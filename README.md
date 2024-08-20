@@ -1,4 +1,4 @@
-# Prime Infrastructure HR Management System
+# HR Management System for Client Company 
 
 ## Overview
 
