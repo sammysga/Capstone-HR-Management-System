@@ -22,6 +22,8 @@ This project enhances Prime Infrastructure Capital, Inc.'s HR operations by auto
 - **npm install**
 - **npm install express express-handlebars**
 - **npm install hbs**
+- **npm install @supabase/supabase-js**
+
 
 ## Installation Steps
 

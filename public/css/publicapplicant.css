@@ -1,0 +1,150 @@
+/* General Styles */
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    line-height: 1.6;
+}
+/* Header Container */
+.header-container {
+    display: flex;
+    align-items: center; /* Vertically center the items */
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: white; /* Set background color to white */
+    border-bottom: 2px solid #B4E3E3; /* Add line divider below the header */
+}
+
+
+/* Logo Container */
+.logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logo-container .logo {
+    max-width: 100px; /* Adjusted size to make the logo smaller */
+    height: auto;
+}
+
+.logo-container .brand-name {
+    color: #07ACB9; /* Color for the brand name */
+    font-size: 18px; /* Adjust text size as needed */
+    font-weight: bold;
+    margin-top: 2px;
+    text-align: center;
+}
+
+/* Navigation Links Styling */
+.nav-links {
+    display: flex;
+    align-items: center; /* Vertically center the navigation links */
+    gap: 20px;
+}
+
+.nav-link {
+    color: #07ACB9; /* Set navigation links color to black */
+    text-decoration: none; /* Removed underline from links */
+    font-weight: bold;
+    font-size: 20px; /* Set font size */
+    margin: 0; /* Remove default margin */
+}
+
+.apply-now-btn {
+    padding: 10px 20px;
+    background-color: #124A5C; /* Background color for Apply Now Button */
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 20px; /* Set font size */
+    display: flex; /* Aligns the button text */
+    align-items: center; /* Vertically center text inside the button */
+    justify-content: center; /* Horizontally center text inside the button */
+}
+
+.nav-link:hover,
+.apply-now-btn:hover {
+    text-decoration: underline;
+}
+
+
+/* Purpose, Mission, Values Styling */
+h2 {
+    color: #07ACB9; /* Purpose, Mission, Our Values */
+}
+
+h3 {
+    color: #07ACB9; /* Value Creation, Integrity, Pioneering, Passion */
+}
+
+.about-us {
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* Purpose and Mission Styling */
+.purpose-mission {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.purpose, .mission {
+    flex: 1;
+    padding: 20px;
+    background-color: white; /* Background color for purpose and mission sections */
+    border-bottom: 2px solid #B4E3E3; /* Bottom border color */
+}
+
+.purpose {
+    border-right: 2px solid #e0e0e0;
+}
+
+.values-heading {
+    text-align: center;
+    margin: 40px 0 20px 0;
+}
+
+.values-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.value {
+    flex: 1 1 45%;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px;
+}
+
+.value p {
+    color: #666;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .purpose-mission {
+        flex-direction: column;
+    }
+
+    .purpose {
+        border-right: none;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .values-container {
+        flex-direction: column;
+    }
+
+    .value {
+        flex: 1 1 100%;
+    }
+}
