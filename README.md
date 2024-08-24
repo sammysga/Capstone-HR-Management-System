@@ -20,6 +20,8 @@ This project enhances Prime Infrastructure Capital, Inc.'s HR operations by auto
 - **npm init**
 - **npm install express**
 - **npm install**
+- **npm install express express-handlebars**
+- **npm install hbs**
 
 ## Installation Steps
 
