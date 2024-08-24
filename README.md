@@ -16,7 +16,12 @@ This project enhances Prime Infrastructure Capital, Inc.'s HR operations by auto
 - **Languages**: JavaScript, CSS, HTML, Python, TensorFlow
 - **Database**: Supabase
 
-## Installation
+## Installed Modules for Reference
+- **npm init**
+- **npm install express**
+- **npm install**
+
+## Installation Steps
 
 1. Clone the repo: `git clone https://github.com/your-username/prime-infra-hrms.git`
 2. Install dependencies: `npm install`
