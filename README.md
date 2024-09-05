@@ -11,9 +11,6 @@ This project enhances Prime Infrastructure Capital, Inc.'s HR operations by auto
 5. **Reports**: Generates insights to improve HR decision-making.
 
 
-## HOW TO RUN:
-** Go to terminal and input "npm start" then press enter."
-
 ## Tech Stack
 
 - **Frameworks**: Node.js, Express.js, React.js, Rasa
@@ -36,7 +33,7 @@ This project enhances Prime Infrastructure Capital, Inc.'s HR operations by auto
 
 
 
-## Installation Steps
+## Installation and Running Steps
 
 1. Clone the repo: `git clone https://github.com/your-username/prime-infra-hrms.git`
 2. Install dependencies: `npm install`
