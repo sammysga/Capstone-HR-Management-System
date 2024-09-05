@@ -19,7 +19,8 @@ app.use(bodyParser.json());
 app.set('view engine', 'ejs');
 
 // Update the views directory for EJS templates
-app.set('views', path.join(__dirname, 'public', 'views'));
+app.set('views', path.join(__dirname, 'public/views'));
+
 
 // Session configuration
 app.use(session({
