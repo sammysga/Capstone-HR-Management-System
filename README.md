@@ -10,6 +10,10 @@ This project enhances Prime Infrastructure Capital, Inc.'s HR operations by auto
 4. **Training Management**: Supports skills assessment and development.
 5. **Reports**: Generates insights to improve HR decision-making.
 
+
+## HOW TO RUN:
+** Go to terminal and input "npm start" then press enter."
+
 ## Tech Stack
 
 - **Frameworks**: Node.js, Express.js, React.js, Rasa
@@ -23,7 +27,12 @@ This project enhances Prime Infrastructure Capital, Inc.'s HR operations by auto
 - **npm install @supabase/supabase-js**
 - **npm install bcrypt**
 - **npm install ejs**
-- **npm install express body-parser express-session*
+- **npm install express body-parser express-session**
+- **npm install connect-flash express-session**
+- **npm install dotenv**
+- **npm install express-validator**
+
+
 
 
 

@@ -4,7 +4,10 @@
   "description": "## Overview",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+  "setup": "node scripts/setupDefaultAccData.js",
+  "prestart": "npm run setup",
+  "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
@@ -12,9 +15,12 @@
     "@supabase/supabase-js": "^2.45.2",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
+    "connect-flash": "^0.1.1",
+    "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-handlebars": "^8.0.1",
-    "express-session": "^1.18.0"
+    "express-session": "^1.18.0",
+    "express-validator": "^7.2.0"
   }
 }
