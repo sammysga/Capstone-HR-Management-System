@@ -91,6 +91,60 @@ const applicantController = {
         res.redirect('/login');
     },
 
+    handleLoginSubmit: async function (req, res) {
+        const { email, password } = req.body;
+    
+        // Query Supabase to check customer credentials
+        const { data, error } = await supabase
+            .from('customeraccounts')
+            .select('email, password, customerId, role')
+            .eq('email', email);
+    
+        if (error) {
+            console.error(error);
+            return res.status(500).send('Internal Server Error');
+        }
+    
+        if (data.length > 0) {
+    
+            console.log('Supabase Data:', data);
+            console.log('Supabase Error:', error);
+    
+            console.log('Entered Password:', password);
+            console.log('Stored Hashed Password:', data[0].password);
+            const passwordMatch = await bcrypt.compare(password, data[0].password);
+    
+            if (passwordMatch) {
+                // Set session variables
+                req.session.authenticated = true;
+                req.session.userID = data[0].customerId;
+                req.session.userRole = data[0].role;
+    
+                // Redirect based on user role
+                switch (data[0].role) {
+                    case 'employee':
+                        res.redirect('/employeehome');
+                        break;
+                    case 'hr':
+                        res.redirect('/hrhome');
+                        break;
+                    case 'depthead':
+                        res.redirect('/deptheadhome');
+                        break;
+                    default:
+                        // In case of an undefined role, redirect to a generic homepage or logout
+                        res.redirect('/generic-home'); // Optional: handle this as per your system
+                        break;
+                }
+            } else {
+                res.render('memberlogin', { message: 'Wrong password or username' });
+            }
+        } else {
+            res.render('memberlogin', { message: 'Wrong password or username' });
+        }
+    },
+    
+
 
 };
 

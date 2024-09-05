@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group input[type="date"] {
+            padding: 8px;
+        }
+        .form-group input[type="password"] {
+            padding: 8px;
+        }
+        .form-group input[type="submit"] {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group input[type="submit"]:hover {
+            background-color: #059f9e;
+        }
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registration Form</h1>
+        <form action="/applicant_signup_submit" method="post">
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" name="lastName" required>
+                <% if (errors && errors.lastName) { %>
+                <p class="error-message"><%= errors.lastName %></p>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" name="firstName" required>
+                <% if (errors && errors.firstName) { %>
+                <p class="error-message"><%= errors.firstName %></p>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="middleInitial">M.I.</label>
+                <input type="text" id="middleInitial" name="middleInitial" maxlength="1">
+                <% if (errors && errors.middleInitial) { %>
+                <p class="error-message"><%= errors.middleInitial %></p>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="birthdate">Birthdate</label>
+                <input type="date" id="birthdate" name="birthdate" required>
+                <% if (errors && errors.birthdate) { %>
+                <p class="error-message"><%= errors.birthdate %></p>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+                <% if (errors && errors.email) { %>
+                <p class="error-message"><%= errors.email %></p>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Set Your Password</label>
+                <input type="password" id="password" name="password" required>
+                <% if (errors && errors.password) { %>
+                <p class="error-message"><%= errors.password %></p>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Your Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+                <% if (errors && errors.confirmPassword) { %>
+                <p class="error-message"><%= errors.confirmPassword %></p>
+                <% } %>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Register">
+            </div>
+        </form>
+    </div>
+</body>
+</html>
