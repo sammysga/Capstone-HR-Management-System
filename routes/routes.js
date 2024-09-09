@@ -19,6 +19,7 @@ router.post('/login/staff', staffLoginController.postStaffLogin);
 
 // Protected routes (role-specific logic in respective controllers)
 router.get('/hr/dashboard', hrController.getHRDashboard);
+router.get('/hr/managestaff', hrController.getHRManageStaff);
 
 
 
