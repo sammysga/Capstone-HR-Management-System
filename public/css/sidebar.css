@@ -1,0 +1,104 @@
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+/* Sidebar Styles */
+.sidebar {
+    width: 250px; /* Fixed width for the sidebar */
+    height: 100vh; /* Full viewport height */
+    background-color: #e8edf3;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Increased shadow depth */
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Inter'; /* Use Inter font */
+    overflow-y: auto; /* Add scrollbar if needed */
+    z-index: 1000; /* Ensure sidebar stays above the content */
+}
+
+/* Logo and heading at the top of the sidebar */
+.logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo {
+    width: 100%; /* Make the image fit the width of the sidebar */
+    height: auto; /* Maintain aspect ratio */
+    max-width: 220px; /* Optional: Set a max-width if you want to limit the size */
+}
+
+/* Styling for collapsible headers */
+.collapsible-header {
+    text-decoration: none;
+    color: #333;
+    font-size: 20px; /* Larger font size for headers */
+    padding: 15px; /* Increased padding for better spacing */
+    display: block;
+    position: relative;
+    background-color: #e0e4e8; /* Background color for headers */
+    border-radius: 5px;
+    cursor: pointer; /* Show pointer cursor for clickable items */
+    margin-bottom: 10px; /* Space below headers */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Remove bullet points from the list items */
+.sidebar ul {
+    list-style-type: none; /* Remove bullet points */
+    padding: 0; /* Remove padding */
+    margin: 0; /* Remove margin */
+}
+
+/* Styling for collapsible content */
+.collapsible-content {
+    list-style-type: none; /* Remove bullet points */
+    padding-left: 0; /* Remove padding on the left */
+    display: none; /* Initially hidden */
+    margin: 0; /* Remove margin */
+}
+
+.collapsible-content li {
+    margin-bottom: 10px; /* Space between nested items */
+}
+
+/* Styling for collapsible content links */
+.collapsible-content a {
+    text-decoration: none;
+    color: #555;
+    font-size: 16px; /* Consistent font size for content links */
+    padding: 10px;
+    display: block;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+/* Hover effect for links */
+.collapsible-content a:hover {
+    background-color: #f0f5f9;
+}
+
+/* Active link styling */
+.sidebar ul li a.active {
+    color: #2385b0; /* Color for active link */
+    background-color: #e8edf3; /* Background for active link */
+    font-weight: 600; /* Optional: bold text for active link */
+}
+
+/* Animation for active link */
+.sidebar ul li a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    height: 3px;
+    background-color: #2385b0; /* Color for animation */
+    transition: width 0.3s;
+}
+
+.sidebar ul li a.active::after {
+    width: 100%;
+}

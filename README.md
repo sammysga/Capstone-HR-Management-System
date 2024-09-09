@@ -28,6 +28,7 @@ This project enhances Prime Infrastructure Capital, Inc.'s HR operations by auto
 - **npm install connect-flash express-session**
 - **npm install dotenv**
 - **npm install express-validator**
+- **npm update ejs**
 
 
 
