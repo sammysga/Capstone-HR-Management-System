@@ -3,51 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Home</title>
+    <title>HR Manage Staff</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+
+    <!-- Inline CSS for table styling -->
+    <style>
+        .staff-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .staff-table th, .staff-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .staff-table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        .staff-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .staff-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        .staff-table input[type="text"] {
+            border: none;
+            background: none;
+            width: 100%;
+        }
+        .staff-table button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .staff-table button:hover {
+            background-color: #45a049;
+        }
+        .about-us {
+            padding: 20px;
+        }
+        button.add-new-staff {
+            margin-top: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button.add-new-staff:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
+
     <!-- Main content -->
     <div class="main-content">
         <section class="about-us">
             <div class="purpose-mission">
                 <div class="purpose">
-                    <h2>Welcome to HR Manage Staff</h2>
-                    <p>TEST</p>
+                    <h2>Manage Staff</h2>
+                    <p>View staff details categorized by departments.</p>
+
+                    <div id="staffTableContainer">
+                        <% departments.forEach(function(department) { %>
+                            <h3><%= department.deptName %></h3>
+                            <table class="staff-table">
+                                <thead>
+                                    <tr>
+                                        <th>Job Title</th>
+                                        <th>Last Name</th>
+                                        <th>First Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Password</th>
+                                        <th>Active Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% department.staff.forEach(function(staff) { %>
+                                        <tr>
+                                            <td><%= staff.jobTitle %></td>
+                                            <td><%= staff.lastName %></td>
+                                            <td><%= staff.firstName %></td>
+                                            <td><%= staff.userEmail %></td>
+                                            <td><%= staff.userRole %></td>
+                                            <td>
+                                                <!-- Display masked password -->
+                                                <input type="text" value="••••••••" readonly>
+                                                <!-- Copy button for original hashed password -->
+                                                <button onclick="copyPassword('<%= staff.userId %>', '<%= staff.hashedPassword %>')">Copy</button>
+                                            </td>
+                                            <td>
+                                                <%= staff.activeStatus %>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+
+                            <!-- Button to add a new row -->
+                            <button class="add-new-staff" onclick="addNewStaffRow('<%= department.deptName %>')">Add New Staff</button>
+                        <% }); %>
+                    </div>
                 </div>
             </div>
         </section>
     </div>
 
-    <!-- JavaScript for sidebar functionality -->
+    <!-- JavaScript for sidebar functionality and row management -->
     <script>
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
+        // Function to copy the hashed password to clipboard
+        function copyPassword(userId, hashedPassword) {
+            // Create a temporary input element to copy the password
+            const tempInput = document.createElement('input');
+            tempInput.value = hashedPassword;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            alert("Password copied: " + hashedPassword);
+        }
 
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
-        });
+        // Function to generate a random password
+        function generateRandomPassword(length = 10) {
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * chars.length);
+                password += chars[randomIndex];
+            }
+            return password;
+        }
+
+        // Function to add a new row for staff under a specific department
+        function addNewStaffRow(deptName) {
+            const tableBody = Array.from(document.querySelectorAll('h3')).find(h => h.textContent === deptName).nextElementSibling.querySelector('tbody');
+
+            // Randomly generated password
+            const randomPassword = generateRandomPassword(10);
+
+            // Insert new row HTML with random password
+            const newRowHTML = `
+                <tr>
+                    <td><input type="text" placeholder="Enter Job Title"></td>
+                    <td><input type="text" placeholder="Enter Last Name"></td>
+                    <td><input type="text" placeholder="Enter First Name"></td>
+                    <td><input type="text" placeholder="Enter Email"></td>
+                    <td><input type="text" placeholder="Enter Role"></td>
+                    <td><input type="text" value="${randomPassword}" readonly></td>
+                    <td>Active</td>
+                </tr>
+            `;
+
+            // Append the new row to the table
+            tableBody.insertAdjacentHTML('beforeend', newRowHTML);
+        }
     </script>
 </body>
 </html>
