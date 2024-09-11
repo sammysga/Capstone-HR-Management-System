@@ -1,5 +1,6 @@
 const supabase = require('../public/config/supabaseClient');
 require('dotenv').config(); // To load environment variables
+const bcrypt = require('bcrypt');
 
 const hrController = {
     getHRDashboard: function(req, res) {
@@ -82,10 +83,12 @@ const hrController = {
                     .select('departmentId, deptName');
                 if (deptError) throw deptError;
 
-                const { data: jobPositions, error } = await supabase
-                .from('jobpositions')
-                .select('jobId, jobTitle')
-                .eq('departmentId', departmentId);
+                const { data: jobPositions, error: jobError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle')
+                    .eq('departmentId, departmentId');
+
+                    //TODO: Fix populate of jobTitle
                 if (jobError) throw jobError;
 
                 // Pass data to the form view

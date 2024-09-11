@@ -6,8 +6,6 @@
     <title>HR Manage Staff</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/hr_pages.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
     <style>
         /* Existing CSS */
         .staff-table {
@@ -174,7 +172,6 @@
                 <select id="jobTitle" name="jobTitle" required>
                     <!-- Options will be populated via JavaScript -->
                 </select><br>
-                
                 <label for="role">Role:</label>
                 <select id="role" name="role" required>
                     <option value="">Select Role</option>
@@ -216,71 +213,60 @@
         }
     
         // Function to populate the departments dropdown
-        // Function to populate the departments dropdown
-function populateDepartments() {
-    const departmentSelect = document.getElementById('department');
-    departmentSelect.innerHTML = ''; // Clear existing options
-
-    // Add a default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.text = 'Select Department';
-    departmentSelect.add(defaultOption);
-
-    const departments = <%- JSON.stringify(departments) %>; // Get departments from server-side
-
-    // Add department options
-    departments.forEach(department => {
-        const option = document.createElement('option');
-        option.value = department.departmentId;
-        option.text = department.deptName;
-        departmentSelect.add(option);
-    });
-}
-
+        function populateDepartments() {
+            const departmentSelect = document.getElementById('department');
+            departmentSelect.innerHTML = ''; // Clear existing options
     
-// Function to populate job titles based on selected department
-document.getElementById('department').addEventListener('change', async function() {
-    const departmentId = this.value;
-    const jobTitleSelect = document.getElementById('jobTitle');
-    jobTitleSelect.innerHTML = ''; // Clear existing options
-
-    if (!departmentId) {
-        // Add a default option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.text = 'Select Job Title';
-        jobTitleSelect.add(defaultOption);
-        return;
-    }
-
-    try {
-        // Fetch job titles for the selected department
-        const response = await fetch(`/get-job-titles?departmentId=${departmentId}`);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+            // Add a default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.text = 'Select Department';
+            departmentSelect.add(defaultOption);
+    
+            const departments = <%- JSON.stringify(departments) %>; // Get departments from server-side
+    
+            // Add department options
+            departments.forEach(department => {
+                const option = document.createElement('option');
+                option.value = department.departmentId;
+                option.text = department.deptName;
+                departmentSelect.add(option);
+            });
         }
-        const jobTitles = await response.json();
-        
-        // Add a default option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.text = 'Select Job Title';
-        jobTitleSelect.add(defaultOption);
-
-        // Add job title options
-        jobTitles.forEach(jobTitle => {
-            const option = document.createElement('option');
-            option.value = jobTitle.jobId;
-            option.text = jobTitle.jobTitle;
-            jobTitleSelect.add(option);
+    
+        // Function to populate job titles based on selected department
+        document.getElementById('department').addEventListener('change', async function() {
+            const departmentId = this.value;
+            const jobTitleSelect = document.getElementById('jobTitle');
+            jobTitleSelect.innerHTML = ''; // Clear existing options
+    
+            if (!departmentId) {
+                // Add a default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.text = 'Select Job Title';
+                jobTitleSelect.add(defaultOption);
+                return;
+            }
+    
+            // Fetch job titles for the selected department
+            const response = await fetch(`/get-job-titles?departmentId=${departmentId}`);
+            const jobTitles = await response.json();
+    
+            // Add a default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.text = 'Select Job Title';
+            jobTitleSelect.add(defaultOption);
+    
+            // Add job title options
+            jobTitles.forEach(jobTitle => {
+                const option = document.createElement('option');
+                option.value = jobTitle.jobId;
+                option.text = jobTitle.jobTitle;
+                jobTitleSelect.add(option);
+            });
         });
-    } catch (error) {
-        console.error('Error fetching job titles:', error);
-    }
-});
-
-
     
         // Function to toggle password fields
         function togglePasswordFields() {
