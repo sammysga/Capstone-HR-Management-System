@@ -4,47 +4,49 @@ const bcrypt = require ('bcrypt');
 const applicantController = {
 
     getPublicHome: function(req, res) {
-        res.render('publichome');
+        res.render('publichome', { errors: {} }); 
     },
     getPublicSignUp: function(req, res) {
-        res.render('publicsignup');
+        res.render('publicsignup', { errors: {} }); 
     },
 
     handleRegisterPage: async function(req, res) {
         console.log('Handling registration request...');
-        const { lastName, firstName, middleName, birthDate, email, password, confirmPassword } = req.body;
-
+        const { lastName, firstName, middleInitial, birthDate, email, password, confirmPassword } = req.body;
+    
+        const errors = {};
+    
         // Validate password on the server-side
         if (!password || password !== confirmPassword) {
-            const errorMessage = 'Invalid password or password mismatch';
-            console.error(errorMessage);
-            return res.status(400).render('publicsignup', { message: errorMessage });
+            errors.password = 'Invalid password or password mismatch';
         }
-
+    
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            const errorMessage = 'Invalid email format';
-            console.error(errorMessage);
-            return res.status(400).render('publicsignup', { message: errorMessage });
+            errors.email = 'Invalid email format';
         }
-
+    
+        if (Object.keys(errors).length > 0) {
+            return res.status(400).render('publicsignup', { errors });
+        }
+    
         // Check if the email already exists in the database
         const { data: existingData, error: existingDataError } = await supabase
             .from('useraccounts')
             .select('userEmail')
             .eq('userEmail', email);
-
+    
         if (existingDataError || (existingData && existingData.length > 0)) {
-            const errorMessage = 'Please try again, email is already existing.';
-            console.error(existingDataError || errorMessage);
-            return res.status(400).render('publicsignup', { message: errorMessage });
+            errors.email = 'Please try again, email is already existing.';
+            console.error(existingDataError || 'Email is already existing.');
+            return res.status(400).render('publicsignup', { errors });
         }
-
+    
         // Hash the password before storing it
         const hashedPassword = await bcrypt.hash(password, 10);
         console.log('Hashed Password:', hashedPassword);  // Log the hashed password
-
+    
         // Insert data into the useraccounts table
         const { data: userData, error: userError } = await supabase
             .from('useraccounts')
@@ -53,20 +55,20 @@ const applicantController = {
                     userEmail: email,
                     userPass: hashedPassword,
                     userRole: 'Applicant',
-                    userStatus: true,
+                    userIsDisabled: false,
                 },
             ])
             .select('userId')
             .single();
-
+    
         if (userError) {
             console.error('Error inserting data into the useraccounts table:', userError);
-            const errorMessage = 'Error inserting data into the database';
-            return res.status(500).render('publicsignup', { message: errorMessage });
+            errors.general = 'Error inserting data into the database';
+            return res.status(500).render('publicsignup', { errors });
         }
-
+    
         const userId = userData.userId;
-
+    
         // Insert data into the applicantaccounts table
         const { data: applicantData, error: applicantError } = await supabase
             .from('applicantaccounts')
@@ -75,21 +77,22 @@ const applicantController = {
                     userId: userId,
                     lastName: lastName,
                     firstName: firstName,
-                    middleInitial: middleName,
-                    birthDate: birthDate,
+                    middleInitial: middleInitial,
+                    birthDate: birthDate, // Ensure this matches your database schema
                     applicantStatus: 'Account initially created',
                 },
             ]);
-
+    
         if (applicantError) {
             console.error('Error inserting data into the applicantaccounts table:', applicantError);
-            const errorMessage = 'Error inserting applicant data into the database';
-            return res.status(500).render('publicsignup', { message: errorMessage });
+            errors.general = 'Error inserting applicant data into the database';
+            return res.status(500).render('publicsignup', { errors });
         }
-
+    
         // Redirect to the login page upon successful registration
         res.redirect('/login');
-    },
+    }
+    ,
 
     handleLoginSubmit: async function (req, res) {
         const { email, password } = req.body;

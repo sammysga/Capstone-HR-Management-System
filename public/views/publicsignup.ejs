@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
     <title>Registration Form</title>
     <style>
         body {
@@ -69,9 +71,10 @@
             <div class="form-group">
                 <label for="lastName">Last Name</label>
                 <input type="text" id="lastName" name="lastName" required>
-                <% if (errors && errors.lastName) { %>
-                <p class="error-message"><%= errors.lastName %></p>
+                <% if (typeof errors !== 'undefined' && errors.lastName) { %>
+                    <p class="error-message"><%= errors.lastName %></p>
                 <% } %>
+                
             </div>
 
             <div class="form-group">
@@ -91,10 +94,10 @@
             </div>
 
             <div class="form-group">
-                <label for="birthdate">Birthdate</label>
-                <input type="date" id="birthdate" name="birthdate" required>
-                <% if (errors && errors.birthdate) { %>
-                <p class="error-message"><%= errors.birthdate %></p>
+                <label for="birthDate">Birthdate</label>
+                <input type="date" id="birthDate" name="birthDate" required>
+                <% if (errors && errors.birthDate) { %>
+                <p class="error-message"><%= errors.birthDate %></p>
                 <% } %>
             </div>
 

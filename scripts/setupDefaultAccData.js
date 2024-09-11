@@ -81,7 +81,7 @@ async function setupDefaultData() {
       console.log('Inserting default user account...');
       const { data: userData, error: userInsertError } = await supabase
         .from('useraccounts')
-        .insert([{ userPass: hashedPassword, userRole: 'HR', userIsDisabled: false, userEmail: 'admin@gmail.com' }])
+        .insert([{ userPass: hashedPassword, userRole: 'HR', userIsDisabled: false, userEmail: 'admin@gmail.com', userStaffOgPass: '12345' }])
         .select() // Ensure to fetch the inserted row
         .single();
 

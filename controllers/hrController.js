@@ -22,7 +22,7 @@ const hrController = {
     
                 const { data: userAccounts, error: userError } = await supabase
                     .from('useraccounts')
-                    .select('userId, userEmail, userRole, userIsDisabled, userPass');
+                    .select('userId, userEmail, userRole, userIsDisabled, userStaffOgPass');
                 if (userError) throw userError;
     
                 const { data: departments, error: deptError } = await supabase
@@ -48,7 +48,7 @@ const hrController = {
                         firstName: staff.firstName,
                         userEmail: userAccount ? userAccount.userEmail : 'N/A',
                         userRole: userAccount ? userAccount.userRole : 'N/A',
-                        hashedPassword: userAccount ? userAccount.userPass : 'N/A',
+                        userStaffOgPass: userAccount ? userAccount.userStaffOgPass : 'N/A',
                         activeStatus: userAccount && userAccount.userIsDisabled ? 'Disabled' : 'Active'
                     };
                 }));
@@ -66,6 +66,89 @@ const hrController = {
                 console.error('Error fetching HR Manage Staff data:', error);
                 req.flash('errors', { fetchError: 'Failed to fetch staff data. Please try again.' });
                 res.redirect('/hr/dashboard');
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/login/staff');
+        }
+    },
+
+    getAddStaffForm: async function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                // Fetch departments and job positions
+                const { data: departments, error: deptError } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName');
+                if (deptError) throw deptError;
+
+                const { data: jobPositions, error } = await supabase
+                .from('jobpositions')
+                .select('jobId, jobTitle')
+                .eq('departmentId', departmentId);
+                if (jobError) throw jobError;
+
+                // Pass data to the form view
+                res.render('staffpages/hr_pages/addstaff', { departments, jobPositions });
+            } catch (error) {
+                console.error('Error fetching data for Add Staff form:', error);
+                req.flash('errors', { fetchError: 'Failed to load form data. Please try again.' });
+                res.redirect('/hr/dashboard');
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/login/staff');
+        }
+    },
+
+    addNewStaff: async function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;
+
+            try {
+                // Determine password based on user selection
+                const password = passwordOption === 'custom' ? customPassword : generatedPassword;
+
+                // Hash the password
+                const hashedPassword = await bcrypt.hash(password, 10);
+
+                // Insert new user account
+                const { data: userData, error: userError } = await supabase
+                    .from('useraccounts')
+                    .insert([{
+                        userPass: hashedPassword, 
+                        userRole: role,
+                        userIsDisabled: false,
+                        userEmail: email,
+                        userStaffOgPass: password // Store the original password for reference
+                    }])
+                    .select()
+                    .single();
+
+                if (userError) throw userError;
+
+                // Get the user ID
+                const userId = userData.userId;
+
+                // Insert new staff account details
+                const { data: staffData, error: staffError } = await supabase
+                    .from('staffaccounts')
+                    .insert([{
+                        userId,
+                        departmentId, // Handle departmentId from form input
+                        jobId, // Handle jobId from form input
+                        lastName,
+                        firstName
+                    }])
+                    .select()
+                    .single();
+
+                if (staffError) throw staffError;
+
+                res.status(200).json({ message: 'Staff added successfully.' });
+            } catch (error) {
+                console.error('Error adding staff:', error);
+                res.status(500).json({ error: 'Error adding staff' });
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });

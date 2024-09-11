@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR Manage Staff</title>
-    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Inline CSS for table styling -->
     <style>
+        /* Existing CSS */
         .staff-table {
             width: 100%;
             border-collapse: collapse;
@@ -66,12 +67,44 @@
         button.add-new-staff:hover {
             background-color: #0056b3;
         }
+    
+        /* Updated CSS for modal */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+            padding-top: 60px; 
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; /* Center horizontally */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%; /* Adjust width as needed */
+            max-width: 600px; /* Ensure it doesn't get too wide on large screens */
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
-
-    <!-- Main content -->
     <div class="main-content">
         <section class="about-us">
             <div class="purpose-mission">
@@ -90,7 +123,7 @@
                                         <th>First Name</th>
                                         <th>Email</th>
                                         <th>Role</th>
-                                        <th>Password</th>
+                                        <th>Original Default Password</th>
                                         <th>Active Status</th>
                                     </tr>
                                 </thead>
@@ -103,10 +136,8 @@
                                             <td><%= staff.userEmail %></td>
                                             <td><%= staff.userRole %></td>
                                             <td>
-                                                <!-- Display masked password -->
-                                                <input type="text" value="••••••••" readonly>
-                                                <!-- Copy button for original hashed password -->
-                                                <button onclick="copyPassword('<%= staff.userId %>', '<%= staff.hashedPassword %>')">Copy</button>
+                                                <input type="password" value="<%= staff.userStaffOgPass ? staff.userStaffOgPass : '' %>" readonly>
+                                                <button onclick="copyPassword(this)" data-password="<%= staff.userStaffOgPass %>">Copy</button>
                                             </td>
                                             <td>
                                                 <%= staff.activeStatus %>
@@ -115,9 +146,7 @@
                                     <% }); %>
                                 </tbody>
                             </table>
-
-                            <!-- Button to add a new row -->
-                            <button class="add-new-staff" onclick="addNewStaffRow('<%= department.deptName %>')">Add New Staff</button>
+                            <button class="add-new-staff" onclick="openModal()">Add New Staff</button>
                         <% }); %>
                     </div>
                 </div>
@@ -125,54 +154,174 @@
         </section>
     </div>
 
-    <!-- JavaScript for sidebar functionality and row management -->
+    <!-- Modal for adding new staff -->
+    <div id="staffModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Add New Staff</h2>
+            <form id="newStaffForm">
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" name="lastName" required><br>
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" name="firstName" required><br>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required><br>
+                <label for="department">Department:</label>
+                <select id="department" name="department" required>
+                    <!-- Options will be populated via JavaScript -->
+                </select><br>
+                <label for="jobTitle">Job Title:</label>
+                <select id="jobTitle" name="jobTitle" required>
+                    <!-- Options will be populated via JavaScript -->
+                </select><br>
+                
+                <label for="role">Role:</label>
+                <select id="role" name="role" required>
+                    <option value="">Select Role</option>
+                    <option value="HR">HR</option>
+                    <option value="Employee">Employee</option>
+                    <option value="Line Manager">Line Manager</option>
+                </select><br>
+                
+                <label for="passwordOption">Set Password:</label>
+                <select id="passwordOption" name="passwordOption" required onchange="togglePasswordFields()">
+                    <option value="custom">Custom Password</option>
+                    <option value="random">Randomly Generated Password</option>
+                </select><br>
+                <div id="passwordFields">
+                    <label for="customPassword">Custom Password:</label>
+                    <input type="password" id="customPassword" name="customPassword"><br>
+                    <label for="generatedPassword">Generated Password:</label>
+                    <input type="text" id="generatedPassword" name="generatedPassword" readonly>
+                    <button type="button" onclick="generateRandomPassword()">Generate</button>
+                    <button type="button" onclick="copyGeneratedPassword()">Copy</button><br>
+                </div>
+                
+                <button type="submit">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript for modal and form handling -->
     <script>
-        // Function to copy the hashed password to clipboard
-        function copyPassword(userId, hashedPassword) {
-            // Create a temporary input element to copy the password
-            const tempInput = document.createElement('input');
-            tempInput.value = hashedPassword;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            alert("Password copied: " + hashedPassword);
+        // Function to open modal
+        function openModal() {
+            document.getElementById('staffModal').style.display = 'block';
+            populateDepartments(); // Populate departments when modal opens
         }
+    
+        // Function to close modal
+        function closeModal() {
+            document.getElementById('staffModal').style.display = 'none';
+        }
+    
+        // Function to populate the departments dropdown
+        // Function to populate the departments dropdown
+function populateDepartments() {
+    const departmentSelect = document.getElementById('department');
+    departmentSelect.innerHTML = ''; // Clear existing options
 
-        // Function to generate a random password
-        function generateRandomPassword(length = 10) {
-            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
-            let password = '';
-            for (let i = 0; i < length; i++) {
-                const randomIndex = Math.floor(Math.random() * chars.length);
-                password += chars[randomIndex];
+    // Add a default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.text = 'Select Department';
+    departmentSelect.add(defaultOption);
+
+    const departments = <%- JSON.stringify(departments) %>; // Get departments from server-side
+
+    // Add department options
+    departments.forEach(department => {
+        const option = document.createElement('option');
+        option.value = department.departmentId;
+        option.text = department.deptName;
+        departmentSelect.add(option);
+    });
+}
+
+    
+// Function to populate job titles based on selected department
+document.getElementById('department').addEventListener('change', async function() {
+    const departmentId = this.value;
+    const jobTitleSelect = document.getElementById('jobTitle');
+    jobTitleSelect.innerHTML = ''; // Clear existing options
+
+    if (!departmentId) {
+        // Add a default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.text = 'Select Job Title';
+        jobTitleSelect.add(defaultOption);
+        return;
+    }
+
+    try {
+        // Fetch job titles for the selected department
+        const response = await fetch(`/get-job-titles?departmentId=${departmentId}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const jobTitles = await response.json();
+        
+        // Add a default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.text = 'Select Job Title';
+        jobTitleSelect.add(defaultOption);
+
+        // Add job title options
+        jobTitles.forEach(jobTitle => {
+            const option = document.createElement('option');
+            option.value = jobTitle.jobId;
+            option.text = jobTitle.jobTitle;
+            jobTitleSelect.add(option);
+        });
+    } catch (error) {
+        console.error('Error fetching job titles:', error);
+    }
+});
+
+
+    
+        // Function to toggle password fields
+        function togglePasswordFields() {
+            const passwordOption = document.getElementById('passwordOption').value;
+            const passwordFields = document.getElementById('passwordFields');
+            if (passwordOption === 'custom') {
+                passwordFields.style.display = 'block';
+            } else {
+                passwordFields.style.display = 'none';
             }
-            return password;
         }
-
-        // Function to add a new row for staff under a specific department
-        function addNewStaffRow(deptName) {
-            const tableBody = Array.from(document.querySelectorAll('h3')).find(h => h.textContent === deptName).nextElementSibling.querySelector('tbody');
-
-            // Randomly generated password
-            const randomPassword = generateRandomPassword(10);
-
-            // Insert new row HTML with random password
-            const newRowHTML = `
-                <tr>
-                    <td><input type="text" placeholder="Enter Job Title"></td>
-                    <td><input type="text" placeholder="Enter Last Name"></td>
-                    <td><input type="text" placeholder="Enter First Name"></td>
-                    <td><input type="text" placeholder="Enter Email"></td>
-                    <td><input type="text" placeholder="Enter Role"></td>
-                    <td><input type="text" value="${randomPassword}" readonly></td>
-                    <td>Active</td>
-                </tr>
-            `;
-
-            // Append the new row to the table
-            tableBody.insertAdjacentHTML('beforeend', newRowHTML);
+    
+        // Function to generate a random password
+        function generateRandomPassword() {
+            const randomPassword = Math.random().toString(36).slice(-8); // Simple random password
+            document.getElementById('generatedPassword').value = randomPassword;
         }
+    
+        // Function to copy the generated password
+        function copyGeneratedPassword() {
+            const generatedPasswordField = document.getElementById('generatedPassword');
+            generatedPasswordField.select();
+            document.execCommand('copy');
+        }
+    
+        // Function to copy the password from a staff row
+        function copyPassword(button) {
+            const password = button.getAttribute('data-password');
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = password;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+        }
+    
+        // Event listener for form submission
+        document.getElementById('newStaffForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            // Implement form submission logic here
+        });
     </script>
 </body>
 </html>
