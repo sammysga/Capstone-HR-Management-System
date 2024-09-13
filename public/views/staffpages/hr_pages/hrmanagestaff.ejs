@@ -65,7 +65,7 @@
         button.add-new-staff:hover {
             background-color: #0056b3;
         }
-    
+
         /* Updated CSS for modal */
         .modal {
             display: none; 
@@ -128,7 +128,7 @@
                                 <tbody>
                                     <% department.staff.forEach(function(staff) { %>
                                         <tr>
-                                            <td><%= staff.jobTitle %></td>
+                                            <td><%= staff.jobpositions ? staff.jobpositions.jobTitle : 'N/A' %></td>
                                             <td><%= staff.lastName %></td>
                                             <td><%= staff.firstName %></td>
                                             <td><%= staff.userEmail %></td>
@@ -137,9 +137,7 @@
                                                 <input type="password" value="<%= staff.userStaffOgPass ? staff.userStaffOgPass : '' %>" readonly>
                                                 <button onclick="copyPassword(this)" data-password="<%= staff.userStaffOgPass %>">Copy</button>
                                             </td>
-                                            <td>
-                                                <%= staff.activeStatus %>
-                                            </td>
+                                            <td><%= staff.activeStatus %></td>
                                         </tr>
                                     <% }); %>
                                 </tbody>
@@ -179,7 +177,7 @@
                     <option value="Employee">Employee</option>
                     <option value="Line Manager">Line Manager</option>
                 </select><br>
-                
+
                 <label for="passwordOption">Set Password:</label>
                 <select id="passwordOption" name="passwordOption" required onchange="togglePasswordFields()">
                     <option value="custom">Custom Password</option>
@@ -193,7 +191,7 @@
                     <button type="button" onclick="generateRandomPassword()">Generate</button>
                     <button type="button" onclick="copyGeneratedPassword()">Copy</button><br>
                 </div>
-                
+
                 <button type="submit">Save</button>
             </form>
         </div>
@@ -206,25 +204,25 @@
             document.getElementById('staffModal').style.display = 'block';
             populateDepartments(); // Populate departments when modal opens
         }
-    
+
         // Function to close modal
         function closeModal() {
             document.getElementById('staffModal').style.display = 'none';
         }
-    
+
         // Function to populate the departments dropdown
         function populateDepartments() {
             const departmentSelect = document.getElementById('department');
             departmentSelect.innerHTML = ''; // Clear existing options
-    
+
             // Add a default option
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.text = 'Select Department';
             departmentSelect.add(defaultOption);
-    
+
             const departments = <%- JSON.stringify(departments) %>; // Get departments from server-side
-    
+
             // Add department options
             departments.forEach(department => {
                 const option = document.createElement('option');
@@ -233,13 +231,13 @@
                 departmentSelect.add(option);
             });
         }
-    
+
         // Function to populate job titles based on selected department
         document.getElementById('department').addEventListener('change', async function() {
             const departmentId = this.value;
             const jobTitleSelect = document.getElementById('jobTitle');
             jobTitleSelect.innerHTML = ''; // Clear existing options
-    
+
             if (!departmentId) {
                 // Add a default option
                 const defaultOption = document.createElement('option');
@@ -248,66 +246,55 @@
                 jobTitleSelect.add(defaultOption);
                 return;
             }
-    
+
             // Fetch job titles for the selected department
             const response = await fetch(`/get-job-titles?departmentId=${departmentId}`);
             const jobTitles = await response.json();
-    
-            // Add a default option
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.text = 'Select Job Title';
-            jobTitleSelect.add(defaultOption);
-    
+
             // Add job title options
             jobTitles.forEach(jobTitle => {
                 const option = document.createElement('option');
-                option.value = jobTitle.jobId;
+                option.value = jobTitle.jobpositionId;
                 option.text = jobTitle.jobTitle;
                 jobTitleSelect.add(option);
             });
         });
-    
-        // Function to toggle password fields
+
+        // Function to handle password option changes
         function togglePasswordFields() {
             const passwordOption = document.getElementById('passwordOption').value;
-            const passwordFields = document.getElementById('passwordFields');
+            const customPasswordField = document.getElementById('customPassword');
+            const generatedPasswordField = document.getElementById('generatedPassword');
+
             if (passwordOption === 'custom') {
-                passwordFields.style.display = 'block';
-            } else {
-                passwordFields.style.display = 'none';
+                customPasswordField.disabled = false;
+                generatedPasswordField.disabled = true;
+            } else if (passwordOption === 'random') {
+                customPasswordField.disabled = true;
+                generatedPasswordField.disabled = false;
             }
         }
-    
-        // Function to generate a random password
+
+        // Function to generate random password
         function generateRandomPassword() {
-            const randomPassword = Math.random().toString(36).slice(-8); // Simple random password
+            const randomPassword = Math.random().toString(36).slice(-8);
             document.getElementById('generatedPassword').value = randomPassword;
         }
-    
-        // Function to copy the generated password
+
+        // Function to copy generated password
         function copyGeneratedPassword() {
-            const generatedPasswordField = document.getElementById('generatedPassword');
-            generatedPasswordField.select();
+            const generatedPassword = document.getElementById('generatedPassword');
+            generatedPassword.select();
             document.execCommand('copy');
         }
-    
-        // Function to copy the password from a staff row
+
+        // Function to copy password for staff
         function copyPassword(button) {
             const password = button.getAttribute('data-password');
-            const tempInput = document.createElement('input');
-            document.body.appendChild(tempInput);
-            tempInput.value = password;
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
+            navigator.clipboard.writeText(password).then(() => {
+                alert('Password copied to clipboard');
+            });
         }
-    
-        // Event listener for form submission
-        document.getElementById('newStaffForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            // Implement form submission logic here
-        });
     </script>
 </body>
 </html>
