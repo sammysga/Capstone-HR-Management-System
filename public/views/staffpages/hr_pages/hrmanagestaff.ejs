@@ -185,7 +185,7 @@
                 </select><br>
                 <div id="passwordFields">
                     <label for="customPassword">Custom Password:</label>
-                    <input type="password" id="customPassword" name="customPassword"><br>
+                    <input type="password" id="customPassword" name="customPassword" style="display: block;"><br>
                     <label for="generatedPassword">Generated Password:</label>
                     <input type="text" id="generatedPassword" name="generatedPassword" readonly>
                     <button type="button" onclick="generateRandomPassword()">Generate</button>
@@ -197,47 +197,57 @@
         </div>
     </div>
 
-    <!-- JavaScript for modal and form handling -->
     <script>
         // Function to open modal
         function openModal() {
+            console.log('Opening modal...');
             document.getElementById('staffModal').style.display = 'block';
             populateDepartments(); // Populate departments when modal opens
         }
-
+    
         // Function to close modal
         function closeModal() {
+            console.log('Closing modal...');
             document.getElementById('staffModal').style.display = 'none';
         }
-
+    
         // Function to populate the departments dropdown
         function populateDepartments() {
-            const departmentSelect = document.getElementById('department');
-            departmentSelect.innerHTML = ''; // Clear existing options
-
-            // Add a default option
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.text = 'Select Department';
-            departmentSelect.add(defaultOption);
-
-            const departments = <%- JSON.stringify(departments) %>; // Get departments from server-side
-
-            // Add department options
-            departments.forEach(department => {
-                const option = document.createElement('option');
-                option.value = department.departmentId;
-                option.text = department.deptName;
-                departmentSelect.add(option);
-            });
+            console.log('Fetching departments...');
+            fetch('/hr/api/departments')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(departments => {
+                    console.log('Departments fetched:', departments);
+                    const departmentSelect = document.getElementById('department');
+                    departmentSelect.innerHTML = ''; // Clear existing options
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.text = 'Select Department';
+                    departmentSelect.add(defaultOption);
+                    departments.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.departmentId;
+                        option.text = dept.deptName;
+                        departmentSelect.add(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching departments:', error);
+                });
         }
-
+    
         // Function to populate job titles based on selected department
         document.getElementById('department').addEventListener('change', async function() {
             const departmentId = this.value;
+            console.log('Selected department ID:', departmentId);
             const jobTitleSelect = document.getElementById('jobTitle');
             jobTitleSelect.innerHTML = ''; // Clear existing options
-
+    
             if (!departmentId) {
                 // Add a default option
                 const defaultOption = document.createElement('option');
@@ -246,55 +256,113 @@
                 jobTitleSelect.add(defaultOption);
                 return;
             }
-
-            // Fetch job titles for the selected department
-            const response = await fetch(`/get-job-titles?departmentId=${departmentId}`);
-            const jobTitles = await response.json();
-
-            // Add job title options
-            jobTitles.forEach(jobTitle => {
-                const option = document.createElement('option');
-                option.value = jobTitle.jobpositionId;
-                option.text = jobTitle.jobTitle;
-                jobTitleSelect.add(option);
-            });
+    
+            try {
+                console.log('Fetching job titles for department ID:', departmentId);
+                // Fetch job titles for the selected department
+                const response = await fetch(`/hr/api/get-job-titles?departmentId=${departmentId}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const jobTitles = await response.json();
+                console.log('Job titles fetched:', jobTitles);
+    
+                // Add job titles to the dropdown
+                if (jobTitles.length === 0) {
+                    const noJobTitleOption = document.createElement('option');
+                    noJobTitleOption.value = '';
+                    noJobTitleOption.text = 'No Job Titles Available';
+                    jobTitleSelect.add(noJobTitleOption);
+                } else {
+                    jobTitles.forEach(job => {
+                        const option = document.createElement('option');
+                        option.value = job.jobTitleId;
+                        option.text = job.jobTitle;
+                        jobTitleSelect.add(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching job titles:', error);
+            }
         });
-
-        // Function to handle password option changes
+    
+        // Function to generate random password
+        function generateRandomPassword() {
+            const password = Math.random().toString(36).slice(-8); // Simple random password generation
+            console.log('Generated random password:', password);
+            document.getElementById('generatedPassword').value = password;
+        }
+    
+        // Function to copy generated password to clipboard
+        function copyGeneratedPassword() {
+            const generatedPasswordField = document.getElementById('generatedPassword');
+            generatedPasswordField.select();
+            document.execCommand('copy');
+            console.log('Copied generated password to clipboard.');
+        }
+    
+        // Function to copy password to clipboard
+        function copyPassword(button) {
+            const password = button.getAttribute('data-password');
+            console.log('Copying password:', password);
+            navigator.clipboard.writeText(password).then(() => {
+                alert('Password copied to clipboard!');
+            });
+        }
+    
+        // Function to toggle password fields based on selected option
         function togglePasswordFields() {
             const passwordOption = document.getElementById('passwordOption').value;
             const customPasswordField = document.getElementById('customPassword');
             const generatedPasswordField = document.getElementById('generatedPassword');
-
+            const passwordFields = document.getElementById('passwordFields');
+    
+            console.log('Selected password option:', passwordOption);
+    
             if (passwordOption === 'custom') {
-                customPasswordField.disabled = false;
-                generatedPasswordField.disabled = true;
-            } else if (passwordOption === 'random') {
-                customPasswordField.disabled = true;
-                generatedPasswordField.disabled = false;
+                customPasswordField.style.display = 'block';
+                generatedPasswordField.style.display = 'none';
+            } else {
+                customPasswordField.style.display = 'none';
+                generatedPasswordField.style.display = 'block';
+                generateRandomPassword(); // Generate a password if option is random
             }
         }
-
-        // Function to generate random password
-        function generateRandomPassword() {
-            const randomPassword = Math.random().toString(36).slice(-8);
-            document.getElementById('generatedPassword').value = randomPassword;
-        }
-
-        // Function to copy generated password
-        function copyGeneratedPassword() {
-            const generatedPassword = document.getElementById('generatedPassword');
-            generatedPassword.select();
-            document.execCommand('copy');
-        }
-
-        // Function to copy password for staff
-        function copyPassword(button) {
-            const password = button.getAttribute('data-password');
-            navigator.clipboard.writeText(password).then(() => {
-                alert('Password copied to clipboard');
+    
+        // Form submission handler
+        document.getElementById('newStaffForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+    
+            console.log('Form submitted. Collecting data...');
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            console.log('Form data:', data);
+    
+            fetch('/hr/api/add-staff', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('Staff added successfully:', result);
+                closeModal();
+                location.reload(); // Reload page to update staff list
+            })
+            .catch(error => {
+                console.error('Error adding staff:', error);
             });
-        }
+        });
     </script>
+    
 </body>
 </html>
+
+

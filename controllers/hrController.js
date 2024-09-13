@@ -74,6 +74,34 @@ const hrController = {
         }
     },
 
+    getDepartments: async function(req, res) {
+        try {
+            const { data: departments, error: deptError } = await supabase
+                .from('departments')
+                .select('departmentId, deptName');
+            if (deptError) throw deptError;
+            res.json(departments);
+        } catch (error) {
+            console.error('Error fetching departments:', error);
+            res.status(500).json({ error: 'Error fetching departments' });
+        }
+    },
+      
+    getJobTitles: async function(req, res) {
+        const departmentId = req.query.departmentId;
+        try {
+            const { data: jobTitles, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobId, jobTitle')
+                .eq('departmentId', departmentId);
+            if (jobError) throw jobError;
+            res.json(jobTitles);
+        } catch (error) {
+            console.error('Error fetching job titles:', error);
+            res.status(500).json({ error: 'Error fetching job titles' });
+        }
+    },
+
     getAddStaffForm: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
@@ -82,13 +110,13 @@ const hrController = {
                     .from('departments')
                     .select('departmentId, deptName');
                 if (deptError) throw deptError;
-    
+
                 // Fetch job positions and include the related departmentId
                 const { data: jobPositions, error: jobError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle, departmentId');
                 if (jobError) throw jobError;
-    
+
                 // Organize job positions by department for easier access in the frontend
                 const jobPositionsByDept = {};
                 departments.forEach(dept => {
@@ -96,7 +124,7 @@ const hrController = {
                         job => job.departmentId === dept.departmentId
                     );
                 });
-    
+
                 // Pass departments and job positions data to the form view
                 res.render('staffpages/hr_pages/addstaff', { 
                     departments, 
@@ -113,7 +141,6 @@ const hrController = {
         }
     },
     
-
     addNewStaff: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;
@@ -171,4 +198,3 @@ const hrController = {
 };
 
 module.exports = hrController;
-
