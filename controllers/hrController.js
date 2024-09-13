@@ -74,25 +74,34 @@ const hrController = {
         }
     },
 
-    getAddStaffForm: async function(req, res) {
+    getAddStaffForm: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                // Fetch departments and job positions
+                // Fetch departments
                 const { data: departments, error: deptError } = await supabase
                     .from('departments')
                     .select('departmentId, deptName');
                 if (deptError) throw deptError;
-
+    
+                // Fetch job positions and include the related departmentId
                 const { data: jobPositions, error: jobError } = await supabase
                     .from('jobpositions')
-                    .select('jobId, jobTitle')
-                    .eq('departmentId, departmentId');
-
-                    //TODO: Fix populate of jobTitle
+                    .select('jobId, jobTitle, departmentId');
                 if (jobError) throw jobError;
-
-                // Pass data to the form view
-                res.render('staffpages/hr_pages/addstaff', { departments, jobPositions });
+    
+                // Organize job positions by department for easier access in the frontend
+                const jobPositionsByDept = {};
+                departments.forEach(dept => {
+                    jobPositionsByDept[dept.departmentId] = jobPositions.filter(
+                        job => job.departmentId === dept.departmentId
+                    );
+                });
+    
+                // Pass departments and job positions data to the form view
+                res.render('staffpages/hr_pages/addstaff', { 
+                    departments, 
+                    jobPositionsByDept // Sending structured job positions
+                });
             } catch (error) {
                 console.error('Error fetching data for Add Staff form:', error);
                 req.flash('errors', { fetchError: 'Failed to load form data. Please try again.' });
@@ -103,6 +112,7 @@ const hrController = {
             res.redirect('/login/staff');
         }
     },
+    
 
     addNewStaff: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
