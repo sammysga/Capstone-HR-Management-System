@@ -13,7 +13,10 @@
     <section class="announcements">
         <h2>ANNOUNCEMENTS</h2>
         <div class="announcement-content">
-            <p>Stay tuned for updates about upcoming projects and initiatives!</p>
+            <!-- Loop through the announcements passed from the controller -->
+            <% announcements.forEach(function(announcement) { %>
+                <p><%= announcement %></p>
+            <% }) %>
         </div>
     </section>
 
