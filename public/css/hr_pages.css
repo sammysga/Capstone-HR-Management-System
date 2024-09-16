@@ -22,7 +22,6 @@
 }
 
 /* Manage Announcements CSS */
-
 .announcements-container {
     font-family: 'Inter', sans-serif;
     margin-top: 20px;
@@ -98,4 +97,105 @@
 
 .add-new-btn:hover {
     background-color: #34caca; 
+}
+
+/* Add an Announcement */
+.add-announcement {
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+}
+
+.back-button {
+    font-size: 17px;
+    color: #b4b9b9;
+    text-decoration: none;
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.announcement-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.announcement-form input[type="text"],
+.announcement-form textarea {
+    border: 1px solid #E9EAEC;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+.announcement-form input[type="text"]::placeholder,
+.announcement-form textarea::placeholder {
+    color: #B8BDC5;
+}
+
+.announcement-form textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.announcement-form input[type="file"] {
+    padding: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.announcement-form textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.submit-btn {
+    background-color: #124A5C;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.submit-btn:hover {
+    background-color: #0d3c4a;
+}
+
+/*sample*/
+/* File Input Styling */
+.file-input-container {
+    position: relative;
+}
+
+.file-input {
+    display: none; /* Hide the default file input */
+}
+
+.custom-file-label {
+    display: inline-flex;
+    align-items: center;
+    background-color: #07ACB9;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.file-label-text {
+    margin-right: 10px;
+}
+
+.file-label-icon {
+    font-size: 20px;
+    color: white;
+}
+
+.custom-file-label:hover {
+    background-color: #059ca4;
 }
