@@ -9,6 +9,9 @@ const applicantController = {
     getPublicSignUp: function(req, res) {
         res.render('publicsignup', { errors: {} }); 
     },
+    getApplicantHome: function(req, res) {
+        res.render('home', { errors: {} }); 
+    },
 
     handleRegisterPage: async function(req, res) {
         console.log('Handling registration request...');
