@@ -16,7 +16,7 @@ router.get('/applicant_signup', applicantController.getPublicSignUp);
 router.post('/applicant_signup_submit', applicantController.handleRegisterPage);
 router.get('/login/staff', staffLoginController.getStaffLogin);
 router.post('/login/staff', staffLoginController.postStaffLogin);
-router.get('/views/staffpages/applicant_pages/home', applicantController.getApplicantHome);
+router.get('/applicant_home', applicantController.getApplicantHome);
 
 
 // Protected routes (role-specific logic in respective controllers)
