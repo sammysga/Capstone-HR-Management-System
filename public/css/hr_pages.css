@@ -27,6 +27,13 @@
     font-family: 'Inter', sans-serif;
     margin-top: 20px;
 }
+
+.manage-announcements-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .announcement-box {
     border: none;
     border-radius: 15px;
@@ -70,4 +77,25 @@
 .announcement-details {
     font-size: 0.9em;
     color: #888;
+}
+
+.add-new-btn {
+    background-color: #07ACB9;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.add-new-btn::before {
+    content: "+";
+    margin-right: 10px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.add-new-btn:hover {
+    background-color: #34caca; 
 }
