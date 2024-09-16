@@ -10,7 +10,7 @@ const applicantController = {
         res.render('publicsignup', { errors: {} }); 
     },
     getApplicantHome: function(req, res) {
-        res.render('home', { errors: {} }); 
+        res.render('applicanthome', { errors: {} }); 
     },
 
     handleRegisterPage: async function(req, res) {
