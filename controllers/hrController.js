@@ -21,6 +21,32 @@ const hrController = {
         }
     },
 
+    getAddAnnouncement: function(req, res){
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/hraddannouncement');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/login/staff');
+        }
+    },
+
+    // POST code for submitting an announcement
+    /*
+    postAddAnnouncement: function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            const { subject, image, shortAnnouncement } = req.body;
+            try {
+                // Form submission code insert here (save the announcement to DB)
+                
+                // Put alert that announcement was successfully or not added:
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/login/staff');
+        }
+    }
+    */
+
     getHRManageStaff: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {

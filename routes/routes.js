@@ -22,8 +22,8 @@ router.get('/hr/dashboard', hrController.getHRDashboard);
 router.get('/hr/managestaff', hrController.getHRManageStaff);
 router.get('/hr/api/departments', hrController.getDepartments);
 router.get('/hr/api/get-job-titles', hrController.getJobTitles);
-router.get('/hr/managehome', hrController.getHRManageHome);
-
+router.get('/hr/managehome', hrController.getHRManageHome); //not working on my end
+router.get('/hr/addannouncement', hrController.getAddAnnouncement); //not working on my end
 
 
 
