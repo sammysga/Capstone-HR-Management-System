@@ -162,14 +162,12 @@
     background-color: #0d3c4a;
 }
 
-/*sample*/
-/* File Input Styling */
 .file-input-container {
     position: relative;
 }
 
 .file-input {
-    display: none; /* Hide the default file input */
+    display: none; 
 }
 
 .custom-file-label {
@@ -198,4 +196,142 @@
 
 .custom-file-label:hover {
     background-color: #059ca4;
+}
+
+
+/* Manage Job Offers */
+.manage-job-offers {
+    margin-top: 20px;
+}
+
+.manage-job-offers .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.manage-job-offers .heading {
+    font-size: 24px;
+    margin: 0;
+}
+
+.heading-filter {
+    display: flex;
+    align-items: center;
+}
+
+.filter-btn {
+    background-color: #d3d3d3; 
+    border-radius: 6px; 
+    margin-left: 10px;
+}
+
+.add-job-btn {
+    background-color: #07ACB9;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.add-job-btn:hover {
+    background-color: #059ca4;
+}
+
+.filter-btn {
+    background-color: #d3d3d3; 
+}
+
+.filter-btn:hover {
+    background-color: #b0b0b0;
+}
+
+.job-offers-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.job-offer-box {
+    border: none;
+    border-radius: 15px;
+    padding: 15px;
+    width: calc(50% - 20px); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Drop shadow instead of border */
+}
+
+.job-offer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.job-offer-header strong {
+    font-size: 18px;
+}
+
+.status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.status.active {
+    background-color: #00b894;
+    color: white;
+}
+
+.status.inactive {
+    background-color: #bdc3c7;
+    color: white;
+}
+
+.edit-btn {
+    background-color: rgba(101, 112, 129, 0.1);
+    color: #657081;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.job-offer-details {
+    margin-top: 10px;
+}
+
+.department {
+    font-size: 14px;
+    color: #888;
+}
+
+.job-type {
+    margin-top: 10px;
+}
+
+.type {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.onsite {
+    background-color: #bdc3c7;
+    color: #333;
+}
+
+.full-time {
+    background-color: #bdc3c7;
+    color: #333;
+}
+
+.job-offer-description p {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #555;
 }
