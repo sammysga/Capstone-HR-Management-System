@@ -14,18 +14,18 @@ const applicantController = {
         res.render('about', { errors: {} }); 
     },
 
-     // Function to render the About Us page with announcements
-     getAboutPage: function(req, res) {
-        // Sample announcements data (replace with dynamic data if available)
-        const announcements = [
-            "New sustainability initiative launching next month!",
-            "Annual company meeting scheduled for next week.",
-            "Prime Infra wins infrastructure award for 2024."
-        ];
+    //  // Function to render the About Us page with announcements
+    //  getAboutPage: function(req, res) {
+    //     // Sample announcements data (replace with dynamic data if available)
+    //     const announcements = [
+    //         "New sustainability initiative launching next month!",
+    //         "Annual company meeting scheduled for next week.",
+    //         "Prime Infra wins infrastructure award for 2024."
+    //     ];
 
-        // Render the about page and pass the announcements data
-        res.render('about', { announcements });
-    },
+    //     // Render the about page and pass the announcements data
+    //     res.render('about', { announcements });
+    // },
     
     handleRegisterPage: async function(req, res) {
         console.log('Handling registration request...');
