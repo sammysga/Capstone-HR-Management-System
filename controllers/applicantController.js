@@ -10,22 +10,17 @@ const applicantController = {
         res.render('publicsignup', { errors: {} }); 
     },
 
-    getAbout: function(req, res) {
-        res.render('about', { errors: {} }); 
+    getAboutPage: async function(req, res) {
+        // Sample announcements data (replace with dynamic data if available)
+        const announcements = [
+            "New sustainability initiative launching next month!",
+            "Annual company meeting scheduled for next week.",
+            "Prime Infra wins infrastructure award for 2024."
+        ];
+
+        // Render the about page and pass the announcements data
+        res.render('about', { announcements });
     },
-
-    //  // Function to render the About Us page with announcements
-    //  getAboutPage: function(req, res) {
-    //     // Sample announcements data (replace with dynamic data if available)
-    //     const announcements = [
-    //         "New sustainability initiative launching next month!",
-    //         "Annual company meeting scheduled for next week.",
-    //         "Prime Infra wins infrastructure award for 2024."
-    //     ];
-
-    //     // Render the about page and pass the announcements data
-    //     res.render('about', { announcements });
-    // },
     
     handleRegisterPage: async function(req, res) {
         console.log('Handling registration request...');
