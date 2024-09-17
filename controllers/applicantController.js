@@ -11,7 +11,7 @@ const applicantController = {
     },
 
      // Function to render the About Us page with announcements
-     getAboutPage: async function(req, res) {
+     getAboutPage: function(req, res) {
         // Sample announcements data (replace with dynamic data if available)
         const announcements = [
             "New sustainability initiative launching next month!",
