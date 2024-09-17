@@ -4,19 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About the Company - Prime Infra</title>
-    
+    <link rel="stylesheet" href="/css/publicapplicant.css">
     <style>
-        .announcement-box {
-            border: 2px solid #ccc; /* Adds a border around the box */
-            padding: 15px; /* Adds spacing inside the box */
-            background-color: #f9f9f9; /* Light background color for the box */
-            margin-top: 10px; /* Adds some space between the heading and the box */
+        /* Style for announcements */
+        .announcements {
+            background-color: #f9f9f9;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .announcements h2 {
+            font-size: 2em;
+            color: #333;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .announcement-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         .announcement-content p {
-            font-size: 16px; /* Adjust the size of the announcement text */
-            margin-bottom: 10px; /* Adds space between each announcement */
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1.1em;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
+        .announcement-content p:before {
+            content: "📢";
+            margin-right: 8px;
+        }
+
+        .announcement-content p.no-announcement {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
+
     </style>
 </head>
 <body>
@@ -25,17 +57,15 @@
     <!-- Announcements Window -->
     <section class="announcements">
         <h2>ANNOUNCEMENTS</h2>
-        <div class="announcement-box">
-            <div class="announcement-content">
-                <!-- Loop through the announcements passed from the controller -->
-                <% if (announcements && announcements.length > 0) { %>
-                    <% announcements.forEach(function(announcement) { %>
-                        <p><%= announcement %></p>
-                    <% }) %>
-                <% } else { %>
-                    <p>No announcements at the moment.</p>
-                <% } %>
-            </div>
+        <div class="announcement-content">
+            <!-- Loop through the announcements passed from the controller -->
+            <% if (announcements && announcements.length > 0) { %>
+                <% announcements.forEach(function(announcement) { %>
+                    <p><%= announcement %></p>
+                <% }) %>
+            <% } else { %>
+                <p class="no-announcement">No announcements at the moment.</p>
+            <% } %>
         </div>
     </section>
 
