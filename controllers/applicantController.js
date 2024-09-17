@@ -10,6 +10,10 @@ const applicantController = {
         res.render('publicsignup', { errors: {} }); 
     },
 
+    getAbout: function(req, res) {
+        res.render('about', { errors: {} }); 
+    },
+
      // Function to render the About Us page with announcements
      getAboutPage: function(req, res) {
         // Sample announcements data (replace with dynamic data if available)
