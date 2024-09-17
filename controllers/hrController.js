@@ -47,6 +47,15 @@ const hrController = {
     }
     */
 
+    getJobOffers: function(req, res){
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/hrjoboffers');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/login/staff');
+        }
+    },
+
     getHRManageStaff: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
