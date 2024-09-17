@@ -19,7 +19,7 @@ const applicantController = {
         ];
 
         // Render the about page and pass the announcements data
-        res.render('about', { announcements });
+        res.render('/applicant_pages/about', { announcements });
     },
     
     handleRegisterPage: async function(req, res) {
