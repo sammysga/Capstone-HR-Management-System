@@ -30,22 +30,32 @@ const hrController = {
         }
     },
 
-    // POST code for submitting an announcement
-    /*
-    postAddAnnouncement: function(req, res) {
+    postAddAnnouncement: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             const { subject, image, shortAnnouncement } = req.body;
             try {
-                // Form submission code insert here (save the announcement to DB)
-                
-                // Put alert that announcement was successfully or not added:
+                const { data, error } = await supabase
+                    .from('announcements')
+                    .insert([{
+                        subject,
+                        imageUrl,
+                        content,
+                    }])
+                    .single();
+
+                    // indicates if success
+                    req.flash('success', 'Announcement added successfully.')
+                    res.redirect('hr/managehome');
+            } catch (error) {
+                console.error('Error adding announcement', error);
+                req.flash('errors', { dbError: 'Failed to add announcement. Please try again' });
+                res.redirect('hr/managehome');
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/login/staff');
         }
-    }
-    */
+    },
 
     getJobOffers: function(req, res){
         if (req.session.user && req.session.user.userRole === 'HR') {

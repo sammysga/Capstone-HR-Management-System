@@ -16,14 +16,14 @@
                 <a href="/" class="back-button">&#9664 Back</a>
                 <h2 class="heading" style="color:#07ACB9;">Add an Announcement</h2>
             </div>
-            <form action="/" method="post" class="announcement-form">
-                <input type="text" id="subject" name="subject" placeholder="Subject">
+            <form action="/hr/addannouncement" method="post" class="announcement-form" enctype="multipart/form-data">
+                <input type="text" id="subject" name="subject" placeholder="Subject" required>
 
                 <div class="file-input-container">
-                    <input type="file" id="image" name="image" class="file-input">
+                    <input type="file" id="image" name="image">
                 </div>
 
-                <textarea id="short-announcement" name="short-announcement" placeholder="Short Announcement"></textarea>
+                <textarea id="content" name="content" placeholder="Announcement Content" required></textarea>
 
                 <button type="submit" class="submit-btn">Submit</button>
             </form>
@@ -60,4 +60,3 @@
     </script>
 </body>
 </html>
-
