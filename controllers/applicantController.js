@@ -21,6 +21,15 @@ const applicantController = {
         // Render the about page and pass the announcements data
         res.render('applicant_pages/about', { announcements });
     },
+
+    getJobRecruitment: async function(req, res) {
+        res.render('applicant_pages/jobrecruitment', { errors: {} }); 
+    },
+
+    getContactForm: async function(req, res) {
+        res.render('applicant_pages/contactform', { errors: {} }); 
+    },
+
     
     handleRegisterPage: async function(req, res) {
         console.log('Handling registration request...');
