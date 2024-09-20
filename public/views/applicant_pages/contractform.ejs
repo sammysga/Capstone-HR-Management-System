@@ -3,10 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About the Company - Prime Infra</title>
+    <title>Contact Us - Prime Infra</title>
     <link rel="stylesheet" href="/css/publicapplicant.css">
+    <style>
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .contact-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-group textarea {
+            height: 150px;
+            resize: vertical;
+        }
+
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+
+        .form-error {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
 </head>
 <body>
     <%- include('../partials/publicheader') %>
+
+    <section class="contact-form">
+        <h2>Contact Us</h2>
+        <form action="/contact" method="POST">
+            <div class="form-group">
+                <label for="inquiry">Inquiry</label>
+                <select name="inquiry" id="inquiry" required>
+                    <option value="">Select Inquiry</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="support">Support</option>
+                    <option value="feedback">Feedback</option>
+                </select>
+                <% if (errors.inquiry) { %><p class="form-error"><%= errors.inquiry %></p><% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" name="lastName" id="lastName" required>
+                <% if (errors.lastName) { %><p class="form-error"><%= errors.lastName %></p><% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" name="firstName" id="firstName" required>
+                <% if (errors.firstName) { %><p class="form-error"><%= errors.firstName %></p><% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" name="email" id="email" required>
+                <% if (errors.email) { %><p class="form-error"><%= errors.email %></p><% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <input type="text" name="subject" id="subject" required>
+                <% if (errors.subject) { %><p class="form-error"><%= errors.subject %></p><% } %>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea name="message" id="message" required></textarea>
+                <% if (errors.message) { %><p class="form-error"><%= errors.message %></p><% } %>
+            </div>
+
+            <div class="form-group">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    </section>
+
 </body>
 </html>

@@ -57,9 +57,42 @@ const applicantController = {
         // Pass the active job offers to the jobrecruitment EJS page
         res.render('applicant_pages/jobrecruitment', { jobOffers: activeJobOffers, errors: {} });
     },
+
     
     getContactForm: async function(req, res) {
         res.render('applicant_pages/contactform', { errors: {} }); 
+    },
+
+    handleContactSubmit: async function(req, res) {
+        const { inquiry, lastName, firstName, email, subject, message } = req.body;
+
+        const errors = {};
+
+        // Basic validation (you can enhance this as needed)
+        if (!inquiry) errors.inquiry = 'Inquiry type is required';
+        if (!lastName) errors.lastName = 'Last name is required';
+        if (!firstName) errors.firstName = 'First name is required';
+        if (!email) {
+            errors.email = 'Email address is required';
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errors.email = 'Invalid email format';
+            }
+        }
+        if (!subject) errors.subject = 'Subject is required';
+        if (!message) errors.message = 'Message is required';
+
+        // If there are validation errors, re-render the form with error messages
+        if (Object.keys(errors).length > 0) {
+            return res.status(400).render('applicant_pages/contactform', { errors });
+        }
+
+        // Here you would typically save the data or send an email
+        // Example: Sending email logic or saving to database (not shown here)
+
+        // On successful submission, redirect to a success page or show a message
+        res.redirect('/contact-success');
     },
 
     
@@ -144,8 +177,7 @@ const applicantController = {
     
         // Redirect to the login page upon successful registration
         res.redirect('/login');
-    }
-    ,
+    },
 
     handleLoginSubmit: async function (req, res) {
         const { email, password } = req.body;
