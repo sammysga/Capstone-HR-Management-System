@@ -26,6 +26,9 @@ router.get('/hr/dashboard', hrController.getHRDashboard);
 router.get('/hr/managestaff', hrController.getHRManageStaff);
 router.get('/hr/api/departments', hrController.getDepartments);
 router.get('/hr/api/get-job-titles', hrController.getJobTitles);
+router.post('/hr/api/departments', hrController.addNewDepartment);
+router.post('/hr/api/job-titles', hrController.addNewJobTitle);
+
 router.get('/hr/managehome', hrController.getHRManageHome); 
 router.get('/hr/addannouncement', hrController.getAddAnnouncement);
 router.post('/hr/addannouncement', hrController.postAddAnnouncement);
