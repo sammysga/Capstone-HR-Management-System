@@ -163,11 +163,13 @@
     </div>
 
    <!-- Modal for adding new staff -->
+<!-- Modal for adding new staff -->
 <div id="staffModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
         <h2>Add New Staff</h2>
         <form id="newStaffForm">
+            <!-- Form fields here -->
             <label for="lastName">Last Name:</label>
             <input type="text" id="lastName" name="lastName" required><br>
             <label for="firstName">First Name:</label>
@@ -204,10 +206,11 @@
                 <button type="button" onclick="copyGeneratedPassword()">Copy</button><br>
             </div>
 
-            <button type="submit">Save</button>
+            <button type="submit" style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Record New Staff</button>
         </form>
     </div>
 </div>
+
 
 
     <!-- jQuery and Bootstrap JS -->
@@ -270,172 +273,178 @@
         }
     
         // Populate departments dropdown
-async function populateDepartments() {
-    try {
-        console.log('Fetching departments...');
-        const response = await fetch('/hr/api/departments');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const departments = await response.json();
-        console.log('Departments fetched:', departments);
-        const departmentSelect = document.getElementById('department');
-        departmentSelect.innerHTML = ''; // Clear existing options
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.text = 'Select Department';
-        departmentSelect.appendChild(defaultOption);
-
-        departments.forEach(dept => {
-            const option = document.createElement('option');
-            option.value = dept.departmentId;
-            option.text = dept.deptName;
-            departmentSelect.appendChild(option);
-        });
-
-        // Add "Add New" option
-        const addNewOption = document.createElement('option');
-        addNewOption.value = 'add-new';
-        addNewOption.text = 'Add New Department';
-        departmentSelect.appendChild(addNewOption);
-
-        $('#department').selectpicker('refresh');
-    } catch (error) {
-        console.error('Error fetching departments:', error);
-    }
-}
-
-// Populate job titles dropdown
-
-async function populateJobTitles(departmentId) {
-    try {
-        console.log('Fetching job titles for department ID:', departmentId);
-        const response = await fetch(`/hr/api/get-job-titles?departmentId=${departmentId}`);
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Network response was not ok: ${response.status} ${errorText}`);
-        }
-        const jobTitles = await response.json();
-        console.log('Job titles fetched:', jobTitles);
-
-        const jobTitleSelect = document.getElementById('jobTitle');
-        jobTitleSelect.innerHTML = ''; // Clear existing options
-
-        if (jobTitles.length === 0) {
-            const noJobTitleOption = document.createElement('option');
-            noJobTitleOption.value = '';
-            noJobTitleOption.text = 'No Job Titles Available';
-            jobTitleSelect.appendChild(noJobTitleOption);
-        } else {
-            jobTitles.forEach(job => {
-                const option = document.createElement('option');
-                option.value = job.jobTitleId;
-                option.text = job.jobTitle;
-                jobTitleSelect.appendChild(option);
-            });
-        }
-
-        // Add "Add New" option
-        const addNewOption = document.createElement('option');
-        addNewOption.value = 'add-new';
-        addNewOption.text = 'Add New Job Title';
-        jobTitleSelect.appendChild(addNewOption);
-
-        $('#jobTitle').selectpicker('refresh');
-    } catch (error) {
-        console.error('Error fetching job titles:', error);
-    }
-}
-
-
-// Event listener for department dropdown
-document.getElementById('department').addEventListener('change', async function() {
-    const departmentId = this.value;
-    console.log('Selected department ID:', departmentId);
-    const jobTitleSelect = document.getElementById('jobTitle');
-    jobTitleSelect.innerHTML = ''; // Clear existing options
-
-    if (departmentId === 'add-new') {
-        // Prompt user to add a new department
-        const newDepartmentName = prompt('Enter the new department name:');
-        if (newDepartmentName) {
+        async function populateDepartments() {
             try {
-                const response = await fetch('/hr/api/departments', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ deptName: newDepartmentName })
-                });
+                console.log('Fetching departments...');
+                const response = await fetch('/hr/api/departments');
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-                const newDepartment = await response.json();
-                console.log('New department added:', newDepartment);
-                populateDepartments(); // Refresh departments dropdown
+                const departments = await response.json();
+                console.log('Departments fetched:', departments);
+                const departmentSelect = document.getElementById('department');
+                departmentSelect.innerHTML = ''; // Clear existing options
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.text = 'Select Department';
+                departmentSelect.appendChild(defaultOption);
+    
+                departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.departmentId;
+                    option.text = dept.deptName;
+                    departmentSelect.appendChild(option);
+                });
+    
+                // Add "Add New" option
+                const addNewOption = document.createElement('option');
+                addNewOption.value = 'add-new';
+                addNewOption.text = 'Add New Department';
+                departmentSelect.appendChild(addNewOption);
+    
+                $('#department').selectpicker('refresh');
             } catch (error) {
-                console.error('Error adding new department:', error);
+                console.error('Error fetching departments:', error);
             }
         }
-        return;
-    }
-
-    if (!departmentId) {
-        // Add a default option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.text = 'Select Job Title';
-        jobTitleSelect.appendChild(defaultOption);
-        return;
-    }
-
-    await populateJobTitles(departmentId);
-});
-
-// Event listener for job title dropdown
-document.getElementById('jobTitle').addEventListener('change', async function() {
-    const jobTitleId = this.value;
-    if (jobTitleId === 'add-new') {
-        const departmentId = document.getElementById('department').value;
-        if (!departmentId || departmentId === 'add-new') {
-            alert('Please select a department first.');
-            return;
-        }
-        const newJobTitle = prompt('Enter the new job title:');
-        if (newJobTitle) {
+    
+        // Populate job titles dropdown
+        async function populateJobTitles(departmentId) {
             try {
-                const response = await fetch('/hr/api/job-titles', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ departmentId,  jobTitle: newJobTitle })
-                });
+                console.log('Fetching job titles for department ID:', departmentId);
+                const response = await fetch(`/hr/api/get-job-titles?departmentId=${departmentId}`);
                 if (!response.ok) {
                     const errorText = await response.text();
                     throw new Error(`Network response was not ok: ${response.status} ${errorText}`);
                 }
-                const newJob = await response.json();
-                console.log('New job title added:', newJob);
-
-                // Refresh the job titles dropdown
-                await populateJobTitles(departmentId);
+                const jobTitles = await response.json();
+                console.log('Job titles fetched:', jobTitles);
+    
+                const jobTitleSelect = document.getElementById('jobTitle');
+                jobTitleSelect.innerHTML = ''; // Clear existing options
+    
+                if (jobTitles.length === 0) {
+                    const noJobTitleOption = document.createElement('option');
+                    noJobTitleOption.value = '';
+                    noJobTitleOption.text = 'No Job Titles Available';
+                    jobTitleSelect.appendChild(noJobTitleOption);
+                } else {
+                    jobTitles.forEach(job => {
+                        const option = document.createElement('option');
+                        option.value = job.jobTitleId;
+                        option.text = job.jobTitle;
+                        jobTitleSelect.appendChild(option);
+                    });
+                }
+    
+                // Add "Add New" option
+                const addNewOption = document.createElement('option');
+                addNewOption.value = 'add-new';
+                addNewOption.text = 'Add New Job Title';
+                jobTitleSelect.appendChild(addNewOption);
+    
+                $('#jobTitle').selectpicker('refresh');
             } catch (error) {
-                console.error('Error adding new job title:', error);
+                console.error('Error fetching job titles:', error);
             }
         }
+    
+        // Event listener for department dropdown
+        document.getElementById('department').addEventListener('change', async function() {
+            const departmentId = this.value;
+            console.log('Selected department ID:', departmentId);
+            const jobTitleSelect = document.getElementById('jobTitle');
+            jobTitleSelect.innerHTML = ''; // Clear existing options
+    
+            if (departmentId === 'add-new') {
+                // Prompt user to add a new department
+                const newDepartmentName = prompt('Enter the new department name:');
+                if (newDepartmentName) {
+                    try {
+                        const response = await fetch('/hr/api/departments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ deptName: newDepartmentName })
+                        });
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        const newDepartment = await response.json();
+                        console.log('New department added:', newDepartment);
+                        populateDepartments(); // Refresh departments dropdown
+                    } catch (error) {
+                        console.error('Error adding new department:', error);
+                    }
+                }
+                return;
+            }
+    
+            if (!departmentId) {
+                // Add a default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.text = 'Select Job Title';
+                jobTitleSelect.appendChild(defaultOption);
+                return;
+            }
+    
+            await populateJobTitles(departmentId);
+        });
+    
+      // Handle form submission
+document.getElementById('newStaffForm').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(this);
+    const data = {
+        lastName: formData.get('lastName'),
+        firstName: formData.get('firstName'),
+        email: formData.get('email'),
+        departmentId: formData.get('department'), // Ensure this matches your backend expectations
+        jobTitleId: formData.get('jobTitle'),     // Ensure this matches your backend expectations
+        role: formData.get('role'),
+        passwordOption: formData.get('passwordOption'),
+        customPassword: formData.get('customPassword'),
+        generatedPassword: formData.get('generatedPassword')
+    };
+
+    // Adjust password handling based on selection
+    if (data.passwordOption === 'random') {
+        data.password = data.generatedPassword;
+    } else {
+        data.password = data.customPassword;
+    }
+
+    console.log('Submitting data:', data);
+
+    try {
+        const response = await fetch('/hr/api/add-staff', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Network response was not ok: ${response.status} ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('New staff added:', result);
+
+        // Close the modal
+        closeModal();
+    } catch (error) {
+        console.error('Error adding new staff:', error);
     }
 });
 
-
-// Initialize the modal when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    const departmentSelect = document.getElementById('department');
-    const jobTitleSelect = document.getElementById('jobTitle');
-    $('#department').selectpicker();
-    $('#jobTitle').selectpicker();
-});
     </script>
+    
     
     
 </body>

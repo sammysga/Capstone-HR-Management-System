@@ -225,13 +225,17 @@ const hrController = {
     },
 
     addNewStaff: async function(req, res) {
+        // Check if the user is authenticated and has HR role
         if (req.session.user && req.session.user.userRole === 'HR') {
+            // Destructure the request body
             const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;
-
+    
             try {
+                // Determine which password to use and hash it
                 const password = passwordOption === 'custom' ? customPassword : generatedPassword;
                 const hashedPassword = await bcrypt.hash(password, 10);
-
+    
+                // Insert into useraccounts table
                 const { data: userData, error: userError } = await supabase
                     .from('useraccounts')
                     .insert([{
@@ -243,11 +247,12 @@ const hrController = {
                     }])
                     .select()
                     .single();
-
+    
                 if (userError) throw userError;
-
+    
                 const userId = userData.userId;
-
+    
+                // Insert into staffaccounts table
                 const { data: staffData, error: staffError } = await supabase
                     .from('staffaccounts')
                     .insert([{
@@ -259,18 +264,23 @@ const hrController = {
                     }])
                     .select()
                     .single();
-
+    
                 if (staffError) throw staffError;
-
+    
+                // Respond with success
                 res.status(200).json({ message: 'Staff added successfully.' });
+                console.log('Staff data:', staffData);
+
             } catch (error) {
                 console.error('Error adding staff:', error);
                 res.status(500).json({ error: 'Error adding staff. Please try again.' });
             }
         } else {
+            // Respond with unauthorized access error
             res.status(403).json({ error: 'Unauthorized access' });
         }
     },
+    
 };
 
 module.exports = hrController;
