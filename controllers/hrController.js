@@ -140,7 +140,7 @@ const hrController = {
             res.status(500).json({ error: 'Error fetching departments' });
         }
     },
-      
+
     getJobTitles: async function(req, res) {
         const departmentId = req.query.departmentId;
         try {
@@ -156,22 +156,52 @@ const hrController = {
         }
     },
 
+    // Add a new department on the select picker on add new staff form
+    addNewDepartment: async function(req, res) {
+        const { deptName } = req.body;  // Assuming department name is sent in the body of the request
+        try {
+            // Insert new department
+            const { data, error } = await supabase
+                .from('departments')
+                .insert([{ deptName }]); // Add department
+            if (error) throw error;
+            res.status(201).json({ message: 'New department added', department: data });
+        } catch (error) {
+            console.error('Error adding department:', error);
+            res.status(500).json({ error: 'Error adding department' });
+        }
+    },
+    
+    // Add a new job title on the select picker on add new staff form
+    addNewJobTitle: async function(req, res) {
+        const { jobTitle, departmentId } = req.body;  // Assuming jobTitle and departmentId are sent in the request body
+        try {
+            // Insert new job title
+            const { data, error } = await supabase
+                .from('jobpositions')
+                .insert([{ jobTitle, departmentId }]); // Add job title under specific department
+            if (error) throw error;
+            res.status(201).json({ message: 'New job title added', jobTitle: data });
+        } catch (error) {
+            console.error('Error adding job title:', error);
+            res.status(500).json({ error: 'Error adding job title' });
+        }
+    },
+
+    
     getAddStaffForm: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                // Fetch departments
                 const { data: departments, error: deptError } = await supabase
                     .from('departments')
                     .select('departmentId, deptName');
                 if (deptError) throw deptError;
 
-                // Fetch job positions and include the related departmentId
                 const { data: jobPositions, error: jobError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle, departmentId');
                 if (jobError) throw jobError;
 
-                // Organize job positions by department for easier access in the frontend
                 const jobPositionsByDept = {};
                 departments.forEach(dept => {
                     jobPositionsByDept[dept.departmentId] = jobPositions.filter(
@@ -179,10 +209,9 @@ const hrController = {
                     );
                 });
 
-                // Pass departments and job positions data to the form view
                 res.render('staffpages/hr_pages/addstaff', { 
                     departments, 
-                    jobPositionsByDept // Sending structured job positions
+                    jobPositionsByDept
                 });
             } catch (error) {
                 console.error('Error fetching data for Add Staff form:', error);
@@ -194,19 +223,15 @@ const hrController = {
             res.redirect('/login/staff');
         }
     },
-    
+
     addNewStaff: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;
 
             try {
-                // Determine password based on user selection
                 const password = passwordOption === 'custom' ? customPassword : generatedPassword;
-
-                // Hash the password
                 const hashedPassword = await bcrypt.hash(password, 10);
 
-                // Insert new user account
                 const { data: userData, error: userError } = await supabase
                     .from('useraccounts')
                     .insert([{
@@ -214,23 +239,21 @@ const hrController = {
                         userRole: role,
                         userIsDisabled: false,
                         userEmail: email,
-                        userStaffOgPass: password // Store the original password for reference
+                        userStaffOgPass: password
                     }])
                     .select()
                     .single();
 
                 if (userError) throw userError;
 
-                // Get the user ID
                 const userId = userData.userId;
 
-                // Insert new staff account details
                 const { data: staffData, error: staffError } = await supabase
                     .from('staffaccounts')
                     .insert([{
                         userId,
-                        departmentId, // Handle departmentId from form input
-                        jobId, // Handle jobId from form input
+                        departmentId,
+                        jobId,
                         lastName,
                         firstName
                     }])
@@ -242,11 +265,10 @@ const hrController = {
                 res.status(200).json({ message: 'Staff added successfully.' });
             } catch (error) {
                 console.error('Error adding staff:', error);
-                res.status(500).json({ error: 'Error adding staff' });
+                res.status(500).json({ error: 'Error adding staff. Please try again.' });
             }
         } else {
-            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/login/staff');
+            res.status(403).json({ error: 'Unauthorized access' });
         }
     },
 };

@@ -6,6 +6,13 @@
     <title>HR Manage Staff</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/hr_pages.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Bootstrap Select CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+
     <style>
         /* Existing CSS */
         .staff-table {
@@ -99,6 +106,11 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+        /* Custom styles for the select picker */
+        .bootstrap-select .dropdown-menu {
+            z-index: 1050; /* Ensure it stays above other elements */
+        }
     </style>
 </head>
 <body>
@@ -162,13 +174,13 @@
                 <input type="text" id="firstName" name="firstName" required><br>
                 <label for="email">Email:</label>
                 <input type="email" id="email" name="email" required><br>
-                <label for="department">Department:</label>
-                <select id="department" name="department" required>
-                    <!-- Options will be populated via JavaScript -->
+                <label for="department">Department: </label>
+                <select id="department" class="selectpicker" data-live-search="true">
+                    <option value="">Select Department</option>
                 </select><br>
-                <label for="jobTitle">Job Title:</label>
-                <select id="jobTitle" name="jobTitle" required>
-                    <!-- Options will be populated via JavaScript -->
+                <label for="jobTitle">Job Title</label>
+                <select id="jobTitle" class="selectpicker" data-live-search="true">
+                    <option value="">Select Job Title</option>
                 </select><br>
                 <label for="role">Role:</label>
                 <select id="role" name="role" required>
@@ -197,21 +209,66 @@
         </div>
     </div>
 
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
     <script>
-        // Function to open modal
+        // Open the modal and fetch departments
         function openModal() {
-            console.log('Opening modal...');
             document.getElementById('staffModal').style.display = 'block';
-            populateDepartments(); // Populate departments when modal opens
+            populateDepartments();
         }
     
-        // Function to close modal
+        // Close the modal
         function closeModal() {
-            console.log('Closing modal...');
             document.getElementById('staffModal').style.display = 'none';
         }
     
-        // Function to populate the departments dropdown
+        // Copy password to clipboard
+        function copyPassword(button) {
+            const password = button.getAttribute('data-password');
+            navigator.clipboard.writeText(password).then(() => {
+                alert('Password copied to clipboard');
+            }).catch(err => console.error('Failed to copy password:', err));
+        }
+    
+        // Generate a random password
+        function generateRandomPassword() {
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+            let password = "";
+            for (let i = 0; i < 12; i++) {
+                const randomIndex = Math.floor(Math.random() * charset.length);
+                password += charset[randomIndex];
+            }
+            document.getElementById('generatedPassword').value = password;
+        }
+    
+        // Copy the generated password to clipboard
+        function copyGeneratedPassword() {
+            const password = document.getElementById('generatedPassword').value;
+            navigator.clipboard.writeText(password).then(() => {
+                alert('Generated password copied to clipboard');
+            }).catch(err => console.error('Failed to copy generated password:', err));
+        }
+    
+        // Toggle password fields based on selection
+        function togglePasswordFields() {
+            const passwordOption = document.getElementById('passwordOption').value;
+            const customPasswordField = document.getElementById('customPassword');
+            const generatedPasswordField = document.getElementById('generatedPassword').parentNode;
+    
+            if (passwordOption === 'custom') {
+                customPasswordField.style.display = 'block';
+                generatedPasswordField.style.display = 'none';
+            } else if (passwordOption === 'random') {
+                customPasswordField.style.display = 'none';
+                generatedPasswordField.style.display = 'block';
+            }
+        }
+    
+        // Populate departments dropdown
         function populateDepartments() {
             console.log('Fetching departments...');
             fetch('/hr/api/departments')
@@ -228,38 +285,72 @@
                     const defaultOption = document.createElement('option');
                     defaultOption.value = '';
                     defaultOption.text = 'Select Department';
-                    departmentSelect.add(defaultOption);
+                    departmentSelect.appendChild(defaultOption);
+    
                     departments.forEach(dept => {
                         const option = document.createElement('option');
                         option.value = dept.departmentId;
                         option.text = dept.deptName;
-                        departmentSelect.add(option);
+                        departmentSelect.appendChild(option);
                     });
+    
+                    // Add "Add New" option
+                    const addNewOption = document.createElement('option');
+                    addNewOption.value = 'add-new';
+                    addNewOption.text = 'Add New Department';
+                    departmentSelect.appendChild(addNewOption);
+    
+                    // Reinitialize select picker
+                    $('#department').selectpicker('refresh');
                 })
                 .catch(error => {
                     console.error('Error fetching departments:', error);
                 });
         }
     
-        // Function to populate job titles based on selected department
+        // Event listener for department dropdown
         document.getElementById('department').addEventListener('change', async function() {
             const departmentId = this.value;
             console.log('Selected department ID:', departmentId);
             const jobTitleSelect = document.getElementById('jobTitle');
             jobTitleSelect.innerHTML = ''; // Clear existing options
     
+            if (departmentId === 'add-new') {
+                // Prompt user to add a new department
+                const newDepartmentName = prompt('Enter the new department name:');
+                if (newDepartmentName) {
+                    try {
+                        const response = await fetch('/hr/api/departments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ deptName: newDepartmentName })
+                        });
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        const newDepartment = await response.json();
+                        console.log('New department added:', newDepartment);
+                        populateDepartments(); // Refresh departments dropdown
+                    } catch (error) {
+                        console.error('Error adding new department:', error);
+                    }
+                }
+                return;
+            }
+    
             if (!departmentId) {
                 // Add a default option
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
                 defaultOption.text = 'Select Job Title';
-                jobTitleSelect.add(defaultOption);
+                jobTitleSelect.appendChild(defaultOption);
                 return;
             }
     
             try {
                 console.log('Fetching job titles for department ID:', departmentId);
-                // Fetch job titles for the selected department
                 const response = await fetch(`/hr/api/get-job-titles?departmentId=${departmentId}`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -267,98 +358,71 @@
                 const jobTitles = await response.json();
                 console.log('Job titles fetched:', jobTitles);
     
-                // Add job titles to the dropdown
                 if (jobTitles.length === 0) {
                     const noJobTitleOption = document.createElement('option');
                     noJobTitleOption.value = '';
                     noJobTitleOption.text = 'No Job Titles Available';
-                    jobTitleSelect.add(noJobTitleOption);
+                    jobTitleSelect.appendChild(noJobTitleOption);
                 } else {
                     jobTitles.forEach(job => {
                         const option = document.createElement('option');
                         option.value = job.jobTitleId;
                         option.text = job.jobTitle;
-                        jobTitleSelect.add(option);
+                        jobTitleSelect.appendChild(option);
                     });
                 }
+    
+                // Add "Add New" option
+                const addNewOption = document.createElement('option');
+                addNewOption.value = 'add-new';
+                addNewOption.text = 'Add New Job Title';
+                jobTitleSelect.appendChild(addNewOption);
+    
+                // Reinitialize select picker
+                $('#jobTitle').selectpicker('refresh');
             } catch (error) {
                 console.error('Error fetching job titles:', error);
             }
         });
     
-        // Function to generate random password
-        function generateRandomPassword() {
-            const password = Math.random().toString(36).slice(-8); // Simple random password generation
-            console.log('Generated random password:', password);
-            document.getElementById('generatedPassword').value = password;
-        }
-    
-        // Function to copy generated password to clipboard
-        function copyGeneratedPassword() {
-            const generatedPasswordField = document.getElementById('generatedPassword');
-            generatedPasswordField.select();
-            document.execCommand('copy');
-            console.log('Copied generated password to clipboard.');
-        }
-    
-        // Function to copy password to clipboard
-        function copyPassword(button) {
-            const password = button.getAttribute('data-password');
-            console.log('Copying password:', password);
-            navigator.clipboard.writeText(password).then(() => {
-                alert('Password copied to clipboard!');
-            });
-        }
-    
-        // Function to toggle password fields based on selected option
-        function togglePasswordFields() {
-            const passwordOption = document.getElementById('passwordOption').value;
-            const customPasswordField = document.getElementById('customPassword');
-            const generatedPasswordField = document.getElementById('generatedPassword');
-            const passwordFields = document.getElementById('passwordFields');
-    
-            console.log('Selected password option:', passwordOption);
-    
-            if (passwordOption === 'custom') {
-                customPasswordField.style.display = 'block';
-                generatedPasswordField.style.display = 'none';
-            } else {
-                customPasswordField.style.display = 'none';
-                generatedPasswordField.style.display = 'block';
-                generateRandomPassword(); // Generate a password if option is random
-            }
-        }
-    
-        // Form submission handler
-        document.getElementById('newStaffForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
-    
-            console.log('Form submitted. Collecting data...');
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-            console.log('Form data:', data);
-    
-            fetch('/hr/api/add-staff', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+        // Event listener for job title dropdown
+        document.getElementById('jobTitle').addEventListener('change', async function() {
+            const jobTitleId = this.value;
+            if (jobTitleId === 'add-new') {
+                const departmentId = document.getElementById('department').value;
+                if (!departmentId || departmentId === 'add-new') {
+                    alert('Please select a department first.');
+                    return;
                 }
-                return response.json();
-            })
-            .then(result => {
-                console.log('Staff added successfully:', result);
-                closeModal();
-                location.reload(); // Reload page to update staff list
-            })
-            .catch(error => {
-                console.error('Error adding staff:', error);
-            });
+                const newJobTitle = prompt('Enter the new job title:');
+                if (newJobTitle) {
+                    try {
+                        const response = await fetch(`/hr/api/departments/${departmentId}/job-titles`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ jobTitleName: newJobTitle })
+                        });
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        const newJob = await response.json();
+                        console.log('New job title added:', newJob);
+                        // Refresh job titles dropdown
+                        const jobTitleSelect = document.getElementById('jobTitle');
+                        jobTitleSelect.innerHTML = '';
+                        populateDepartments(); // Refresh departments dropdown to include new job title
+                    } catch (error) {
+                        console.error('Error adding new job title:', error);
+                    }
+                }
+            }
+        });
+    
+        // Initialize the select pickers
+        $(document).ready(function() {
+            $('.selectpicker').selectpicker();
         });
     </script>
     
