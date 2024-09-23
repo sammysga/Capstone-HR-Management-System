@@ -95,6 +95,9 @@ const applicantController = {
         res.redirect('/contact-success');
     },
 
+    getApplicantLogin: async function(req, res) {
+        res.render('applicant_pages/login', { errors: {} }); 
+    },
     
     handleRegisterPage: async function(req, res) {
         console.log('Handling registration request...');
