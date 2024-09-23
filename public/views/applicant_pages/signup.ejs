@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="/public/css/signup.css"> <!-- Add your own CSS path here -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('/images/prime_assets/banner-IR-1536x741.jpg'); /* Add your background image path here */
+            background-size: cover;
+            background-position: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .signup-container {
+            background-color: white;
+            padding: 20px;
+            width: 350px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .signup-container h2 {
+            margin-bottom: 20px;
+        }
+
+        .signup-container input[type="text"],
+        .signup-container input[type="email"],
+        .signup-container input[type="password"],
+        .signup-container input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .signup-container .form-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signup-container .form-row input[type="text"] {
+            width: 48%; /* Adjust width for fields in a row */
+        }
+
+        .signup-container button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+
+        .signup-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .signup-container .login-link {
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="signup-container">
+        <h2>Create Account</h2>
+        <form action="/signup" method="POST">
+            <input type="text" name="lastname" placeholder="Last Name" required>
+            <input type="text" name="firstname" placeholder="First Name" required>
+            
+            <div class="form-row">
+                <input type="text" name="middleinitial" placeholder="M.I." maxlength="1" required>
+                <input type="date" name="birthdate" placeholder="Birthdate" required>
+            </div>
+            
+            <input type="email" name="email" placeholder="Email Address" required>
+            <input type="password" name="password" id="password" placeholder="Set Password" required>
+            <input type="password" name="confirmpassword" id="confirmpassword" placeholder="Confirm Password" required>
+            
+            <button type="submit">Sign Up</button>
+        </form>
+        <div class="login-link">
+            Already have an account? <a href="/login">Login here</a>
+        </div>
+    </div>
+    
+</body>
+</html>

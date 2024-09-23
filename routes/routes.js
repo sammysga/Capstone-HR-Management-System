@@ -20,7 +20,7 @@ router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
 router.get('/applicantlogin', applicantController.getApplicantLogin);
-
+router.get('/applicantsignup', applicantController.getApplicantSignup);
 
 // Protected routes (role-specific logic in respective controllers)
 router.get('/hr/dashboard', hrController.getHRDashboard);

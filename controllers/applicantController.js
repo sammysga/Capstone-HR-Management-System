@@ -98,6 +98,10 @@ const applicantController = {
     getApplicantLogin: async function(req, res) {
         res.render('applicant_pages/login', { errors: {} }); 
     },
+
+    getApplicantSignup: async function(req, res) {
+        res.render('applicant_pages/signup', { errors: {} }); 
+    },
     
     handleRegisterPage: async function(req, res) {
         console.log('Handling registration request...');
