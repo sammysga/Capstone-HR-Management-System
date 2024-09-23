@@ -247,29 +247,53 @@ const hrController = {
     },
 
     addNewStaff: async function(req, res) {
-        // Check if the user is authenticated and has HR role
         if (req.session.user && req.session.user.userRole === 'HR') {
-            // Destructure the request body
-            const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;    
+            const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;
+    
+            console.log('Request Body:', req.body);
+            console.log('Password Option:', passwordsOption);
+            console.log('Custom Password:', customPassword);
+            console.log('Generated Password:', generatedPassword);
+    
             try {
-                // Determine which password to use and hash it
-                const password = passwordOption === 'custom' ? customPassword : generatedPassword;
+                // Handle password option
+                let password;
+                if (passwordOption === 'custom') {
+                    password = customPassword;
+                } else if (passwordOption === 'generated') {
+                    password = generatedPassword;
+                } else {
+                    throw new Error('Invalid password option');
+                }
+    
+                // Check if password is provided
+                if (!password) {
+                    throw new Error('Password is required');
+                }
+    
+                console.log('Password before hashing:', password);
+    
+                // Hash the password
                 const hashedPassword = await bcrypt.hash(password, 10);
+                console.log('Hashed Password:', hashedPassword);
     
                 // Insert into useraccounts table
                 const { data: userData, error: userError } = await supabase
                     .from('useraccounts')
                     .insert([{
-                        userPass: hashedPassword, 
+                        userPass: hashedPassword,
                         userRole: role,
                         userIsDisabled: false,
                         userEmail: email,
-                        userStaffOgPass: password
+                        userStaffOgPass: password // Store the actual password
                     }])
                     .select()
                     .single();
     
-                if (userError) throw userError;
+                if (userError) {
+                    console.error('User Insert Error:', userError);
+                    throw userError;
+                }
     
                 const userId = userData.userId;
     
@@ -278,29 +302,32 @@ const hrController = {
                     .from('staffaccounts')
                     .insert([{
                         userId,
-                        departmentId,  // Use departmentId here
-                        jobId,         // Use jobId here
+                        departmentId,
+                        jobId,
                         lastName,
                         firstName
                     }])
                     .select()
                     .single();
     
-                if (staffError) throw staffError;
+                if (staffError) {
+                    console.error('Staff Insert Error:', staffError);
+                    throw staffError;
+                }
     
-                // Respond with success
                 res.status(200).json({ message: 'Staff added successfully.' });
                 console.log('Staff data:', staffData);
     
             } catch (error) {
-                console.error('Error adding staff:', error);
-                res.status(500).json({ error: 'Error adding staff. Please try again.' });
+                console.error('Error adding staff:', error.message);
+                res.status(500).json({ error: `Error adding staff. Please try again. ${error.message}` });
             }
         } else {
-            // Respond with unauthorized access error
             res.status(403).json({ error: 'Unauthorized access' });
         }
     },
+    
+    
     
     
 };

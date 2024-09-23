@@ -340,7 +340,7 @@ async function populateJobTitles(departmentId) {
         } else {
             jobTitles.forEach(job => {
                 const option = document.createElement('option');
-                option.value = job.jobTitleId;
+                option.value = job.jobId;
                 option.text = job.jobTitle;
                 jobTitleSelect.appendChild(option);
             });
@@ -405,10 +405,10 @@ async function populateJobTitles(departmentId) {
 
     // Event listener for job title dropdown change
 document.getElementById('jobTitle').addEventListener('change', async function() {
-    const jobTitleId = this.value;
-    console.log('Selected job title ID:', jobTitleId); // Log selected jobTitleId
+    const jobId = this.value;
+    console.log('Selected job ID:', jobId);  // Log the correct jobId
 
-    if (jobTitleId === 'add-new') {
+    if (jobId === 'add-new') {
         // Prompt user to add a new job title
         const newJobTitle = prompt('Enter the new job title:');
         if (newJobTitle) {
@@ -435,7 +435,7 @@ document.getElementById('jobTitle').addEventListener('change', async function() 
     }
 
     // Clear and repopulate job titles if a new option is selected
-    if (!jobTitleId) {
+    if (!jobId) {
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
         defaultOption.text = 'Select Job Title';
@@ -443,38 +443,38 @@ document.getElementById('jobTitle').addEventListener('change', async function() 
         return;
     }
 });
-
-
-    // Handle form submission
-    document.getElementById('newStaffForm').addEventListener('submit', async function(event) {
+// Handle form submission
+document.getElementById('newStaffForm').addEventListener('submit', async function(event) {
     event.preventDefault(); // Prevent default form submission
 
     const formData = new FormData(this);
 
-    // Debug: Log all form data
-    console.log('FormData contents:');
-    for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
+    // Get departmentId and check if it's selected
+    const departmentId = formData.get('department');
+    if (!departmentId) {
+        alert('Please select a department');
+        return;
     }
 
-    const data = {
+    // Get jobId and check if it's selected correctly
+    const jobId = document.getElementById('jobTitle').value;
+    if (!jobId || jobId === 'undefined' || jobId === '') {
+        alert('Please select a valid job title.');
+        return;
+    }
+
+    // Log data for debugging
+    console.log('Form data before submission:', {
+        departmentId,
+        jobId,
         lastName: formData.get('lastName'),
         firstName: formData.get('firstName'),
         email: formData.get('email'),
-        departmentId: formData.get('department'), // Retrieve the selected departmentId
-        jobId: formData.get('jobTitle'),          // Retrieve the selected jobId
         role: formData.get('role'),
         passwordOption: formData.get('passwordOption'),
         customPassword: formData.get('customPassword'),
         generatedPassword: formData.get('generatedPassword')
-    };
-
-    console.log('Form data before submission:', data); // Log data before submission
-
-    // Adjust password handling based on selection
-    data.password = data.passwordOption === 'random' ? data.generatedPassword : data.customPassword;
-
-    console.log('Submitting data:', data);
+    });
 
     try {
         const response = await fetch('/hr/api/add-staff', {
@@ -482,7 +482,17 @@ document.getElementById('jobTitle').addEventListener('change', async function() 
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify({
+                lastName: formData.get('lastName'),
+                firstName: formData.get('firstName'),
+                email: formData.get('email'),
+                departmentId,
+                jobId,  // Ensure jobId is passed here
+                role: formData.get('role'),
+                passwordOption: formData.get('passwordOption'),
+                customPassword: formData.get('customPassword'),
+                generatedPassword: formData.get('generatedPassword')
+            })
         });
 
         if (!response.ok) {
@@ -492,7 +502,7 @@ document.getElementById('jobTitle').addEventListener('change', async function() 
         const result = await response.json();
         console.log('Staff added successfully:', result);
 
-        // Optionally close the modal and reset the form
+        // Close modal and reset the form
         closeModal();
         document.getElementById('newStaffForm').reset();
 
@@ -500,7 +510,6 @@ document.getElementById('jobTitle').addEventListener('change', async function() 
         console.error('Error adding new staff:', error);
     }
 });
-
 </script>
     
     
