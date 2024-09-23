@@ -12,14 +12,29 @@ const hrController = {
         }
     },
 
-    getHRManageHome: function(req, res) {
+    getHRManageHome: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hrmanagehome');
+            try {
+                // fetch announcements from the database
+                const { data: announcements, error } = await supabase
+                    .from('announcements')
+                    .select('*')
+                    .order('createdAt', { ascending: false });
+    
+                if (error) throw error;
+    
+                res.render('staffpages/hr_pages/hrmanagehome', { announcements });
+            } catch (error) {
+                console.error('Error fetching announcements:', error);
+                req.flash('errors', { fetchError: 'Failed to load announcements. Please try again.' });
+                res.redirect('/hr/dashboard');
+            }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/login/staff');
         }
     },
+    
 
     getAddAnnouncement: function(req, res){
         if (req.session.user && req.session.user.userRole === 'HR') {
@@ -32,24 +47,31 @@ const hrController = {
 
     postAddAnnouncement: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            const { subject, image, shortAnnouncement } = req.body;
+            const { subject, content } = req.body;
+            let imageUrl = null;
+
+            if (req.file) {
+                imageUrl = `uploads/${req.file.filename}`;
+            }
+
             try {
                 const { data, error } = await supabase
                     .from('announcements')
                     .insert([{
                         subject,
-                        imageUrl,
+                        imageUrl, // can be null if no file is uploaded
                         content,
-                    }])
-                    .single();
+                        createdAt: new Date()
+                    }]);
+                
+                if (error) throw error;
 
-                    // indicates if success
-                    req.flash('success', 'Announcement added successfully.')
-                    res.redirect('hr/managehome');
+                req.flash('success', 'Announcement added successfully!');
+                res.redirect('/hr/managehome');
             } catch (error) {
-                console.error('Error adding announcement', error);
-                req.flash('errors', { dbError: 'Failed to add announcement. Please try again' });
-                res.redirect('hr/managehome');
+                console.error('Error adding announcement:', error);
+                req.flash('errors', { dbError: 'Failed to add announcement. Please try again.' });
+                res.redirect('/hr/addannouncement');
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
