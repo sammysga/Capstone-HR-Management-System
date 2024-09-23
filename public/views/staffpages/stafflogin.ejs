@@ -6,63 +6,84 @@
     <title>Login Page</title>
     <style>
         body {
-            font-family: 'Inter';
-            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('/images/prime_assets/banner-IR-1536x741.jpg'); 
+            background-size: cover;
+            background-position: center;
+            font-family: Arial, sans-serif;
         }
+
         .container {
-            width: 90%;
-            max-width: 400px;
-            margin: 0 auto;
+            background-color: white;
             padding: 20px;
-            background: #fff;
+            width: 320px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
-            color: #333;
+        }
+
+        .container img {
+            width: 80px;
             margin-bottom: 20px;
         }
+
+        .container h1 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #124A5C;
+        }
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            text-align: left;
         }
+
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #333;
+            font-size: 0.9em;
+            margin-bottom: 5px;
         }
-        .form-group input {
+
+        .form-group input[type="email"],
+        .form-group input[type="password"] {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
         }
+
         .form-group input[type="submit"] {
+            width: 100%;
+            padding: 12px;
             background-color: #124A5C;
             color: white;
             border: none;
-            padding: 12px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1em;
         }
+
         .form-group input[type="submit"]:hover {
-            background-color: #059f9e;
+            background-color: #42575e;
         }
+
         .error-message {
             color: red;
             font-size: 0.9em;
-            margin-top: 5px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Login</h1>
+        <img src="/images/prime_assets/primeinfra-logo-text.png" alt="Company Logo">
         <form action="/login/staff" method="post">
             <div class="form-group">
                 <label for="email">Email</label>
