@@ -82,6 +82,7 @@
     background-color: #07ACB9;
     color: white;
     border: none;
+    text-decoration: none;
     padding: 10px 20px;
     border-radius: 5px;
     font-weight: bold;
@@ -107,10 +108,14 @@
 
 .back-button {
     font-size: 17px;
-    color: #b4b9b9;
+    color: #585858;
     text-decoration: none;
     margin-right: 15px;
     cursor: pointer;
+}
+
+.back-button:hover {
+    color: #b4b9b9;
 }
 
 .announcement-form {
