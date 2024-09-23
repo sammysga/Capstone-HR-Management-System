@@ -19,6 +19,7 @@ router.post('/login/staff', staffLoginController.postStaffLogin);
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
+router.get('/applicantlogin', applicantController.getApplicantLogin);
 
 
 // Protected routes (role-specific logic in respective controllers)
