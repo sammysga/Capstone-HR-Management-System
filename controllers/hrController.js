@@ -260,7 +260,7 @@ const hrController = {
             const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;
     
             console.log('Request Body:', req.body);
-            console.log('Password Option:', passwordsOption);
+            console.log('Password Option:', passwordOption);
             console.log('Custom Password:', customPassword);
             console.log('Generated Password:', generatedPassword);
     
@@ -269,7 +269,7 @@ const hrController = {
                 let password;
                 if (passwordOption === 'custom') {
                     password = customPassword;
-                } else if (passwordOption === 'generated') {
+                } else if (passwordOption === 'random') {  // Corrected this line
                     password = generatedPassword;
                 } else {
                     throw new Error('Invalid password option');
@@ -335,7 +335,6 @@ const hrController = {
             res.status(403).json({ error: 'Unauthorized access' });
         }
     },
-    
     
     
     
