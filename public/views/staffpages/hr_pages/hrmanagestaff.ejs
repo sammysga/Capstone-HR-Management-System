@@ -489,7 +489,7 @@ document.getElementById('newStaffForm').addEventListener('submit', async functio
                 departmentId,
                 jobId,  // Ensure jobId is passed here
                 role: formData.get('role'),
-                passwordOption: formData.get('passwordOption'),
+                passwordOption: formData.get('passwordOption') === 'random' ? 'random' : 'custom',  // Corrected this line
                 customPassword: formData.get('customPassword'),
                 generatedPassword: formData.get('generatedPassword')
             })
@@ -500,7 +500,7 @@ document.getElementById('newStaffForm').addEventListener('submit', async functio
         }
 
         const result = await response.json();
-        console.log('Staff added successfully:', result);
+ console.log('Staff added successfully:', result);
 
         // Close modal and reset the form
         closeModal();
