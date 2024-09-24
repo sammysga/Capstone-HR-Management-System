@@ -57,6 +57,37 @@
                 }
             });
         });
+
+        // Handle form submission using fetch API
+        document.getElementById('announcementForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('subject', document.getElementById('subject').value);
+            formData.append('content', document.getElementById('content').value);
+
+            const imageFile = document.getElementById('image').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            try {
+                const response = await fetch('/hr/api/add-announcement', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add announcement. ');
+                }
+
+                const result = await response.json();
+                console.log('Announcement added successfully:', result);
+                window.location.href = '/hr/managehome';
+            } catch (error) {
+                console.error('Error adding announcement:', error);
+            }
+        });
     </script>
 </body>
 </html>
