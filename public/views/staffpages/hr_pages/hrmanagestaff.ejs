@@ -54,6 +54,13 @@
         .staff-table button:hover {
             background-color: #45a049;
         }
+        .staff-table th, .staff-table td {
+            width: 14.28%; /* 100% / 7 columns */
+        }
+        .float-right {
+        float: right;
+        margin-top: 10px;
+        }
         .about-us {
             padding: 20px;
         }
@@ -115,60 +122,60 @@
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
-<div class="main-content">
-    <section class="about-us">
-        <div class="purpose-mission">
-            <div class="purpose">
-                <h2>Manage Staff</h2>
-                <p>View staff details categorized by departments.</p>
-
-                <div id="staffTableContainer">
-                    <% if (departments && departments.length > 0) { %>
-                        <% departments.forEach(function(department) { %>
-                            <h3><%= department.deptName %></h3>
-                            <table class="staff-table">
-                                <thead>
-                                    <tr>
-                                        <th>Job Title</th>
-                                        <th>Last Name</th>
-                                        <th>First Name</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Original Default Password</th>
-                                        <th>Active Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% if (department.staff && department.staff.length > 0) { %>
-                                        <% department.staff.forEach(function(staff) { %>
-                                            <tr>
-                                                <td><%= staff.jobpositions ? staff.jobpositions.jobTitle : 'N/A' %></td>
-                                                <td><%= staff.lastName %></td>
-                                                <td><%= staff.firstName %></td>
-                                                <td><%= staff.userEmail %></td>
-                                                <td><%= staff.userRole %></td>
-                                                <td>
-                                                    <input type="password" value="<%= staff.userStaffOgPass ? staff.userStaffOgPass : '' %>" readonly>
-                                                    <button onclick="copyPassword(this)" data-password="<%= staff.userStaffOgPass %>">Copy</button>
-                                                </td>
-                                                <td><%= staff.activeStatus %></td>
-                                            </tr>
-                                        <% }); %>
-                                    <% } else { %>
-                                        <tr><td colspan="7">No staff members available</td></tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
-                            <button class="add-new-staff" onclick="openModal()">Add New Staff</button>
-                        <% }); %>
-                    <% } else { %>
-                        <p>No departments available</p>
-                    <% } %>
+    <div class="main-content">
+        <section class="about-us">
+            <div class="purpose-mission">
+                <div class="purpose">
+                    <h2>Manage Staff</h2>
+                    <p>View staff details categorized by departments.</p>
+                    <!-- Add the button here -->
+                    <button class="add-new-staff float-right" onclick="openModal()">Add New Staff</button>
+                    <div id="staffTableContainer">
+                        <% if (departments && departments.length > 0) { %>
+                            <% departments.forEach(function(department) { %>
+                                <h3><%= department.deptName %></h3>
+                                <table class="staff-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Job Title</th>
+                                            <th>Last Name</th>
+                                            <th>First Name</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Original Default Password</th>
+                                            <th>Active Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (department.staff && department.staff.length > 0) { %>
+                                            <% department.staff.forEach(function(staff) { %>
+                                                <tr>
+                                                    <td><%= staff.jobTitle %></td>
+                                                    <td><%= staff.lastName %></td>
+                                                    <td><%= staff.firstName %></td>
+                                                    <td><%= staff.userEmail %></td>
+                                                    <td><%= staff.userRole %></td>
+                                                    <td>
+                                                        <input type="password" value="<%= staff.userStaffOgPass ? staff.userStaffOgPass : '' %>" readonly>
+                                                        <button onclick="copyPassword(this)" data-password="<%= staff.userStaffOgPass %>">Copy</button>
+                                                    </td>
+                                                    <td><%= staff.activeStatus %></td>
+                                                </tr>
+                                            <% }); %>
+                                        <% } else { %>
+                                            <tr><td colspan="7">No staff members available</td></tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            <% }); %>
+                        <% } else { %>
+                            <p>No departments available</p>
+                        <% } %>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
-</div>
+        </section>
+    </div>
 <!-- Modal for adding new staff -->
 <div id="staffModal" class="modal">
     <div class="modal-content">
@@ -489,7 +496,7 @@ document.getElementById('newStaffForm').addEventListener('submit', async functio
                 departmentId,
                 jobId,  // Ensure jobId is passed here
                 role: formData.get('role'),
-                passwordOption: formData.get('passwordOption'),
+                passwordOption: formData.get('passwordOption') === 'random' ? 'random' : 'custom',  // Corrected this line
                 customPassword: formData.get('customPassword'),
                 generatedPassword: formData.get('generatedPassword')
             })
@@ -500,7 +507,7 @@ document.getElementById('newStaffForm').addEventListener('submit', async functio
         }
 
         const result = await response.json();
-        console.log('Staff added successfully:', result);
+ console.log('Staff added successfully:', result);
 
         // Close modal and reset the form
         closeModal();

@@ -103,7 +103,7 @@ const hrController = {
                 // Fetch data from Supabase
                 const { data: staffAccounts, error: staffError } = await supabase
                     .from('staffaccounts')
-                    .select('userId, departmentId, jobId, lastName, firstName');
+                    .select('staffId, userId, departmentId, jobId, lastName, firstName');
                 if (staffError) throw staffError;
     
                 const { data: userAccounts, error: userError } = await supabase
@@ -127,13 +127,17 @@ const hrController = {
                     const department = departments.find(dept => dept.departmentId === staff.departmentId);
                     const jobPosition = jobPositions.find(job => job.jobId === staff.jobId);
     
+                    let jobTitle = jobPosition ? jobPosition.jobTitle : 'No job title assigned';
+                    let userRole = userAccount ? userAccount.userRole : 'Unknown';
+                    let deptName = department ? department.deptName : 'Unknown';
+    
                     return {
-                        deptName: department ? department.deptName : 'Unknown',
-                        jobTitle: jobPosition ? jobPosition.jobTitle : 'Unknown',
+                        deptName,
+                        jobTitle,
                         lastName: staff.lastName,
                         firstName: staff.firstName,
                         userEmail: userAccount ? userAccount.userEmail : 'N/A',
-                        userRole: userAccount ? userAccount.userRole : 'N/A',
+                        userRole,
                         userStaffOgPass: userAccount ? userAccount.userStaffOgPass : 'N/A',
                         activeStatus: userAccount && userAccount.userIsDisabled ? 'Disabled' : 'Active'
                     };
@@ -260,7 +264,7 @@ const hrController = {
             const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;
     
             console.log('Request Body:', req.body);
-            console.log('Password Option:', passwordsOption);
+            console.log('Password Option:', passwordOption);
             console.log('Custom Password:', customPassword);
             console.log('Generated Password:', generatedPassword);
     
@@ -269,7 +273,7 @@ const hrController = {
                 let password;
                 if (passwordOption === 'custom') {
                     password = customPassword;
-                } else if (passwordOption === 'generated') {
+                } else if (passwordOption === 'random') {  // Corrected this line
                     password = generatedPassword;
                 } else {
                     throw new Error('Invalid password option');
@@ -335,7 +339,6 @@ const hrController = {
             res.status(403).json({ error: 'Unauthorized access' });
         }
     },
-    
     
     
     
