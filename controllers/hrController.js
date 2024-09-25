@@ -79,9 +79,21 @@ const hrController = {
         }
     },
 
-    getJobOffers: function(req, res){
+    getJobOffers: async function(req, res){
         if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hrjoboffers');
+            try {
+                const { data: jobOffers, error } = await supabase
+                    .from('joboffers')
+                    .select('*');
+
+                if (error) throw error;
+            
+                res.render('staffpages/hr_pages/hrjoboffers');
+            } catch (error) {
+                console.error('Error fetching job offers:', error);
+                req.flash('errors', { fetchError: 'Failed to load job offers. Please try again.' });
+                res.redirect('/hr/dashboard');
+            }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/login/staff');
