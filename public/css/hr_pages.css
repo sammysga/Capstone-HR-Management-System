@@ -79,7 +79,7 @@
 }
 
 .add-new-btn {
-    background-color: #07ACB9;
+    background-color: #124A5C;
     color: white;
     border: none;
     text-decoration: none;
@@ -97,7 +97,7 @@
 }
 
 .add-new-btn:hover {
-    background-color: #34caca; 
+    background-color: #059ca4; 
 }
 
 /* Add an Announcement */
@@ -209,49 +209,44 @@
     margin-top: 20px;
 }
 
-.manage-job-offers .header {
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-title {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
 }
 
 .manage-job-offers .heading {
     font-size: 24px;
-    margin: 0;
-}
-
-.heading-filter {
-    display: flex;
-    align-items: center;
+    margin-right: 10px;
 }
 
 .filter-btn {
-    background-color: #d3d3d3; 
-    border-radius: 6px; 
-    margin-left: 10px;
+    background-color: rgba(101, 112, 129, 0.10); 
+    color: #657081;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
 }
 
 .add-job-btn {
-    background-color: #07ACB9;
+    background-color: #124A5C;
     color: white;
     border: none;
     padding: 10px 20px;
-    border-radius: 5px;
+    border-radius: 20px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .add-job-btn:hover {
     background-color: #059ca4;
-}
-
-.filter-btn {
-    background-color: #d3d3d3; 
-}
-
-.filter-btn:hover {
-    background-color: #b0b0b0;
 }
 
 .job-offers-container {
@@ -264,18 +259,25 @@
     border: none;
     border-radius: 15px;
     padding: 15px;
-    width: calc(50% - 20px); 
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Drop shadow instead of border */
+    width: calc(50% - 20px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .job-offer-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
 .job-offer-header strong {
     font-size: 18px;
+}
+
+.job-role-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .status {
@@ -305,7 +307,10 @@
 }
 
 .job-offer-details {
-    margin-top: 10px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    /*margin-top: 10px;*/
 }
 
 .department {
@@ -313,27 +318,30 @@
     color: #888;
 }
 
-.job-type {
-    margin-top: 10px;
+.job-conditions {
+    display: flex;
+    gap: 10px;
 }
 
 .type {
     display: inline-block;
     padding: 5px 10px;
-    border-radius: 20px;
+    border-radius: 50px;
     font-size: 14px;
-    margin-right: 10px;
+    background-color: rgba(101, 112, 129, 0.1);
+    color: #333;
+    white-space: nowrap;
 }
 
-.onsite {
-    background-color: #bdc3c7;
+/* .onsite {
+    background-color: rgba(101, 112, 129, 0.1);
     color: #333;
 }
 
 .full-time {
-    background-color: #bdc3c7;
+    background-color: rgba(101, 112, 129, 0.1);
     color: #333;
-}
+} */
 
 .job-offer-description p {
     margin: 10px 0;

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR Manage Job Offers</title>
-    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
@@ -13,35 +13,39 @@
     <div class="main-content">
         <section class="manage-job-offers">
             <div class="header">
-                <h2 class="heading" style="color:#07ACB9;">Manage Job Offers</h2>
-                <button class="filter-btn">Filter By</button>
+                <div class="header-title">
+                    <h2 class="heading" style="color:#07ACB9;">Manage Job Offers</h2>
+                    <button class="filter-btn">Filter By</button>
+                </div>
+                <button class="add-job-btn">Add a Job Offer</button>
             </div>
-            <button class="add-job-btn">Add a Job Offer</button>
             <div class="job-offers-container">
                 <!-- Example Job Offer -->
                 <div class="job-offer-box">
                     <div class="job-offer-header">
-                        <strong>Job Role</strong>
-                        <span class="status active">Active</span>
+                        <div class="job-role-status">
+                            <strong>Job Role</strong>
+                            <span class="status active">Active</span>
+                        </div>
                         <button class="edit-btn">Edit</button>
                     </div>
                     <div class="job-offer-details">
                         <p class="department">Department</p>
-                        <div class="job-type">
-                            <span class="type onsite">Onsite</span>
-                            <span class="type full-time">Full-time</span>
+                        <div class="job-conditions">
+                            <span class="type work-location">Onsite</span>
+                            <span class="type employment-type">Full-time</span>
                         </div>
                     </div>
                     <div class="job-offer-description">
                         <p>Description of the job offer with detailed information about the role, responsibilities, and qualifications required.</p>
                     </div>
                 </div>
-                <!-- Add more job-offer-boxes as needed -->
             </div>
         </section>
     </div>
 </body>
 </html>
+
 
 <!-- JavaScript for sidebar functionality -->
 <script>
