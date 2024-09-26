@@ -22,27 +22,26 @@ const applicantController = {
         res.render('applicant_pages/about', { announcements });
     },
 
-    getJobRecruitment: async function (req, res) {
+    getJobRecruitment: async function(req, res) {
         try {
-          // Fetch job offers from the 'jobOffers' table in Supabase
+          // Fetch job offers from Supabase
           const { data: joboffers, error } = await supabase
-            .from('joboffers')
+            .from('jobOffers')
             .select('*')
             .order('createdAt', { ascending: false });
     
+          // Handle errors in fetching data
           if (error) {
             console.error('Error fetching job offers:', error);
-            return res.status(500).json({ error: 'Failed to fetch job offers' });
+            return res.status(500).send('Error fetching job offers');
           }
     
-          // Filter active job offers
-          const activeJoboffers = joboffers.filter(offer => offer.status === 'Active');
+          // Render the job offers on the jobrecruitment EJS page
+          res.render('applicant_pages/jobrecruitment', { joboffers: joboffers, errors: {} });
     
-          // Pass the active job offers to the jobrecruitment EJS page
-          res.render('applicant_pages/jobrecruitment', { joboffers: activeJoboffers, errors: {} });
         } catch (err) {
-          console.error('Error:', err);
-          res.status(500).json({ error: 'Server error' });
+          console.error('Server error:', err);
+          res.status(500).send('Server error');
         }
       },
 
