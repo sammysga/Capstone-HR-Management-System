@@ -26,7 +26,7 @@ const applicantController = {
         try {
           // Fetch job offers from the 'jobOffers' table in Supabase
           const { data: jobOffers, error } = await supabase
-            .from('jobOffers')
+            .from('joboffers')
             .select('*')
             .order('createdAt', { ascending: false });
     
@@ -36,10 +36,10 @@ const applicantController = {
           }
     
           // Filter active job offers
-          const activeJobOffers = jobOffers.filter(offer => offer.status === 'Active');
+          const activeJoboffers = joboffers.filter(offer => offer.status === 'Active');
     
           // Pass the active job offers to the jobrecruitment EJS page
-          res.render('applicant_pages/jobrecruitment', { jobOffers: activeJobOffers, errors: {} });
+          res.render('applicant_pages/jobrecruitment', { joboffers: activeJoboffers, errors: {} });
         } catch (err) {
           console.error('Error:', err);
           res.status(500).json({ error: 'Server error' });
