@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Home</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+</head>
+<body>
+    <%- include('../../partials/employee_partials') %>
+    <!-- Main content -->
+    <div class="main-content">
+        <section class="about-us">
+            <div class="purpose-mission">
+                <div class="purpose">
+                    <h2>Welcome to Employee Home</h2>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- JavaScript for sidebar functionality -->
+    <script>
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });s
+        });
+    </script>
+</body>
+</html>
+
