@@ -79,11 +79,11 @@
             <% if (jobOffers && jobOffers.length > 0) { %>
                 <% jobOffers.forEach(function(job) { %>
                     <div class="job-item">
-                        <div class="title"><%= job.title %></div>
+                        <div class="title"><%= job.jobRole %></div>
                         <div class="department">Department: <%= job.department %></div>
                         <div class="description"><%= job.description %></div>
                         <div class="status">
-                            Status: <%= job.isActive ? "Active" : "Inactive" %>
+                            Status: <%= job.status === "Active" ? "Active" : "Inactive" %>
                         </div>
                     </div>
                 <% }) %>

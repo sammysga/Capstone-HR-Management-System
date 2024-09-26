@@ -22,41 +22,29 @@ const applicantController = {
         res.render('applicant_pages/about', { announcements });
     },
 
-    getJobRecruitment: async function(req, res) {
-        // Sample job offers data
-        const jobOffers = [
-            {
-                title: "Project Manager",
-                department: "Operations",
-                description: "Oversee and manage infrastructure projects from inception to completion.",
-                isActive: true
-            },
-            {
-                title: "Data Analyst",
-                department: "IT",
-                description: "Analyze data to support decision-making and improve business performance.",
-                isActive: true
-            },
-            {
-                title: "Civil Engineer",
-                department: "Engineering",
-                description: "Design and supervise construction projects including roads, bridges, and utilities.",
-                isActive: true
-            },
-            {
-                title: "Marketing Coordinator",
-                department: "Marketing",
-                description: "Coordinate marketing campaigns and events to increase brand awareness.",
-                isActive: false
-            }
-        ];
-
-        // Filter active job offers
-        const activeJobOffers = jobOffers.filter(offer => offer.isActive);
-
-        // Pass the active job offers to the jobrecruitment EJS page
-        res.render('applicant_pages/jobrecruitment', { jobOffers: activeJobOffers, errors: {} });
-    },
+    getJobRecruitment: async function (req, res) {
+        try {
+          // Fetch job offers from the 'jobOffers' table in Supabase
+          const { data: jobOffers, error } = await supabase
+            .from('jobOffers')
+            .select('*')
+            .order('createdAt', { ascending: false });
+    
+          if (error) {
+            console.error('Error fetching job offers:', error);
+            return res.status(500).json({ error: 'Failed to fetch job offers' });
+          }
+    
+          // Filter active job offers
+          const activeJobOffers = jobOffers.filter(offer => offer.status === 'Active');
+    
+          // Pass the active job offers to the jobrecruitment EJS page
+          res.render('applicant_pages/jobrecruitment', { jobOffers: activeJobOffers, errors: {} });
+        } catch (err) {
+          console.error('Error:', err);
+          res.status(500).json({ error: 'Server error' });
+        }
+      },
 
     
     getContactForm: async function(req, res) {
