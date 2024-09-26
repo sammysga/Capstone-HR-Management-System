@@ -25,7 +25,7 @@ const applicantController = {
     getJobRecruitment: async function (req, res) {
         try {
           // Fetch job offers from the 'jobOffers' table in Supabase
-          const { data: jobOffers, error } = await supabase
+          const { data: joboffers, error } = await supabase
             .from('joboffers')
             .select('*')
             .order('createdAt', { ascending: false });
