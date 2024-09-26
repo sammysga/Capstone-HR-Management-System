@@ -3,6 +3,8 @@ const router = express.Router();
 const applicantController = require('../controllers/applicantController');
 const staffLoginController = require('../controllers/staffloginController');
 const hrController = require('../controllers/hrController');
+const employeeController = require('../controllers/employeeController');
+const lineManagerController = require('../controllers/lineManagerController');
 
 
 
@@ -35,6 +37,15 @@ router.get('/hr/managehome', hrController.getHRManageHome);
 router.get('/hr/addannouncement', hrController.getAddAnnouncement);
 router.post('/hr/addannouncement', hrController.postAddAnnouncement);
 router.get('/hr/joboffers', hrController.getJobOffers);
+
+
+// Employee Routes
+router.get('/employee/dashboard', employeeController.getEmployeeDashboard);
+
+
+// Lina Manager Routes
+router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
+
 
 
 module.exports = router;
