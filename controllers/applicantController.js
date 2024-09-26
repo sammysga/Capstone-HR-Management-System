@@ -26,7 +26,7 @@ const applicantController = {
         try {
           // Fetch job offers from Supabase
           const { data: joboffers, error } = await supabase
-            .from('jobOffers')
+            .from('joboffers')
             .select('*')
             .order('createdAt', { ascending: false });
     
