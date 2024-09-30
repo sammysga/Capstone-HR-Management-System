@@ -60,7 +60,7 @@ const applicantController = {
           }
       
           // Render job details page
-          res.render('applicant_pages/jobdetails', { job: job });
+          res.render('applicant_pages/job-details', { job: job });
         } catch (err) {
           console.error('Server error:', err);
           res.status(500).send('Server error');
