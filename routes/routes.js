@@ -25,7 +25,8 @@ router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
 router.get('/applicantlogin', applicantController.getApplicantLogin);
 router.get('/applicantsignup', applicantController.getApplicantSignup);
-router.get('/jobdetails', applicantController.getJobDetails);
+router.get('/job-details/:jobOfferUUID', applicantController.getJobDetails);
+
 
 // Protected routes (role-specific logic in respective controllers)
 router.get('/hr/dashboard', hrController.getHRDashboard);
