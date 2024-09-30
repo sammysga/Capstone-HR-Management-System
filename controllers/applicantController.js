@@ -47,11 +47,11 @@ const applicantController = {
 
       getJobDetails: async function(req, res) {
         try {
-          const jobOfferUUID = req.params.jobOfferUUID;
+          const jobOfferId = req.params.jobOfferId;
           const { data: job, error } = await supabase
             .from('joboffers')
             .select('*')
-            .eq('jobOfferUUID', jobOfferUUID)
+            .eq('jobOfferId', jobOfferId)
             .single();
           
           if (error) {
