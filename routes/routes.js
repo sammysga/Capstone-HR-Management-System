@@ -18,11 +18,14 @@ router.get('/applicant_signup', applicantController.getPublicSignUp);
 router.post('/applicant_signup_submit', applicantController.handleRegisterPage);
 router.get('/login/staff', staffLoginController.getStaffLogin);
 router.post('/login/staff', staffLoginController.postStaffLogin);
+
+// Applicant 
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
 router.get('/applicantlogin', applicantController.getApplicantLogin);
 router.get('/applicantsignup', applicantController.getApplicantSignup);
+router.get('/jobdetails', applicantController.getJobDetails);
 
 // Protected routes (role-specific logic in respective controllers)
 router.get('/hr/dashboard', hrController.getHRDashboard);

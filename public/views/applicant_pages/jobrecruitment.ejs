@@ -37,6 +37,16 @@
             border-radius: 6px;
             font-size: 1em;
             color: #555;
+            transition: background-color 0.3s ease;
+        }
+
+        .job-item:hover {
+            background-color: #e0e0e0;
+        }
+
+        .job-item a {
+            text-decoration: none;
+            color: inherit;
         }
 
         .job-item .title {
@@ -66,6 +76,22 @@
         .job-item .inactive {
             color: red;
         }
+
+        .apply-button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .apply-button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
@@ -79,12 +105,15 @@
             <% if (joboffers && joboffers.length > 0) { %>
                 <% joboffers.forEach(function(job) { %>
                     <div class="job-item">
-                        <div class="title"><%= job.jobRole %></div>
-                        <div class="department">Department: <%= job.department %></div>
-                        <div class="description"><%= job.description %></div>
-                        <div class="status">
-                            Status: <%= job.status === "Active" ? "Active" : "Inactive" %>
-                        </div>
+                        <!-- Make job offer clickable -->
+                        <a href="/job-details/<%= job.jobOfferUUID %>">
+                            <div class="title"><%= job.jobRole %></div>
+                            <div class="department">Department: <%= job.department %></div>
+                            <div class="description"><%= job.description %></div>
+                            <div class="status">
+                                Status: <%= job.status === "Active" ? "Active" : "Inactive" %>
+                            </div>
+                        </a>
                     </div>
                 <% }) %>
             <% } else { %>

@@ -45,6 +45,29 @@ const applicantController = {
         }
       },
 
+      getJobDetails: async function(req, res) {
+        try {
+          const jobOfferUUID = req.params.jobOfferUUID;
+          const { data: job, error } = await supabase
+            .from('joboffers')
+            .select('*')
+            .eq('jobOfferUUID', jobOfferUUID)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching job details:', error);
+            return res.status(500).send('Error fetching job details');
+          }
+      
+          // Render job details page
+          res.render('applicant_pages/jobdetails', { job: job });
+        } catch (err) {
+          console.error('Server error:', err);
+          res.status(500).send('Server error');
+        }
+      },
+      
+
     
     getContactForm: async function(req, res) {
         res.render('applicant_pages/contactform', { errors: {} }); 
