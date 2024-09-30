@@ -47,25 +47,26 @@ const applicantController = {
 
       getJobDetails: async function(req, res) {
         try {
-          const jobOfferId = req.params.jobOfferId;
-          const { data: job, error } = await supabase
-            .from('joboffers')
-            .select('*')
-            .eq('jobOfferId', jobOfferId)
-            .single();
-          
-          if (error) {
-            console.error('Error fetching job details:', error);
-            return res.status(500).send('Error fetching job details');
-          }
-      
-          // Render job details page
-          res.render('applicant_pages/job-details', { job: job });
+            const jobOfferId = req.params.jobOfferId; // Make sure this matches the route parameter
+            const { data: job, error } = await supabase
+                .from('joboffers')
+                .select('*')
+                .eq('jobOfferId', jobOfferId) // Use the correct column name here
+                .single();
+            
+            if (error) {
+                console.error('Error fetching job details:', error);
+                return res.status(500).send('Error fetching job details');
+            }
+    
+            // Render job details page
+            res.render('applicant_pages/job-details', { job: job });
         } catch (err) {
-          console.error('Server error:', err);
-          res.status(500).send('Server error');
+            console.error('Server error:', err);
+            res.status(500).send('Server error');
         }
-      },
+    },
+    
       
 
     
