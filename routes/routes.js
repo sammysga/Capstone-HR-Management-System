@@ -14,19 +14,22 @@ router.use(express.urlencoded({ extended: true }));
 
 // Route to render the public home page
 router.get('/', applicantController.getPublicHome);
-router.get('/applicant_signup', applicantController.getPublicSignUp);
-router.post('/applicant_signup_submit', applicantController.handleRegisterPage);
-router.get('/login/staff', staffLoginController.getStaffLogin);
-router.post('/login/staff', staffLoginController.postStaffLogin);
+router.get('/applicant/signup', applicantController.getApplicantRegisterPage);
+router.post('/applicant/signup', applicantController.handleRegisterPage);
+router.get('/applicant/login', applicantController.getApplicantLogin);
+router.post('/applicant/login', applicantController.handleLoginSubmit);
+
+
 
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
-router.get('/applicantlogin', applicantController.getApplicantLogin);
-router.get('/applicantsignup', applicantController.getApplicantSignup);
 router.get('/job-details/:jobOfferId', applicantController.getJobDetails);
 
+// Staff Log in
+router.get('/login/staff', staffLoginController.getStaffLogin);
+router.post('/login/staff', staffLoginController.postStaffLogin);
 
 // Protected routes (role-specific logic in respective controllers)
 router.get('/hr/dashboard', hrController.getHRDashboard);
