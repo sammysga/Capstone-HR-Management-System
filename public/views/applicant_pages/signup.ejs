@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
-    <link rel="stylesheet" href="/public/css/signup.css"> <!-- Add your own CSS path here -->
+    <link rel="stylesheet" href="/css/signup.css">
     <style>
         body {
             margin: 0;
@@ -86,23 +86,19 @@
     <div class="signup-container">
         <img src="/images/prime_assets/primeinfra-logo-text.png" alt="Company Logo"> <!-- Add your logo path here -->
         <h2>Create Account</h2>
-        <form action="/signup" method="POST">
-            <input type="text" name="lastname" placeholder="Last Name" required>
-            <input type="text" name="firstname" placeholder="First Name" required>
-            
-            <div class="form-row">
-                <input type="text" name="middleinitial" placeholder="M.I." maxlength="1" required>
-                <input type="date" name="birthdate" placeholder="Birthdate" required>
-            </div>
-            
+        <form action="/applicant/signup" method="POST">
+            <input type="text" name="lastName" placeholder="Last Name" required>
+            <input type="text" name="firstName" placeholder="First Name" required>
+            <input type="text" name="middleInitial" placeholder="M.I." maxlength="1" required>
+            <input type="date" name="birthDate" placeholder="Birthdate" required>
             <input type="email" name="email" placeholder="Email Address" required>
             <input type="password" name="password" id="password" placeholder="Set Password" required>
-            <input type="password" name="confirmpassword" id="confirmpassword" placeholder="Confirm Password" required>
-            
+            <input type="password" name="confirmPassword" id="confirmpassword" placeholder="Confirm Password" required>
+
             <button type="submit">Sign Up</button>
         </form>
         <div class="login-link">
-            Already have an account? <a href="/login">Login here</a>
+            Already have an account? <a href="/applicant/login">Login here</a>
         </div>
     </div>
     

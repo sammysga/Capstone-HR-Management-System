@@ -1,85 +1,72 @@
-const supabase = require ('../public/config/supabaseClient');
-const bcrypt = require ('bcrypt');
+const supabase = require('../public/config/supabaseClient');
+const bcrypt = require('bcrypt');
 
 const applicantController = {
-
     getPublicHome: function(req, res) {
         res.render('publichome', { errors: {} }); 
     },
-    getPublicSignUp: function(req, res) {
-        res.render('publicsignup', { errors: {} }); 
+    getApplicantRegisterPage: async function(req, res) {
+        res.render('applicant_pages/signup', { errors: {} });
     },
 
     getAboutPage: async function(req, res) {
-        // Sample announcements data (replace with dynamic data if available)
         const announcements = [
             "New sustainability initiative launching next month!",
             "Annual company meeting scheduled for next week.",
             "Prime Infra wins infrastructure award for 2024."
         ];
-
-        // Render the about page and pass the announcements data
         res.render('applicant_pages/about', { announcements });
     },
 
     getJobRecruitment: async function(req, res) {
         try {
-          // Fetch job offers from Supabase
-          const { data: joboffers, error } = await supabase
-            .from('joboffers')
-            .select('*')
-            .order('createdAt', { ascending: false });
-    
-          // Handle errors in fetching data
-          if (error) {
-            console.error('Error fetching job offers:', error);
-            return res.status(500).send('Error fetching job offers');
-          }
-    
-          // Render the job offers on the jobrecruitment EJS page
-          res.render('applicant_pages/jobrecruitment', { joboffers: joboffers, errors: {} });
-    
-        } catch (err) {
-          console.error('Server error:', err);
-          res.status(500).send('Server error');
-        }
-      },
+            const { data: joboffers, error } = await supabase
+                .from('joboffers')
+                .select('*')
+                .order('createdAt', { ascending: false });
 
-      getJobDetails: async function(req, res) {
+            if (error) {
+                console.error('Error fetching job offers:', error);
+                return res.status(500).send('Error fetching job offers');
+            }
+
+            res.render('applicant_pages/jobrecruitment', { joboffers, errors: {} });
+        } catch (err) {
+            console.error('Server error:', err);
+            res.status(500).send('Server error');
+        }
+    },
+
+    getJobDetails: async function(req, res) {
         try {
-            const jobOfferId = req.params.jobOfferId; // Make sure this matches the route parameter
+            const jobOfferId = req.params.jobOfferId;
             const { data: job, error } = await supabase
                 .from('joboffers')
                 .select('*')
-                .eq('jobOfferId', jobOfferId) // Use the correct column name here
+                .eq('jobOfferId', jobOfferId)
                 .single();
             
             if (error) {
                 console.error('Error fetching job details:', error);
                 return res.status(500).send('Error fetching job details');
             }
-    
-            // Render job details page
-            res.render('applicant_pages/job-details', { job: job });
+
+            res.render('applicant_pages/job-details', { job });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
-    
-      
 
-    
     getContactForm: async function(req, res) {
         res.render('applicant_pages/contactform', { errors: {} }); 
     },
 
     handleContactSubmit: async function(req, res) {
         const { inquiry, lastName, firstName, email, subject, message } = req.body;
-
         const errors = {};
 
-        // Basic validation (you can enhance this as needed)
+        // Basic validation
         if (!inquiry) errors.inquiry = 'Inquiry type is required';
         if (!lastName) errors.lastName = 'Last name is required';
         if (!firstName) errors.firstName = 'First name is required';
@@ -94,15 +81,12 @@ const applicantController = {
         if (!subject) errors.subject = 'Subject is required';
         if (!message) errors.message = 'Message is required';
 
-        // If there are validation errors, re-render the form with error messages
         if (Object.keys(errors).length > 0) {
             return res.status(400).render('applicant_pages/contactform', { errors });
         }
 
-        // Here you would typically save the data or send an email
-        // Example: Sending email logic or saving to database (not shown here)
+        // Logic for sending an email or saving the inquiry can go here
 
-        // On successful submission, redirect to a success page or show a message
         res.redirect('/contact-success');
     },
 
@@ -110,48 +94,47 @@ const applicantController = {
         res.render('applicant_pages/login', { errors: {} }); 
     },
 
-    getApplicantSignup: async function(req, res) {
-        res.render('applicant_pages/signup', { errors: {} }); 
-    },
-    
     handleRegisterPage: async function(req, res) {
         console.log('Handling registration request...');
         const { lastName, firstName, middleInitial, birthDate, email, password, confirmPassword } = req.body;
-    
         const errors = {};
-    
-        // Validate password on the server-side
-        if (!password || password !== confirmPassword) {
-            errors.password = 'Invalid password or password mismatch';
+
+        // Password validation
+        if (!password || !confirmPassword || password !== confirmPassword) {
+            errors.password = 'Password is required and must match the confirmation';
         }
-    
-        // Validate email format
+
+        // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             errors.email = 'Invalid email format';
         }
-    
+
         if (Object.keys(errors).length > 0) {
-            return res.status(400).render('publicsignup', { errors });
+            return res.status(400).render('applicant_pages/signup', { errors });
         }
-    
-        // Check if the email already exists in the database
+
+        // Check if email already exists
         const { data: existingData, error: existingDataError } = await supabase
             .from('useraccounts')
             .select('userEmail')
             .eq('userEmail', email);
-    
-        if (existingDataError || (existingData && existingData.length > 0)) {
-            errors.email = 'Please try again, email is already existing.';
-            console.error(existingDataError || 'Email is already existing.');
-            return res.status(400).render('publicsignup', { errors });
+
+        if (existingDataError) {
+            console.error('Database error:', existingDataError);
+            errors.general = 'Error checking existing email';
+            return res.status(500).render('applicant_pages/signup', { errors });
         }
-    
-        // Hash the password before storing it
+
+        if (existingData && existingData.length > 0) {
+            errors.email = 'Email is already in use';
+            return res.status(400).render('applicant_pages/signup', { errors });
+        }
+
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
-        console.log('Hashed Password:', hashedPassword);  // Log the hashed password
-    
-        // Insert data into the useraccounts table
+
+        // Insert user data
         const { data: userData, error: userError } = await supabase
             .from('useraccounts')
             .insert([
@@ -164,94 +147,89 @@ const applicantController = {
             ])
             .select('userId')
             .single();
-    
+
         if (userError) {
-            console.error('Error inserting data into the useraccounts table:', userError);
+            console.error('Error inserting data into useraccounts:', userError);
             errors.general = 'Error inserting data into the database';
-            return res.status(500).render('publicsignup', { errors });
+            return res.status(500).render('applicant_pages/signup', { errors });
         }
-    
-        const userId = userData.userId;
-    
-        // Insert data into the applicantaccounts table
+
+        // Insert applicant data
         const { data: applicantData, error: applicantError } = await supabase
             .from('applicantaccounts')
             .insert([
                 {
-                    userId: userId,
+                    userId: userData.userId,
                     lastName: lastName,
                     firstName: firstName,
                     middleInitial: middleInitial,
-                    birthDate: birthDate, // Ensure this matches your database schema
+                    birthDate: birthDate,
                     applicantStatus: 'Account initially created',
                 },
             ]);
-    
+
         if (applicantError) {
-            console.error('Error inserting data into the applicantaccounts table:', applicantError);
+            console.error('Error inserting data into applicantaccounts:', applicantError);
             errors.general = 'Error inserting applicant data into the database';
-            return res.status(500).render('publicsignup', { errors });
+            return res.status(500).render('applicant_pages/signup', { errors });
         }
-    
-        // Redirect to the login page upon successful registration
-        res.redirect('/login');
+
+        // Redirect upon success
+        res.redirect('/applicant/login');
     },
 
     handleLoginSubmit: async function (req, res) {
         const { email, password } = req.body;
-    
-        // Query Supabase to check customer credentials
-        const { data, error } = await supabase
-            .from('customeraccounts')
-            .select('email, password, customerId, role')
-            .eq('email', email);
-    
+
+        // Check user in useraccounts
+        let { data, error } = await supabase
+            .from('useraccounts')
+            .select('userId, userPass, userRole') // Make sure to include userId
+            .eq('userEmail', email);
+
+        // If user not found in useraccounts, check applicantaccounts
         if (error) {
             console.error(error);
             return res.status(500).send('Internal Server Error');
         }
-    
+
+        // Check for user in applicantaccounts only if not found in useraccounts
+        if (data.length === 0) {
+            ({ data, error } = await supabase
+                .from('applicantaccounts')
+                .select('userId, userPass, userRole') // Adjust fields if necessary
+                .eq('userId', email) // Note: This may need adjustment if applicantaccounts does not have email
+            );
+
+            if (error) {
+                console.error(error);
+                return res.status(500).send('Internal Server Error');
+            }
+        }
+
+        // Check if user is found in either useraccounts or applicantaccounts
         if (data.length > 0) {
-    
             console.log('Supabase Data:', data);
-            console.log('Supabase Error:', error);
-    
             console.log('Entered Password:', password);
-            console.log('Stored Hashed Password:', data[0].password);
-            const passwordMatch = await bcrypt.compare(password, data[0].password);
-    
+            console.log('Stored Hashed Password:', data[0].userPass);
+            
+            // Compare the entered password with the stored hashed password
+            const passwordMatch = await bcrypt.compare(password, data[0].userPass);
+
             if (passwordMatch) {
                 // Set session variables
                 req.session.authenticated = true;
-                req.session.userID = data[0].customerId;
-                req.session.userRole = data[0].role;
-    
-                // Redirect based on user role
-                switch (data[0].role) {
-                    case 'employee':
-                        res.redirect('/employeehome');
-                        break;
-                    case 'hr':
-                        res.redirect('/hrhome');
-                        break;
-                    case 'depthead':
-                        res.redirect('/deptheadhome');
-                        break;
-                    default:
-                        // In case of an undefined role, redirect to a generic homepage or logout
-                        res.redirect('/generic-home'); // Optional: handle this as per your system
-                        break;
-                }
-            } else {
-                res.render('memberlogin', { message: 'Wrong password or username' });
+                req.session.userID = data[0].userId; // Ensure this matches your actual field
+                req.session.userRole = data[0].userRole;
+
+                // Redirect to /chatbothome after successful login
+                return res.redirect('/chatbothome');
             }
-        } else {
-            res.render('memberlogin', { message: 'Wrong password or username' });
         }
+
+        // If no user found or password does not match
+        res.render('applicant_pages/login', { message: 'Wrong password or email' });
     },
-    
-
-
 };
 
 // Export the applicantController object
