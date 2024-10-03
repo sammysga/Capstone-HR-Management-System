@@ -19,8 +19,6 @@ router.post('/applicant/signup', applicantController.handleRegisterPage);
 router.get('/applicant/login', applicantController.getApplicantLogin);
 router.post('/applicant/login', applicantController.getApplicantLogin);
 
-
-
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
