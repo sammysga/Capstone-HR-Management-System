@@ -62,17 +62,18 @@
         document.getElementById('announcementForm').addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            const formData = new FormData();
-            formData.append('subject', document.getElementById('subject').value);
-            formData.append('content', document.getElementById('content').value);
+            const formData = new FormData(this);
+            
+            // formData.append('subject', document.getElementById('subject').value);
+            // formData.append('content', document.getElementById('content').value);
 
-            const imageFile = document.getElementById('image').files[0];
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
+            // const imageFile = document.getElementById('image').files[0];
+            // if (imageFile) {
+            //     formData.append('image', imageFile);
+            // }
 
             try {
-                const response = await fetch('/hr/api/add-announcement', {
+                const response = await fetch('/hr/add-announcement', {
                     method: 'POST',
                     body: formData
                 });
@@ -83,9 +84,10 @@
 
                 const result = await response.json();
                 console.log('Announcement added successfully:', result);
-                window.location.href = '/hr/managehome';
+                window.location.href = '/hr/managehome'; // redirect to manage home after succesful submission
             } catch (error) {
                 console.error('Error adding announcement:', error);
+                alert('Error adding announcement. Please try again.');
             }
         })
     </script>
