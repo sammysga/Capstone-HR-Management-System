@@ -8,7 +8,7 @@ const hrController = {
             res.render('staffpages/hr_pages/hrdashboard');
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
 
@@ -31,7 +31,7 @@ const hrController = {
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
     
@@ -41,7 +41,7 @@ const hrController = {
             res.render('staffpages/hr_pages/hraddannouncement');
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
 
@@ -87,7 +87,7 @@ const hrController = {
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
 
@@ -108,7 +108,7 @@ const hrController = {
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
 
@@ -117,7 +117,7 @@ const hrController = {
             res.render('staffpages/hr_pages/hreditjoboffers');
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
 
@@ -183,7 +183,7 @@ const hrController = {
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
 
@@ -279,7 +279,7 @@ const hrController = {
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
 

@@ -4,7 +4,7 @@ const lineManagerController = {
             res.render('staffpages/linemanager_pages/managerdashboard');
         } else {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
 };

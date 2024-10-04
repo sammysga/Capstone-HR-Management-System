@@ -17,7 +17,7 @@ const staffloginController = {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             req.flash('errors', { loginError: errors.array().map(error => error.msg).join(', ') });
-            return res.redirect('/login/staff');
+            return res.redirect('/staff/login');
         }
 
         const { email, password } = req.body;
@@ -30,13 +30,13 @@ const staffloginController = {
 
         if (error || !user) {
             req.flash('errors', { loginError: 'Invalid email or password' });
-            return res.redirect('/login/staff');
+            return res.redirect('/staff/login');
         }
 
         const isMatch = await bcrypt.compare(password, user.userPass);
         if (!isMatch) {
             req.flash('errors', { loginError: 'Invalid email or password' });
-            return res.redirect('/login/staff');
+            return res.redirect('/staff/login');
         }
 
         req.session.user = user;
@@ -54,7 +54,7 @@ const staffloginController = {
                 break;
             default:
                 req.flash('errors', { loginError: 'Unauthorized access' });
-                res.redirect('/login/staff');
+                res.redirect('/staff/login');
         }
     },
 };
