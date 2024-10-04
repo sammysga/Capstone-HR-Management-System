@@ -47,19 +47,31 @@ const hrController = {
 
     postAddAnnouncement: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            const { subject, content } = req.body;
-            let imageUrl = null;
 
-            if (req.file) {
-                imageUrl = `uploads/${req.file.filename}`;
+            // console.log('Request Body:', req.body); 
+
+            const { subject, content } = req.body;
+
+            console.log('Received Subject:', subject);
+            console.log('Received Content:', content);
+
+            if(!subject || !content) {
+                req.flash('errors', { dbError: 'Subject and content are required.' });
+                return res.redirect('/hr/addannouncement');
             }
+            
+            // let imageUrl = null;
+
+            // if (req.file) {
+            //     imageUrl = `uploads/${req.file.filename}`;
+            // }
 
             try {
                 const { data, error } = await supabase
                     .from('announcements')
                     .insert([{
                         subject,
-                        imageUrl, // can be null if no file is uploaded
+                        imageUrl: null, // can be null if no file is uploaded
                         content,
                         createdAt: new Date()
                     }]);
