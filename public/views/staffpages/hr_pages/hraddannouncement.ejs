@@ -16,12 +16,12 @@
                 <a href="/hr/managehome" class="back-button">&#9664 Back</a>
                 <h2 class="heading" style="color:#07ACB9;">Add an Announcement</h2>
             </div>
-            <form id="announcementForm" action="/hr/addannouncement" method="post" class="announcement-form" enctype="multipart/form-data">
+            <form id="announcementForm" action="/hr/addannouncement" method="post" class="announcement-form">
                 <input type="text" id="subject" name="subject" placeholder="Subject" required>
 
-                <div class="file-input-container">
+                <!-- <div class="file-input-container">
                     <input type="file" id="image" name="image">
-                </div>
+                </div> -->
 
                 <textarea id="content" name="content" placeholder="Announcement Content" required></textarea>
 
@@ -62,24 +62,31 @@
         document.getElementById('announcementForm').addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            const formData = new FormData(this);
-            
-            // formData.append('subject', document.getElementById('subject').value);
-            // formData.append('content', document.getElementById('content').value);
+            const formData = new FormData();
+            formData.append('subject', document.getElementById('subject').value);
+            formData.append('content', document.getElementById('content').value);
+
 
             // const imageFile = document.getElementById('image').files[0];
             // if (imageFile) {
             //     formData.append('image', imageFile);
             // }
 
+            console.log('Subject:', document.getElementById('subject').value);
+            console.log('Content:', document.getElementById('content').value);
+            // console.log('Image File:', imageFile);
+
+
             try {
-                const response = await fetch('/hr/add-announcement', {
+                const response = await fetch('/hr/addannouncement', {
                     method: 'POST',
                     body: formData
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to add announcement. ');
+                    const errorText = await response.text();
+                    console.error('Server error:', response.status, errorText);
+                    throw new Error('Failed to add announcement. Server error: ' + response.status);
                 }
 
                 const result = await response.json();
@@ -87,7 +94,7 @@
                 window.location.href = '/hr/managehome'; // redirect to manage home after succesful submission
             } catch (error) {
                 console.error('Error adding announcement:', error);
-                alert('Error adding announcement. Please try again.');
+                alert('Error adding announcement. Please try again.' + error.message);
             }
         })
     </script>
