@@ -17,9 +17,7 @@ router.get('/', applicantController.getPublicHome);
 router.get('/applicant/signup', applicantController.getApplicantRegisterPage);
 router.post('/applicant/signup', applicantController.handleRegisterPage);
 router.get('/applicant/login', applicantController.getApplicantLogin);
-router.post('/applicant/login', applicantController.handleLoginSubmit);
-
-
+router.post('/applicant/login', applicantController.getApplicantLogin);
 
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
@@ -28,8 +26,8 @@ router.get('/contactform', applicantController.getContactForm);
 router.get('/job-details/:jobOfferId', applicantController.getJobDetails);
 
 // Staff Log in
-router.get('/login/staff', staffLoginController.getStaffLogin);
-router.post('/login/staff', staffLoginController.postStaffLogin);
+router.get('/staff/login', staffLoginController.getStaffLogin);
+router.post('/staff/login', staffLoginController.postStaffLogin);
 
 // Protected routes (role-specific logic in respective controllers)
 router.get('/hr/dashboard', hrController.getHRDashboard);

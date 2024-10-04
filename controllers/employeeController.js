@@ -4,7 +4,7 @@ const employeeController = {
             res.render('staffpages/employee_pages/employeedashboard');
         } else {
             req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
-            res.redirect('/login/staff');
+            res.redirect('/staff/login');
         }
     },
 };
