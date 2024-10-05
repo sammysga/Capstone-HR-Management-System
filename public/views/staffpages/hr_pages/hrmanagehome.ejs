@@ -22,10 +22,10 @@
                     <% announcements.forEach(announcement => { %>
                         <div class="announcement-box">
                             <button class="delete-btn" data-id="<%= announcement.id %>">X</button>
-                    
+
                             <div class="announcement-header">
                                 <h3><%= announcement.subject %></h3>
-                                <button class="edit-btn">Edit</button>
+                                <a href='/hr/editannouncement/:id'class="edit-btn">Edit</a>
                             </div>
                     
                             <div class="announcement-details">

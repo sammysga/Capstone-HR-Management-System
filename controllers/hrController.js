@@ -90,7 +90,7 @@ const hrController = {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 const { data: announcement, error } = await supabase
-                    .from('annouoncements')
+                    .from('announcements')
                     .select('*')
                     .eq('id', id)
                     .single(); 
@@ -110,14 +110,14 @@ const hrController = {
     },
 
     deleteAnnouncement: async function (req, res) {
-        const { id } = req.params;
+        const { announcementID } = req.params;
 
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 const { error } = await supabase
                     .from('announcements')
                     .delete()
-                    .eq('id', id);
+                    .eq('id', announcementID);
 
                 if (error) throw error;
 
