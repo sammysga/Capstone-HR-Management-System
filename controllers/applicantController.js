@@ -61,6 +61,9 @@ const applicantController = {
     getContactForm: async function(req, res) {
         res.render('applicant_pages/contactform', { errors: {} }); 
     },
+    getChatbotPage: async function(req, res) {
+        res.render('applicant_pages/chatbot', { errors: {} }); 
+    },
 
     handleContactSubmit: async function(req, res) {
         const { inquiry, lastName, firstName, email, subject, message } = req.body;
@@ -179,56 +182,70 @@ const applicantController = {
     },
 
     handleLoginSubmit: async function (req, res) {
-        const { email, password } = req.body;
+        try {
+            const { email, password } = req.body;
 
-        // Check user in useraccounts
-        let { data, error } = await supabase
-            .from('useraccounts')
-            .select('userId, userPass, userRole') // Make sure to include userId
-            .eq('userEmail', email);
+            console.log('Login Attempt:', { email, password });
 
-        // If user not found in useraccounts, check applicantaccounts
-        if (error) {
-            console.error(error);
-            return res.status(500).send('Internal Server Error');
-        }
+            // Check user in useraccounts
+            let { data, error } = await supabase
+                .from('useraccounts')
+                .select('userId, userPass, userRole')
+                .eq('userEmail', email);
 
-        // Check for user in applicantaccounts only if not found in useraccounts
-        if (data.length === 0) {
-            ({ data, error } = await supabase
-                .from('applicantaccounts')
-                .select('userId, userPass, userRole') // Adjust fields if necessary
-                .eq('userId', email) // Note: This may need adjustment if applicantaccounts does not have email
-            );
-
+            console.log('useraccounts data:', data);
             if (error) {
-                console.error(error);
+                console.error('Error querying useraccounts:', error);
                 return res.status(500).send('Internal Server Error');
             }
-        }
 
-        // Check if user is found in either useraccounts or applicantaccounts
-        if (data.length > 0) {
-            console.log('Supabase Data:', data);
-            console.log('Entered Password:', password);
-            console.log('Stored Hashed Password:', data[0].userPass);
-            
-            // Compare the entered password with the stored hashed password
-            const passwordMatch = await bcrypt.compare(password, data[0].userPass);
+            // If user not found in useraccounts, check applicantaccounts
+            if (data.length === 0) {
+                console.log('User not found in useraccounts, checking applicantaccounts...');
+                ({ data, error } = await supabase
+                    .from('applicantaccounts')
+                    .select('userId, userPass, userRole') 
+                    .eq('userEmail', email));
 
-            if (passwordMatch) {
-                // Set session variables
-                req.session.authenticated = true;
-                req.session.userID = data[0].userId; // Ensure this matches your actual field
-                req.session.userRole = data[0].userRole;
-
-                // Redirect to /chatbothome after successful login
-                return res.redirect('/chatbothome');
+                console.log('applicantaccounts data:', data);
+                if (error) {
+                    console.error('Error querying applicantaccounts:', error);
+                    return res.status(500).send('Internal Server Error');
+                }
             }
-        }
 
-        // If no user found or password does not match
-        res.render('applicant_pages/login', { message: 'Wrong password or email' });
+            // Check if user is found
+            if (data.length > 0) {
+                console.log('User found:', data[0]);
+
+                // Compare the entered password with the stored hashed password
+                const passwordMatch = await bcrypt.compare(password, data[0].userPass);
+                console.log('Password Match:', passwordMatch);
+
+                if (passwordMatch) {
+                    // Set session variables
+                    req.session.authenticated = true;
+                    req.session.userID = data[0].userId;
+                    req.session.userRole = data[0].userRole;
+
+                    // Log session information
+                    console.log('Session data:', req.session);
+
+                    // Redirect to /chatbothome after successful login
+                    return res.redirect('/chatbothome');
+                } else {
+                    console.log('Password mismatch');
+                }
+            } else {
+                console.log('No user found');
+            }
+
+            // If no user found or password does not match
+            res.render('applicant_pages/login', { message: 'Wrong password or email' });
+        } catch (err) {
+            console.error('Unexpected error during login process:', err);
+            res.status(500).send('Internal Server Error');
+        }
     },
 };
 
