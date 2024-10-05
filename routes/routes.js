@@ -17,13 +17,14 @@ router.get('/', applicantController.getPublicHome);
 router.get('/applicant/signup', applicantController.getApplicantRegisterPage);
 router.post('/applicant/signup', applicantController.handleRegisterPage);
 router.get('/applicant/login', applicantController.getApplicantLogin);
-router.post('/applicant/login', applicantController.getApplicantLogin);
+router.post('/applicant/login', applicantController.handleLoginSubmit);
 
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
 router.get('/job-details/:jobOfferId', applicantController.getJobDetails);
+router.get('/chatbothome', applicantController.getChatbotPage);
 
 // Staff Log in
 router.get('/staff/login', staffLoginController.getStaffLogin);
