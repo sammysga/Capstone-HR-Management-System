@@ -300,6 +300,7 @@
 .edit-btn {
     background-color: rgba(101, 112, 129, 0.1);
     color: #657081;
+    text-decoration: none;
     border: none;
     padding: 5px 10px;
     border-radius: 5px;

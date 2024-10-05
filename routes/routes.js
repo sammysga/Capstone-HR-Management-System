@@ -43,7 +43,7 @@ router.get('/hr/managehome', hrController.getHRManageHome);
 router.get('/hr/addannouncement', hrController.getAddAnnouncement);
 router.post('/hr/addannouncement', hrController.postAddAnnouncement);
 router.get('hr/editannouncement/:id', hrController.getAddAnnouncement);
-router.delete('/hr/deleteannouncement/:id', hrController.deleteAnnouncement);
+router.delete('/hr/deleteannouncement/:announcementID', hrController.deleteAnnouncement);
 router.get('/hr/joboffers', hrController.getJobOffers);
 
 
