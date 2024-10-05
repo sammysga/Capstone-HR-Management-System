@@ -1,3 +1,4 @@
+const { render } = require('ejs');
 const supabase = require('../public/config/supabaseClient');
 require('dotenv').config(); // To load environment variables
 const bcrypt = require('bcrypt');
@@ -46,47 +47,87 @@ const hrController = {
     },
 
     postAddAnnouncement: async function(req, res) {
+        console.log('Request Body:', req.body); // Log the entire request body
+        
         if (req.session.user && req.session.user.userRole === 'HR') {
+        const { subject, content } = req.body; // Destructure the subject and content from the request body
 
-            // console.log('Request Body:', req.body); 
+        console.log('Received Subject:', subject);
+        console.log('Received Content:', content);
 
-            const { subject, content } = req.body;
+        // Validate subject and content
+        if (!subject || !content) {
+            return res.status(400).json({ error: 'Subject and content are required.' });
+        }
 
-            console.log('Received Subject:', subject);
-            console.log('Received Content:', content);
-
-            if(!subject || !content) {
-                req.flash('errors', { dbError: 'Subject and content are required.' });
-                return res.redirect('/hr/addannouncement');
-            }
+        try {
+            const { data: announcements, error } = await supabase
+                .from('announcements')
+                .insert([{
+                    subject,
+                    imageUrl: null, // Set to null if no file is uploaded
+                    content,
+                    createdAt: new Date()
+                }]);
             
-            // let imageUrl = null;
+            if (error) throw error;
 
-            // if (req.file) {
-            //     imageUrl = `uploads/${req.file.filename}`;
-            // }
-
-            try {
-                const { data, error } = await supabase
-                    .from('announcements')
-                    .insert([{
-                        subject,
-                        imageUrl: null, // can be null if no file is uploaded
-                        content,
-                        createdAt: new Date()
-                    }]);
-                
-                if (error) throw error;
-
-                req.flash('success', 'Announcement added successfully!');
-                res.redirect('/hr/managehome');
+            req.flash('success', 'Announcement added successfully!');
+            res.status(200).json({ success: true }); // Send a JSON response
             } catch (error) {
                 console.error('Error adding announcement:', error);
-                req.flash('errors', { dbError: 'Failed to add announcement. Please try again.' });
-                res.redirect('/hr/addannouncement');
+                return res.status(500).json({ error: 'Failed to add announcement. Please try again' });
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
+    getEditAnnouncement: async function(req, res) {
+        const { id } = req.params;
+        
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const { data: announcement, error } = await supabase
+                    .from('annouoncements')
+                    .select('*')
+                    .eq('id', id)
+                    .single(); 
+
+                if (error) throw error;
+
+                res.render('staff/hr_pages/hreditannouncement', { announcement });
+            } catch (error) {
+                console.error('Error fetching announcement:', error);
+                req.flash('errors', { fetchError: 'Failed to load announcement. Please try again.' });
+                res.redirect('/hr/managehome');
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
+    deleteAnnouncement: async function (req, res) {
+        const { id } = req.params;
+
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const { error } = await supabase
+                    .from('announcements')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                res.status(200).ascending('Announcement deleted successfully.');
+            } catch (error) {
+                console.error('Error deleting announcement:', error);r
+                res.status(500).send('Failed to delete announcement. Please try again.');
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only. '});
             res.redirect('/staff/login');
         }
     },

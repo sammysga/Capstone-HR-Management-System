@@ -18,49 +18,10 @@
             </div>
         
             <div class="announcements-container">
-                <div class="announcement-box">
-                    <button class="delete-btn">X</button>
-        
-                    <div class="announcement-header">
-                        <h3>Subject</h3>
-                        <button class="edit-btn">Edit</button>
-                    </div>
-        
-                    <div class="announcement-details">
-                        <p>00:00 AM · Jan 01, 2024</p> <!-- Example Time and Date -->
-                    </div>
-        
-                    <div class="announcement-content">
-                        <p>This is the announcement text. It can contain information about the company's updates, upcoming events, or any other important news.</p>
-                    </div>
-                </div>
-            </div>
-        
-            <!-- Another sample -->
-            <div class="announcements-container">
-                <div class="announcement-box">
-                    <button class="delete-btn">X</button>
-        
-                    <div class="announcement-header">
-                        <h3>Subject</h3>
-                        <button class="edit-btn">Edit</button>
-                    </div>
-        
-                    <div class="announcement-details">
-                        <p>00:00 AM · Jan 01, 2024</p> <!-- Example Time and Date -->
-                    </div>
-        
-                    <div class="announcement-content">
-                        <p>This is the announcement text. It can contain information about the company's updates, upcoming events, or any other important news.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="announcements-container">
                 <% if (announcements.length > 0) { %>
                     <% announcements.forEach(announcement => { %>
                         <div class="announcement-box">
-                            <button class="delete-btn">X</button>
+                            <button class="delete-btn" data-id="<%= announcement.id %>">X</button>
                     
                             <div class="announcement-header">
                                 <h3><%= announcement.subject %></h3>
@@ -93,6 +54,33 @@
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
                 this.classList.add('active');
+            });
+        });
+
+        // Delete button functionality
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const id = this.getAttribute('data-id'); // get the announcement id
+                const confirmDelete = confirm('Do you really want to delete this announcement?');
+
+                if (confirmDelete) {
+                    try {
+                        const response = await fetch(`/hr/deleteannouncement/${id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            alert('Announcement deleted successfully.');
+                            window.location.reload();
+                        } else {
+                            const errorText = await response.text();
+                            alert('Failed to delete announcement: ', errorText);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting announcement:', error);
+                        alert('An error occured while trying to delete the announcement.');
+                    }
+                }
             });
         });
 
