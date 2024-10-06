@@ -61,6 +61,8 @@
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', async function() {
                 const id = this.getAttribute('data-id'); // get the announcement id
+                console.log('Deleting announcement with ID:', id);
+
                 const confirmDelete = confirm('Do you really want to delete this announcement?');
 
                 if (confirmDelete) {
