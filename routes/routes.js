@@ -17,13 +17,14 @@ router.get('/', applicantController.getPublicHome);
 router.get('/applicant/signup', applicantController.getApplicantRegisterPage);
 router.post('/applicant/signup', applicantController.handleRegisterPage);
 router.get('/applicant/login', applicantController.getApplicantLogin);
-router.post('/applicant/login', applicantController.getApplicantLogin);
+router.post('/applicant/login', applicantController.handleLoginSubmit);
 
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
 router.get('/job-details/:jobOfferId', applicantController.getJobDetails);
+router.get('/chatbothome', applicantController.getChatbotPage);
 
 // Staff Log in
 router.get('/staff/login', staffLoginController.getStaffLogin);
@@ -41,6 +42,8 @@ router.post('/hr/api/add-staff', hrController.addNewStaff);
 router.get('/hr/managehome', hrController.getHRManageHome); 
 router.get('/hr/addannouncement', hrController.getAddAnnouncement);
 router.post('/hr/addannouncement', hrController.postAddAnnouncement);
+router.get('hr/editannouncement/:id', hrController.getAddAnnouncement);
+router.delete('/hr/deleteannouncement/:announcementID', hrController.deleteAnnouncement);
 router.get('/hr/joboffers', hrController.getJobOffers);
 
 
