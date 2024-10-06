@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Manage Job Offers</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
+</head>
+<body>
+    <%- include('../../partials/hr_partials') %>
+    <!-- Main content -->
+    <div class="main-content">
+        <section class="manage-job-offers">
+            <div class="header">
+                <div class="header-title">
+                    <h2 class="heading" style="color:#07ACB9;">Manage Job Offers</h2>
+                    <button class="filter-btn">Filter By</button>
+                </div>
+                <button class="add-job-btn">Add a Job Offer</button>
+            </div>
+            <div class="job-offers-container">
+                <!-- Example Job Offer -->
+                <div class="job-offer-box">
+                    <div class="job-offer-header">
+                        <div class="job-role-status">
+                            <strong>Job Role</strong>
+                            <span class="status active">Active</span>
+                        </div>
+                        <a href="/hr/editjoboffers" class="edit-btn">Edit</a>
+                    </div>
+                    <div class="job-offer-details">
+                        <p class="department">Department</p>
+                        <div class="job-conditions">
+                            <span class="type work-location">Onsite</span>
+                            <span class="type employment-type">Full-time</span>
+                        </div>
+                    </div>
+                    <div class="job-offer-description">
+                        <p>Description of the job offer with detailed information about the role, responsibilities, and qualifications required.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
+
+
+<!-- JavaScript for sidebar functionality -->
+<script>
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+</script>
