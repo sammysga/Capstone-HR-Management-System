@@ -186,6 +186,15 @@ const hrController = {
         }
     },
 
+    addJobOffer: function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/hraddjoboffers');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
     getEditJobOffers: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             res.render('staffpages/hr_pages/hreditjoboffers');
