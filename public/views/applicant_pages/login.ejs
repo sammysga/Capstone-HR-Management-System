@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Applicant Login</title>
-    <link rel="stylesheet" href="/public/css/loginapplicant.css"> <!-- Add your own CSS path here -->
+    <link rel="stylesheet" href="/css/loginapplicant.css"> <!-- Add your own CSS path here -->
     <style>
         body {
             margin: 0;
@@ -76,8 +76,8 @@
 
     <div class="login-container">
         <img src="/images/prime_assets/primeinfra-logo-text.png" alt="Company Logo"> <!-- Add your logo path here -->
-        <form action="/applicant/login" method="POST">
-            <input type="email" name="email" placeholder="Email" required>
+        <form method="POST" action="/applicant/login">
+            <input type="email" name="email" placeholder="Email" required autocomplete="email">
             
             <div class="password-wrapper">
                 <input type="password" name="password" id="password" placeholder="Password" required>
