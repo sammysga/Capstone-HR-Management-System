@@ -73,7 +73,7 @@ const hrController = {
             if (error) throw error;
 
             req.flash('success', 'Announcement added successfully!');
-            res.status(200).json({ success: true }); // Send a JSON response
+            res.status(200).json({ success: true });
             } catch (error) {
                 console.error('Error adding announcement:', error);
                 return res.status(500).json({ error: 'Failed to add announcement. Please try again' });
@@ -186,11 +186,43 @@ const hrController = {
         }
     },
 
-    addJobOffer: function(req, res) {
+    getAddJobOffer: function(req, res){
         if (req.session.user && req.session.user.userRole === 'HR') {
             res.render('staffpages/hr_pages/hraddjoboffers');
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
+    postAddJobOffer: async function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const { jobRole, department, workLocation, employmentType, description } = req.body;
+
+                const { data, error } = await supabase
+                    .from('joboffers')
+                    .insert([
+                        {
+                            jobRole, 
+                            department,
+                            status: 'Active',
+                            workLocation,
+                            employmentType,
+                            description,
+                            createdAt: new Date()
+                        }
+                    ]);
+
+                    if (error) throw error;
+
+                    res.status(201).json({ message: 'Job offer added successfully', data });
+            } catch (error) {
+                console.error('Error adding job offers:', error);
+                res.status(500).json({ error: 'Failed to add job offer. Please try agian.' });
+            }
+        } else {
+            req.status(403).json({ errors: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
         }
     },
