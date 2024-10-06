@@ -46,7 +46,8 @@ router.get('/hr/editannouncement/:announcementID', hrController.getEditAnnouncem
 router.post('/hr/editannouncement/:announcementID', hrController.updateAnnouncement);
 router.delete('/hr/deleteannouncement/:announcementID', hrController.deleteAnnouncement);
 router.get('/hr/joboffers', hrController.getJobOffers);
-router.get('/hr/addjoboffer', hrController.addJobOffer);
+router.get('/hr/addjoboffer', hrController.getAddJobOffer);
+router.post('/hr/addjoboffer', hrController.postAddJobOffer);
 router.get('/hr/editjoboffers', hrController.getEditJobOffers);
 
 
