@@ -788,4 +788,22 @@ body {
         padding: 16px;
     }
 }
+
+.application-status-tab {
+    padding: 20px;
+    font-size: 16px;
+}
+
+.application-steps-list {
+    list-style-type: decimal; /* This will display numbers for the list */
+    padding-left: 20px; /* Adjust padding as needed for alignment */
+    margin-left: 0; /* Ensure no extra margin on the left */
+}
+
+.application-steps-list li {
+    margin: 0; /* Remove margin from list items */
+}
+
+
+
 /* end: Breakpoints */
