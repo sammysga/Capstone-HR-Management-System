@@ -5,21 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Recruitment - Prime Infra</title>
     <link rel="stylesheet" href="/css/publicapplicant.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Style for job offers */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9f9f9; /* Light background for the page */
+        }
+
         .job-offers {
             background-color: #fff;
             padding: 20px;
-            margin: 20px 0;
+            margin: 20px auto;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .job-offers h2 {
-            font-size: 1.8em;
+            font-size: 2em;
+            font-weight: 600;
             color: #333;
             text-align: center;
             margin-bottom: 20px;
@@ -33,11 +39,13 @@
 
         .job-item {
             background-color: #f4f4f4;
-            padding: 20px;
+            padding: 25px; /* Increased padding for a cleaner look */
             border-radius: 6px;
             font-size: 1em;
             color: #555;
             transition: background-color 0.3s ease;
+            line-height: 1.6; /* Increased line-height for readability */
+            letter-spacing: 0.5px; /* Subtle letter spacing */
         }
 
         .job-item:hover {
@@ -47,34 +55,41 @@
         .job-item a {
             text-decoration: none;
             color: inherit;
+            transition: color 0.3s ease, text-decoration 0.3s ease;
+        }
+
+        .job-item a:hover {
+            color: #4CAF50; /* Change color on hover */
+            text-decoration: underline; /* Underline on hover */
         }
 
         .job-item .title {
-            font-weight: bold;
-            color: #333;
+            font-weight: 600;
+            font-size: 1.4em;
+            color: #2c2c2c; /* Darker shade for title */
             margin-bottom: 10px;
-            font-size: 1.2em;
         }
 
         .job-item .department {
             font-size: 0.9em;
-            color: #888;
+            color: #757575; /* Lighter shade for department */
             margin-bottom: 10px;
         }
 
         .job-item .description {
-            color: #666;
+            font-weight: 400;
             font-size: 1em;
+            color: #666; /* Description color */
+            margin-bottom: 10px;
         }
 
         .job-item .status {
-            color: green;
             font-weight: bold;
             margin-top: 10px;
         }
 
         .job-item .inactive {
-            color: red;
+            color: #f44336; /* Red for inactive */
         }
 
         .apply-button {
@@ -99,19 +114,22 @@
 
     <!-- Job Recruitment Section -->
     <section class="job-offers">
-        <h2>Job Offers</h2>
+        <h2>Current Job Openings</h2>
         <div class="job-listing">
-            <!-- Loop through the job offers passed from the controller -->
             <% if (joboffers && joboffers.length > 0) { %>
                 <% joboffers.forEach(function(job) { %>
                     <div class="job-item">
-                        <!-- Make job offer clickable -->
                         <a href="/job-details/<%= job.jobOfferId %>">
-                            <div class="title"><%= job.jobRole %></div>
-                            <div class="department">Department: <%= job.department %></div>
+                            <div class="title">Join Us as a <%= job.jobRole %>!</div>
+                            <div class="department">
+                                <i class="fas fa-building"></i> Department: <%= job.department %>
+                            </div>
                             <div class="description"><%= job.description %></div>
                             <div class="status">
-                                Status: <%= job.status === "Active" ? "Active" : "Inactive" %>
+                                Status: <%= job.status === "Active" ? "This position is currently open!" : "This position is no longer accepting applications." %>
+                            </div>
+                            <div>
+                                <a class="apply-button" href="/job-details/<%= job.jobOfferId %>">Apply Now!</a>
                             </div>
                         </a>
                     </div>

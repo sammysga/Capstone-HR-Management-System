@@ -5,21 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About the Company - Prime Infra</title>
     <link rel="stylesheet" href="/css/publicapplicant.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Simple and modern style for announcements */
+        /* Overall body styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9f9f9; /* Light background for the page */
+            margin: 0;
+            padding: 0;
+            color: #333; /* Default text color */
+            font-size: 16px; /* Base font size */
+        }
+
+        /* Announcements Section */
         .announcements {
             background-color: #fff;
             padding: 20px;
-            margin: 20px 0;
+            margin: 20px auto;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .announcements h2 {
-            font-size: 1.8em;
+            font-size: 2em; /* Main heading size */
             color: #07ACB9;
             text-align: center;
             margin-bottom: 20px;
@@ -35,25 +45,30 @@
             background-color: #f4f4f4;
             padding: 20px;
             border-radius: 6px;
-            font-size: 1em;
-            color: #555;
+            transition: background-color 0.3s ease;
+        }
+
+        .announcement-item:hover {
+            background-color: #e0e0e0; /* Hover effect */
         }
 
         .announcement-item .subject {
-            font-weight: bold;
+            font-weight: 600;
             color: #333;
             margin-bottom: 10px;
+            font-size: 1.2em; /* Subject text size */
         }
 
         .announcement-item .timestamp {
-            font-size: 0.9em;
+            font-size: 0.9em; /* Slightly smaller timestamp */
             color: #888;
             margin-bottom: 10px;
         }
 
         .announcement-item .description {
             color: #666;
-            font-size: 1em;
+            font-size: 1em; /* Standard description size */
+            line-height: 1.5; /* Improve readability */
         }
 
         .announcement-content p.no-announcement {
@@ -62,6 +77,75 @@
             font-style: italic;
         }
 
+        /* About Us Section */
+        .about-us {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .purpose-mission {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .purpose, .mission {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        .purpose:hover, .mission:hover {
+            background-color: #e0e0e0; /* Hover effect */
+        }
+
+        .purpose h2, .mission h2 {
+            font-size: 1.5em; /* Section heading size */
+            color: #07ACB9; /* Matching color */
+            margin-bottom: 10px;
+        }
+
+        .values-heading {
+            text-align: center;
+            font-size: 2em; /* Values section heading size */
+            color: #07ACB9;
+            margin-bottom: 20px;
+        }
+
+        .values-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .value {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        .value:hover {
+            background-color: #e0e0e0; /* Hover effect */
+        }
+
+        .value h3 {
+            font-size: 1.2em; /* Value title size */
+            color: #333; /* Title color */
+            margin-bottom: 10px;
+        }
+
+        .value p {
+            color: #666; /* Description color */
+            line-height: 1.5; /* Improve readability */
+            font-size: 1em; /* Standard description size */
+        }
     </style>
 </head>
 <body>
@@ -96,7 +180,7 @@
         <div class="purpose-mission">
             <div class="purpose">
                 <h2>PURPOSE</h2>
-                <p>Better lives and resilient economies, through critical infrastructure.</p>
+                <p>Better lives and resilient economies through critical infrastructure.</p>
             </div>
 
             <div class="mission">
@@ -108,22 +192,22 @@
         <h2 class="values-heading">OUR VALUES</h2>
         <div class="values-container">
             <div class="value">
-                <h3>VALUE CREATION</h3>
+                <h3><i class="fas fa-star"></i> VALUE CREATION</h3>
                 <p>We create meaningful value by investing in projects that improve the quality of life for our host communities, investing in the development and welfare of our employees, and managing these investments to deliver high returns to our shareholders.</p>
             </div>
 
             <div class="value">
-                <h3>INTEGRITY</h3>
+                <h3><i class="fas fa-shield-alt"></i> INTEGRITY</h3>
                 <p>We are ethical, fair, and transparent in our business practices at every level of our organization while delivering a profitable and sustainable business, and expect similar behavior from our business partners.</p>
             </div>
 
             <div class="value">
-                <h3>PIONEERING</h3>
+                <h3><i class="fas fa-lightbulb"></i> PIONEERING</h3>
                 <p>We evolve new approaches, explore new methods and ideas, in order to create innovative solutions and deliver lasting impact for the countries in which we operate.</p>
             </div>
 
             <div class="value">
-                <h3>PASSION</h3>
+                <h3><i class="fas fa-heart"></i> PASSION</h3>
                 <p>We live and breathe the work that we do, and seek out colleagues and business partners that share the same deep commitment to our purpose.</p>
             </div>
         </div>
