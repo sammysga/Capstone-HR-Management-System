@@ -431,7 +431,7 @@ body {
 }
 
 .conversation-main {
-    height: calc(100% - 48px);
+    height: calc(100% - 120px);
     overflow-y: auto;
 }
 .conversation-wrapper {
@@ -607,100 +607,112 @@ body {
     position: relative;
     z-index: 1;
 }
-
 .conversation-form {
-    padding: 10px 0px;
-    background-color: var(--white);
-    display: flex;
-    align-items: flex-end;
+    padding: 10px 0; /* Padding for top and bottom */
+    background-color: var(--white); /* Background color for the form */
+    display: flex; /* Use flexbox for layout */
+    align-items: flex-end; /* Align items to the bottom */
 }
 
 .conversation-form-group {
-    width: calc(100% - 40px); /* set width to account for send button */
-    position: relative;
-    margin-right: 0; /* remove margin-right */
+    width: calc(100% - 40px); /* Set width to account for the send button */
+    position: relative; /* Relative positioning for child elements */
+    margin-right: 0; /* Remove right margin */
 }
 
 .conversation-form-input {
-    background-color: var(--slate-100);
-    border: 1px solid var(--slate-300);
-    border-radius: 4px;
-    outline: transparent;
-    padding: 10px 32px 10px 0; /* set padding-left to 0 */
-    font: inherit;
-    font-size: 16px;
-    resize: none;
-    width: 100%;
-    display: block;
-    line-height: 1.5;
-    max-height: calc(20px + ((14px * 2) * 6));
+    background-color: var(--slate-100); /* Input background color */
+    border: 1px solid var(--slate-300); /* Border color */
+    border-radius: 4px; /* Rounded corners */
+    outline: none; /* No outline on focus */
+    padding: 10px 32px 10px 10px; /* Padding left adjusted to 10px */
+    font: inherit; /* Inherit font properties */
+    font-size: 16px; /* Font size */
+    resize: none; /* No resizing */
+    width: 100%; /* Full width */
+    display: block; /* Block display */
+    line-height: 1.5; /* Line height for better readability */
+    max-height: calc(20px + (14px * 2 * 6)); /* Max height based on line height */
 }
+
 .conversation-form-input:focus {
-    border-color: var(--slate-400);
+    border-color: var(--slate-400); /* Border color on focus */
 }
+
 .conversation-form-record {
-    position: absolute;
-    bottom: 8px;
-    right: 16px;
-    font-size: 20px;
-    color: var(--slate-400);
-    background-color: transparent;
-    border: none;
-    outline: transparent;
-    cursor: pointer;
+    position: absolute; /* Absolute positioning */
+    bottom: 8px; /* Position from bottom */
+    right: 16px; /* Position from right */
+    font-size: 20px; /* Font size for record button */
+    color: var(--slate-400); /* Text color */
+    background-color: transparent; /* Transparent background */
+    border: none; /* No border */
+    outline: none; /* No outline */
+    cursor: pointer; /* Pointer cursor */
 }
+
 .conversation-form-record:hover {
-    color: var(--slate-600);
+    color: var(--slate-600); /* Text color on hover */
 }
+
 .conversation-form-button {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    border: none;
-    background-color: transparent;
-    outline: transparent;
-    font-size: 20px;
-    color: var(--slate-400);
-    cursor: pointer;
-    flex-shrink: 0;
+    width: 40px; /* Width of the button */
+    height: 40px; /* Height of the button */
+    display: flex; /* Use flexbox for centering */
+    align-items: center; /* Center items vertically */
+    justify-content: center; /* Center items horizontally */
+    border-radius: 4px; /* Rounded corners */
+    border: none; /* No border */
+    background-color: transparent; /* Transparent background */
+    outline: none; /* No outline */
+    font-size: 20px; /* Font size */
+    color: var(--slate-400); /* Text color */
+    cursor: pointer; /* Pointer cursor */
+    flex-shrink: 0; /* Prevent shrinking */
 }
+
 .conversation-form-button:hover {
-    background-color: var(--slate-100);
-    color: var(--slate-600);
+    background-color: var(--slate-100); /* Background color on hover */
+    color: var(--slate-600); /* Text color on hover */
 }
+
 .conversation-form-button:active {
-    background-color: var(--slate-200);
-    color: var(--slate-600);
+    background-color: var(--slate-200); /* Background color on active */
+    color: var(--slate-600); /* Text color on active */
 }
+
 .conversation-form-submit {
-    background-color: #07ACB9;
-    box-shadow: 0 2px 8px -2px #07ACB9;
-    color: var(--white);
+    background-color: #07ACB9; /* Submit button background color */
+    box-shadow: 0 2px 8px -2px #07ACB9; /* Shadow effect */
+    color: var(--white); /* Text color */
 }
+
 .conversation-form-submit:hover {
-    background-color: #06A8B5;
-    color: var(--white);
+    background-color: #06A8B5; /* Background color on hover */
+    color: var(--white); /* Text color on hover */
 }
+
 .conversation-form-submit:active {
-    background-color: #0597A5;
-    color: var(--white);
+    background-color: #0597A5; /* Background color on active */
+    color: var(--white); /* Text color on active */
 }
+
 .conversation-default {
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    padding-left: calc(256px + 16px);
-    color: var(--slate-400);
+    align-items: center; /* Center items vertically */
+    justify-content: center; /* Center items horizontally */
+    padding: 16px; /* Padding for the default conversation */
+    padding-left: calc(256px + 16px); /* Left padding adjusted */
+    color: var(--slate-400); /* Text color */
 }
+
 .conversation-default i {
-    font-size: 32px;
+    font-size: 32px; /* Icon font size */
 }
+
 .conversation-default p {
-    margin-top: 16px;
+    margin-top: 16px; /* Margin for the paragraph */
 }
+
 /* end: Conversation */
 
 
