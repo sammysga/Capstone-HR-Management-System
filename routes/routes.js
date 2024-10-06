@@ -56,5 +56,5 @@ router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboa
 
 
 
-module.exports = router;
+module.exports = router; 
 
