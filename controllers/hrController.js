@@ -92,12 +92,12 @@ const hrController = {
                 const { data: announcement, error } = await supabase
                     .from('announcements')
                     .select('*')
-                    .eq('id', id)
+                    .eq('id', announcementID)
                     .single(); 
 
                 if (error) throw error;
 
-                res.render('staffpages/hr_pages/hreditannouncement', { announcementID });
+                res.render('staffpages/hr_pages/hreditannouncement', { announcement });
             } catch (error) {
                 console.error('Error fetching announcement:', error);
                 req.flash('errors', { fetchError: 'Failed to load announcement. Please try again.' });
