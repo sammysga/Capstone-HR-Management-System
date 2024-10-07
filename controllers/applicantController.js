@@ -23,7 +23,6 @@ const applicantController = {
             const { data: joboffers, error } = await supabase
                 .from('joboffers')
                 .select('jobOfferId, jobId, jobOfferdescription, jobLocation, isActive')
-                
     
             if (error) {
                 console.error('Error fetching job offers:', error);
@@ -41,23 +40,37 @@ const applicantController = {
     getJobDetails: async function(req, res) {
         try {
             const jobOfferId = req.params.jobOfferId;
-            const { data: job, error } = await supabase
+            
+            // Fetch the job details
+            const { data: job, error: jobError } = await supabase
                 .from('joboffers')
                 .select('*')
                 .eq('jobOfferId', jobOfferId)
                 .single();
-            
-            if (error) {
-                console.error('Error fetching job details:', error);
+    
+            if (jobError) {
+                console.error('Error fetching job details:', jobError);
                 return res.status(500).send('Error fetching job details');
             }
-
-            res.render('applicant_pages/job-details', { job });
+    
+            // Fetch the job requirements associated with the job offer
+            const { data: requirements, error: requirementsError } = await supabase
+                .from('jobrequirements')
+                .select('*')
+                .eq('jobOfferId', jobOfferId); // Ensure jobOfferId is used for matching
+    
+            if (requirementsError) {
+                console.error('Error fetching job requirements:', requirementsError);
+                return res.status(500).send('Error fetching job requirements');
+            }
+    
+            res.render('applicant_pages/job-details', { job, requirements });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
+    
 
     getContactForm: async function(req, res) {
         res.render('applicant_pages/contactform', { errors: {} }); 

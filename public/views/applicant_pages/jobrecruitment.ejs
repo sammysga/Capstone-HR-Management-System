@@ -119,11 +119,10 @@
                 <% joboffers.forEach(function(job) { %>
                     <div class="job-item">
                         <a href="/job-details/<%= job.jobOfferId %>">
-                            <div class="title">Join Us as a <%= job.jobId %>!</div>
+                            <div class="title"><%= job.jobOfferdescription %></div>
                             <div class="department">
                                 <i class="fas fa-building"></i> Location: <%= job.jobLocation %>
                             </div>
-                            <div class="description"><%= job.jobOfferdescription %></div>
                             <div class="status">
                                 Status: <%= job.isActive ? "This position is currently open!" : "This position is no longer accepting applications." %>
                             </div>
