@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= job.jobRole %> - Job Details</title>
+    <title><%= job.jobOfferdescription %> - Job Details</title>
     <link rel="stylesheet" href="/css/publicapplicant.css">
     <style>
         .job-details {
@@ -40,17 +40,46 @@
         .apply-button:hover {
             background-color: #45a049;
         }
+
+        .requirements {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
     <%- include('../partials/publicheader') %>
 
     <div class="job-details">
-        <h1><%= job.jobRole %></h1>
-        <p><strong>Department:</strong> <%= job.department %></p>
-        <p class="description"><%= job.description %></p>
-        <p><strong>Status:</strong> <%= job.status === "Active" ? "Active" : "Inactive" %></p>
+        <!-- Display the Job Offer Description as Title -->
+        <h1><%= job.jobOfferdescription %></h1>
+        
+        <!-- Display Job Location -->
+        <p><strong>Location:</strong> <%= job.jobLocation %></p>
+        
+        <!-- Display the Full Job Description -->
+        <p class="description"><%= job.jobOfferdescription %></p>
+        
+        <!-- Simple Job Status Display -->
+        <p><strong>Status:</strong> <%= job.isActive ? "Active" : "Inactive" %></p>
 
+        <!-- Job Requirements Section -->
+        <div class="requirements">
+            <h2>Job Requirements</h2>
+            <% if (requirements && requirements.length > 0) { %>
+                <ul>
+                    <% requirements.forEach(function(req) { %>
+                        <li><strong><%= req.jobReqName %>:</strong> <%= req.jobReqDescript %></li>
+                    <% }) %>
+                </ul>
+            <% } else { %>
+                <p>No requirements listed for this job.</p>
+            <% } %>
+        </div>
+
+        <!-- Apply Button -->
         <a href="/apply/<%= job.jobOfferId %>" class="apply-button">Apply Now</a>
     </div>
 </body>
