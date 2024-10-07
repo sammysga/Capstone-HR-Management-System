@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
 /* Basic reset for margins and paddings */
 * {
     margin: 0;
@@ -6,7 +8,8 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', sans-serif; /* Use Inter font */
+    color: #07ACB9;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -14,6 +17,7 @@ body {
     background-image: url('/path/to/your/background/image.jpg'); /* Replace with your background image */
     background-size: cover;
     background-position: center;
+    
 }
 
 /* Centered login box with semi-transparent background */

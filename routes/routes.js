@@ -42,9 +42,13 @@ router.post('/hr/api/add-staff', hrController.addNewStaff);
 router.get('/hr/managehome', hrController.getHRManageHome); 
 router.get('/hr/addannouncement', hrController.getAddAnnouncement);
 router.post('/hr/addannouncement', hrController.postAddAnnouncement);
-router.get('hr/editannouncement/:id', hrController.getAddAnnouncement);
+router.get('/hr/editannouncement/:announcementID', hrController.getEditAnnouncement);
+router.post('/hr/editannouncement/:announcementID', hrController.updateAnnouncement);
 router.delete('/hr/deleteannouncement/:announcementID', hrController.deleteAnnouncement);
 router.get('/hr/joboffers', hrController.getJobOffers);
+router.get('/hr/addjoboffer', hrController.getAddJobOffer);
+router.post('/hr/addjoboffer', hrController.postAddJobOffer);
+router.get('/hr/editjoboffers', hrController.getEditJobOffers);
 
 
 // Employee Routes

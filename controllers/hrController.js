@@ -73,7 +73,7 @@ const hrController = {
             if (error) throw error;
 
             req.flash('success', 'Announcement added successfully!');
-            res.status(200).json({ success: true }); // Send a JSON response
+            res.status(200).json({ success: true });
             } catch (error) {
                 console.error('Error adding announcement:', error);
                 return res.status(500).json({ error: 'Failed to add announcement. Please try again' });
@@ -85,7 +85,7 @@ const hrController = {
     },
 
     getEditAnnouncement: async function(req, res) {
-        const { id } = req.params;
+        const { announcementID } = req.params;
         
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
@@ -97,11 +97,44 @@ const hrController = {
 
                 if (error) throw error;
 
-                res.render('staff/hr_pages/hreditannouncement', { announcement });
+                res.render('staffpages/hr_pages/hreditannouncement', { announcementID });
             } catch (error) {
                 console.error('Error fetching announcement:', error);
                 req.flash('errors', { fetchError: 'Failed to load announcement. Please try again.' });
                 res.redirect('/hr/managehome');
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
+    updateAnnouncement: async function(req, res) {
+        const { announcementID } = req.params;
+        const { subject, content } = req.body;
+    
+        console.log('Update Request Body:', req.body); 
+    
+        if (req.session.user && req.session.user.userRole === 'HR') {
+
+            if (!subject || !content) {
+                return res.status(400).json({ error: 'Subject and content are required.' });
+            }
+    
+            try {
+                const { error } = await supabase
+                    .from('announcements')
+                    .update({ subject, content, updatedAt: new Date() }) 
+                    .eq('id', announcementID); 
+    
+                if (error) throw error;
+    
+                req.flash('success', 'Announcement updated successfully.');
+                res.redirect('/hr/managehome'); 
+            } catch (error) {
+                console.error('Error updating announcement:', error);
+                req.flash('errors', { updateError: 'Failed to update announcement. Please try again.' });
+                res.redirect(`/hr/editannouncement/${announcementID}`); 
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
@@ -117,13 +150,13 @@ const hrController = {
                 const { error } = await supabase
                     .from('announcements')
                     .delete()
-                    .eq('id', announcementID);
+                    .eq('announcementID', announcementID);
 
                 if (error) throw error;
 
-                res.status(200).ascending('Announcement deleted successfully.');
+                res.status(200).send('Announcement deleted successfully.');
             } catch (error) {
-                console.error('Error deleting announcement:', error);r
+                console.error('Error deleting announcement:', error);
                 res.status(500).send('Failed to delete announcement. Please try again.');
             }
         } else {
@@ -149,6 +182,47 @@ const hrController = {
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
+    getAddJobOffer: function(req, res){
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/hraddjoboffers');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
+    postAddJobOffer: async function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const { jobRole, department, workLocation, employmentType, description } = req.body;
+
+                const { data, error } = await supabase
+                    .from('joboffers')
+                    .insert([
+                        {
+                            jobRole, 
+                            department,
+                            status: 'Active',
+                            workLocation,
+                            employmentType,
+                            description,
+                            createdAt: new Date()
+                        }
+                    ]);
+
+                    if (error) throw error;
+
+                    res.status(201).json({ message: 'Job offer added successfully', data });
+            } catch (error) {
+                console.error('Error adding job offers:', error);
+                res.status(500).json({ error: 'Failed to add job offer. Please try agian.' });
+            }
+        } else {
+            req.status(403).json({ errors: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
         }
     },
