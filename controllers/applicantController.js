@@ -22,20 +22,21 @@ const applicantController = {
         try {
             const { data: joboffers, error } = await supabase
                 .from('joboffers')
-                .select('*')
-                .order('createdAt', { ascending: false });
-
+                .select('jobOfferId, jobId, jobOfferdescription, jobLocation, isActive')
+                
+    
             if (error) {
                 console.error('Error fetching job offers:', error);
                 return res.status(500).send('Error fetching job offers');
             }
-
+    
             res.render('applicant_pages/jobrecruitment', { joboffers, errors: {} });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
+    
 
     getJobDetails: async function(req, res) {
         try {
