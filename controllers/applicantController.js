@@ -39,7 +39,7 @@ const applicantController = {
 
     getJobDetails: async function(req, res) {
         try {
-            const jobId = req.params.jobId; // Get jobId from request parameters
+            const jobId = req.params.jobId;  // Make sure this is the correct parameter for jobId
             
             // Fetch the job details from the jobpositions table
             const { data: job, error: jobError } = await supabase
@@ -47,18 +47,18 @@ const applicantController = {
                 .select('*')
                 .eq('jobId', jobId)
                 .single();
-            
+    
             if (jobError) {
                 console.error('Error fetching job details:', jobError);
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch the job requirements associated with the job position using jobId
+            // Fetch the job requirements associated with the job position
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
                 .select('*')
-                .eq('jobId', jobId); // Ensure you filter by jobId
-            
+                .eq('jobOfferId', jobId);  // Change this to match your foreign key
+    
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
                 return res.status(500).send('Error fetching job requirements');
@@ -70,6 +70,7 @@ const applicantController = {
             res.status(500).send('Server error');
         }
     },
+    
     
 
     getContactForm: async function(req, res) {
