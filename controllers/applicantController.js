@@ -39,13 +39,21 @@ const applicantController = {
 
     getJobDetails: async function(req, res) {
         try {
-            const jobId = req.params.jobId;  // Fetch jobId from URL parameters
+            const jobId = req.params.jobId; // Fetch jobId from URL parameters
             
+            // Debugging log
+            console.log('Fetched jobId:', jobId);
+            
+            if (!jobId) {
+                console.error('jobId is undefined');
+                return res.status(400).send('Invalid job ID');
+            }
+    
             // Fetch the job details from the jobpositions table
             const { data: job, error: jobError } = await supabase
                 .from('jobpositions')
                 .select('*')
-                .eq('jobId', jobId)  // Fetch the job with the matching jobId
+                .eq('jobId', jobId)
                 .single();
     
             if (jobError) {
@@ -53,24 +61,24 @@ const applicantController = {
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch the job requirements associated with the departmentId of the job
+            // Fetch the job requirements associated with the jobId
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
-                .select('jobReqName, jobReqDescript')  // Select only relevant fields
-                .eq('departmentId', job.departmentId);  // Match departmentId to fetch the right requirements
-            
+                .select('jobReqName, jobReqDescript')
+                .eq('jobOfferId', jobId); // Ensure jobOfferId is used for matching
+    
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
                 return res.status(500).send('Error fetching job requirements');
             }
     
-            // Render the job-details view with job and requirements data
             res.render('applicant_pages/job-details', { job, requirements });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
+    
     
     
     
