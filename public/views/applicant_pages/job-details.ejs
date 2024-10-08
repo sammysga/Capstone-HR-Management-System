@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= job.jobOfferdescription %> - Job Details</title>
+    <title><%= job.jobTitle %> - Job Details</title>
     <link rel="stylesheet" href="/css/publicapplicant.css">
     <style>
         .job-details {
@@ -53,17 +53,17 @@
     <%- include('../partials/publicheader') %>
 
     <div class="job-details">
-        <!-- Display the Job Offer Description as Title -->
-        <h1><%= job.jobOfferdescription %></h1>
+        <!-- Display the Job Title as Title -->
+        <h1><%= job.jobTitle %></h1>
         
         <!-- Display Job Location -->
-        <p><strong>Location:</strong> <%= job.jobLocation %></p>
+        <p><strong>Location:</strong> <%= job.jobBranch %></p>
         
         <!-- Display the Full Job Description -->
-        <p class="description"><%= job.jobOfferdescription %></p>
+        <p class="description"><%= job.jobDescrpt %></p>
         
         <!-- Simple Job Status Display -->
-        <p><strong>Status:</strong> <%= job.isActive ? "Active" : "Inactive" %></p>
+        <p><strong>Status:</strong> <%= job.isActiveJob ? "Active" : "Inactive" %></p>
 
         <!-- Job Requirements Section -->
         <div class="requirements">
@@ -80,7 +80,7 @@
         </div>
 
         <!-- Apply Button -->
-        <a href="/apply/<%= job.jobOfferId %>" class="apply-button">Apply Now</a>
+        <a href="/apply/<%= job.jobId %>" class="apply-button">Apply Now</a>
     </div>
 </body>
 </html>
