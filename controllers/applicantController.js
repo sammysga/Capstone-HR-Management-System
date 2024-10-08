@@ -57,7 +57,7 @@ const applicantController = {
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
                 .select('*')
-                .eq('jobOfferId', jobId); // Linking job requirements to the jobId
+            
             
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
