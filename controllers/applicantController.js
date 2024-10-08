@@ -57,7 +57,7 @@ const applicantController = {
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
                 .select('*')
-                .eq('jobOfferId', jobId);  // Change this to match your foreign key
+                .eq('jobId', jobId);  // Change this to match your foreign key
     
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
