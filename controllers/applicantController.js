@@ -20,16 +20,16 @@ const applicantController = {
 
     getJobRecruitment: async function(req, res) {
         try {
-            const { data: joboffers, error } = await supabase
-                .from('joboffers')
-                .select('jobOfferId, jobId, jobOfferdescription, jobLocation, isActive')
+            const { data: jobpositions, error } = await supabase
+                .from('jobpositions')
+                .select('jobId, jobTitle, jobDescrpt, jobBranch, isActiveJob');
     
             if (error) {
-                console.error('Error fetching job offers:', error);
-                return res.status(500).send('Error fetching job offers');
+                console.error('Error fetching job positions:', error);
+                return res.status(500).send('Error fetching job positions');
             }
     
-            res.render('applicant_pages/jobrecruitment', { joboffers, errors: {} });
+            res.render('applicant_pages/jobrecruitment', { jobpositions, errors: {} });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');

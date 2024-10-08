@@ -111,31 +111,31 @@
 <body>
     <%- include('../partials/publicheader') %>
 
-    <!-- Job Recruitment Section -->
-    <section class="job-offers">
-        <h2>Current Job Openings</h2>
-        <div class="job-listing">
-            <% if (joboffers && joboffers.length > 0) { %>
-                <% joboffers.forEach(function(job) { %>
-                    <div class="job-item">
-                        <a href="/job-details/<%= job.jobOfferId %>">
-                            <div class="title"><%= job.jobOfferdescription %></div>
-                            <div class="department">
-                                <i class="fas fa-building"></i> Location: <%= job.jobLocation %>
-                            </div>
-                            <div class="status">
-                                Status: <%= job.isActive ? "This position is currently open!" : "This position is no longer accepting applications." %>
-                            </div>
-                            <div>
-                                <a class="apply-button" href="/job-details/<%= job.jobOfferId %>">Apply Now!</a>
-                            </div>
-                        </a>
-                    </div>
-                <% }) %>
-            <% } else { %>
-                <p>No job offers available at the moment.</p>
-            <% } %>
-        </div>
-    </section>
+   <!-- Job Recruitment Section -->
+   <section class="job-offers">
+    <h2>Current Job Openings</h2>
+    <div class="job-listing">
+        <% if (jobpositions && jobpositions.length > 0) { %>
+            <% jobpositions.forEach(function(job) { %>
+                <div class="job-item">
+                    <a href="/job-details/<%= job.jobId %>">
+                        <div class="title"><%= job.jobTitle %></div>
+                        <div class="department">
+                            <i class="fas fa-building"></i> Location: <%= job.jobBranch %>
+                        </div>
+                        <div class="status">
+                            Status: <%= job.isActiveJob ? "This position is currently open!" : "This position is no longer accepting applications." %>
+                        </div>
+                        <div>
+                            <a class="apply-button" href="/job-details/<%= job.jobId %>">Apply Now!</a>
+                        </div>
+                    </a>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <p>No job offers available at the moment.</p>
+        <% } %>
+    </div>
+</section>
 </body>
 </html>
