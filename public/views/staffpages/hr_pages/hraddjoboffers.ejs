@@ -83,7 +83,7 @@ textarea {
         <form action="/hr/addjoboffer" method="POST">
             <div class="form-group">
                 <label for="jobRole">Job Role</label>
-                <select id="jobRole" name="jobRole" required>
+                <select id="jobRole" name="jobId" required>
                     <option value="Frontend Developer">Frontend Developer</option>
                     <option value="Assistant Finance Controller">Assistant Finance Controller</option>
                 </select>
@@ -91,36 +91,53 @@ textarea {
             
             <div class="form-group">
                 <label for="department">Department</label>
-                <select id="department" name="department" required>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Human Resources">Human Resources</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Information Technology">Information Technology</option>
-                    <option value="Engineering">Engineering</option>
+                <select id="department" name="departmentId" required>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="workLocation">Work Location</label>
-                <input type="text" name="workLocation" placeholder="Location" required>
+                <select id="workLocation" name="jobLocation" required>
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Onsite">Onsite</option>
+                </select>
             </div>
-
-            <!-- add work model here: onsite, remote, hybrid -->
 
             <div class="form-group">
                 <label for="employmentType">Employment Type</label>
-                <select id="employmentType" name="employmentType" required>
+                <select id="employmentType" name="jobTimeCommittment" required>
                     <option value="Full-time">Full-time</option>
                     <option value="Part-time">Part-time</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" required></textarea>
+                <label for="description">Job Offer Description</label>
+                <textarea id="description" name="jobOfferdescription" required></textarea>
             </div>
 
-            <div class="skills-section">
+            <div class="form-group">
+                <label for="hiringStartDate">Hiring Start Date</label>
+                <input type="date" id="hiringStartDate" name="hiringStarDate" required>
+            </div>
+
+            <div class="form-group">
+                <label for="hiringEndDate">Hiring End Date</label>
+                <input type="date" id="hiringEndDate" name="hiringEndDate" required>
+            </div>
+
+            <div class="form-group">
+                <label for="isActive">Is Active</label>
+                <input type="checkbox" id="isActive" name="isActive" required>
+            </div>
+             
+            <!-- <div class="skills-section">
                 <h3>Job Skills</h3>
                 <div class="form-group">
                     <label>Hard Skills</label>
@@ -146,7 +163,7 @@ textarea {
                     <label for="requirementDescription">Description</label>
                     <textarea id="requirementDescription" name="requirementDescription" required></textarea>
                 </div>
-            </div>
+            </div> -->
 
             <button type="submit" class="submit-btn">Save Changes</button>
         </form>
@@ -182,7 +199,7 @@ textarea {
 
     // add job offers form submission
     document.getElementById('job-offer-form').addEventListener('submit', async (event) => {
-        event.preventDefault(); // Prevent the default form submission
+        event.preventDefault();
 
         const formData = new FormData(event.target);
         const data = Object.fromEntries(formData.entries());
@@ -199,7 +216,6 @@ textarea {
             if (response.ok) {
                 const result = await response.json();
                 alert(result.message);
-                // Optionally redirect or clear the form
                 event.target.reset();
             } else {
                 const error = await response.json();
