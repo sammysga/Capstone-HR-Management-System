@@ -40,7 +40,7 @@ const applicantController = {
     getJobDetails: async function(req, res) {
         try {
             const jobId = req.params.jobId; // Fetch jobId from URL parameters
-            
+    
             if (!jobId) {
                 console.error('jobId is undefined');
                 return res.status(400).send('Invalid job ID');
@@ -53,7 +53,7 @@ const applicantController = {
                 .eq('jobId', jobId)
                 .single();
     
-            if (jobError) {
+            if (jobError || !job) {
                 console.error('Error fetching job details:', jobError);
                 return res.status(500).send('Error fetching job details');
             }
