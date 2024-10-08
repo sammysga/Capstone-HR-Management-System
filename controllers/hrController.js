@@ -198,19 +198,20 @@ const hrController = {
     postAddJobOffer: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { jobRole, department, workLocation, employmentType, description } = req.body;
+                const { jobId, departmentId, jobLocation, jobTimeCommittment, jobOfferdescription, hiringStarDate, hiringEndDate, isActive } = req.body;
 
                 const { data, error } = await supabase
                     .from('joboffers')
                     .insert([
                         {
-                            jobRole, 
-                            department,
-                            status: 'Active',
-                            workLocation,
-                            employmentType,
-                            description,
-                            createdAt: new Date()
+                            jobId, 
+                            departmentId,
+                            jobLocation,
+                            jobTimeCommittment,
+                            jobOfferdescription,
+                            hiringStarDate,
+                            hiringEndDate,
+                            isActive: isActive ? true : false,
                         }
                     ]);
 
