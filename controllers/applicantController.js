@@ -39,13 +39,13 @@ const applicantController = {
 
     getJobDetails: async function(req, res) {
         try {
-            const jobId = req.params.jobId;  // Updated to match your new primary key
+            const jobId = req.params.jobId;  // Fetch jobId from URL parameters
             
             // Fetch the job details from the jobpositions table
             const { data: job, error: jobError } = await supabase
                 .from('jobpositions')
                 .select('*')
-                .eq('jobId', jobId)
+                .eq('jobId', jobId)  // Fetch the job with the matching jobId
                 .single();
     
             if (jobError) {
@@ -53,23 +53,25 @@ const applicantController = {
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch the job requirements associated with the job position
+            // Fetch the job requirements associated with the departmentId of the job
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
-                .select('*')
-            
+                .select('jobReqName, jobReqDescript')  // Select only relevant fields
+                .eq('departmentId', job.departmentId);  // Match departmentId to fetch the right requirements
             
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
                 return res.status(500).send('Error fetching job requirements');
             }
     
+            // Render the job-details view with job and requirements data
             res.render('applicant_pages/job-details', { job, requirements });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
+    
     
     
 
