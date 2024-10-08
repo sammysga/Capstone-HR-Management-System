@@ -39,7 +39,7 @@ const applicantController = {
 
     getJobDetails: async function(req, res) {
         try {
-            const jobId = req.params.jobId;  // Make sure this is the correct parameter for jobId
+            const jobId = req.params.jobId;  // Ensure this matches your jobId
             
             // Fetch the job details from the jobpositions table
             const { data: job, error: jobError } = await supabase
@@ -53,23 +53,39 @@ const applicantController = {
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch the job requirements associated with the job position
+            // Fetch the job requirements
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
                 .select('*')
-                .eq('jobId', jobId);  // Change this to match your foreign key
+                .eq('jobOfferId', jobId);  // Make sure the foreign key is correct
     
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
                 return res.status(500).send('Error fetching job requirements');
             }
     
-            res.render('applicant_pages/job-details', { job, requirements });
+            // Fetch job skills from jobskills table
+            const { data: jobSkills, error: jobSkillsError } = await supabase
+                .from('jobskills')
+                .select('*')
+                .eq('jobId', jobId);
+    
+            if (jobSkillsError) {
+                console.error('Error fetching job skills:', jobSkillsError);
+                return res.status(500).send('Error fetching job skills');
+            }
+    
+            // Separate hard and soft skills
+            const hardSkills = jobSkills.filter(skill => skill.isHardSkill);
+            const softSkills = jobSkills.filter(skill => !skill.isHardSkill);
+    
+            res.render('applicant_pages/job-details', { job, requirements, hardSkills, softSkills });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
+    
     
     
 
