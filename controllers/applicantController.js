@@ -40,53 +40,36 @@ const applicantController = {
     getJobDetails: async function(req, res) {
         try {
             const jobId = req.params.jobId; // Get jobId from request parameters
-    
-            if (!jobId) {
-                console.error('jobId is undefined');
-                return res.status(400).send('Invalid job ID');
-            }
-    
+            
             // Fetch the job details from the jobpositions table
             const { data: job, error: jobError } = await supabase
                 .from('jobpositions')
                 .select('*')
                 .eq('jobId', jobId)
                 .single();
-    
-            if (jobError || !job) {
+            
+            if (jobError) {
                 console.error('Error fetching job details:', jobError);
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Debugging log for job
-            console.log('Fetched job:', job); // Log the fetched job details
-    
-            // Fetch the job requirements associated with the job's departmentId
+            // Fetch the job requirements associated with the job position using jobId
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
-                .select('jobReqName, jobReqDescript')
-                .eq('departmentId', job.departmentId); // Use departmentId to fetch requirements
-    
-            // Log departmentId being used for fetching requirements
-            console.log('Fetching requirements for departmentId:', job.departmentId);
-    
+                .select('*')
+                .eq('jobId', jobId); // Ensure you filter by jobId
+            
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
                 return res.status(500).send('Error fetching job requirements');
             }
     
-            // Debugging log for requirements
-            console.log('Fetched requirements:', requirements); // Log the fetched requirements
-    
-            // Render the job details page
             res.render('applicant_pages/job-details', { job, requirements });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
-    
-    
     
 
     getContactForm: async function(req, res) {
