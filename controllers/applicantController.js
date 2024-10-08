@@ -39,7 +39,7 @@ const applicantController = {
 
     getJobDetails: async function(req, res) {
         try {
-            const jobId = req.params.jobId; // Fetch jobId from URL parameters
+            const jobId = req.params.jobId; // Get jobId from request parameters
     
             if (!jobId) {
                 console.error('jobId is undefined');
@@ -59,7 +59,7 @@ const applicantController = {
             }
     
             // Debugging log for job
-            console.log('Fetched job:', job);
+            console.log('Fetched job:', job); // Log the fetched job details
     
             // Fetch the job requirements associated with the job's departmentId
             const { data: requirements, error: requirementsError } = await supabase
@@ -67,13 +67,16 @@ const applicantController = {
                 .select('jobReqName, jobReqDescript')
                 .eq('departmentId', job.departmentId); // Use departmentId to fetch requirements
     
+            // Log departmentId being used for fetching requirements
+            console.log('Fetching requirements for departmentId:', job.departmentId);
+    
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
                 return res.status(500).send('Error fetching job requirements');
             }
     
             // Debugging log for requirements
-            console.log('Fetched requirements:', requirements);
+            console.log('Fetched requirements:', requirements); // Log the fetched requirements
     
             // Render the job details page
             res.render('applicant_pages/job-details', { job, requirements });
@@ -82,6 +85,7 @@ const applicantController = {
             res.status(500).send('Server error');
         }
     },
+    
     
     
 
