@@ -39,13 +39,13 @@ const applicantController = {
 
     getJobDetails: async function(req, res) {
         try {
-            const jobOfferId = req.params.jobOfferId;
+            const jobId = req.params.jobId;  // Updated to match your new primary key
             
-            // Fetch the job details
+            // Fetch the job details from the jobpositions table
             const { data: job, error: jobError } = await supabase
-                .from('joboffers')
+                .from('jobpositions')
                 .select('*')
-                .eq('jobOfferId', jobOfferId)
+                .eq('jobId', jobId)
                 .single();
     
             if (jobError) {
@@ -53,12 +53,12 @@ const applicantController = {
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch the job requirements associated with the job offer
+            // Fetch the job requirements associated with the job position
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
                 .select('*')
-                .eq('jobOfferId', jobOfferId); // Ensure jobOfferId is used for matching
-    
+                .eq('jobOfferId', jobId); // Linking job requirements to the jobId
+            
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
                 return res.status(500).send('Error fetching job requirements');
@@ -70,6 +70,7 @@ const applicantController = {
             res.status(500).send('Server error');
         }
     },
+    
     
 
     getContactForm: async function(req, res) {
