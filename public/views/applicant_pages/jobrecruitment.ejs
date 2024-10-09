@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Recruitment - Prime Infra</title>
+
+    <!-- Link to Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="/css/publicapplicant.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: #f9f9f9;
         }
 
@@ -115,19 +118,19 @@
     <section class="job-offers">
         <h2>Current Job Openings</h2>
         <div class="job-listing">
-            <% if (joboffers && joboffers.length > 0) { %>
-                <% joboffers.forEach(function(job) { %>
+            <% if (jobpositions && jobpositions.length > 0) { %>
+                <% jobpositions.forEach(function(job) { %>
                     <div class="job-item">
-                        <a href="/job-details/<%= job.jobOfferId %>">
-                            <div class="title"><%= job.jobOfferdescription %></div>
+                        <a href="/job-details/<%= job.jobId %>">
+                            <div class="title"><%= job.jobTitle %></div>
                             <div class="department">
-                                <i class="fas fa-building"></i> Location: <%= job.jobLocation %>
+                                <i class="fas fa-building"></i> Location: <%= job.jobBranch %>
                             </div>
                             <div class="status">
-                                Status: <%= job.isActive ? "This position is currently open!" : "This position is no longer accepting applications." %>
+                                Status: <%= job.isActiveJob ? "This position is currently open!" : "This position is no longer accepting applications." %>
                             </div>
                             <div>
-                                <a class="apply-button" href="/job-details/<%= job.jobOfferId %>">Apply Now!</a>
+                                <a class="apply-button" href="/job-details/<%= job.jobId %>">Apply Now!</a>
                             </div>
                         </a>
                     </div>
