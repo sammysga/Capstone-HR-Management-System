@@ -9,7 +9,7 @@
 </head>
 <style>
     body {
-    font-family: Arial, sans-serif;
+    font-family: Arial, sans-serif; /* change to Inter */
     background-color: #f9f9f9;
     margin: 0;
     padding: 20px;
@@ -24,14 +24,13 @@
     margin: auto;
 }
 
-.title {
+h1, h3 {
     text-align: center;
-    color: #00bfff; /* Change this to match your branding */
-    margin-bottom: 20px;
+    color: #00bfff;
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 label {
@@ -53,12 +52,6 @@ textarea {
     height: 100px;
 }
 
-.skills-section, .requirements-section {
-    margin-top: 20px;
-    border-top: 2px solid #00bfff; /* Change this to match your branding */
-    padding-top: 10px;
-}
-
 .submit-btn {
     background-color: #00bfff; /* Change this to match your branding */
     color: white;
@@ -75,97 +68,105 @@ textarea {
     background-color: #008bbf; /* Darken on hover */
 }
 
+.section {
+    margin-top: 30px;
+}
+
 </style>
 <body>
     <%- include('../../partials/hr_partials') %>
     <div class="container">
         <h1 class="title">ADD A JOB OFFER</h1>
-        <form action="/hr/addjoboffer" method="POST">
+        <form id = "addJobForm" action="/hr/addjoboffer" method="POST">
+            <!--Job Title-->
             <div class="form-group">
-                <label for="jobRole">Job Role</label>
-                <select id="jobRole" name="jobId" required>
-                    <option value="Frontend Developer">Frontend Developer</option>
-                    <option value="Assistant Finance Controller">Assistant Finance Controller</option>
-                </select>
+                <label for="jobTitle">Job Title</label>
+                <input type="text" id="jobTitle" name="jobTitle" placeholder="Enter job title" required>
             </div>
-            
-            <div class="form-group">
-                <label for="department">Department</label>
-                <select id="department" name="departmentId" required>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
+
+             <!-- Department -->
+             <div class="form-group">
+                <label for="departmentId">Department</label>
+                <select id="departmentId" name="departmentId" required>
+                    <option value="">Select Department</option>
+                    <option value="2">HR</option>
+                    <option value="3">IT</option>
+                    <option value="4">Marketing</option>
+                    <option value="5">Partnerships</option>
+                    <option value="6">Investor Relations</option>
                 </select>
             </div>
 
+            <!-- Job Type -->
             <div class="form-group">
-                <label for="workLocation">Work Location</label>
-                <select id="workLocation" name="jobLocation" required>
-                    <option value="Remote">Remote</option>
-                    <option value="Hybrid">Hybrid</option>
+                <label for="jobType">Job Type</label>
+                <select id="jobType" name="jobType" required>
+                    <option value="">Select Job Type</option>
                     <option value="Onsite">Onsite</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Remote">Remote</option>
                 </select>
             </div>
 
+            <!-- Employment Type -->
             <div class="form-group">
-                <label for="employmentType">Employment Type</label>
-                <select id="employmentType" name="jobTimeCommittment" required>
+                <label for="jobTimeCommitment">Employment Type</label>
+                <select id="jobTimeCommitment" name="jobTimeCommitment" required>
+                    <option value="">Select Employment Type</option>
                     <option value="Full-time">Full-time</option>
                     <option value="Part-time">Part-time</option>
                 </select>
             </div>
 
+            <!-- Job Description -->
             <div class="form-group">
-                <label for="description">Job Offer Description</label>
-                <textarea id="description" name="jobOfferdescription" required></textarea>
+                <label for="jobDescrpt">Job Description</label>
+                <textarea id="jobDescrpt" name="jobDescrpt" placeholder="Enter job description" required></textarea>
             </div>
 
+            <!-- Hiring Start Date -->
             <div class="form-group">
                 <label for="hiringStartDate">Hiring Start Date</label>
-                <input type="date" id="hiringStartDate" name="hiringStarDate" required>
+                <input type="date" id="hiringStartDate" name="hiringStartDate" required>
             </div>
 
+            <!-- Hiring End Date -->
             <div class="form-group">
                 <label for="hiringEndDate">Hiring End Date</label>
                 <input type="date" id="hiringEndDate" name="hiringEndDate" required>
             </div>
 
+            <!-- Is Active -->
             <div class="form-group">
-                <label for="isActive">Is Active</label>
-                <input type="checkbox" id="isActive" name="isActive" required>
+                <label for="isActiveHiring">Is Active Hiring</label>
+                <input type="checkbox" id="isActiveHiring" name="isActiveHiring">
             </div>
-             
-            <!-- <div class="skills-section">
+
+            <!-- Job Requirements Section -->
+            <div class="section">
+                <h3>Job Requirements</h3>
+
+                <div class="form-group">
+                    <label for="jobReqName">Requirement Name</label>
+                    <input type="text" id="jobReqName" name="jobReqName" placeholder="Enter requirement name">
+                </div>
+
+                <div class="form-group">
+                    <label for="jobReqDescript">Requirement Description</label>
+                    <textarea id="jobReqDescript" name="jobReqDescript" placeholder="Enter requirement description"></textarea>
+                </div>
+            </div>
+
+            <!-- Job Skills Section -->
+            <div class="section">
                 <h3>Job Skills</h3>
                 <div class="form-group">
-                    <label>Hard Skills</label>
-                    <input type="text" name="hardSkills" placeholder="Add a Skill">
-                </div>
-                <div class="form-group">
-                    <label>Soft Skills</label>
-                    <input type="text" name="softSkills" placeholder="Add a Skill">
+                    <label for="skills">Skills</label>
+                    <textarea id="skills" name="skills" placeholder="Enter required skills"></textarea>
                 </div>
             </div>
 
-            <div class="requirements-section">
-                <h3>Job Requirements</h3>
-                <div class="form-group">
-                    <label for="degree">Degree</label>
-                    <input type="text" id="degree" name="degree" required>
-                </div>
-                <div class="form-group">
-                    <label for="experiences">Experiences</label>
-                    <input type="text" id="experiences" name="experiences" required>
-                </div>
-                <div class="form-group">
-                    <label for="requirementDescription">Description</label>
-                    <textarea id="requirementDescription" name="requirementDescription" required></textarea>
-                </div>
-            </div> -->
-
-            <button type="submit" class="submit-btn">Save Changes</button>
+            <button type="submit" class="submit-btn">Save Job Offer</button>
         </form>
     </div>
 
