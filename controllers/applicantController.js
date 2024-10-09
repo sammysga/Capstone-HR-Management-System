@@ -20,16 +20,16 @@ const applicantController = {
 
     getJobRecruitment: async function(req, res) {
         try {
-            const { data: joboffers, error } = await supabase
-                .from('joboffers')
-                .select('jobOfferId, jobId, jobOfferdescription, jobLocation, isActive')
+            const { data: jobpositions, error } = await supabase
+                .from('jobpositions')
+                .select('jobId, jobTitle, jobDescrpt, jobBranch, isActiveJob');
     
             if (error) {
-                console.error('Error fetching job offers:', error);
-                return res.status(500).send('Error fetching job offers');
+                console.error('Error fetching job positions:', error);
+                return res.status(500).send('Error fetching job positions');
             }
     
-            res.render('applicant_pages/jobrecruitment', { joboffers, errors: {} });
+            res.render('applicant_pages/jobrecruitment', { jobpositions, errors: {} });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
@@ -39,13 +39,13 @@ const applicantController = {
 
     getJobDetails: async function(req, res) {
         try {
-            const jobOfferId = req.params.jobOfferId;
+            const jobId = req.params.jobId;  // Ensure this matches your jobId
             
-            // Fetch the job details
+            // Fetch the job details from the jobpositions table
             const { data: job, error: jobError } = await supabase
-                .from('joboffers')
+                .from('jobpositions')
                 .select('*')
-                .eq('jobOfferId', jobOfferId)
+                .eq('jobId', jobId)
                 .single();
     
             if (jobError) {
@@ -53,23 +53,40 @@ const applicantController = {
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch the job requirements associated with the job offer
+            // Fetch the job requirements
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
                 .select('*')
-                .eq('jobOfferId', jobOfferId); // Ensure jobOfferId is used for matching
+                .eq('jobOfferId', jobId);  // Make sure the foreign key is correct
     
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
                 return res.status(500).send('Error fetching job requirements');
             }
     
-            res.render('applicant_pages/job-details', { job, requirements });
+            // Fetch job skills from jobskills table
+            const { data: jobSkills, error: jobSkillsError } = await supabase
+                .from('jobskills')
+                .select('*')
+                .eq('jobId', jobId);
+    
+            if (jobSkillsError) {
+                console.error('Error fetching job skills:', jobSkillsError);
+                return res.status(500).send('Error fetching job skills');
+            }
+    
+            // Separate hard and soft skills
+            const hardSkills = jobSkills.filter(skill => skill.isHardSkill);
+            const softSkills = jobSkills.filter(skill => !skill.isHardSkill);
+    
+            res.render('applicant_pages/job-details', { job, requirements, hardSkills, softSkills });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
+    
+    
     
 
     getContactForm: async function(req, res) {

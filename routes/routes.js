@@ -23,7 +23,7 @@ router.post('/applicant/login', applicantController.handleLoginSubmit);
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
-router.get('/job-details/:jobOfferId', applicantController.getJobDetails);
+router.get('/job-details/:jobId', applicantController.getJobDetails);
 router.get('/chatbothome', applicantController.getChatbotPage);
 
 // Staff Log in

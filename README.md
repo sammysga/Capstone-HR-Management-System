@@ -36,7 +36,7 @@ This project enhances Prime Infrastructure Capital, Inc.'s HR operations by auto
 
 ## Installation and Running Steps
 
-1. Clone the repo: `git clone https://github.com/your-username/prime-infra-hrms.git`
+1. Clone the repo: `git clone https://github.com/your-username/prime-infra-hrms.git](https://github.com/sammysga/Capstone-HR-Management-System.git`
 2. Install dependencies: `npm install`
 3. Run the app: `npm start`
 

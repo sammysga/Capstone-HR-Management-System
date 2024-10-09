@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= job.jobOfferdescription %> - Job Details</title>
+    <title><%= job.jobTitle %> - Job Details</title>
+    
+    <!-- Link to Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="/css/publicapplicant.css">
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f9f9;
+        }
+
         .job-details {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 20px auto;  /* Add margin for spacing */
             padding: 20px;
             background-color: #fff;
             border-radius: 8px;
@@ -41,7 +50,7 @@
             background-color: #45a049;
         }
 
-        .requirements {
+        .requirements, .skills {
             margin-top: 20px;
             background-color: #f9f9f9;
             padding: 15px;
@@ -53,17 +62,17 @@
     <%- include('../partials/publicheader') %>
 
     <div class="job-details">
-        <!-- Display the Job Offer Description as Title -->
-        <h1><%= job.jobOfferdescription %></h1>
+        <!-- Display the Job Title as Title -->
+        <h1><%= job.jobTitle %></h1>
         
         <!-- Display Job Location -->
-        <p><strong>Location:</strong> <%= job.jobLocation %></p>
+        <p><strong>Location:</strong> <%= job.jobBranch %></p>
         
         <!-- Display the Full Job Description -->
-        <p class="description"><%= job.jobOfferdescription %></p>
+        <p class="description"><%= job.jobDescrpt %></p>
         
         <!-- Simple Job Status Display -->
-        <p><strong>Status:</strong> <%= job.isActive ? "Active" : "Inactive" %></p>
+        <p><strong>Status:</strong> <%= job.isActiveJob ? "Active" : "Inactive" %></p>
 
         <!-- Job Requirements Section -->
         <div class="requirements">
@@ -79,8 +88,41 @@
             <% } %>
         </div>
 
+        <!-- Job Skills Section -->
+        <div class="skills">
+            <h2>Skills</h2>
+
+            <!-- Hard Skills Section -->
+            <div class="hard-skills">
+                <h3>Hard Skills</h3>
+                <% if (hardSkills && hardSkills.length > 0) { %>
+                    <ul>
+                        <% hardSkills.forEach(function(skill) { %>
+                            <li><strong><%= skill.skillName %>:</strong> Required Level - <%= skill.requiredSkillLevel %></li>
+                        <% }) %>
+                    </ul>
+                <% } else { %>
+                    <p>No hard skills listed for this job.</p>
+                <% } %>
+            </div>
+
+            <!-- Soft Skills Section -->
+            <div class="soft-skills">
+                <h3>Soft Skills</h3>
+                <% if (softSkills && softSkills.length > 0) { %>
+                    <ul>
+                        <% softSkills.forEach(function(skill) { %>
+                            <li><strong><%= skill.skillName %>:</strong> Required Level - <%= skill.requiredSkillLevel %></li>
+                        <% }) %>
+                    </ul>
+                <% } else { %>
+                    <p>No soft skills listed for this job.</p>
+                <% } %>
+            </div>
+        </div>
+
         <!-- Apply Button -->
-        <a href="/apply/<%= job.jobOfferId %>" class="apply-button">Apply Now</a>
+        <a href="/apply/<%= job.jobId %>" class="apply-button">Apply Now</a>
     </div>
 </body>
 </html>
