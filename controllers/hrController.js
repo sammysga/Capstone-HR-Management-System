@@ -167,13 +167,13 @@ const hrController = {
         }
     },
 
-    getJobOffers: async function(req, res){
+    getJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 const { data: jobPositions, error } = await supabase
                     .from('jobpositions')
                     .select('*');
-
+    
                 if (error) throw error;
             
                 res.render('staffpages/hr_pages/hrjoboffers', { jobPositions });
@@ -187,8 +187,8 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
-
-    getAddJobOffer: function(req, res){
+    
+    getAddJobOffer: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             res.render('staffpages/hr_pages/hraddjoboffers');
         } else {
@@ -196,14 +196,14 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
-
+    
     postAddJobOffer: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 const { jobTitle, departmentId, jobDescrpt, jobBranch, jobType, jobTimeCommitment, hiringStartDate, hiringEndDate, isActiveHiring } = req.body;
             
                 const { data, error } = await supabase
-                    .from('jobpositions')
+                    .from('jobpositions') // Using jobpositions table
                     .insert([
                         { 
                             jobTitle,
@@ -217,20 +217,20 @@ const hrController = {
                             isActiveHiring: isActiveHiring ? true : false
                         }
                     ]);
-
-                    if (error) throw error;
-
-                    res.status(201).json({ message: 'Job offer added successfully', data });
+    
+                if (error) throw error;
+    
+                res.status(201).json({ message: 'Job offer added successfully', data });
             } catch (error) {
                 console.error('Error adding job offers:', error);
-                res.status(500).json({ error: 'Failed to add job offer. Please try agian.' });
+                res.status(500).json({ error: 'Failed to add job offer. Please try again.' });
             }
         } else {
-            req.status(403).json({ errors: 'Unauthorized. HR access only.' });
+            res.status(403).json({ errors: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
         }
     },
-
+    
     getEditJobOffers: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             res.render('staffpages/hr_pages/hreditjoboffers');
@@ -239,6 +239,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
 
     getHRManageStaff: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
