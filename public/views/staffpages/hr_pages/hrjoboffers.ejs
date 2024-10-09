@@ -20,32 +20,38 @@
                 <a href="/hr/addjoboffer" class="add-job-btn">Add a Job Offer</a>
             </div>
             <div class="job-offers-container">
-                <!-- Example Job Offer -->
-                <div class="job-offer-box">
-                    <div class="job-offer-header">
-                        <div class="job-role-status">
-                            <strong>Job Role</strong>
-                            <span class="status active">Active</span>
+                <% if (jobPositions && jobPositions.length > 0) { %>
+                    <% jobPositions.forEach(job => { %>
+                        <div class="job-offer-box">
+                            <div class="job-offer-header">
+                                <div class="job-role-status">
+                                    <strong><%= job.jobTitle %></strong>
+                                    <span class="status <%= job.isActiveHiring ? 'active' : 'inactive' %>">
+                                        <%= job.isActiveHiring ? 'Active' : 'Inactive' %>
+                                    </span>
+                                </div>
+                                <a href="/hr/editjoboffers/<%= job.id %>" class="edit-btn">Edit</a>
+                            </div>
+                            <div class="job-offer-details">
+                                <p class="department"><%= job.departmentId %></p>
+                                <div class="job-conditions">
+                                    <span class="type work-location"><%= job.jobBranch %></span>
+                                    <span class="type employment-type"><%= job.jobType %></span>
+                                </div>
+                            </div>
+                            <div class="job-offer-description">
+                                <p><%= job.jobDescrpt %></p>
+                            </div>
                         </div>
-                        <a href="/hr/editjoboffers" class="edit-btn">Edit</a>
-                    </div>
-                    <div class="job-offer-details">
-                        <p class="department">Department</p>
-                        <div class="job-conditions">
-                            <span class="type work-location">Onsite</span>
-                            <span class="type employment-type">Full-time</span>
-                        </div>
-                    </div>
-                    <div class="job-offer-description">
-                        <p>Description of the job offer with detailed information about the role, responsibilities, and qualifications required.</p>
-                    </div>
-                </div>
+                    <% }) %>
+                <% } else { %>
+                    <p>No job offers found.</p>
+                <% } %>
             </div>
         </section>
     </div>
 </body>
 </html>
-
 
 <!-- JavaScript for sidebar functionality -->
 <script>
