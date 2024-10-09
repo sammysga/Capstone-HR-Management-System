@@ -2,6 +2,8 @@ const { render } = require('ejs');
 const supabase = require('../public/config/supabaseClient');
 require('dotenv').config(); // To load environment variables
 const bcrypt = require('bcrypt');
+const { parse } = require('dotenv');
+const flash = require('connect-flash/lib/flash');
 
 const hrController = {
     getHRDashboard: function(req, res) {
@@ -168,13 +170,13 @@ const hrController = {
     getJobOffers: async function(req, res){
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { data: jobOffers, error } = await supabase
-                    .from('joboffers')
+                const { data: jobPositions, error } = await supabase
+                    .from('jobpositions')
                     .select('*');
 
                 if (error) throw error;
             
-                res.render('staffpages/hr_pages/hrjoboffers');
+                res.render('staffpages/hr_pages/hrjoboffers', { jobPositions });
             } catch (error) {
                 console.error('Error fetching job offers:', error);
                 req.flash('errors', { fetchError: 'Failed to load job offers. Please try again.' });
@@ -198,20 +200,21 @@ const hrController = {
     postAddJobOffer: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { jobId, departmentId, jobLocation, jobTimeCommittment, jobOfferdescription, hiringStarDate, hiringEndDate, isActive } = req.body;
-
+                const { jobTitle, departmentId, jobDescrpt, jobBranch, jobType, jobTimeCommitment, hiringStartDate, hiringEndDate, isActiveHiring } = req.body;
+            
                 const { data, error } = await supabase
-                    .from('joboffers')
+                    .from('jobpositions')
                     .insert([
-                        {
-                            jobId, 
-                            departmentId,
-                            jobLocation,
-                            jobTimeCommittment,
-                            jobOfferdescription,
-                            hiringStarDate,
+                        { 
+                            jobTitle,
+                            departmentId: parseInt(departmentId),
+                            jobDescrpt,
+                            jobBranch,
+                            jobType,
+                            jobTimeCommitment,
+                            hiringStartDate,
                             hiringEndDate,
-                            isActive: isActive ? true : false,
+                            isActiveHiring: isActiveHiring ? true : false
                         }
                     ]);
 
