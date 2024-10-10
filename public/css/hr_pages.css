@@ -243,6 +243,7 @@
     border-radius: 20px;
     cursor: pointer;
     font-size: 15px;
+    text-decoration: none;
 }
 
 .add-job-btn:hover {
@@ -253,6 +254,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
+    justify-content: space-between;
 }
 
 .job-offer-box {
@@ -261,6 +263,7 @@
     padding: 15px;
     width: calc(50% - 20px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
 }
 
 .job-offer-header {
@@ -334,18 +337,14 @@
     white-space: nowrap;
 }
 
-/* .onsite {
-    background-color: rgba(101, 112, 129, 0.1);
-    color: #333;
-}
-
-.full-time {
-    background-color: rgba(101, 112, 129, 0.1);
-    color: #333;
-} */
-
 .job-offer-description p {
     margin: 10px 0;
     font-size: 16px;
     color: #555;
+}
+
+@media (max-width: 768px) {
+    .job-offer-box {
+        width: calc(100% - 20px);
+    }
 }
