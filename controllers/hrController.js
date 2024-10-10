@@ -172,11 +172,23 @@ const hrController = {
             try {
                 const { data: jobPositions, error } = await supabase
                     .from('jobpositions')
-                    .select('*');
+                    .select(`
+                        *,
+                        departments (deptName)  // fetching the department name from the departments table
+                    `);
     
                 if (error) throw error;
+
+                // to be deleted later on
+                console.log('Job Positions:', jobPositions);
+
+                // mapping to include dept names instead of deptId
+                const jobPositionsWithNames = jobPositions.map(position => ({
+                    ...position,
+                    department: position.departments ? position.departments.deptName : 'Unknown'
+                }));
             
-                res.render('staffpages/hr_pages/hrjoboffers', { jobPositions });
+                res.render('staffpages/hr_pages/hrjoboffers', { jobPositions: jobPositionsWithNames });
             } catch (error) {
                 console.error('Error fetching job offers:', error);
                 req.flash('errors', { fetchError: 'Failed to load job offers. Please try again.' });
