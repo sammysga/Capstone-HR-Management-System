@@ -53,7 +53,7 @@ router.get('/hr/editjoboffers', hrController.getEditJobOffers);
 
 // Employee Routes
 router.get('/employee/dashboard', employeeController.getEmployeeDashboard);
-
+router.get('/employee/useracc', employeeController.getUserAccountPage);
 
 // Lina Manager Routes
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
