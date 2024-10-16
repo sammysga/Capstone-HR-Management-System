@@ -1,12 +1,12 @@
 /* Main container layout */
 .main-content {
-    margin-left: 250px; /* Ensure this matches the sidebar width if necessary */
+    margin-left: 250px; 
     background-color: #f9f9f9;
     min-height: 100vh;
     padding: 20px;
+    font-family: 'Inter', sans-serif;
 }
 
-/* Content container styling */
 .content {
     padding: 40px;
 }
@@ -14,7 +14,7 @@
 .content h1 {
     font-size: 24px;
     margin-bottom: 30px;
-    color: #008fc3;
+    color: #07ACB9;
 }
 
 /* Table style */
@@ -39,8 +39,12 @@
 .new-mrf-button {
     float: right;
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: #124A5C;
     color: white;
     text-decoration: none;
     border-radius: 5px;
+}
+
+.new-mrf-button:hover {
+    background-color: #059ca4; 
 }
