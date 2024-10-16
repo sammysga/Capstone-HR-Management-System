@@ -25,7 +25,8 @@
         <div class="profile-container">
             <img src="/images/profile.jpg" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <h3><%= user.userEmail %></h3> <!-- Display user's email -->
+                <h3><%= user.firstName %> <%= user.lastName %></h3> <!-- Display user's first and last name -->
+                <p>Email: <%= user.userEmail %></p> <!-- Display user's email -->
                 <p>Role: <%= user.userRole %></p> <!-- Display user's role -->
             </div>
         </div>
