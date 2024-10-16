@@ -33,7 +33,6 @@ const employeeController = {
             return res.redirect('/staff/employee/dashboard');
         }
 
-        // Combine user and staff data for the view
         const userData = {
             ...user,
             firstName: staff.firstName,
@@ -44,7 +43,44 @@ const employeeController = {
     } catch (err) {
         console.error('Error in getUserAccount controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the account page.' });
-        res.redirect('/staff/login');
+        res.redirect('/staff/employee/dashboard');
+    }
+},
+
+// Password reset controller function
+resetPassword: async function(req, res) {
+    try {
+        const userId = req.session.user.userId; // Assuming userId is stored in session
+        const { newPassword, confirmPassword } = req.body;
+
+        // Ensure passwords match
+        if (newPassword !== confirmPassword) {
+            req.flash('errors', { passwordError: 'Passwords do not match.' });
+            return res.redirect('/staff/employee/useracc');
+        }
+
+        // Hash the new password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        // Update password in database
+        const { error } = await supabase
+            .from('useraccounts')
+            .update({ userPass: hashedPassword })
+            .eq('userId', userId);
+
+        if (error) {
+            console.error('Error updating password:', error);
+            req.flash('errors', { dbError: 'Error updating password.' });
+            return res.redirect('/staff/employee/useracc');
+        }
+
+        req.flash('success', 'Password updated successfully!');
+        res.redirect('/staff/employee/useracc');
+    } catch (err) {
+        console.error('Error in resetPassword controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while updating the password.' });
+        res.redirect('/staff/employee/useracc');
     }
 }
 
