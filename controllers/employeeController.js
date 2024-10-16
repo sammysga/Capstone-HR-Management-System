@@ -8,39 +8,28 @@ const employeeController = {
         }
     },
 
-    getUserAccount: async function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'Employee') {
-            try {
-                // Fetch the user's details from Supabase using the userId from the session
-                const { data, error } = await supabase
-                    .from('users')
-                    .select('userEmail, userRole')
-                    .eq('userId', req.session.user.userId)
-                    .single();
+   // Fetch user account information from Supabase
+   getUserAccount: async function(req, res) {
+    try {
+        const userId = req.session.user.userId; // Assuming userId is stored in session
+        const { data, error } = await supabase
+            .from('useraccounts')
+            .select('userEmail, userRole')
+            .eq('userId', userId)
+            .single();
 
-                if (error) {
-                    console.error('Error fetching user details:', error);
-                    req.flash('errors', { fetchError: 'Unable to fetch user details.' });
-                    res.redirect('/staff/login');
-                } else {
-                    // Pass the fetched user data to the EJS template
-                    res.render('staffpages/employee_pages/useracc', {
-                        user: {
-                            email: data.userEmail,
-                            userRole: data.userRole,
-                        }
-                    });
-                }
-            } catch (err) {
-                console.error('Error in getUserAccount controller:', err);
-                req.flash('errors', { fetchError: 'Error occurred while fetching data.' });
-                res.redirect('/staff/login');
-            }
-        } else {
-            req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
-            res.redirect('/staff/login');
+        if (error) {
+            throw error;
         }
+
+        // Render the user account view with the data
+        res.render('staffpages/employee_pages/useracc', { user: data });
+    } catch (err) {
+        console.error('Error in getUserAccount controller:', err);
+        req.flash('errors', { dbError: 'Failed to fetch user account information.' });
+        res.redirect('/staff/login');
     }
+}
 
 };
 
