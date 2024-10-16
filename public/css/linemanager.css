@@ -1,0 +1,46 @@
+/* Main container layout */
+.main-content {
+    margin-left: 250px; /* Ensure this matches the sidebar width if necessary */
+    background-color: #f9f9f9;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Content container styling */
+.content {
+    padding: 40px;
+}
+
+.content h1 {
+    font-size: 24px;
+    margin-bottom: 30px;
+    color: #008fc3;
+}
+
+/* Table style */
+.form-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.form-table th, .form-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ccc;
+}
+
+.form-table th {
+    text-align: left;
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+/* Header button */
+.new-mrf-button {
+    float: right;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
