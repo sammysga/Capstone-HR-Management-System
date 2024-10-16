@@ -1,3 +1,6 @@
+const supabase = require('../public/config/supabaseClient');
+const bcrypt = require('bcrypt');
+
 const employeeController = {
     getEmployeeDashboard: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Employee') {
