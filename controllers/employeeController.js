@@ -82,6 +82,37 @@ resetPassword: async function(req, res) {
         req.flash('errors', { dbError: 'An error occurred while updating the password.' });
         res.redirect('/staff/employee/useracc');
     }
+},
+
+updateUserInfo: async function(req, res) {
+    try {
+        const userId = req.session.user.userId; // Assuming userId is stored in session
+        const { firstName, lastName, userEmail } = req.body;
+
+        // Update the user info in both 'useraccounts' and 'staffaccounts' tables
+        const { error: userError } = await supabase
+            .from('useraccounts')
+            .update({ userEmail })
+            .eq('userId', userId);
+
+        const { error: staffError } = await supabase
+            .from('staffaccounts')
+            .update({ firstName, lastName })
+            .eq('userId', userId);
+
+        if (userError || staffError) {
+            console.error('Error updating user information:', userError || staffError);
+            req.flash('errors', { dbError: 'Error updating user information.' });
+            return res.redirect('/staff/employee/useracc');
+        }
+
+        req.flash('success', 'User information updated successfully!');
+        res.redirect('/staff/employee/useracc');
+    } catch (err) {
+        console.error('Error in updateUserInfo controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while updating the information.' });
+        res.redirect('/staff/employee/useracc');
+    }
 }
 
 };

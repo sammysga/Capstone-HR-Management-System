@@ -18,6 +18,9 @@
         .password-reset-container input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
         .update-password-btn { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s ease; }
         .update-password-btn:hover { background-color: #45a049; }
+        .edit-btn, .save-btn { background-color: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background-color 0.3s ease; }
+        .edit-btn:hover, .save-btn:hover { background-color: #0b7dda; }
+        .form-input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -29,9 +32,13 @@
         <div class="profile-container">
             <img src="/images/profile.jpg" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <h3><%= user.firstName %> <%= user.lastName %></h3> <!-- Display user's first and last name -->
-                <p>Email: <%= user.userEmail %></p> <!-- Display user's email -->
-                <p>Role: <%= user.userRole %></p> <!-- Display user's role -->
+                <form id="edit-user-info" action="/staff/employee/update-info" method="POST">
+                    <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" readonly required>
+                    <input type="text" id="lastName" name="lastName" value="<%= user.lastName %>" class="form-input" readonly required>
+                    <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input" readonly required>
+                    <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
+                    <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
+                </form>
             </div>
         </div>
 
@@ -52,13 +59,19 @@
     </div>
 
     <script>
-        function requestOffboarding() {
-            if (confirm('Are you sure you want to request offboarding?')) {
-                window.location.href = '/staff/employee/request-offboarding';
-            }
-        }
+        // Toggle editing for user info
+        const editBtn = document.getElementById('edit-info-btn');
+        const saveBtn = document.getElementById('save-info-btn');
+        const inputs = document.querySelectorAll('#edit-user-info input');
 
-        document.getElementById('reset-password-form').addEventListener('submit', function(event) {
+        editBtn.addEventListener('click', function () {
+            inputs.forEach(input => input.removeAttribute('readonly'));
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+        });
+
+        // Password matching validation
+        document.getElementById('reset-password-form').addEventListener('submit', function (event) {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
 
@@ -67,6 +80,12 @@
                 event.preventDefault();
             }
         });
+
+        function requestOffboarding() {
+            if (confirm('Are you sure you want to request offboarding?')) {
+                window.location.href = '/staff/employee/request-offboarding';
+            }
+        }
     </script>
 </body>
 </html>
