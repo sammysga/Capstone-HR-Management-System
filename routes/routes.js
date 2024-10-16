@@ -57,7 +57,7 @@ router.get('/employee/useracc', employeeController.getUserAccount);
 
 // Lina Manager Routes
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
-router.get('linemanager/mrf', lineManagerController.getMRF);
+router.get('/linemanager/mrf', lineManagerController.getMRF);
 
 
 
