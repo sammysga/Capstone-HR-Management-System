@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Home</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <style>
+        /* Profile container styling */
+        .profile-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        /* Profile picture styling */
+        .profile-pic {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+
+        /* Name and title styling */
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-info h3 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: #09191F;
+        }
+
+        .profile-info p {
+            margin: 0;
+            font-size: 1rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/employee_partials') %>
+
+    <!-- Main content -->
+    <div class="main-content">
+        <!-- Profile section -->
+        <div class="profile-container">
+            <img src="/images/profile.jpg" alt="Profile Picture" class="profile-pic">
+            <div class="profile-info">
+                <h3>Jane Smith</h3>
+                <p>Accountant</p>
+            </div>
+        </div>
+
+        <!-- Additional content can go here -->
+    </div>
+</body>
+</html>
