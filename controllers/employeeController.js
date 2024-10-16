@@ -44,7 +44,7 @@ const employeeController = {
     } catch (err) {
         console.error('Error in getUserAccount controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the account page.' });
-        res.redirect('/staff/employee/dashboard');
+        res.redirect('/staff/login');
     }
 }
 
