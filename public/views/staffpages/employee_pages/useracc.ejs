@@ -24,6 +24,8 @@
         .form-text { font-size: 1.1rem; color: #333; }
         .account-info-header { margin-top: 20px; font-size: 1.5rem; color: #09191F; }
         .sub-header { margin-top: 15px; font-size: 1.2rem; color: #333; }
+        /* Ensure sidebar is clickable */
+        .sidebar { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -33,29 +35,24 @@
     <div class="main-content">
         <!-- Profile section -->
         <div class="profile-container">
-            <img src="/images/profile.png " alt="Profile Picture" class="profile-pic">
+            <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
                 <form id="edit-user-info" action="/staff/employee/update-info" method="POST">
-                    <!-- Display name as text until Edit is clicked -->
                     <span id="display-firstname" class="form-text"><%= user.firstName %></span>
                     <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required>
                     
                     <span id="display-lastname" class="form-text"><%= user.lastName %></span>
                     <input type="text" id="lastName" name="lastName" value="<%= user.lastName %>" class="form-input" required>
 
-                    <!-- Move userRole below the first and last name -->
                     <span id="display-role" class="form-text"><%= user.userRole %></span>
                     <input type="text" id="userRole" name="userRole" value="<%= user.userRole %>" class="form-input" required>
                     
-                    <!-- Edit button -->
                     <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
-                    <!-- Save button, hidden initially -->
                     <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
                 </form>
             </div>
         </div>
 
-        <!-- User Account Information Section -->
         <div class="account-info-header">User Account Information</div>
         <div>
             <div class="sub-header">Email:</div>
@@ -67,12 +64,10 @@
             <span id="display-role-info" class="form-text"><%= user.userRole %></span>
         </div>
 
-        <!-- Offboarding Request Button -->
         <div>
             <button class="offboarding-btn" onclick="requestOffboarding()">Request for Offboarding</button>
         </div>
 
-        <!-- Password Reset Section -->
         <div class="password-reset-container">
             <h4>Reset Password</h4>
             <form id="reset-password-form" action="/staff/employee/reset-password" method="POST">
@@ -97,7 +92,6 @@
         const emailInput = document.getElementById('userEmail');
 
         editBtn.addEventListener('click', function () {
-            // Hide text elements and show input fields
             displayFirstName.style.display = 'none';
             displayLastName.style.display = 'none';
             displayRole.style.display = 'none';
@@ -107,12 +101,10 @@
             roleInput.style.display = 'block';
             emailInput.style.display = 'block';
 
-            // Show save button and hide edit button
             editBtn.style.display = 'none';
             saveBtn.style.display = 'inline-block';
         });
 
-        // Password matching validation
         document.getElementById('reset-password-form').addEventListener('submit', function (event) {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
