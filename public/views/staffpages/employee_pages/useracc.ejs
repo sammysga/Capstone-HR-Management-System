@@ -25,7 +25,7 @@
         .account-info-header { margin-top: 20px; font-size: 1.5rem; color: #09191F; }
         .sub-header { margin-top: 15px; font-size: 1.2rem; color: #333; }
         /* Ensure sidebar is clickable */
-        .sidebar { cursor: pointer; }
+        .sidebar { cursor: pointer; z-index: 1; } /* Adjust z-index if necessary */
     </style>
 </head>
 <body>
@@ -116,6 +116,7 @@
         });
 
         function requestOffboarding() {
+            console.log('Offboarding request initiated'); // Debugging line
             if (confirm('Are you sure you want to request offboarding?')) {
                 window.location.href = '/staff/employee/request-offboarding';
             }
