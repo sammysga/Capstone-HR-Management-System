@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Account</title>
-    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css">
     <style>
-        /* Existing CSS styles */
         .profile-container { display: flex; align-items: center; margin-bottom: 20px; }
         .profile-pic { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
         .profile-info { display: flex; flex-direction: column; }
@@ -23,72 +22,13 @@
         .form-text { font-size: 1.1rem; color: #333; }
         .account-info-header { margin-top: 20px; font-size: 1.5rem; color: #09191F; }
         .sub-header { margin-top: 15px; font-size: 1.2rem; color: #333; }
-
-        /* Sidebar styles */
-        .sidebar {
-            width: 250px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background-color: #f8f9fa;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .sidebar ul li {
-            margin: 15px 0;
-        }
-
-        .sidebar ul li a {
-            text-decoration: none;
-            color: #333;
-            padding: 10px;
-            display: block;
-            border-radius: 5px;
-        }
-
-        .sidebar ul li a:hover, .sidebar ul li a.active {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .collapsible-header {
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .collapsible-content {
-            display: none;
-            margin-left: 20px;
-        }
     </style>
 </head>
 <body>
     <%- include('../../partials/employee_partials') %>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h2>HR Dashboard</h2>
-        <ul>
-            <li><a href="/useracc" class="active">User Account</a></li>
-            <li><a href="/employee/performance">Employee Performance</a></li>
-            <li class="collapsible-header">Performance Management</li>
-            <div class="collapsible-content">
-                <li><a href="/employee/goals">Goal Setting</a></li>
-                <li><a href="/employee/reviews">Performance Reviews</a></li>
-            </div>
-            <li><a href="/logout">Logout</a></li>
-        </ul>
-    </div>
-
     <!-- Main content -->
-    <div class="main-content" style="margin-left: 260px; padding: 20px;">
+    <div class="main-content">
         <!-- Profile section -->
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
@@ -113,7 +53,7 @@
         <div>
             <div class="sub-header">Email:</div>
             <span id="display-email" class="form-text"><%= user.userEmail %></span>
-            <input type="text" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input" required style="display: none;">
+            <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input" required style="display: none;">
         </div>
         <div>
             <div class="sub-header">User Role:</div>
@@ -164,10 +104,12 @@
             if (newPassword !== confirmPassword) {
                 alert('Passwords do not match!');
                 event.preventDefault();
+            } else {
+                alert('Password has been successfully updated!');
             }
         });
 
-        // Sidebar functionality
+        // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
@@ -179,7 +121,28 @@
         document.querySelectorAll('.collapsible-header').forEach(header => {
             header.addEventListener('click', function() {
                 var content = this.nextElementSibling;
-                content.style.display = content.style.display === "block" ? "none" : "block";
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+
+        // Handle navigation for Performance Management links
+        document.querySelectorAll('.collapsible-content a').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default link behavior
+                
+                // Perform the desired action or navigation
+                const targetUrl = this.getAttribute('href');
+                window.location.href = targetUrl; // Navigate to the target URL
             });
         });
     </script>

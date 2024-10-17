@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Home</title>
+    <title>Personal Information & Career Progression</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
 </head>
@@ -43,25 +43,14 @@
             });
         });
 
-        // Handle navigation for Performance Management links
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
+         // Handle navigation for Performance Management links
+         document.querySelectorAll('.collapsible-content a').forEach(link => {
             link.addEventListener('click', function(event) {
                 event.preventDefault(); // Prevent default link behavior
                 
-                // Check the link text and load corresponding functionality
-                switch (this.textContent.trim()) {
-                    case 'Employee Performance':
-                        window.location.href = '/employee/performance'; // Link to the performance page
-                        break;
-                    case 'Goal Setting':
-                        window.location.href = '/employee/goals'; // Link to the goal-setting page
-                        break;
-                    case 'Performance Reviews':
-                        window.location.href = '/employee/reviews'; // Link to the performance reviews page
-                        break;
-                    default:
-                        console.log('No functionality assigned to this link');
-                }
+                // Perform the desired action or navigation
+                const targetUrl = this.getAttribute('href');
+                window.location.href = targetUrl; // Navigate to the target URL
             });
         });
     </script>
