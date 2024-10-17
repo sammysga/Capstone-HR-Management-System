@@ -14,7 +14,12 @@ const employeeController = {
    // Fetch user account information from Supabase
    getUserAccount: async function(req, res) {
     try {
-        const userId = req.session.user.userId; // Assuming userId is stored in session
+        const userId = req.session.user ? req.session.user.userId : null; // Safely access userId
+        if (!userId) {
+            req.flash('errors', { authError: 'User not logged in.' });
+            return res.redirect('/staff/login');
+        }
+
         const { data: user, error } = await supabase
             .from('useraccounts')
             .select('userEmail, userRole')
@@ -43,7 +48,7 @@ const employeeController = {
     } catch (err) {
         console.error('Error in getUserAccount controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the account page.' });
-        res.redirect('/employee/dashboard');
+        res.redirect('/staff/employee/dashboard');
     }
 },
 
