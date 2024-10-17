@@ -47,7 +47,7 @@ const staffloginController = {
                 res.redirect('/hr/dashboard');
                 break;
             case 'Employee':
-                res.redirect('/employee/dashboard');
+                res.redirect('/employee/useracc');
                 break;
             case 'Line Manager':
                 res.redirect('/linemanager/dashboard');
