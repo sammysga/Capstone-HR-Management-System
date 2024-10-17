@@ -16,6 +16,10 @@
         .password-reset-container input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
         .update-password-btn { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s ease; }
         .update-password-btn:hover { background-color: #45a049; }
+        .edit-btn, .save-btn { background-color: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background-color 0.3s ease; }
+        .edit-btn:hover, .save-btn:hover { background-color: #0b7dda; }
+        .form-input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; display: none; }
+        .form-text { font-size: 1.1rem; color: #333; }
         .account-info-header { margin-top: 20px; font-size: 1.5rem; color: #09191F; }
         .sub-header { margin-top: 15px; font-size: 1.2rem; color: #333; }
     </style>
@@ -29,17 +33,31 @@
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <h3><%= user.firstName %> <%= user.lastName %></h3>
-                <p>User Role: <%= user.userRole %></p>
-                <p>Email: <%= user.userEmail %></p>
+                <form id="edit-user-info" action="/staff/employee/update-info" method="POST">
+                    <span id="display-firstname" class="form-text"><%= user.firstName %></span>
+                    <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required>
+                    
+                    <span id="display-lastname" class="form-text"><%= user.lastName %></span>
+                    <input type="text" id="lastName" name="lastName" value="<%= user.lastName %>" class="form-input" required>
+
+                    <span id="display-role" class="form-text"><%= user.userRole %></span>
+                    <input type="text" id="userRole" name="userRole" value="<%= user.userRole %>" class="form-input" required>
+                    
+                    <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
+                    <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
+                </form>
             </div>
         </div>
 
         <div class="account-info-header">User Account Information</div>
-        
+        <div>
+            <div class="sub-header">Email:</div>
+            <span id="display-email" class="form-text"><%= user.userEmail %></span>
+            <input type="text" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input" required style="display: none;">
+        </div>
         <div>
             <div class="sub-header">User Role:</div>
-            <span class="form-text"><%= user.userRole %></span>
+            <span id="display-role-info" class="form-text"><%= user.userRole %></span>
         </div>
 
         <div class="password-reset-container">
@@ -53,6 +71,32 @@
     </div>
 
     <script>
+        // Toggle editing for user info
+        const editBtn = document.getElementById('edit-info-btn');
+        const saveBtn = document.getElementById('save-info-btn');
+        const displayFirstName = document.getElementById('display-firstname');
+        const displayLastName = document.getElementById('display-lastname');
+        const displayEmail = document.getElementById('display-email');
+        const displayRole = document.getElementById('display-role-info');
+        const firstNameInput = document.getElementById('firstName');
+        const lastNameInput = document.getElementById('lastName');
+        const roleInput = document.getElementById('userRole');
+        const emailInput = document.getElementById('userEmail');
+
+        editBtn.addEventListener('click', function () {
+            displayFirstName.style.display = 'none';
+            displayLastName.style.display = 'none';
+            displayRole.style.display = 'none';
+            displayEmail.style.display = 'none';
+            firstNameInput.style.display = 'block';
+            lastNameInput.style.display = 'block';
+            roleInput.style.display = 'block';
+            emailInput.style.display = 'block';
+
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+        });
+
         document.getElementById('reset-password-form').addEventListener('submit', function (event) {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
