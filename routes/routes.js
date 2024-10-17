@@ -58,6 +58,8 @@ router.get('/employee/useracc', employeeController.getUserAccount);
 // Lina Manager Routes
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
 router.get('/linemanager/mrf', lineManagerController.getMRF);
+router.get('/linemanager/request-mrf', lineManagerController.getRequestMRF);
+// add router.post for mrf here
 
 
 

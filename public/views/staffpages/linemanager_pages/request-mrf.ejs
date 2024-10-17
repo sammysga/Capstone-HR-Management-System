@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manpower Requisition Form</title>
+    <link rel="stylesheet" href="/css/styles.css"> <!-- Linking the CSS file -->
+</head>
+<body>
+    <%- include('../../partials/linemanager_partials') %> <!-- Sidebar inclusion -->
+
+    <!-- Main content wrapper -->
+    <div class="main-content">
+        <!-- Content section -->
+        <div class="content">
+            <!-- Manpower Requisition Form -->
+            <div class="mrf-form" id="mrfForm" style="display: none;">
+                <h2>Position Details</h2>
+                <div class="form-section">
+                    <label for="positionTitle">Position Title:</label>
+                    <input type="text" id="positionTitle" placeholder="Enter Position">
+                </div>
+
+                <div class="form-section">
+                    <label for="jobGrade">Job Grade:</label>
+                    <input type="text" id="jobGrade" placeholder="Enter Job Grade">
+                </div>
+
+                <div class="form-section">
+                    <label for="sectionDept">Section/Department:</label>
+                    <input type="text" id="sectionDept" placeholder="Enter Department">
+                </div>
+
+                <div class="form-section">
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" placeholder="Enter Location">
+                </div>
+
+                <div class="form-section">
+                    <label for="dateRequisitioned">Date Requisitioned:</label>
+                    <input type="date" id="dateRequisitioned">
+                </div>
+
+                <div class="form-section">
+                    <label for="dateRequired">Date Required:</label>
+                    <input type="date" id="dateRequired">
+                </div>
+
+                <div class="form-section">
+                    <label for="numPersons">No. of Persons Requisitioned:</label>
+                    <input type="number" id="numPersons" placeholder="Enter No. of Persons">
+                </div>
+
+                <h2>Job Specifications</h2>
+                <div class="form-section">
+                    <label for="reqType">Type of Requisition:</label>
+                    <select id="reqType">
+                        <option>New Position/Replacement</option>
+                    </select>
+                </div>
+
+                <div class="form-section">
+                    <label for="employmentNature">Nature of Employment:</label>
+                    <select id="employmentNature">
+                        <option>Probationary for Permanent Job</option>
+                    </select>
+                </div>
+
+                <div class="form-section">
+                    <label for="empCategory">Employee Category:</label>
+                    <select id="empCategory">
+                        <option>Managerial/Supervisory</option>
+                    </select>
+                </div>
+
+                <div class="form-section">
+                    <label for="justification">Justification:</label>
+                    <textarea id="justification" rows="4" placeholder="Enter Justification"></textarea>
+                </div>
+
+                <button class="save-button">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to handle form visibility -->
+    <script>
+        document.getElementById('showFormButton').addEventListener('click', function() {
+            var form = document.getElementById('mrfForm');
+            form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+        });
+    </script>
+</body>
+</html>
