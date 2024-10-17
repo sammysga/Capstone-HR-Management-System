@@ -18,8 +18,6 @@
         .update-password-btn:hover { background-color: #45a049; }
         .account-info-header { margin-top: 20px; font-size: 1.5rem; color: #09191F; }
         .sub-header { margin-top: 15px; font-size: 1.2rem; color: #333; }
-        /* Ensure sidebar is clickable */
-        .sidebar { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -31,28 +29,17 @@
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <form id="edit-user-info" action="/staff/employee/update-info" method="POST">
-                    <span id="display-firstname" class="form-text"><%= user.firstName %></span>
-                    <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required style="display: none;">
-                    
-                    <span id="display-lastname" class="form-text"><%= user.lastName %></span>
-                    <input type="text" id="lastName" name="lastName" value="<%= user.lastName %>" class="form-input" required style="display: none;">
-
-                    <span id="display-role" class="form-text"><%= user.userRole %></span>
-                    <input type="text" id="userRole" name="userRole" value="<%= user.userRole %>" class="form-input" required style="display: none;">
-                </form>
+                <h3><%= user.firstName %> <%= user.lastName %></h3>
+                <p>User Role: <%= user.userRole %></p>
+                <p>Email: <%= user.userEmail %></p>
             </div>
         </div>
 
         <div class="account-info-header">User Account Information</div>
-        <div>
-            <div class="sub-header">Email:</div>
-            <span id="display-email" class="form-text"><%= user.userEmail %></span>
-            <input type="text" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input" required style="display: none;">
-        </div>
+        
         <div>
             <div class="sub-header">User Role:</div>
-            <span id="display-role-info" class="form-text"><%= user.userRole %></span>
+            <span class="form-text"><%= user.userRole %></span>
         </div>
 
         <div class="password-reset-container">
