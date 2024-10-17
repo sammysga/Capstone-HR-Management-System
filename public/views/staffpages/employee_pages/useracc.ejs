@@ -12,18 +12,13 @@
         .profile-info { display: flex; flex-direction: column; }
         .profile-info h3 { margin: 0; font-size: 1.4rem; color: #09191F; }
         .profile-info p { margin: 5px 0; font-size: 1rem; color: #666; }
-        .offboarding-btn { background-color: #FF6666; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s ease; }
-        .offboarding-btn:hover { background-color: #E64A4A; }
         .password-reset-container { margin-top: 30px; }
         .password-reset-container input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
         .update-password-btn { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s ease; }
         .update-password-btn:hover { background-color: #45a049; }
-        .edit-btn, .save-btn { background-color: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background-color 0.3s ease; }
-        .edit-btn:hover, .save-btn:hover { background-color: #0b7dda; }
-        .form-input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; display: none; }
-        .form-text { font-size: 1.1rem; color: #333; }
         .account-info-header { margin-top: 20px; font-size: 1.5rem; color: #09191F; }
         .sub-header { margin-top: 15px; font-size: 1.2rem; color: #333; }
+        /* Ensure sidebar is clickable */
         .sidebar { cursor: pointer; }
     </style>
 </head>
@@ -38,16 +33,13 @@
             <div class="profile-info">
                 <form id="edit-user-info" action="/staff/employee/update-info" method="POST">
                     <span id="display-firstname" class="form-text"><%= user.firstName %></span>
-                    <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required>
+                    <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required style="display: none;">
                     
                     <span id="display-lastname" class="form-text"><%= user.lastName %></span>
-                    <input type="text" id="lastName" name="lastName" value="<%= user.lastName %>" class="form-input" required>
+                    <input type="text" id="lastName" name="lastName" value="<%= user.lastName %>" class="form-input" required style="display: none;">
 
                     <span id="display-role" class="form-text"><%= user.userRole %></span>
-                    <input type="text" id="userRole" name="userRole" value="<%= user.userRole %>" class="form-input" required>
-                    
-                    <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
-                    <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
+                    <input type="text" id="userRole" name="userRole" value="<%= user.userRole %>" class="form-input" required style="display: none;">
                 </form>
             </div>
         </div>
@@ -63,10 +55,6 @@
             <span id="display-role-info" class="form-text"><%= user.userRole %></span>
         </div>
 
-        <div>
-            <button class="offboarding-btn" onclick="requestOffboarding(event)">Request for Offboarding</button>
-        </div>
-
         <div class="password-reset-container">
             <h4>Reset Password</h4>
             <form id="reset-password-form" action="/staff/employee/reset-password" method="POST">
@@ -78,32 +66,6 @@
     </div>
 
     <script>
-        // Toggle editing for user info
-        const editBtn = document.getElementById('edit-info-btn');
-        const saveBtn = document.getElementById('save-info-btn');
-        const displayFirstName = document.getElementById('display-firstname');
-        const displayLastName = document.getElementById('display-lastname');
-        const displayEmail = document.getElementById('display-email');
-        const displayRole = document.getElementById('display-role-info');
-        const firstNameInput = document.getElementById('firstName');
-        const lastNameInput = document.getElementById('lastName');
-        const roleInput = document.getElementById('userRole');
-        const emailInput = document.getElementById('userEmail');
-
-        editBtn.addEventListener('click', function () {
-            displayFirstName.style.display = 'none';
-            displayLastName.style.display = 'none';
-            displayRole.style.display = 'none';
-            displayEmail.style.display = 'none';
-            firstNameInput.style.display = 'block';
-            lastNameInput.style.display = 'block';
-            roleInput.style.display = 'block';
-            emailInput.style.display = 'block';
-
-            editBtn.style.display = 'none';
-            saveBtn.style.display = 'inline-block';
-        });
-
         document.getElementById('reset-password-form').addEventListener('submit', function (event) {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
@@ -113,14 +75,6 @@
                 event.preventDefault();
             }
         });
-
-        function requestOffboarding(event) {
-            event.preventDefault(); // Prevent default behavior
-            console.log('Offboarding request initiated'); // Debugging line
-            if (confirm('Are you sure you want to request offboarding?')) {
-                window.location.href = '/staff/employee/request-offboarding';
-            }
-        }
     </script>
 </body>
 </html>
