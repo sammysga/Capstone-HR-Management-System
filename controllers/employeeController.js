@@ -118,7 +118,17 @@ updateUserInfo: async function(req, res) {
         req.flash('errors', { dbError: 'An error occurred while updating the information.' });
         res.redirect('/staff/employee/useracc');
     }
-}
+},
+
+ // Method to render the personal info and career progression page
+ getPersInfoCareerProg: function(req, res) {
+    if (req.session.user) {
+        res.render('staffpages/employee_pages/persinfocareerprog'); // Adjust the path as necessary
+    } else {
+        req.flash('errors', { authError: 'Unauthorized access.' });
+        res.redirect('/staff/login'); // Redirect to login if not authenticated
+    }
+},
 
 };
 
