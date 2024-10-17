@@ -74,9 +74,40 @@
 
 .save-button {
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: #124A5C;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+}
+
+/* Checkbox for Step 3: Required Attachments style */
+.toggle-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.toggle-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.toggle-item input[type="checkbox"] {
+    margin-right: 10px; 
+    width: 20px; 
+    height: 20px; 
+}
+
+.others-input {
+    margin-left: 10px; 
+    padding: 5px;
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    width: 200px;
+}
+
+.toggle-item label {
+    cursor: pointer; 
 }
