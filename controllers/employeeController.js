@@ -122,11 +122,12 @@ updateUserInfo: async function(req, res) {
 
  // Method to render the personal info and career progression page
  getPersInfoCareerProg: function(req, res) {
+    console.log('User session:', req.session.user); // Check the session content
     if (req.session.user) {
-        res.render('staffpages/employee_pages/persinfocareerprog'); // Adjust the path as necessary
+        res.render('staffpages/employee_pages/persinfocareerprog');
     } else {
         req.flash('errors', { authError: 'Unauthorized access.' });
-        res.redirect('/staff/login'); // Redirect to login if not authenticated
+        res.redirect('/staff/login');
     }
 },
 
