@@ -54,9 +54,11 @@ router.get('/hr/editjoboffers', hrController.getEditJobOffers);
 // Employee Routes
 router.get('/employee/dashboard', employeeController.getEmployeeDashboard);
 router.get('/employee/useracc', employeeController.getUserAccount);
+router.get('/employee/employeeoffboarding', employeeController.getEmployeeOffboarding);
 router.get('/employee/persinfocareerprog', employeeController.getPersInfoCareerProg);
 router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
+
 
 // Lina Manager Routes
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
