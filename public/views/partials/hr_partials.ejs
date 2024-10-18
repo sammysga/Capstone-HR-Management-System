@@ -1,3 +1,31 @@
+<style>
+    .logout-container {
+    margin-top: 455px; /* Push the logout button to the bottom */
+    text-align: center; /* Center the button */
+    margin-right: 35px;
+}
+
+.logout-button {
+    text-decoration: none;
+    color: #2385B0; /* Text color */
+    font-weight: bold;
+    background-color: #D8D8D8; /* Bootstrap's danger color for logout */
+    padding: 15px 15px; /* Padding for button */
+    border-radius: 5px; /* Rounded corners */
+    display: block; /* Align as a block */
+    transition: background-color 0.3s; /* Smooth hover effect */
+    font-size: 16px; /* Font size */
+    width: 100%;
+}
+
+.logout-button:hover {
+    background-color: #2385B0; 
+    color: #D8D8D8;
+    font-weight: bold;
+}
+
+</style>
+
 <div class="sidebar">
     <div class="logo-container">
         <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Logo" class="logo">
@@ -40,4 +68,7 @@
             </ul>
         </li>
     </ul>
+    <div class="logout-container">
+        <a href="/logout" class="logout-button">Logout</a>
+    </div>
 </div>
