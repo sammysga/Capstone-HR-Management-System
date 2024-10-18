@@ -22,6 +22,9 @@
         .milestone-label { position: relative; padding-left: 20px; }
         .milestone-label h4 { margin: 0; font-size: 1.2rem; color: #2196F3; }
         .milestone-label p { margin: 0; font-size: 1rem; color: #666; }
+        .section { margin: 20px 0; }
+        .section h2 { margin-bottom: 10px; }
+        .section p { margin: 5px 0; font-size: 1rem; color: #333; }
     </style>
 </head>
 <body>
@@ -109,6 +112,27 @@
                 </div>
             </div>
         </div>
+
+        <!-- Degree, Experiences, and Uploaded Certifications Section -->
+        <div class="section">
+            <h2>Degree</h2>
+            <p>Bachelor of Science in Computer Science</p>
+            <p>University of Technology - Graduated 2012</p>
+        </div>
+
+        <div class="section">
+            <h2>Experiences</h2>
+            <p>Software Engineer at XYZ Corp (2015 - Present)</p>
+            <p>Junior Developer at ABC Inc. (2012 - 2015)</p>
+        </div>
+
+        <div class="section">
+            <h2>Uploaded Certifications</h2>
+            <p>Certified Scrum Master (CSM)</p>
+            <p>Oracle Certified Java Programmer</p>
+            <p>Microsoft Certified: Azure Developer Associate</p>
+        </div>
+
     </div>
 
     <!-- JavaScript for toggling edit mode -->
@@ -125,6 +149,43 @@
             inputFields.forEach(input => input.style.display = 'block');
             editBtn.style.display = 'none';
             saveBtn.style.display = 'inline-block';
+        });
+
+         // Toggle active class for sidebar links
+         document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+
+        // Handle navigation for Performance Management links
+        document.querySelectorAll('.collapsible-content a').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default link behavior
+                
+                // Perform the desired action or navigation
+                const targetUrl = this.getAttribute('href');
+                window.location.href = targetUrl; // Navigate to the target URL
+            });
         });
     </script>
 </body>
