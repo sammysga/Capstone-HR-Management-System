@@ -4,6 +4,7 @@ require('dotenv').config(); // To load environment variables
 const bcrypt = require('bcrypt');
 const { parse } = require('dotenv');
 const flash = require('connect-flash/lib/flash');
+const { getUserAccount } = require('./employeeController');
 
 const hrController = {
     getHRDashboard: function(req, res) {
@@ -12,6 +13,46 @@ const hrController = {
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
+        }
+    },
+
+    getUserAccount: async function (req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'User not logged in.' });
+                return res.redirect('/staff/login');
+            }
+    
+            const { data: user, error } = await supabase
+                .from('useraccounts')
+                .select('userEmail, userRole')
+                .eq('userId', userId)
+                .single();
+    
+            const { data: staff, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('firstName, lastName')
+                .eq('userId', userId)
+                .single();
+    
+            if (error || staffError) {
+                console.error('Error fetching user or staff details:', error || staffError);
+                req.flash('errors', { dbError: 'Error fetching user data.' });
+                return res.redirect('/staff/employee/dashboard');
+            }
+
+            const userData = {
+                ...user,
+                firstName: staff.firstName,
+                lastName: staff.lastName
+            };
+
+            res.render('staffpages/employee_pages/useracc', { user: userData });
+        } catch (err) {
+            console.error('Error in getUserAccount controller:', err);
+            req.flash('errors', { dbError: 'An error occured while loading the account page.' });
+            res.redirect('/hr/dashboard');
         }
     },
 
