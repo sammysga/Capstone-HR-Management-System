@@ -6,18 +6,50 @@
     <title>Personal Information & Career Progression</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <style>
+        .personal-info-container {
+            margin: 20px;
+        }
+        .personal-info-header {
+            font-size: 1.5rem;
+            color: #09191F;
+            margin-bottom: 20px;
+        }
+        .personal-info-item {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .personal-info-label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
 </head>
 <body>
     <%- include('../../partials/employee_partials') %>
 
     <!-- Main content area -->
     <div class="main-content">
-        <!-- You can add content here later if needed -->
+        <div class="personal-info-container">
+            <div class="personal-info-header">Personal Information</div>
+            <div class="personal-info-item">
+                <span class="personal-info-label">Email:</span> <%= user.userEmail %>
+            </div>
+            <div class="personal-info-item">
+                <span class="personal-info-label">Phone Number:</span> <%= user.phoneNumber %>
+            </div>
+            <div class="personal-info-item">
+                <span class="personal-info-label">Date of Birth:</span> <%= user.dateOfBirth %>
+            </div>
+            <div class="personal-info-item">
+                <span class="personal-info-label">Emergency Contact:</span> <%= user.emergencyContact %>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript for sidebar functionality -->
     <script>
-        // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
@@ -25,14 +57,12 @@
             });
         });
 
-        // Toggle collapsible content
         document.querySelectorAll('.collapsible-header').forEach(header => {
             header.addEventListener('click', function() {
                 var content = this.nextElementSibling;
                 if (content.style.display === 'block') {
                     content.style.display = 'none';
                 } else {
-                    // Hide all other collapsible contents
                     document.querySelectorAll('.collapsible-content').forEach(item => {
                         if (item !== content) {
                             item.style.display = 'none';
@@ -40,17 +70,6 @@
                     });
                     content.style.display = 'block';
                 }
-            });
-        });
-
-         // Handle navigation for Performance Management links
-         document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default link behavior
-                
-                // Perform the desired action or navigation
-                const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl; // Navigate to the target URL
             });
         });
     </script>
