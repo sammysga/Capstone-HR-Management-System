@@ -162,6 +162,37 @@ getPersInfoCareerProg: async function(req, res) {
         res.redirect('/staff/employee/dashboard');
     }
 },
+
+getEmployeeOffboarding: async function(req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null;
+        if (!userId) {
+            req.flash('errors', { authError: 'Unauthorized access.' });
+            return res.redirect('/staff/login');
+        }
+
+        // Fetch user-specific data if needed, or any offboarding-related details
+        const { data: user, error } = await supabase
+            .from('useraccounts')
+            .select('userEmail, userRole')
+            .eq('userId', userId)
+            .single();
+
+        if (error) {
+            console.error('Error fetching user details:', error);
+            req.flash('errors', { dbError: 'Error fetching user data.' });
+            return res.redirect('/staff/employee/dashboard');
+        }
+
+        // Render the offboarding page
+        res.render('staffpages/employee_pages/employeeoffboarding', { user });
+    } catch (err) {
+        console.error('Error in getEmployeeOffboarding controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while loading the offboarding page.' });
+        res.redirect('/staff/employee/dashboard');
+    }
+}
+
 };
 
 module.exports = employeeController;
