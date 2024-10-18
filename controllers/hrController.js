@@ -495,8 +495,16 @@ const hrController = {
             res.status(403).json({ error: 'Unauthorized access' });
         }
     },
-    
-    
+
+    getLogoutButton: function(req, res) {
+        req.session.destroy(err => {
+            if(error) {
+                console.error('Error destroying session', error);
+                return res.status(500).json({ error: 'Failed to log out. Please try again.' });
+            }
+            res.redirect('/staff/login');
+        });
+    },
     
 };
 
