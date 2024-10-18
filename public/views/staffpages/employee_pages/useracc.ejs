@@ -14,14 +14,15 @@
         .profile-info p { margin: 5px 0; font-size: 1rem; color: #666; }
         .password-reset-container { margin-top: 30px; }
         .password-reset-container input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
-        .update-password-btn { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s ease; }
-        .update-password-btn:hover { background-color: #45a049; }
+        .update-password-btn, .offboarding-btn { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s ease; }
+        .update-password-btn:hover, .offboarding-btn:hover { background-color: #45a049; }
         .edit-btn, .save-btn { background-color: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background-color 0.3s ease; }
         .edit-btn:hover, .save-btn:hover { background-color: #0b7dda; }
         .form-input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; display: none; }
         .form-text { font-size: 1.1rem; color: #333; }
         .account-info-header { margin-top: 20px; font-size: 1.5rem; color: #09191F; }
         .sub-header { margin-top: 15px; font-size: 1.2rem; color: #333; }
+        .offboarding-btn-container { margin-top: 30px; }
     </style>
 </head>
 <body>
@@ -58,6 +59,13 @@
         <div>
             <div class="sub-header">User Role:</div>
             <span id="display-role-info" class="form-text"><%= user.userRole %></span>
+        </div>
+
+        <!-- Offboarding button -->
+        <div class="offboarding-btn-container">
+            <form action="/employee/employeeoffboarding" method="GET">
+                <button type="submit" class="offboarding-btn">Request for Offboarding</button>
+            </form>
         </div>
 
         <div class="password-reset-container">
