@@ -6,12 +6,28 @@
     <title>Personal Information & Career Progression</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <style>
+        .profile-container { display: flex; align-items: center; margin-bottom: 20px; }
+        .profile-pic { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
+        .profile-info { display: flex; flex-direction: column; }
+        .profile-info h3 { margin: 0; font-size: 1.4rem; color: #09191F; }
+        .profile-info p { margin: 5px 0; font-size: 1rem; color: #666; }
+    </style>
 </head>
 <body>
     <%- include('../../partials/employee_partials') %>
 
     <!-- Main content area -->
     <div class="main-content">
+
+        <!-- Profile section -->
+        <div class="profile-container">
+            <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
+            <div class="profile-info">
+                <h3><%= user.firstName %> <%= user.lastName %></h3> <!-- First and Last Name -->
+                <p><%= user.userRole %></p> <!-- User Role -->
+            </div>
+        </div>
 
         <!-- Personal Information Section -->
         <h2>Personal Information</h2>
