@@ -571,7 +571,6 @@ const hrController = {
     // Leave Request functionality
     getLeaveRequestForm: async function(req, res) {
         try {
-            // Hardcoding the leave types
             const leaveTypes = [
                 { leaveTypeId: 1, typeName: 'Sick Leave' },
                 { leaveTypeId: 2, typeName: 'Vacation Leave' },
@@ -590,10 +589,14 @@ const hrController = {
 
     submitLeaveRequest: async function (req, res) {
         try {
+
+            console.log('Form Data:', req.body);
+
             const { dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
 
-            // Assuming the logged-in user's staffId is stored in the session
-            const staffId = req.session.staffId; // Make sure you store this in the session during login
+            const staffId = req.session.staffId; 
+
+            console.log('Staff ID:', staffId);
 
             if (!staffId) {
                 req.flash('error', { submitError: 'Unable to identify the staff member.' });
@@ -601,7 +604,7 @@ const hrController = {
             }
 
             const leaveRequestData = {
-                staffId: staffId,  // Include staffId in the leave request data
+                staffId: staffId, 
                 dayType: dayType,
                 reason,
                 submittedAt: new Date().toISOString(),
@@ -609,6 +612,8 @@ const hrController = {
                     ? { halfDayDate: halfDayDate, startTime: startTime, endTime: endTime } 
                     : { fromDate: fromDate, toDate: toDate })
             };
+
+            console.log('Leave Request Data:', leaveRequestData);
 
             // Insert leave request to db
             const { error } = await supabase
