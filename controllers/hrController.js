@@ -630,6 +630,15 @@ const hrController = {
             res.status(500).json({ message: 'Internal server error', error: error.message });
         }
     },
+
+    getRecordsPerformanceTracker: function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/hrrecordsperftracker');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
     
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
