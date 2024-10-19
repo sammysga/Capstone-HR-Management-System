@@ -108,7 +108,7 @@ updateUserInfo: async function(req, res) {
         if (userError || staffError) {
             console.error('Error updating user information:', userError || staffError);
             req.flash('errors', { dbError: 'Error updating user information.' });
-            return res.redirect('/staff/employee/useracc');
+            return res.redirect('/employee/useracc');
         }
 
         req.flash('success', 'User information updated successfully!');
