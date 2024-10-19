@@ -55,6 +55,9 @@ router.get('/hr/joboffers', hrController.getJobOffers);
 router.get('/hr/addjoboffer', hrController.getAddJobOffer);
 router.post('/hr/addjoboffer', hrController.postAddJobOffer);
 router.get('/hr/editjoboffers', hrController.getEditJobOffers);
+
+router.get('/hr/records-performance-tracker', hrController.getRecordsPerformanceTracker);
+
 router.get('/logout', hrController.getLogoutButton);
 
 

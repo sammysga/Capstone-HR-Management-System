@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Employee's Records and Performance History</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <%- include('../../partials/hr_partials') %>
+</head>
+<body>
+    <div class="container">
+        <h1>View Employee's Records and Performance History</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Last Name</th>
+                    <th>First Name</th>
+                    <th>Department</th>
+                    <th>Job Position</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% employees.forEach(employee => { %>
+                    <tr onclick="window.location.href='/employee/persinfocareerprog/<%= employee.id %>'">
+                        <td><%= employee.lastName %></td>
+                        <td><%= employee.firstName %></td>
+                        <td><%= employee.department %></td>
+                        <td><%= employee.jobPosition %></td>
+                        <td><%= employee.email %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
