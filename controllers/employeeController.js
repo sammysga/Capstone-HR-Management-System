@@ -164,6 +164,65 @@ getPersInfoCareerProg: async function(req, res) {
     }
 },
 
+// Add this function to your employeeController
+updatePersUserInfo: async function(req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null;
+        if (!userId) {
+            req.flash('errors', { authError: 'Unauthorized access.' });
+            return res.redirect('/staff/login');
+        }
+
+        // Extract user information from the request body
+        const { userEmail, phone, dateOfBirth, emergencyContact, employmentType, jobTitle, department, hireDate } = req.body;
+
+        // Update user account information
+        const { error: userError } = await supabase
+            .from('useraccounts')
+            .update({
+                userEmail, // Update email
+                phone, // Assuming you add a phone field to useraccounts
+                dateOfBirth, // Assuming you add a dateOfBirth field to useraccounts
+                emergencyContact // Assuming you add an emergencyContact field to useraccounts
+            })
+            .eq('userId', userId);
+
+        // Check for errors
+        if (userError) {
+            console.error('Error updating user account:', userError);
+            req.flash('errors', { dbError: 'Error updating user information.' });
+            return res.redirect('/employee/persinfocareerprog');
+        }
+
+        // Update staff account information
+        const { error: staffError } = await supabase
+            .from('staffaccounts')
+            .update({
+                employmentType,
+                jobTitle,
+                department,
+                hireDate
+            })
+            .eq('userId', userId);
+
+        // Check for errors
+        if (staffError) {
+            console.error('Error updating staff account:', staffError);
+            req.flash('errors', { dbError: 'Error updating staff information.' });
+            return res.redirect('/staff/employee/persinfocareerprog');
+        }
+
+        // Redirect back to the personal information page with success message
+        req.flash('success', { updateSuccess: 'User information updated successfully!' });
+        res.redirect('/staff/employee/persinfocareerprog');
+
+    } catch (err) {
+        console.error('Error in updateUserInfo controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while updating the information.' });
+        res.redirect('/staff/employee/persinfocareerprog');
+    }
+},
+
 getEmployeeOffboarding: async function(req, res) {
     try {
         const userId = req.session.user ? req.session.user.userId : null;

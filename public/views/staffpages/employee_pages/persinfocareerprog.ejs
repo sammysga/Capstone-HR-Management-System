@@ -7,24 +7,100 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
     <style>
-        .profile-container { display: flex; align-items: center; margin-bottom: 20px; }
-        .profile-pic { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
-        .profile-info { display: flex; flex-direction: column; }
-        .profile-info h3 { margin: 0; font-size: 1.4rem; color: #09191F; }
-        .profile-info p { margin: 5px 0; font-size: 1rem; color: #666; }
-        .edit-btn, .save-btn { background-color: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background-color 0.3s ease; }
-        .edit-btn:hover, .save-btn:hover { background-color: #0b7dda; }
-        .form-input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; display: none; }
-        .form-text { font-size: 1.1rem; color: #333; }
-        .milestone-container { margin: 30px 0; }
-        .milestone { position: relative; margin-left: 20px; margin-bottom: 30px; }
-        .milestone:before { content: ''; position: absolute; left: -10px; top: 0; height: 100%; border-left: 2px solid #2196F3; }
-        .milestone-label { position: relative; padding-left: 20px; }
-        .milestone-label h4 { margin: 0; font-size: 1.2rem; color: #2196F3; }
-        .milestone-label p { margin: 0; font-size: 1rem; color: #666; }
-        .section { margin: 20px 0; }
-        .section h2 { margin-bottom: 10px; }
-        .section p { margin: 5px 0; font-size: 1rem; color: #333; }
+  .profile-container { 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 20px; 
+}
+.profile-pic { 
+    width: 80px; 
+    height: 80px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    margin-right: 15px; 
+}
+.profile-info { 
+    display: flex; 
+    flex-direction: column; 
+}
+.profile-info h3 { 
+    margin: 0; 
+    font-size: 1.4rem; 
+    color: #09191F; /* Updated color from useracc.ejs */
+}
+.profile-info p { 
+    margin: 5px 0; 
+    font-size: 1rem; 
+    color: #666; 
+}
+.edit-btn, .save-btn { 
+    background-color: #124A5C; /* Updated color from useracc.ejs */
+    color: white; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 5px; 
+    font-size: 1rem; 
+    cursor: pointer; 
+    margin-top: 10px; 
+    transition: background-color 0.3s ease; 
+}
+.edit-btn:hover, .save-btn:hover { 
+    background-color: #059ca4; /* Updated hover color from useracc.ejs */
+}
+.form-input { 
+    width: 100%; 
+    padding: 10px; 
+    margin: 10px 0; 
+    border-radius: 5px; 
+    border: 1px solid #ccc; 
+    display: none; 
+}
+.form-text { 
+    font-size: 1.1rem; 
+    color: #09191F; /* Updated color from useracc.ejs */
+}
+.milestone-container { 
+    margin: 30px 0; 
+}
+.milestone { 
+    position: relative; 
+    margin-left: 20px; 
+    margin-bottom: 30px; 
+}
+.milestone:before { 
+    content: ''; 
+    position: absolute; 
+    left: -10px; 
+    top: 0; 
+    height: 100%; 
+    border-left: 2px solid #124A5C; /* Updated color from useracc.ejs */
+}
+.milestone-label { 
+    position: relative; 
+    padding-left: 20px; 
+}
+.milestone-label h4 { 
+    margin: 0; 
+    font-size: 1.2rem; 
+    color: #124A5C; /* Updated color from useracc.ejs */
+}
+.milestone-label p { 
+    margin: 0; 
+    font-size: 1rem; 
+    color: #666; 
+}
+.section { 
+    margin: 20px 0; 
+}
+.section h2 { 
+    margin-bottom: 10px; 
+}
+.section p { 
+    margin: 5px 0; 
+    font-size: 1rem; 
+    color: #333; 
+}
+
     </style>
 </head>
 <body>
@@ -44,7 +120,7 @@
 
         <!-- Personal Information Section -->
         <h2>Personal Information</h2>
-        <form id="edit-user-info" action="/staff/employee/update-info" method="POST">
+        <form id="edit-user-info" action="/employee/update-persinfo" method="POST">
             <p><strong>Email:</strong> <span id="display-email" class="form-text"><%= user.userEmail %></span></p>
             <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input">
 
