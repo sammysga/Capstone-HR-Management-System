@@ -592,7 +592,7 @@ const hrController = {
             const { dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
     
             // Log session data to verify userId is set correctly
-            console.log('Session Object:', req.session);  
+            console.log('Session Object:', req.session);
     
             const userId = req.session.userId;  // Ensure this is set on login
             console.log('User ID:', userId); // Check if userId is available
@@ -611,7 +611,7 @@ const hrController = {
     
             if (staffError || !staffAccount) {
                 console.error('Error fetching staffId:', staffError);
-                req.flash('error', { submitError: 'Unable to fetch staff information.' });
+                req.flash('error', { submitError: 'Unable to fetch staff information. Please ensure your account is set up correctly.' });
                 return res.redirect('/hr/leaverequest');
             }
     
@@ -626,20 +626,20 @@ const hrController = {
                 reason,
                 submittedAt: new Date().toISOString(),
                 ...(dayType === 'half_day' 
-                    ? { halfDayDate: halfDayDate, startTime: startTime, endTime: endTime } 
-                    : { fromDate: fromDate, toDate: toDate })
+                    ? { halfDayDate, startTime, endTime } 
+                    : { fromDate, toDate })
             };
     
             console.log('Leave Request Data:', leaveRequestData); // Final data check
     
             // Insert leave request into the database
-            const { error } = await supabase
+            const { error: insertError } = await supabase
                 .from('leave_requests')
                 .insert([leaveRequestData]);
     
-            if (error) {
-                console.error('Error submitting leave request:', error);
-                req.flash('error', { submitError: 'Failed to submit leave request.' });
+            if (insertError) {
+                console.error('Error submitting leave request:', insertError);
+                req.flash('error', { submitError: 'Failed to submit leave request. Please try again later.' });
                 return res.redirect('/hr/leaverequest');
             }
     
@@ -647,10 +647,10 @@ const hrController = {
             return res.redirect('/hr/leaverequest');
         } catch (error) {
             console.error('Error processing leave request:', error);
-            req.flash('error', { submitError: 'An error occurred while submitting leave request.' });
+            req.flash('error', { submitError: 'An error occurred while submitting leave request. Please try again later.' });
             return res.redirect('/hr/leaverequest');
         }
-    },
+    },    
     
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
