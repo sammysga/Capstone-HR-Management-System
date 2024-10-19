@@ -211,14 +211,19 @@
         });
 
         // Toggle collapsible content
-        document.querySelectorAll('.collapsible').forEach(item => {
-            item.addEventListener('click', function () {
-                this.classList.toggle('active');
-                const content = this.nextElementSibling;
-                if (content.style.maxHeight) {
-                    content.style.maxHeight = null;
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
                 } else {
-                    content.style.maxHeight = content.scrollHeight + "px";
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
                 }
             });
         });
@@ -233,7 +238,6 @@
                 window.location.href = targetUrl; // Navigate to the target URL
             });
         });
-
     </script>
 </body>
 </html>
