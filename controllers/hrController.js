@@ -587,57 +587,51 @@ const hrController = {
         }
     },
 
-    submitLeaveRequest: async function (req, res) {
+    submitLeaveRequest: async function(req, res) {
+        const { leaveType, dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
+    
         try {
-            // Check if the user is logged in and has the appropriate role
-            if (!req.session.user || req.session.user.userRole !== 'HR') {
-                return res.status(403).json({ message: 'Unauthorized. HR access only.' }); // Return error in JSON
+            // Validate required fields
+            if (!leaveType || !dayType || !reason) {
+                req.flash('error', { validationError: 'Leave type, day type, and reason are required.' });
+                return res.status(400).json({ message: 'Validation error', errors: ['Leave type, day type, and reason are required.'] });
             }
     
-            console.log('Form Data:', { dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate });
-    
-            // Log the received form data for debugging
-            console.log('Form Data:', {
-                dayType,
-                reason,
-                halfDayDate,
-                startTime,
-                endTime,
-                fromDate,
-                toDate
-            });
-    
-            // Ensure the userId is set in the leave request data
+            // Prepare the leave request data
             const leaveRequestData = {
-                userId: req.session.user.userId, // Set userId from the session
+                leaveType,
                 dayType,
                 reason,
-                submittedAt: new Date().toISOString(),
-                ...(dayType === 'half_day' 
-                    ? { halfDayDate, startTime, endTime } 
-                    : { fromDate, toDate })
+                userId: req.session.user.userId, // Assuming user ID is stored in session
+                createdAt: new Date(),
             };
     
-            // Log the leave request data for debugging
-            console.log('Leave Request Data:', leaveRequestData);
-    
-            // Insert leave request to db
-            const { data, error } = await supabase
-                .from('leave_requests')
-                .insert([leaveRequestData]);
-            
-            // Check for error during insertion
-            if (error) {
-                console.error('Error submitting leave request:', error); // Log the error details
-                return res.status(400).json({ message: 'Failed to submit leave request.' }); // Return error in JSON
+            // Add additional fields based on the day type
+            if (dayType === 'half_day') {
+                leaveRequestData.halfDayDate = halfDayDate;
+                leaveRequestData.startTime = startTime;
+                leaveRequestData.endTime = endTime;
+            } else if (dayType === 'whole_day') {
+                leaveRequestData.fromDate = fromDate;
+                leaveRequestData.toDate = toDate;
             }
     
-            return res.status(200).json({ message: 'Leave request submitted successfully!' }); // Return success in JSON
+            // Insert the leave request into the database
+            const { data, error } = await supabase
+                .from('leave_requests') // Adjust the table name as per your schema
+                .insert([leaveRequestData]);
+    
+            if (error) throw error;
+    
+            // Send success response
+            res.status(201).json({ message: 'Leave request submitted successfully.', data });
         } catch (error) {
-            console.error('Unexpected error processing leave request:', error);
-        return res.status(500).json({ message: 'An error occurred while submitting leave request. Please try again.' }); // Return unexpected error in JSON
+            console.error('Error submitting leave request:', error);
+            req.flash('error', { submitError: 'Failed to submit leave request. Please try again.' });
+            res.status(500).json({ message: 'Internal server error', error: error.message });
         }
     },
+    
     
     
     
