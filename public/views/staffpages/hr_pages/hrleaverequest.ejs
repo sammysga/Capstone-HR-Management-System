@@ -107,22 +107,31 @@
                 };
             }
 
-            const response = await('/hr/leaverequest', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(leaveData)
-            });
+            console.log('Submitting leave request:', leaveData); // Log the leave data
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Leave request submitted:', data);
-                document.getElementById('fileLeaveModal').style.display = 'none';
-                // Optionally, refresh the leave requests list or provide user feedback
-            } else {
-                console.error('Error submitting leave request:', await response.text());
-            }
+            try {
+                const response = await fetch('/hr/leaverequest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(leaveData)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Leave request submitted successfully:', data);
+                    alert('Leave request submitted successfully!'); // Alert on success
+                    document.getElementById('fileLeaveModal').style.display = 'none';
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error submitting leave request:', errorText);
+                    alert('Failed to submit leave request: ' + errorText); // Alert on error
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('An error occurred while submitting the request. Please try again.'); // Alert on fetch error
+}
         });
     </script>
 </body>
