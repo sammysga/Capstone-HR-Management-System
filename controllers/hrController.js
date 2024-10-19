@@ -617,8 +617,8 @@ const hrController = {
                         reason,
                         fromDate,
                         toDate,
-                        status: 'Pending', // Default status
-                        createdAt: new Date()
+                        status: 'Pending for Approval', // Default status
+                        submittedAt: new Date()
                     }
                 ]);
     
