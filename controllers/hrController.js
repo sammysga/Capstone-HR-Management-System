@@ -689,6 +689,33 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+
+    // New function to get employee career progression information
+    getEmployeeCareerProgression: async function (req, res) {
+        const staffId = req.params.id;  // Get the staffId from the URL parameters
+
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                // Fetch employee career progression data from the database
+                const { data: careerProgression, error } = await supabase
+                    .from('careerprogression')  // Replace with your actual table for career progression
+                    .select('*')  // Adjust fields as necessary
+                    .eq('staffId', staffId);
+                
+                if (error) throw error;
+
+                // Render the career progression page with the data
+                res.render('staffpages/hr_pages/persinfocareerprogression', { employee: careerProgression });
+            } catch (error) {
+                console.error('Error fetching employee career progression data:', error);
+                req.flash('errors', { fetchError: 'Failed to fetch career progression data. Please try again.' });
+                res.redirect('/hr/dashboard');
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
     
     
     getLogoutButton: function(req, res) {
