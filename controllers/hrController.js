@@ -588,6 +588,38 @@ const hrController = {
         }
     },
 
+    submitLeaveRequest: async function (req, res) {
+        try {
+            const { leaveTypeId, dayType, reason, halfDdayDate, startTime, endTime, fromDate, toDate } = req.body;
+
+            const leaveRequestData = {
+                leave_type_id: leaveTypeId,
+                day_type: dayType,
+                reason,
+                create_at: new Date().toISOString(),
+                ...(dayType === 'half_day' ? { half_day_date: halfDayDate, start_time: startTime, end_time: endTime } : { from_date: fromDate, to_date: toDate })
+            };
+
+            // Insert leave request to db
+            const { data, error } = await supabase
+                .from('leave_requests')
+                .insert([leaveRequestData]);
+            
+            if (error) {
+                console.error('Error submitting leave request:', error);
+                req.flash('error', { submitError: 'Failed to submit leave request.' });
+                return res.redirect('/staff/leaverequest');
+            }
+
+            req.flash('success', { submitSuccess: 'Leave request submitted successfully!' });
+            return res.redirect('/staff/leaverequest');
+        } catch (error) {
+            console.error('Error processing leave request:', error);
+            req.flash('error', { submitError: 'An error occured while submitting leave request.' });
+            return res.redirect('/staff/leaverequest');
+        }
+    },
+
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
             if(err) {
