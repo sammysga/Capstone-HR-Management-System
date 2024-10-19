@@ -631,9 +631,52 @@ const hrController = {
         }
     },
 
-    getRecordsPerformanceTracker: function (req, res) {
+    getRecordsPerformanceTracker: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hrrecordsperftracker');
+            try {
+                // Fetchh employee accounts from db
+                const { data: staffAccounts, error: staffError } = await supabase
+                    .from('staffaccounts')
+                    .select('staffId, userId, departmentId, jobId, lastName, firstName')
+                if (staffError) throw staffError;
+
+                const { data: departments, error: deptError } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName');
+                if (deptError) throw deptError;
+
+                const { data: jobPositions, error: jobError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle');
+                if (jobError) throw jobError;
+
+                // Map and combine staff data
+                const employeeList = await Promise.all(staffAccounts.map(async (staff) => {
+                    const userAccount = userAccounts.find(user => user.userId === staff.userId);
+                    const department = departments.find(dept => dept.departmentId === staff.departmentId);
+                    const jobPosition = jobPositions.find(job => job.jobId === staff.jobId);
+
+                    let jobTitle = jobPosition ? jobPosition.jobTitle : 'No job title assigned';
+                    let userEmail = userAccount ? userAccount.userEmail : 'N/A';
+                    let deptName = department ? department.deptName : 'Unknown';
+
+                    return {
+                        lastName: staff.lastName,
+                        firstName: staff.firstName,
+                        deptName,
+                        jobTitle,
+                        email: userEmail
+                    };
+                }));
+
+                const error = req.flash('error') || {};
+                res.render('staffpages/hr_pages/hrrecordsperftracker', { errors, employees: employeeList });
+            } catch (error) {
+                console.error('Error fetching Employee Records and Performance History data:', error);
+                req.flash('errors', { fetchError: 'Failed to fetch employee records. Please try again.' });
+                res.redirect('/hr/dashboard');
+            }
+            
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
