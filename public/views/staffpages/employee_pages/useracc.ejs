@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
     <style>
-        .profile-container { 
+.profile-container { 
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
@@ -61,7 +61,7 @@
             background-color: #059ca4; 
         }
         .edit-btn, .save-btn { 
-            background-color: #124A5c; 
+            background-color: #124A5C; 
             color: white; 
             border: none; 
             padding: 10px 20px; 
@@ -76,11 +76,23 @@
         }
         .form-input { 
             width: 100%; 
-            padding: 10px; 
+            padding: 15px; 
             margin: 10px 0; 
             border-radius: 5px; 
             border: 1px solid #ccc; 
+            font-size: 16px; 
+            transition: border-color 0.3s ease, box-shadow 0.3s ease; 
+            background-color: #f9f9f9; /* Light background color */
             display: none; 
+        }
+        .form-input:focus { 
+            border-color: #059ca4; /* Change border color on focus */
+            box-shadow: 0 0 5px rgba(5, 156, 164, 0.5); /* Add shadow on focus */
+            background-color: #ffffff; /* Change background color on focus */
+        }
+        .form-input::placeholder { 
+            color: #aaa; /* Placeholder color */
+            opacity: 1; /* Show placeholder color */
         }
         .account-info-header { 
             margin-top: 40px; 
@@ -96,7 +108,7 @@
         .offboarding-btn-container { 
             margin-top: 30px; 
         }
-        .password-reset-info{
+        .password-reset-info {
             margin-top: 40px; 
             font-size: 1.5rem; 
             font-weight: bold; 
@@ -105,14 +117,14 @@
     </style>
 </head>
 <body>
-    <%- include('../../partials/hr_partials') %>
+    <%- include('../../partials/employee_partials') %>
     <!-- Main content -->
     <div class="main-content">
         <!-- Profile section -->
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <form id="edit-user-info" action="" method="POST">
+                <form id="edit-user-info" action="/employee/update-info" method="POST"> <!-- Updated action URL -->
                     <span id="display-firstname" class="form-text" style="font-weight: bold; font-size: 25px;"><%= user.firstName %></span>
                     <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required>
                     
@@ -121,6 +133,8 @@
                     
                     <span id="display-role" class="form-text" style="margin-top: 5px;"><%= user.userRole %></span>
                     <input type="text" id="userRole" name="userRole" value="<%= user.userRole %>" class="form-input" required>
+
+                    <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input" required style="display: none;">
                 </form>
             </div>
             <div>
@@ -184,6 +198,10 @@
 
             editBtn.style.display = 'none';
             saveBtn.style.display = 'inline-block';
+        });
+
+        saveBtn.addEventListener('click', function () {
+            document.getElementById('edit-user-info').submit(); // Submit the form
         });
 
         document.getElementById('reset-password-form').addEventListener('submit', function (event) {
