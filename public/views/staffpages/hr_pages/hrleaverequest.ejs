@@ -84,54 +84,55 @@
         });
 
         document.getElementById('leaveForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            
-            const dayType = document.getElementById('dayType').value;
-            const reason = document.getElementById('reason').value;
+        event.preventDefault();
+        
+        const dayType = document.getElementById('dayType').value;
+        const reason = document.getElementById('reason').value;
 
-            let leaveData = { dayType, reason };
+        let leaveData = { dayType, reason };
 
-            if (dayType === 'half_day') {
-                leaveData = {
-                    ...leaveData,
-                    halfDayDate: document.getElementById('halfDayDate').value,
-                    startTime: document.getElementById('startTime').value,
-                    endTime: document.getElementById('endTime').value
-                };
+        if (dayType === 'half_day') {
+            leaveData = {
+                ...leaveData,
+                halfDayDate: document.getElementById('halfDayDate').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value
+            };
+        } else {
+            leaveData = {
+                ...leaveData,
+                fromDate: document.getElementById('fromDate').value,
+                toDate: document.getElementById('toDate').value
+            };
+        }
+
+        console.log('Submitting leave request:', leaveData); // Log the leave data
+
+        try {
+            const response = await fetch('/hr/leaverequest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(leaveData)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Leave request submitted successfully:', data);
+                alert('Leave request submitted successfully!'); // Alert on success
+                document.getElementById('fileLeaveModal').style.display = 'none';
             } else {
-                leaveData = {
-                    ...leaveData,
-                    fromDate: document.getElementById('fromDate').value,
-                    toDate: document.getElementById('toDate').value
-                };
+                const errorText = await response.text();
+                console.error('Error submitting leave request:', errorText);
+                alert('Failed to submit leave request: ' + errorText); // Alert on error
             }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            alert('An error occurred while submitting the request. Please try again.'); // Alert on fetch error
+        }
+    });
 
-            console.log('Submitting leave request:', leaveData); // Log the leave data
-
-            try {
-                const response = await fetch('/hr/leaverequest', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(leaveData)
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Leave request submitted successfully:', data);
-                    alert('Leave request submitted successfully!'); // Alert on success
-                    document.getElementById('fileLeaveModal').style.display = 'none';
-                } else {
-                    const errorText = await response.text();
-                    console.error('Error submitting leave request:', errorText);
-                    alert('Failed to submit leave request: ' + errorText); // Alert on error
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                alert('An error occurred while submitting the request. Please try again.'); // Alert on fetch error
-}
-        });
     </script>
 </body>
 </html>
