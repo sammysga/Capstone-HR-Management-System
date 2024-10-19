@@ -112,16 +112,19 @@
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <form id="edit-user-info" action="/employee/update-info" method="POST"> <!-- Updated action URL -->
-                    <span id="display-firstname" class="form-text" style="font-weight: bold; font-size: 25px;"><%= user.firstName %></span>
-                    <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required>
-                    
-                    <span id="display-lastname" class="form-text" style="font-weight: bold; font-size: 25px;"><%= user.lastName %></span>
-                    <input type="text" id="lastName" name="lastName" value="<%= user.lastName %>" class="form-input" required>
-                    
-                    <span id="display-role" class="form-text" style="margin-top: 5px;"><%= user.userRole %></span>
-                    <input type="text" id="userRole" name="userRole" value="<%= user.userRole %>" class="form-input" required>
+                <form action="/employee/update-info" method="POST">
+                    <label for="firstName">First Name:</label>
+                    <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" required>
+                
+                    <label for="lastName">Last Name:</label>
+                    <input type="text" id="lastName" name="lastName" value="<%= user.lastName %>" required>
+                
+                    <label for="userEmail">Email:</label>
+                    <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" required>
+                
+                    <button type="submit">Update</button>
                 </form>
+                
             </div>
             <div>
                 <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
