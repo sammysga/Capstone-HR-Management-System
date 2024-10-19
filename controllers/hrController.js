@@ -640,6 +640,12 @@ const hrController = {
                     .select('staffId, userId, departmentId, jobId, lastName, firstName')
                 if (staffError) throw staffError;
 
+                // Fetch user accounts from db
+                const { data: userAccounts, error: userError } = await supabase
+                    .from('useraccounts')
+                    .select('userId, userEmail');  // Adjust the fields as needed
+                if (userError) throw userError;
+
                 const { data: departments, error: deptError } = await supabase
                     .from('departments')
                     .select('departmentId, deptName');
