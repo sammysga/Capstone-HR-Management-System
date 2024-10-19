@@ -57,7 +57,6 @@ router.post('/hr/addjoboffer', hrController.postAddJobOffer);
 router.get('/hr/editjoboffers', hrController.getEditJobOffers);
 
 router.get('/hr/records-performance-tracker', hrController.getRecordsPerformanceTracker);
-router.get('/employee/persinfocareerprog/:id', hrController.getEmployeeCareerProgression);
 
 
 router.get('/logout', hrController.getLogoutButton);
