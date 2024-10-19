@@ -5,10 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Employee's Records and Performance History</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <%- include('../../partials/hr_partials') %>
+    <link rel="stylesheet" href="/css/hr_page.css"> <!-- Linking HR Page CSS -->
+    <style>
+        /* Main Content Styles */
+        .main-content {
+            margin-left: 300px; /* Space for the sidebar */
+            padding: 20px;
+            font-family: 'Inter', sans-serif; /* Use Inter font */
+            min-height: 100vh; /* Full viewport height */
+            box-sizing: border-box; /* Include padding in total width and height */
+            overflow-x: auto; /* Allow horizontal scrolling */
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%; /* Full width for table */
+            border-collapse: collapse; /* Clean table borders */
+            overflow-x: auto; /* Horizontal scroll for table if necessary */
+            display: block; /* Allow scrolling */
+        }
+
+        /* Table Header Styles */
+        th, td {
+            padding: 10px; /* Add padding for table cells */
+            border: 1px solid #ccc; /* Border for table cells */
+            text-align: left; /* Align text to the left */
+        }
+
+        /* Header Styling */
+        th {
+            background-color: #e0e4e8; /* Background color for headers */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0; /* Remove sidebar margin on small screens */
+                padding: 10px; /* Adjust padding */
+            }
+            .sidebar {
+                display: none; /* Hide sidebar on small screens if needed */
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    <%- include('../../partials/hr_partials') %>
+    <div class="main-content">
         <h1>View Employee's Records and Performance History</h1>
         <table>
             <thead>
