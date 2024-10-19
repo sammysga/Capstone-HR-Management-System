@@ -112,7 +112,7 @@
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <form id="edit-user-info" action="/updateUserInfo" method="POST"> <!-- Updated action URL -->
+                <form id="edit-user-info" action="/employee/update-info" method="POST"> <!-- Updated action URL -->
                     <span id="display-firstname" class="form-text" style="font-weight: bold; font-size: 25px;"><%= user.firstName %></span>
                     <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required>
                     
@@ -233,7 +233,7 @@
                 window.location.href = targetUrl; // Navigate to the target URL
             });
         });
-        
+
     </script>
 </body>
 </html>
