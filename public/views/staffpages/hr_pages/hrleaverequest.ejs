@@ -7,13 +7,9 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
 </head>
 <body>
-    <%- include('../../partials/hr_partials') %>
-    <!-- dashboard.ejs -->
     <div class="dashboard">
-        <!-- Button to create a new leave request -->
         <button id="newRequestBtn" class="btn">+ New Request</button>
 
-        <!-- Leave Requests Section -->
         <div id="leaveRequests" class="leave-requests">
             <h2>Leave Requests</h2>
             <ul id="requestsList">
@@ -21,7 +17,6 @@
             </ul>
         </div>
 
-        <!-- Pending for Submission Section -->
         <div id="pendingSubmission" class="pending-submission">
             <h2>Pending for Submission</h2>
             <ul id="pendingList">
@@ -30,25 +25,27 @@
         </div>
     </div>
 
-    <!-- Hidden form for filing a leave request -->
     <div id="fileLeaveModal" class="modal" style="display: none;">
         <form id="leaveForm">
             <label for="leaveType">Leave Type:</label>
             <select id="leaveType" name="leaveType">
-                <option value="bereavement">Bereavement Leave</option>
-                <option value="magna_carta">Magna Carta Leave</option>
-                <option value="sick">Sick Leave</option>
-                <option value="solo_parent">Solo Parent Leave</option>
-                <option value="vacation">Vacation Leave</option>
+                <% if (leaveTypes && leaveTypes.length > 0) { %>
+                    <% leaveTypes.forEach(function(type) { %>
+                        <option value="<%= type.leaveTypeId %>"><%= type.typeName %></option>
+                    <% }); %>
+                <% } else { %>
+                    <option disabled>No leave types available</option>
+                <% } %>
             </select>
+            
 
             <label for="dayType">Day Type:</label>
             <select id="dayType" name="dayType">
+                <option value="pick_date-type">Pick Day Type</option>
                 <option value="half_day">Half Day</option>
                 <option value="whole_day">Whole Day</option>
             </select>
 
-            <!-- Half Day time inputs -->
             <div id="halfDayFields" style="display: none;">
                 <label for="halfDayDate">Date:</label>
                 <input type="date" id="halfDayDate" name="halfDayDate">
@@ -60,7 +57,6 @@
                 <input type="time" id="endTime" name="endTime">
             </div>
 
-            <!-- Whole Day date inputs -->
             <div id="wholeDayFields" style="display: none;">
                 <label for="fromDate">From Date:</label>
                 <input type="date" id="fromDate" name="fromDate">
@@ -75,34 +71,27 @@
             <button type="submit" class="btn">Submit</button>
         </form>
     </div>
+
     <script>
-        // JavaScript for handling the leave form logic
         document.getElementById('newRequestBtn').addEventListener('click', () => {
             document.getElementById('fileLeaveModal').style.display = 'block';
         });
 
         document.getElementById('dayType').addEventListener('change', function () {
             const dayType = this.value;
-            if (dayType === 'half_day') {
-                document.getElementById('halfDayFields').style.display = 'block';
-                document.getElementById('wholeDayFields').style.display = 'none';
-            } else if (dayType === 'whole_day') {
-                document.getElementById('halfDayFields').style.display = 'none';
-                document.getElementById('wholeDayFields').style.display = 'block';
-            }
+            document.getElementById('halfDayFields').style.display = dayType === 'half_day' ? 'block' : 'none';
+            document.getElementById('wholeDayFields').style.display = dayType === 'whole_day' ? 'block' : 'none';
         });
 
-        // Submit form and interact with Supabase
         document.getElementById('leaveForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             
-            const leaveType = document.getElementById('leaveType').value;
+            const leaveTypeId = document.getElementById('leaveType').value;
             const dayType = document.getElementById('dayType').value;
             const reason = document.getElementById('reason').value;
-            
-            let leaveData = { leaveType, dayType, reason };
 
-            // Collect date/time based on the day type
+            let leaveData = { leaveTypeId, dayType, reason };
+
             if (dayType === 'half_day') {
                 leaveData = {
                     ...leaveData,
@@ -118,7 +107,6 @@
                 };
             }
 
-            // Call the backend (Supabase) to submit the leave request
             const { data, error } = await supabase
                 .from('leave_requests')
                 .insert([leaveData]);
@@ -127,11 +115,9 @@
                 console.error('Error submitting leave request:', error);
             } else {
                 console.log('Leave request submitted:', data);
-                // Update UI or give feedback to the user
                 document.getElementById('fileLeaveModal').style.display = 'none';
             }
         });
-
     </script>
 </body>
 </html>
