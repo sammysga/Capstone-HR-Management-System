@@ -593,30 +593,30 @@ const hrController = {
     },
     
     submitLeaveRequest: async function (req, res) {
-        // Check if user is authenticated
         if (!req.session.user || !req.session.user.userId) {
             return res.status(401).json({ message: 'Unauthorized access' });
         }
     
-        const { leaveType, dayType, reason, fromDate, toDate } = req.body;
+        const { leaveType, dayType, reason, fromDate, toDate, halfDayDate, startTime, endTime } = req.body;
     
-        // Validate leave request data
         if (!leaveType || !dayType || !reason) {
             return res.status(400).json({ message: 'Leave type, day type, and reason are required.' });
         }
     
-        // Proceed with inserting the leave request into the database
         try {
             const { error } = await supabase
                 .from('leave_requests')
                 .insert([
                     {
-                        userId: req.session.user.userId, // Ensure this is defined
+                        userId: req.session.user.userId, 
                         leaveType,
                         dayType,
                         reason,
                         fromDate,
                         toDate,
+                        halfDayDate,
+                        startTime,
+                        endTime,
                         status: 'Pending for Approval', // Default status
                         submittedAt: new Date()
                     }
