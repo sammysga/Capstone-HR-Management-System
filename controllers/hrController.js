@@ -571,23 +571,26 @@ const hrController = {
     // Leave Request functionality
     getLeaveRequestForm: async function(req, res) {
         try {
-            // Hardcoding the leave types
-            const leaveTypes = [
-                { leaveTypeId: 1, typeName: 'Sick Leave' },
-                { leaveTypeId: 2, typeName: 'Vacation Leave' },
-                { leaveTypeId: 3, typeName: 'Emergency Leave' },
-                { leaveTypeId: 4, typeName: 'Maternity Leave' },
-                { leaveTypeId: 5, typeName: 'Paternity Leave' }
-            ];
+            // Fetch leave types from the database
+            const { data: leaveTypes, error: leaveError } = await supabase
+                .from('leave_types')
+                .select('*');
             
+            // Check for errors in the query
+            if (leaveError) {
+                console.error('Error fetching leave types:', leaveError);
+                req.flash('error', { fetchError: 'Unable to fetch leave types.' });
+                return res.redirect('/staff/login');
+            }
+
+            // Render the leave request form with the fetched leave types
             res.render('staffpages/hr_pages/hrleaverequest', { leaveTypes });
         } catch (error) {
-            console.error('Error rendering leave request form:', error);
-            req.flash('error', { fetchError: 'Unable to load leave request form.' });
+            console.error('Error in getLeaveRequestForm:', error);
+            req.flash('error', { fetchError: 'An unexpected error occurred.' });
             return res.redirect('/staff/login');
         }
     },
-    
 
 
     getLogoutButton: function(req, res) {
