@@ -592,7 +592,16 @@ const hrController = {
         try {
             const { dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
 
+            // Assuming the logged-in user's staffId is stored in the session
+            const staffId = req.session.staffId; // Make sure you store this in the session during login
+
+            if (!staffId) {
+                req.flash('error', { submitError: 'Unable to identify the staff member.' });
+                return res.redirect('/hr/leaverequest');
+            }
+
             const leaveRequestData = {
+                staffId: staffId,  // Include staffId in the leave request data
                 dayType: dayType,
                 reason,
                 submittedAt: new Date().toISOString(),
@@ -616,7 +625,7 @@ const hrController = {
             return res.redirect('/hr/leaverequest');
         } catch (error) {
             console.error('Error processing leave request:', error);
-            req.flash('error', { submitError: 'An error occured while submitting leave request.' });
+            req.flash('error', { submitError: 'An error occurred while submitting leave request.' });
             return res.redirect('/hr/leaverequest');
         }
     },
