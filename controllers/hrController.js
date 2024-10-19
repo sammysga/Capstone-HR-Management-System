@@ -569,14 +569,26 @@ const hrController = {
     },
 
     // Leave Request functionality
-    getLeaveRequestForm: async function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hrleaverequest');
-        } else {
-            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/staff/login');
+    getLeaveRequestForm: async function(req, res) {
+        try {
+            // Hardcoding the leave types
+            const leaveTypes = [
+                { leaveTypeId: 1, typeName: 'Sick Leave' },
+                { leaveTypeId: 2, typeName: 'Vacation Leave' },
+                { leaveTypeId: 3, typeName: 'Emergency Leave' },
+                { leaveTypeId: 4, typeName: 'Maternity Leave' },
+                { leaveTypeId: 5, typeName: 'Paternity Leave' }
+            ];
+            
+            res.render('staffpages/hr_pages/hrleaverequest', { leaveTypes });
+        } catch (error) {
+            console.error('Error rendering leave request form:', error);
+            req.flash('error', { fetchError: 'Unable to load leave request form.' });
+            return res.redirect('/staff/login');
         }
     },
+    
+
 
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
