@@ -65,16 +65,45 @@
             </thead>
             <tbody>
                 <% employees.forEach(employee => { %>
+                    <script>console.log('Employee ID:', '<%= employee.id %>');</script>
                     <tr onclick="window.location.href='/employee/persinfocareerprog/<%= employee.id %>'">
                         <td><%= employee.lastName %></td>
                         <td><%= employee.firstName %></td>
-                        <td><%= employee.department %></td>
-                        <td><%= employee.jobPosition %></td>
+                        <td><%= employee.department || 'N/A' %></td>
+                        <td><%= employee.jobPosition || 'N/A' %></td>
                         <td><%= employee.email %></td>
                     </tr>
                 <% }) %>
             </tbody>
         </table>
     </div>
+    <script>
+                // Toggle active class for sidebar links
+                document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>
