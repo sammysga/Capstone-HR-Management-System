@@ -593,11 +593,11 @@ const hrController = {
             const { leaveTypeId, dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
 
             const leaveRequestData = {
-                leave_type_id: leaveTypeId,
-                day_type: dayType,
+                leaveTypeId: leaveTypeId,
+                dayType: dayType,
                 reason,
-                submitted_at: new Date().toISOString(),
-                ...(dayType === 'half_day' ? { half_day_date: halfDayDate, start_time: startTime, end_time: endTime } : { from_date: fromDate, to_date: toDate })
+                submittedAt: new Date().toISOString(),
+                ...(dayType === 'half_day' ? { halfDayDate: halfDayDate, startTime: startTime, endTime: endTime } : { fromDate: fromDate, toDate: toDate })
             };
 
             // Insert leave request to db
