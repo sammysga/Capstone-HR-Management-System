@@ -112,7 +112,7 @@
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <form id="edit-user-info" action="" method="POST">
+                <form id="edit-user-info" action="/updateUserInfo" method="POST"> <!-- Updated action URL -->
                     <span id="display-firstname" class="form-text" style="font-weight: bold; font-size: 25px;"><%= user.firstName %></span>
                     <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required>
                     
@@ -186,6 +186,10 @@
             saveBtn.style.display = 'inline-block';
         });
 
+        saveBtn.addEventListener('click', function () {
+            document.getElementById('edit-user-info').submit(); // Submit the form
+        });
+
         document.getElementById('reset-password-form').addEventListener('submit', function (event) {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
@@ -207,19 +211,14 @@
         });
 
         // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
+        document.querySelectorAll('.collapsible').forEach(item => {
+            item.addEventListener('click', function () {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
                 } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
+                    content.style.maxHeight = content.scrollHeight + "px";
                 }
             });
         });
@@ -234,6 +233,7 @@
                 window.location.href = targetUrl; // Navigate to the target URL
             });
         });
+        
     </script>
 </body>
 </html>
