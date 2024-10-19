@@ -570,70 +570,66 @@ const hrController = {
 
     // Leave Request functionality
     getLeaveRequestForm: async function(req, res) {
-        try {
-            const leaveTypes = [
-                { leaveTypeId: 1, typeName: 'Sick Leave' },
-                { leaveTypeId: 2, typeName: 'Vacation Leave' },
-                { leaveTypeId: 3, typeName: 'Emergency Leave' },
-                { leaveTypeId: 4, typeName: 'Maternity Leave' },
-                { leaveTypeId: 5, typeName: 'Paternity Leave' }
-            ];
-            
-            res.render('staffpages/hr_pages/hrleaverequest', { leaveTypes });
-        } catch (error) {
-            console.error('Error rendering leave request form:', error);
-            req.flash('error', { fetchError: 'Unable to load leave request form.' });
-            return res.redirect('/staff/login');
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const leaveTypes = [
+                    { leaveTypeId: 1, typeName: 'Sick Leave' },
+                    { leaveTypeId: 2, typeName: 'Vacation Leave' },
+                    { leaveTypeId: 3, typeName: 'Emergency Leave' },
+                    { leaveTypeId: 4, typeName: 'Maternity Leave' },
+                    { leaveTypeId: 5, typeName: 'Paternity Leave' }
+                ];
+                
+                res.render('staffpages/hr_pages/hrleaverequest', { leaveTypes });
+            } catch (error) {
+                console.error('Error rendering leave request form:', error);
+                req.flash('error', { fetchError: 'Unable to load leave request form.' });
+                return res.redirect('/staff/login');
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            res.redirect('/staff/login');
         }
     },
-
-    submitLeaveRequest: async function(req, res) {
-        const { leaveType, dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
     
+    submitLeaveRequest: async function (req, res) {
+        // Check if user is authenticated
+        if (!req.session.user || !req.session.user.userId) {
+            return res.status(401).json({ message: 'Unauthorized access' });
+        }
+    
+        const { leaveType, dayType, reason, fromDate, toDate } = req.body;
+    
+        // Validate leave request data
+        if (!leaveType || !dayType || !reason) {
+            return res.status(400).json({ message: 'Leave type, day type, and reason are required.' });
+        }
+    
+        // Proceed with inserting the leave request into the database
         try {
-            // Validate required fields
-            if (!leaveType || !dayType || !reason) {
-                req.flash('error', { validationError: 'Leave type, day type, and reason are required.' });
-                return res.status(400).json({ message: 'Validation error', errors: ['Leave type, day type, and reason are required.'] });
-            }
-    
-            // Prepare the leave request data
-            const leaveRequestData = {
-                leaveType,
-                dayType,
-                reason,
-                userId: req.session.user.userId, // Assuming user ID is stored in session
-                createdAt: new Date(),
-            };
-    
-            // Add additional fields based on the day type
-            if (dayType === 'half_day') {
-                leaveRequestData.halfDayDate = halfDayDate;
-                leaveRequestData.startTime = startTime;
-                leaveRequestData.endTime = endTime;
-            } else if (dayType === 'whole_day') {
-                leaveRequestData.fromDate = fromDate;
-                leaveRequestData.toDate = toDate;
-            }
-    
-            // Insert the leave request into the database
-            const { data, error } = await supabase
-                .from('leave_requests') // Adjust the table name as per your schema
-                .insert([leaveRequestData]);
+            const { error } = await supabase
+                .from('leave_requests')
+                .insert([
+                    {
+                        userId: req.session.user.userId, // Ensure this is defined
+                        leaveType,
+                        dayType,
+                        reason,
+                        fromDate,
+                        toDate,
+                        status: 'Pending', // Default status
+                        createdAt: new Date()
+                    }
+                ]);
     
             if (error) throw error;
     
-            // Send success response
-            res.status(201).json({ message: 'Leave request submitted successfully.', data });
+            res.status(200).json({ message: 'Leave request submitted successfully' });
         } catch (error) {
             console.error('Error submitting leave request:', error);
-            req.flash('error', { submitError: 'Failed to submit leave request. Please try again.' });
             res.status(500).json({ message: 'Internal server error', error: error.message });
         }
     },
-    
-    
-    
     
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
