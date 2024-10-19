@@ -617,7 +617,7 @@ const hrController = {
                         halfDayDate,
                         startTime,
                         endTime,
-                        status: 'Pending for Approval', // Default status
+                        status: 'Pending for Approval', 
                         submittedAt: new Date()
                     }
                 ]);
