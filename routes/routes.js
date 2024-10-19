@@ -43,6 +43,7 @@ router.get('/hr/useraccount', hrController.getUserAccount);
 router.post('/hr/update-info', hrController.updateUserInfo);
 
 router.get('/hr/leaverequest', hrController.getLeaveRequestForm);
+router.post('/hr/leaverequest', hrController.submitLeaveRequest);
 
 router.get('/hr/managehome', hrController.getHRManageHome); 
 router.get('/hr/addannouncement', hrController.getAddAnnouncement);

@@ -26,9 +26,9 @@
     </div>
 
     <div id="fileLeaveModal" class="modal" style="display: none;">
-        <form id="leaveForm">
+        <form id="leaveForm" action="/staff/leaverequest" method="POST">
             <label for="leaveType">Leave Type:</label>
-            <select id="leaveType" name="leaveType">
+            <select id="leaveType" name="leaveType" required>
                 <% if (leaveTypes && leaveTypes.length > 0) { %>
                     <% leaveTypes.forEach(function(type) { %>
                         <option value="<%= type.leaveTypeId %>"><%= type.typeName %></option>
@@ -37,39 +37,39 @@
                     <option disabled>No leave types available</option>
                 <% } %>
             </select>
-            
-
+        
             <label for="dayType">Day Type:</label>
-            <select id="dayType" name="dayType">
+            <select id="dayType" name="dayType" required>
                 <option value="pick_date-type">Pick Day Type</option>
                 <option value="half_day">Half Day</option>
                 <option value="whole_day">Whole Day</option>
             </select>
-
+        
             <div id="halfDayFields" style="display: none;">
                 <label for="halfDayDate">Date:</label>
                 <input type="date" id="halfDayDate" name="halfDayDate">
-
+        
                 <label for="startTime">From Time:</label>
                 <input type="time" id="startTime" name="startTime">
-
+        
                 <label for="endTime">End Time:</label>
                 <input type="time" id="endTime" name="endTime">
             </div>
-
+        
             <div id="wholeDayFields" style="display: none;">
                 <label for="fromDate">From Date:</label>
-                <input type="date" id="fromDate" name="fromDate">
-
+                <input type="date" id="fromDate" name="fromDate" required>
+        
                 <label for="toDate">To Date:</label>
-                <input type="date" id="toDate" name="toDate">
+                <input type="date" id="toDate" name="toDate" required>
             </div>
-
+        
             <label for="reason">Reason:</label>
             <input type="text" id="reason" name="reason" required>
-
+        
             <button type="submit" class="btn">Submit</button>
         </form>
+        
     </div>
 
     <script>
