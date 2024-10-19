@@ -112,11 +112,11 @@ updateUserInfo: async function(req, res) {
         }
 
         req.flash('success', 'User information updated successfully!');
-        res.redirect('/staff/employee/useracc');
+        res.redirect('/employee/useracc');
     } catch (err) {
         console.error('Error in updateUserInfo controller:', err);
         req.flash('errors', { dbError: 'An error occurred while updating the information.' });
-        res.redirect('/staff/employee/useracc');
+        res.redirect('/employee/useracc');
     }
 },
 
