@@ -589,38 +589,39 @@ const hrController = {
 
     submitLeaveRequest: async function (req, res) {
         try {
-            console.log('Form Data:', req.body);
-
             const { dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
-
-            const userId = req.session.userId;
-
-            console.log('User ID', userId);
-
+    
+            // Log session data to verify userId is set correctly
+            console.log('Session Object:', req.session);  
+    
+            const userId = req.session.userId;  // Ensure this is set on login
+            console.log('User ID:', userId); // Check if userId is available
+    
             if (!userId) {
-                req.flash('error', { submitError: 'Unable to identify the staff member.' });
+                req.flash('error', { submitError: 'Unable to identify the user. Please log in again.' });
                 return res.redirect('/staff/login');
             }
-
-            //Fetch staffId using userId from the staffaccounts table
+    
+            // Fetch staffId using userId from staffaccounts
             const { data: staffAccount, error: staffError } = await supabase
                 .from('staffaccounts')
                 .select('staffId')
                 .eq('userId', userId)
                 .single();
-            
+    
             if (staffError || !staffAccount) {
                 console.error('Error fetching staffId:', staffError);
                 req.flash('error', { submitError: 'Unable to fetch staff information.' });
                 return res.redirect('/hr/leaverequest');
             }
-
+    
             const staffId = staffAccount.staffId;
-
-            console.log('Staff ID:', staffId);
-
+    
+            console.log('Staff ID:', staffId); // Confirm staffId is retrieved
+    
+            // Prepare leave request data
             const leaveRequestData = {
-                staffId: staffId, 
+                staffId: staffId,
                 dayType: dayType,
                 reason,
                 submittedAt: new Date().toISOString(),
@@ -628,20 +629,20 @@ const hrController = {
                     ? { halfDayDate: halfDayDate, startTime: startTime, endTime: endTime } 
                     : { fromDate: fromDate, toDate: toDate })
             };
-
-            console.log('Leave Request Data:', leaveRequestData);
-
-            // Insert leave request to db
+    
+            console.log('Leave Request Data:', leaveRequestData); // Final data check
+    
+            // Insert leave request into the database
             const { error } = await supabase
                 .from('leave_requests')
                 .insert([leaveRequestData]);
-            
+    
             if (error) {
                 console.error('Error submitting leave request:', error);
                 req.flash('error', { submitError: 'Failed to submit leave request.' });
                 return res.redirect('/hr/leaverequest');
             }
-
+    
             req.flash('success', { submitSuccess: 'Leave request submitted successfully!' });
             return res.redirect('/hr/leaverequest');
         } catch (error) {
@@ -650,7 +651,7 @@ const hrController = {
             return res.redirect('/hr/leaverequest');
         }
     },
-
+    
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
             if(err) {
