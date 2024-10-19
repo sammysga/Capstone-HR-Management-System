@@ -643,7 +643,7 @@ const hrController = {
                 // Fetch user accounts from db
                 const { data: userAccounts, error: userError } = await supabase
                     .from('useraccounts')
-                    .select('userId, userEmail');  // Adjust the fields as needed
+                    .select('userId, userEmail');  
                 if (userError) throw userError;
     
                 const { data: departments, error: deptError } = await supabase
@@ -667,7 +667,6 @@ const hrController = {
                     let deptName = department ? department.deptName : 'Unknown';
     
                     return {
-                        id: staff.staffId,
                         lastName: staff.lastName,
                         firstName: staff.firstName,
                         deptName: deptName,
@@ -676,8 +675,7 @@ const hrController = {
                     };
                 }));
     
-                // Define errors variable to avoid ReferenceError
-                const errors = req.flash('errors') || {};  // Change 'error' to 'errors' to match your usage
+                const errors = req.flash('errors') || {};  
                 res.render('staffpages/hr_pages/hrrecordsperftracker', { errors, employees: employeeList });
             } catch (error) {
                 console.error('Error fetching Employee Records and Performance History data:', error);
