@@ -64,7 +64,7 @@ router.get('/employee/employeeoffboarding', employeeController.getEmployeeOffboa
 router.get('/employee/persinfocareerprog', employeeController.getPersInfoCareerProg);
 router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
-
+router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
 
 // Lina Manager Routes
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
