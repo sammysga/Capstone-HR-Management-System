@@ -26,7 +26,7 @@
     </div>
 
     <div id="fileLeaveModal" class="modal" style="display: none;">
-        <form id="leaveForm" action="/staff/leaverequest" method="POST">
+        <form id="leaveForm">
             <label for="leaveType">Leave Type:</label>
             <select id="leaveType" name="leaveType" required>
                 <% if (leaveTypes && leaveTypes.length > 0) { %>
@@ -107,15 +107,21 @@
                 };
             }
 
-            const { data, error } = await supabase
-                .from('leave_requests')
-                .insert([leaveData]);
+            const response = await('/hr/leaverequest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(leaveData)
+            });
 
-            if (error) {
-                console.error('Error submitting leave request:', error);
-            } else {
+            if (response.ok) {
+                const data = await response.json();
                 console.log('Leave request submitted:', data);
                 document.getElementById('fileLeaveModal').style.display = 'none';
+                // Optionally, refresh the leave requests list or provide user feedback
+            } else {
+                console.error('Error submitting leave request:', await response.text());
             }
         });
     </script>
