@@ -596,7 +596,7 @@ const hrController = {
                 leave_type_id: leaveTypeId,
                 day_type: dayType,
                 reason,
-                create_at: new Date().toISOString(),
+                submittedAt: new Date().toISOString(),
                 ...(dayType === 'half_day' ? { half_day_date: halfDayDate, start_time: startTime, end_time: endTime } : { from_date: fromDate, to_date: toDate })
             };
 
@@ -608,15 +608,15 @@ const hrController = {
             if (error) {
                 console.error('Error submitting leave request:', error);
                 req.flash('error', { submitError: 'Failed to submit leave request.' });
-                return res.redirect('/staff/leaverequest');
+                return res.redirect('/hr/leaverequest');
             }
 
             req.flash('success', { submitSuccess: 'Leave request submitted successfully!' });
-            return res.redirect('/staff/leaverequest');
+            return res.redirect('/hr/leaverequest');
         } catch (error) {
             console.error('Error processing leave request:', error);
             req.flash('error', { submitError: 'An error occured while submitting leave request.' });
-            return res.redirect('/staff/leaverequest');
+            return res.redirect('/hr/leaverequest');
         }
     },
 
