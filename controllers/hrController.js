@@ -623,12 +623,13 @@ const hrController = {
             console.log('Leave Request Data:', leaveRequestData);
     
             // Insert leave request to db
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('leave_requests')
                 .insert([leaveRequestData]);
             
+            // Check for error during insertion
             if (error) {
-                console.error('Error submitting leave request:', error);
+                console.error('Error submitting leave request:', error); // Log the error details
                 req.flash('error', { submitError: 'Failed to submit leave request.' });
                 return res.redirect('/hr/leaverequest');
             }
@@ -636,11 +637,12 @@ const hrController = {
             req.flash('success', { submitSuccess: 'Leave request submitted successfully!' });
             return res.redirect('/hr/leaverequest');
         } catch (error) {
-            console.error('Error processing leave request:', error);
-            req.flash('error', { submitError: 'An error occurred while submitting leave request.' });
+            console.error('Unexpected error processing leave request:', error); // Log unexpected errors
+            req.flash('error', { submitError: 'An error occurred while submitting leave request. Please try again.' });
             return res.redirect('/hr/leaverequest');
         }
     },
+    
     
     
     getLogoutButton: function(req, res) {
