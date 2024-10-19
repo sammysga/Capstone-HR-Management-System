@@ -568,6 +568,16 @@ const hrController = {
         }
     },
 
+    // Leave Request functionality
+    getLeaveRequestForm: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/hrleaverequest');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
             if(err) {
