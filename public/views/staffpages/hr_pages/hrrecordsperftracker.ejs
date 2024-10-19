@@ -65,17 +65,14 @@
             </thead>
             <tbody>
                 <% employees.forEach(employee => { %>
-                    <tr>
-                        <td><%= employee.firstName %></td>
+                    <tr onclick="window.location.href='/employee/persinfocareerprog/<%= employee.id %>'">
                         <td><%= employee.lastName %></td>
-                        <td><%= employee.deptName %></td>
-                        <td><%= employee.jobTitle %></td>
+                        <td><%= employee.firstName %></td>
+                        <td><%= employee.department || 'N/A' %></td>
+                        <td><%= employee.jobPosition || 'N/A' %></td>
                         <td><%= employee.email %></td>
-                        <td>
-                            <a href="/employee/persinfocareerprog/<%= employee.id %>">View Career Progression</a>
-                        </td>
                     </tr>
-                <% }); %>
+                <% }) %>
             </tbody>
         </table>
     </div>
