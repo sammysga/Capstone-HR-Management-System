@@ -97,7 +97,7 @@ updateUserInfo: async function(req, res) {
         // Update the user info in both 'useraccounts' and 'staffaccounts' tables
         const { error: userError } = await supabase
             .from('useraccounts')
-            .update({ userEmail })
+            .update({ userEmail }) // This line updates the email
             .eq('userId', userId);
 
         const { error: staffError } = await supabase
@@ -119,6 +119,7 @@ updateUserInfo: async function(req, res) {
         res.redirect('/employee/useracc');
     }
 },
+
 
 getPersInfoCareerProg: async function(req, res) {
     try {
