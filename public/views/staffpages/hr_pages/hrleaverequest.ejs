@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR User Account</title>
+    <title>HR Leave Request</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
 </head>
 <body>
@@ -47,13 +47,13 @@
         
             <div id="halfDayFields" style="display: none;">
                 <label for="halfDayDate">Date:</label>
-                <input type="date" id="halfDayDate" name="halfDayDate">
+                <input type="date" id="halfDayDate" name="halfDayDate" required>
         
                 <label for="startTime">From Time:</label>
-                <input type="time" id="startTime" name="startTime">
+                <input type="time" id="startTime" name="startTime" required>
         
                 <label for="endTime">End Time:</label>
-                <input type="time" id="endTime" name="endTime">
+                <input type="time" id="endTime" name="endTime" required>
             </div>
         
             <div id="wholeDayFields" style="display: none;">
@@ -79,8 +79,21 @@
 
         document.getElementById('dayType').addEventListener('change', function () {
             const dayType = this.value;
+            const fromDateField = document.getElementById('fromDate');
+            const toDateField = document.getElementById('toDate');
+
             document.getElementById('halfDayFields').style.display = dayType === 'half_day' ? 'block' : 'none';
             document.getElementById('wholeDayFields').style.display = dayType === 'whole_day' ? 'block' : 'none';
+
+            if (dayType === 'half_day') {
+                // Remove required attribute from whole-day date fields
+                fromDateField.removeAttribute('required');
+                toDateField.removeAttribute('required');
+            } else {
+                // Set required attributes back for whole-day
+                fromDateField.setAttribute('required', 'true');
+                toDateField.setAttribute('required', 'true');
+            }
         });
 
         document.getElementById('leaveForm').addEventListener('submit', async (event) => {
@@ -99,6 +112,7 @@
                     startTime: document.getElementById('startTime').value,
                     endTime: document.getElementById('endTime').value
                 };
+                console.log('Half Day Data:', leaveData);
             } else {
                 leaveData = {
                     ...leaveData,
