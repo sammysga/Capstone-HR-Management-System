@@ -591,11 +591,10 @@ const hrController = {
         try {
             // Check if the user is logged in and has the appropriate role
             if (!req.session.user || req.session.user.userRole !== 'HR') {
-                req.flash('error', { authError: 'Unauthorized. HR access only.' });
-                return res.redirect('/staff/login'); // Redirect unauthorized users
+                return res.status(403).json({ message: 'Unauthorized. HR access only.' }); // Return error in JSON
             }
     
-            const { dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
+            console.log('Form Data:', { dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate });
     
             // Log the received form data for debugging
             console.log('Form Data:', {
@@ -630,16 +629,13 @@ const hrController = {
             // Check for error during insertion
             if (error) {
                 console.error('Error submitting leave request:', error); // Log the error details
-                req.flash('error', { submitError: 'Failed to submit leave request.' });
-                return res.redirect('/hr/leaverequest');
+                return res.status(400).json({ message: 'Failed to submit leave request.' }); // Return error in JSON
             }
     
-            req.flash('success', { submitSuccess: 'Leave request submitted successfully!' });
-            return res.redirect('/hr/leaverequest');
+            return res.status(200).json({ message: 'Leave request submitted successfully!' }); // Return success in JSON
         } catch (error) {
-            console.error('Unexpected error processing leave request:', error); // Log unexpected errors
-            req.flash('error', { submitError: 'An error occurred while submitting leave request. Please try again.' });
-            return res.redirect('/hr/leaverequest');
+            console.error('Unexpected error processing leave request:', error);
+        return res.status(500).json({ message: 'An error occurred while submitting leave request. Please try again.' }); // Return unexpected error in JSON
         }
     },
     
