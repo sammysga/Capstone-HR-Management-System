@@ -667,10 +667,11 @@ const hrController = {
                     let deptName = department ? department.deptName : 'Unknown';
     
                     return {
+                        id: staff.staffId,
                         lastName: staff.lastName,
                         firstName: staff.firstName,
-                        deptName,
-                        jobTitle,
+                        deptName: deptName,
+                        jobTitle: jobTitle,
                         email: userEmail
                     };
                 }));
