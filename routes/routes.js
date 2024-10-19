@@ -40,6 +40,8 @@ router.post('/hr/api/job-titles', hrController.addNewJobTitle);
 router.post('/hr/api/add-staff', hrController.addNewStaff);
 
 router.get('/hr/useraccount', hrController.getUserAccount);
+router.post('/hr/update-info', hrController.updateUserInfo);
+
 router.get('/hr/managehome', hrController.getHRManageHome); 
 router.get('/hr/addannouncement', hrController.getAddAnnouncement);
 router.post('/hr/addannouncement', hrController.postAddAnnouncement);

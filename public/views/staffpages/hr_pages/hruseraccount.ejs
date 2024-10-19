@@ -7,22 +7,101 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
     <style>
-        .profile-container { display: flex; align-items: center; margin-bottom: 20px; }
-        .profile-pic { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
-        .profile-info { display: flex; flex-direction: column; }
-        .profile-info h3 { margin: 0; font-size: 1.4rem; color: #09191F; }
-        .profile-info p { margin: 5px 0; font-size: 1rem; color: #666; }
-        .password-reset-container { margin-top: 30px; }
-        .password-reset-container input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
-        .update-password-btn, .offboarding-btn { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s ease; }
-        .update-password-btn:hover, .offboarding-btn:hover { background-color: #45a049; }
-        .edit-btn, .save-btn { background-color: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background-color 0.3s ease; }
-        .edit-btn:hover, .save-btn:hover { background-color: #0b7dda; }
-        .form-input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; display: none; }
-        .form-text { font-size: 1.1rem; color: #333; }
-        .account-info-header { margin-top: 20px; font-size: 1.5rem; color: #09191F; }
-        .sub-header { margin-top: 15px; font-size: 1.2rem; color: #333; }
-        .offboarding-btn-container { margin-top: 30px; }
+        .profile-container { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            margin-bottom: 20px; 
+        }
+        .profile-pic { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            margin-right: 15px; 
+        }
+        .profile-info { 
+            display: flex; 
+            flex-direction: column; 
+            flex-grow: 1; 
+            margin-right: 20px;
+        }
+        .form-text { 
+            font-size: 20px; 
+            color: #09191F; 
+        }
+        #display-role { 
+            font-size: 1.2rem; 
+            font-style: italic; 
+            margin-top: 5px; 
+        }
+        .password-reset-container { 
+            margin-top: 30px; 
+            border-top: 1px solid #ccc; 
+            padding-top: 20px; 
+        }
+        .password-reset-container input { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border: 1px solid #ccc; 
+        }
+        .update-password-btn, .offboarding-btn { 
+            background-color: #124A5C; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            transition: background-color 0.3s ease; 
+        }
+        .update-password-btn:hover, .offboarding-btn:hover { 
+            background-color: #059ca4; 
+        }
+        .edit-btn, .save-btn { 
+            background-color: #124A5c; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            margin-left: 20px; /* Space between button and profile info */
+            transition: background-color 0.3s ease; 
+        }
+        .edit-btn:hover, .save-btn:hover { 
+            background-color: #059ca4; 
+        }
+        .form-input { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border: 1px solid #ccc; 
+            display: none; 
+        }
+        .account-info-header { 
+            margin-top: 40px; 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            color: #059ca4; 
+        }
+        .sub-header { 
+            margin-top: 20px; 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+        }
+        .offboarding-btn-container { 
+            margin-top: 30px; 
+        }
+        .password-reset-info{
+            margin-top: 40px; 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            color: #059ca4; 
+        }
     </style>
 </head>
 <body>
@@ -33,19 +112,20 @@
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <form id="edit-user-info" action="/staff/employee/update-info" method="POST">
-                    <span id="display-firstname" class="form-text"><%= user.firstName %></span>
+                <form id="edit-user-info" action="" method="POST">
+                    <span id="display-firstname" class="form-text" style="font-weight: bold; font-size: 25px;"><%= user.firstName %></span>
                     <input type="text" id="firstName" name="firstName" value="<%= user.firstName %>" class="form-input" required>
                     
-                    <span id="display-lastname" class="form-text"><%= user.lastName %></span>
+                    <span id="display-lastname" class="form-text" style="font-weight: bold; font-size: 25px;"><%= user.lastName %></span>
                     <input type="text" id="lastName" name="lastName" value="<%= user.lastName %>" class="form-input" required>
-
-                    <span id="display-role" class="form-text"><%= user.userRole %></span>
-                    <input type="text" id="userRole" name="userRole" value="<%= user.userRole %>" class="form-input" required>
                     
-                    <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
-                    <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
+                    <span id="display-role" class="form-text" style="margin-top: 5px;"><%= user.userRole %></span>
+                    <input type="text" id="userRole" name="userRole" value="<%= user.userRole %>" class="form-input" required>
                 </form>
+            </div>
+            <div>
+                <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
+                <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
             </div>
         </div>
 
@@ -62,16 +142,18 @@
 
         <!-- Offboarding button -->
         <div class="offboarding-btn-container">
-            <form action="/employee/employeeoffboarding" method="GET">
+            <form action="#" method="GET">
                 <button type="submit" class="offboarding-btn">Request for Offboarding</button>
             </form>
         </div>
 
         <div class="password-reset-container">
-            <h4>Reset Password</h4>
-            <form id="reset-password-form" action="/staff/employee/reset-password" method="POST">
-                <input type="password" id="new-password" name="newPassword" placeholder="Set new password" required>
-                <input type="password" id="confirm-password" name="confirmPassword" placeholder="Confirm new password" required>
+            <h4 class="password-reset-info">Reset Password</h4>
+            <form id="reset-password-form" action="#" method="POST">
+                <label>Set New Password:</label>
+                <input type="password" id="new-password" name="newPassword" placeholder="Input to set new password" required>
+                <label>Confirm New Password:</label>
+                <input type="password" id="confirm-password" name="confirmPassword" placeholder="Input to confirm new password" required>
                 <button type="submit" class="update-password-btn">Update Password</button>
             </form>
         </div>
