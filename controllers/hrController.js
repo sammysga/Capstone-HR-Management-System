@@ -590,13 +590,13 @@ const hrController = {
 
     submitLeaveRequest: async function (req, res) {
         try {
-            const { leaveTypeId, dayType, reason, halfDdayDate, startTime, endTime, fromDate, toDate } = req.body;
+            const { leaveTypeId, dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
 
             const leaveRequestData = {
                 leave_type_id: leaveTypeId,
                 day_type: dayType,
                 reason,
-                submittedAt: new Date().toISOString(),
+                submitted_at: new Date().toISOString(),
                 ...(dayType === 'half_day' ? { half_day_date: halfDayDate, start_time: startTime, end_time: endTime } : { from_date: fromDate, to_date: toDate })
             };
 
