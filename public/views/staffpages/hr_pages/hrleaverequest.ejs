@@ -86,11 +86,10 @@
         document.getElementById('leaveForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             
-            const leaveTypeId = document.getElementById('leaveType').value;
             const dayType = document.getElementById('dayType').value;
             const reason = document.getElementById('reason').value;
 
-            let leaveData = { leaveTypeId, dayType, reason };
+            let leaveData = { dayType, reason };
 
             if (dayType === 'half_day') {
                 leaveData = {

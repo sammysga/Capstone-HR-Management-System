@@ -590,18 +590,19 @@ const hrController = {
 
     submitLeaveRequest: async function (req, res) {
         try {
-            const { leaveTypeId, dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
+            const { dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
 
             const leaveRequestData = {
-                leaveTypeId: leaveTypeId,
                 dayType: dayType,
                 reason,
                 submittedAt: new Date().toISOString(),
-                ...(dayType === 'half_day' ? { halfDayDate: halfDayDate, startTime: startTime, endTime: endTime } : { fromDate: fromDate, toDate: toDate })
+                ...(dayType === 'half_day' 
+                    ? { halfDayDate: halfDayDate, startTime: startTime, endTime: endTime } 
+                    : { fromDate: fromDate, toDate: toDate })
             };
 
             // Insert leave request to db
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('leave_requests')
                 .insert([leaveRequestData]);
             
