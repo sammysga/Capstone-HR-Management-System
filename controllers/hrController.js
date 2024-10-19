@@ -589,19 +589,35 @@ const hrController = {
 
     submitLeaveRequest: async function (req, res) {
         try {
-
             console.log('Form Data:', req.body);
 
             const { dayType, reason, halfDayDate, startTime, endTime, fromDate, toDate } = req.body;
 
-            const staffId = req.session.staffId; 
+            const userId = req.session.userId;
 
-            console.log('Staff ID:', staffId);
+            console.log('User ID', userId);
 
-            if (!staffId) {
+            if (!userId) {
                 req.flash('error', { submitError: 'Unable to identify the staff member.' });
+                return res.redirect('/staff/login');
+            }
+
+            //Fetch staffId using userId from the staffaccounts table
+            const { data: staffAccount, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('staffId')
+                .eq('userId', userId)
+                .single();
+            
+            if (staffError || !staffAccount) {
+                console.error('Error fetching staffId:', staffError);
+                req.flash('error', { submitError: 'Unable to fetch staff information.' });
                 return res.redirect('/hr/leaverequest');
             }
+
+            const staffId = staffAccount.staffId;
+
+            console.log('Staff ID:', staffId);
 
             const leaveRequestData = {
                 staffId: staffId, 
