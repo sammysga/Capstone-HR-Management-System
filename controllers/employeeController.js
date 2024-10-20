@@ -123,13 +123,14 @@ updateUserInfo: async function(req, res) {
 
 getPersInfoCareerProg: async function(req, res) {
     try {
-        const userId = req.session.user ? req.session.user.userId : null;
+        const userId = req.session.user ? req.session.user.userId : null; // Get the user ID from the session
         if (!userId) {
-            req.flash('errors', { authError: 'Unauthorized access.' });
+            req.flash('errors', { authError: 'User not logged in.' });
             return res.redirect('/staff/login');
         }
 
-        const { data: user, error } = await supabase
+        // Fetch user and staff information
+        const { data: user, error: userError } = await supabase
             .from('useraccounts')
             .select('userEmail, userRole')
             .eq('userId', userId)
@@ -141,28 +142,65 @@ getPersInfoCareerProg: async function(req, res) {
             .eq('userId', userId)
             .single();
 
-        if (error || staffError) {
-            console.error('Error fetching user or staff details:', error || staffError);
+        if (userError || staffError) {
+            console.error('Error fetching user or staff details:', userError || staffError);
             req.flash('errors', { dbError: 'Error fetching user data.' });
-            return res.redirect('/staff/employee/dashboard');
+            return res.redirect('/employee/persinfocareerprog');
+        }
+
+        // Fetch degree information
+        const { data: degree, error: degreeError } = await supabase
+            .from('degree')
+            .select('degreeName, universityName, graduationYear')
+            .eq('userId', userId);
+
+        if (degreeError) {
+            console.error('Error fetching degree details:', degreeError);
+            req.flash('errors', { dbError: 'Error fetching degree data.' });
+            return res.redirect('/employee/persinfocareerprog');
+        }
+
+        // Fetch experience information
+        const { data: experience, error: experienceError } = await supabase
+            .from('experience')
+            .select('jobTitle, companyName, jobDuration')
+            .eq('userId', userId);
+
+        if (experienceError) {
+            console.error('Error fetching experience details:', experienceError);
+            req.flash('errors', { dbError: 'Error fetching experience data.' });
+            return res.redirect('/employee/persinfocareerprog');
+        }
+
+        // Fetch certification information
+        const { data: certification, error: certificationError } = await supabase
+            .from('certification')
+            .select('certificationName, certificationImage')
+            .eq('userId', userId);
+
+        if (certificationError) {
+            console.error('Error fetching certification details:', certificationError);
+            req.flash('errors', { dbError: 'Error fetching certification data.' });
+            return res.redirect('/employee/persinfocareerprog');
         }
 
         const userData = {
             ...user,
             firstName: staff.firstName,
             lastName: staff.lastName,
-            phoneNumber: '123-456-7890', // Dummy phone number
-            dateOfBirth: '1990-01-01', // Dummy date of birth
-            emergencyContact: 'Jane Doe (123-456-7890)' // Dummy emergency contact
+            degree: degree || null,
+            experience: experience || null,
+            certification: certification || null
         };
 
         res.render('staffpages/employee_pages/persinfocareerprog', { user: userData });
     } catch (err) {
         console.error('Error in getPersInfoCareerProg controller:', err);
-        req.flash('errors', { dbError: 'An error occurred while loading the page.' });
+        req.flash('errors', { dbError: 'An error occurred while loading the career progression page.' });
         res.redirect('/staff/employee/dashboard');
     }
 },
+
 
 // Add this function to your employeeController
 updatePersUserInfo: async function(req, res) {
