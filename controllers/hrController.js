@@ -129,6 +129,58 @@ const hrController = {
             res.redirect('/hr/dashboard');
         }
     },
+
+    updatePersUserInfo: async function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            const { userEmail, phone, dateOfBirth, emergencyContact, employmentType, jobTitle, department, hireDate } = req.body;
+    
+            const { error: userError } = await supabase
+                .from('useraccounts')
+                .update({
+                    userEmail,
+                    phone, 
+                    dateOfBirth, 
+                    emergencyContact 
+                })
+                .eq('userId', userId);
+    
+            if (userError) {
+                console.error('Error updating user account:', userError);
+                req.flash('errors', { dbError: 'Error updating user information.' });
+                return res.redirect('staffpages/hr_pages/persinfocareerprog');
+            }
+
+            const { error: staffError } = await supabase
+                .from('staffaccounts')
+                .update({
+                    employmentType,
+                    jobTitle,
+                    department,
+                    hireDate
+                })
+                .eq('userId', userId);
+    
+            if (staffError) {
+                console.error('Error updating staff account:', staffError);
+                req.flash('errors', { dbError: 'Error updating staff information.' });
+                return res.redirect('staffpages/hr_pages/persinfocareerprog');
+            }
+    
+            req.flash('success', { updateSuccess: 'User information updated successfully!' });
+            res.redirect('staffpages/hr_pages/persinfocareerprog');
+    
+        } catch (err) {
+            console.error('Error in updateUserInfo controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while updating the information.' });
+            res.redirect('staffpages/hr_pages/persinfocareerprog');
+        }
+    },
     
 
     getHRManageHome: async function(req, res) {
