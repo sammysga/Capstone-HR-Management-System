@@ -2,14 +2,68 @@ const supabase = require('../public/config/supabaseClient');
 const bcrypt = require('bcrypt');
 
 const lineManagerController = {
-    getLineManagerDashboard: function(req, res) {
+    getLineManagerDashboard: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/managerdashboard');
+            try {
+                const { data: allLeaves, error } = await supabase
+                    .from('leaverequests')
+                    .select(`
+                        leaveRequestId, 
+                        staffId, 
+                        created_at, 
+                        leaveTypeId, 
+                        fromDate, 
+                        untilDate, 
+                        staffaccounts (lastName, firstName), 
+                        leave_types (typeName)  
+                    `)
+                    .order('created_at', { ascending: false });
+    
+                if (error) {
+                    console.error('Error fetching leave requests:', error);
+                    req.flash('errors', { dbError: 'Error fetching leave requests.' });
+                    return res.redirect('/linemanager/dashboard');
+                }
+    
+                // Log the fetched data for debugging
+                console.log('All Leaves fetched from database:', allLeaves);
+    
+                // Check if allLeaves contains data
+                if (!allLeaves || allLeaves.length === 0) {
+                    console.log('No leave requests found in the database.');
+                }
+    
+                // Format the leave requests to only include necessary fields
+                const formattedLeaves = allLeaves.map(leave => ({
+                    lastName: leave.staffaccounts ? leave.staffaccounts.lastName : 'N/A', // Check if staffaccounts exists
+                    firstName: leave.staffaccounts ? leave.staffaccounts.firstName : 'N/A', // Check if staffaccounts exists
+                    filedDate: leave.created_at ? leave.created_at.split(' ')[0] : 'N/A', // Get only the date part
+                    type: leave.leave_types ? leave.leave_types.typeName : 'N/A', // Check if leave_types exists
+                    startDate: leave.fromDate || 'N/A',
+                    endDate: leave.untilDate || 'N/A'
+                }));
+    
+                // Log the formatted leaves
+                console.log('Formatted Leaves:', formattedLeaves);
+    
+                // Render the dashboard with success and error messages
+                res.render('staffpages/linemanager_pages/managerdashboard', { 
+                    allLeaves: formattedLeaves,
+                    successMessage: req.flash('success'), // Add success message
+                    errorMessage: req.flash('errors') // Handle error messages if any
+                });
+            } catch (err) {
+                console.error('Error fetching leave requests:', err);
+                req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
+                res.redirect('/linemanager/dashboard');
+            }
         } else {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
         }
-    },
+    },    
+    
+    
     getUserAccount: async function (req, res) {
         try {
             const userId = req.session.user ? req.session.user.userId : null;
