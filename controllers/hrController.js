@@ -4,7 +4,7 @@ require('dotenv').config(); // To load environment variables
 const bcrypt = require('bcrypt');
 const { parse } = require('dotenv');
 const flash = require('connect-flash/lib/flash');
-const { getUserAccount } = require('./employeeController');
+const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
 
 const hrController = {
     getHRDashboard: function(req, res) {
@@ -58,7 +58,7 @@ const hrController = {
 
     updateUserInfo: async function (req, res) {
         try {
-            const userId = req.session.user.userId; // Assuming userId is stored in session
+            const userId = req.session.user.userId;
             const { firstName, lastName, userEmail } = req.body;
 
             // Update the user info in both 'useraccounts' and 'staffaccounts' tables
@@ -84,6 +84,15 @@ const hrController = {
             console.error('Error in updateUserInfo controller:', err);
             req.flash('errors', { dbError: 'An error occurred while updating the information.' });
             res.redirect('staffpages/hr_pages/hruseraccount')
+        }
+    },
+
+    getPersInfoCareerProg: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/persinfocareerprog');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
         }
     },
 

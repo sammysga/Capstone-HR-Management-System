@@ -41,6 +41,7 @@ router.post('/hr/api/add-staff', hrController.addNewStaff);
 
 router.get('/hr/useraccount', hrController.getUserAccount);
 router.post('/hr/update-info', hrController.updateUserInfo);
+router.get('/hr/careerprog', hrController.getPersInfoCareerProg);
 
 router.get('/hr/leaverequest', hrController.getLeaveRequestForm);
 router.post('/hr/leaverequest', hrController.submitLeaveRequest);
