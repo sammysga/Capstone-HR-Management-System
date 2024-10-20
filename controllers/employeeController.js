@@ -145,7 +145,7 @@ getPersInfoCareerProg: async function(req, res) {
         if (userError || staffError) {
             console.error('Error fetching user or staff details:', userError || staffError);
             req.flash('errors', { dbError: 'Error fetching user data.' });
-            return res.redirect('/employee/persinfocareerprog');
+            return res.redirect('/employee/employeepersinfocareerprog');
         }
 
         // Fetch degree information
@@ -157,7 +157,7 @@ getPersInfoCareerProg: async function(req, res) {
         if (degreeError) {
             console.error('Error fetching degree details:', degreeError);
             req.flash('errors', { dbError: 'Error fetching degree data.' });
-            return res.redirect('/employee/persinfocareerprog');
+            return res.redirect('/employee/employeepersinfocareerprog');
         }
 
         // Fetch experience information
@@ -169,7 +169,7 @@ getPersInfoCareerProg: async function(req, res) {
         if (experienceError) {
             console.error('Error fetching experience details:', experienceError);
             req.flash('errors', { dbError: 'Error fetching experience data.' });
-            return res.redirect('/employee/persinfocareerprog');
+            return res.redirect('/employee/employeepersinfocareerprog');
         }
 
         // Fetch certification information
@@ -181,7 +181,7 @@ getPersInfoCareerProg: async function(req, res) {
         if (certificationError) {
             console.error('Error fetching certification details:', certificationError);
             req.flash('errors', { dbError: 'Error fetching certification data.' });
-            return res.redirect('/employee/persinfocareerprog');
+            return res.redirect('/employee/employeepersinfocareerprog');
         }
 
         const userData = {
