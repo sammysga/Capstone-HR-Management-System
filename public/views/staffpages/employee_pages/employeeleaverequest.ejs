@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Leave Request</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+</head>
+<body>
+    <div class="dashboard">
+        <button id="newRequestBtn" class="btn">+ New Request</button>
+
+        <div id="leaveRequests" class="leave-requests">
+            <h2>Leave Requests</h2>
+            <ul id="requestsList">
+                <!-- Dynamically render leave requests here -->
+            </ul>
+        </div>
+
+        <div id="pendingSubmission" class="pending-submission">
+            <h2>Pending for Submission</h2>
+            <ul id="pendingList">
+                <!-- Dynamically render pending leave requests here -->
+            </ul>
+        </div>
+    </div>
+
+    <div id="fileLeaveModal" class="modal" style="display: none;">
+        <form id="leaveForm">
+            <label for="leaveType">Leave Type:</label>
+            <select id="leaveType" name="leaveTypeId" required> <!-- Updated name attribute -->
+                <% if (leaveTypes && leaveTypes.length > 0) { %>
+                    <% leaveTypes.forEach(function(type) { %>
+                        <option value="<%= type.leaveTypeId %>"><%= type.typeName %></option>
+                    <% }); %>
+                <% } else { %>
+                    <option disabled>No leave types available</option>
+                <% } %>
+            </select>
+
+            <label for="fromDate">From Date:</label>
+            <input type="date" id="fromDate" name="fromDate" required>
+
+            <label for="fromDayType">From Day Type:</label>
+            <select id="fromDayType" name="fromDayType" required>
+                <option value="whole_day">Whole Day</option>
+                <option value="half_day">Half Day</option>
+            </select>
+
+            <label for="untilDate">Until Date:</label>
+            <input type="date" id="untilDate" name="untilDate" required>
+
+            <label for="untilDayType">Until Day Type:</label>
+            <select id="untilDayType" name="untilDayType" required>
+                <option value="whole_day">Whole Day</option>
+                <option value="half_day">Half Day</option>
+            </select>
+
+            <label for="reason">Reason:</label>
+            <input type="text" id="reason" name="reason" required>
+
+            <button type="submit" class="btn">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        // Show modal on button click
+        document.getElementById('newRequestBtn').addEventListener('click', () => {
+            document.getElementById('fileLeaveModal').style.display = 'block';
+        });
+
+        // Handle form submission
+        document.getElementById('leaveForm').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Get form values
+            const leaveType = document.getElementById('leaveType').value;
+            const fromDate = document.getElementById('fromDate').value;
+            const fromDayType = document.getElementById('fromDayType').value;
+            const untilDate = document.getElementById('untilDate').value;
+            const untilDayType = document.getElementById('untilDayType').value;
+            const reason = document.getElementById('reason').value;
+
+            // Prepare data for submission
+            const leaveData = {
+                leaveTypeId: leaveType, // Ensure the key matches what your backend expects
+                fromDate,
+                fromDayType,
+                untilDate,
+                untilDayType,
+                reason
+            };
+
+            // Submit form data via fetch API
+            try {
+                const response = await fetch('/employee/leaverequest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(leaveData)
+                });
+
+                // Handle the server's response
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('Leave request submitted successfully!');
+                    document.getElementById('fileLeaveModal').style.display = 'none';
+                } else {
+                    const errorText = await response.text();
+                    alert('Failed to submit leave request: ' + errorText);
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('An error occurred while submitting the request. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
+

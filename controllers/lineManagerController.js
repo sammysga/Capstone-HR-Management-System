@@ -193,6 +193,9 @@ const lineManagerController = {
             res.redirect('/staff/login');
         }
     },
+
+
+
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
             if(err) {
