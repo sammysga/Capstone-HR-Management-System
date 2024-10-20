@@ -87,14 +87,49 @@ const hrController = {
         }
     },
 
-    getPersInfoCareerProg: async function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/persinfocareerprog');
-        } else {
-            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/staff/login');
+    getPersInfoCareerProg: async function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            const { data: user, error } = await supabase
+                .from('useraccounts')
+                .select('userEmail, userRole')
+                .eq('userId', userId)
+                .single();
+    
+            const { data: staff, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('firstName, lastName')
+                .eq('userId', userId)
+                .single();
+    
+            if (error || staffError) {
+                console.error('Error fetching user or staff details:', error || staffError);
+                req.flash('errors', { dbError: 'Error fetching user data.' });
+                return res.redirect('/hr/dashboard');
+            }
+    
+            const userData = {
+                ...user,
+                firstName: staff.firstName,
+                lastName: staff.lastName,
+                phoneNumber: '123-456-7890', // Dummy phone number
+                dateOfBirth: '1990-01-01', // Dummy date of birth
+                emergencyContact: 'Jane Doe (123-456-7890)' // Dummy emergency contact
+            };
+    
+            res.render('staffpages/hr_pages/persinfocareerprog', { user: userData });
+        } catch (err) {
+            console.error('Error in getPersInfoCareerProg controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading the page.' });
+            res.redirect('/hr/dashboard');
         }
     },
+    
 
     getHRManageHome: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
