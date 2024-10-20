@@ -152,7 +152,7 @@ getPersInfoCareerProg: async function(req, res) {
         const { data: degree, error: degreeError } = await supabase
             .from('degree')
             .select('degreeName, universityName, graduationYear')
-            .eq('userId', userId);
+            .eq('userId', degreeId);
 
         if (degreeError) {
             console.error('Error fetching degree details:', degreeError);
