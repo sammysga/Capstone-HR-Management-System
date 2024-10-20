@@ -152,7 +152,7 @@ getPersInfoCareerProg: async function(req, res) {
         const { data: degree, error: degreeError } = await supabase
             .from('degree')
             .select('degreeName, universityName, graduationYear')
-            .eq('userId', degreeId);
+            .eq('userId', userId);
 
         if (degreeError) {
             console.error('Error fetching degree details:', degreeError);
@@ -197,7 +197,7 @@ getPersInfoCareerProg: async function(req, res) {
     } catch (err) {
         console.error('Error in getPersInfoCareerProg controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the career progression page.' });
-        res.redirect('/staff/employee/useracc');
+        res.redirect('/employee/useracc');
     }
 },
 
