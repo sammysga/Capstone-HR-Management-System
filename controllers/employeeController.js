@@ -153,7 +153,6 @@ getPersInfoCareerProg: async function(req, res) {
             });
         }
 
-<<<<<<< HEAD
         // Fetch degree, experience, and certification information
         const { data: degree = null, error: degreeError } = await fetchData('degree', 'degreeName, universityName, graduationYear');
         const { data: experience = null, error: experienceError } = await fetchData('experience', 'jobTitle, companyName, jobDuration');
@@ -181,57 +180,14 @@ getPersInfoCareerProg: async function(req, res) {
             console.error('Error fetching experiences:', experiencesError);
             req.flash('errors', { dbError: 'Error fetching experiences data.' });
         }
-=======
-        // Fetch degree information
-        // const { data: degree, error: degreeError } = await supabase
-        //     .from('degree')
-        //     .select('degreeName, universityName, graduationYear')
-        //     .eq('userId', userId);
-
-        // if (degreeError) {
-        //     console.error('Error fetching degree details:', degreeError);
-        //     req.flash('errors', { dbError: 'Error fetching degree data.' });
-        //     return res.redirect('/employee/employeepersinfocareerprog');
-        // }
-
-        // Fetch experience information
-        // const { data: experience, error: experienceError } = await supabase
-        //     .from('experience')
-        //     .select('jobTitle, companyName, jobDuration')
-        //     .eq('userId', userId);
-
-        // if (experienceError) {
-        //     console.error('Error fetching experience details:', experienceError);
-        //     req.flash('errors', { dbError: 'Error fetching experience data.' });
-        //     return res.redirect('/employee/employeepersinfocareerprog');
-        // }
-
-        // // Fetch certification information
-        // const { data: certification, error: certificationError } = await supabase
-        //     .from('certification')
-        //     .select('certificationName, certificationImage')
-        //     .eq('userId', userId);
-
-        // if (certificationError) {
-        //     console.error('Error fetching certification details:', certificationError);
-        //     req.flash('errors', { dbError: 'Error fetching certification data.' });
-        //     return res.redirect('/employee/employeepersinfocareerprog');
-        // }
->>>>>>> 1c5d3a6fa8d2f1d4eee21cc71cc05de50d8308f8
 
         const userData = {
             ...user,
             firstName: staff.firstName,
             lastName: staff.lastName,
-<<<<<<< HEAD
             degree: degree, // null if error
             experiences: experiences || [], // passed as array
             certification: certification || null
-=======
-            // degree: degree || null,
-            // experience: experience || null,
-            // certification: certification || null
->>>>>>> 1c5d3a6fa8d2f1d4eee21cc71cc05de50d8308f8
         };
 
         res.render('staffpages/employee_pages/employeepersinfocareerprog', {
