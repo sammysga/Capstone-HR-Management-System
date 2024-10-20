@@ -155,7 +155,7 @@
      <!-- Career Progression Section -->
 <h2>Career Progression</h2>
 
-<!-- Vertical Milestone List
+<%# Vertical Milestone List %>
 <div class="milestone-container">
     <% if (milestones && milestones.length > 0) { %>
         <% milestones.forEach(function(milestone) { %>
@@ -171,31 +171,52 @@
     <% } %>
 </div>
 
-        Degree, Experiences, and Uploaded Certifications Section
-        <div class="section">
-            <h2>Degree</h2>
-            <% if (user.degree && user.degree.length > 0) { %>
-                <% user.degree.forEach(function(degree) { %>
-                    <p><%= degree.degreeName %></p>
-                    <p><%= degree.universityName %> - Graduated <%= degree.graduationYear %></p>
-                <% }) %>
-            <% } else { %>
-                <p>No degree information available.</p>
-            <% } %>
-        </div>
+<%# Degree, Experiences, and Uploaded Certifications Section %>
+<div class="section">
+    <h2>Degree</h2>
+    <% if (user.degree && user.degree.length > 0) { %>
+        <% user.degree.forEach(function(degree) { %>
+            <p><%= degree.degreeName %></p>
+            <p><%= degree.universityName %> - Graduated <%= degree.graduationYear %></p>
+        <% }) %>
+    <% } else { %>
+        <p>No degree information available.</p>
+    <% } %>
+</div>
 
-        <section id="experience">
-            <h2>Experience</h2>
-            <ul>
-                <% experiences.forEach(function(experience) { %>
-                    <li>
-                        <strong>Job Title:</strong> <%= experience.jobTitle %><br>
-                        <strong>Company Name:</strong> <%= experience.companyName %><br>
-                        <strong>Job Duration:</strong> <%= experience.jobDuration %>
-                    </li>
-                <% }); %>
-            </ul>
-        </section>
+<section id="experience">
+    <h2>Experience</h2>
+<ul>
+    <% if (Array.isArray(experiences) && experiences.length > 0) { %>
+        <% experiences.forEach(function(experience) { %>
+            <li>
+                <strong>Job Title:</strong> <%= experience.jobTitle %><br>
+                <strong>Company Name:</strong> <%= experience.companyName %><br>
+                <strong>Job Duration:</strong> <%= experience.jobDuration %><br>
+            </li>
+        <% }); %>
+    <% } else { %>
+        <p>No experiences found.</p> 
+    <% } %>
+</ul>
+
+</section>
+
+<%# Certifications Section %>
+<section id="certifications-info">
+    <h2>Certifications</h2>
+    <% if (user.certification && user.certification.length > 0) { %>
+        <% user.certification.forEach(cert => { %>
+            <p><strong>Certification Name:</strong> <%= cert.certificationName %></p>
+            <% if (cert.certificationImage) { %>
+                <img src="<%= cert.certificationImage %>" alt="<%= cert.certificationName %> Image" width="150" />
+            <% } else { %>
+                <p>No certification image available.</p>
+            <% } %>
+        <% }); %>
+    <% } else { %>
+        <p>No certifications available.</p>
+    <% } %>
 
        <-- Certifications Section -->
        <section id="certifications-info">
