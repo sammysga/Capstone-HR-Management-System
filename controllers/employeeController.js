@@ -197,7 +197,7 @@ getPersInfoCareerProg: async function(req, res) {
     } catch (err) {
         console.error('Error in getPersInfoCareerProg controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the career progression page.' });
-        res.redirect('/staff/employee/dashboard');
+        res.redirect('/staff/employee/useracc');
     }
 },
 
