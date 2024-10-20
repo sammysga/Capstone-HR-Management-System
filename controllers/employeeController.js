@@ -193,7 +193,7 @@ getPersInfoCareerProg: async function(req, res) {
             certification: certification || null
         };
 
-        res.render('staffpages/employee_pages/persinfocareerprog', { user: userData });
+        res.render('staffpages/employee_pages/employeepersinfocareerprog', { user: userData });
     } catch (err) {
         console.error('Error in getPersInfoCareerProg controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the career progression page.' });
