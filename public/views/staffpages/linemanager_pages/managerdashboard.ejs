@@ -6,19 +6,73 @@
     <title>HR Home</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <style>
+        /* Adding styles for the dashboard */
+        h2 {
+            color: #2385B0; /* Color for the dashboard title */
+            margin-left: 40px; /* Increased space from the left */
+        }
+        h3 {
+            margin-left: 40px; /* Increased space from the left for the sub-header */
+        }
+        .content {
+            margin-left: 220px; /* Adjust based on your sidebar width to prevent overlap */
+            padding: 20px; /* Adding some padding for better spacing */
+            background-color: white; /* Set background color to white for the entire content area */
+        }
+        table {
+            width: 80%; /* Full width for the table */
+            border-collapse: collapse; /* Collapse borders */
+            margin: 20px auto 80px; /* Center table and add space above and below */
+        }
+        th, td {
+            border: 1px solid #ddd; /* Border for table cells */
+            padding: 5px; /* Padding for table cells */
+            text-align: left; /* Left-align text */
+        }
+        th {
+            background-color: #f2f2f2; /* Light gray background for headers */
+        }
+        tr:hover {
+            background-color: #f1f1f1; /* Hover effect for table rows */
+        }
+    </style>
+    
+    
+    
 </head>
 <body>
     <%- include('../../partials/linemanager_partials') %>
     <!-- Main content -->
     <div class="main-content">
-        <section class="about-us">
-            <div class="purpose-mission">
-                <div class="purpose">
-                    <h2>Welcome to Line Manager Home</h2>
-                </div>
-            </div>
-        </section>
-    </div>linemanager_pages
+        <h2>Line Manager Dashboard</h2>
+
+        <!-- Approved Leave Requests Table -->
+        <h3>Approved Leave Requests</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Last Name</th>
+                    <th>First Name</th>
+                    <th>Filed Date</th>
+                    <th>Leave Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% allLeaves.forEach(leave => { %>
+                    <tr>
+                        <td><%= leave.staffaccounts ? leave.staffaccounts.lastName : 'N/A' %></td>  <!-- Safely access lastName -->
+                        <td><%= leave.staffaccounts ? leave.staffaccounts.firstName : 'N/A' %></td> <!-- Safely access firstName -->
+                        <td><%= leave.created_at %></td>                <!-- Access filedDate directly -->
+                        <td><%= leave.leave_types ? leave.leave_types.typeName : 'N/A' %></td>   <!-- Safely access leaveType -->
+                    </trs>
+                <% }); %>
+            </tbody>
+        </table>
+        
+        
+    </div>
 
     <!-- JavaScript for sidebar functionality -->
     <script>
