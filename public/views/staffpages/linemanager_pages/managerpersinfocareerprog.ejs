@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Information & Career Progression</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <style>
+  .profile-container { 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 20px; 
+}
+.profile-pic { 
+    width: 80px; 
+    height: 80px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    margin-right: 15px; 
+}
+.profile-info { 
+    display: flex; 
+    flex-direction: column; 
+}
+.profile-info h3 { 
+    margin: 0; 
+    font-size: 1.4rem; 
+    color: #09191F; /* Updated color from useracc.ejs */
+}
+.profile-info p { 
+    margin: 5px 0; 
+    font-size: 1rem; 
+    color: #666; 
+}
+.edit-btn, .save-btn { 
+    background-color: #124A5C; /* Updated color from useracc.ejs */
+    color: white; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 5px; 
+    font-size: 1rem; 
+    cursor: pointer; 
+    margin-top: 10px; 
+    transition: background-color 0.3s ease; 
+}
+.edit-btn:hover, .save-btn:hover { 
+    background-color: #059ca4; /* Updated hover color from useracc.ejs */
+}
+.form-input { 
+    width: 100%; 
+    padding: 10px; 
+    margin: 10px 0; 
+    border-radius: 5px; 
+    border: 1px solid #ccc; 
+    display: none; 
+}
+.form-text { 
+    font-size: 1.1rem; 
+    color: #09191F; /* Updated color from useracc.ejs */
+}
+.milestone-container { 
+    margin: 30px 0; 
+}
+.milestone { 
+    position: relative; 
+    margin-left: 20px; 
+    margin-bottom: 30px; 
+}
+.milestone:before { 
+    content: ''; 
+    position: absolute; 
+    left: -10px; 
+    top: 0; 
+    height: 100%; 
+    border-left: 2px solid #124A5C; /* Updated color from useracc.ejs */
+}
+.milestone-label { 
+    position: relative; 
+    padding-left: 20px; 
+}
+.milestone-label h4 { 
+    margin: 0; 
+    font-size: 1.2rem; 
+    color: #124A5C; /* Updated color from useracc.ejs */
+}
+.milestone-label p { 
+    margin: 0; 
+    font-size: 1rem; 
+    color: #666; 
+}
+.section { 
+    margin: 20px 0; 
+}
+.section h2 { 
+    margin-bottom: 10px; 
+}
+.section p { 
+    margin: 5px 0; 
+    font-size: 1rem; 
+    color: #333; 
+}
+
+    </style>
+</head>
+<body>
+    <%- include('../../partials/linemanager_partials') %>
+
+    <!-- Main content area -->
+    <div class="main-content">
+
+        <!-- Profile section -->
+        <div class="profile-container">
+            <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
+            <div class="profile-info">
+                <h3 id="display-name"><%= user.firstName %> <%= user.lastName %></h3> <!-- Display name -->
+                <p id="display-role"><%= user.userRole %></p> <!-- Display role -->
+            </div>
+        </div>
+
+        <!-- Personal Information Section -->
+        <h2>Personal Information</h2>
+        <form id="edit-user-info" action="/employee/update-persinfo" method="POST">
+            <p><strong>Email:</strong> <span id="display-email" class="form-text"><%= user.userEmail %></span></p>
+            <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input">
+
+            <p><strong>Phone:</strong> <span id="display-phone" class="form-text">+1-234-567-8901</span></p> <!-- Dummy Phone -->
+            <input type="text" id="phone" name="phone" value="+1-234-567-8901" class="form-input">
+
+            <p><strong>Date of Birth:</strong> <span id="display-dob" class="form-text">1990-01-15</span></p> <!-- Dummy Date of Birth -->
+            <input type="date" id="dateOfBirth" name="dateOfBirth" value="1990-01-15" class="form-input">
+
+            <p><strong>Emergency Contact:</strong> <span id="display-emergency" class="form-text">John Doe (Brother) - +1-234-555-6789</span></p> <!-- Dummy Emergency Contact -->
+            <input type="text" id="emergencyContact" name="emergencyContact" value="John Doe (Brother) - +1-234-555-6789" class="form-input">
+
+            <!-- Employment Details Section -->
+            <h2>Employment Details</h2>
+            <p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text">Full-Time</span></p>
+            <input type="text" id="employmentType" name="employmentType" value="Full-Time" class="form-input">
+
+            <p><strong>Job Title:</strong> <span id="display-job-title" class="form-text">Software Engineer</span></p>
+            <input type="text" id="jobTitle" name="jobTitle" value="Software Engineer" class="form-input">
+
+            <p><strong>Department:</strong> <span id="display-department" class="form-text">IT Department</span></p>
+            <input type="text" id="department" name="department" value="IT Department" class="form-input">
+
+            <p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text">2020-06-01</span></p>
+            <input type="date" id="hireDate" name="hireDate" value="2020-06-01" class="form-input">
+
+            <!-- Edit and Save buttons -->
+            <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
+            <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
+        </form>
+
+        <!-- Career Progression Section -->
+        <h2>Career Progression</h2>
+
+        <!-- Vertical Milestone List -->
+        <div class="milestone-container">
+            <div class="milestone">
+                <div class="milestone-label">
+                    <h4>Milestone 1</h4>
+                    <p>Joined Company</p>
+                </div>
+            </div>
+            <div class="milestone">
+                <div class="milestone-label">
+                    <h4>Milestone 2</h4>
+                    <p>Promoted to Junior Developer</p>
+                </div>
+            </div>
+            <div class="milestone">
+                <div class="milestone-label">
+                    <h4>Milestone 3</h4>
+                    <p>Completed Major Project</p>
+                </div>
+            </div>
+            <div class="milestone">
+                <div class="milestone-label">
+                    <h4>Milestone 4</h4>
+                    <p>Promoted to Developer</p>
+                </div>
+            </div>
+            <div class="milestone">
+                <div class="milestone-label">
+                    <h4>Milestone 5</h4>
+                    <p>Achieved Team Lead Role</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Degree, Experiences, and Uploaded Certifications Section -->
+        <div class="section">
+            <h2>Degree</h2>
+            <p>Bachelor of Science in Computer Science</p>
+            <p>University of Technology - Graduated 2012</p>
+        </div>
+
+        <div class="section">
+            <h2>Experiences</h2>
+            <p>Software Engineer at XYZ Corp (2015 - Present)</p>
+            <p>Junior Developer at ABC Inc. (2012 - 2015)</p>
+        </div>
+
+        <div class="section">
+            <h2>Uploaded Certifications</h2>
+            <p>Certified Scrum Master (CSM)</p>
+            <p>Oracle Certified Java Programmer</p>
+            <p>Microsoft Certified: Azure Developer Associate</p>
+        </div>
+
+    </div>
+
+    <!-- JavaScript for toggling edit mode -->
+    <script>
+        const editBtn = document.getElementById('edit-info-btn');
+        const saveBtn = document.getElementById('save-info-btn');
+
+        const displayFields = document.querySelectorAll('.form-text');
+        const inputFields = document.querySelectorAll('.form-input');
+
+        // Toggle edit mode
+        editBtn.addEventListener('click', function () {
+            displayFields.forEach(field => field.style.display = 'none');
+            inputFields.forEach(input => input.style.display = 'block');
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+        });
+
+         // Toggle active class for sidebar links
+         document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+
+        // Handle navigation for Performance Management links
+        document.querySelectorAll('.collapsible-content a').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefaults(); // Prevent default link behavior
+                
+                // Perform the desired action or navigation
+                const targetUrl = this.getAttribute('href');
+                window.location.href = targetUrl; // Navigate to the target URL
+            });
+        });
+    </script>
+</body>
+</html>

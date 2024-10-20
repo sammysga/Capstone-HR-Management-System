@@ -61,6 +61,7 @@ router.get('/hr/editjoboffers', hrController.getEditJobOffers);
 router.get('/hr/records-performance-tracker', hrController.getRecordsPerformanceTracker);
 
 router.get('/logout', hrController.getLogoutButton);
+router.get('/logout', lineManagerController.getLogoutButton);
 
 
 // Employee Routes
@@ -73,7 +74,15 @@ router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
 
 // Lina Manager Routes
+
+// Staff information
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
+
+router.get('/linemanager/useraccount', lineManagerController.getUserAccount);
+router.post('/linemanager/update-info', lineManagerController.updateUserInfo);
+router.get('/linemanager/persinfocareerprog', lineManagerController.getPersInfoCareerProg); // copied this url since HR is an employee
+router.post('/linemanager/update-persinfo', lineManagerController.updatePersUserInfo);
+
 router.get('/linemanager/mrf', lineManagerController.getMRF);
 router.get('/linemanager/request-mrf', lineManagerController.getRequestMRF);
 // add router.post for mrf here
