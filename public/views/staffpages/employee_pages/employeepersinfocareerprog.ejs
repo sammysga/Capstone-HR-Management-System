@@ -152,10 +152,14 @@
             <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
         </form>
 
-     <!-- Career Progression Section -->
+     <!-- Career Progression Section
 <h2>Career Progression</h2>
 
+<<<<<<< HEAD
 <%# Vertical Milestone List %>
+=======
+Vertical Milestone List
+>>>>>>> 1c5d3a6fa8d2f1d4eee21cc71cc05de50d8308f8
 <div class="milestone-container">
     <% if (milestones && milestones.length > 0) { %>
         <% milestones.forEach(function(milestone) { %>
@@ -184,6 +188,7 @@
     <% } %>
 </div>
 
+<<<<<<< HEAD
 <section id="experience">
     <h2>Experience</h2>
 <ul>
@@ -217,9 +222,23 @@
     <% } else { %>
         <p>No certifications available.</p>
     <% } %>
+=======
+        <section id="experience">
+            <h2>Experience</h2>
+            <ul>
+                <% experiences.forEach(function(experience) { %>
+                    <li>
+                        <strong>Job Title:</strong> <%= experience.jobTitle %><br>
+                        <strong>Company Name:</strong> <%= experience.companyName %><br>
+                        <strong>Job Duration:</strong> <%= experience.jobDuration %>
+                    </li>
+                <% }); %>
+            </ul>
+        </section> -->
+>>>>>>> 1c5d3a6fa8d2f1d4eee21cc71cc05de50d8308f8
 
-       <-- Certifications Section -->
-       <section id="certifications-info">
+       <!-- Certifications Section -->
+       <!-- <section id="certifications-info">
         <h2>Certifications</h2>
         <% if (user.certification && user.certification.length > 0) { %>
             <% user.certification.forEach(cert => { %>
