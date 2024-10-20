@@ -4,7 +4,7 @@ require('dotenv').config(); // To load environment variables
 const bcrypt = require('bcrypt');
 const { parse } = require('dotenv');
 const flash = require('connect-flash/lib/flash');
-const { getUserAccount } = require('./employeeController');
+const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
 
 const hrController = {
     getHRDashboard: function(req, res) {
@@ -58,7 +58,7 @@ const hrController = {
 
     updateUserInfo: async function (req, res) {
         try {
-            const userId = req.session.user.userId; // Assuming userId is stored in session
+            const userId = req.session.user.userId;
             const { firstName, lastName, userEmail } = req.body;
 
             // Update the user info in both 'useraccounts' and 'staffaccounts' tables
@@ -86,6 +86,102 @@ const hrController = {
             res.redirect('staffpages/hr_pages/hruseraccount')
         }
     },
+
+    getPersInfoCareerProg: async function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            const { data: user, error } = await supabase
+                .from('useraccounts')
+                .select('userEmail, userRole')
+                .eq('userId', userId)
+                .single();
+    
+            const { data: staff, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('firstName, lastName')
+                .eq('userId', userId)
+                .single();
+    
+            if (error || staffError) {
+                console.error('Error fetching user or staff details:', error || staffError);
+                req.flash('errors', { dbError: 'Error fetching user data.' });
+                return res.redirect('/hr/dashboard');
+            }
+    
+            const userData = {
+                ...user,
+                firstName: staff.firstName,
+                lastName: staff.lastName,
+                phoneNumber: '123-456-7890', // Dummy phone number
+                dateOfBirth: '1990-01-01', // Dummy date of birth
+                emergencyContact: 'Jane Doe (123-456-7890)' // Dummy emergency contact
+            };
+    
+            res.render('staffpages/hr_pages/persinfocareerprog', { user: userData });
+        } catch (err) {
+            console.error('Error in getPersInfoCareerProg controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading the page.' });
+            res.redirect('/hr/dashboard');
+        }
+    },
+
+    updatePersUserInfo: async function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            const { userEmail, phone, dateOfBirth, emergencyContact, employmentType, jobTitle, department, hireDate } = req.body;
+    
+            const { error: userError } = await supabase
+                .from('useraccounts')
+                .update({
+                    userEmail,
+                    phone, 
+                    dateOfBirth, 
+                    emergencyContact 
+                })
+                .eq('userId', userId);
+    
+            if (userError) {
+                console.error('Error updating user account:', userError);
+                req.flash('errors', { dbError: 'Error updating user information.' });
+                return res.redirect('staffpages/hr_pages/persinfocareerprog');
+            }
+
+            const { error: staffError } = await supabase
+                .from('staffaccounts')
+                .update({
+                    employmentType,
+                    jobTitle,
+                    department,
+                    hireDate
+                })
+                .eq('userId', userId);
+    
+            if (staffError) {
+                console.error('Error updating staff account:', staffError);
+                req.flash('errors', { dbError: 'Error updating staff information.' });
+                return res.redirect('staffpages/hr_pages/persinfocareerprog');
+            }
+    
+            req.flash('success', { updateSuccess: 'User information updated successfully!' });
+            res.redirect('staffpages/hr_pages/persinfocareerprog');
+    
+        } catch (err) {
+            console.error('Error in updateUserInfo controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while updating the information.' });
+            res.redirect('staffpages/hr_pages/persinfocareerprog');
+        }
+    },
+    
 
     getHRManageHome: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
@@ -593,31 +689,31 @@ const hrController = {
     },
     
     submitLeaveRequest: async function (req, res) {
-        // Check if user is authenticated
         if (!req.session.user || !req.session.user.userId) {
             return res.status(401).json({ message: 'Unauthorized access' });
         }
     
-        const { leaveType, dayType, reason, fromDate, toDate } = req.body;
+        const { leaveType, dayType, reason, fromDate, toDate, halfDayDate, startTime, endTime } = req.body;
     
-        // Validate leave request data
         if (!leaveType || !dayType || !reason) {
             return res.status(400).json({ message: 'Leave type, day type, and reason are required.' });
         }
     
-        // Proceed with inserting the leave request into the database
         try {
             const { error } = await supabase
                 .from('leave_requests')
                 .insert([
                     {
-                        userId: req.session.user.userId, // Ensure this is defined
+                        userId: req.session.user.userId, 
                         leaveType,
                         dayType,
                         reason,
                         fromDate,
                         toDate,
-                        status: 'Pending for Approval', // Default status
+                        halfDayDate,
+                        startTime,
+                        endTime,
+                        status: 'Pending for Approval', 
                         submittedAt: new Date()
                     }
                 ]);
@@ -628,6 +724,63 @@ const hrController = {
         } catch (error) {
             console.error('Error submitting leave request:', error);
             res.status(500).json({ message: 'Internal server error', error: error.message });
+        }
+    },
+
+    getRecordsPerformanceTracker: async function (req, res) {  // Declare the function as async
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                // Fetch employee accounts from db
+                const { data: staffAccounts, error: staffError } = await supabase
+                    .from('staffaccounts')
+                    .select('staffId, userId, departmentId, jobId, lastName, firstName');
+                if (staffError) throw staffError;
+    
+                // Fetch user accounts from db
+                const { data: userAccounts, error: userError } = await supabase
+                    .from('useraccounts')
+                    .select('userId, userEmail');  
+                if (userError) throw userError;
+    
+                const { data: departments, error: deptError } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName');
+                if (deptError) throw deptError;
+    
+                const { data: jobPositions, error: jobError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle');
+                if (jobError) throw jobError;
+    
+                // Map and combine staff data
+                const employeeList = await Promise.all(staffAccounts.map(async (staff) => {
+                    const userAccount = userAccounts.find(user => user.userId === staff.userId);
+                    const department = departments.find(dept => dept.departmentId === staff.departmentId);
+                    const jobPosition = jobPositions.find(job => job.jobId === staff.jobId);
+    
+                    let jobTitle = jobPosition ? jobPosition.jobTitle : 'No job title assigned';
+                    let userEmail = userAccount ? userAccount.userEmail : 'N/A';
+                    let deptName = department ? department.deptName : 'Unknown';
+    
+                    return {
+                        lastName: staff.lastName,
+                        firstName: staff.firstName,
+                        deptName: deptName,
+                        jobTitle: jobTitle,
+                        email: userEmail
+                    };
+                }));
+    
+                const errors = req.flash('errors') || {};  
+                res.render('staffpages/hr_pages/hrrecordsperftracker', { errors, employees: employeeList });
+            } catch (error) {
+                console.error('Error fetching Employee Records and Performance History data:', error);
+                req.flash('errors', { fetchError: 'Failed to fetch employee records. Please try again.' });
+                res.redirect('/hr/dashboard');
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
         }
     },
     

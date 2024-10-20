@@ -41,6 +41,8 @@ router.post('/hr/api/add-staff', hrController.addNewStaff);
 
 router.get('/hr/useraccount', hrController.getUserAccount);
 router.post('/hr/update-info', hrController.updateUserInfo);
+router.get('/employee/persinfocareerprog', hrController.getPersInfoCareerProg); // copied this url since HR is an employee
+router.post('/employee/update-persinfo', hrController.updatePersUserInfo);
 
 router.get('/hr/leaverequest', hrController.getLeaveRequestForm);
 router.post('/hr/leaverequest', hrController.submitLeaveRequest);
@@ -55,6 +57,9 @@ router.get('/hr/joboffers', hrController.getJobOffers);
 router.get('/hr/addjoboffer', hrController.getAddJobOffer);
 router.post('/hr/addjoboffer', hrController.postAddJobOffer);
 router.get('/hr/editjoboffers', hrController.getEditJobOffers);
+
+router.get('/hr/records-performance-tracker', hrController.getRecordsPerformanceTracker);
+
 router.get('/logout', hrController.getLogoutButton);
 
 

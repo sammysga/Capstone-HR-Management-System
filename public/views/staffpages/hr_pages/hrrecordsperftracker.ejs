@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Employee's Records and Performance History</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/hr_page.css"> <!-- Linking HR Page CSS -->
+    <style>
+        /* Main Content Styles */
+        .main-content {
+            margin-left: 300px; /* Space for the sidebar */
+            padding: 20px;
+            font-family: 'Inter', sans-serif; /* Use Inter font */
+            min-height: 100vh; /* Full viewport height */
+            box-sizing: border-box; /* Include padding in total width and height */
+            overflow-x: auto; /* Allow horizontal scrolling */
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%; /* Full width for table */
+            border-collapse: collapse; /* Clean table borders */
+            overflow-x: auto; /* Horizontal scroll for table if necessary */
+            display: block; /* Allow scrolling */
+        }
+
+        /* Table Header Styles */
+        th, td {
+            padding: 10px; /* Add padding for table cells */
+            border: 1px solid #ccc; /* Border for table cells */
+            text-align: left; /* Align text to the left */
+        }
+
+        /* Header Styling */
+        th {
+            background-color: #e0e4e8; /* Background color for headers */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0; /* Remove sidebar margin on small screens */
+                padding: 10px; /* Adjust padding */
+            }
+            .sidebar {
+                display: none; /* Hide sidebar on small screens if needed */
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/hr_partials') %>
+    <div class="main-content">
+        <h1>View Employee's Records and Performance History</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Last Name</th>
+                    <th>First Name</th>
+                    <th>Department</th>
+                    <th>Job Position</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% employees.forEach(employee => { %>
+                    <tr onclick="window.location.href='/employee/persinfocareerprog/<%= employee.id %>'">
+                        <td><%= employee.lastName %></td>
+                        <td><%= employee.firstName %></td>
+                        <td><%= employee.department || 'N/A' %></td>
+                        <td><%= employee.jobPosition || 'N/A' %></td>
+                        <td><%= employee.email %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+    <script>
+                // Toggle active class for sidebar links
+                document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
