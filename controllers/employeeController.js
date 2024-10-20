@@ -294,7 +294,88 @@ getEmployeeOffboarding: async function(req, res) {
         req.flash('errors', { dbError: 'An error occurred while loading the offboarding page.' });
         res.redirect('/staff/employee/dashboard');
     }
-}
+},
+
+ // Leave Request functionality
+ getLeaveRequestForm: async function(req, res) {
+    console.log('Session User:', req.session.user);
+    if (req.session.user && req.session.user.userRole === 'Employee') {
+        try {
+            // Fetch leave types dynamically from Supabase
+            const { data: leaveTypes, error } = await supabase
+                .from('leave_types')
+                .select('leaveTypeId, typeName'); // Adjust column name if necessary
+
+            // Log the error if any
+            if (error) {
+                console.error('Error fetching leave types:', error.message); // Log the error message
+                throw error; // Throw error to catch block
+            }
+
+            console.log('Fetched Leave Types:', leaveTypes);
+            if (!leaveTypes || leaveTypes.length === 0) {
+                req.flash('error', { fetchError: 'No leave types available.' });
+                return res.redirect('/staff/login');
+            }
+
+            // Render the leave request form with the fetched leave types
+            res.render('staffpages/employee_pages/employeeleaverequest', { leaveTypes });
+        } catch (error) {
+            console.error('Error rendering leave request form:', error);
+            req.flash('error', { fetchError: 'Unable to load leave request form.' });
+            return res.redirect('/staff/login');
+        }
+    } else {
+        req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+        res.redirect('/staff/login');
+    }
+},
+
+
+submitLeaveRequest: async function (req, res) {
+    // Check if the user is authenticated
+    if (!req.session.user || !req.session.user.userId) {
+        return res.status(401).json({ message: 'Unauthorized access' });
+    }
+
+    // Destructure the relevant fields from the request body
+    const { leaveTypeId, fromDate, fromDayType, untilDate, untilDayType, reason } = req.body;
+
+    // Ensure mandatory fields are provided
+    if (!leaveTypeId || !fromDate || !fromDayType || !untilDate || !untilDayType || !reason) {
+        return res.status(400).json({ message: 'All fields are required: Leave type, dates, day types, and reason.' });
+    }
+
+    try {
+        // Log the incoming data for debugging
+        console.log('Leave request data:', { userId: req.session.user.userId, leaveTypeId, fromDate, fromDayType, untilDate, untilDayType, reason });
+
+        // Insert the leave request into the leave_requests table
+        const { error } = await supabase
+            .from('leaverequests')
+            .insert([
+                {
+                    userId: req.session.user.userId,  // FK to the user making the request
+                    leaveTypeId,                       // Use leaveTypeId here to reference the leave type
+                    fromDate,                          // Start date of leave
+                    fromDayType,                       // Type of the starting day (e.g., half/whole day)
+                    untilDate,                         // End date of leave
+                    untilDayType,                      // Type of the end day (e.g., half/whole day)
+                    reason,                            // Reason for the leave request
+                    status: 'Pending for Approval',    // Initial status
+                }
+            ]);
+
+        if (error) throw error;
+
+        // If successful, respond with a success message
+        res.status(200).json({ message: 'Leave request submitted successfully' });
+    } catch (error) {
+        // Log and respond with error in case of failure
+        console.error('Error submitting leave request:', error);
+        res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+},
 
 };
 

@@ -73,7 +73,12 @@ router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
 
-// Lina Manager Routes
+router.get('/employee/leaverequest', employeeController.getLeaveRequestForm);
+router.post('/employee/leaverequest', employeeController.submitLeaveRequest);
+
+
+
+// Line Manager Routes
 
 // Staff information
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
