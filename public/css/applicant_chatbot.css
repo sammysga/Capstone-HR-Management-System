@@ -182,6 +182,37 @@ body {
 /* end: Sidebar */
 
 
+/*sidebar ez steppers*/
+.ez-stepper {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+.ez-step {
+    padding: 10px;
+    border-bottom: 1px solid #ddd; /* Optional */
+    cursor: pointer; /* Indicate that the step is clickable */
+}
+
+.ez-step.active {
+    font-weight: bold; /* Highlight active step */
+}
+
+.ez-step.completed {
+    text-decoration: line-through; /* Strikethrough for completed steps */
+    color: gray; /* Change color for completed */
+}
+
+.ez-step-title {
+    font-size: 1.2em;
+}
+
+.ez-step-description {
+    font-size: 0.9em;
+    color: #777; /* Optional */
+}
+
 
 /* start: Content side */
 .chat-content {

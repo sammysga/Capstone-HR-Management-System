@@ -1,0 +1,7 @@
+intents:
+  - greet
+  - ask_job_position
+  - provide_job_position
+
+entities:
+  - job_title
