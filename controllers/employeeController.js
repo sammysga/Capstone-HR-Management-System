@@ -424,6 +424,119 @@ submitLeaveRequest: async function (req, res) {
         console.error('Error submitting leave request:', error);
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
+},getAttendance: async function (req, res) {
+    // Check if the user is authenticated
+    if (!req.session.user || !req.session.user.userId) {
+        console.log('Unauthorized access, session:', req.session);
+        return res.status(401).json({ message: 'Unauthorized access' });
+    }
+
+    try {
+        // Fetch staffId, departmentId, firstName, and lastName associated with the userId
+        const { data: userData, error: fetchError } = await supabase
+            .from('staffaccounts')
+            .select('staffId, departmentId, firstName, lastName')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (fetchError) {
+            console.error('Fetch Error:', fetchError);
+            return res.status(404).json({ message: 'User not found', error: fetchError.message });
+        }
+
+        if (!userData) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const { staffId, departmentId, firstName, lastName } = userData;
+
+        // Fetch attendance records for the current date or all records
+        const { data: attendanceRecords, error: attendanceError } = await supabase
+            .from('attendance')
+            .select('attendanceDate, attendanceTime, attendanceAction')
+            .eq('staffId', staffId) // Filter by staffId
+            .order('attendanceDate', { ascending: false }); // Order by date descending
+
+        if (attendanceError) {
+            console.error('Attendance Fetch Error:', attendanceError);
+            throw attendanceError;
+        }
+
+        // Render the attendance page with the attendance records and user details
+        res.render('staffpages/employee_pages/employeeattendance', {
+            user: {
+                staffId,
+                departmentId,
+                firstName,
+                lastName
+            },
+            records: attendanceRecords || [],
+            message: 'Attendance records retrieved successfully' // You can include other data as needed
+        });
+
+    } catch (error) {
+        // Log and respond with error in case of failure
+        console.error('Error retrieving attendance records:', error);
+        res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+},
+postAttendance: async function (req, res) {
+    // Check if the user is authenticated
+    if (!req.session.user || !req.session.user.userId) {
+        return res.status(401).json({ message: 'Unauthorized access' });
+    }
+
+    // Destructure the relevant fields from the request body
+    const { attendanceAction } = req.body; // Expecting attendanceAction (Time In or Time Out)
+
+    // Ensure mandatory fields are provided
+    if (!attendanceAction) {
+        return res.status(400).json({ message: 'Attendance action is required (Time In or Time Out).' });
+    }
+
+    try {
+        // Fetch staffId and user details associated with the userId
+        const { data: userData, error: fetchError } = await supabase
+            .from('staffaccounts')
+            .select('staffId, firstName, lastName')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (fetchError || !userData) {
+            return res.status(404).json({ message: 'User  not found' });
+        }
+
+        const { staffId, firstName, lastName } = userData;
+
+        // Get the current date and time
+        const currentDate = new Date();
+        const attendanceDate = currentDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+        const attendanceTime = currentDate.toTimeString().split(' ')[0]; // Format: HH:MM:SS
+
+        // Insert the attendance record into the attendance table
+        const { error: insertError } = await supabase
+            .from('attendance')
+            .insert([
+                {
+                    staffId,              // Foreign key reference to staff
+                    attendanceDate,       // Current date
+                    attendanceTime,       // Current time
+                    attendanceAction      // Action: Time In or Time Out
+                }
+            ]);
+
+        if (insertError) throw insertError;
+
+        // Log the attendance submission
+        console.log(`Attendance recorded for: ${firstName} ${lastName} on ${attendanceDate} at ${attendanceTime} as ${attendanceAction}`);
+
+        // Respond with a success message
+        res.status(200).json({ message: `Attendance recorded successfully for ${firstName} ${lastName}` });
+    } catch (error) {
+        // Log and respond with error in case of failure
+        console.error('Error recording attendance:', error);
+        res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
 },
 
 };

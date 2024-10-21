@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Page</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #124A5C;
+        }
+        .form-container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: white;
+        }
+        .form-input, .action-select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        .save-btn {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        .save-btn:hover {
+            background-color: #059ca4;
+        }
+        .records-container {
+            margin-top: 20px;
+        }
+        .record {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f1f1f1;
+        }
+        .no-records {
+            color: #124A5C;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <%- include('../../partials/employee_partials') %>
+    <h1>Attendance</h1>
+    <div class="form-container">
+        <form id="attendance-form" action="/attendance/save" method="POST">
+            <label for="employeeName">Employee Name</label>
+            <input type="text" id="employeeName" name="employeeName" placeholder="Employee Name" class="form-input" required>
+
+            <label for="attendanceDate">Attendance Date</label>
+            <input type="date" id="attendanceDate" name="attendanceDate" class="form-input" required>
+
+            <label for="attendanceTime">Attendance Time</label>
+            <input type="time" id="attendanceTime" name="attendanceTime" class="form-input" required>
+
+            <label for="actionSelect">Action</label>
+            <select id="actionSelect" name="action" class="action-select" required>
+                <option value="" disabled selected>Choose an Action</option>
+                <option value="timeIn">Time In</option>
+                <option value="timeOut">Time Out</option>
+            </select>
+            <button type="submit" class="save-btn">Save</button>
+        </form>
+    </div>
+
+    <div class="records-container" id="records-container">
+        <h2>Attendance Records</h2>
+        <div id="attendance-records"></div>
+    </div>
+
+    <script>
+        // Fetch attendance records when the page loads
+        window.onload = async function() {
+            try {
+                const response = await fetch('/attendance'); // Adjust the URL as necessary
+                const data = await response.json();
+
+                // Check if any records are found
+                if (data.records.length > 0) {
+                    const recordsContainer = document.getElementById('attendance-records');
+                    data.records.forEach(record => {
+                        const recordHTML = `
+                            <div class="record">
+                                <p>Attendance Date: ${record.attendanceDate}</p>
+                                <p>Attendance Time: ${record.attendanceTime}</p>
+                                <p>Attendance Action: ${record.attendanceAction}</p>
+                            </div>
+                        `;
+                        recordsContainer.innerHTML += recordHTML;
+                    });
+                } else {
+                    // Display staffName, current date, and time even if no records
+                    document.getElementById('attendance-records').innerHTML = `
+                        <p class="no-records">No attendance records found for today.</p>
+                        <p>Staff Name: ${data.staffName}</p>
+                        <p>Current Date: ${data.attendanceDate}</p>
+                        <p>Current Time: ${data.attendanceTime}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching attendance records:', error);
+            }
+        };
+    </script>
+</body>
+</html>
