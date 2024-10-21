@@ -158,7 +158,7 @@ getPersInfoCareerProg: async function(req, res) {
             const { data: job, error: jobError } = await supabase
                 .from('jobpositions')
                 .select('jobTitle')
-                .eq('jobId', staff[0].jobId); // Assuming jobId is linked in staffaccounts
+                .eq('jobId', jobId); // Assuming jobId is linked in staffaccounts
         
             // Log job fetch error
             if (jobError) {
