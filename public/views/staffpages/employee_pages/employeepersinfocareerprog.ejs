@@ -26,7 +26,7 @@
         .profile-info h3 { 
             margin: 0; 
             font-size: 1.4rem; 
-            color: #09191F; /* Updated color from useracc.ejs */
+            color: #09191F; 
         }
         .profile-info p { 
             margin: 5px 0; 
@@ -34,7 +34,7 @@
             color: #666; 
         }
         .edit-btn, .save-btn { 
-            background-color: #124A5C; /* Updated color from useracc.ejs */
+            background-color: #124A5C; 
             color: white; 
             border: none; 
             padding: 10px 20px; 
@@ -45,7 +45,7 @@
             transition: background-color 0.3s ease; 
         }
         .edit-btn:hover, .save-btn:hover { 
-            background-color: #059ca4; /* Updated hover color from useracc.ejs */
+            background-color: #059ca4; 
         }
         .form-input { 
             width: 100%; 
@@ -57,7 +57,7 @@
         }
         .form-text { 
             font-size: 1.1rem; 
-            color: #09191F; /* Updated color from useracc.ejs */
+            color: #09191F; 
         }
         .milestone-container { 
             margin: 30px 0; 
@@ -73,7 +73,7 @@
             left: -10px; 
             top: 0; 
             height: 100%; 
-            border-left: 2px solid #124A5C; /* Updated color from useracc.ejs */
+            border-left: 2px solid #124A5C; 
         }
         .milestone-label { 
             position: relative; 
@@ -82,7 +82,7 @@
         .milestone-label h4 { 
             margin: 0; 
             font-size: 1.2rem; 
-            color: #124A5C; /* Updated color from useracc.ejs */
+            color: #124A5C; 
         }
         .milestone-label p { 
             margin: 0; 
@@ -189,51 +189,25 @@
                             <strong>Job Title:</strong> <%= experience.jobTitle %><br>
                             <strong>Company Name:</strong> <%= experience.companyName %><br>
                             <strong>Duration:</strong> <%= experience.jobDuration %>
-                        </li>
-                    <% }); %>
-                <% } else { %>
-                    <p>No work experience available.</p>
-                <% } %>
-            </ul>
 
-            <!-- Certifications Section -->
-            <h2>Certifications</h2>
-            <ul>
-                <% if (user.certifications.length > 0) { %>
-                    <% user.certifications.forEach(certification => { %>
-                        <li>
-                            <strong>Certification Name:</strong> <%= certification.certificationName %><br>
-                            <img src="<%= certification.certificationImage %>" alt="<%= certification.certificationName %> Image" width="100">
-                        </li>
-                    <% }); %>
-                <% } else { %>
-                    <li>No certifications available.</li>
-                <% } %>
-            </ul>
-
-            <button type="button" class="edit-btn" id="edit-button">Edit</button>
-            <button type="submit" class="save-btn" style="display:none;" id="save-button">Save</button>
-        </form>
-    </div>
-
-    <!-- JavaScript for toggling edit mode -->
+                                <!-- JavaScript for toggling edit mode -->
     <script>
-        const editBtn = document.getElementById('edit-info-btn');
-        const saveBtn = document.getElementById('save-info-btn');
+        const editBtn = document.getElementById('edit-button'); // Corrected ID for edit button
+        const saveBtn = document.getElementById('save-button'); // Corrected ID for save button
 
         const displayFields = document.querySelectorAll('.form-text');
         const inputFields = document.querySelectorAll('.form-input');
 
         // Toggle edit mode
         editBtn.addEventListener('click', function () {
-            displayFields.forEach(field => field.style.display = 'none');
-            inputFields.forEach(input => input.style.display = 'block');
-            editBtn.style.display = 'none';
-            saveBtn.style.display = 'inline-block';
+            displayFields.forEach(field => field.style.display = 'none'); // Hide display fields
+            inputFields.forEach(input => input.style.display = 'block'); // Show input fields
+            editBtn.style.display = 'none'; // Hide the edit button
+            saveBtn.style.display = 'inline-block'; // Show the save button
         });
 
-         // Toggle active class for sidebar links
-         document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
                 this.classList.add('active');
