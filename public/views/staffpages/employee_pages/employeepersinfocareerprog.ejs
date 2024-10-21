@@ -180,15 +180,41 @@
                 <% } %>
             </ul>
 
-            <!-- Experience Section -->
-            <h2>Experience</h2>
-            <ul>
-                <% if (user.experiences.length > 0) { %>
-                    <% user.experiences.forEach(experience => { %>
-                        <li>
-                            <strong>Job Title:</strong> <%= experience.jobTitle %><br>
-                            <strong>Company Name:</strong> <%= experience.companyName %><br>
-                            <strong>Duration:</strong> <%= experience.jobDuration %>
+       <!-- Experience Section -->
+       <h2>Experience</h2>
+       <ul>
+           <% if (user.experiences.length > 0) { %>
+               <% user.experiences.forEach(experience => { %>
+                   <li>
+                       <strong>Job Title:</strong> <%= experience.jobTitle %><br>
+                       <strong>Company Name:</strong> <%= experience.companyName %><br>
+                       <strong>Duration:</strong> <%= experience.jobDuration %>
+                   </li>
+               <% }); %>
+           <% } else { %>
+               <p>No work experience available.</p>
+           <% } %>
+       </ul>
+
+       <!-- Certifications Section -->
+       <h2>Certifications</h2>
+       <ul>
+           <% if (user.certifications.length > 0) { %>
+               <% user.certifications.forEach(certification => { %>
+                   <li>
+                       <strong>Certification Name:</strong> <%= certification.certificationName %><br>
+                       <img src="<%= certification.certificationImage %>" alt="<%= certification.certificationName %> Image" width="100">
+                   </li>
+               <% }); %>
+           <% } else { %>
+               <li>No certifications available.</li>
+           <% } %>
+       </ul>
+
+       <button type="button" class="edit-btn" id="edit-button">Edit</button>
+       <button type="submit" class="save-btn" style="display:none;" id="save-button">Save</button>
+   </form>
+</div>
 
                                 <!-- JavaScript for toggling edit mode -->
     <script>
