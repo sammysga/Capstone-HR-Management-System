@@ -119,38 +119,36 @@
         </div>
 
         <!-- Personal Information Section -->
-        <h2>Personal Information</h2>
-        <form id="edit-user-info" action="/employee/update-persinfo" method="POST">
-            <p><strong>Email:</strong> <span id="display-email" class="form-text"><%= user.userEmail %></span></p>
-            <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input">
+<h2>Personal Information</h2>
+<form id="edit-user-info" action="/employee/update-persinfo" method="POST">
+    <p><strong>Email:</strong> <span id="display-email" class="form-text"><%= user.userEmail %></span></p>
+    <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input">
 
-            <p><strong>Phone:</strong> <span id="display-phone" class="form-text">+1-234-567-8901</span></p> <!-- Dummy Phone -->
-            <input type="text" id="phone" name="phone" value="+1-234-567-8901" class="form-input">
+    <p><strong>Phone:</strong> <span id="display-phone" class="form-text"><%= user.phoneNumber %></span></p>
+    <input type="text" id="phone" name="phone" value="<%= user.phoneNumber %>" class="form-input">
 
-            <p><strong>Date of Birth:</strong> <span id="display-dob" class="form-text">1990-01-15</span></p> <!-- Dummy Date of Birth -->
-            <input type="date" id="dateOfBirth" name="dateOfBirth" value="1990-01-15" class="form-input">
+    <p><strong>Date of Birth:</strong> <span id="display-dob" class="form-text"><%= user.dateOfBirth %></span></p>
+    <input type="date" id="dateOfBirth" name="dateOfBirth" value="<%= user.dateOfBirth %>" class="form-input">
 
-            <p><strong>Emergency Contact:</strong> <span id="display-emergency" class="form-text">John Doe (Brother) - +1-234-555-6789</span></p> <!-- Dummy Emergency Contact -->
-            <input type="text" id="emergencyContact" name="emergencyContact" value="John Doe (Brother) - +1-234-555-6789" class="form-input">
+    <p><strong>Emergency Contact:</strong> <span id="display-emergency" class="form-text"><%= user.emergencyContactName %> - <%= user.emergencyContactNumber %></span></p>
+    <input type="text" id="emergencyContact" name="emergencyContact" value="<%= user.emergencyContactName %> - <%= user.emergencyContactNumber %>" class="form-input">
 
-            <!-- Employment Details Section -->
-            <h2>Employment Details</h2>
-            <p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text">Full-Time</span></p>
-            <input type="text" id="employmentType" name="employmentType" value="Full-Time" class="form-input">
+ <!-- Employment Details Section -->
+<h2>Employment Details</h2>
+<p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text"><%= staff.employmentType %></span></p>
+<input type="text" id="employmentType" name="employmentType" value="<%= staff.employmentType %>" class="form-input">
 
-            <p><strong>Job Title:</strong> <span id="display-job-title" class="form-text">Software Engineer</span></p>
-            <input type="text" id="jobTitle" name="jobTitle" value="Software Engineer" class="form-input">
+<p><strong>Job Title:</strong> <span id="display-job-title" class="form-text"><%= staff.jobpositions.jobTitle %></span></p>
+<input type="text" id="jobTitle" name="jobTitle" value="<%= staff.jobpositions.jobTitle %>" class="form-input">
 
-            <p><strong>Department:</strong> <span id="display-department" class="form-text">IT Department</span></p>
-            <input type="text" id="department" name="department" value="IT Department" class="form-input">
+<p><strong>Department:</strong> <span id="display-department" class="form-text"><%= staff.departments.deptName %></span></p>
+<input type="text" id="department" name="department" value="<%= staff.departments.deptName %>" class="form-input">
 
-            <p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text">2020-06-01</span></p>
-            <input type="date" id="hireDate" name="hireDate" value="2020-06-01" class="form-input">
+<p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text"><%= staff.hireDate %></span></p>
+<input type="date" id="hireDate" name="hireDate" value="<%= staff.hireDate %>" class="form-input">
 
-            <!-- Edit and Save buttons -->
-            <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
-            <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
-        </form>
+</form>
+
 
   
     </div>
