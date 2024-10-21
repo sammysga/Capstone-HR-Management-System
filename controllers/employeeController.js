@@ -122,7 +122,7 @@ updateUserInfo: async function(req, res) {
 
 getPersInfoCareerProg: async function(req, res) {
     try {
-        const userId = req.session.user ? req.session.user.userId : null;
+        const userId = req.session.user ? req.session.user.userId : null; // Get the user ID from the session
         if (!userId) {
             req.flash('errors', { authError: 'User not logged in.' });
             return res.redirect('/staff/login');
@@ -134,34 +134,33 @@ getPersInfoCareerProg: async function(req, res) {
             .select('userEmail, userRole')
             .eq('userId', userId);
 
-        // Fetch staff information including phone number, date of birth, emergency contact, and jobId
+        // Fetch staff information from staffaccounts table
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
-            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId, jobId')
+            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId, jobId') // Added jobId to link to career progression
             .eq('userId', userId);
-
-        const jobId = staff[0]?.jobId; // Fetch jobId from staff
-        if (!jobId) {
-            console.error('Job ID is undefined for staff:', staff);
-            req.flash('errors', { dbError: 'Job ID not found for the staff member.' });
-            return res.redirect('/employee/employeepersinfocareerprog');
-        }
 
         // Fetch job title from jobpositions table based on jobId
         const { data: job, error: jobError } = await supabase
             .from('jobpositions')
             .select('jobTitle')
-            .eq('jobId', jobId);
+            .eq('jobId', staff[0]?.jobId); // Assuming jobId is linked in staffaccounts
 
         // Fetch department name from departments table based on departmentId
         const { data: department, error: departmentError } = await supabase
             .from('departments')
             .select('deptName')
-            .eq('departmentId', staff[0]?.departmentId);
+            .eq('departmentId', staff[0]?.departmentId); // Fetching department name based on departmentId
+
+        // Fetch career progression milestones from staffcareerprogression table based on staffId
+        const { data: milestones, error: milestonesError } = await supabase
+            .from('staffcareerprogression')
+            .select('milestoneName, startDate, endDate')
+            .eq('staffId', staff[0]?.staffId); // Assuming staffId is linked in staffaccounts
 
         // Check for errors
-        if (userError || staffError || jobError || departmentError) {
-            console.error('Error fetching user, staff, job, or department details:', userError || staffError || jobError || departmentError);
+        if (userError || staffError || jobError || departmentError || milestonesError) {
+            console.error('Error fetching user, staff, job, department, or milestones:', userError || staffError || jobError || departmentError || milestonesError);
             req.flash('errors', { dbError: 'Error fetching data.' });
             return res.redirect('/employee/employeepersinfocareerprog');
         }
@@ -178,7 +177,8 @@ getPersInfoCareerProg: async function(req, res) {
             employmentType: staff[0]?.employmentType || '',
             hireDate: staff[0]?.hireDate || '',
             jobTitle: job[0]?.jobTitle || '',
-            departmentName: department[0]?.deptName || ''
+            departmentName: department[0]?.deptName || '',
+            milestones: milestones || [] // Added milestones to userData
         };
 
         // Render the personal information and career progression page
@@ -192,6 +192,7 @@ getPersInfoCareerProg: async function(req, res) {
         res.redirect('/employee/useracc');
     }
 },
+
 
 // Add this function to your employeeController
 updatePersUserInfo: async function(req, res) {
