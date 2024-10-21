@@ -424,7 +424,8 @@ submitLeaveRequest: async function (req, res) {
         console.error('Error submitting leave request:', error);
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
-},getAttendance: async function (req, res) {
+},
+getAttendance: async function (req, res) {
     // Check if the user is authenticated
     if (!req.session.user || !req.session.user.userId) {
         console.log('Unauthorized access, session:', req.session);
@@ -462,6 +463,10 @@ submitLeaveRequest: async function (req, res) {
             throw attendanceError;
         }
 
+        // Get today's date and current time
+        const todayDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const currentTime = new Date().toTimeString().split(' ')[0]; // HH:mm:ss
+
         // Render the attendance page with the attendance records and user details
         res.render('staffpages/employee_pages/employeeattendance', {
             user: {
@@ -471,6 +476,8 @@ submitLeaveRequest: async function (req, res) {
                 lastName
             },
             records: attendanceRecords || [],
+            todayDate, // Pass the todayDate
+            currentTime, // Pass the currentTime
             message: 'Attendance records retrieved successfully' // You can include other data as needed
         });
 
@@ -480,6 +487,8 @@ submitLeaveRequest: async function (req, res) {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 },
+
+
 postAttendance: async function (req, res) {
     // Check if the user is authenticated
     if (!req.session.user || !req.session.user.userId) {

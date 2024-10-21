@@ -70,13 +70,14 @@
     <div class="form-container">
         <form id="attendance-form" action="/attendance/save" method="POST">
             <label for="employeeName">Employee Name</label>
-            <input type="text" id="employeeName" name="employeeName" placeholder="Employee Name" class="form-input" required>
+            <input type="text" id="employeeName" name="employeeName" value="<%= user.firstName %> <%= user.lastName %>" class="form-input" required readonly>
 
             <label for="attendanceDate">Attendance Date</label>
-            <input type="date" id="attendanceDate" name="attendanceDate" class="form-input" required>
-
+            <input type="date" id="attendanceDate" name="attendanceDate" value="<%= todayDate %>" class="form-input" required>
+            
             <label for="attendanceTime">Attendance Time</label>
-            <input type="time" id="attendanceTime" name="attendanceTime" class="form-input" required>
+            <input type="time" id="attendanceTime" name="attendanceTime" value="<%= currentTime %>" class="form-input" required>
+            
 
             <label for="actionSelect">Action</label>
             <select id="actionSelect" name="action" class="action-select" required>
