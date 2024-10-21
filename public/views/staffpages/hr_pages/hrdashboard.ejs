@@ -6,20 +6,87 @@
     <title>HR Home</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+
+    <style>
+        /* Adding styles for the dashboard */
+        h2 {
+            color: #2385B0; /* Color for the dashboard title */
+            margin-left: 40px; /* Increased space from the left */
+        }
+        h3 {
+            margin-left: 40px; /* Increased space from the left for the sub-header */
+        }
+        .content {
+            margin-left: 220px; /* Adjust based on your sidebar width to prevent overlap */
+            padding: 20px; /* Adding some padding for better spacing */
+            background-color: white; /* Set background color to white for the entire content area */
+        }
+        table {
+            width: 80%; /* Full width for the table */
+            border-collapse: collapse; /* Collapse borders */
+            margin: 20px auto 80px; /* Center table and add space above and below */
+        }
+        th, td {
+            border: 1px solid #ddd; /* Border for table cells */
+            padding: 5px; /* Padding for table cells */
+            text-align: left; /* Left-align text */
+        }
+        th {
+            background-color: #f2f2f2; /* Light gray background for headers */
+        }
+        tr:hover {
+            background-color: #f1f1f1; /* Hover effect for table rows */
+        }
+    </style>
+    
+    
+    
 </head>
 <body>
-    <%- include('../../partials/hr_partials') %>
+    <%- include('../../partials/linemanager_partials') %>
     <!-- Main content -->
     <div class="main-content">
-        <section class="about-us">
-            <div class="purpose-mission">
-                <div class="purpose">
-                    <h2>Welcome to HR Home</h2>
-                    <p>This is your HR dashboard where you can manage job offers, track applicants, and handle various HR-related tasks.</p>
-                    <p>Use the navigation on the left to explore different sections of the HR management system.</p>
-                </div>
-            </div>
-        </section>
+        <h2>HR Dashboard</h2>
+
+        <!-- Approved Leave Requests Table -->
+
+        <div class="allLeaves">
+
+            <h3>Approved Leave Requests</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th> <!-- Combined Full Name -->
+                        <th>Filed Date</th>
+                        <th>Department</th> <!-- New Department Header -->
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (allLeaves && allLeaves.length > 0) { %>
+                        <% allLeaves.forEach(leave => { %>
+                            <tr>
+                                <td><%= leave.lastName %>, <%= leave.firstName %></td> <!-- Combined Full Name -->
+                                <td><%= leave.filedDate %></td> <!-- Filed Date -->
+                                <td><%= leave.department %></td> <!-- Department Name --> <!-- New Department Column -->
+                                <td><%= leave.type %></td> <!-- Leave Type -->
+                                <td><%= leave.startDate %></td> <!-- Start Date -->
+                                <td><%= leave.endDate %></td> <!-- End Date -->
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="6">No leave requests found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+            
+        </div>
+        
+        
     </div>
 
     <!-- JavaScript for sidebar functionality -->
@@ -52,4 +119,3 @@
     </script>
 </body>
 </html>
-
