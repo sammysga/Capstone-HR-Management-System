@@ -165,16 +165,33 @@
             </div>
 
             <h2>Degree Information</h2>
-<ul>
-    <% user.degrees.forEach(degree => { %>
-        <li>
-            <strong>Degree Name:</strong> <%= degree.degreeName %><br>
-            <strong>University:</strong> <%= degree.universityName %><br>
-            <strong>Graduation Year:</strong> <%= degree.graduationYear %>
-        </li>
-    <% }); %>
-</ul>
+            <ul>
+                <% if (user.degrees && user.degrees.length > 0) { %>
+                    <% user.degrees.forEach(degree => { %>
+                        <li>
+                            <strong>Degree Name:</strong> <%= degree.degreeName %><br>
+                            <strong>University:</strong> <%= degree.universityName %><br>
+                            <strong>Graduation Year:</strong> <%= degree.graduationYear %>
+                        </li>
+                    <% }); %>
+                <% } else { %>
+                    <li>No degree information available.</li>
+                <% } %>
+            </ul>
 
+            <h2>Experience</h2>
+            <ul>
+                <% if (user.experiences.length > 0) { %>
+                    <% user.experiences.forEach(experience => { %>
+                        <li>
+                            <strong>Company Name:</strong> <%= experience.companyName %><br>
+                            <strong>Start Date:</strong> <%= new Date(experience.startDate).toLocaleDateString() %>
+                        </li>
+                    <% }); %>
+                <% } else { %>
+                    <p>No work experience available.</p>
+                <% } %>
+            </ul>
 
 </form>
 
