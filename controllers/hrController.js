@@ -7,12 +7,91 @@ const flash = require('connect-flash/lib/flash');
 const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
 
 const hrController = {
-    getHRDashboard: function(req, res) {
+    getHRDashboard: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hrdashboard');
+            try {
+                const { data: allLeaves, error } = await supabase
+                    .from('leaverequests')
+                    .select(`
+                        leaveRequestId, 
+                        staffId, 
+                        created_at, 
+                        leaveTypeId, 
+                        fromDate, 
+                        untilDate, 
+                        staffaccounts (lastName, firstName), 
+                        leave_types (typeName), 
+                        departments (deptName)  // Directly fetching the department name
+                    `)
+                    .order('created_at', { ascending: false });
+    
+                if (error) {
+                    console.error('Error fetching leave requests:', error);
+                    req.flash('errors', { dbError: 'Error fetching leave requests.' });
+                    return res.redirect('/hr/dashboard');
+                }
+    
+                // Format the leave requests to include the department name
+                const formattedLeaves = allLeaves.map(leave => ({
+                    lastName: leave.staffaccounts ? leave.staffaccounts.lastName : 'N/A',
+                    firstName: leave.staffaccounts ? leave.staffaccounts.firstName : 'N/A',
+                    filedDate: leave.created_at ? new Date(leave.created_at).toISOString().split('T')[0] : 'N/A', // Format date correctly
+                    type: leave.leave_types ? leave.leave_types.typeName : 'N/A',
+                    startDate: leave.fromDate || 'N/A',
+                    endDate: leave.untilDate || 'N/A',
+                    department: leave.departments ? leave.departments.deptName : 'N/A' // Fetching deptName directly
+                }));
+    
+                res.render('staffpages/hr_pages/hrdashboard', { allLeaves: formattedLeaves });
+            } catch (err) {
+                console.error('Error fetching leave requests:', err);
+                req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
+                res.redirect('/hr/dashboard');
+            }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
+        }
+    },
+    
+    
+    getUserAccount: async function (req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'User not logged in.' });
+                return res.redirect('/staff/login');
+            }
+    
+            const { data: user, error } = await supabase
+                .from('useraccounts')
+                .select('userEmail, userRole')
+                .eq('userId', userId)
+                .single();
+    
+            const { data: staff, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('firstName, lastName')
+                .eq('userId', userId)
+                .single();
+    
+            if (error || staffError) {
+                console.error('Error fetching user or staff details:', error || staffError);
+                req.flash('errors', { dbError: 'Error fetching user data.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+
+            const userData = {
+                ...user,
+                firstName: staff.firstName,
+                lastName: staff.lastName
+            };
+
+            res.render('staffpages/linemanager_pages/manageruseraccount', { user: userData });
+        } catch (err) {
+            console.error('Error in getUserAccount controller:', err);
+            req.flash('errors', { dbError: 'An error occured while loading the account page.' });
+            res.redirect('/linemanager/dashboard');
         }
     },
 
