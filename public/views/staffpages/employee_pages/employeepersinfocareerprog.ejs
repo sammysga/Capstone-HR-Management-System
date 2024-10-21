@@ -147,6 +147,23 @@
 <p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text"><%= user.hireDate %></span></p>
 <input type="date" id="hireDate" name="hireDate" value="<%= user.hireDate %>" class="form-input">
 
+<h2>Career Progression</h2>
+            <div class="milestone-container">
+                <% if (user.milestones.length > 0) { %>
+                    <% user.milestones.forEach(milestone => { %>
+                        <div class="milestone">
+                            <div class="milestone-label">
+                                <h4><%= milestone.milestoneName %></h4>
+                                <p><strong>Start Date:</strong> <%= new Date(milestone.startDate).toLocaleDateString() %></p>
+                                <p><strong>End Date:</strong> <%= new Date(milestone.endDate).toLocaleDateString() %></p>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p>No career progression milestones available.</p>
+                <% } %>
+            </div>
+
 
 </form>
 
