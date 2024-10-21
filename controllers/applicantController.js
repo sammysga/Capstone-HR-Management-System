@@ -22,7 +22,7 @@ const applicantController = {
         try {
             const { data: jobpositions, error } = await supabase
                 .from('jobpositions')
-                .select('jobId, jobTitle, jobDescrpt, jobBranch, isActiveJob');
+                .select('jobId, jobTitle, jobDescrpt, isActiveJob');
     
             if (error) {
                 console.error('Error fetching job positions:', error);
