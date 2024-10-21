@@ -163,7 +163,7 @@ getPersInfoCareerProg: async function(req, res) {
         const { data: milestones, error: milestonesError } = await supabase
             .from('staffcareerprogression')
             .select('milestoneName, startDate, endDate')
-            .eq('staffId', staffId)
+            .eq('staffId', staff[0]?.staffId)
 
         // Check for errors
         if (userError || staffError || jobError || departmentError) {
