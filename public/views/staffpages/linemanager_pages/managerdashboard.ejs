@@ -47,12 +47,68 @@
     <!-- Main content -->
     <div class="main-content">
         <h2>Line Manager Dashboard</h2>
+        <!-- Success and Error Messages -->
+        <div class="messages">
+            <% if (successMessage) { %>
+                <div class="alert alert-success">
+                    <%= successMessage %>
+                </div>
+            <% } %>
+            <% if (errorMessage) { %>
+                <div class="alert alert-error">
+                    <%= errorMessage.dbError %>
+                </div>
+            <% } %>
+        </div>
 
-        <!-- Approved Leave Requests Table -->
 
-        <div class="allLeaves">
+    <!-- Attendance Logs Section -->
+<section class="attendance-logs">
+    <h2>Attendance Logs</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Last Name</th>
+                <th>First Name</th>
+                <th>Date</th>
+                <th>Department</th>
+                <th>Job Position</th>
+                <th>Time In Time</th> <!-- Updated Column -->
+                <th>Time Out Time</th> <!-- New Column -->
+                <th>Active Working Hours</th> <!-- Updated Column -->
+            </tr>
+        </thead>
+        <tbody>
+            <% if (attendanceLogs && attendanceLogs.length > 0) { %>
+                <% attendanceLogs.forEach(log => { %>
+                    <tr>
+                        <td><%= log.lastName %></td>
+                        <td><%= log.firstName %></td>
+                        <td><%= log.date %></td>
+                        <td><%= log.department %></td>
+                        <td><%= log.jobPosition %></td>
+                        <td>
+                            <%= log.attendanceAction === 'Time In' ? log.attendanceTime || 'N/A' : 'N/A' %>
+                        </td> <!-- Time In -->
+                        <td>
+                            <%= log.attendanceAction === 'Time Out' ? log.attendanceTime || 'N/A' : 'N/A' %>
+                        </td> <!-- Time Out -->
+                        <td><%= log.activeWorkingHours || 'N/A' %></td> <!-- Active Working Hours -->
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="8">No attendance logs found.</td> <!-- Adjusted colspan -->
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</section>
 
-            <h3>Approved Leave Requests</h3>
+
+        <!-- Leave Requests Section -->
+        <section class="leave-requests">
+            <h2>Approved Leave Requests</h2>
             <table>
                 <thead>
                     <tr>
@@ -68,12 +124,12 @@
                     <% if (allLeaves && allLeaves.length > 0) { %>
                         <% allLeaves.forEach(leave => { %>
                             <tr>
-                                <td><%= leave.lastName %></td> <!-- Last Name -->
-                                <td><%= leave.firstName %></td> <!-- First Name -->
-                                <td><%= leave.filedDate %></td> <!-- Filed Date -->
-                                <td><%= leave.type %></td> <!-- Leave Type -->
-                                <td><%= leave.startDate %></td> <!-- Start Date -->
-                                <td><%= leave.endDate %></td> <!-- End Date -->
+                                <td><%= leave.lastName %></td>
+                                <td><%= leave.firstName %></td>
+                                <td><%= leave.filedDate %></td>
+                                <td><%= leave.type %></td>
+                                <td><%= leave.startDate %></td>
+                                <td><%= leave.endDate %></td>
                             </tr>
                         <% }); %>
                     <% } else { %>
@@ -82,10 +138,9 @@
                         </tr>
                     <% } %>
                 </tbody>
-            </table>  
-        </div>
-        
-        
+            </table>
+        </section>
+    
     </div>
 
     <!-- JavaScript for sidebar functionality -->
