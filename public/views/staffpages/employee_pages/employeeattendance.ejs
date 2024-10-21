@@ -68,7 +68,7 @@
     <%- include('../../partials/employee_partials') %>
     <h1>Attendance</h1>
     <div class="form-container">
-        <form id="attendance-form" action="/attendance/save" method="POST">
+        <form id="attendance-form">
             <label for="employeeName">Employee Name</label>
             <input type="text" id="employeeName" name="employeeName" value="<%= user.firstName %> <%= user.lastName %>" class="form-input" required readonly>
 
@@ -78,14 +78,13 @@
             <label for="attendanceTime">Attendance Time</label>
             <input type="time" id="attendanceTime" name="attendanceTime" value="<%= currentTime %>" class="form-input" required>
             
-
             <label for="actionSelect">Action</label>
             <select id="actionSelect" name="action" class="action-select" required>
                 <option value="" disabled selected>Choose an Action</option>
-                <option value="timeIn">Time In</option>
-                <option value="timeOut">Time Out</option>
+                <option value="Time In">Time In</option>
+                <option value="Time Out">Time Out</option>
             </select>
-            <button type="submit" class="save-btn">Save</button>
+            <button type="submit" class="save-btn">Submit</button>
         </form>
     </div>
 
@@ -95,10 +94,51 @@
     </div>
 
     <script>
+        // Handle form submission using JavaScript
+        document.getElementById('attendance-form').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent form from submitting the traditional way
+
+    const formData = {
+        attendanceDate: document.getElementById('attendanceDate').value,
+        attendanceTime: document.getElementById('attendanceTime').value,
+        attendanceAction: document.getElementById('actionSelect').value // Use 'attendanceAction' instead of 'action'
+    };
+
+    // Log the form data for debugging purposes
+    console.log('Form data:', formData);
+
+    try {
+        const response = await fetch('/employee/attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Show a success message
+            alert(data.message);  // Pop-up message indicating success
+
+            // Redirect back to the attendance page after success
+            window.location.href = 'http://localhost:4000/employee/attendance';
+        } else {
+            // Handle errors (e.g., display a message)
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error submitting attendance:', error);
+        alert('There was an error submitting your attendance.');
+    }
+});
+
+        
         // Fetch attendance records when the page loads
         window.onload = async function() {
             try {
-                const response = await fetch('/attendance'); // Adjust the URL as necessary
+                const response = await fetch('/employee/attendance'); // Adjusted the URL
                 const data = await response.json();
 
                 // Check if any records are found
@@ -115,12 +155,9 @@
                         recordsContainer.innerHTML += recordHTML;
                     });
                 } else {
-                    // Display staffName, current date, and time even if no records
+                    // Display message when no records found
                     document.getElementById('attendance-records').innerHTML = `
                         <p class="no-records">No attendance records found for today.</p>
-                        <p>Staff Name: ${data.staffName}</p>
-                        <p>Current Date: ${data.attendanceDate}</p>
-                        <p>Current Time: ${data.attendanceTime}</p>
                     `;
                 }
             } catch (error) {
@@ -130,3 +167,4 @@
     </script>
 </body>
 </html>
+
