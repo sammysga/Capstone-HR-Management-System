@@ -84,6 +84,7 @@ router.post('/employee/attendance', employeeController.postAttendance);
 // Staff information
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
 
+
 router.get('/linemanager/useraccount', lineManagerController.getUserAccount);
 router.post('/linemanager/update-info', lineManagerController.updateUserInfo);
 router.get('/linemanager/persinfocareerprog', lineManagerController.getPersInfoCareerProg); // copied this url since HR is an employee
