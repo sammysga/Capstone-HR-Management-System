@@ -132,47 +132,46 @@ getPersInfoCareerProg: async function(req, res) {
         const { data: user, error: userError } = await supabase
             .from('useraccounts')
             .select('userEmail, userRole')
-            .eq('userId', userId)
-            .single();
+            .eq('userId', userId);
 
-        // Fetch firstName and lastName from staffaccounts table
+        // Fetch staff information including phone number, date of birth, and emergency contact from staffaccounts table
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
-            .select('firstName, lastName, departmentId')
-            .eq('userId', userId)
-            .single();
-
-        if (userError || staffError) {
-            console.error('Error fetching user or staff details:', userError || staffError);
-            req.flash('errors', { dbError: 'Error fetching user data.' });
-            return res.redirect('/employee/useracc');
-        }
+            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId') // Added necessary fields
+            .eq('userId', userId);
 
         // Fetch job title from jobpositions table based on jobId
         const { data: job, error: jobError } = await supabase
             .from('jobpositions')
             .select('jobTitle')
-            .eq('jobId', staff.departmentId); // Assuming jobId is stored in departmentId field, adjust if necessary
+            .eq('jobId', staff[0]?.jobId); // Assuming jobId is linked in staffaccounts
 
-        // Fetch department name from departments table
+        // Fetch department name from departments table based on departmentId
         const { data: department, error: departmentError } = await supabase
             .from('departments')
             .select('deptName')
-            .eq('departmentId', staff.departmentId); // Fetching department name using departmentId
+            .eq('departmentId', staff[0]?.departmentId); // Fetching department name based on departmentId
 
-        if (jobError || departmentError) {
-            console.error('Error fetching job or department details:', jobError || departmentError);
-            req.flash('errors', { dbError: 'Error fetching job or department details.' });
+        // Check for errors
+        if (userError || staffError || jobError || departmentError) {
+            console.error('Error fetching user, staff, job, or department details:', userError || staffError || jobError || departmentError);
+            req.flash('errors', { dbError: 'Error fetching data.' });
             return res.redirect('/employee/useracc');
         }
 
         const userData = {
-            userEmail: user?.userEmail || '',
-            userRole: user?.userRole || '',
-            firstName: staff?.firstName || '',
-            lastName: staff?.lastName || '',
-            jobTitle: job[0]?.jobTitle || '', // Add job title to user data
-            departmentName: department[0]?.deptName || '' // Add department name to user data
+            userEmail: user[0]?.userEmail || '',
+            userRole: user[0]?.userRole || '',
+            firstName: staff[0]?.firstName || '',
+            lastName: staff[0]?.lastName || '',
+            phoneNumber: staff[0]?.phoneNumber || '', // Added phoneNumber
+            dateOfBirth: staff[0]?.dateOfBirth || '', // Added dateOfBirth
+            emergencyContactName: staff[0]?.emergencyContactName || '', // Added emergencyContactName
+            emergencyContactNumber: staff[0]?.emergencyContactNumber || '', // Added emergencyContactNumber
+            employmentType: staff[0]?.employmentType || '', // Added employmentType
+            hireDate: staff[0]?.hireDate || '', // Added hireDate
+            jobTitle: job[0]?.jobTitle || '', // Added jobTitle
+            departmentName: department[0]?.deptName || '' // Added departmentName
         };
 
         // Render the personal information and career progression page
@@ -186,6 +185,7 @@ getPersInfoCareerProg: async function(req, res) {
         res.redirect('/employee/useracc');
     }
 },
+
 
 
 
