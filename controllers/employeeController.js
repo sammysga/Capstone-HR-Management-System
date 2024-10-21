@@ -156,7 +156,7 @@ getPersInfoCareerProg: async function(req, res) {
         if (userError || staffError || jobError || departmentError) {
             console.error('Error fetching user, staff, job, or department details:', userError || staffError || jobError || departmentError);
             req.flash('errors', { dbError: 'Error fetching data.' });
-            return res.redirect('/employee/useracc');
+            return res.redirect('/employee/employeepersinfocareerprog');
         }
 
         const userData = {
