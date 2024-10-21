@@ -150,15 +150,20 @@ getPersInfoCareerProg: async function(req, res) {
             console.error('Error fetching staff data:', staffError);
         }
 
-        // Fetch job title from jobpositions table based on jobId
-        const { data: job, error: jobError } = await supabase
-            .from('jobpositions')
-            .select('jobTitle')
-            .eq('jobId', staff[0]?.jobId); // Assuming jobId is linked in staffaccounts
-
-        // Log job fetch error
-        if (jobError) {
-            console.error('Error fetching job data:', jobError);
+        if (!staff[0]?.jobId) {
+            console.error('Job ID is undefined for staff:', staff);
+            // Handle the case where jobId is not available, e.g., set jobTitle to empty
+            userData.jobTitle = '';
+        } else {
+            const { data: job, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobTitle')
+                .eq('jobId', staff[0].jobId); // Assuming jobId is linked in staffaccounts
+        
+            // Log job fetch error
+            if (jobError) {
+                console.error('Error fetching job data:', jobError);
+            }
         }
 
         // Fetch department name from departments table based on departmentId
