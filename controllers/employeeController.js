@@ -193,12 +193,6 @@ getPersInfoCareerProg: async function(req, res) {
     }
 },
 
-
-
-
-
-
-
 // Add this function to your employeeController
 updatePersUserInfo: async function(req, res) {
     try {
