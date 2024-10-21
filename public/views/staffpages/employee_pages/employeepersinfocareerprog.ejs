@@ -7,100 +7,99 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
     <style>
-  .profile-container { 
-    display: flex; 
-    align-items: center; 
-    margin-bottom: 20px; 
-}
-.profile-pic { 
-    width: 80px; 
-    height: 80px; 
-    border-radius: 50%; 
-    object-fit: cover; 
-    margin-right: 15px; 
-}
-.profile-info { 
-    display: flex; 
-    flex-direction: column; 
-}
-.profile-info h3 { 
-    margin: 0; 
-    font-size: 1.4rem; 
-    color: #09191F; /* Updated color from useracc.ejs */
-}
-.profile-info p { 
-    margin: 5px 0; 
-    font-size: 1rem; 
-    color: #666; 
-}
-.edit-btn, .save-btn { 
-    background-color: #124A5C; /* Updated color from useracc.ejs */
-    color: white; 
-    border: none; 
-    padding: 10px 20px; 
-    border-radius: 5px; 
-    font-size: 1rem; 
-    cursor: pointer; 
-    margin-top: 10px; 
-    transition: background-color 0.3s ease; 
-}
-.edit-btn:hover, .save-btn:hover { 
-    background-color: #059ca4; /* Updated hover color from useracc.ejs */
-}
-.form-input { 
-    width: 100%; 
-    padding: 10px; 
-    margin: 10px 0; 
-    border-radius: 5px; 
-    border: 1px solid #ccc; 
-    display: none; 
-}
-.form-text { 
-    font-size: 1.1rem; 
-    color: #09191F; /* Updated color from useracc.ejs */
-}
-.milestone-container { 
-    margin: 30px 0; 
-}
-.milestone { 
-    position: relative; 
-    margin-left: 20px; 
-    margin-bottom: 30px; 
-}
-.milestone:before { 
-    content: ''; 
-    position: absolute; 
-    left: -10px; 
-    top: 0; 
-    height: 100%; 
-    border-left: 2px solid #124A5C; /* Updated color from useracc.ejs */
-}
-.milestone-label { 
-    position: relative; 
-    padding-left: 20px; 
-}
-.milestone-label h4 { 
-    margin: 0; 
-    font-size: 1.2rem; 
-    color: #124A5C; /* Updated color from useracc.ejs */
-}
-.milestone-label p { 
-    margin: 0; 
-    font-size: 1rem; 
-    color: #666; 
-}
-.section { 
-    margin: 20px 0; 
-}
-.section h2 { 
-    margin-bottom: 10px; 
-}
-.section p { 
-    margin: 5px 0; 
-    font-size: 1rem; 
-    color: #333; 
-}
-
+        .profile-container { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 20px; 
+        }
+        .profile-pic { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            margin-right: 15px; 
+        }
+        .profile-info { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .profile-info h3 { 
+            margin: 0; 
+            font-size: 1.4rem; 
+            color: #09191F; /* Updated color from useracc.ejs */
+        }
+        .profile-info p { 
+            margin: 5px 0; 
+            font-size: 1rem; 
+            color: #666; 
+        }
+        .edit-btn, .save-btn { 
+            background-color: #124A5C; /* Updated color from useracc.ejs */
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            margin-top: 10px; 
+            transition: background-color 0.3s ease; 
+        }
+        .edit-btn:hover, .save-btn:hover { 
+            background-color: #059ca4; /* Updated hover color from useracc.ejs */
+        }
+        .form-input { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border: 1px solid #ccc; 
+            display: none; 
+        }
+        .form-text { 
+            font-size: 1.1rem; 
+            color: #09191F; /* Updated color from useracc.ejs */
+        }
+        .milestone-container { 
+            margin: 30px 0; 
+        }
+        .milestone { 
+            position: relative; 
+            margin-left: 20px; 
+            margin-bottom: 30px; 
+        }
+        .milestone:before { 
+            content: ''; 
+            position: absolute; 
+            left: -10px; 
+            top: 0; 
+            height: 100%; 
+            border-left: 2px solid #124A5C; /* Updated color from useracc.ejs */
+        }
+        .milestone-label { 
+            position: relative; 
+            padding-left: 20px; 
+        }
+        .milestone-label h4 { 
+            margin: 0; 
+            font-size: 1.2rem; 
+            color: #124A5C; /* Updated color from useracc.ejs */
+        }
+        .milestone-label p { 
+            margin: 0; 
+            font-size: 1rem; 
+            color: #666; 
+        }
+        .section { 
+            margin: 20px 0; 
+        }
+        .section h2 { 
+            margin-bottom: 10px; 
+        }
+        .section p { 
+            margin: 5px 0; 
+            font-size: 1rem; 
+            color: #333; 
+        }
     </style>
 </head>
 <body>
@@ -119,35 +118,36 @@
         </div>
 
         <!-- Personal Information Section -->
-<h2>Personal Information</h2>
-<form id="edit-user-info" action="/employee/update-persinfo" method="POST">
-    <p><strong>Email:</strong> <span id="display-email" class="form-text"><%= user.userEmail %></span></p>
-    <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input">
+        <h2>Personal Information</h2>
+        <form id="edit-user-info" action="/employee/update-persinfo" method="POST">
+            <p><strong>Email:</strong> <span id="display-email" class="form-text"><%= user.userEmail %></span></p>
+            <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input">
 
-    <p><strong>Phone:</strong> <span id="display-phone" class="form-text"><%= user.phoneNumber %></span></p>
-    <input type="text" id="phone" name="phone" value="<%= user.phoneNumber %>" class="form-input">
+            <p><strong>Phone:</strong> <span id="display-phone" class="form-text"><%= user.phoneNumber %></span></p>
+            <input type="text" id="phone" name="phone" value="<%= user.phoneNumber %>" class="form-input">
 
-    <p><strong>Date of Birth:</strong> <span id="display-dob" class="form-text"><%= user.dateOfBirth %></span></p>
-    <input type="date" id="dateOfBirth" name="dateOfBirth" value="<%= user.dateOfBirth %>" class="form-input">
+            <p><strong>Date of Birth:</strong> <span id="display-dob" class="form-text"><%= user.dateOfBirth %></span></p>
+            <input type="date" id="dateOfBirth" name="dateOfBirth" value="<%= user.dateOfBirth %>" class="form-input">
 
-    <p><strong>Emergency Contact:</strong> <span id="display-emergency" class="form-text"><%= user.emergencyContactName %> - <%= user.emergencyContactNumber %></span></p>
-    <input type="text" id="emergencyContact" name="emergencyContact" value="<%= user.emergencyContactName %> - <%= user.emergencyContactNumber %>" class="form-input">
+            <p><strong>Emergency Contact:</strong> <span id="display-emergency" class="form-text"><%= user.emergencyContactName %> - <%= user.emergencyContactNumber %></span></p>
+            <input type="text" id="emergencyContact" name="emergencyContact" value="<%= user.emergencyContactName %> - <%= user.emergencyContactNumber %>" class="form-input">
 
-<!-- Employment Details Section -->
-<h2>Employment Details</h2>
-<p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text"><%= user.employmentType %></span></p>
-<input type="text" id="employmentType" name="employmentType" value="<%= user.employmentType %>" class="form-input">
+            <!-- Employment Details Section -->
+            <h2>Employment Details</h2>
+            <p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text"><%= user.employmentType %></span></p>
+            <input type="text" id="employmentType" name="employmentType" value="<%= user.employmentType %>" class="form-input">
 
-<p><strong>Job Title:</strong> <span id="display-job-title" class="form-text"><%= user.jobTitle %></span></p>
-<input type="text" id="jobTitle" name="jobTitle" value="<%= user.jobTitle %>" class="form-input">
+            <p><strong>Job Title:</strong> <span id="display-job-title" class="form-text"><%= user.jobTitle %></span></p>
+            <input type="text" id="jobTitle" name="jobTitle" value="<%= user.jobTitle %>" class="form-input">
 
-<p><strong>Department:</strong> <span id="display-department" class="form-text"><%= user.departmentName %></span></p>
-<input type="text" id="department" name="department" value="<%= user.departmentName %>" class="form-input">
+            <p><strong>Department:</strong> <span id="display-department" class="form-text"><%= user.departmentName %></span></p>
+            <input type="text" id="department" name="department" value="<%= user.departmentName %>" class="form-input">
 
-<p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text"><%= user.hireDate %></span></p>
-<input type="date" id="hireDate" name="hireDate" value="<%= user.hireDate %>" class="form-input">
+            <p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text"><%= user.hireDate %></span></p>
+            <input type="date" id="hireDate" name="hireDate" value="<%= user.hireDate %>" class="form-input">
 
-<h2>Career Progression</h2>
+            <!-- Career Progression Section -->
+            <h2>Career Progression</h2>
             <div class="milestone-container">
                 <% if (user.milestones.length > 0) { %>
                     <% user.milestones.forEach(milestone => { %>
@@ -164,6 +164,7 @@
                 <% } %>
             </div>
 
+            <!-- Degree Information Section -->
             <h2>Degree Information</h2>
             <ul>
                 <% if (user.degrees && user.degrees.length > 0) { %>
@@ -179,13 +180,15 @@
                 <% } %>
             </ul>
 
+            <!-- Experience Section -->
             <h2>Experience</h2>
             <ul>
                 <% if (user.experiences.length > 0) { %>
                     <% user.experiences.forEach(experience => { %>
                         <li>
+                            <strong>Job Title:</strong> <%= experience.jobTitle %><br>
                             <strong>Company Name:</strong> <%= experience.companyName %><br>
-                            <strong>Start Date:</strong> <%= new Date(experience.startDate).toLocaleDateString() %>
+                            <strong>Duration:</strong> <%= experience.jobDuration %>
                         </li>
                     <% }); %>
                 <% } else { %>
@@ -193,28 +196,24 @@
                 <% } %>
             </ul>
 
+            <!-- Certifications Section -->
             <h2>Certifications</h2>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Certification Name</th>
-                        <th>Certification Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% user.certifications.forEach(function(certification) { %>
-                        <tr>
-                            <td><%= certification.certificateName %></td>
-                            <td><%= certification.certDate %></td>
-                        </tr>
+            <ul>
+                <% if (user.certifications.length > 0) { %>
+                    <% user.certifications.forEach(certification => { %>
+                        <li>
+                            <strong>Certification Name:</strong> <%= certification.certificationName %><br>
+                            <img src="<%= certification.certificationImage %>" alt="<%= certification.certificationName %> Image" width="100">
+                        </li>
                     <% }); %>
-                </tbody>
-            </table>
+                <% } else { %>
+                    <li>No certifications available.</li>
+                <% } %>
+            </ul>
 
-</form>
-
-
-  
+            <button type="button" class="edit-btn" id="edit-button">Edit</button>
+            <button type="submit" class="save-btn" style="display:none;" id="save-button">Save</button>
+        </form>
     </div>
 
     <!-- JavaScript for toggling edit mode -->
