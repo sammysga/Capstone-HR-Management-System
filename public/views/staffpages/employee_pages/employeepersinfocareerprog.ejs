@@ -193,6 +193,24 @@
                 <% } %>
             </ul>
 
+            <h2>Certifications</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Certification Name</th>
+                        <th>Certification Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% user.certifications.forEach(function(certification) { %>
+                        <tr>
+                            <td><%= certification.certificateName %></td>
+                            <td><%= certification.certDate %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+
 </form>
 
 
