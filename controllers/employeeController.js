@@ -122,7 +122,7 @@ updateUserInfo: async function(req, res) {
 
 getPersInfoCareerProg: async function(req, res) {
     try {
-        const userId = req.session.user ? req.session.user.userId : null; // Get the user ID from the session
+        const userId = req.session.user ? req.session.user.userId : null;
         if (!userId) {
             req.flash('errors', { authError: 'User not logged in.' });
             return res.redirect('/staff/login');
@@ -134,48 +134,30 @@ getPersInfoCareerProg: async function(req, res) {
             .select('userEmail, userRole')
             .eq('userId', userId);
 
-        // Log user fetch error
-        if (userError) {
-            console.error('Error fetching user data:', userError);
-        }
-
-        // Fetch staff information including phone number, date of birth, and emergency contact from staffaccounts table
+        // Fetch staff information including phone number, date of birth, emergency contact, and jobId
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
-            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId') // Added necessary fields
+            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId, jobId')
             .eq('userId', userId);
 
-        // Log staff fetch error
-        if (staffError) {
-            console.error('Error fetching staff data:', staffError);
+        const jobId = staff[0]?.jobId; // Fetch jobId from staff
+        if (!jobId) {
+            console.error('Job ID is undefined for staff:', staff);
+            req.flash('errors', { dbError: 'Job ID not found for the staff member.' });
+            return res.redirect('/employee/employeepersinfocareerprog');
         }
 
-        if (!staff[0]?.jobId) {
-            console.error('Job ID is undefined for staff:', staff);
-            // Handle the case where jobId is not available, e.g., set jobTitle to empty
-            userData.jobTitle = '';
-        } else {
-            const { data: job, error: jobError } = await supabase
-                .from('jobpositions')
-                .select('jobTitle')
-                .eq('jobId', jobId); // Assuming jobId is linked in staffaccounts
-        
-            // Log job fetch error
-            if (jobError) {
-                console.error('Error fetching job data:', jobError);
-            }
-        }
+        // Fetch job title from jobpositions table based on jobId
+        const { data: job, error: jobError } = await supabase
+            .from('jobpositions')
+            .select('jobTitle')
+            .eq('jobId', jobId);
 
         // Fetch department name from departments table based on departmentId
         const { data: department, error: departmentError } = await supabase
             .from('departments')
             .select('deptName')
-            .eq('departmentId', staff[0]?.departmentId); // Fetching department name based on departmentId
-
-        // Log department fetch error
-        if (departmentError) {
-            console.error('Error fetching department data:', departmentError);
-        }
+            .eq('departmentId', staff[0]?.departmentId);
 
         // Check for errors
         if (userError || staffError || jobError || departmentError) {
@@ -184,29 +166,20 @@ getPersInfoCareerProg: async function(req, res) {
             return res.redirect('/employee/employeepersinfocareerprog');
         }
 
-        // Check if data arrays are empty
-        if (!user || !staff || !job || !department) {
-            req.flash('errors', { dbError: 'No data found.' });
-            return res.redirect('/employee/employeepersinfocareerprog');
-        }
-
         const userData = {
             userEmail: user[0]?.userEmail || '',
             userRole: user[0]?.userRole || '',
             firstName: staff[0]?.firstName || '',
             lastName: staff[0]?.lastName || '',
-            phoneNumber: staff[0]?.phoneNumber || '', // Added phoneNumber
-            dateOfBirth: staff[0]?.dateOfBirth || '', // Added dateOfBirth
-            emergencyContactName: staff[0]?.emergencyContactName || '', // Added emergencyContactName
-            emergencyContactNumber: staff[0]?.emergencyContactNumber || '', // Added emergencyContactNumber
-            employmentType: staff[0]?.employmentType || '', // Added employmentType
-            hireDate: staff[0]?.hireDate || '', // Added hireDate
-            jobTitle: job[0]?.jobTitle || '', // Added jobTitle
-            departmentName: department[0]?.deptName || '' // Added departmentName
+            phoneNumber: staff[0]?.phoneNumber || '',
+            dateOfBirth: staff[0]?.dateOfBirth || '',
+            emergencyContactName: staff[0]?.emergencyContactName || '',
+            emergencyContactNumber: staff[0]?.emergencyContactNumber || '',
+            employmentType: staff[0]?.employmentType || '',
+            hireDate: staff[0]?.hireDate || '',
+            jobTitle: job[0]?.jobTitle || '',
+            departmentName: department[0]?.deptName || ''
         };
-
-        // Log userData for debugging
-        console.log('User data prepared for rendering:', userData);
 
         // Render the personal information and career progression page
         res.render('staffpages/employee_pages/employeepersinfocareerprog', {
@@ -219,6 +192,7 @@ getPersInfoCareerProg: async function(req, res) {
         res.redirect('/employee/useracc');
     }
 },
+
 
 
 
