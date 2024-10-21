@@ -135,10 +135,10 @@ getPersInfoCareerProg: async function(req, res) {
             .select('userEmail, userRole')
             .eq('userId', userId);
 
-        // Fetch firstName and lastName from staffaccounts table
+        // Fetch staff details from staffaccounts table
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
-            .select('firstName, lastName')
+            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, hireDate, employmentType, departmentId')
             .eq('userId', userId);
 
         if (userError || staffError) {
@@ -147,11 +147,40 @@ getPersInfoCareerProg: async function(req, res) {
             return res.redirect('/employee/useracc');
         }
 
+        const departmentId = staff[0]?.departmentId;
+        const jobId = staff[0]?.jobId; // Assuming staff table has jobId field
+
+        // Fetch job title from jobpositions table
+        const { data: job, error: jobError } = await supabase
+            .from('jobpositions')
+            .select('jobTitle')
+            .eq('jobId', jobId);
+
+        // Fetch department name from departments table
+        const { data: department, error: deptError } = await supabase
+            .from('departments')
+            .select('deptName')
+            .eq('departmentId', departmentId);
+
+        if (jobError || deptError) {
+            console.error('Error fetching job or department details:', jobError || deptError);
+            req.flash('errors', { dbError: 'Error fetching employment data.' });
+            return res.redirect('/employee/useracc');
+        }
+
         const userData = {
             userEmail: user[0]?.userEmail || '',
             userRole: user[0]?.userRole || '',
             firstName: staff[0]?.firstName || '',
-            lastName: staff[0]?.lastName || ''
+            lastName: staff[0]?.lastName || '',
+            phoneNumber: staff[0]?.phoneNumber || '',
+            dateOfBirth: staff[0]?.dateOfBirth || '',
+            emergencyContactName: staff[0]?.emergencyContactName || '',
+            emergencyContactNumber: staff[0]?.emergencyContactNumber || '',
+            hireDate: staff[0]?.hireDate || '',
+            employmentType: staff[0]?.employmentType || '',
+            jobTitle: job[0]?.jobTitle || '',
+            deptName: department[0]?.deptName || ''
         };
 
         // Render the personal information and career progression page
@@ -165,6 +194,7 @@ getPersInfoCareerProg: async function(req, res) {
         res.redirect('/employee/useracc');
     }
 },
+
 
 
 // Add this function to your employeeController
