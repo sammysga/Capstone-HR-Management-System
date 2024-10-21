@@ -75,7 +75,8 @@ router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
 
 router.get('/employee/leaverequest', employeeController.getLeaveRequestForm);
 router.post('/employee/leaverequest', employeeController.submitLeaveRequest);
-
+router.get('/employee/attendance', employeeController.getAttendance);
+router.post('/employee/attendance', employeeController.postAttendance);
 
 
 // Line Manager Routes
