@@ -129,82 +129,42 @@ getPersInfoCareerProg: async function(req, res) {
             return res.redirect('/staff/login');
         }
 
-        // Function to fetch data from a specific table
-        const fetchData = async (table, selectFields) => {
-            const { data, error } = await supabase
-                .from(table)
-                .select(selectFields)
-                .eq('userId', userId);
-            return { data, error };
-        };
+        // Fetch user email and role from useraccounts table
+        const { data: user, error: userError } = await supabase
+            .from('useraccounts')
+            .select('userEmail, userRole')
+            .eq('userId', userId);
 
-        // Fetch user and staff information
-        const { data: user, error: userError } = await fetchData('useraccounts', 'userEmail, userRole');
-        const { data: staff, error: staffError } = await fetchData('staffaccounts', 'firstName, lastName');
+        // Fetch firstName and lastName from staffaccounts table
+        const { data: staff, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('firstName, lastName')
+            .eq('userId', userId);
 
         if (userError || staffError) {
             console.error('Error fetching user or staff details:', userError || staffError);
             req.flash('errors', { dbError: 'Error fetching user data.' });
-            return res.render('staffpages/employee_pages/employeepersinfocareerprog', {
-                user: { degree: null, experience: null, certification: null },
-                experiences: [], // pass as empty array
-                milestones: [], // pass as empty array
-                errors: req.flash('errors')
-            });
-        }
-
-        // Fetch degree, experience, and certification information
-        const { data: degree = null, error: degreeError } = await fetchData('degree', 'degreeName, universityName, graduationYear');
-        const { data: experience = null, error: experienceError } = await fetchData('experience', 'jobTitle, companyName, jobDuration');
-        const { data: certification = null, error: certificationError } = await fetchData('certification', 'certificationName, certificationImage');
-
-        if (degreeError) {
-            console.error('Error fetching degree details:', degreeError);
-            req.flash('errors', { dbError: 'Error fetching degree data.' });
-        }
-        if (experienceError) {
-            console.error('Error fetching experience details:', experienceError);
-            req.flash('errors', { dbError: 'Error fetching experience data.' });
-        }
-        if (certificationError) {
-            console.error('Error fetching certification details:', certificationError);
-            req.flash('errors', { dbError: 'Error fetching certification data.' });
-        }
-
-        // fetch milestones and experiences; correct "not defined" error
-        const { data: milestones = [], error: milestonesError } = await fetchData('milestones', 'milestoneField'); 
-        const { data: experiences = [], error: experiencesError } = await fetchData('experience', 'jobTitle, companyName, jobDuration');
-
-        // Check if there was an error fetching experiences
-        if (experiencesError) {
-            console.error('Error fetching experiences:', experiencesError);
-            req.flash('errors', { dbError: 'Error fetching experiences data.' });
+            return res.redirect('/employee/useracc');
         }
 
         const userData = {
-            ...user,
-            firstName: staff.firstName,
-            lastName: staff.lastName,
-            degree: degree, // null if error
-            experiences: experiences || [], // passed as array
-            certification: certification || null
+            userEmail: user[0]?.userEmail || '',
+            userRole: user[0]?.userRole || '',
+            firstName: staff[0]?.firstName || '',
+            lastName: staff[0]?.lastName || ''
         };
 
+        // Render the personal information and career progression page
         res.render('staffpages/employee_pages/employeepersinfocareerprog', {
             user: userData,
-            milestones, // pass to view
-            experiences, // pass to view
             errors: req.flash('errors')
         });
     } catch (err) {
         console.error('Error in getPersInfoCareerProg controller:', err);
-        req.flash('errors', { dbError: 'An error occurred while loading the career progression page.' });
-        res.redirect('/employee/useracc'); 
+        req.flash('errors', { dbError: 'An error occurred while loading the personal info page.' });
+        res.redirect('/employee/useracc');
     }
 },
-
-
-
 
 
 // Add this function to your employeeController
