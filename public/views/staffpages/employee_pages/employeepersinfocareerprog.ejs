@@ -133,19 +133,20 @@
     <p><strong>Emergency Contact:</strong> <span id="display-emergency" class="form-text"><%= user.emergencyContactName %> - <%= user.emergencyContactNumber %></span></p>
     <input type="text" id="emergencyContact" name="emergencyContact" value="<%= user.emergencyContactName %> - <%= user.emergencyContactNumber %>" class="form-input">
 
- <!-- Employment Details Section -->
+<!-- Employment Details Section -->
 <h2>Employment Details</h2>
 <p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text"><%= user.employmentType %></span></p>
-<input type="text" id="employmentType" name="employmentType" value="<%= staff.employmentType %>" class="form-input">
+<input type="text" id="employmentType" name="employmentType" value="<%= user.employmentType %>" class="form-input">
 
-<p><strong>Job Title:</strong> <span id="display-job-title" class="form-text"><%= user.jobpositions.jobTitle %></span></p>
-<input type="text" id="jobTitle" name="jobTitle" value="<%= staff.jobpositions.jobTitle %>" class="form-input">
+<p><strong>Job Title:</strong> <span id="display-job-title" class="form-text"><%= user.jobTitle %></span></p>
+<input type="text" id="jobTitle" name="jobTitle" value="<%= user.jobTitle %>" class="form-input">
 
-<p><strong>Department:</strong> <span id="display-department" class="form-text"><%= user.departments.deptName %></span></p>
-<input type="text" id="department" name="department" value="<%= staff.departments.deptName %>" class="form-input">
+<p><strong>Department:</strong> <span id="display-department" class="form-text"><%= user.departmentName %></span></p>
+<input type="text" id="department" name="department" value="<%= user.departmentName %>" class="form-input">
 
 <p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text"><%= user.hireDate %></span></p>
-<input type="date" id="hireDate" name="hireDate" value="<%= staff.hireDate %>" class="form-input">
+<input type="date" id="hireDate" name="hireDate" value="<%= user.hireDate %>" class="form-input">
+
 
 </form>
 
