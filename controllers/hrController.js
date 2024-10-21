@@ -459,7 +459,7 @@ const hrController = {
     postAddJobOffer: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { jobTitle, departmentId, jobDescrpt, jobBranch, jobType, jobTimeCommitment, hiringStartDate, hiringEndDate, isActiveHiring } = req.body;
+                const { jobTitle, departmentId, jobDescrpt, jobType, jobTimeCommitment, hiringStartDate, hiringEndDate, isActiveHiring } = req.body;
             
                 const { data, error } = await supabase
                     .from('jobpositions') // Using jobpositions table
@@ -468,7 +468,6 @@ const hrController = {
                             jobTitle,
                             departmentId: parseInt(departmentId),
                             jobDescrpt,
-                            jobBranch,
                             jobType,
                             jobTimeCommitment,
                             hiringStartDate,
