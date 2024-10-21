@@ -164,10 +164,11 @@ getPersInfoCareerProg: async function(req, res) {
             .from('staffcareerprogression')
             .select('milestoneName, startDate, endDate')
             .eq('staffId', staff[0]?.staffId)
+            
 
         // Check for errors
-        if (userError || staffError || jobError || departmentError) {
-            console.error('Error fetching user, staff, job, or department details:', userError || staffError || jobError || departmentError);
+        if (userError || staffError || jobError || departmentError || milestonesError) {
+            console.error('Error fetching user, staff, job, or department details:', userError || staffError || jobError || departmentError || milestonesError);
             req.flash('errors', { dbError: 'Error fetching data.' });
             return res.redirect('/employee/employeepersinfocareerprog');
         }
