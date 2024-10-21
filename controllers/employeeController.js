@@ -169,7 +169,7 @@ getPersInfoCareerProg: async function(req, res) {
         const { data: degrees, error: degreesError } = await supabase
         .from('staffdegrees')
         .select('degreeName, universityName, graduationYear')
-        .eq('staffId', staff[0]?.staffId);           
+        .eq('staffId', staffId);           
             
 
         // Check for errors
