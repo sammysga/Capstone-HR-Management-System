@@ -185,7 +185,7 @@ getPersInfoCareerProg: async function(req, res) {
             hireDate: staff[0]?.hireDate || '',
             jobTitle: job[0]?.jobTitle || '',
             departmentName: department[0]?.deptName || '',
-            milestones: milestones || [] // Added milestones to userData
+            milestones: milestones || [0] // Added milestones to userData
         };
 
         // Render the personal information and career progression page
