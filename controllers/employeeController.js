@@ -361,18 +361,18 @@ submitLeaveRequest: async function (req, res) {
         // Log the incoming data for debugging
         console.log('Leave request data:', { userId: req.session.user.userId, leaveTypeId, fromDate, fromDayType, untilDate, untilDayType, reason });
 
-        // Fetch staffId, firstName, and lastName associated with the userId
+        // Fetch staffId and departmentId associated with the userId
         const { data: userData, error: fetchError } = await supabase
             .from('staffaccounts')
-            .select('staffId, firstName, lastName')  // Select staffId, firstName, and lastName
+            .select('staffId, departmentId, firstName, lastName')  // Select staffId, departmentId, firstName, and lastName
             .eq('userId', req.session.user.userId)
             .single();
 
         if (fetchError || !userData) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User  not found' });
         }
 
-        const { staffId, firstName, lastName } = userData;
+        const { staffId, departmentId, firstName, lastName } = userData;
 
         // Log or display the user's full name for confirmation
         console.log(`Leave request submitted by: ${firstName} ${lastName}`);
@@ -382,14 +382,15 @@ submitLeaveRequest: async function (req, res) {
             .from('leaverequests')
             .insert([
                 {
-                    staffId,  // Use staffId here instead of userId
-                    leaveTypeId,      // Use leaveTypeId here to reference the leave type
-                    fromDate,         // Start date of leave
-                    fromDayType,      // Type of the starting day (e.g., half/whole day)
-                    untilDate,        // End date of leave
-                    untilDayType,     // Type of the end day (e.g., half/whole day)
-                    reason,           // Reason for the leave request
+                    staffId,        // Use staffId here instead of userId
+                    leaveTypeId,    // Use leaveTypeId here to reference the leave type
+                    fromDate,       // Start date of leave
+                    fromDayType,    // Type of the starting day (e.g., half/whole day)
+                    untilDate,      // End date of leave
+                    untilDayType,   // Type of the end day (e.g., half/whole day)
+                    reason,         // Reason for the leave request
                     status: 'Pending for Approval', // Initial status
+                    departmentId    // Add departmentId to the request
                 }
             ]);
 
@@ -403,7 +404,6 @@ submitLeaveRequest: async function (req, res) {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 },
-
 
 };
 

@@ -15,7 +15,7 @@ const lineManagerController = {
                         fromDate, 
                         untilDate, 
                         staffaccounts (lastName, firstName), 
-                        leave_types (typeName)  
+                        leave_types (typeName)
                     `)
                     .order('created_at', { ascending: false });
     
@@ -25,9 +25,6 @@ const lineManagerController = {
                     return res.redirect('/linemanager/dashboard');
                 }
     
-                // Log the fetched data for debugging
-                console.log('All Leaves fetched from database:', allLeaves);
-    
                 // Check if allLeaves contains data
                 if (!allLeaves || allLeaves.length === 0) {
                     console.log('No leave requests found in the database.');
@@ -35,22 +32,19 @@ const lineManagerController = {
     
                 // Format the leave requests to only include necessary fields
                 const formattedLeaves = allLeaves.map(leave => ({
-                    lastName: leave.staffaccounts ? leave.staffaccounts.lastName : 'N/A', // Check if staffaccounts exists
-                    firstName: leave.staffaccounts ? leave.staffaccounts.firstName : 'N/A', // Check if staffaccounts exists
-                    filedDate: leave.created_at ? leave.created_at.split(' ')[0] : 'N/A', // Get only the date part
-                    type: leave.leave_types ? leave.leave_types.typeName : 'N/A', // Check if leave_types exists
+                    lastName: leave.staffaccounts?.lastName || 'N/A',
+                    firstName: leave.staffaccounts?.firstName || 'N/A',
+                    filedDate: leave.created_at ? new Date(leave.created_at).toISOString().split('T')[0] : 'N/A', // Format date correctly
+                    type: leave.leave_types?.typeName || 'N/A',
                     startDate: leave.fromDate || 'N/A',
                     endDate: leave.untilDate || 'N/A'
                 }));
     
-                // Log the formatted leaves
-                console.log('Formatted Leaves:', formattedLeaves);
-    
-                // Render the dashboard with success and error messages
+                // Render the dashboard with the formatted leave requests
                 res.render('staffpages/linemanager_pages/managerdashboard', { 
                     allLeaves: formattedLeaves,
-                    successMessage: req.flash('success'), // Add success message
-                    errorMessage: req.flash('errors') // Handle error messages if any
+                    successMessage: req.flash('success'), // Success message handling
+                    errorMessage: req.flash('errors') // Error message handling
                 });
             } catch (err) {
                 console.error('Error fetching leave requests:', err);
@@ -61,7 +55,7 @@ const lineManagerController = {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
         }
-    },    
+    },
     
     
     getUserAccount: async function (req, res) {
