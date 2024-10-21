@@ -120,7 +120,6 @@ updateUserInfo: async function(req, res) {
     }
 },
 
-
 getPersInfoCareerProg: async function(req, res) {
     try {
         const userId = req.session.user ? req.session.user.userId : null; // Get the user ID from the session
@@ -133,13 +132,15 @@ getPersInfoCareerProg: async function(req, res) {
         const { data: user, error: userError } = await supabase
             .from('useraccounts')
             .select('userEmail, userRole')
-            .eq('userId', userId);
+            .eq('userId', userId)
+            .single();
 
-        // Fetch staff details from staffaccounts table
+        // Fetch firstName and lastName from staffaccounts table
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
-            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, hireDate, employmentType, departmentId')
-            .eq('userId', userId);
+            .select('firstName, lastName, departmentId')
+            .eq('userId', userId)
+            .single();
 
         if (userError || staffError) {
             console.error('Error fetching user or staff details:', userError || staffError);
@@ -147,40 +148,31 @@ getPersInfoCareerProg: async function(req, res) {
             return res.redirect('/employee/useracc');
         }
 
-        const departmentId = staff[0]?.departmentId;
-        const jobId = staff[0]?.jobId; // Assuming staff table has jobId field
-
-        // Fetch job title from jobpositions table
+        // Fetch job title from jobpositions table based on jobId
         const { data: job, error: jobError } = await supabase
             .from('jobpositions')
             .select('jobTitle')
-            .eq('jobId', jobId);
+            .eq('jobId', staff.departmentId); // Assuming jobId is stored in departmentId field, adjust if necessary
 
         // Fetch department name from departments table
-        const { data: department, error: deptError } = await supabase
+        const { data: department, error: departmentError } = await supabase
             .from('departments')
             .select('deptName')
-            .eq('departmentId', departmentId);
+            .eq('departmentId', staff.departmentId); // Fetching department name using departmentId
 
-        if (jobError || deptError) {
-            console.error('Error fetching job or department details:', jobError || deptError);
-            req.flash('errors', { dbError: 'Error fetching employment data.' });
+        if (jobError || departmentError) {
+            console.error('Error fetching job or department details:', jobError || departmentError);
+            req.flash('errors', { dbError: 'Error fetching job or department details.' });
             return res.redirect('/employee/useracc');
         }
 
         const userData = {
-            userEmail: user[0]?.userEmail || '',
-            userRole: user[0]?.userRole || '',
-            firstName: staff[0]?.firstName || '',
-            lastName: staff[0]?.lastName || '',
-            phoneNumber: staff[0]?.phoneNumber || '',
-            dateOfBirth: staff[0]?.dateOfBirth || '',
-            emergencyContactName: staff[0]?.emergencyContactName || '',
-            emergencyContactNumber: staff[0]?.emergencyContactNumber || '',
-            hireDate: staff[0]?.hireDate || '',
-            employmentType: staff[0]?.employmentType || '',
-            jobTitle: job[0]?.jobTitle || '',
-            deptName: department[0]?.deptName || ''
+            userEmail: user?.userEmail || '',
+            userRole: user?.userRole || '',
+            firstName: staff?.firstName || '',
+            lastName: staff?.lastName || '',
+            jobTitle: job[0]?.jobTitle || '', // Add job title to user data
+            departmentName: department[0]?.deptName || '' // Add department name to user data
         };
 
         // Render the personal information and career progression page
@@ -194,6 +186,7 @@ getPersInfoCareerProg: async function(req, res) {
         res.redirect('/employee/useracc');
     }
 },
+
 
 
 
