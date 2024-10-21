@@ -164,6 +164,17 @@
                 <% } %>
             </div>
 
+            <h2>Degree Information</h2>
+<ul>
+    <% user.degrees.forEach(degree => { %>
+        <li>
+            <strong>Degree Name:</strong> <%= degree.degreeName %><br>
+            <strong>University:</strong> <%= degree.universityName %><br>
+            <strong>Graduation Year:</strong> <%= degree.graduationYear %>
+        </li>
+    <% }); %>
+</ul>
+
 
 </form>
 

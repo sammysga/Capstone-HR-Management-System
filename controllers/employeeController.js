@@ -164,6 +164,12 @@ getPersInfoCareerProg: async function(req, res) {
             .from('staffcareerprogression')
             .select('milestoneName, startDate, endDate')
             .eq('staffId', staff[0]?.staffId)
+
+        // Fetch degree information from staffdegrees table based on staffId
+        const { data: degrees, error: degreesError } = await supabase
+        .from('staffdegrees')
+        .select('degreeName, universityName, graduationYear')
+        .eq('staffId', staff[0]?.staffId);           
             
 
         // Check for errors
@@ -186,7 +192,9 @@ getPersInfoCareerProg: async function(req, res) {
             hireDate: staff[0]?.hireDate || '',
             jobTitle: job[0]?.jobTitle || '',
             departmentName: department[0]?.deptName || '',
-            milestones: milestones || [0] // Added milestones to userData
+            milestones: milestones || [], // Added milestones to userData
+            degrees: degrees || [] // Added degrees to userData
+
         };
 
         // Render the personal information and career progression page
