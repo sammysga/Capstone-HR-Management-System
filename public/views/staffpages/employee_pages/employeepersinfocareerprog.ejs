@@ -135,16 +135,16 @@
 
  <!-- Employment Details Section -->
 <h2>Employment Details</h2>
-<p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text"><%= staff.employmentType %></span></p>
+<p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text"><%= user.employmentType %></span></p>
 <input type="text" id="employmentType" name="employmentType" value="<%= staff.employmentType %>" class="form-input">
 
-<p><strong>Job Title:</strong> <span id="display-job-title" class="form-text"><%= staff.jobpositions.jobTitle %></span></p>
+<p><strong>Job Title:</strong> <span id="display-job-title" class="form-text"><%= user.jobpositions.jobTitle %></span></p>
 <input type="text" id="jobTitle" name="jobTitle" value="<%= staff.jobpositions.jobTitle %>" class="form-input">
 
-<p><strong>Department:</strong> <span id="display-department" class="form-text"><%= staff.departments.deptName %></span></p>
+<p><strong>Department:</strong> <span id="display-department" class="form-text"><%= user.departments.deptName %></span></p>
 <input type="text" id="department" name="department" value="<%= staff.departments.deptName %>" class="form-input">
 
-<p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text"><%= staff.hireDate %></span></p>
+<p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text"><%= user.hireDate %></span></p>
 <input type="date" id="hireDate" name="hireDate" value="<%= staff.hireDate %>" class="form-input">
 
 </form>
