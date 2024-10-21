@@ -137,17 +137,40 @@ getPersInfoCareerProg: async function(req, res) {
         // Fetch staff information including phone number, date of birth, emergency contact, and jobId
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
-            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId, jobId')
+            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId, jobId, staffId') // Include staffId in the select
             .eq('userId', userId);
 
-        const jobId = staff[0]?.jobId; // Fetch jobId from staff
+        // Check for staff errors
+        if (staffError) {
+            console.error('Error fetching staff data:', staffError);
+            req.flash('errors', { dbError: 'Error fetching staff information.' });
+            return res.redirect('/employee/employeepersinfocareerprog');
+        }
+
+        const staffId = staff[0]?.staffId; // Now this should not be undefined
+        console.log('Fetching degrees for staffId:', staffId);
+
+        // Fetch degree information from staffdegrees table using staffId
+        const { data: degrees, error: degreeError } = await supabase
+            .from('staffdegrees')
+            .select('degreeName, universityName, graduationYear')
+            .eq('staffId', staffId);
+
+        // Check for errors in fetching degrees
+        if (degreeError) {
+            console.error('Error fetching degree data:', degreeError);
+            req.flash('errors', { dbError: 'Error fetching degree information.' });
+            return res.redirect('/employee/employeepersinfocareerprog');
+        }
+
+        // Fetch job title from jobpositions table based on jobId
+        const jobId = staff[0]?.jobId;
         if (!jobId) {
             console.error('Job ID is undefined for staff:', staff);
             req.flash('errors', { dbError: 'Job ID not found for the staff member.' });
             return res.redirect('/employee/employeepersinfocareerprog');
         }
 
-        // Fetch job title from jobpositions table based on jobId
         const { data: job, error: jobError } = await supabase
             .from('jobpositions')
             .select('jobTitle')
@@ -163,20 +186,11 @@ getPersInfoCareerProg: async function(req, res) {
         const { data: milestones, error: milestonesError } = await supabase
             .from('staffcareerprogression')
             .select('milestoneName, startDate, endDate')
-            .eq('staffId', staff[0]?.staffId)
-
-        // Fetch degree information from staffdegrees table based on staffId
-        const staffId = staff[0]?.staffId; // Ensure this value is correct
-console.log('Fetching degrees for staffId:', staffId);
-        const { data: degrees, error: degreesError } = await supabase
-        .from('staffdegrees')
-        .select('degreeName, universityName, graduationYear')
-        .eq('staffId', staffId);           
-            
+            .eq('staffId', staffId);
 
         // Check for errors
-        if (userError || staffError || jobError || departmentError || milestonesError) {
-            console.error('Error fetching user, staff, job, or department details:', userError || staffError || jobError || departmentError || milestonesError);
+        if (userError || jobError || departmentError || milestonesError) {
+            console.error('Error fetching user, job, department, or milestones:', userError || jobError || departmentError || milestonesError);
             req.flash('errors', { dbError: 'Error fetching data.' });
             return res.redirect('/employee/employeepersinfocareerprog');
         }
@@ -194,9 +208,8 @@ console.log('Fetching degrees for staffId:', staffId);
             hireDate: staff[0]?.hireDate || '',
             jobTitle: job[0]?.jobTitle || '',
             departmentName: department[0]?.deptName || '',
-            milestones: milestones || [], // Added milestones to userData
-            degrees: degrees || [] // Added degrees to userData
-
+            milestones: milestones || [],
+            degrees: degrees || [] // Add degrees to userData
         };
 
         // Render the personal information and career progression page
