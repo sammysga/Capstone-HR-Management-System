@@ -134,11 +134,21 @@ getPersInfoCareerProg: async function(req, res) {
             .select('userEmail, userRole')
             .eq('userId', userId);
 
+        // Log user fetch error
+        if (userError) {
+            console.error('Error fetching user data:', userError);
+        }
+
         // Fetch staff information including phone number, date of birth, and emergency contact from staffaccounts table
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
             .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId') // Added necessary fields
             .eq('userId', userId);
+
+        // Log staff fetch error
+        if (staffError) {
+            console.error('Error fetching staff data:', staffError);
+        }
 
         // Fetch job title from jobpositions table based on jobId
         const { data: job, error: jobError } = await supabase
@@ -146,16 +156,32 @@ getPersInfoCareerProg: async function(req, res) {
             .select('jobTitle')
             .eq('jobId', staff[0]?.jobId); // Assuming jobId is linked in staffaccounts
 
+        // Log job fetch error
+        if (jobError) {
+            console.error('Error fetching job data:', jobError);
+        }
+
         // Fetch department name from departments table based on departmentId
         const { data: department, error: departmentError } = await supabase
             .from('departments')
             .select('deptName')
             .eq('departmentId', staff[0]?.departmentId); // Fetching department name based on departmentId
 
+        // Log department fetch error
+        if (departmentError) {
+            console.error('Error fetching department data:', departmentError);
+        }
+
         // Check for errors
         if (userError || staffError || jobError || departmentError) {
             console.error('Error fetching user, staff, job, or department details:', userError || staffError || jobError || departmentError);
             req.flash('errors', { dbError: 'Error fetching data.' });
+            return res.redirect('/employee/employeepersinfocareerprog');
+        }
+
+        // Check if data arrays are empty
+        if (!user || !staff || !job || !department) {
+            req.flash('errors', { dbError: 'No data found.' });
             return res.redirect('/employee/employeepersinfocareerprog');
         }
 
@@ -174,6 +200,9 @@ getPersInfoCareerProg: async function(req, res) {
             departmentName: department[0]?.deptName || '' // Added departmentName
         };
 
+        // Log userData for debugging
+        console.log('User data prepared for rendering:', userData);
+
         // Render the personal information and career progression page
         res.render('staffpages/employee_pages/employeepersinfocareerprog', {
             user: userData,
@@ -185,6 +214,7 @@ getPersInfoCareerProg: async function(req, res) {
         res.redirect('/employee/useracc');
     }
 },
+
 
 
 
