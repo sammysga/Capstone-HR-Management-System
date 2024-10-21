@@ -137,7 +137,7 @@ getPersInfoCareerProg: async function(req, res) {
         // Fetch staff information including phone number, date of birth, emergency contact, and jobId
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
-            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId, jobId, staffId')
+            .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId, jobId, staffId') // Include staffId in the select
             .eq('userId', userId);
 
         // Check for staff errors
@@ -147,7 +147,7 @@ getPersInfoCareerProg: async function(req, res) {
             return res.redirect('/employee/employeepersinfocareerprog');
         }
 
-        const staffId = staff[0]?.staffId;
+        const staffId = staff[0]?.staffId; // Now this should not be undefined
         console.log('Fetching degrees for staffId:', staffId);
 
         // Fetch degree information from staffdegrees table using staffId
@@ -188,15 +188,21 @@ getPersInfoCareerProg: async function(req, res) {
             .select('milestoneName, startDate, endDate')
             .eq('staffId', staffId);
 
-        // Fetch certifications from staffcertification table based on staffId
-        const { data: certifications, error: certError } = await supabase
+        // Fetch experiences from staffexperiences table using staffId
+        const { data: experiences, error: experienceError } = await supabase
+            .from('staffexperiences')
+            .select('companyName, startDate')
+            .eq('staffId', staffId);
+
+        // Fetch certifications from staffcertification table using staffId
+        const { data: certifications, error: certificationError } = await supabase
             .from('staffcertification')
-            .select('certificateName, certDate, staffCertId')
+            .select('certificateName, certDate')
             .eq('staffId', staffId);
 
         // Check for errors
-        if (userError || jobError || departmentError || milestonesError || certError) {
-            console.error('Error fetching user, job, department, milestones, or certifications:', userError || jobError || departmentError || milestonesError || certError);
+        if (userError || jobError || departmentError || milestonesError || experienceError || certificationError) {
+            console.error('Error fetching user, job, department, milestones, experiences, or certifications:', userError || jobError || departmentError || milestonesError || experienceError || certificationError);
             req.flash('errors', { dbError: 'Error fetching data.' });
             return res.redirect('/employee/employeepersinfocareerprog');
         }
@@ -215,7 +221,8 @@ getPersInfoCareerProg: async function(req, res) {
             jobTitle: job[0]?.jobTitle || '',
             departmentName: department[0]?.deptName || '',
             milestones: milestones || [],
-            degrees: degrees || [],
+            degrees: degrees || [], // Add degrees to userData
+            experiences: experiences || [], // Add experiences to userData
             certifications: certifications || [] // Add certifications to userData
         };
 
@@ -230,6 +237,7 @@ getPersInfoCareerProg: async function(req, res) {
         res.redirect('/employee/useracc');
     }
 },
+
 
 
 
