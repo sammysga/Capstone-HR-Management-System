@@ -166,10 +166,12 @@ getPersInfoCareerProg: async function(req, res) {
             .eq('staffId', staff[0]?.staffId)
 
         // Fetch degree information from staffdegrees table based on staffId
+        const staffId = staff[0]?.staffId; // Ensure this value is correct
+console.log('Fetching degrees for staffId:', staffId);
         const { data: degrees, error: degreesError } = await supabase
         .from('staffdegrees')
         .select('degreeName, universityName, graduationYear')
-        .eq('staffId', staff[0]?.staffId);           
+        .eq('staffId', staffId);           
             
 
         // Check for errors
