@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Manage Job Offers</title>
+    <title>HR Manage Job Postings</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/hr_pages.css">
 </head>
@@ -14,10 +14,10 @@
         <section class="manage-job-offers">
             <div class="header">
                 <div class="header-title">
-                    <h2 class="heading" style="color:#07ACB9;">Manage Job Offers</h2>
+                    <h2 class="heading" style="color:#07ACB9;">Manage Job Posting</h2>
                     <button class="filter-btn">Filter By</button>
                 </div>
-                <a href="/hr/addjoboffer" class="add-job-btn">Add a Job Offer</a>
+                <a href="/hr/addjoboffer" class="add-job-btn">Add a Job Posting</a>
             </div>
             <div class="job-offers-container">
                 <% if (jobPositions && jobPositions.length > 0) { %>
@@ -44,7 +44,7 @@
                         </div>
                     <% }) %>
                 <% } else { %>
-                    <p>No job offers found.</p>
+                    <p>No job postings found.</p>
                 <% } %>
             </div>
         </section>
