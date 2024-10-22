@@ -94,7 +94,7 @@ router.post('/linemanager/update-persinfo', lineManagerController.updatePersUser
 
 router.get('/linemanager/mrf', lineManagerController.getMRF);
 router.get('/linemanager/request-mrf', lineManagerController.getRequestMRF);
-// add router.post for mrf here
+router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
 
 
 

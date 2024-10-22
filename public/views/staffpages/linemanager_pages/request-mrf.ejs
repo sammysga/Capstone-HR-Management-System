@@ -99,36 +99,36 @@
                 <div class="step"><span>4</span><p>Review & Approvals</p></div>
             </div>
 
-            <form id="mrfForm">
+            <form id="mrfForm" action="/linemanager/request-mrf" method="POST">
                 <div class="step-content active">
                     <h2>Position Details</h2>
                     <div class="form-section">
                         <label for="positionTitle">Position Title:</label>
-                        <input type="text" id="positionTitle" placeholder="Enter Position" required>
+                        <input type="text" id="positionTitle" name="positionTitle" placeholder="Enter Position" required>
                     </div>
                     <div class="form-section">
                         <label for="jobGrade">Job Grade:</label>
-                        <input type="text" id="jobGrade" placeholder="Enter Job Grade" required>
+                        <input type="text" id="jobGrade" name="jobGrade" placeholder="Enter Job Grade" required>
                     </div>
                     <div class="form-section">
                         <label for="sectionDept">Section/Department:</label>
-                        <input type="text" id="sectionDept" placeholder="Enter Department" required>
+                        <input type="text" id="sectionDept" name="departmentId" placeholder="Enter Department" required>
                     </div>
                     <div class="form-section">
                         <label for="location">Location:</label>
-                        <input type="text" id="location" placeholder="Enter Location" required>
+                        <input type="text" id="location" name="location" placeholder="Enter Location" required>
                     </div>
                     <div class="form-section">
                         <label for="dateRequisitioned">Date Requisitioned:</label>
-                        <input type="date" id="dateRequisitioned" required>
+                        <input type="date" id="dateRequisitioned" name="requisitionDate" required>
                     </div>
                     <div class="form-section">
                         <label for="dateRequired">Date Required:</label>
-                        <input type="date" id="dateRequired" required>
+                        <input type="date" id="dateRequired" name="requiredDate" required>
                     </div>
                     <div class="form-section">
                         <label for="numPersons">No. of Persons Requisitioned:</label>
-                        <input type="number" id="numPersons" placeholder="Enter No. of Persons" required>
+                        <input type="number" id="numPersons" name="numPersonsRequisitioned" placeholder="Enter No. of Persons" required>
                     </div>
                 </div>
 
@@ -136,7 +136,7 @@
                     <h2>Job Specifications</h2>
                     <div class="form-section">
                         <label for="reqType">Type of Requisition:</label>
-                        <select id="reqType" onchange="showReplacementDetails()">
+                        <select id="reqType" name="requisitionType" onchange="showReplacementDetails()">
                             <option value="new">New Position</option>
                             <option value="replacement">Replacement due to</option>
                         </select>
@@ -144,7 +144,7 @@
                     <div id="replacementDetails" style="display: none;">
                         <div class="form-section">
                             <label for="replacementReason">Replacement due to:</label>
-                            <select id="replacementReason" required>
+                            <select id="replacementReason" name="replacementReason" required>
                                 <option value="transfer">Transfer/Promotion</option>
                                 <option value="resignation">Resignation/Separation</option>
                                 <option value="retirement">Retirement</option>
@@ -152,12 +152,12 @@
                         </div>
                         <div class="form-section">
                             <label for="incumbentName">Name of Incumbent:</label>
-                            <input type="text" id="incumbentName" placeholder="Enter Incumbent's Name">
+                            <input type="text" id="incumbentName" name="incumbentName" placeholder="Enter Incumbent's Name">
                         </div>
                     </div>
                     <div class="form-section">
                         <label for="employmentNature">Nature of Employment:</label>
-                        <select id="employmentNature" onchange="showDurationInput()">
+                        <select id="employmentNature" name="employmentNature" onchange="showDurationInput()">
                             <option value="probationary">Probationary for Permanent Job (FTE)</option>
                             <option value="regular">Regular Employee for Job Transfer</option>
                             <option value="fixedTerm">Fixed Term Contract/Project-based for the duration of</option>
@@ -165,11 +165,11 @@
                     </div>
                     <div id="durationInput" class="form-section" style="display: none;">
                         <label for="duration">Duration (in months):</label>
-                        <input type="number" id="duration" placeholder="Enter duration in months">
+                        <input type="number" id="duration" name="duration" placeholder="Enter duration in months">
                     </div>
                     <div class="form-section">
                         <label for="empCategory">Employee Category:</label>
-                        <select id="empCategory" required>
+                        <select id="empCategory" name="employeeCategory" required>
                             <option value="managerial">Managerial/Supervisory</option>
                             <option value="nonManagerial">Non-Supervisory</option>
                         </select>
@@ -182,20 +182,20 @@
                         <label>Choose Required Attachments:</label>
                         <div class="toggle-container">
                             <div class="toggle-item">
-                                <input type="checkbox" id="jobDescription" name="attachments" value="Job Description">
+                                <input type="checkbox" id="jobDescription" name="requiredAttachments[]" value="Job Description">
                                 <label for="jobDescription">Job Description for regular/permanent positions</label>
                             </div>
                             <div class="toggle-item">
-                                <input type="checkbox" id="jobScope" name="attachments" value="Job Scope">
+                                <input type="checkbox" id="jobScope" name="requiredAttachments[]" value="Job Scope">
                                 <label for="jobScope">Job Scope for Contractual positions</label>
                             </div>
                             <div class="toggle-item">
-                                <input type="checkbox" id="others" name="attachments" value="Others">
+                                <input type="checkbox" id="others" name="requiredAttachments[]" value="Others">
                                 <label for="others">Others:</label>
-                                <input type="text" id="othersInput" placeholder="Specify other attachments" class="others-input">
+                                <input type="text" id="othersInput" name="otherAttachments" placeholder="Specify other attachments">
                             </div>
                         </div>
-                    </div>
+                    </div>                    
                 </div>
 
                 <div class="step-content">
@@ -204,14 +204,14 @@
                     <div class="form-section" id="approvalsSection">
                         <p>Please approve the form by ticking the appropriate box:</p>
                         <div class="toggle-item" id="requisitionerApproval">
-                            <input type="checkbox" id="requisitionerCheckbox">
+                            <input type="checkbox" id="requisitionerCheckbox" name="requisitionerApproval">
                             <label for="requisitionerCheckbox">Requisitioner Approval</label>
                         </div>
-                        <div class="toggle-item" id="linemanagerApproval">
+                        <div class="toggle-item" id="linemanagerApproval" name="linemanagerApproval">
                             <input type="checkbox" id="linemanagerCheckbox">
                             <label for="linemanagerCheckbox">Line Manager Approval</label>
                         </div>
-                        <div class="toggle-item" id="hrApproval">
+                        <div class="toggle-item" id="hrApproval" name="hrApproval">
                             <input type="checkbox" id="hrCheckbox">
                             <label for="hrCheckbox">HR Head Approval</label>
                         </div>

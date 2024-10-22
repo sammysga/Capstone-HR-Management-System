@@ -333,7 +333,45 @@ const lineManagerController = {
         }
     },
 
-
+    submitMRF: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+            return res.redirect('/staff/login');
+        }
+    
+        // Prepare the MRF data from the request body
+        const mrfData = {
+            jobGrade: req.body.jobGrade,
+            departmentId: req.body.departmentId,
+            location: req.body.location,
+            requisitionDate: req.body.requisitionDate,
+            requiredDate: req.body.requiredDate,
+            numPersonsRequisitioned: req.body.numPersonsRequisitioned,
+            requisitionType: req.body.requisitionType,
+            employmentNature: req.body.employmentNature,
+            employeeCategory: req.body.employeeCategory,
+            justification: req.body.justification,
+            requiredAttachments: req.body.requiredAttachments ? req.body.requiredAttachments.join(', ') : '', // Convert array to string
+            userId: req.session.user.userId,
+        };
+    
+        try {
+            const { data: mrf, error } = await supabase
+                .from('mrf')
+                .insert([mrfData]);
+    
+            if (error) {
+                throw error;
+            }
+    
+            req.flash('success', { message: 'MRF submitted successfully!' });
+            return res.redirect('/linemanager/mrf');
+        } catch (error) {
+            console.error(error);
+            req.flash('errors', { submissionError: 'Failed to submit MRF. Please try again.' });
+            return res.redirect('/linemanager/request-mrf');
+        }
+    },
 
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
