@@ -9,91 +9,150 @@
 </head>
 <style>
     body {
-    font-family: Arial, sans-serif; /* change to Inter */
-    background-color: #f9f9f9;
-    margin: 0;
-    padding: 20px;
-}
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+    }
 
-.container {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    margin: auto;
-}
+    .container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: auto;
+    }
 
-h1, h3 {
-    text-align: center;
-    color: #00bfff;
-}
+    h1, h3 {
+        text-align: center;
+        color: #07ACB9;
+    }
 
-.form-group {
-    margin-bottom: 20px;
-}
+    .form-group {
+        margin-bottom: 20px;
+    }
 
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
 
-input[type="text"],
-textarea,
-select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
+    input[type="text"],
+    input[type="date"],
+    textarea,
+    select {
+        width: calc(100% - 22px); /* Adjust for padding and border */
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
 
-textarea {
-    height: 100px;
-}
+    textarea {
+        height: 100px;
+    }
 
-.submit-btn {
-    background-color: #00bfff; /* Change this to match your branding */
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 20px;
-    width: 100%;
-}
+    .small-input {
+        width: calc(40% - 22px); /* Smaller width for degree type, adjusted for padding */
+    }
 
-.submit-btn:hover {
-    background-color: #008bbf; /* Darken on hover */
-}
+    .submit-btn {
+        background-color: #07ACB9;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 20px;
+        width: 100%;
+    }
 
-.section {
-    margin-top: 30px;
-}
+    .submit-btn:hover {
+        background-color: #009b9f; /* Change on hover */
+    }
 
+    .section {
+        margin-top: 30px;
+    }
+
+    .add-more, .remove-btn {
+        color: #07ACB9;
+        cursor: pointer;
+        margin-top: 10px;
+        display: inline-block;
+        border: 1px solid #07ACB9; /* Add border to match input styling */
+        border-radius: 5px; /* Rounded corners for the button */
+        padding: 8px 12px; /* Consistent padding for buttons */
+        text-align: center; /* Center text in buttons */
+    }
+
+    .remove-btn {
+        color: #ff4d4d;
+        margin-left: 10px; /* Space between Add More and Remove button */
+    }
+
+    .form-group.inline-group {
+        display: flex;
+        flex-direction: column; /* Align items vertically */
+        gap: 10px; /* Space between input elements */
+        align-items: flex-start; /* Align items to the left */
+    }
+
+    .form-group.inline-group > div {
+        width: 100%; /* Make inner divs take full width */
+        display: flex; /* Enable flexbox for inner div */
+        align-items: center; /* Align items vertically */
+    }
+
+    .form-group.inline-group > div > label {
+        flex: 1; /* Allow label to take full width */
+    }
+
+    .form-group.inline-group > div > .add-more,
+    .form-group.inline-group > div > .remove-btn {
+        margin-left: 10px; /* Space next to input fields */
+    }
+
+    .form-group + .form-group {
+        margin-top: 25px;
+    }
+
+    .toggle-label {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .toggle-label input {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+
+    .toggle-label span {
+        margin: 0 10px;
+    }
 </style>
+
+
 <body>
     <%- include('../../partials/hr_partials') %>
     <div class="container">
-        <h1 class="title">ADD A JOB OFFER</h1>
-        <form id = "addJobForm" action="/hr/addjoboffer" method="POST">
+        <h1 class="title">Add a Job Posting</h1>
+        <form id="addJobForm" action="/hr/addjoboffer" method="POST">
             <!--Job Title-->
             <div class="form-group">
                 <label for="jobTitle">Job Title</label>
                 <input type="text" id="jobTitle" name="jobTitle" placeholder="Enter job title" required>
             </div>
 
-             <!-- Department -->
-             <div class="form-group">
+            <!-- Department -->
+            <div class="form-group">
                 <label for="departmentId">Department</label>
                 <select id="departmentId" name="departmentId" required>
                     <option value="">Select Department</option>
-                    <option value="2">HR</option>
-                    <option value="3">IT</option>
-                    <option value="4">Marketing</option>
-                    <option value="5">Partnerships</option>
-                    <option value="6">Investor Relations</option>
+                    <!-- Dynamic options will be populated here -->
                 </select>
             </div>
 
@@ -136,97 +195,124 @@ textarea {
                 <input type="date" id="hiringEndDate" name="hiringEndDate" required>
             </div>
 
-            <!-- Is Active -->
-            <div class="form-group">
-                <label for="isActiveHiring">Is Active Hiring</label>
-                <input type="checkbox" id="isActiveHiring" name="isActiveHiring">
+            <!-- Hiring Status Toggle -->
+            <div class="form-group toggle-label">
+                <label>Would you like to set the Job Posting Status into active?</label>
+                <span>Yes</span>
+                <input type="radio" id="hiringStatusYes" name="isActiveHiring" value="true">
+                <span>No</span>
+                <input type="radio" id="hiringStatusNo" name="isActiveHiring" value="false" checked>
             </div>
+            
 
-            <!-- Job Requirements Section -->
-            <div class="section">
-                <h3>Job Requirements</h3>
+           <!-- Job Requirements Section -->
+<div class="section">
+    <h2>Job Requirements</h2>
 
-                <div class="form-group">
-                    <label for="jobReqName">Requirement Name</label>
-                    <input type="text" id="jobReqName" name="jobReqName" placeholder="Enter requirement name">
-                </div>
+    <!-- Certifications Section -->
+    <div id="certification-section">
+        <label>Certifications</label>
+        <div class="form-group inline-group">
+            <input type="text" name="jobReqCertificateDescrpt[]" placeholder="Enter certification description (e.g., Must be AWS certified)">
+            <span class="add-more" onclick="addMoreInput('certification-section', 'jobReqCertificateDescrpt', 'Certification Description')">Add More</span>
+        </div>
+    </div>
 
-                <div class="form-group">
-                    <label for="jobReqDescript">Requirement Description</label>
-                    <textarea id="jobReqDescript" name="jobReqDescript" placeholder="Enter requirement description"></textarea>
-                </div>
-            </div>
+    <!-- Degrees Section -->
+    <div id="degree-section">
+        <label>Degrees</label>
+        <div class="form-group inline-group">
+            <input type="text" class="smaller-input" name="jobReqDegreeType[]" placeholder="Enter degree type (e.g., Bachelor's Degree)">
+            <input type="text" class="smaller-input" name="jobReqDegreeDescrpt[]" placeholder="Enter degree description (e.g., Must be any graduate of Bachelor's degree in Finance)">
+            <span class="add-more" onclick="addMoreInput('degree-section', 'degree', 'Degree')">Add More</span>
+        </div>
+    </div>
 
-            <!-- Job Skills Section -->
-            <div class="section">
-                <h3>Job Skills</h3>
-                <div class="form-group">
-                    <label for="skills">Skills</label>
-                    <textarea id="skills" name="skills" placeholder="Enter required skills"></textarea>
-                </div>
-            </div>
+    <!-- Experiences Section -->
+    <div id="experience-section">
+        <label>Experiences</label>
+        <div class="form-group inline-group">
+            <input type="text" class="smaller-input" name="jobReqExperienceType[]" placeholder="Enter experience type (e.g., Relevant Industry Experience)">
+            <input type="text" class="smaller-input" name="jobReqExperienceDescrpt[]" placeholder="Enter experience description (e.g., Must have experience in a relevant industry, such as oil and gas)">
+            <span class="add-more" onclick="addMoreInput('experience-section', 'experience', 'Experience')">Add More</span>
+        </div>
+    </div>
+
+    <!-- Skills Section -->
+    <div id="skill-section">
+        <label>Skills</label>
+        <div class="form-group inline-group">
+            <select name="jobReqSkillType[]" class="smaller-input" placeholder="Add a Hard or Soft Skill">
+                <option value="Hard">Hard Skill</option>
+                <option value="Soft">Soft Skill</option>
+            </select>
+            <input type="text" class="smaller-input" name="jobReqSkillName[]" placeholder="Enter skill name (e.g., Building and Maintaining Financial Models for Hard Skills or Communication for Soft Skills)">
+            <span class="add-more" onclick="addMoreInput('skill-section', 'skill', 'Skill')">Add More</span>
+        </div>
+    </div>
+</div>
+
 
             <button type="submit" class="submit-btn">Save Job Offer</button>
         </form>
     </div>
 
-    <!-- JavaScript for sidebar functionality -->
-<script>
-    // Toggle active class for sidebar links
-    document.querySelectorAll('.sidebar ul li a').forEach(link => {
-        link.addEventListener('click', function() {
-            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
+    <!-- JavaScript for dynamic functionality -->
+    <script>
+        // Dynamically fetch departments from the backend
+        document.addEventListener('DOMContentLoaded', async function() {
+            const departmentSelect = document.getElementById('departmentId');
+            try {
+                const response = await fetch('/hr/getDepartments');
+                const departments = await response.json();
 
-    // Toggle collapsible content
-    document.querySelectorAll('.collapsible-header').forEach(header => {
-        header.addEventListener('click', function() {
-            var content = this.nextElementSibling;
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                // Hide all other collapsible contents
-                document.querySelectorAll('.collapsible-content').forEach(item => {
-                    if (item !== content) {
-                        item.style.display = 'none';
-                    }
+                departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.id;
+                    option.textContent = dept.name;
+                    departmentSelect.appendChild(option);
                 });
-                content.style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching departments:', error);
             }
         });
-    });
 
-    // add job offers form submission
-    document.getElementById('job-offer-form').addEventListener('submit', async (event) => {
-        event.preventDefault();
+        function addMoreInput(sectionId, inputName, placeholderText) {
+            const section = document.getElementById(sectionId);
+            const newDiv = document.createElement('div');
+            newDiv.className = "form-group inline-group";
 
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
-
-        try {
-            const response = await fetch('/hr/joboffers/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                alert(result.message);
-                event.target.reset();
-            } else {
-                const error = await response.json();
-                alert(error.error);
+            if (inputName === 'jobReqCertificateDescrpt') {
+                newDiv.innerHTML = `
+                    <input type="text" name="jobReqCertificateDescrpt[]" placeholder="Enter certification description">
+                    <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
+                `;
+            } else if (inputName === 'degree') {
+                newDiv.innerHTML = `
+                    <input type="text" class="small-input" name="jobReqDegreeType[]" placeholder="Enter degree type">
+                    <input type="text" name="jobReqDegreeDescrpt[]" placeholder="Enter degree description">
+                    <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
+                `;
+            } else if (inputName === 'experience') {
+                newDiv.innerHTML = `
+                    <input type="text" name="jobReqExperienceType[]" placeholder="Enter experience type">
+                    <input type="text" name="jobReqExperienceDescrpt[]" placeholder="Enter experience description">
+                    <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
+                `;
+            } else if (inputName === 'skill') {
+                newDiv.innerHTML = `
+                    <select name="jobReqSkillType[]">
+                        <option value="">Select Skill Type</option>
+                        <option value="Hard">Hard Skill</option>
+                        <option value="Soft">Soft Skill</option>
+                    </select>
+                    <input type="text" name="jobReqSkillName[]" placeholder="Enter skill name">
+                    <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
+                `;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Failed to add job offer. Please try again.');
+
+            section.appendChild(newDiv);
         }
-    });
-</script>
+    </script>
 </body>
 </html>
