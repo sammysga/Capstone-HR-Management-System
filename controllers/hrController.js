@@ -437,8 +437,8 @@ const hrController = {
             
                 res.render('staffpages/hr_pages/hrjoboffers', { jobPositions: jobPositionsWithNames });
             } catch (error) {
-                console.error('Error fetching job offers:', error);
-                req.flash('errors', { fetchError: 'Failed to load job offers. Please try again.' });
+                console.error('Error fetching job postings:', error);
+                req.flash('errors', { fetchError: 'Failed to load job postings. Please try again.' });
                 res.redirect('/hr/dashboard');
             }
         } else {
@@ -455,40 +455,111 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
-    
-    postAddJobOffer: async function(req, res) {
+    postAddJobOffer: async function (req, res) {
+        // Check if the user is HR
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { jobTitle, departmentId, jobDescrpt, jobType, jobTimeCommitment, hiringStartDate, hiringEndDate, isActiveHiring } = req.body;
-            
-                const { data, error } = await supabase
-                    .from('jobpositions') // Using jobpositions table
-                    .insert([
-                        { 
-                            jobTitle,
-                            departmentId: parseInt(departmentId),
-                            jobDescrpt,
-                            jobType,
-                            jobTimeCommitment,
-                            hiringStartDate,
-                            hiringEndDate,
-                            isActiveHiring: isActiveHiring ? true : false
-                        }
-                    ]);
+                // Extract data from the request body
+                const {
+                    jobTitle, departmentId, jobDescrpt, jobType, jobTimeCommitment,
+                    hiringStartDate, hiringEndDate,
+                    jobReqCertificateType, jobReqCertificateDescrpt,
+                    jobReqDegreeType, jobReqDegreeDescrpt,
+                    jobReqExperienceType, jobReqExperienceDescrpt, jobReqSkillType, jobReqSkillName
+                } = req.body;
     
-                if (error) throw error;
+                // Determine if the job is currently active based on hiring dates
+                const currentDate = new Date();
+                const startDate = new Date(hiringStartDate);
+                const endDate = new Date(hiringEndDate);
+                const isActiveHiring = currentDate >= startDate && currentDate <= endDate;
     
-                res.status(201).json({ message: 'Job offer added successfully', data });
+                // Insert the basic job posting into the jobpositions table
+                const { data: jobData, error: jobError } = await supabase
+                    .from('jobpositions')
+                    .insert([{
+                        jobTitle,
+                        departmentId: parseInt(departmentId),
+                        jobDescrpt,
+                        jobType,
+                        jobTimeCommitment,
+                        hiringStartDate,
+                        hiringEndDate,
+                        isActiveHiring // Use the computed value
+                    }])
+                    .select(); // Return the inserted row with its jobId
+    
+                if (jobError) throw jobError;
+    
+                const jobId = jobData[0].jobId; // Get the jobId from the inserted row
+    
+                // Insert certifications if provided
+                if (jobReqCertificateType && Array.isArray(jobReqCertificateType) && jobReqCertificateDescrpt && Array.isArray(jobReqCertificateDescrpt)) {
+                    const certData = jobReqCertificateType.map((certType, index) => ({
+                        jobId,
+                        jobReqCertificateType: certType,
+                        jobReqCertificateDescrpt: jobReqCertificateDescrpt[index]
+                    }));
+                    const { error: certError } = await supabase
+                        .from('jobreqcertifications')
+                        .insert(certData);
+                    if (certError) throw certError;
+                }
+    
+                // Insert degrees if provided
+                if (jobReqDegreeType && Array.isArray(jobReqDegreeType) && jobReqDegreeDescrpt && Array.isArray(jobReqDegreeDescrpt)) {
+                    const degreeData = jobReqDegreeType.map((degreeType, index) => ({
+                        jobId,
+                        jobReqDegreeType: degreeType,
+                        jobReqDegreeDescrpt: jobReqDegreeDescrpt[index]
+                    }));
+                    const { error: degreeError } = await supabase
+                        .from('jobreqdegrees')
+                        .insert(degreeData);
+                    if (degreeError) throw degreeError;
+                }
+    
+                // Insert experiences if provided
+                if (jobReqExperienceType && Array.isArray(jobReqExperienceType) && jobReqExperienceDescrpt && Array.isArray(jobReqExperienceDescrpt)) {
+                    const experienceData = jobReqExperienceType.map((experienceType, index) => ({
+                        jobId,
+                        jobReqExperienceType: experienceType,
+                        jobReqExperienceDescrpt: jobReqExperienceDescrpt[index]
+                    }));
+                    const { error: experienceError } = await supabase
+                        .from('jobreqexperiences')
+                        .insert(experienceData);
+                    if (experienceError) throw experienceError;
+                }
+    
+                // Insert skills if provided
+                if (jobReqSkillType && Array.isArray(jobReqSkillType) && jobReqSkillName && Array.isArray(jobReqSkillName)) {
+                    const skillData = jobReqSkillType.map((skillType, index) => ({
+                        jobId,
+                        jobReqSkillType: skillType,
+                        jobReqSkillName: jobReqSkillName[index]
+                    }));
+                    const { error: skillError } = await supabase
+                        .from('jobreqskills')
+                        .insert(skillData);
+                    if (skillError) throw skillError;
+                }
+    
+                // Success response: redirect to job postings page
+                // Use redirect instead of JSON response here
+                res.redirect('/hr/joboffers');
+                
             } catch (error) {
-                console.error('Error adding job offers:', error);
-                res.status(500).json({ error: 'Failed to add job offer. Please try again.' });
+                console.error('Error adding job postings and requirements:', error);
+                // Handle error response
+                res.status(500).json({ error: 'Failed to add job posting. Please try again.' });
             }
         } else {
+            // Handle unauthorized access
             res.status(403).json({ errors: 'Unauthorized. HR access only.' });
-            res.redirect('/staff/login');
+            // No need to redirect here as JSON response is sent
         }
     },
-    
     getEditJobOffers: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             res.render('staffpages/hr_pages/hreditjoboffers');
