@@ -53,20 +53,3 @@ app.listen(port, (error) => {
         console.log(`Server is running on http://localhost:${port}`);
     }
 });
-
-
-// TODO: Install Session
-// const session = require('express-session');
-
-// Set up session middleware
-// app.use(session({
-//     secret: 'secret-key',  
-//     resave: false,
-//     saveUninitialized: true,
-//     cookie: {
-//         maxAge: null, // Set maxAge as needed, or null for a session cookie
-//         secure: false, // Set to true if your app is served over HTTPS
-//         httpOnly: true, // Recommended to prevent client-side JavaScript from accessing the cookie
-//     }
-// }));
-// Serve static files from the 'public' directory
