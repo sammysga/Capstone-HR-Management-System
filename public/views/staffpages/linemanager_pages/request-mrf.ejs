@@ -110,31 +110,31 @@
                     <h2>Position Details</h2>
                     <div class="form-section">
                         <label for="positionTitle">Position Title:</label>
-                        <input type="text" id="positionTitle" placeholder="Enter Position">
+                        <input type="text" id="positionTitle" placeholder="Enter Position" required>
                     </div>
                     <div class="form-section">
                         <label for="jobGrade">Job Grade:</label>
-                        <input type="text" id="jobGrade" placeholder="Enter Job Grade">
+                        <input type="text" id="jobGrade" placeholder="Enter Job Grade" required>
                     </div>
                     <div class="form-section">
                         <label for="sectionDept">Section/Department:</label>
-                        <input type="text" id="sectionDept" placeholder="Enter Department">
+                        <input type="text" id="sectionDept" placeholder="Enter Department" required>
                     </div>
                     <div class="form-section">
                         <label for="location">Location:</label>
-                        <input type="text" id="location" placeholder="Enter Location">
+                        <input type="text" id="location" placeholder="Enter Location" required>
                     </div>
                     <div class="form-section">
                         <label for="dateRequisitioned">Date Requisitioned:</label>
-                        <input type="date" id="dateRequisitioned">
+                        <input type="date" id="dateRequisitioned" required>
                     </div>
                     <div class="form-section">
                         <label for="dateRequired">Date Required:</label>
-                        <input type="date" id="dateRequired">
+                        <input type="date" id="dateRequired" required>
                     </div>
                     <div class="form-section">
                         <label for="numPersons">No. of Persons Requisitioned:</label>
-                        <input type="number" id="numPersons" placeholder="Enter No. of Persons">
+                        <input type="number" id="numPersons" placeholder="Enter No. of Persons" required>
                     </div>
                 </div>
 
@@ -145,7 +145,7 @@
                     <!-- Type of Requisition -->
                     <div class="form-section">
                         <label for="reqType">Type of Requisition:</label>
-                        <select id="reqType" onchange="showReplacementDetails()">
+                        <select id="reqType" onchange="showReplacementDetails()" required>
                             <option value="new">New Position</option>
                             <option value="replacement">Replacement due to</option>
                         </select>
@@ -155,7 +155,7 @@
                     <div id="replacementDetails" style="display: none;">
                         <div class="form-section">
                             <label for="replacementReason">Replacement due to:</label>
-                            <select id="replacementReason">
+                            <select id="replacementReason" required>
                                 <option value="transfer">Transfer/Promotion</option>
                                 <option value="resignation">Resignation/Separation</option>
                                 <option value="retirement">Retirement</option>
@@ -163,14 +163,14 @@
                         </div>
                         <div class="form-section">
                             <label for="incumbentName">Name of Incumbent:</label>
-                            <input type="text" id="incumbentName" placeholder="Enter Incumbent's Name">
+                            <input type="text" id="incumbentName" placeholder="Enter Incumbent's Name" required>
                         </div>
                     </div>
 
                     <!-- Nature of Employment -->
                     <div class="form-section">
                         <label for="employmentNature">Nature of Employment:</label>
-                        <select id="employmentNature" onchange="showDurationInput()">
+                        <select id="employmentNature" onchange="showDurationInput()" required>
                             <option value="probationary">Probationary for Permanent Job (FTE)</option>
                             <option value="regular">Regular Employee for Job Transfer</option>
                             <option value="fixedTerm">Fixed Term Contract/Project-based for the duration of</option>
@@ -180,13 +180,13 @@
                     <!-- Duration input for Fixed Term Contract -->
                     <div id="durationInput" class="form-section" style="display: none;">
                         <label for="duration">Duration (in months):</label>
-                        <input type="number" id="duration" placeholder="Enter duration in months">
+                        <input type="number" id="duration" placeholder="Enter duration in months" required>
                     </div>
 
                     <!-- Employee Category -->
                     <div class="form-section">
                         <label for="empCategory">Employee Category:</label>
-                        <select id="empCategory">
+                        <select id="empCategory" required>
                             <option value="managerial">Managerial/Supervisory</option>
                             <option value="nonManagerial">Non-Supervisory</option>
                         </select>
@@ -220,6 +220,15 @@
                 <div class="step-content">
                     <h2>Review & Approvals</h2>
                     <p>Review the information and submit for approval.</p>
+
+                    <!-- Approvals Section -->
+                     <div class="form-section" id="approvalsSection" style="display: none;">
+                        <p>Please approve the form by ticking the appropriate box:</p>
+                        <div class="toggle-item" id="requisitionerApproval" style="display: none;">
+                            <input type="checkbox" id="requisitionerCheckbox">
+                            <label for="requisitionerCheckbox">Requisitioner Approvak</label> 
+                        </div>
+                     </div>
                 </div>
 
                 <!-- Navigation buttons -->
@@ -238,7 +247,7 @@
         let currentStep = 0;
 
         document.getElementById('nextBtn').addEventListener('click', () => {
-            changeStep(1);
+                changeStep(1);
         });
 
         document.getElementById('prevBtn').addEventListener('click', () => {
@@ -246,6 +255,20 @@
         });
 
         function changeStep(stepChange) {
+            const currentFields = steps[currentStep].querySelectorAll('input[required], select[required]');
+            let allValid = true;
+
+            currentFields.forEach(field => {
+                if (!field.checkValidity()) {
+                    allValid.false;
+                    field.reportValidity();
+                }
+            });
+
+            if (!allValid && stepChange === 1) {
+                return;
+            }
+            
             steps[currentStep].classList.remove('active');
             progressBar[currentStep].classList.remove('active');
             currentStep += stepChange;
