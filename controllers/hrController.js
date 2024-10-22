@@ -456,76 +456,100 @@ const hrController = {
         }
     },
     
+    //TODO: Fix ERR_HTTP_HEADERS_SENT error
     postAddJobOffer: async function (req, res) {
+        // Logic includes isActiveHiring = true if within the hiringStart and End Date.
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 // Extract data from the request body
-                const { jobTitle, departmentId, jobDescrpt, jobType, jobTimeCommitment, hiringStartDate, hiringEndDate, isActiveHiring,
-                    jobReqCertificateDescrpt, jobReqDegreeType, jobReqDegreeDescrpt, jobReqExperienceType, jobReqExperienceDescrpt, jobReqSkillType, jobReqSkillName } = req.body;
+                const {
+                    jobTitle, departmentId, jobDescrpt, jobType, jobTimeCommitment,
+                    hiringStartDate, hiringEndDate,
+                    jobReqCertificateType, jobReqCertificateDescrpt, // Added certificate type
+                    jobReqDegreeType, jobReqDegreeDescrpt,
+                    jobReqExperienceType, jobReqExperienceDescrpt, jobReqSkillType, jobReqSkillName
+                } = req.body;
+    
+                // Determine if the job is currently active based on hiring dates
+                const currentDate = new Date();
+                const startDate = new Date(hiringStartDate);
+                const endDate = new Date(hiringEndDate);
+                const isActiveHiring = currentDate >= startDate && currentDate <= endDate;
     
                 // Insert the basic job offer into the jobpositions table
                 const { data: jobData, error: jobError } = await supabase
                     .from('jobpositions')
-                    .insert([
-                        {
-                            jobTitle,
-                            departmentId: parseInt(departmentId),
-                            jobDescrpt,
-                            jobType,
-                            jobTimeCommitment,
-                            hiringStartDate,
-                            hiringEndDate,
-                            isActiveHiring: isActiveHiring ? true : false
-                        }
-                    ])
-                    .select(); // This will return the inserted row with its jobId
+                    .insert([{
+                        jobTitle,
+                        departmentId: parseInt(departmentId),
+                        jobDescrpt,
+                        jobType,
+                        jobTimeCommitment,
+                        hiringStartDate,
+                        hiringEndDate,
+                        isActiveHiring // Use the computed value
+                    }])
+                    .select(); // Return the inserted row with its jobId
     
                 if (jobError) throw jobError;
     
                 const jobId = jobData[0].jobId; // Get the jobId from the inserted row
     
-                // Insert job requirements into jobreqcertifications
-                if (jobReqCertificateDescrpt) {
+                // Insert certifications if provided
+                if (jobReqCertificateType && Array.isArray(jobReqCertificateType) && jobReqCertificateDescrpt && Array.isArray(jobReqCertificateDescrpt)) {
+                    const certData = jobReqCertificateType.map((certType, index) => ({
+                        jobId,
+                        jobReqCertificateType: certType,
+                        jobReqCertificateDescrpt: jobReqCertificateDescrpt[index]
+                    }));
                     const { error: certError } = await supabase
                         .from('jobreqcertifications')
-                        .insert([
-                            { jobId, jobReqCertificateDescrpt }
-                        ]);
+                        .insert(certData);
                     if (certError) throw certError;
                 }
     
-                // Insert job degrees into jobreqdegrees
-                if (jobReqDegreeType && jobReqDegreeDescrpt) {
+                // Insert degrees if provided
+                if (jobReqDegreeType && Array.isArray(jobReqDegreeType) && jobReqDegreeDescrpt && Array.isArray(jobReqDegreeDescrpt)) {
+                    const degreeData = jobReqDegreeType.map((degreeType, index) => ({
+                        jobId,
+                        jobReqDegreeType: degreeType,
+                        jobReqDegreeDescrpt: jobReqDegreeDescrpt[index]
+                    }));
                     const { error: degreeError } = await supabase
                         .from('jobreqdegrees')
-                        .insert([
-                            { jobId, jobReqDegreeType, jobReqDegreeDescrpt }
-                        ]);
+                        .insert(degreeData);
                     if (degreeError) throw degreeError;
                 }
     
-                // Insert job experiences into jobreqexperiences
-                if (jobReqExperienceType && jobReqExperienceDescrpt) {
+                // Insert experiences if provided
+                if (jobReqExperienceType && Array.isArray(jobReqExperienceType) && jobReqExperienceDescrpt && Array.isArray(jobReqExperienceDescrpt)) {
+                    const experienceData = jobReqExperienceType.map((experienceType, index) => ({
+                        jobId,
+                        jobReqExperienceType: experienceType,
+                        jobReqExperienceDescrpt: jobReqExperienceDescrpt[index]
+                    }));
                     const { error: experienceError } = await supabase
                         .from('jobreqexperiences')
-                        .insert([
-                            { jobId, jobReqExperienceType, jobReqExperienceDescrpt }
-                        ]);
+                        .insert(experienceData);
                     if (experienceError) throw experienceError;
                 }
     
-                // Insert job skills into jobreqskills
-                if (jobReqSkillType && jobReqSkillName) {
+                // Insert skills if provided
+                if (jobReqSkillType && Array.isArray(jobReqSkillType) && jobReqSkillName && Array.isArray(jobReqSkillName)) {
+                    const skillData = jobReqSkillType.map((skillType, index) => ({
+                        jobId,
+                        jobReqSkillType: skillType,
+                        jobReqSkillName: jobReqSkillName[index]
+                    }));
                     const { error: skillError } = await supabase
                         .from('jobreqskills')
-                        .insert([
-                            { jobId, jobReqSkillType, jobReqSkillName }
-                        ]);
+                        .insert(skillData);
                     if (skillError) throw skillError;
                 }
     
                 // Success response
                 res.status(201).json({ message: 'Job offer and requirements added successfully' });
+                res.redirect('/hr/joboffers');
     
             } catch (error) {
                 console.error('Error adding job offers and requirements:', error);
@@ -535,7 +559,9 @@ const hrController = {
             res.status(403).json({ errors: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
         }
-    },    
+    },
+    
+    
     
     getEditJobOffers: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {

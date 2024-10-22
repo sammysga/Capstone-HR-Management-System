@@ -150,9 +150,8 @@
             <!-- Department -->
             <div class="form-group">
                 <label for="departmentId">Department</label>
-                <select id="departmentId" name="departmentId" required>
+                <select id="departmentId" name="departmentId" class="form-control" required>
                     <option value="">Select Department</option>
-                    <!-- Dynamic options will be populated here -->
                 </select>
             </div>
 
@@ -195,86 +194,89 @@
                 <input type="date" id="hiringEndDate" name="hiringEndDate" required>
             </div>
 
-            <!-- Hiring Status Toggle -->
-            <div class="form-group toggle-label">
-                <label>Would you like to set the Job Posting Status into active?</label>
-                <span>Yes</span>
-                <input type="radio" id="hiringStatusYes" name="isActiveHiring" value="true">
-                <span>No</span>
-                <input type="radio" id="hiringStatusNo" name="isActiveHiring" value="false" checked>
-            </div>
-            
+            <!-- Remove Job Posting Status Toggle -->
 
-           <!-- Job Requirements Section -->
-<div class="section">
-    <h2>Job Requirements</h2>
+            <!-- Job Requirements Section -->
+            <div class="section">
+                <h2>Job Requirements</h2>
 
-    <!-- Certifications Section -->
-    <div id="certification-section">
-        <label>Certifications</label>
-        <div class="form-group inline-group">
-            <input type="text" name="jobReqCertificateDescrpt[]" placeholder="Enter certification description (e.g., Must be AWS certified)">
-            <span class="add-more" onclick="addMoreInput('certification-section', 'jobReqCertificateDescrpt', 'Certification Description')">Add More</span>
-        </div>
-    </div>
-
-    <!-- Degrees Section -->
-    <div id="degree-section">
-        <label>Degrees</label>
-        <div class="form-group inline-group">
-            <input type="text" class="smaller-input" name="jobReqDegreeType[]" placeholder="Enter degree type (e.g., Bachelor's Degree)">
-            <input type="text" class="smaller-input" name="jobReqDegreeDescrpt[]" placeholder="Enter degree description (e.g., Must be any graduate of Bachelor's degree in Finance)">
-            <span class="add-more" onclick="addMoreInput('degree-section', 'degree', 'Degree')">Add More</span>
-        </div>
-    </div>
-
-    <!-- Experiences Section -->
-    <div id="experience-section">
-        <label>Experiences</label>
-        <div class="form-group inline-group">
-            <input type="text" class="smaller-input" name="jobReqExperienceType[]" placeholder="Enter experience type (e.g., Relevant Industry Experience)">
-            <input type="text" class="smaller-input" name="jobReqExperienceDescrpt[]" placeholder="Enter experience description (e.g., Must have experience in a relevant industry, such as oil and gas)">
-            <span class="add-more" onclick="addMoreInput('experience-section', 'experience', 'Experience')">Add More</span>
-        </div>
-    </div>
-
-    <!-- Skills Section -->
-    <div id="skill-section">
-        <label>Skills</label>
-        <div class="form-group inline-group">
-            <select name="jobReqSkillType[]" class="smaller-input" placeholder="Add a Hard or Soft Skill">
-                <option value="Hard">Hard Skill</option>
-                <option value="Soft">Soft Skill</option>
-            </select>
-            <input type="text" class="smaller-input" name="jobReqSkillName[]" placeholder="Enter skill name (e.g., Building and Maintaining Financial Models for Hard Skills or Communication for Soft Skills)">
-            <span class="add-more" onclick="addMoreInput('skill-section', 'skill', 'Skill')">Add More</span>
-        </div>
+               <!-- Certifications Section -->
+<div id="certification-section">
+    <label>Certifications</label>
+    <div class="form-group inline-group">
+        <input type="text" name="jobReqCertificateType[]" placeholder="Enter certification type (e.g., AWS)">
+        <input type="text" name="jobReqCertificateDescrpt[]" placeholder="Enter certification description (e.g., Must be AWS certified)">
+        <span class="add-more" onclick="addMoreInput('certification-section', 'jobReqCertificateDescrpt', 'Certification Description')">Add More</span>
     </div>
 </div>
 
 
-            <button type="submit" class="submit-btn">Save Job Offer</button>
+                <!-- Degrees Section -->
+                <div id="degree-section">
+                    <label>Degrees</label>
+                    <div class="form-group inline-group">
+                        <input type="text" class="smaller-input" name="jobReqDegreeType[]" placeholder="Enter degree type (e.g., Bachelor's Degree)">
+                        <input type="text" class="smaller-input" name="jobReqDegreeDescrpt[]" placeholder="Enter degree description (e.g., Must be any graduate of Bachelor's degree in Finance)">
+                        <span class="add-more" onclick="addMoreInput('degree-section', 'degree', 'Degree')">Add More</span>
+                    </div>
+                </div>
+
+                <!-- Experiences Section -->
+                <div id="experience-section">
+                    <label>Experiences</label>
+                    <div class="form-group inline-group">
+                        <input type="text" class="smaller-input" name="jobReqExperienceType[]" placeholder="Enter experience type (e.g., Relevant Industry Experience)">
+                        <input type="text" class="smaller-input" name="jobReqExperienceDescrpt[]" placeholder="Enter experience description (e.g., Must have experience in a relevant industry, such as oil and gas)">
+                        <span class="add-more" onclick="addMoreInput('experience-section', 'experience', 'Experience')">Add More</span>
+                    </div>
+                </div>
+
+                <!-- Skills Section -->
+                <div id="skill-section">
+                    <label>Skills</label>
+                    <div class="form-group inline-group">
+                        <select name="jobReqSkillType[]" class="smaller-input" placeholder="Add a Hard or Soft Skill">
+                            <option value="Hard">Hard Skill</option>
+                            <option value="Soft">Soft Skill</option>
+                        </select>
+                        <input type="text" class="smaller-input" name="jobReqSkillName[]" placeholder="Enter skill name (e.g., Building and Maintaining Financial Models for Hard Skills or Communication for Soft Skills)">
+                        <span class="add-more" onclick="addMoreInput('skill-section', 'skill', 'Skill')">Add More</span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Submit</button>
         </form>
     </div>
-
     <!-- JavaScript for dynamic functionality -->
     <script>
         // Dynamically fetch departments from the backend
-        document.addEventListener('DOMContentLoaded', async function() {
-            const departmentSelect = document.getElementById('departmentId');
-            try {
-                const response = await fetch('/hr/getDepartments');
-                const departments = await response.json();
-
-                departments.forEach(dept => {
-                    const option = document.createElement('option');
-                    option.value = dept.id;
-                    option.textContent = dept.name;
-                    departmentSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error fetching departments:', error);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to fetch departments
+            function fetchDepartments() {
+                fetch('/hr/api/departments')
+                    .then(response => response.json())
+                    .then(data => {
+                        const departmentSelect = document.getElementById('departmentId');
+                        
+                        // Clear existing options
+                        departmentSelect.innerHTML = '<option value="">Select Department</option>';
+                        
+                        // Populate with fetched departments
+                        data.forEach(department => {
+                            const option = document.createElement('option');
+                            option.value = department.departmentId;  // Assuming departmentId is the correct field
+                            option.textContent = department.deptName;  // Assuming deptName is the correct field
+                            departmentSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching departments:', error);
+                    });
             }
+
+            // Call the function to fetch departments when the page loads
+            fetchDepartments();
         });
 
         function addMoreInput(sectionId, inputName, placeholderText) {
