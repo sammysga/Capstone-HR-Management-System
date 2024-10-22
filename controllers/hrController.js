@@ -437,8 +437,8 @@ const hrController = {
             
                 res.render('staffpages/hr_pages/hrjoboffers', { jobPositions: jobPositionsWithNames });
             } catch (error) {
-                console.error('Error fetching job offers:', error);
-                req.flash('errors', { fetchError: 'Failed to load job offers. Please try again.' });
+                console.error('Error fetching job postings:', error);
+                req.flash('errors', { fetchError: 'Failed to load job postings. Please try again.' });
                 res.redirect('/hr/dashboard');
             }
         } else {
