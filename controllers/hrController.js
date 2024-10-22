@@ -456,15 +456,18 @@ const hrController = {
         }
     },
     
-    postAddJobOffer: async function(req, res) {
+    postAddJobOffer: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { jobTitle, departmentId, jobDescrpt, jobType, jobTimeCommitment, hiringStartDate, hiringEndDate, isActiveHiring } = req.body;
-            
-                const { data, error } = await supabase
-                    .from('jobpositions') // Using jobpositions table
+                // Extract data from the request body
+                const { jobTitle, departmentId, jobDescrpt, jobType, jobTimeCommitment, hiringStartDate, hiringEndDate, isActiveHiring,
+                    jobReqCertificateDescrpt, jobReqDegreeType, jobReqDegreeDescrpt, jobReqExperienceType, jobReqExperienceDescrpt, jobReqSkillType, jobReqSkillName } = req.body;
+    
+                // Insert the basic job offer into the jobpositions table
+                const { data: jobData, error: jobError } = await supabase
+                    .from('jobpositions')
                     .insert([
-                        { 
+                        {
                             jobTitle,
                             departmentId: parseInt(departmentId),
                             jobDescrpt,
@@ -474,20 +477,65 @@ const hrController = {
                             hiringEndDate,
                             isActiveHiring: isActiveHiring ? true : false
                         }
-                    ]);
+                    ])
+                    .select(); // This will return the inserted row with its jobId
     
-                if (error) throw error;
+                if (jobError) throw jobError;
     
-                res.status(201).json({ message: 'Job offer added successfully', data });
+                const jobId = jobData[0].jobId; // Get the jobId from the inserted row
+    
+                // Insert job requirements into jobreqcertifications
+                if (jobReqCertificateDescrpt) {
+                    const { error: certError } = await supabase
+                        .from('jobreqcertifications')
+                        .insert([
+                            { jobId, jobReqCertificateDescrpt }
+                        ]);
+                    if (certError) throw certError;
+                }
+    
+                // Insert job degrees into jobreqdegrees
+                if (jobReqDegreeType && jobReqDegreeDescrpt) {
+                    const { error: degreeError } = await supabase
+                        .from('jobreqdegrees')
+                        .insert([
+                            { jobId, jobReqDegreeType, jobReqDegreeDescrpt }
+                        ]);
+                    if (degreeError) throw degreeError;
+                }
+    
+                // Insert job experiences into jobreqexperiences
+                if (jobReqExperienceType && jobReqExperienceDescrpt) {
+                    const { error: experienceError } = await supabase
+                        .from('jobreqexperiences')
+                        .insert([
+                            { jobId, jobReqExperienceType, jobReqExperienceDescrpt }
+                        ]);
+                    if (experienceError) throw experienceError;
+                }
+    
+                // Insert job skills into jobreqskills
+                if (jobReqSkillType && jobReqSkillName) {
+                    const { error: skillError } = await supabase
+                        .from('jobreqskills')
+                        .insert([
+                            { jobId, jobReqSkillType, jobReqSkillName }
+                        ]);
+                    if (skillError) throw skillError;
+                }
+    
+                // Success response
+                res.status(201).json({ message: 'Job offer and requirements added successfully' });
+    
             } catch (error) {
-                console.error('Error adding job offers:', error);
+                console.error('Error adding job offers and requirements:', error);
                 res.status(500).json({ error: 'Failed to add job offer. Please try again.' });
             }
         } else {
             res.status(403).json({ errors: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
         }
-    },
+    },    
     
     getEditJobOffers: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {

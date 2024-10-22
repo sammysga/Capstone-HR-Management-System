@@ -25,6 +25,8 @@ router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
 router.get('/job-details/:jobId', applicantController.getJobDetails);
 router.get('/chatbothome', applicantController.getChatbotPage);
+router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);
+
 
 // Staff Log in
 router.get('/staff/login', staffLoginController.getStaffLogin);
