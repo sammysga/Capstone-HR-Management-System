@@ -219,7 +219,9 @@ const applicantController = {
 
     handleLoginSubmit: async function (req, res) {
         /* Logic is redirects both internal and external separately into the 
-            2 pages: internalapplicant_chatbot (internal) and chatbot (external)        
+            2 pages: internalapplicant_chatbot (internal) and chatbot (external) 
+            chatbot (external) - creation of account is need
+            internalapplicant_chatbot (internal) - can sign in the same email if there is staffaccounts record
         */
         try {
             const { email, password } = req.body;
