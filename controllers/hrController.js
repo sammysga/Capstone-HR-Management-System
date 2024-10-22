@@ -455,17 +455,15 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
-    
-    //TODO: Fix ERR_HTTP_HEADERS_SENT error
     postAddJobOffer: async function (req, res) {
-        // Logic includes isActiveHiring = true if within the hiringStart and End Date.
+        // Check if the user is HR
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 // Extract data from the request body
                 const {
                     jobTitle, departmentId, jobDescrpt, jobType, jobTimeCommitment,
                     hiringStartDate, hiringEndDate,
-                    jobReqCertificateType, jobReqCertificateDescrpt, // Added certificate type
+                    jobReqCertificateType, jobReqCertificateDescrpt,
                     jobReqDegreeType, jobReqDegreeDescrpt,
                     jobReqExperienceType, jobReqExperienceDescrpt, jobReqSkillType, jobReqSkillName
                 } = req.body;
@@ -476,7 +474,7 @@ const hrController = {
                 const endDate = new Date(hiringEndDate);
                 const isActiveHiring = currentDate >= startDate && currentDate <= endDate;
     
-                // Insert the basic job offer into the jobpositions table
+                // Insert the basic job posting into the jobpositions table
                 const { data: jobData, error: jobError } = await supabase
                     .from('jobpositions')
                     .insert([{
@@ -547,22 +545,21 @@ const hrController = {
                     if (skillError) throw skillError;
                 }
     
-                // Success response
-                res.status(201).json({ message: 'Job offer and requirements added successfully' });
+                // Success response: redirect to job postings page
+                // Use redirect instead of JSON response here
                 res.redirect('/hr/joboffers');
-    
+                
             } catch (error) {
-                console.error('Error adding job offers and requirements:', error);
-                res.status(500).json({ error: 'Failed to add job offer. Please try again.' });
+                console.error('Error adding job postings and requirements:', error);
+                // Handle error response
+                res.status(500).json({ error: 'Failed to add job posting. Please try again.' });
             }
         } else {
+            // Handle unauthorized access
             res.status(403).json({ errors: 'Unauthorized. HR access only.' });
-            res.redirect('/staff/login');
+            // No need to redirect here as JSON response is sent
         }
     },
-    
-    
-    
     getEditJobOffers: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             res.render('staffpages/hr_pages/hreditjoboffers');
