@@ -238,7 +238,106 @@ getPersInfoCareerProg: async function(req, res) {
     }
 },
 
+updateAllInfo: async function(req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null;
+        if (!userId) {
+            req.flash('errors', { authError: 'Unauthorized access.' });
+            return res.redirect('/staff/login');
+        }
 
+        // Extract user information from the request body
+        const {
+            userEmail,
+            phone,
+            dateOfBirth,
+            emergencyContact,
+            employmentType,
+            jobTitle,
+            department,
+            hireDate,
+            milestones, // Assuming this is an array of milestone objects
+            degrees,    // Assuming this is an array of degree objects
+            experiences, // Assuming this is an array of experience objects
+            certifications // Assuming this is an array of certification objects
+        } = req.body;
+
+        // Update user account information
+        const { error: userError } = await supabase
+            .from('useraccounts')
+            .update({
+                userEmail,
+                phone,
+                dateOfBirth,
+                emergencyContact
+            })
+            .eq('userId', userId);
+
+        if (userError) {
+            console.error('Error updating user account:', userError);
+            req.flash('errors', { dbError: 'Error updating user information.' });
+            return res.redirect('/employee/persinfocareerprog');
+        }
+
+        // Update staff account information
+        const { error: staffError } = await supabase
+            .from('staffaccounts')
+            .update({
+                employmentType,
+                jobTitle,
+                department,
+                hireDate
+            })
+            .eq('userId', userId);
+
+        if (staffError) {
+            console.error('Error updating staff account:', staffError);
+            req.flash('errors', { dbError: 'Error updating staff information.' });
+            return res.redirect('/employee/persinfocareerprog');
+        }
+
+        // Update milestones
+        for (const milestone of milestones) {
+            const { milestoneName, startDate, endDate } = milestone;
+            await supabase
+                .from('staffcareerprogression')
+                .upsert({ milestoneName, startDate, endDate, staffId: userId }); // Assuming staffId is the foreign key
+        }
+
+        // Update degrees
+        for (const degree of degrees) {
+            const { degreeName, universityName, graduationYear } = degree;
+            await supabase
+                .from('staffdegrees')
+                .upsert({ degreeName, universityName, graduationYear, staffId: userId });
+        }
+
+        // Update experiences
+        for (const experience of experiences) {
+            const { jobTitle, companyName, startDate } = experience;
+            await supabase
+                .from('experiences')
+                .upsert({ jobTitle, companyName, startDate, staffId: userId });
+        }
+
+        // Update certifications
+        for (const certification of certifications) {
+            const { certificateName, certDate } = certification;
+            await supabase
+                .from('certifications')
+                .upsert({ certificateName, certDate, staffId: userId });
+        }
+
+        // Redirect back to the personal information page with success message
+        req.flash('success', { updateSuccess: 'User information updated successfully!' });
+        res.redirect('/employee/persinfocareerprog');
+
+    } catch (err) {
+        console.error('Error in updateUserInfo controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while updating the information.' });
+        res.redirect('/employee/persinfocareerprog');
+    }
+},
 
 
 // Add this function to your employeeController
