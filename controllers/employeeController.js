@@ -255,7 +255,7 @@ updateAllInfo: async function(req, res) {
             employmentType,
             department,
             hireDate,
-            milestones, // Assuming this is an array of milestone objects
+            milestones = [], // Assuming this is an array of milestone objects
             degrees,    // Assuming this is an array of degree objects
             experiences, // Assuming this is an array of experience objects
             certifications // Assuming this is an array of certification objects
