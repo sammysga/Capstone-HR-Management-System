@@ -366,7 +366,6 @@ const lineManagerController = {
             return res.redirect('/staff/login');
         }
     
-        // TODO: positionTitle not being inserted in the db, status still in works (should be connected to mrf_approvals)
         const mrfData = {
             jobGrade: req.body.jobGrade,
             positionTitle: req.body.positionTitle,
@@ -392,7 +391,7 @@ const lineManagerController = {
                 throw error;
             }
     
-            req.flash('success', { message: 'MRF submitted successfully!' });
+            req.flash('success', { message: 'MRF Request submitted successfully!' });
             return res.redirect('/linemanager/mrf');
         } catch (error) {
             console.error(error);
