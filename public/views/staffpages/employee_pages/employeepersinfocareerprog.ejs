@@ -33,20 +33,6 @@
             font-size: 1rem; 
             color: #666; 
         }
-        .edit-btn, .save-btn { 
-            background-color: #124A5C; 
-            color: white; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 5px; 
-            font-size: 1rem; 
-            cursor: pointer; 
-            margin-top: 10px; 
-            transition: background-color 0.3s ease; 
-        }
-        .edit-btn:hover, .save-btn:hover { 
-            background-color: #059ca4; 
-        }
         .form-input { 
             width: 100%; 
             padding: 10px; 
@@ -117,121 +103,143 @@
             </div>
         </div>
 
-        <!-- Personal Information Section -->
-        <h2>Personal Information</h2>
-        <form id="edit-user-info" action="/employee/update-persinfo" method="POST">
-            <p><strong>Email:</strong> <span id="display-email" class="form-text"><%= user.userEmail %></span></p>
-            <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input">
+   <!-- Personal Information Section -->
+   <div id="personal-info">
+    <h2>Personal Information</h2>
+    <p>Name: <span id="nameDisplay"><%= user.firstName %> <%= user.lastName %></span></p>
+    <p>Phone: <span id="phoneDisplay"><%= user.phoneNumber %></span></p>
+    <p>Date of Birth: <span id="dobDisplay"><%= user.dateOfBirth %></span></p>
+    <p>Emergency Contact: <span id="emergencyDisplay"><%= user.emergencyContactName %> (<%= user.emergencyContactNumber %>)</span></p>
 
-            <p><strong>Phone:</strong> <span id="display-phone" class="form-text"><%= user.phoneNumber %></span></p>
-            <input type="text" id="phone" name="phone" value="<%= user.phoneNumber %>" class="form-input">
+     <!-- Employment Details Section -->
+     <div id="employment-details">
+        <h2>Employment Details</h2>
+        <p>Job Title: <span id="jobTitleDisplay"><%= user.jobTitle %></span></p>
+        <p>Department: <span id="departmentDisplay"><%= user.departmentName %></span></p>
+        <p>Employment Type: <span id="employmentTypeDisplay"><%= user.employmentType %></span></p>
+        <p>Hire Date: <span id="hireDateDisplay"><%= user.hireDate %></span></p>
+    </div>
 
-            <p><strong>Date of Birth:</strong> <span id="display-dob" class="form-text"><%= user.dateOfBirth %></span></p>
-            <input type="date" id="dateOfBirth" name="dateOfBirth" value="<%= user.dateOfBirth %>" class="form-input">
+    <!-- Career Progression Section -->
+    <div id="career-progression">
+        <h2>Career Progression</h2>
+        <% if (user.milestones.length > 0) { %>
+            <% user.milestones.forEach(function(milestone) { %>
+                <p>Milestone: <%= milestone.milestoneName %> (Start: <%= milestone.startDate %>, End: <%= milestone.endDate %>)</p>
+            <% }) %>
+        <% } else { %>
+            <p>No career progression milestones available.</p>
+        <% } %>
+    </div>
 
-            <p><strong>Emergency Contact:</strong> <span id="display-emergency" class="form-text"><%= user.emergencyContactName %> - <%= user.emergencyContactNumber %></span></p>
-            <input type="text" id="emergencyContact" name="emergencyContact" value="<%= user.emergencyContactName %> - <%= user.emergencyContactNumber %>" class="form-input">
+    <!-- Degree Information Section -->
+    <div id="degree-info">
+        <h2>Degree Information</h2>
+        <% if (user.degrees.length > 0) { %>
+            <% user.degrees.forEach(function(degree) { %>
+                <p>Degree: <%= degree.degreeName %>, University: <%= degree.universityName %> (Graduation Year: <%= degree.graduationYear %>)</p>
+            <% }) %>
+        <% } else { %>
+            <p>No degrees available.</p>
+        <% } %>
+    </div>
 
-            <!-- Employment Details Section -->
-            <h2>Employment Details</h2>
-            <p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text"><%= user.employmentType %></span></p>
-            <input type="text" id="employmentType" name="employmentType" value="<%= user.employmentType %>" class="form-input">
+    <!-- Experience Section -->
+    <div id="experience">
+        <h2>Experience</h2>
+        <% if (user.experiences.length > 0) { %>
+            <% user.experiences.forEach(function(exp) { %>
+                <p>Company: <%= exp.companyName %>, Start Date: <%= exp.startDate %></p>
+            <% }) %>
+        <% } else { %>
+            <p>No experiences available.</p>
+        <% } %>
+    </div>
 
-            <p><strong>Job Title:</strong> <span id="display-job-title" class="form-text"><%= user.jobTitle %></span></p>
-            <input type="text" id="jobTitle" name="jobTitle" value="<%= user.jobTitle %>" class="form-input">
+    <!-- Certifications Section -->
+    <div id="certifications">
+        <h2>Certifications</h2>
+        <% if (user.certifications.length > 0) { %>
+            <% user.certifications.forEach(function(cert) { %>
+                <p>Certification: <%= cert.certificateName %>, Date: <%= cert.certDate %></p>
+            <% }) %>
+        <% } else { %>
+            <p>No certifications available.</p>
+        <% } %>
+    </div>
 
-            <p><strong>Department:</strong> <span id="display-department" class="form-text"><%= user.departmentName %></span></p>
-            <input type="text" id="department" name="department" value="<%= user.departmentName %>" class="form-input">
+    <!-- Hidden form for editing personal information -->
+    <form id="editForm" action="/employee/update-all-info" method="POST" class="edit-section">
+        <h3>Edit Personal Information</h3>
+        <input type="text" name="firstName" value="<%= user.firstName %>" required>
+        <input type="text" name="lastName" value="<%= user.lastName %>" required>
+        <input type="text" name="phoneNumber" value="<%= user.phoneNumber %>" required>
+        <input type="date" name="dateOfBirth" value="<%= user.dateOfBirth %>" required>
+        <input type="text" name="emergencyContactName" value="<%= user.emergencyContactName %>" required>
+        <input type="text" name="emergencyContactNumber" value="<%= user.emergencyContactNumber %>" required>
 
-            <p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text"><%= user.hireDate %></span></p>
-            <input type="date" id="hireDate" name="hireDate" value="<%= user.hireDate %>" class="form-input">
+        <!-- Employment Details Section -->
+        <h3>Edit Employment Details</h3>
+        <input type="text" name="jobTitle" value="<%= user.jobTitle %>" required>
+        <input type="text" name="departmentName" value="<%= user.departmentName %>" required>
+        <input type="text" name="employmentType" value="<%= user.employmentType %>" required>
+        <input type="date" name="hireDate" value="<%= user.hireDate %>" required>
 
-            <!-- Career Progression Section -->
-            <h2>Career Progression</h2>
-            <div class="milestone-container">
-                <% if (user.milestones.length > 0) { %>
-                    <% user.milestones.forEach(milestone => { %>
-                        <div class="milestone">
-                            <div class="milestone-label">
-                                <h4><%= milestone.milestoneName %></h4>
-                                <p><strong>Start Date:</strong> <%= new Date(milestone.startDate).toLocaleDateString() %></p>
-                                <p><strong>End Date:</strong> <%= new Date(milestone.endDate).toLocaleDateString() %></p>
-                            </div>
-                        </div>
-                    <% }); %>
-                <% } else { %>
-                    <p>No career progression milestones available.</p>
-                <% } %>
-            </div>
+        <!-- Career Progression Section -->
+        <h3>Edit Career Progression</h3>
+        <% user.milestones.forEach(function(milestone, index) { %>
+            <input type="text" name="milestones[<%= index %>].milestoneName" value="<%= milestone.milestoneName %>" required>
+            <input type="date" name="milestones[<%= index %>].startDate" value="<%= milestone.startDate %>" required>
+            <input type="date" name="milestones[<%= index %>].endDate" value="<%= milestone.endDate %>" required>
+        <% }) %>
 
-            <!-- Degree Information Section -->
-            <h2>Degree Information</h2>
-            <ul>
-                <% if (user.degrees && user.degrees.length > 0) { %>
-                    <% user.degrees.forEach(degree => { %>
-                        <li>
-                            <strong>Degree Name:</strong> <%= degree.degreeName %><br>
-                            <strong>University:</strong> <%= degree.universityName %><br>
-                            <strong>Graduation Year:</strong> <%= degree.graduationYear %>
-                        </li>
-                    <% }); %>
-                <% } else { %>
-                    <li>No degree information available.</li>
-                <% } %>
-            </ul>
+        <!-- Degree Information Section -->
+        <h3>Edit Degree Information</h3>
+        <% user.degrees.forEach(function(degree, index) { %>
+            <input type="text" name="degrees[<%= index %>].degreeName" value="<%= degree.degreeName %>" required>
+            <input type="text" name="degrees[<%= index %>].universityName" value="<%= degree.universityName %>" required>
+            <input type="number" name="degrees[<%= index %>].graduationYear" value="<%= degree.graduationYear %>" required>
+        <% }) %>
 
-       <!-- Experience Section -->
-       <h2>Experience</h2>
-       <ul>
-           <% if (user.experiences.length > 0) { %>
-               <% user.experiences.forEach(experience => { %>
-                   <li>
-                       <strong>Job Title:</strong> <%= experience.jobTitle %><br>
-                       <strong>Company Name:</strong> <%= experience.companyName %><br>
-                       <strong>Duration:</strong> <%= experience.jobDuration %>
-                   </li>
-               <% }); %>
-           <% } else { %>
-               <p>No work experience available.</p>
-           <% } %>
-       </ul>
+        <!-- Experience Section -->
+        <h3>Edit Experience</h3>
+        <% user.experiences.forEach(function(exp, index) { %>
+            <input type="text" name="experiences[<%= index %>].companyName" value="<%= exp.companyName %>" required>
+            <input type="date" name="experiences[<%= index %>].startDate" value="<%= exp.startDate %>" required>
+        <% }) %>
 
-       <!-- Certifications Section -->
-       <h2>Certifications</h2>
-       <ul>
-           <% if (user.certifications.length > 0) { %>
-               <% user.certifications.forEach(certification => { %>
-                   <li>
-                       <strong>Certification Name:</strong> <%= certification.certificationName %><br>
-                       <img src="<%= certification.certificationImage %>" alt="<%= certification.certificationName %> Image" width="100">
-                   </li>
-               <% }); %>
-           <% } else { %>
-               <li>No certifications available.</li>
-           <% } %>
-       </ul>
+        <!-- Certifications Section -->
+        <h3>Edit Certifications</h3>
+        <% user.certifications.forEach(function(cert, index) { %>
+            <input type="text" name="certifications[<%= index %>].certificateName" value="<%= cert.certificateName %>" required>
+            <input type="date" name="certifications[<%= index %>].certDate" value="<%= cert.certDate %>" required>
+        <% }) %>
 
-       <button type="button" class="edit-btn" id="edit-button">Edit</button>
-       <button type="submit" class="save-btn" style="display:none;" id="save-button">Save</button>
-   </form>
+        <!-- Submit button for the entire form -->
+        <button type="submit">Save All Changes</button>
+    </form>
 </div>
 
-                                <!-- JavaScript for toggling edit mode -->
+<!-- One button to reveal the entire form -->
+<button id="toggleEditBtn">Edit All</button>
+
     <script>
-        const editBtn = document.getElementById('edit-button'); // Corrected ID for edit button
-        const saveBtn = document.getElementById('save-button'); // Corrected ID for save button
 
-        const displayFields = document.querySelectorAll('.form-text');
-        const inputFields = document.querySelectorAll('.form-input');
-
-        // Toggle edit mode
-        editBtn.addEventListener('click', function () {
-            displayFields.forEach(field => field.style.display = 'none'); // Hide display fields
-            inputFields.forEach(input => input.style.display = 'block'); // Show input fields
-            editBtn.style.display = 'none'; // Hide the edit button
-            saveBtn.style.display = 'inline-block'; // Show the save button
+      // Toggle form visibility for all sections at once
+      document.getElementById('toggleEditBtn').addEventListener('click', function() {
+            var form = document.getElementById('editForm');
+            if (form.style.display === 'block') {
+                form.style.display = 'none';
+                this.textContent = 'Edit All';
+            } else {
+                form.style.display = 'block';
+                this.textContent = 'Cancel Edit';
+            }
         });
 
+
+
+                                    // Sidebar Navigation dont touch 
         // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
