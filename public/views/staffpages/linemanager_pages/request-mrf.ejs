@@ -7,302 +7,237 @@
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/linemanager.css">
     <style>
-        /* Progress bar styles */
-        .progress-bar {
-            display: flex;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h1 {
+            color: #124A5C;
+        }
+
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            margin: 20px auto;
+            padding: 40px;
+        }
+
+        .form-section {
             margin-bottom: 20px;
         }
 
-        .step {
-            flex: 1;
-            text-align: center;
-            position: relative;
-        }
-
-        .step:before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            height: 2px;
-            background-color: #ddd;
-            width: 100%;
-            z-index: -1;
-        }
-
-        .step.active:before {
-            background-color: #07ACB9;
-        }
-
-        .step.active {
+        label {
+            display: block;
+            margin-bottom: 5px;
             font-weight: bold;
-            color: #07ACB9;
+            color: #333;
         }
 
-        .step:last-child:before {
-            display: none;
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            font-size: 16px;
         }
 
-        .step > span {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #ddd;
-            border-radius: 50%;
+        .form-section-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .form-section h2 {
+            color: #124A5C;
+            font-size: 1.2rem;
             margin-bottom: 10px;
         }
 
-        .step.active > span {
+        button {
             background-color: #07ACB9;
-            color: #fff;
-        }
-
-        .step-content {
-            display: none;
-        }
-
-        .step-content.active {
-            display: block;
-        }
-
-        .form-navigation {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .form-navigation button {
-            padding: 10px 20px;
-            background-color: #124A5C;
             color: white;
+            padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px 0;
         }
 
-        .form-navigation button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        button:hover {
+            background-color: #065d6a;
+        }
+
+        .toggle-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toggle-item {
+            display: flex;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            form {
+                padding: 10px;
+            }
+
+            .form-section {
+                margin-bottom: 15px;
+            }
+
+            input[type="text"], input[type="date"], input[type="number"], select, textarea {
+                font-size: 14px;
+            }
+
+            button {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
     <%- include('../../partials/linemanager_partials') %>
-    
     <div class="main-content">
         <div class="content">
             <h1>Manpower Requisition Form</h1>
 
-            <div class="progress-bar">
-                <div class="step active"><span>1</span><p>Position Details</p></div>
-                <div class="step"><span>2</span><p>Job Specifications</p></div>
-                <div class="step"><span>3</span><p>Required Attachments</p></div>
-                <div class="step"><span>4</span><p>Review & Approvals</p></div>
-            </div>
-
-            <form id="mrfForm" action="/linemanager/request-mrf" method="POST">
-                <div class="step-content active">
+            <form action="/linemanager/request-mrf" method="POST">
+                <!-- Position Details Section -->
+                <div class="form-section">
                     <h2>Position Details</h2>
-                    <div class="form-section">
-                        <label for="positionTitle">Position Title:</label>
-                        <input type="text" id="positionTitle" name="positionTitle" placeholder="Enter Position" required>
-                    </div>
-                    <div class="form-section">
-                        <label for="jobGrade">Job Grade:</label>
-                        <input type="text" id="jobGrade" name="jobGrade" placeholder="Enter Job Grade" required>
-                    </div>
-                    <div class="form-section">
-                        <label for="sectionDept">Section/Department:</label>
-                        <input type="text" id="sectionDept" name="departmentId" placeholder="Enter Department" required>
-                    </div>
-                    <div class="form-section">
-                        <label for="location">Location:</label>
-                        <input type="text" id="location" name="location" placeholder="Enter Location" required>
-                    </div>
-                    <div class="form-section">
-                        <label for="dateRequisitioned">Date Requisitioned:</label>
-                        <input type="date" id="dateRequisitioned" name="requisitionDate" required>
-                    </div>
-                    <div class="form-section">
-                        <label for="dateRequired">Date Required:</label>
-                        <input type="date" id="dateRequired" name="requiredDate" required>
-                    </div>
-                    <div class="form-section">
-                        <label for="numPersons">No. of Persons Requisitioned:</label>
-                        <input type="number" id="numPersons" name="numPersonsRequisitioned" placeholder="Enter No. of Persons" required>
-                    </div>
+                    <label for="positionTitle">Position Title:</label>
+                    <input type="text" id="positionTitle" name="positionTitle" placeholder="Enter Position" required>
+
+                    <label for="jobGrade">Job Grade:</label>
+                    <input type="text" id="jobGrade" name="jobGrade" placeholder="Enter Job Grade" required>
+
+                    <label for="sectionDept">Section/Department:</label>
+                    <select id="sectionDept" name="departmentId" required>
+                        <option value="">Select Department</option>
+                        <% if (departments && departments.length > 0) { %>
+                            <% departments.forEach(function(department) { %>
+                                <option value="<%= department.departmentId %>"><%= department.deptName %></option>
+                            <% }); %>
+                        <% } else { %>
+                            <option value="">No departments available</option>
+                        <% } %>
+                    </select>
+
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" name="location" placeholder="Enter Location" required>
+
+                    <label for="dateRequisitioned">Date Requisitioned:</label>
+                    <input type="date" id="dateRequisitioned" name="requisitionDate" required>
+
+                    <label for="dateRequired">Date Required:</label>
+                    <input type="date" id="dateRequired" name="requiredDate" required>
+
+                    <label for="numPersons">No. of Persons Requisitioned:</label>
+                    <input type="number" id="numPersons" name="numPersonsRequisitioned" placeholder="Enter No. of Persons" required>
                 </div>
 
-                <div class="step-content">
+                <!-- Job Specifications Section -->
+                <div class="form-section">
                     <h2>Job Specifications</h2>
-                    <div class="form-section">
-                        <label for="reqType">Type of Requisition:</label>
-                        <select id="reqType" name="requisitionType" onchange="showReplacementDetails()">
-                            <option value="new">New Position</option>
-                            <option value="replacement">Replacement due to</option>
-                        </select>
-                    </div>
+                    <label for="reqType">Type of Requisition:</label>
+                    <select id="reqType" name="requisitionType" onchange="showReplacementDetails()">
+                        <option value="new">New Position</option>
+                        <option value="replacement">Replacement due to</option>
+                    </select>
+
                     <div id="replacementDetails" style="display: none;">
-                        <div class="form-section">
-                            <label for="replacementReason">Replacement due to:</label>
-                            <select id="replacementReason" name="replacementReason" required>
-                                <option value="transfer">Transfer/Promotion</option>
-                                <option value="resignation">Resignation/Separation</option>
-                                <option value="retirement">Retirement</option>
-                            </select>
-                        </div>
-                        <div class="form-section">
-                            <label for="incumbentName">Name of Incumbent:</label>
-                            <input type="text" id="incumbentName" name="incumbentName" placeholder="Enter Incumbent's Name">
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <label for="employmentNature">Nature of Employment:</label>
-                        <select id="employmentNature" name="employmentNature" onchange="showDurationInput()">
-                            <option value="probationary">Probationary for Permanent Job (FTE)</option>
-                            <option value="regular">Regular Employee for Job Transfer</option>
-                            <option value="fixedTerm">Fixed Term Contract/Project-based for the duration of</option>
+                        <label for="replacementReason">Replacement due to:</label>
+                        <select id="replacementReason" name="replacementReason" required>
+                            <option value="transfer">Transfer/Promotion</option>
+                            <option value="resignation">Resignation/Separation</option>
+                            <option value="retirement">Retirement</option>
                         </select>
+
+                        <label for="incumbentName">Name of Incumbent:</label>
+                        <input type="text" id="incumbentName" name="incumbentName" placeholder="Enter Incumbent's Name">
                     </div>
+
+                    <label for="employmentNature">Nature of Employment:</label>
+                    <select id="employmentNature" name="employmentNature" onchange="showDurationInput()">
+                        <option value="probationary">Probationary for Permanent Job (FTE)</option>
+                        <option value="regular">Regular Employee for Job Transfer</option>
+                        <option value="fixedTerm">Fixed Term Contract/Project-based for the duration of</option>
+                    </select>
+
                     <div id="durationInput" class="form-section" style="display: none;">
                         <label for="duration">Duration (in months):</label>
                         <input type="number" id="duration" name="duration" placeholder="Enter duration in months">
                     </div>
-                    <div class="form-section">
-                        <label for="empCategory">Employee Category:</label>
-                        <select id="empCategory" name="employeeCategory" required>
-                            <option value="managerial">Managerial/Supervisory</option>
-                            <option value="nonManagerial">Non-Supervisory</option>
-                        </select>
-                    </div>
+
+                    <label for="empCategory">Employee Category:</label>
+                    <select id="empCategory" name="employeeCategory" required>
+                        <option value="managerial">Managerial/Supervisory</option>
+                        <option value="nonManagerial">Non-Supervisory</option>
+                    </select>
                 </div>
 
-                <div class="step-content">
+                <!-- Required Attachments Section -->
+                <div class="form-section">
                     <h2>Required Attachments</h2>
-                    <div class="form-section">
-                        <label>Choose Required Attachments:</label>
-                        <div class="toggle-container">
-                            <div class="toggle-item">
-                                <input type="checkbox" id="jobDescription" name="requiredAttachments[]" value="Job Description">
-                                <label for="jobDescription">Job Description for regular/permanent positions</label>
-                            </div>
-                            <div class="toggle-item">
-                                <input type="checkbox" id="jobScope" name="requiredAttachments[]" value="Job Scope">
-                                <label for="jobScope">Job Scope for Contractual positions</label>
-                            </div>
-                            <div class="toggle-item">
-                                <input type="checkbox" id="others" name="requiredAttachments[]" value="Others">
-                                <label for="others">Others:</label>
-                                <input type="text" id="othersInput" name="otherAttachments" placeholder="Specify other attachments">
-                            </div>
+                    <label>Choose Required Attachments:</label>
+                    <div class="toggle-container">
+                        <div class="toggle-item">
+                            <input type="checkbox" id="jobDescription" name="requiredAttachments[]" value="Job Description">
+                            <label for="jobDescription">Job Description for regular/permanent positions</label>
                         </div>
-                    </div>                    
-                </div>
-
-                <div class="step-content">
-                    <h2>Review & Approvals</h2>
-                    <p>Review the information and submit for approval.</p>
-                    <div class="form-section" id="approvalsSection">
-                        <p>Please approve the form by ticking the appropriate box:</p>
-                        <div class="toggle-item" id="requisitionerApproval">
-                            <input type="checkbox" id="requisitionerCheckbox" name="requisitionerApproval">
-                            <label for="requisitionerCheckbox">Requisitioner Approval</label>
+                        <div class="toggle-item">
+                            <input type="checkbox" id="jobScope" name="requiredAttachments[]" value="Job Scope">
+                            <label for="jobScope">Job Scope for Contractual positions</label>
                         </div>
-                        <div class="toggle-item" id="linemanagerApproval" name="linemanagerApproval">
-                            <input type="checkbox" id="linemanagerCheckbox">
-                            <label for="linemanagerCheckbox">Line Manager Approval</label>
-                        </div>
-                        <div class="toggle-item" id="hrApproval" name="hrApproval">
-                            <input type="checkbox" id="hrCheckbox">
-                            <label for="hrCheckbox">HR Head Approval</label>
+                        <div class="toggle-item">
+                            <input type="checkbox" id="others" name="requiredAttachments[]" value="Others">
+                            <label for="others">Others:</label>
+                            <input type="text" id="othersInput" name="otherAttachments" placeholder="Specify other attachments">
                         </div>
                     </div>
                 </div>
 
-                <div class="form-navigation">
-                    <button type="button" id="prevBtn" disabled>Previous</button>
-                    <button type="button" id="nextBtn">Next</button>
+                <!-- Approvals Section -->
+                <div class="form-section">
+                    <h2>Review & Approvals</h2>
+                    <p>Review the information and submit for approval:</p>
+                    <div class="toggle-item">
+                        <input type="checkbox" id="requisitionerCheckbox" name="requisitionerApproval">
+                        <label for="requisitionerCheckbox">Requisitioner Approval</label>
+                    </div>
+                    <div class="toggle-item">
+                        <input type="checkbox" id="linemanagerCheckbox" name="linemanagerApproval">
+                        <label for="linemanagerCheckbox">Line Manager Approval</label>
+                    </div>
+                    <div class="toggle-item">
+                        <input type="checkbox" id="hrCheckbox" name="hrApproval">
+                        <label for="hrCheckbox">HR Head Approval</label>
+                    </div>
                 </div>
+
+                <!-- Submit Button -->
+                <button type="submit">Submit</button>
             </form>
         </div>
     </div>
 
     <script>
-        const steps = document.querySelectorAll('.step-content');
-        const progressBar = document.querySelectorAll('.step');
-        let currentStep = 0;
-
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            const requiredFieldsFilled = [...steps[currentStep].querySelectorAll('input[required], select[required]')]
-                .every(field => field.checkValidity());
-
-            if (requiredFieldsFilled) {
-                if (currentStep === steps.length - 1) {
-                    document.getElementById('mrfForm').submit();
-                } else {
-                    changeStep(1);
-                }
-            } else {
-                steps[currentStep].querySelector('input[required], select[required]').reportValidity();
-            }
-        });
-
-        document.getElementById('prevBtn').addEventListener('click', () => {
-            changeStep(-1);
-        });
-
-        function changeStep(stepChange) {
-            // Hide current step and progress bar
-            steps[currentStep].classList.remove('active');
-            progressBar[currentStep].classList.remove('active');
-
-            // Move to the next or previous step
-            currentStep += stepChange;
-
-            // Prevent moving beyond the first and last steps
-            if (currentStep < 0) {
-                currentStep = 0;
-            } else if (currentStep >= steps.length) {
-                currentStep = steps.length - 1;
-            }
-
-            // Show the next step and progress bar
-            steps[currentStep].classList.add('active');
-            progressBar[currentStep].classList.add('active');
-
-            // Update button states
-            document.getElementById('prevBtn').disabled = currentStep === 0;
-            document.getElementById('nextBtn').innerHTML = currentStep === steps.length - 1 ? 'Submit' : 'Next';
-        }
-
-        // Show/Hide Replacement Details based on "Type of Requisition" selection
-        function showReplacementDetails() {
-            const reqType = document.getElementById('reqType').value;
-            const replacementDetails = document.getElementById('replacementDetails');
-
-            if (reqType === 'replacement') {
-                replacementDetails.style.display = 'block';
-            } else {
-                replacementDetails.style.display = 'none';
-                // Reset replacement-related inputs
-                document.getElementById('replacementReason').value = '';
-                document.getElementById('incumbentName').value = '';
-            }
-        }
-
-        // Show/Hide Duration input based on "Nature of Employment" selection
-        function showDurationInput() {
-            const employmentNature = document.getElementById('employmentNature').value;
-            const durationInput = document.getElementById('durationInput');
-
-            if (employmentNature === 'fixedTerm') {
-                durationInput.style.display = 'block';
-            } else {
-                durationInput.style.display = 'none';
-                // Reset duration input
-                document.getElementById('duration').value = '';
-            }
-        }
-
         // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
@@ -318,6 +253,7 @@
                 if (content.style.display === 'block') {
                     content.style.display = 'none';
                 } else {
+                    // Hide all other collapsible contents
                     document.querySelectorAll('.collapsible-content').forEach(item => {
                         if (item !== content) {
                             item.style.display = 'none';
@@ -327,7 +263,22 @@
                 }
             });
         });
+
+        // Show/Hide Replacement Details based on "Type of Requisition" selection
+        function showReplacementDetails() {
+            const reqType = document.getElementById('reqType').value;
+            const replacementDetails = document.getElementById('replacementDetails');
+            replacementDetails.style.display = (reqType === 'replacement') ? 'block' : 'none';
+        }
+
+        // Show/Hide Duration input based on "Nature of Employment" selection
+        function showDurationInput() {
+            const employmentNature = document.getElementById('employmentNature').value;
+            const durationInput = document.getElementById('durationInput');
+            durationInput.style.display = (employmentNature === 'fixedTerm') ? 'block' : 'none';
+        }
+
+        //TODO: after submitting MRF, should be shown in the MRF dashboard
     </script>
 </body>
 </html>
-
