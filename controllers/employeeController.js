@@ -314,7 +314,7 @@ updateAllInfo: async function(req, res) {
         for (const experience of experiences) {
             const { jobTitle, companyName, startDate } = experience;
             await supabase
-                .from('experiences')
+                .from('staffexperiences')
                 .upsert({ jobTitle, companyName, startDate, staffId: userId });
         }
 
@@ -322,7 +322,7 @@ updateAllInfo: async function(req, res) {
         for (const certification of certifications) {
             const { certificateName, certDate } = certification;
             await supabase
-                .from('certifications')
+                .from('staffcertification')
                 .upsert({ certificateName, certDate, staffId: userId });
         }
 
