@@ -264,7 +264,7 @@ updateAllInfo: async function(req, res) {
 
         // Update user account information
         const { error: userError } = await supabase
-            .from('useraccounts')
+            .from('staffaccounts')
             .update({
                 userEmail,
                 phone,
@@ -276,7 +276,7 @@ updateAllInfo: async function(req, res) {
         if (userError) {
             console.error('Error updating user account:', userError);
             req.flash('errors', { dbError: 'Error updating user information.' });
-            return res.redirect('/employee/persinfocareerprog');
+            return res.redirect('/employee/employeepersinfocareerprog');
         }
 
         // Update staff account information
@@ -293,7 +293,7 @@ updateAllInfo: async function(req, res) {
         if (staffError) {
             console.error('Error updating staff account:', staffError);
             req.flash('errors', { dbError: 'Error updating staff information.' });
-            return res.redirect('/employee/persinfocareerprog');
+            return res.redirect('/employee/employeepersinfocareerprog');
         }
 
         // Update milestones
@@ -330,12 +330,12 @@ updateAllInfo: async function(req, res) {
 
         // Redirect back to the personal information page with success message
         req.flash('success', { updateSuccess: 'User information updated successfully!' });
-        res.redirect('/employee/persinfocareerprog');
+        res.redirect('/employee/employeepersinfocareerprog');
 
     } catch (err) {
         console.error('Error in updateUserInfo controller:', err);
         req.flash('errors', { dbError: 'An error occurred while updating the information.' });
-        res.redirect('/employee/persinfocareerprog');
+        res.redirect('/employee/employeepersinfocareerprog');
     }
 },
 
