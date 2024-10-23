@@ -253,7 +253,6 @@ updateAllInfo: async function(req, res) {
             dateOfBirth,
             emergencyContact,
             employmentType,
-            jobTitle,
             department,
             hireDate,
             milestones, // Assuming this is an array of milestone objects
@@ -284,7 +283,6 @@ updateAllInfo: async function(req, res) {
             .from('staffaccounts')
             .update({
                 employmentType,
-                jobTitle,
                 department,
                 hireDate
             })
