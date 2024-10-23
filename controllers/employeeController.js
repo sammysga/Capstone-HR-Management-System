@@ -337,6 +337,61 @@ updateAllInfo: async function(req, res) {
     }
 },
 
+uploadCertification: async function(req, res) {
+
+    try {
+        const { certificateName } = req.body; // Certificate name from request body
+        const file = req.body.file; // Assuming the file is sent in the request body as base64
+
+        // Convert the base64 file to binary
+        const buffer = Buffer.from(file, 'base64');
+
+        // Upload the file to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('certifications') // Replace with your storage bucket name
+            .upload(`${Date.now()}_${certificateName}`, buffer, {
+                contentType: 'application/pdf', // Adjust based on your file type
+                upsert: true,
+            });
+
+        if (uploadError) {
+            console.error('Error uploading file:', uploadError);
+            return res.status(500).json({ error: 'Error uploading file' });
+        }
+
+        // Get the public URL of the uploaded file
+        const { publicURL, error: urlError } = supabase.storage
+            .from('certifications')
+            .getPublicUrl(uploadData.path);
+
+        if (urlError) {
+            console.error('Error getting public URL:', urlError);
+            return res.status(500).json({ error: 'Error retrieving file URL' });
+        }
+
+        // Insert certification details into the Supabase database
+        const { data, error } = await supabase
+            .from('certifications') // Replace with your table name
+            .insert([
+                {
+                    certificateName,
+                    certificationImage: publicURL,
+                    userId: req.session.userId // Assuming userId is stored in the session
+                }
+            ]);
+
+        if (error) {
+            console.error('Error inserting certification:', error);
+            return res.status(500).json({ error: 'Error saving certification' });
+        }
+
+        // Redirect to user account page or send success response
+        return res.redirect('/employee/employeepersinfocareerprog'); // Adjust the redirect as needed
+    } catch (err) {
+        console.error('Error uploading certification:', err);
+        return res.status(500).json({ error: 'An error occurred while uploading the certification' });
+    }
+},
 
 // Add this function to your employeeController
 updatePersUserInfo: async function(req, res) {
