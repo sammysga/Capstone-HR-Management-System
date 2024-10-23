@@ -71,6 +71,7 @@ router.get('/employee/dashboard', employeeController.getEmployeeDashboard);
 router.get('/employee/useracc', employeeController.getUserAccount);
 router.get('/employee/employeeoffboarding', employeeController.getEmployeeOffboarding);
 router.get('/employee/employeepersinfocareerprog', employeeController.getPersInfoCareerProg);
+router.post('/employee/update-all-info', employeeController.updateAllInfo);
 router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
@@ -79,6 +80,7 @@ router.get('/employee/leaverequest', employeeController.getLeaveRequestForm);
 router.post('/employee/leaverequest', employeeController.submitLeaveRequest);
 router.get('/employee/attendance', employeeController.getAttendance);
 router.post('/employee/attendance', employeeController.postAttendance);
+
 
 
 // Line Manager Routes
