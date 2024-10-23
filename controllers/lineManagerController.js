@@ -324,14 +324,41 @@ const lineManagerController = {
         }
     },
 
-    getRequestMRF: function(req, res) {
+    getMRFList: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/request-mrf');
+            MRFModel.find({}, (err, mrfList) => {
+                if (err) {
+                    req.flash('errors', { fetchError: 'Error fetching MRF list.' });
+                }
+                res.render('staffpages/linemanager_pages/mrf_list', { mrfList });
+            });
         } else {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
         }
     },
+
+    getRequestMRF: async function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
+            try {
+                const { data: departments, error } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName');
+    
+                if (error) throw error;
+    
+                res.render('staffpages/linemanager_pages/request-mrf', { departments });
+            } catch (err) {
+                req.flash('errors', { fetchError: 'Error fetching departments.' });
+                res.redirect('/linemanager/mrf'); 
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+    
+    
 
     submitMRF: async function(req, res) {
         if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
@@ -339,9 +366,10 @@ const lineManagerController = {
             return res.redirect('/staff/login');
         }
     
-        // Prepare the MRF data from the request body
+        // TODO: positionTitle not being inserted in the db, status still in works (should be connected to mrf_approvals)
         const mrfData = {
             jobGrade: req.body.jobGrade,
+            positionTitle: req.body.positionTitle,
             departmentId: req.body.departmentId,
             location: req.body.location,
             requisitionDate: req.body.requisitionDate,
