@@ -34,12 +34,15 @@ router.post('/staff/login', staffLoginController.postStaffLogin);
 
 // Protected routes (role-specific logic in respective controllers)
 router.get('/hr/dashboard', hrController.getHRDashboard);
+router.get('/hr/manageleavetypes', hrController.getManageLeaveTypes);
 router.get('/hr/managestaff', hrController.getHRManageStaff);
 router.get('/hr/api/departments', hrController.getDepartments);
 router.get('/hr/api/job-titles', hrController.getJobTitles);
 router.post('/hr/api/departments', hrController.addNewDepartment);
 router.post('/hr/api/job-titles', hrController.addNewJobTitle);
 router.post('/hr/api/add-staff', hrController.addNewStaff);
+router.put('/hr/api/update-leavetypes/:leaveTypeId', hrController.updateLeaveTypes); // Ensure leaveTypeId is included in the URL
+
 
 router.get('/hr/useraccount', hrController.getUserAccount);
 router.post('/hr/update-info', hrController.updateUserInfo);
@@ -76,8 +79,15 @@ router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
 
+
 router.get('/employee/leaverequest', employeeController.getLeaveRequestForm);
 router.post('/employee/leaverequest', employeeController.submitLeaveRequest);
+// router.get('/employee/leaverequest', employeeController.getLeaveRequestForm); // Render form for requesting leave
+// router.post('/employee/leaverequest', employeeController.submitLeaveRequest); // Handle submitting leave requests
+// router.get('/employee/leaverequest', employeeController.getLeaveBalances); // Fetch and display leave balances
+// router.get('/employee/leaverequest/pending', employeeController.getPendingLeaveRequests); // Fetch pending leave requests
+
+
 router.get('/employee/attendance', employeeController.getAttendance);
 router.post('/employee/attendance', employeeController.postAttendance);
 

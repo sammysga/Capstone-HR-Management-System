@@ -10,39 +10,52 @@ const hrController = {
     getHRDashboard: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { data: allLeaves, error } = await supabase
-                    .from('leaverequests')
-                    .select(`
-                        leaveRequestId, 
-                        staffId, 
-                        created_at, 
-                        leaveTypeId, 
-                        fromDate, 
-                        untilDate, 
-                        staffaccounts (lastName, firstName), 
-                        leave_types (typeName), 
-                        departments (deptName)  // Directly fetching the department name
-                    `)
-                    .order('created_at', { ascending: false });
-    
-                if (error) {
-                    console.error('Error fetching leave requests:', error);
-                    req.flash('errors', { dbError: 'Error fetching leave requests.' });
-                    return res.redirect('/hr/dashboard');
-                }
-    
-                // Format the leave requests to include the department name
-                const formattedLeaves = allLeaves.map(leave => ({
-                    lastName: leave.staffaccounts ? leave.staffaccounts.lastName : 'N/A',
-                    firstName: leave.staffaccounts ? leave.staffaccounts.firstName : 'N/A',
-                    filedDate: leave.created_at ? new Date(leave.created_at).toISOString().split('T')[0] : 'N/A', // Format date correctly
-                    type: leave.leave_types ? leave.leave_types.typeName : 'N/A',
-                    startDate: leave.fromDate || 'N/A',
-                    endDate: leave.untilDate || 'N/A',
-                    department: leave.departments ? leave.departments.deptName : 'N/A' // Fetching deptName directly
-                }));
-    
-                res.render('staffpages/hr_pages/hrdashboard', { allLeaves: formattedLeaves });
+                // Function to fetch and format leave data
+                const fetchAndFormatLeaves = async (statusFilter = null) => {
+                    const query = supabase
+                        .from('leaverequests')
+                        .select(`
+                            leaveRequestId, 
+                            staffId, 
+                            created_at, 
+                            leaveTypeId, 
+                            fromDate, 
+                            untilDate, 
+                            status,
+                            staffaccounts (lastName, firstName), 
+                            leave_types (typeName), 
+                            departments (deptName)
+                        `)
+                        .order('created_at', { ascending: false });
+                    
+                    if (statusFilter) query.eq('status', statusFilter);
+                    
+                    const { data, error } = await query;
+                    if (error) throw error;
+                    
+                    return data.map(leave => ({
+                        lastName: leave.staffaccounts ? leave.staffaccounts.lastName : 'N/A',
+                        firstName: leave.staffaccounts ? leave.staffaccounts.firstName : 'N/A',
+                        filedDate: leave.created_at ? new Date(leave.created_at).toISOString().split('T')[0] : 'N/A',
+                        type: leave.leave_types ? leave.leave_types.typeName : 'N/A',
+                        startDate: leave.fromDate || 'N/A',
+                        endDate: leave.untilDate || 'N/A',
+                        department: leave.departments ? leave.departments.deptName : 'N/A',
+                        status: leave.status || 'Pending'
+                    }));
+                };
+
+                // Fetch formatted leaves
+                const [formattedAllLeaves, formattedApprovedLeaves] = await Promise.all([
+                    fetchAndFormatLeaves(),
+                    fetchAndFormatLeaves('Approved')
+                ]);
+
+                res.render('staffpages/hr_pages/hrdashboard', { 
+                    allLeaves: formattedAllLeaves, 
+                    approvedLeaves: formattedApprovedLeaves 
+                });
+                
             } catch (err) {
                 console.error('Error fetching leave requests:', err);
                 req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
@@ -51,6 +64,66 @@ const hrController = {
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
+        }
+    },
+    getManageLeaveTypes: async function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                // Fetch leave types from the Supabase database
+                const { data: leaveTypes, error } = await supabase
+                    .from('leave_types')
+                    .select('leaveTypeId, typeName, typeMaxCount, typeIsActive');
+    
+                if (error) {
+                    throw error; // Handle error
+                }
+    
+                // Process the leave types to send to frontend
+                const processedLeaveTypes = leaveTypes.map(leaveType => ({
+                    leaveTypeId: leaveType.leaveTypeId,
+                    typeName: leaveType.typeName,
+                    typeMaxCount: leaveType.typeMaxCount,
+                    typeIsActive: leaveType.typeIsActive // Keep it as a boolean
+                }));
+    
+                // Send response with leave types
+                res.render('staffpages/hr_pages/hrmanageleavetypes', { 
+                    leaveTypes: processedLeaveTypes 
+                });
+            } catch (err) {
+                console.error("Error fetching leave types:", err);
+                req.flash('errors', { dbError: 'An error occurred while loading leave types.' });
+                res.redirect('/hr/dashboard'); 
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+    
+    updateLeaveTypes: async (req, res) => {
+        const { typeMaxCount, typeIsActive } = req.body; 
+        const { leaveTypeId } = req.params; 
+    
+        try {
+            const isActive = typeIsActive === 'true'; // Ensure it's a boolean
+    
+            const { data, error } = await supabase
+                .from('leave_types')
+                .update({
+                    typeMaxCount: typeMaxCount,
+                    typeIsActive: isActive // Use boolean value
+                })
+                .eq('leaveTypeId', leaveTypeId);
+    
+            if (error) {
+                return res.status(400).json({ message: 'Error updating leave type', error });
+            }
+    
+            res.status(200).json({ message: 'Leave type updated successfully', data });
+        } catch (err) {
+            console.error('Error updating leave type:', err);
+            res.status(500).json({ message: 'Internal server error' });
         }
     },
     
