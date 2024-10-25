@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Leave Types</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
+
+    <style>
+        /* Adding styles for the dashboard */
+        h2 {
+            color: #2385B0;
+            margin-left: 40px;
+        }
+        h3 {
+            margin-left: 40px;
+        }
+        .content {
+            margin-left: 220px;
+            padding: 20px;
+            background-color: white;
+        }
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .edit-button, .save-button {
+            padding: 5px 10px;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .edit-button {
+            background-color: #2385B0;
+            float: right;
+        }
+        .edit-button:hover {
+            background-color: #1a5f78;
+        }
+        .save-button {
+            background-color: #28a745;
+            display: none; /* Initially hidden */
+            margin-top: 20px;
+        }
+        .save-button:hover {
+            background-color: #218838;
+        }
+        .editable {
+            border: none;
+            background-color: transparent;
+            width: 100%;
+            box-shadow: none;
+        }
+        /* Toggle switch styles */
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2385B0;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/hr_partials') %>
+    <div class="main-content">
+        <div class="manageLeaveTypes">
+            <h3>Manage Leave Types</h3>
+            <button class="edit-button" onclick="toggleEditMode()">Edit</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>Max Number of Days per Year</th>
+                        <th>Active Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (leaveTypes && leaveTypes.length > 0) { %>
+                        <% leaveTypes.forEach(leave => { %>
+                            <tr>
+                                <td><%= leave.typeName %></td>
+                                <td>
+                                    <input type="number" value="<%= leave.typeMaxCount %>" class="editable" data-id="<%= leave.leaveTypeId %>" readonly />
+                                </td>
+                                <td>
+                                    <span class="<%= leave.typeIsActive ? 'active' : 'inactive' %>">
+                                        <%= leave.typeIsActive ? 'Active' : 'Inactive' %>
+                                    </span>
+                                    <label class="toggle" style="display: none;">
+                                        <input type="checkbox" class="active-status" data-id="<%= leave.leaveTypeId %>" <% if (leave.typeIsActive) { %> checked <% } %> />
+                                        <span class="slider"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="3">No leave types found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <button class="save-button" onclick="saveAllLeaveTypes()">Save Changes</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleEditMode() {
+            const editableFields = document.querySelectorAll('.editable');
+            const activeCheckboxes = document.querySelectorAll('.active-status');
+            const saveButton = document.querySelector('.save-button');
+
+            const isEditing = saveButton.style.display === 'block';
+
+            editableFields.forEach(field => {
+                field.readOnly = isEditing;
+                field.classList.toggle('editable', !isEditing);
+            });
+
+            activeCheckboxes.forEach(checkbox => {
+                checkbox.disabled = isEditing; // Disable checkbox when editing
+                checkbox.closest('.toggle').style.display = isEditing ? 'none' : 'inline-block'; // Show toggle only in view mode
+            });
+
+            // Show or hide the save button
+            saveButton.style.display = isEditing ? 'none' : 'block';
+        }
+
+        function saveAllLeaveTypes() {
+    const rows = document.querySelectorAll('tbody tr');
+
+    rows.forEach(row => {
+        const maxDaysInput = row.querySelector('.editable');
+        const activeCheckbox = row.querySelector('.active-status');
+        const leaveTypeId = maxDaysInput.getAttribute('data-id');
+
+        const updatedLeaveType = {
+            typeMaxCount: parseInt(maxDaysInput.value),
+            typeIsActive: activeCheckbox.checked.toString(), // Ensure it's a string
+        };
+
+        // Send updated leave type to the backend
+        fetch(`/hr/api/update-leavetypes/${leaveTypeId}`, { // Changed the URL
+            method: 'PUT', // Changed PATCH to PUT
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedLeaveType),
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log(`Leave type ${leaveTypeId} updated successfully!`);
+            } else {
+                console.error(`Failed to update leave type ${leaveTypeId}.`);
+            }
+        })
+        .catch(error => console.error('Error updating leave type:', error));
+    });
+
+    alert('All changes saved successfully!');
+    toggleEditMode(); // Switch back to view mode
+}
+
+    </script>
+</body>
+</html>

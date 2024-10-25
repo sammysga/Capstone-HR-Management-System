@@ -37,6 +37,22 @@
         tr:hover {
             background-color: #f1f1f1; /* Hover effect for table rows */
         }
+
+        .manage-leaves-button {
+    padding: 10px 15px;
+    background-color: #2385B0; /* Your preferred color */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.manage-leaves-button:hover {
+    background-color: #1a5f78; /* Darker shade for hover effect */
+}
+
+
+
     </style>
     
     
@@ -45,49 +61,89 @@
 <body>
     <%- include('../../partials/hr_partials') %>
     <!-- Main content -->
-    <div class="main-content">
-        <h2>HR Dashboard</h2>
+<div class="main-content">
+    <h2>HR Dashboard</h2>
 
-        <!-- Approved Leave Requests Table -->
-
-        <div class="allLeaves">
-
-            <h3>Approved Leave Requests</h3>
-            <table>
-                <thead>
+<!-- Approved Leave Requests Table -->
+<div class="approvedLeaves">
+    <h3>Approved Leave Requests</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Filed Date</th>
+                <th>Department</th>
+                <th>Leave Type</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (approvedLeaves && approvedLeaves.length > 0) { %>
+                <% approvedLeaves.forEach(leave => { %>
                     <tr>
-                        <th>Full Name</th> <!-- Combined Full Name -->
-                        <th>Filed Date</th>
-                        <th>Department</th> <!-- New Department Header -->
-                        <th>Leave Type</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
+                        <td><%= leave.lastName %>, <%= leave.firstName %></td>
+                        <td><%= leave.filedDate %></td>
+                        <td><%= leave.department %></td>
+                        <td><%= leave.type %></td>
+                        <td><%= leave.startDate %></td>
+                        <td><%= leave.endDate %></td>
+                        <td><%= leave.status %></td>
                     </tr>
-                </thead>
-                <tbody>
-                    <% if (allLeaves && allLeaves.length > 0) { %>
-                        <% allLeaves.forEach(leave => { %>
-                            <tr>
-                                <td><%= leave.lastName %>, <%= leave.firstName %></td> <!-- Combined Full Name -->
-                                <td><%= leave.filedDate %></td> <!-- Filed Date -->
-                                <td><%= leave.department %></td> <!-- Department Name --> <!-- New Department Column -->
-                                <td><%= leave.type %></td> <!-- Leave Type -->
-                                <td><%= leave.startDate %></td> <!-- Start Date -->
-                                <td><%= leave.endDate %></td> <!-- End Date -->
-                            </tr>
-                        <% }); %>
-                    <% } else { %>
-                        <tr>
-                            <td colspan="6">No leave requests found.</td>
-                        </tr>
-                    <% } %>
-                </tbody>
-            </table>
-            
-        </div>
-        
-        
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="7">No approved leave requests found.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+
+    <!-- All Leave Requests Table -->
+<div class="allLeaves">
+    <div style="display: flex; align-items: center;">
+        <h3 style="margin-right: 10px;">All Leave Requests</h3>
+        <!-- Manage Leaves Button -->
+        <a href="/hr/manageleavetypes" class="manage-leaves-button">Manage Leave Types</a>
     </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Filed Date</th>
+                <th>Department</th>
+                <th>Leave Type</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (allLeaves && allLeaves.length > 0) { %>
+                <% allLeaves.forEach(leave => { %>
+                    <tr>
+                        <td><%= leave.lastName %>, <%= leave.firstName %></td>
+                        <td><%= leave.filedDate %></td>
+                        <td><%= leave.department %></td>
+                        <td><%= leave.type %></td>
+                        <td><%= leave.startDate %></td>
+                        <td><%= leave.endDate %></td>
+                        <td><%= leave.status %></td>
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="7">No leave requests found.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
 
     <!-- JavaScript for sidebar functionality -->
     <script>
