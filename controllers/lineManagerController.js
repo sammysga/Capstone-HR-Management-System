@@ -52,7 +52,7 @@ const lineManagerController = {
     //                 `)
     //                 .order('attendanceDate', { ascending: false });
 
-    //             if (attendanceError) {
+    //           no  if (attendanceError) {
     //                 console.error('Error fetching attendance logs:', attendanceError);
     //                 req.flash('errors', { dbError: 'Error fetching attendance logs.' });
     //                 return res.redirect('/linemanager/dashboard');
@@ -128,9 +128,7 @@ const lineManagerController = {
     getLineManagerDashboard: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
-                const userId = req.session.user.userId; // Get userId
-    
-                // Fetch leave requests and join with useraccounts and staffaccounts
+                // Fetch leave requests
                 const { data: allLeaves, error: leaveError } = await supabase
                     .from('leaverequests')
                     .select(`
@@ -143,16 +141,10 @@ const lineManagerController = {
                         useraccounts (
                             userId, 
                             userEmail,
-                            staffaccounts (
-                                lastName, 
-                                firstName
-                            )
+                            staffaccounts (lastName, firstName)
                         ), 
-                        leave_types (
-                            typeName
-                        )
+                        leave_types (typeName)
                     `)
-                    .eq('userId', userId) // Ensure we filter by the logged-in user
                     .order('created_at', { ascending: false });
     
                 if (leaveError) {
@@ -171,13 +163,14 @@ const lineManagerController = {
                     endDate: leave.untilDate || 'N/A'
                 }));
     
-                // Fetch attendance logs and join with useraccounts and staffaccounts
+                // Fetch attendance logs
                 const { data: attendanceLogs, error: attendanceError } = await supabase
                     .from('attendance')
                     .select(`
                         userId, 
                         attendanceDate, 
                         attendanceAction, 
+                        attendanceTime, 
                         useraccounts (
                             userId, 
                             staffaccounts (
@@ -188,7 +181,6 @@ const lineManagerController = {
                             )
                         )
                     `)
-                    .eq('userId', userId) // Ensure we filter by the logged-in user
                     .order('attendanceDate', { ascending: false });
     
                 if (attendanceError) {
@@ -201,62 +193,64 @@ const lineManagerController = {
                 const formattedAttendanceLogs = await Promise.all(attendanceLogs.map(async (attendance) => {
                     const attendanceDate = new Date(attendance.attendanceDate);
                     const attendanceAction = attendance.attendanceAction || 'N/A';
-    
-                    // Initialize variables
+                    const attendanceTimeString = attendance.attendanceTime || '00:00:00';
+                
+                    // Split the time string to get hours, minutes, and seconds
+                    const timeParts = attendanceTimeString.split(':');
+                    const [hours, minutes, seconds] = timeParts.map(Number);
+                
                     let timeIn = null;
                     let timeOut = null;
                     let activeWorkingHours = 0;
-    
-                    // Check if attendanceTime exists and is a valid string
-                    const attendanceTimeString = attendance.attendanceTime || '00:00:00';
-    
-                    // Split the time string to get hours, minutes, and seconds
-                    const timeParts = attendanceTimeString.split(':');
-                    if (timeParts.length === 3) {
-                        const [hours, minutes, seconds] = timeParts.map(Number);
-                        const localDate = new Date(attendanceDate.getFullYear(), attendanceDate.getMonth(), attendanceDate.getDate());
-    
-                        if (attendanceAction === 'Time In') {
-                            timeIn = new Date(localDate.getTime() + (hours * 3600000) + (minutes * 60000) + (seconds * 1000));
-                        } else if (attendanceAction === 'Time Out') {
-                            timeOut = new Date(localDate.getTime() + (hours * 3600000 ) + (minutes * 60000) + (seconds * 1000));
-                        }
+                
+                    const localDate = new Date(attendanceDate.getFullYear(), attendanceDate.getMonth(), attendanceDate.getDate());
+                
+                    // Determine timeIn and timeOut based on attendanceAction
+                    if (attendanceAction === 'Time In') {
+                        timeIn = new Date(localDate.getTime() + (hours * 3600000) + (minutes * 60000) + (seconds * 1000));
+                    } else if (attendanceAction === 'Time Out') {
+                        timeOut = new Date(localDate.getTime() + (hours * 3600000) + (minutes * 60000) + (seconds * 1000));
                     }
-    
+                
                     // Calculate active working hours
                     if (timeIn && timeOut) {
                         activeWorkingHours = Math.abs((timeOut.getTime() - timeIn.getTime()) / 3600000);
                     }
-    
+                
+                    // Fetch department name and job title using helper functions
+                    const departmentName = await lineManagerController.getDepartmentName(attendance.useraccounts?.staffaccounts?.departmentId);
+                    const jobTitle = await lineManagerController.getJobTitle(attendance.useraccounts?.staffaccounts?.jobId);
+                
                     return {
                         lastName: attendance.useraccounts?.staffaccounts?.lastName || 'N/A',
                         firstName: attendance.useraccounts?.staffaccounts?.firstName || 'N/A',
-                        attendanceDate: attendanceDate.toISOString().split('T')[0],
-                        attendanceAction,
-                        timeIn: timeIn ? timeIn.toLocaleTimeString() : 'N/A',
-                        timeOut: timeOut ? timeOut.toLocaleTimeString() : 'N/A',
-                        activeWorkingHours: activeWorkingHours.toFixed(2) || 'N/A'
+                        date: attendance.attendanceDate ? new Date(attendance.attendanceDate).toISOString().split('T')[0] : 'N/A',
+                        department: departmentName,
+                        jobPosition: jobTitle,
+                        attendanceTime: timeIn ? timeIn.toLocaleTimeString() : 'N/A', // Time In
+                        timeOut: timeOut ? timeOut.toLocaleTimeString() : 'N/A', // Time Out
+                        activeWorkingHours: activeWorkingHours.toFixed(2) // Active working hours
                     };
                 }));
-    
-                res.render('staffpages/linemanager_pages/managerdashboard', {
-                    formattedLeaves, // Use this if you want to display formatted leaves
-                    formattedAttendanceLogs,
-                    user: req.session.user,
-                    successMessage: req.flash('success'),
-                    errorMessage: req.flash('errors')
+                // Render the dashboard with both leave requests and attendance logs
+               // Render the dashboard with both leave requests and attendance logs
+                res.render('staffpages/linemanager_pages/managerdashboard', { 
+                formattedLeaves: formattedLeaves, // Change this to formattedLeaves
+                attendanceLogs: formattedAttendanceLogs,
+                successMessage: req.flash('success'),
+                errorMessage: req.flash('errors')
                 });
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-                req.flash('errors', { dbError: 'Error fetching dashboard data.' });
-                return res.redirect('/linemanager/dashboard');
+            } catch (err) {
+                console.error('Error fetching data for the dashboard:', err);
+                req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
+                res.redirect('/linemanager/dashboard');
             }
         } else {
-            req.flash('errors', { unauthorized: 'Unauthorized access.' });
-            return res.redirect('/login');
+            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+            res.redirect('/staff/login');
         }
     },
-
+    
     // Helper function to get department name
     getDepartmentName: async function(departmentId) {
         if (!departmentId) return 'N/A'; // Handle undefined departmentId
