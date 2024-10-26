@@ -49,12 +49,12 @@
         <h2>Line Manager Dashboard</h2>
         <!-- Success and Error Messages -->
         <div class="messages">
-            <% if (successMessage) { %>
+            <% if (successMessage && successMessage.length > 0) { %>
                 <div class="alert alert-success">
                     <%= successMessage %>
                 </div>
             <% } %>
-            <% if (errorMessage) { %>
+            <% if (errorMessage && errorMessage.length > 0) { %>
                 <div class="alert alert-error">
                     <%= errorMessage.dbError %>
                 </div>
@@ -79,26 +79,22 @@
             </tr>
         </thead>
         <tbody>
-            <% if (attendanceLogs && attendanceLogs.length > 0) { %>
-                <% attendanceLogs.forEach(log => { %>
+            <% if (formattedAttendanceLogs && formattedAttendanceLogs.length > 0) { %>
+                <% formattedAttendanceLogs.forEach(log => { %>
                     <tr>
                         <td><%= log.lastName %></td>
                         <td><%= log.firstName %></td>
-                        <td><%= log.date %></td>
-                        <td><%= log.department %></td>
-                        <td><%= log.jobPosition %></td>
-                        <td>
-                            <%= log.attendanceAction === 'Time In' ? log.attendanceTime || 'N/A' : 'N/A' %>
-                        </td> <!-- Time In -->
-                        <td>
-                            <%= log.attendanceAction === 'Time Out' ? log.attendanceTime || 'N/A' : 'N/A' %>
-                        </td> <!-- Time Out -->
-                        <td><%= log.activeWorkingHours || 'N/A' %></td> <!-- Active Working Hours -->
+                        <td><%= log.attendanceDate %></td>
+                        <td><%= log.department || 'N/A' %></td>
+                        <td><%= log.jobPosition || 'N/A' %></td>
+                        <td><%= log.timeIn || 'N/A' %></td>
+                        <td><%= log.timeOut || 'N/A' %></td>
+                        <td><%= log.activeWorkingHours || 'N/A' %></td>
                     </tr>
                 <% }); %>
             <% } else { %>
                 <tr>
-                    <td colspan="8">No attendance logs found.</td> <!-- Adjusted colspan -->
+                    <td colspan="8">No attendance logs found.</td>
                 </tr>
             <% } %>
         </tbody>
@@ -121,8 +117,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% if (allLeaves && allLeaves.length > 0) { %>
-                        <% allLeaves.forEach(leave => { %>
+                    <% if (formattedLeaves && formattedLeaves.length > 0) { %>
+                        <% formattedLeaves.forEach(leave => { %>
                             <tr>
                                 <td><%= leave.lastName %></td>
                                 <td><%= leave.firstName %></td>
