@@ -62,7 +62,7 @@
             margin-bottom: 20px;
         }
 
-        .pending-container h2 {
+        .pending-container h3 {
             margin-bottom: 10px;
             color: #124A5C;
         }
@@ -88,6 +88,7 @@
 
         .records-container {
             width: 100%; /* Set the width of the records container */
+            text-align: center; /* Center the text */
         }
 
         /* Style for the leave requests table */
@@ -178,33 +179,26 @@
 <body>
     <%- include('../../partials/employee_partials') %>
 
-
-     <!--TODO: Backend for the Leave Request Count Display -->
     <!-- Main Content Wrapper -->
     <div class="content">
         <h1>Leave Requests</h1>
+    
+        <div class="chart-container">
+            <% leaveBalances.forEach(function(balance) { %>
+                <% if (balance.remainingLeaves >= 0) { %> <!-- Check if there are remaining leaves -->
+                    <div class="chart" id="<%= balance.typeName %>">
+                        <h3><%= balance.typeName %></h3>
+                        <p>Remaining Leaves: <span><%= balance.remainingLeaves %></span></p>
+                    </div>
+                <% } %>
+            <% }); %>
+        </div>
 
-<!-- Leave Balance Charts -->
-<div class="chart-container">
-    <div class="chart">
-        <h3>Vacation Leave</h3>
-        <p>17 Days Available</p>
-    </div>
-    <div class="chart">
-        <h3>Sick Leave</h3>
-        <p>17 Days Available</p>
-    </div>
-    <div class="chart">
-        <h3>Emergency Leave</h3>
-        <p>5 Days Available</p>
-    </div>
-</div>
-
-<!-- Pending Leave Requests (Centered) -->
-<div class="pending-container" style="text-align: center; margin: 20px 0;"> <!-- Centering the pending request -->
-    <h3>Pending for Approval</h3>
-    <p id="pendingCount">3 Pending Requests</p> <!-- Dynamically rendered pending count -->
-</div>
+        <!-- Pending Leave Requests (Centered) -->
+        <div class="pending-container" style="text-align: center; margin: 20px 0;">
+            <h3>Pending for Approval</h3>
+            <p id="pendingCount">Loading Pending Requests...</p> <!-- Dynamically rendered pending count -->
+        </div>
 
         <!-- File New Leave Button -->
         <div class="btn-container">
@@ -225,21 +219,22 @@
                     </tr>
                 </thead>
                 <tbody id="leaveRequestsTable">
-                    <tr>
-                        <td>Vacation</td>
-                        <td>2024-10-01</td>
-                        <td>2024-10-05</td>
-                        <td>5</td>
-                        <td>Approved</td>
-                    </tr>
-                    <tr>
-                        <td>Sick</td>
-                        <td>2024-09-15</td>
-                        <td>2024-09-16</td>
-                        <td>2</td>
-                        <td>Pending</td>
-                    </tr>
-                </tbody>
+                    <% if (leaveRequests && leaveRequests.length > 0) { %>
+                        <% leaveRequests.forEach(request => { %>
+                            <tr>
+                                <td><%= request.leave_types.typeName %></td>
+                                <td><%= request.fromDate %></td>
+                                <td><%= request.untilDate %></td>
+                                <td><%= Math.ceil((new Date(request.untilDate) - new Date(request.fromDate)) / (1000 * 60 * 60 * 24)) + 1 %></td>
+                                <td><%= request.status %></td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5">No leave requests found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>        
             </table>
         </div>
 
@@ -264,105 +259,146 @@
                     <input type="date" id="fromDate" name="fromDate" required>
 
                     <label for="fromDayType">From Day Type:</label>
-                    <select id="fromDayType" name="fromDayType" required>
-                        <option value="whole_day">Whole Day</option>
-                        <option value="half_day">Half Day</option>
-                    </select>
+<select id="fromDayType" name="fromDayType" required>
+    <option value="whole_day">Whole Day</option>
+    <option value="half_day">Half Day</option>
+</select>
 
                     <label for="untilDate">Until Date:</label>
                     <input type="date" id="untilDate" name="untilDate" required>
 
                     <label for="untilDayType">Until Day Type:</label>
-                    <select id="untilDayType" name="untilDayType" required>
-                        <option value="whole_day">Whole Day</option>
-                        <option value="half_day">Half Day</option>
-                    </select>
+<select id="untilDayType" name="untilDayType" required>
+    <option value="whole_day">Whole Day</option>
+    <option value="half_day">Half Day</option>
+</select>
 
                     <label for="reason">Reason:</label>
                     <input type="text" id="reason" name="reason" required>
 
-                    <button type="submit" class="btn">Submit</button>
+                    <button type="submit">Submit Leave Request</button>
                 </form>
             </div>
         </div>
+    </div>
 
-        <script>
+  <script>
             // Get the modal
             var modal = document.getElementById("fileLeaveModal");
-
+        
             // Get the button that opens the modal
             var btn = document.getElementById("fileLeaveBtn");
-
+        
             // Get the <span> element that closes the modal
             var closeBtn = document.getElementById("closeModalBtn");
-
+        
             // When the user clicks the button, open the modal 
             btn.onclick = function() {
                 modal.style.display = "block";
             }
-
+        
             // When the user clicks on <span> (x), close the modal
             closeBtn.onclick = function() {
                 modal.style.display = "none";
             }
-
+        
             // When the user clicks anywhere outside of the modal, close it
             window.onclick = function(event) {
                 if (event.target == modal) {
                     modal.style.display = "none";
                 }
             }
-
-            
-    // Handle form submission
-    document.getElementById('leaveForm').addEventListener('submit', async (event) => {
-        event.preventDefault(); // Prevent the default form submission
-
-        // Get form values
-        const leaveType = document.getElementById('leaveType').value;
-        const fromDate = document.getElementById('fromDate').value;
-        const fromDayType = document.getElementById('fromDayType').value;
-        const untilDate = document.getElementById('untilDate').value;
-        const untilDayType = document.getElementById('untilDayType').value;
-        const reason = document.getElementById('reason').value;
-
-        // Prepare data for submission
-        const leaveData = {
-            leaveTypeId: leaveType, // Ensure the key matches what your backend expects
-            fromDate,
-            fromDayType,
-            untilDate,
-            untilDayType,
-            reason
-        };
-
-        // Submit form data via fetch API
-        try {
-            const response = await fetch('/employee/leaverequest', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(leaveData)
-            });
-
-            // Handle the server's response
-            if (response.ok) {
-                const data = await response.json();
-                alert('Leave request submitted successfully!');
-                document.getElementById('fileLeaveModal').style.display = 'none';
-                // Optionally, reset the form
-                document.getElementById('leaveForm').reset();
-            } else {
-                const errorText = await response.text();
-                alert('Failed to submit leave request: ' + errorText);
+        
+            // Update leave requests table with new data
+            function updateLeaveData(leaveType, fromDate, untilDate, totalDays, status) {
+                // Find the leave requests table
+                const table = document.getElementById('leaveRequestsTable');
+                
+                // Create a new row and cells
+                const newRow = table.insertRow();
+                const cellLeaveType = newRow.insertCell(0);
+                const cellFromDate = newRow.insertCell(1);
+                const cellUntilDate = newRow.insertCell(2);
+                const cellTotalDays = newRow.insertCell(3);
+                const cellStatus = newRow.insertCell(4);
+        
+                // Set cell content
+                cellLeaveType.textContent = leaveType;
+                cellFromDate.textContent = fromDate;
+                cellUntilDate.textContent = untilDate;
+                cellTotalDays.textContent = totalDays;
+                cellStatus.textContent = status;
             }
-        } catch (error) {
-            console.error('Fetch error:', error);
-            alert('An error occurred while submitting the request. Please try again.');
+// This function updates the displayed remaining leaves after a successful leave request
+function updateRemainingLeaves(leaveTypeId, daysRequested) {
+    const balanceElement = document.getElementById(leaveTypeId); // Assuming balance typeName is same as leaveTypeId
+
+    if (balanceElement) {
+        const remainingLeavesSpan = balanceElement.querySelector('span');
+        let remainingLeaves = parseInt(remainingLeavesSpan.textContent); // Get current remaining leaves
+        remainingLeaves -= daysRequested; // Decrease by the days requested
+        remainingLeavesSpan.textContent = remainingLeaves; // Update the displayed value
+    }
+}
+
+// Handle form submission
+document.getElementById('leaveForm').addEventListener('submit', async (event) => {
+    event.preventDefault(); // Prevent the default form submission
+
+    // Get form values
+    const leaveTypeId = document.getElementById('leaveType').value;
+    const fromDate = document.getElementById('fromDate').value;
+    const fromDayType = document.getElementById('fromDayType').value;
+    const untilDate = document.getElementById('untilDate').value;
+    const untilDayType = document.getElementById('untilDayType').value;
+    const reason = document.getElementById('reason').value;
+
+    // Calculate total days (you can adjust the calculation as per your needs)
+    const totalDays = Math.ceil((new Date(untilDate) - new Date(fromDate)) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Prepare data for submission
+    const leaveData = {
+        leaveTypeId,
+        fromDate,
+        fromDayType,
+        untilDate,
+        untilDayType,
+        reason
+    };
+
+    // Submit form data via fetch API
+    try {
+        const response = await fetch('/employee/leaverequest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(leaveData)
+        });
+
+        // Handle the server's response
+        if (response.ok) {
+            const data = await response.json();
+            alert('Leave request submitted successfully!');
+            
+            // Update the table with the new request
+            updateLeaveData(data.leaveType, fromDate, untilDate, totalDays, 'Pending');
+            
+            // Update the remaining leaves
+            updateRemainingLeaves(leaveTypeId, totalDays);
+            
+            // Close the modal and reset the form
+            modal.style.display = 'none';
+            document.getElementById('leaveForm').reset(); // Reset form fields
+        } else {
+            alert('Failed to submit leave request. Please try again.');
         }
-    });
+    } catch (error) {
+        console.error('Error submitting leave request:', error);
+        alert('An error occurred. Please try again later.');
+    }
+});
+
         </script>
-    </div>
 </body>
 </html>
