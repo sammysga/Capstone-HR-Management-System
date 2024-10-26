@@ -777,7 +777,29 @@ postLeaveBalancesByUserId: async function(req, res) {
 },
 
 
+// Function to fetch the count of pending leave requests
+fetchPendingRequestsCount: async function(req, res) {
+    console.log('Fetching count of pending leave requests for user:', req.session.user.userId);
 
+    try {
+        const { count, error } = await supabase
+            .from('leaverequests')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'Pending for Approval')
+            .eq('userId', req.session.user.userId);
+
+        if (error) {
+            console.error('Error fetching pending requests:', error.message);
+            return res.status(500).json({ message: 'Error fetching pending requests', error: error.message });
+        }
+
+        console.log('Pending requests count for user:', count);
+        return res.status(200).json({ count: count });
+    } catch (err) {
+        console.error('Error in fetchPendingRequestsCount:', err);
+        return res.status(500).json({ message: 'Internal server error', error: err.message });
+    }
+},
 
 getAttendance: async function (req, res) {
     // Check if the user is authenticated

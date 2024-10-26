@@ -83,12 +83,8 @@ router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
 router.get('/employee/leaverequest', employeeController.getLeaveRequestForm); // To load the form
 router.post('/employee/leaverequest', employeeController.submitLeaveRequest); // To submit a leave request
 router.get('/employee/leaverequest/requests', employeeController.getLeaveRequestsByUserId); // To get leave requests
-router.post('/employee/leaverequest/balances', employeeController.postLeaveBalancesByUserId); // To get leave balances
-
-// router.get('/employee/leaverequest', employeeController.getLeaveRequestForm); // Render form for requesting leave
-// router.post('/employee/leaverequest', employeeController.submitLeaveRequest); // Handle submitting leave requests
-// router.get('/employee/leaverequest', employeeController.getLeaveBalances); // Fetch and display leave balances
-// router.get('/employee/leaverequest/pending', employeeController.getPendingLeaveRequests); // Fetch pending leave requests
+router.post('/employee/leaverequest', employeeController.postLeaveBalancesByUserId); // To get leave balances
+router.get('/employee/leaverequest/pending', employeeController.fetchPendingRequestsCount);
 
 
 router.get('/employee/attendance', employeeController.getAttendance);
