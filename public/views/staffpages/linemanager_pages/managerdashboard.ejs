@@ -79,17 +79,17 @@
             </tr>
         </thead>
         <tbody>
-            <% if (formattedAttendanceLogs && formattedAttendanceLogs.length > 0) { %>
-                <% formattedAttendanceLogs.forEach(log => { %>
+            <% if (attendanceLogs && attendanceLogs.length > 0) { %> <!-- Change this line -->
+                <% attendanceLogs.forEach(log => { %> <!-- Change this line -->
                     <tr>
                         <td><%= log.lastName %></td>
                         <td><%= log.firstName %></td>
-                        <td><%= log.attendanceDate %></td>
+                        <td><%= log.date %></td> <!-- Update this to use the correct property -->
                         <td><%= log.department || 'N/A' %></td>
                         <td><%= log.jobPosition || 'N/A' %></td>
-                        <td><%= log.timeIn || 'N/A' %></td>
-                        <td><%= log.timeOut || 'N/A' %></td>
-                        <td><%= log.activeWorkingHours || 'N/A' %></td>
+                        <td><%= log.attendanceTime || 'N/A' %></td> <!-- Updated Column -->
+                        <td><%= log.timeOut || 'N/A' %></td> <!-- New Column -->
+                        <td><%= log.activeWorkingHours || 'N/A' %></td> <!-- Updated Column -->
                     </tr>
                 <% }); %>
             <% } else { %>
@@ -101,72 +101,71 @@
     </table>
 </section>
 
-
-        <!-- Leave Requests Section -->
-        <section class="leave-requests">
-            <h2>Approved Leave Requests</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Last Name</th>
-                        <th>First Name</th>
-                        <th>Filed Date</th>
-                        <th>Leave Type</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (formattedLeaves && formattedLeaves.length > 0) { %>
-                        <% formattedLeaves.forEach(leave => { %>
-                            <tr>
-                                <td><%= leave.lastName %></td>
-                                <td><%= leave.firstName %></td>
-                                <td><%= leave.filedDate %></td>
-                                <td><%= leave.type %></td>
-                                <td><%= leave.startDate %></td>
-                                <td><%= leave.endDate %></td>
-                            </tr>
-                        <% }); %>
-                    <% } else { %>
+    <!-- Leave Requests Section -->
+    <section class="leave-requests">
+        <h2>Approved Leave Requests</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Last Name</th>
+                    <th>First Name</th>
+                    <th>Filed Date</th>
+                    <th>Leave Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (formattedLeaves && formattedLeaves.length > 0) { %>
+                    <% formattedLeaves.forEach(leave => { %>
                         <tr>
-                            <td colspan="6">No leave requests found.</td>
+                            <td><%= leave.lastName %></td>
+                            <td><%= leave.firstName %></td>
+                            <td><%= leave.filedDate %></td>
+                            <td><%= leave.type %></td>
+                            <td><%= leave.startDate %></td>
+                            <td><%= leave.endDate %></td>
                         </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </section>
-    
-    </div>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="6">No leave requests found.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </section>
 
-    <!-- JavaScript for sidebar functionality -->
-    <script>
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
+</div>
 
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
+<!-- JavaScript for sidebar functionality -->
+<script>
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
         });
-    </script>
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+</script>
 </body>
 </html>
 
