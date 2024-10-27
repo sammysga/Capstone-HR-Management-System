@@ -5,159 +5,286 @@ const lineManagerController = {
     getLineManagerDashboard: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
-                // Fetch leave requests
-                const { data: allLeaves, error: leaveError } = await supabase
+                // Common function to fetch and format leave data
+                const fetchAndFormatLeaves = async (statusFilter = null) => {
+                    const query = supabase
+                        .from('leaverequests')
+                        .select(`
+                            leaveRequestId, 
+                            userId, 
+                            created_at, 
+                            leaveTypeId, 
+                            fromDate, 
+                            untilDate, 
+                            status,
+                            useraccounts (
+                                userId, 
+                                userEmail,
+                                staffaccounts (
+                                    departments (deptName), 
+                                    lastName, 
+                                    firstName
+                                )
+                            ), 
+                            leave_types (
+                                typeName
+                            )
+                        `)
+                        .order('created_at', { ascending: false });
+                    
+                    if (statusFilter) query.eq('status', statusFilter);
+                    
+                    const { data, error } = await query;
+                    if (error) throw error;
+                    
+                    return data.map(leave => ({
+                        lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+                        firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+                        department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+                        filedDate: leave.created_at ? new Date(leave.created_at).toISOString().split('T')[0] : 'N/A',
+                        type: leave.leave_types?.typeName || 'N/A',
+                        startDate: leave.fromDate || 'N/A',
+                        endDate: leave.untilDate || 'N/A',
+                        status: leave.status || 'Pending'
+                    }));
+                };
+    
+                // Function to fetch attendance logs
+                const fetchAttendanceLogs = async () => {
+                    const { data: attendanceLogs, error: attendanceError } = await supabase
+                        .from('attendance')
+                        .select(`
+                            userId, 
+                            attendanceDate, 
+                            attendanceAction, 
+                            attendanceTime, 
+                            useraccounts (
+                                userId, 
+                                staffaccounts (
+                                    staffId,
+                                    firstName, 
+                                    lastName,
+                                    departmentId, 
+                                    jobId,
+                                    departments: departmentId ("deptName"),
+                                    jobpositions: jobId ("jobTitle")
+                                )
+                            )
+                        `)
+                        .order('attendanceDate', { ascending: false });
+    
+                    if (attendanceError) {
+                        console.error('Error fetching attendance logs:', attendanceError);
+                        throw new Error('Error fetching attendance logs.');
+                    }
+    
+                    return attendanceLogs;
+                };
+    
+                // Function to format attendance logs
+                const formatAttendanceLogs = (attendanceLogs) => {
+                    const formattedAttendanceLogs = attendanceLogs.reduce((acc, attendance) => {
+                        const attendanceDate = attendance.attendanceDate;
+                        const attendanceTime = attendance.attendanceTime || '00:00:00';
+                        const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
+                        const localDate = new Date(attendanceDate);
+                        localDate.setHours(hours, minutes, seconds);
+    
+                        const userId = attendance.userId;
+                        const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
+    
+                        if (attendance.attendanceAction === 'Time In') {
+                            if (existingEntry) {
+                                existingEntry.timeIn = localDate;
+                            } else {
+                                acc.push({
+                                    userId,
+                                    date: attendanceDate,
+                                    timeIn: localDate,
+                                    timeOut: null,
+                                    useraccounts: attendance.useraccounts
+                                });
+                            }
+                        } else if (attendance.attendanceAction === 'Time Out') {
+                            if (existingEntry) {
+                                existingEntry.timeOut = localDate;
+                            } else {
+                                acc.push({
+                                    userId,
+                                    date: attendanceDate,
+                                    timeIn: null,
+                                    timeOut: localDate,
+                                    useraccounts: attendance.useraccounts
+                                });
+                            }
+                        }
+    
+                        return acc;
+                    }, []);
+    
+                    return formattedAttendanceLogs.map(log => {
+                        const activeWorkingHours = log.timeIn && log.timeOut ? (log.timeOut - log.timeIn) / 3600000 : 0;
+    
+                        return {
+                            department: log.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+                            firstName: log.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+                            lastName: log.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+                            jobTitle: log.useraccounts?.staffaccounts[0]?.jobpositions?.jobTitle || 'N/A',
+                            date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
+                            timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
+                            timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : 'N/A',
+                            activeWorkingHours: activeWorkingHours.toFixed(2)
+                        };
+                    });
+                };
+    
+                // Fetch formatted leave data
+                const formattedAllLeaves = await fetchAndFormatLeaves();
+                const formattedApprovedLeaves = await fetchAndFormatLeaves('Approved');
+                const attendanceLogs = await fetchAttendanceLogs();
+                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+    
+                // Render the dashboard with all relevant data
+                return res.render('staffpages/linemanager_pages/managerdashboard', { 
+                    allLeaves: formattedAllLeaves,
+                    approvedLeaves: formattedApprovedLeaves,
+                    attendanceLogs: formattedAttendanceDisplay,
+                    successMessage: req.flash('success'),
+                    errorMessage: req.flash('errors')
+                });
+            } catch (err) {
+                console.error('Error fetching data for the dashboard:', err);
+                req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+        } else {
+            // Redirect or handle unauthorized access here if needed
+            return res.redirect('/login');
+        }
+    },
+    getLeaveRequest: async function(req, res) {
+        // Check if the user is logged in and has the 'Line Manager' role
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
+            try {
+                const userId = req.session.user.userId;
+                const { userId: paramUserId } = req.params;
+                const finalUserId = paramUserId || userId;
+    
+                console.log('Final User ID for query:', finalUserId);
+    
+                // Fetch leave request and related employee data
+                const { data, error } = await supabase
                     .from('leaverequests')
                     .select(`
-                        leaveRequestId, 
-                        userId, 
-                        created_at, 
-                        leaveTypeId, 
-                        fromDate, 
-                        untilDate, 
+                        *,
                         useraccounts (
-                            userId, 
-                            userEmail,
                             staffaccounts (
-                                lastName, 
-                                firstName
+                                lastName,
+                                firstName,
+                                phoneNumber
                             )
-                        ), 
+                        ),
                         leave_types (
                             typeName
                         )
                     `)
-                    .order('created_at', { ascending: false });
+                    .eq('userId', finalUserId) // Using finalUserId for the query
+                    .single(); // Fetch a single record
     
-                if (leaveError) {
-                    console.error('Error fetching leave requests:', leaveError);
-                    req.flash('errors', { dbError: 'Error fetching leave requests.' });
-                    return res.redirect('/linemanager/dashboard');
+                console.log('Supabase Query Result:', { data, error });
+    
+                // If no data is returned or there's an error
+                if (error || !data) {
+                    console.error('Error details:', error);
+                    return res.status(404).json({ message: 'Leave request or employee not found.' }); // User-friendly message
                 }
     
-                console.log('Leave Requests Data:', allLeaves); // Check leave requests data structure
+                // Construct the leave request object
+                const leaveRequest = {
+                    employeeName: `${data.useraccounts.staffaccounts.lastName} ${data.useraccounts.staffaccounts.firstName}`,
+                    employeeContactNo: data.useraccounts.staffaccounts.phoneNumber,
+                    leaveType: data.leave_types.typeName,
+                    leaveStartDate: data.fromDate,
+                    leaveStartDayType: data.fromDayType,
+                    leaveEndDate: data.untilDate,
+                    leaveEndDayType: data.untilDayType,
+                    reason: data.reason,
+                };
     
-                const formattedLeaves = allLeaves.map(leave => ({
-                    lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A', 
-                    firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
-                    filedDate: leave.created_at ? new Date(leave.created_at).toISOString().split('T')[0] : 'N/A',
-                    type: leave.leave_types?.typeName || 'N/A',
-                    startDate: leave.fromDate || 'N/A',
-                    endDate: leave.untilDate || 'N/A'
-                }));
+                console.log('Leave Request Object:', leaveRequest);
     
-                // Fetch attendance logs with department and job information
-const { data: attendanceLogs, error: attendanceError } = await supabase
-.from('attendance')
-.select(`
-    userId, 
-    attendanceDate, 
-    attendanceAction, 
-    attendanceTime, 
-    useraccounts (
-        "userId", 
-        staffaccounts (
-            "staffId",
-            "firstName", 
-            "lastName",
-            "departmentId", 
-            "jobId",
-            departments:departmentId ("deptName"),
-            jobpositions:jobId ("jobTitle")
-        )
-    )
-`)
-.order('attendanceDate', { ascending: false });
-
-if (attendanceError) {
-console.error('Error fetching attendance logs:', attendanceError);
-req.flash('errors', { dbError: 'Error fetching attendance logs.' });
-return res.redirect('/linemanager/managerdashboard');
-}
-
-// Log the raw data for debugging
-console.log('Raw Attendance Logs:', JSON.stringify(attendanceLogs, null, 2));
-
-// Initialize an array to hold the formatted attendance logs
-const formattedAttendanceLogs = attendanceLogs.reduce((acc, attendance) => {
-const attendanceDate = attendance.attendanceDate;
-const attendanceTime = attendance.attendanceTime || '00:00:00';
-const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
-const localDate = new Date(attendanceDate);
-localDate.setHours(hours, minutes, seconds);
-
-const userId = attendance.userId;
-const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
-
-if (attendance.attendanceAction === 'Time In') {
-    if (existingEntry) {
-        existingEntry.timeIn = localDate;
-    } else {
-        acc.push({
-            userId,
-            date: attendanceDate,
-            timeIn: localDate,
-            timeOut: null,
-            useraccounts: attendance.useraccounts
-        });
-    }
-} else if (attendance.attendanceAction === 'Time Out') {
-    if (existingEntry) {
-        existingEntry.timeOut = localDate;
-    } else {
-        acc.push({
-            userId,
-            date: attendanceDate,
-            timeIn: null,
-            timeOut: localDate,
-            useraccounts: attendance.useraccounts
-        });
-    }
-}
-
-return acc;
-}, []);
-
-// Format the attendance logs for display
-const formattedAttendanceDisplay = formattedAttendanceLogs.map(log => {
-const activeWorkingHours = log.timeIn && log.timeOut ? (log.timeOut - log.timeIn) / 3600000 : 0;
-
-const lastName = log.useraccounts?.staffaccounts?.[0]?.lastName || 'N/A';
-const firstName = log.useraccounts?.staffaccounts?.[0]?.firstName || 'N/A';                        
-const jobTitle = log.useraccounts?.staffaccounts?.[0]?.jobpositions?.jobTitle || 'N/A'; 
-const departmentName = log.useraccounts?.staffaccounts?.[0]?.departments?.deptName || 'N/A';
-
-return {
-    department: departmentName,
-    firstName,
-    lastName,
-    jobTitle,
-    date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
-    timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
-    timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : 'N/A',
-    activeWorkingHours: activeWorkingHours.toFixed(2)
-};
-});
-
-console.log('Formatted Attendance Logs:', formattedAttendanceDisplay);
-
-res.render('staffpages/linemanager_pages/managerdashboard', {
-formattedLeaves,
-attendanceLogs: formattedAttendanceDisplay,
-successMessage: req.flash('success'),
-errorMessage: req.flash('errors')
-});
-
-            } catch (err) {
-                console.error('Error fetching data for the dashboard:', err);
-                req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
-                res.redirect('/linemanager/dashboard');
+                // Render the view with leaveRequest data
+                return res.render('staffpages/linemanager_pages/managerviewleaverequests', { leaveRequest });
+    
+            } catch (error) {
+                console.error('Error fetching leave request:', error);
+                return res.status(500).json({ success: false, message: 'Server error. Please try again later.' }); // User-friendly message
             }
         } else {
-            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
-            res.redirect('/staff/login');
+            return res.redirect('/login');
         }
     },
+    
+    updateLeaveRequest: async function(req, res) {
+        const { leaveRequestId, action, remarks } = req.body;
+    
+        try {
+            const updatedData = {
+                remarkByManager: remarks,
+                updatedDate: new Date(),
+                status: action === 'approve' ? 'Approved' : 'Rejected'
+            };
+    
+            const { data, error } = await supabase
+                .from('leaverequests')
+                .update(updatedData)
+                .eq('leaveRequestId', leaveRequestId);
+    
+            if (error) {
+                return res.status(400).json({ message: 'Failed to update leave request', error });
+            }
+    
+            return res.redirect('/path/to/success/page');
+        } catch (error) {
+            console.error('Error updating leave request:', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    },
+    
+    
+    // updateLeaveRequest: async function(req, res) {
+    //     try {
+    //         const { action, remarks, leaveRequestId } = req.body;
+    
+    //         // Validate input
+    //         if (!action || !remarks || !leaveRequestId) {
+    //             return res.status(400).json({ success: false, message: 'All fields are required.' });
+    //         }
+    
+    //         // Update the leave request in Supabase
+    //         const { error } = await supabase
+    //             .from('leaverequests')
+    //             .update({
+    //                 status: action === 'approve' ? 'Approved' : 'Rejected', // Set the status based on the action
+    //                 remarkByManager: remarks, // Save the manager's remarks
+    //                 updatedDate: new Date().toISOString(), // Update the date
+    //             })
+    //             .eq('id', leaveRequestId); // Assuming id is the primary key for leave requests
+    
+    //         if (error) {
+    //             return res.status(404).json({ success: false, message: 'Leave request not found.', error });
+    //         }
+    
+    //         // Optionally, redirect to the leave requests page or render a confirmation view
+    //         // res.redirect('/linemanager/leaverequests'); // Redirect if you have a route to list leave requests
+    //         res.json({ success: true, message: 'Leave request updated successfully.' }); // Return success message as JSON
+    
+    //     } catch (error) {
+    //         console.error('Error updating leave request:', error);
+    //         res.status(500).json({ success: false, message: 'Server error.' });
+    //     }
+    // },
+    
     getUserAccount: async function (req, res) {
         try {
             const userId = req.session.user ? req.session.user.userId : null;

@@ -96,7 +96,8 @@ router.post('/employee/attendance', employeeController.postAttendance);
 
 // Staff information
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
-
+router.get('/linemanager/leaverequest', lineManagerController.getLeaveRequest); // Fetch leave request
+router.post('/linemanager/leaverequest/update', lineManagerController.updateLeaveRequest); // Update leave request
 
 router.get('/linemanager/useraccount', lineManagerController.getUserAccount);
 router.post('/linemanager/update-info', lineManagerController.updateUserInfo);
