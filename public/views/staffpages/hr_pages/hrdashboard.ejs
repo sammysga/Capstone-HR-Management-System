@@ -37,141 +37,171 @@
         tr:hover {
             background-color: #f1f1f1; /* Hover effect for table rows */
         }
-
         .manage-leaves-button {
-    padding: 10px 15px;
-    background-color: #2385B0; /* Your preferred color */
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.manage-leaves-button:hover {
-    background-color: #1a5f78; /* Darker shade for hover effect */
-}
-
-
-
+            padding: 10px 15px;
+            background-color: #2385B0; /* Your preferred color */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .manage-leaves-button:hover {
+            background-color: #1a5f78; /* Darker shade for hover effect */
+        }
     </style>
-    
-    
-    
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
     <!-- Main content -->
-<div class="main-content">
-    <h2>HR Dashboard</h2>
+    <div class="main-content">
+        <h2>HR Dashboard</h2>
 
-<!-- Approved Leave Requests Table -->
-<div class="approvedLeaves">
-    <h3>Approved Leave Requests</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Full Name</th>
-                <th>Filed Date</th>
-                <th>Department</th>
-                <th>Leave Type</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% if (approvedLeaves && approvedLeaves.length > 0) { %>
-                <% approvedLeaves.forEach(leave => { %>
+        <!-- Attendance Logs Section -->
+        <section class="attendance-logs">
+            <h2>Attendance Logs</h2>
+            <table>
+                <thead>
                     <tr>
-                        <td><%= leave.lastName %>, <%= leave.firstName %></td>
-                        <td><%= leave.filedDate %></td>
-                        <td><%= leave.department %></td>
-                        <td><%= leave.type %></td>
-                        <td><%= leave.startDate %></td>
-                        <td><%= leave.endDate %></td>
-                        <td><%= leave.status %></td>
+                        <th>Last Name</th>
+                        <th>First Name</th>
+                        <th>Date</th>
+                        <th>Department</th>
+                        <th>Job Position</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Active Working Hours</th>
                     </tr>
-                <% }); %>
-            <% } else { %>
-                <tr>
-                    <td colspan="7">No approved leave requests found.</td>
-                </tr>
-            <% } %>
-        </tbody>
-    </table>
-</div>
+                </thead>
+                <tbody>
+                    <% if (attendanceLogs && attendanceLogs.length) { %>
+                        <% attendanceLogs.forEach(log => { %>
+                            <tr>
+                                <td><%= log.lastName %></td>
+                                <td><%= log.firstName %></td>
+                                <td><%= log.date %></td>
+                                <td><%= log.department %></td>
+                                <td><%= log.jobTitle %></td>
+                                <td><%= log.timeIn %></td>
+                                <td><%= log.timeOut %></td>
+                                <td><%= log.activeWorkingHours %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="8">No attendance logs available.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </section>
 
+        <!-- Approved Leave Requests Table -->
+        <div class="approvedLeaves">
+            <h3>Approved Leave Requests</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Filed Date</th>
+                        <th>Department</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (approvedLeaves && approvedLeaves.length > 0) { %>
+                        <% approvedLeaves.forEach(leave => { %>
+                            <tr>
+                                <td><%= leave.lastName %>, <%= leave.firstName %></td>
+                                <td><%= leave.filedDate %></td>
+                                <td><%= leave.department %></td>
+                                <td><%= leave.type %></td>
+                                <td><%= leave.startDate %></td>
+                                <td><%= leave.endDate %></td>
+                                <td><%= leave.status %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="7">No approved leave requests found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
 
-    <!-- All Leave Requests Table -->
-<div class="allLeaves">
-    <div style="display: flex; align-items: center;">
-        <h3 style="margin-right: 10px;">All Leave Requests</h3>
-        <!-- Manage Leaves Button -->
-        <a href="/hr/manageleavetypes" class="manage-leaves-button">Manage Leave Types</a>
+        <!-- All Leave Requests Table -->
+        <div class="allLeaves">
+            <div style="display: flex; align-items: center;">
+                <h3 style="margin-right: 10px;">All Leave Requests</h3>
+                <!-- Manage Leaves Button -->
+                <a href="/hr/manageleavetypes" class="manage-leaves-button">Manage Leave Types</a>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Filed Date</th>
+                        <th>Department</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (allLeaves && allLeaves.length > 0) { %>
+                        <% allLeaves.forEach(leave => { %>
+                            <tr>
+                                <td><%= leave.lastName %>, <%= leave.firstName %></td>
+                                <td><%= leave.filedDate %></td>
+                                <td><%= leave.department %></td>
+                                <td><%= leave.type %></td>
+                                <td><%= leave.startDate %></td>
+                                <td><%= leave.endDate %></td>
+                                <td><%= leave.status %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="7">No leave requests found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- JavaScript for sidebar functionality -->
+        <script>
+            // Toggle active class for sidebar links
+            document.querySelectorAll('.sidebar ul li a').forEach(link => {
+                link.addEventListener('click', function() {
+                    document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Toggle collapsible content
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    var content = this.nextElementSibling;
+                    if (content.style.display === 'block') {
+                        content.style.display = 'none';
+                    } else {
+                        // Hide all other collapsible contents
+                        document.querySelectorAll('.collapsible-content').forEach(item => {
+                            if (item !== content) {
+                                item.style.display = 'none';
+                            }
+                        });
+                        content.style.display = 'block';
+                    }
+                });
+            });
+        </script>
     </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Full Name</th>
-                <th>Filed Date</th>
-                <th>Department</th>
-                <th>Leave Type</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% if (allLeaves && allLeaves.length > 0) { %>
-                <% allLeaves.forEach(leave => { %>
-                    <tr>
-                        <td><%= leave.lastName %>, <%= leave.firstName %></td>
-                        <td><%= leave.filedDate %></td>
-                        <td><%= leave.department %></td>
-                        <td><%= leave.type %></td>
-                        <td><%= leave.startDate %></td>
-                        <td><%= leave.endDate %></td>
-                        <td><%= leave.status %></td>
-                    </tr>
-                <% }); %>
-            <% } else { %>
-                <tr>
-                    <td colspan="7">No leave requests found.</td>
-                </tr>
-            <% } %>
-        </tbody>
-    </table>
-</div>
-
-
-    <!-- JavaScript for sidebar functionality -->
-    <script>
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
-        });
-    </script>
 </body>
 </html>
