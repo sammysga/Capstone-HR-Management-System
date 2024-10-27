@@ -73,30 +73,25 @@
                 <th>Date</th>
                 <th>Department</th>
                 <th>Job Position</th>
-                <th>Time In Time</th> <!-- Updated Column -->
-                <th>Time Out Time</th> <!-- New Column -->
-                <th>Active Working Hours</th> <!-- Updated Column -->
+                <th>Time In</th>
+                <th>Time Out</th>
+                <th>Active Working Hours</th>
             </tr>
         </thead>
         <tbody>
-            <% if (attendanceLogs && attendanceLogs.length > 0) { %> <!-- Change this line -->
-                <% attendanceLogs.forEach(log => { %> <!-- Change this line -->
-                    <tr>
-                        <td><%= log.lastName %></td>
-                        <td><%= log.firstName %></td>
-                        <td><%= log.date %></td> <!-- Update this to use the correct property -->
-                        <td><%= log.department || 'N/A' %></td>
-                        <td><%= log.jobPosition || 'N/A' %></td>
-                        <td><%= log.attendanceTime || 'N/A' %></td> <!-- Updated Column -->
-                        <td><%= log.timeOut || 'N/A' %></td> <!-- New Column -->
-                        <td><%= log.activeWorkingHours || 'N/A' %></td> <!-- Updated Column -->
-                    </tr>
-                <% }); %>
-            <% } else { %>
+            <% attendanceLogs.forEach(log => { %>
                 <tr>
-                    <td colspan="8">No attendance logs found.</td>
+                    <td><%= log.lastName %></td>
+<td><%= log.firstName %></td>
+<td><%= log.date %></td>
+<td><%= log.department %></td>
+<td><%= log.jobTitle%></td>
+<td><%= log.timeIn %></td>
+<td><%= log.timeOut %></td>
+<td><%= log.activeWorkingHours %></td>
+
                 </tr>
-            <% } %>
+            <% }) %>
         </tbody>
     </table>
 </section>
