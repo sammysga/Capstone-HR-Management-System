@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Leave Request</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Line Manager CSS -->
+    <style>
+        /* Adding styles for the dashboard */
+        h2 {
+            color: #2385B0; /* Color for the dashboard title */
+            margin-left: 40px; /* Increased space from the left */
+        }
+        h3 {
+            margin-left: 40px; /* Increased space from the left for the sub-header */
+        }
+        .content {
+            margin-left: 220px; /* Adjust based on your sidebar width to prevent overlap */
+            padding: 20px; /* Adding some padding for better spacing */
+            background-color: white; /* Set background color to white for the entire content area */
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .field {
+            margin-bottom: 15px;
+        }
+        .field label {
+            font-weight: bold;
+        }
+        .action-dropdown {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .remarks-input {
+            width: 100%;
+            padding: 10px;
+            height: 80px; /* Height for remarks input */
+        }
+        .submit-button {
+            background-color: #07ACB9;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .submit-button:hover {
+            background-color: #05a1a0; /* Darker shade for hover effect */
+        }
+        table {
+            width: 80%; /* Full width for the table */
+            border-collapse: collapse; /* Collapse borders */
+            margin: 20px auto 80px; /* Center table and add space above and below */
+        }
+        th, td {
+            border: 1px solid #ddd; /* Border for table cells */
+            padding: 10px; /* Padding for table cells */
+            text-align: left; /* Left-align text */
+        }
+        th {
+            background-color: #f2f2f2; /* Light gray background for headers */
+        }
+        tr:hover {
+            background-color: #f1f1f1; /* Hover effect for table rows */
+            height: 60px; /* Set a minimum height for the rows */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Include Sidebar -->
+    <%- include('../../partials/linemanager_partials') %>
+
+    <div class="content">
+        <h2 class="heading">View Leave Request</h2>
+
+        <div class="container">
+            <div class="field">
+                <label>Employee Name:</label>
+                <p><%= leaveRequest.employeeName %></p>
+            </div>
+
+            <div class="field">
+                <label>Employee Contact No:</label>
+                <p><%= leaveRequest.employeeContactNo %></p>
+            </div>
+
+            <div class="field">
+                <label>Leave Type:</label>
+                <p><%= leaveRequest.leaveType %></p>
+            </div>
+
+            <div class="field">
+                <label>Leave Start Date:</label>
+                <p><%= leaveRequest.leaveStartDate %> - <%= leaveRequest.leaveStartDayType %></p>
+            </div>
+
+            <div class="field">
+                <label>Leave End Date:</label>
+                <p><%= leaveRequest.leaveEndDate %> - <%= leaveRequest.leaveEndDayType %></p>
+            </div>
+
+            <div class="field">
+                <label>Reason:</label>
+                <p><%= leaveRequest.reason %></p>
+            </div>
+
+            <div class="field">
+                <label>Choose an Action:</label>
+                <select class="action-dropdown" id="actionSelect">
+                    <option value="" disabled selected>Select Action</option>
+                    <option value="approve">Approve</option>
+                    <option value="reject">Reject</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Remarks:</label>
+                <textarea class="remarks-input" id="remarksInput" placeholder="Enter remarks..."></textarea>
+            </div>
+
+            <button class="submit-button" onclick="submitLeaveRequest()">Submit</button>
+        </div>
+    </div>
+    <script>
+        async function submitLeaveRequest() {
+            const action = document.getElementById('actionSelect').value;
+            const remarks = document.getElementById('remarksInput').value;
+    
+            if (!action || !remarks) {
+                alert('Please fill in all fields.');
+                return;
+            }
+    
+            // Make an API call to update the leave request
+            try {
+                const response = await fetch('/linemanager/leaverequest/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        remarks: remarks,
+                        leaveRequestId: '<%= leaveRequest.leaveRequestId %>', // Pass the leave request ID
+                    }),
+                });
+    
+                if (!response.ok) {
+                    const errorResponse = await response.json();
+                    // Check for specific error messages
+                    if (errorResponse.message) {
+                        alert('Error: ' + errorResponse.message); // Display a user-friendly message
+                    } else {
+                        alert('An error occurred. Please try again later.'); // Generic error message
+                    }
+                    return; // Exit the function if there's an error
+                }
+    
+                const result = await response.json();
+                if (result.success) {
+                    alert('Leave request updated successfully!');
+                    // Optionally redirect or refresh the page
+                } else {
+                    alert('Failed to update leave request: ' + (result.message || 'Unknown error.'));
+                }
+            } catch (error) {
+                console.error('Error updating leave request:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        }
+    </script>
+    
+
+</body>
+</html>
