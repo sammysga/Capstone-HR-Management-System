@@ -2,6 +2,9 @@ const supabase = require('../public/config/supabaseClient');
 const bcrypt = require('bcrypt');
 
 const lineManagerController = {
+
+    //TODO: should display all approved leave requests of the day - current sol here is not the current date
+    // ++ should arrange this part by respective department 
     getLineManagerDashboard: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
@@ -163,12 +166,9 @@ const lineManagerController = {
             return res.redirect('/login');
         }
     },
-    
     getLeaveRequest: async function(req, res) {
-        // Get userId from query parameters instead of the session
         const userId = req.query.userId;
     
-        // Log the full request query to debug
         console.log('Incoming request query:', req.query);
         
         if (!userId) {
@@ -176,14 +176,14 @@ const lineManagerController = {
         }
     
         try {
-            console.log('User ID for query:', userId); // Log the user ID
+            console.log('User ID for query:', userId);
     
-            // Function to fetch leave request data from Supabase
             const fetchLeaveRequestData = async (userId) => {
-                console.log('User ID for fetching leave request:', userId); // Log the user ID here
+                console.log('User ID for fetching leave request:', userId);
                 const { data, error } = await supabase
                     .from('leaverequests')
                     .select(`
+                        leaveRequestId,
                         userId,
                         fromDate,
                         fromDayType,
@@ -204,117 +204,104 @@ const lineManagerController = {
                             typeName
                         )
                     `)
-                    .eq('userId', userId)
-                    .single();
-            
-                // Log response data and error, if any
+                    .eq('userId', userId);
+    
                 console.log('Raw leave request data:', data);
                 if (error) {
                     console.error('Error details:', error);
                     throw error;
                 }
-            
+    
                 return data;
             };
     
-            // Function to format leave request data
-            const formatLeaveRequestData = (leaveRequestData) => {
-                if (!leaveRequestData) return null;
-                return {
-                    userId: leaveRequestData.userId,
-                    fromDate: leaveRequestData.fromDate,
-                    fromDayType: leaveRequestData.fromDayType,
-                    untilDate: leaveRequestData.untilDate,
-                    untilDayType: leaveRequestData.untilDayType,
-                    reason: leaveRequestData.reason,
-                    leaveTypeId: leaveRequestData.leaveTypeId,
-                    leaveTypeName: leaveRequestData.leave_types?.typeName || 'N/A',
-                    staff: {
-                        lastName: leaveRequestData.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
-                        firstName: leaveRequestData.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
-                        phoneNumber: leaveRequestData.useraccounts?.staffaccounts[0]?.phoneNumber || 'N/A'
-                    }
-                };
-                
-            };
-    
-            // Fetch and format leave request data
             const leaveRequestData = await fetchLeaveRequestData(userId);
-            console.log('Fetched leave request data:', leaveRequestData);  // Log after fetching
-            const leaveRequest = formatLeaveRequestData(leaveRequestData);
     
-            console.log('Formatted Leave Request Object:', leaveRequest);  // Final log of formatted data
+            if (!leaveRequestData || leaveRequestData.length === 0) {
+                return res.status(404).json({ success: false, message: 'No leave requests found.' });
+            }
     
-            // Render the view with leaveRequest data
-            res.render('staffpages/linemanager_pages/managerviewleaverequests', { leaveRequest });
+            // Only select the first leave request for rendering
+            const leaveRequest = leaveRequestData[0];
+            
+            const formattedLeaveRequest = {
+                leaveRequestId: leaveRequest.leaveRequestId, // Add this line
+                userId: leaveRequest.userId,
+                fromDate: leaveRequest.fromDate,
+                fromDayType: leaveRequest.fromDayType,
+                untilDate: leaveRequest.untilDate,
+                untilDayType: leaveRequest.untilDayType,
+                reason: leaveRequest.reason,
+                leaveTypeId: leaveRequest.leaveTypeId,
+                leaveTypeName: leaveRequest.leave_types.typeName,
+                staff: {
+                    lastName: leaveRequest.useraccounts.staffaccounts[0]?.lastName || 'N/A',
+                    firstName: leaveRequest.useraccounts.staffaccounts[0]?.firstName || 'N/A',
+                    phoneNumber: leaveRequest.useraccounts.staffaccounts[0]?.phoneNumber || 'N/A'
+                }
+            };
+            
+            
+            return res.render('staffpages/linemanager_pages/managerviewleaverequests', { leaveRequest: formattedLeaveRequest });
     
-        } catch (error) {
-            console.error('Error fetching leave request:', error);
-            return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
+        } catch (err) {
+            console.error('Error fetching leave request:', err);
+            return res.status(500).json({ success: false, message: 'Error fetching leave request.' });
         }
     },
     
-
+        
     updateLeaveRequest: async function(req, res) {
-        const { leaveRequestId, action, remarks } = req.body;
+        const leaveRequestId = req.body.leaveRequestId || req.query.leaveRequestId;
+    const { action, remarks } = req.body;
+
+    console.log('Incoming update request body:', req.body); // Log entire request body
+    console.log('leaveRequestId:', leaveRequestId); // Check if leaveRequestId is present
+    console.log('Action:', action); // Confirm action is received
+
+    if (!leaveRequestId) {
+        console.error('Error: leaveRequestId is missing');
+        return res.status(400).json({ success: false, message: 'Leave Request ID is required.' });
+    }
+    if (!action) {
+        console.error('Error: action is missing');
+        return res.status(400).json({ success: false, message: 'Action is required.' });
+    }
     
         try {
+            // Prepare the updated data based on action
             const updatedData = {
                 remarkByManager: remarks,
                 updatedDate: new Date(),
                 status: action === 'approve' ? 'Approved' : 'Rejected'
             };
     
+            // Log the prepared update data
+            console.log('Updating leave request with data:', updatedData);
+    
+            // Update the leave request in the Supabase database
             const { data, error } = await supabase
                 .from('leaverequests')
                 .update(updatedData)
                 .eq('leaveRequestId', leaveRequestId);
     
+            // Check for errors in the update operation
             if (error) {
-                return res.status(400).json({ message: 'Failed to update leave request', error });
+                console.error('Error details while updating leave request:', error);
+                return res.status(400).json({ success: false, message: 'Failed to update leave request', error });
             }
     
-            return res.redirect('/path/to/success/page');
+            // Log the successful update
+            console.log('Leave request updated successfully:', data);
+    
+            return res.redirect('/linemanager/dashboard');            return res.redirect('/linemanager/dashboard');
         } catch (error) {
             console.error('Error updating leave request:', error);
-            return res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
         }
     },
     
-    
-    // updateLeaveRequest: async function(req, res) {
-    //     try {
-    //         const { action, remarks, leaveRequestId } = req.body;
-    
-    //         // Validate input
-    //         if (!action || !remarks || !leaveRequestId) {
-    //             return res.status(400).json({ success: false, message: 'All fields are required.' });
-    //         }
-    
-    //         // Update the leave request in Supabase
-    //         const { error } = await supabase
-    //             .from('leaverequests')
-    //             .update({
-    //                 status: action === 'approve' ? 'Approved' : 'Rejected', // Set the status based on the action
-    //                 remarkByManager: remarks, // Save the manager's remarks
-    //                 updatedDate: new Date().toISOString(), // Update the date
-    //             })
-    //             .eq('id', leaveRequestId); // Assuming id is the primary key for leave requests
-    
-    //         if (error) {
-    //             return res.status(404).json({ success: false, message: 'Leave request not found.', error });
-    //         }
-    
-    //         // Optionally, redirect to the leave requests page or render a confirmation view
-    //         // res.redirect('/linemanager/leaverequests'); // Redirect if you have a route to list leave requests
-    //         res.json({ success: true, message: 'Leave request updated successfully.' }); // Return success message as JSON
-    
-    //     } catch (error) {
-    //         console.error('Error updating leave request:', error);
-    //         res.status(500).json({ success: false, message: 'Server error.' });
-    //     }
-    // },
-    
+
     getUserAccount: async function (req, res) {
         try {
             const userId = req.session.user ? req.session.user.userId : null;

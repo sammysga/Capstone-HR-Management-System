@@ -87,114 +87,97 @@
     <!-- Include Sidebar -->
     <%- include('../../partials/linemanager_partials') %>
 
-    <div class="content">
-        <h2 class="heading">View Leave Request</h2>
-
-        <div class="container">
-            <div class="field">
-                <label>Employee Name:</label>
-                <p><%= leaveRequest.staff.firstName %> <%= leaveRequest.staff.lastName %></p>
-            </div>
-
-            <div class="field">
-                <label>Employee Contact No:</label>
-                <p><%= leaveRequest.staff.phoneNumber %></p>
-            </div>
-
-            <div class="field">
-                <label>Leave Type:</label>
-                <p><%= leaveRequest.leaveTypeName %></p>
-            </div>
-
-            <div class="field">
-                <label>Leave Start Date:</label>
-                <p><%= leaveRequest.fromDate %></p>
-            </div>
-
-            <div class="field">
-                <label>Leave Start Date Type:</label>
-                <p><%= leaveRequest.fromDayType %></p>
-            </div>
-
-            <div class="field">
-                <label>Leave End Date:</label>
-                <p><%= leaveRequest.untilDate %></p>
-            </div>
-
-            <div class="field">
-                <label>Leave End Date Type:</label>
-                <p><%= leaveRequest.untilDayType %></p>
-            </div>
-
-            <div class="field">
-                <label>Reason:</label>
-                <p><%= leaveRequest.reason %></p>
-            </div>
-
-            <div class="field">
-                <label>Choose an Action:</label>
-                <select class="action-dropdown" id="actionSelect">
-                    <option value="" disabled selected>Select Action</option>
-                    <option value="approve">Approve</option>
-                    <option value="reject">Reject</option>
-                </select>
-            </div>
-
-            <div class="field">
-                <label>Remarks:</label>
-                <textarea class="remarks-input" id="remarksInput" placeholder="Enter remarks..."></textarea>
-            </div>
-
-            <button class="submit-button" onclick="submitLeaveRequest()">Submit</button>
+<div class="content">
+    <h2 class="heading">View Leave Request</h2>
+    <div class="container">
+        <div class="field">
+            <label>Employee Name:</label>
+            <p><%= leaveRequest.staff.firstName %> <%= leaveRequest.staff.lastName %></p>
         </div>
+
+        <div class="field">
+            <label>Employee Contact No:</label>
+            <p><%= leaveRequest.staff.phoneNumber %></p>
+        </div>
+
+        <div class="field">
+            <label>Leave Type:</label>
+            <p><%= leaveRequest.leaveTypeName %></p>
+        </div>
+
+        <div class="field">
+            <label>Leave Start Date:</label>
+            <p><%= leaveRequest.fromDate %></p>
+        </div>
+
+        <div class="field">
+            <label>Leave Start Date Type:</label>
+            <p><%= leaveRequest.fromDayType %></p>
+        </div>
+
+        <div class="field">
+            <label>Leave End Date:</label>
+            <p><%= leaveRequest.untilDate %></p>
+        </div>
+
+        <div class="field">
+            <label>Leave End Date Type:</label>
+            <p><%= leaveRequest.untilDayType %></p>
+        </div>
+
+        <div class="field">
+            <label>Reason:</label>
+            <p><%= leaveRequest.reason %></p>
+        </div>
+        
+        <!-- Action section for the request -->
+        <div class="field">
+            <label>Choose an Action:</label>
+            <select class="action-dropdown" id="actionSelect">
+                <option value="" disabled selected>Select Action</option>
+                <option value="approve">Approve</option>
+                <option value="reject">Reject</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Remarks:</label>
+            <textarea class="remarks-input" id="remarksInput" placeholder="Enter remarks..."></textarea>
+        </div>
+
+        <button class="submit-button" onclick="submitLeaveRequest('<%= leaveRequest.leaveRequestId %>')">Submit</button>
     </div>
+</div>
+
+    
     <script>
-        async function submitLeaveRequest() {
-            const action = document.getElementById('actionSelect').value;
-            const remarks = document.getElementById('remarksInput').value;
-    
-            if (!action || !remarks) {
-                alert('Please fill in all fields.');
-                return;
-            }
-    
-            // Make an API call to update the leave request
-            try {
-                const response = await fetch('/linemanager/leaverequest/update', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        remarks: remarks,
-                        leaveRequestId: '<%= leaveRequest.leaveRequestId %>', // Pass the leave request ID
-                    }),
-                });
-    
-                if (!response.ok) {
-                    const errorResponse = await response.json();
-                    // Check for specific error messages
-                    if (errorResponse.message) {
-                        alert('Error: ' + errorResponse.message); // Display a user-friendly message
-                    } else {
-                        alert('An error occurred. Please try again later.'); // Generic error message
-                    }
-                    return; // Exit the function if there's an error
-                }
-    
-                const result = await response.json();
-                if (result.success) {
-                    alert('Leave request updated successfully!');
-                    // Optionally redirect or refresh the page
-                } else {
-                    alert('Failed to update leave request: ' + (result.message || 'Unknown error.'));
-                }
-            } catch (error) {
-                console.error('Error updating leave request:', error);
-                alert('An error occurred. Please try again later.');
-            }
-        }
+        // Assuming leaveRequestId is part of the leaveRequest object rendered on the frontend
+async function submitLeaveRequest(leaveRequestId) {
+    const action = document.getElementById('actionSelect').value;
+    const remarks = document.getElementById('remarksInput').value;
+
+    if (!action || !remarks) {
+        alert('Please fill in all fields.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/linemanager/leaverequest/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action,
+                remarks,
+                leaveRequestId, // Make sure leaveRequestId is passed here
+            }),
+        });
+        // Handle response here
+    } catch (error) {
+        console.error('Error updating leave request:', error);
+        alert('An error occurred. Please try again later.');
+    }
+}
+
     </script>
 
 </body>
