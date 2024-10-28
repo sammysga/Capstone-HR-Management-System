@@ -180,8 +180,12 @@
                         <td><%= leave.endDate %></td>
                         <td><%= leave.status %></td>
                         <td>
-                            <a href="/linemanager/leaverequest<%= leave.userId %>" class="action-button">Action Required</a>
-                        </td>
+                            <% if (leave.userId) { %>
+                                <a href="/linemanager/leaverequest?userId=<%= leave.userId %>" class="action-button">View Leave Request</a>
+                            <% } else { %>
+                                No User ID
+                            <% } %>
+                        </td>                                 
                     </tr>
                 <% }); %>
             <% } else { %>

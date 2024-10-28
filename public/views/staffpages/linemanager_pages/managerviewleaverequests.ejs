@@ -4,15 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Leave Request</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"> <!-- Include Inter font -->
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Line Manager CSS -->
     <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Apply the Inter font to the body */
+        }
         /* Adding styles for the dashboard */
         h2 {
-            color: #2385B0; /* Color for the dashboard title */
-            margin-left: 40px; /* Increased space from the left */
-        }
+    color: #2385B0; /* Color for the dashboard title */
+    text-align: center; /* Center the text */
+    margin: 20px 0; /* Add top and bottom margin, remove left margin */
+}
+
         h3 {
             margin-left: 40px; /* Increased space from the left for the sub-header */
         }
@@ -87,27 +93,37 @@
         <div class="container">
             <div class="field">
                 <label>Employee Name:</label>
-                <p><%= leaveRequest.employeeName %></p>
+                <p><%= leaveRequest.staff.firstName %> <%= leaveRequest.staff.lastName %></p>
             </div>
 
             <div class="field">
                 <label>Employee Contact No:</label>
-                <p><%= leaveRequest.employeeContactNo %></p>
+                <p><%= leaveRequest.staff.phoneNumber %></p>
             </div>
 
             <div class="field">
                 <label>Leave Type:</label>
-                <p><%= leaveRequest.leaveType %></p>
+                <p><%= leaveRequest.leaveTypeName %></p>
             </div>
 
             <div class="field">
                 <label>Leave Start Date:</label>
-                <p><%= leaveRequest.leaveStartDate %> - <%= leaveRequest.leaveStartDayType %></p>
+                <p><%= leaveRequest.fromDate %></p>
+            </div>
+
+            <div class="field">
+                <label>Leave Start Date Type:</label>
+                <p><%= leaveRequest.fromDayType %></p>
             </div>
 
             <div class="field">
                 <label>Leave End Date:</label>
-                <p><%= leaveRequest.leaveEndDate %> - <%= leaveRequest.leaveEndDayType %></p>
+                <p><%= leaveRequest.untilDate %></p>
+            </div>
+
+            <div class="field">
+                <label>Leave End Date Type:</label>
+                <p><%= leaveRequest.untilDayType %></p>
             </div>
 
             <div class="field">
@@ -180,7 +196,6 @@
             }
         }
     </script>
-    
 
 </body>
 </html>
