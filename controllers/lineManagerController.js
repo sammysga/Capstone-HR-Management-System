@@ -31,13 +31,14 @@ const lineManagerController = {
                             )
                         `)
                         .order('created_at', { ascending: false });
-                    
+    
                     if (statusFilter) query.eq('status', statusFilter);
-                    
+    
                     const { data, error } = await query;
                     if (error) throw error;
-                    
+    
                     return data.map(leave => ({
+                        userId: leave.userId, // Include userId here
                         lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
                         firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
                         department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
@@ -162,23 +163,38 @@ const lineManagerController = {
             return res.redirect('/login');
         }
     },
+    
     getLeaveRequest: async function(req, res) {
-        // Check if the user is logged in and has the 'Line Manager' role
-        if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            try {
-                const userId = req.session.user.userId;
-                const { userId: paramUserId } = req.params;
-                const finalUserId = paramUserId || userId;
+        // Get userId from query parameters instead of the session
+        const userId = req.query.userId;
     
-                console.log('Final User ID for query:', finalUserId);
+        // Log the full request query to debug
+        console.log('Incoming request query:', req.query);
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'User ID is required.' });
+        }
     
-                // Fetch leave request and related employee data
+        try {
+            console.log('User ID for query:', userId); // Log the user ID
+    
+            // Function to fetch leave request data from Supabase
+            const fetchLeaveRequestData = async (userId) => {
+                console.log('User ID for fetching leave request:', userId); // Log the user ID here
                 const { data, error } = await supabase
                     .from('leaverequests')
                     .select(`
-                        *,
+                        userId,
+                        fromDate,
+                        fromDayType,
+                        untilDate,
+                        untilDayType,
+                        reason,
+                        leaveTypeId,
                         useraccounts (
+                            userId,
                             staffaccounts (
+                                staffId,
                                 lastName,
                                 firstName,
                                 phoneNumber
@@ -188,43 +204,57 @@ const lineManagerController = {
                             typeName
                         )
                     `)
-                    .eq('userId', finalUserId) // Using finalUserId for the query
-                    .single(); // Fetch a single record
-    
-                console.log('Supabase Query Result:', { data, error });
-    
-                // If no data is returned or there's an error
-                if (error || !data) {
+                    .eq('userId', userId)
+                    .single();
+            
+                // Log response data and error, if any
+                console.log('Raw leave request data:', data);
+                if (error) {
                     console.error('Error details:', error);
-                    return res.status(404).json({ message: 'Leave request or employee not found.' }); // User-friendly message
+                    throw error;
                 }
+            
+                return data;
+            };
     
-                // Construct the leave request object
-                const leaveRequest = {
-                    employeeName: `${data.useraccounts.staffaccounts.lastName} ${data.useraccounts.staffaccounts.firstName}`,
-                    employeeContactNo: data.useraccounts.staffaccounts.phoneNumber,
-                    leaveType: data.leave_types.typeName,
-                    leaveStartDate: data.fromDate,
-                    leaveStartDayType: data.fromDayType,
-                    leaveEndDate: data.untilDate,
-                    leaveEndDayType: data.untilDayType,
-                    reason: data.reason,
+            // Function to format leave request data
+            const formatLeaveRequestData = (leaveRequestData) => {
+                if (!leaveRequestData) return null;
+                return {
+                    userId: leaveRequestData.userId,
+                    fromDate: leaveRequestData.fromDate,
+                    fromDayType: leaveRequestData.fromDayType,
+                    untilDate: leaveRequestData.untilDate,
+                    untilDayType: leaveRequestData.untilDayType,
+                    reason: leaveRequestData.reason,
+                    leaveTypeId: leaveRequestData.leaveTypeId,
+                    leaveTypeName: leaveRequestData.leave_types?.typeName || 'N/A',
+                    staff: {
+                        lastName: leaveRequestData.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+                        firstName: leaveRequestData.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+                        phoneNumber: leaveRequestData.useraccounts?.staffaccounts[0]?.phoneNumber || 'N/A'
+                    }
                 };
+                
+            };
     
-                console.log('Leave Request Object:', leaveRequest);
+            // Fetch and format leave request data
+            const leaveRequestData = await fetchLeaveRequestData(userId);
+            console.log('Fetched leave request data:', leaveRequestData);  // Log after fetching
+            const leaveRequest = formatLeaveRequestData(leaveRequestData);
     
-                // Render the view with leaveRequest data
-                return res.render('staffpages/linemanager_pages/managerviewleaverequests', { leaveRequest });
+            console.log('Formatted Leave Request Object:', leaveRequest);  // Final log of formatted data
     
-            } catch (error) {
-                console.error('Error fetching leave request:', error);
-                return res.status(500).json({ success: false, message: 'Server error. Please try again later.' }); // User-friendly message
-            }
-        } else {
-            return res.redirect('/login');
+            // Render the view with leaveRequest data
+            res.render('staffpages/linemanager_pages/managerviewleaverequests', { leaveRequest });
+    
+        } catch (error) {
+            console.error('Error fetching leave request:', error);
+            return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
         }
     },
     
+
     updateLeaveRequest: async function(req, res) {
         const { leaveRequestId, action, remarks } = req.body;
     
