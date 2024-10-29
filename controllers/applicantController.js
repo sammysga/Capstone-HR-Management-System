@@ -39,37 +39,37 @@ const applicantController = {
 
     getJobDetails: async function(req, res) {
         try {
-            const jobId = req.params.jobId;  // Ensure this matches your jobId
-            
-            // Fetch the job details from the jobpositions table
+            const jobId = req.params.jobId;
+    
+            // Fetch job details
             const { data: job, error: jobError } = await supabase
                 .from('jobpositions')
                 .select('*')
                 .eq('jobId', jobId)
                 .single();
-    
+            
             if (jobError) {
                 console.error('Error fetching job details:', jobError);
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch the job requirements
+            // Fetch job requirements
             const { data: requirements, error: requirementsError } = await supabase
                 .from('jobrequirements')
                 .select('*')
-                .eq('jobId', jobId);  // Make sure the foreign key is correct
-    
+                .eq('jobId', jobId);
+            
             if (requirementsError) {
                 console.error('Error fetching job requirements:', requirementsError);
                 return res.status(500).send('Error fetching job requirements');
             }
     
-            // Fetch job skills from jobskills table
+            // Fetch job skills
             const { data: jobSkills, error: jobSkillsError } = await supabase
                 .from('jobskills')
                 .select('*')
                 .eq('jobId', jobId);
-    
+            
             if (jobSkillsError) {
                 console.error('Error fetching job skills:', jobSkillsError);
                 return res.status(500).send('Error fetching job skills');
@@ -79,7 +79,19 @@ const applicantController = {
             const hardSkills = jobSkills.filter(skill => skill.isHardSkill);
             const softSkills = jobSkills.filter(skill => !skill.isHardSkill);
     
-            res.render('applicant_pages/job-details', { job, requirements, hardSkills, softSkills });
+            // Fetch job certifications from jobreqcertifications
+            const { data: certifications, error: certificationsError } = await supabase
+                .from('jobreqcertifications')
+                .select('jobReqCertificateType, jobReqCertificateDescrpt')
+                .eq('jobId', jobId);
+    
+            if (certificationsError) {
+                console.error('Error fetching job certifications:', certificationsError);
+                return res.status(500).send('Error fetching job certifications');
+            }
+    
+            // Render the job-details page with all fetched data
+            res.render('applicant_pages/job-details', { job, requirements, hardSkills, softSkills, certifications });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');

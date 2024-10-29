@@ -86,6 +86,20 @@
             <% } %>
         </div>
 
+        <!-- Certification Requirements Section -->
+<div class="certifications">
+    <h2>Certification Requirements</h2>
+    <% if (certifications && certifications.length > 0) { %>
+        <ul>
+            <% certifications.forEach(function(cert) { %>
+                <li><strong><%= cert.jobReqCertificateType %>:</strong> <%= cert.jobReqCertificateDescrpt %></li>
+            <% }) %>
+        </ul>
+    <% } else { %>
+        <p>No certification requirements listed for this job.</p>
+    <% } %>
+</div>
+
         <!-- Job Skills Section -->
         <div class="skills">
             <h2>Skills</h2>
