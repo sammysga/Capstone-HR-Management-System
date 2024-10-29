@@ -37,6 +37,11 @@
             background-color: #e0e4e8; /* Background color for headers */
         }
 
+        /* Bold styling for labels */
+        strong {
+            font-weight: bold;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .main-content {
@@ -56,29 +61,29 @@
         <table>
             <thead>
                 <tr>
-                    <th>Last Name</th>
-                    <th>First Name</th>
-                    <th>Department</th>
-                    <th>Job Position</th>
-                    <th>Email</th>
+                    <th><strong>Last Name</strong></th>
+                    <th><strong>First Name</strong></th>
+                    <th><strong>Department</strong></th>
+                    <th><strong>Job Position</strong></th>
+                    <th><strong>Email</strong></th>
                 </tr>
             </thead>
             <tbody>
                 <% employees.forEach(employee => { %>
-                    <tr onclick="window.location.href='/employee/persinfocareerprog/<%= employee.id %>'">
+                    <tr onclick="window.location.href='/hr/records-performance-tracker/<%= employee.userId %>'">
                         <td><%= employee.lastName %></td>
                         <td><%= employee.firstName %></td>
-                        <td><%= employee.department || 'N/A' %></td>
-                        <td><%= employee.jobPosition || 'N/A' %></td>
+                        <td><%= employee.deptName || 'N/A' %></td>
+                        <td><%= employee.jobTitle || 'N/A' %></td>
                         <td><%= employee.email %></td>
                     </tr>
                 <% }) %>
             </tbody>
         </table>
-    </div>
+    </div>    
     <script>
-                // Toggle active class for sidebar links
-                document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
                 this.classList.add('active');

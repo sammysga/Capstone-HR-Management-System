@@ -64,6 +64,8 @@ router.post('/hr/addjoboffer', hrController.postAddJobOffer);
 router.get('/hr/editjoboffers', hrController.getEditJobOffers);
 
 router.get('/hr/records-performance-tracker', hrController.getRecordsPerformanceTracker);
+router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPerformanceTrackerByUserId);
+
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);

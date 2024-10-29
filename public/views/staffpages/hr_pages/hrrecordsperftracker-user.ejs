@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Information & Career Progression</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
+    <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
+</head>
+
+<body>
+    <%- include('../../partials/hr_partials') %> <!-- Including partials for the header/footer -->
+
+    <!-- Main content area -->
+    <div class="main-content">
+
+        <div class="container">
+            <div class="columns">
+                <!-- Column 1: Personal Information -->
+                <div class="column" id="personal-info">
+                    <div class="section">
+                        <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
+                        <h2>Personal Information</h2>
+                        <p><strong>Name:</strong> <span id="nameDisplay"><%= user.firstName %> <%= user.lastName %></span></p>
+                        <p><strong>Phone:</strong> <span id="phoneDisplay"><%= user.phoneNumber %></span></p>
+                        <p><strong>Date of Birth:</strong> <span id="dobDisplay"><%= user.dateOfBirth %></span></p>
+                        <p><strong>Emergency Contact:</strong> <span id="emergencyDisplay"><%= user.emergencyContactName %> (<%= user.emergencyContactNumber %>)</span></p>
+                    </div>
+                    <div class="section">
+                        <h2>Employment Details</h2>
+                        <p><strong>Job Title:</strong> <span id="jobTitleDisplay"><%= user.jobTitle %></span></p>
+                        <p><strong>Department:</strong> <span id="departmentDisplay"><%= user.departmentName %></span></p>
+                        <p><strong>Employment Type:</strong> <span id="employmentTypeDisplay"><%= user.employmentType %></span></p>
+                        <p><strong>Hire Date:</strong> <span id="hireDateDisplay"><%= user.hireDate %></span></p>
+                    </div>
+                </div>
+        
+                <!-- Column 2: Career Progression -->
+                <div class="column" id="career-progression">
+                    <div class="section">
+                        <h2>Career Progression</h2>
+                        <div class="milestone-container">
+                            <div class="milestone">
+                                <div class="milestone-label">
+                                    <h4>Milestone 1</h4>
+                                    <p>Joined Company</p>
+                                </div>
+                            </div>
+                            <div class="milestone">
+                                <div class="milestone-label">
+                                    <h4>Milestone 2</h4>
+                                    <p>Promoted to Junior Developer</p>
+                                </div>
+                            </div>
+                            <div class="milestone">
+                                <div class="milestone-label">
+                                    <h4>Milestone 3</h4>
+                                    <p>Completed Major Project</p>
+                                </div>
+                            </div>
+                            <div class="milestone">
+                                <div class="milestone-label">
+                                    <h4>Milestone 4</h4>
+                                    <p>Promoted to Developer</p>
+                                </div>
+                            </div>
+                            <div class="milestone">
+                                <div class="milestone-label">
+                                    <h4>Milestone 5</h4>
+                                    <p>Achieved Team Lead Role</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Column 3: Degree, Experiences, and Uploaded Certifications -->
+                <div class="column" id="degree-experience-certifications">
+                    <div class="section">
+                        <h2>Degree</h2>
+                        <p>Bachelor of Science in Computer Science</p>
+                        <p>University of Technology - Graduated 2012</p>
+                    </div>
+        
+                    <div class="section">
+                        <h2>Experiences</h2>
+                        <p>Software Engineer at XYZ Corp (2015 - Present)</p>
+                        <p>Junior Developer at ABC Inc. (2012 - 2015)</p>
+                    </div>
+        
+                    <div class="section">
+                        <h2>Uploaded Certifications</h2>
+                        <p>Certified Scrum Master (CSM)</p>
+                        <p>Oracle Certified Java Programmer</p>
+                        <p>Microsoft Certified: Azure Developer Associate</p>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- Below the three columns -->
+            <section id="attendance-logs">
+                <h2>Attendance Logs</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Last Name</th>
+                            <th>First Name</th>
+                            <th>Date</th>
+                            <th>Department</th>
+                            <th>Job Position</th>
+                            <th>Time In</th>
+                            <th>Time Out</th>
+                            <th>Active Working Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Doe</td>
+                            <td>John</td>
+                            <td>2024-10-30</td>
+                            <td>Finance</td>
+                            <td>Financial Analyst</td>
+                            <td>08:00 AM</td>
+                            <td>05:00 PM</td>
+                            <td>8 Hours</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        
+            <section id="objective-skill-progress">
+                <h2>Objective-based Skill Quarterly Progress Overview</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>KRA/Objectives</th>
+                            <th>KPI</th>
+                            <th>Target</th>
+                            <th>UOM</th>
+                            <th>Assigned Weight</th>
+                            <th>Current Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Improve Financial Reporting</td>
+                            <td>Accuracy Rate</td>
+                            <td>95%</td>
+                            <td>%</td>
+                            <td>20%</td>
+                            <td>90%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        
+            <section id="skill-gap-analysis">
+                <h2>Job Required Skill and Gap Analysis Quarterly Overview</h2>
+                <h3>Hard Skills</h3>
+                <p>Analysis, Reporting, Forecasting</p>
+                <h3>Soft Skills</h3>
+                <p>Communication, Teamwork, Adaptability</p>
+            </section>
+        
+            <section class="stepper">
+                <h2>Career Progression</h2>
+                <div class="stepper-container">
+                    <div class="step">
+                        <div class="step-icon">1</div>
+                        <div class="step-label">Performance Review</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon">2</div>
+                        <div class="step-label">Training Needs Analysis</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon">3</div>
+                        <div class="step-label">Career Development Plan</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon">4</div>
+                        <div class="step-label">Feedback & Adjustments</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon">5</div>
+                        <div class="step-label">Next Steps</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+    </div>
+</body>
+</html>
