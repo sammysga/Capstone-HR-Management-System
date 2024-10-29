@@ -53,10 +53,10 @@ const applicantController = {
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch job skills
+            // Fetch job skills from jobreqskills table
             const { data: jobSkills, error: jobSkillsError } = await supabase
-                .from('jobskills')
-                .select('*')
+                .from('jobreqskills')
+                .select('jobReqSkillType, jobReqSkillName')
                 .eq('jobId', jobId);
             
             if (jobSkillsError) {
@@ -64,9 +64,9 @@ const applicantController = {
                 return res.status(500).send('Error fetching job skills');
             }
     
-            // Separate hard and soft skills
-            const hardSkills = jobSkills.filter(skill => skill.isHardSkill);
-            const softSkills = jobSkills.filter(skill => !skill.isHardSkill);
+            // Separate hard and soft skills based on jobReqSkillType
+            const hardSkills = jobSkills.filter(skill => skill.jobReqSkillType === 'Hard');
+            const softSkills = jobSkills.filter(skill => skill.jobReqSkillType === 'Soft');
     
             // Fetch job certifications from jobreqcertifications
             const { data: certifications, error: certificationsError } = await supabase
@@ -86,10 +86,6 @@ const applicantController = {
             res.status(500).send('Server error');
         }
     },
-    
-    
-    
-    
 
     getContactForm: async function(req, res) {
         res.render('applicant_pages/contactform', { errors: {} }); 
