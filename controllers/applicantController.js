@@ -53,10 +53,10 @@ const applicantController = {
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch job skills from jobreqskills table
+            // Fetch job skills
             const { data: jobSkills, error: jobSkillsError } = await supabase
-                .from('jobreqskills')
-                .select('jobReqSkillType, jobReqSkillName')
+                .from('jobreqskills') // updated to the new table name
+                .select('*')
                 .eq('jobId', jobId);
             
             if (jobSkillsError) {
@@ -64,29 +64,40 @@ const applicantController = {
                 return res.status(500).send('Error fetching job skills');
             }
     
-            // Separate hard and soft skills based on jobReqSkillType
-            const hardSkills = jobSkills.filter(skill => skill.jobReqSkillType === 'Hard');
-            const softSkills = jobSkills.filter(skill => skill.jobReqSkillType === 'Soft');
+            // Separate hard and soft skills
+            const hardSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Hard");
+            const softSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Soft");
     
             // Fetch job certifications from jobreqcertifications
             const { data: certifications, error: certificationsError } = await supabase
                 .from('jobreqcertifications')
                 .select('jobReqCertificateType, jobReqCertificateDescrpt')
                 .eq('jobId', jobId);
-    
+            
             if (certificationsError) {
                 console.error('Error fetching job certifications:', certificationsError);
                 return res.status(500).send('Error fetching job certifications');
             }
     
+            // Fetch job degrees from jobreqdegrees
+            const { data: degrees, error: degreesError } = await supabase
+                .from('jobreqdegrees')
+                .select('jobReqDegreeType, jobReqDegreeDescrpt')
+                .eq('jobId', jobId);
+            
+            if (degreesError) {
+                console.error('Error fetching job degrees:', degreesError);
+                return res.status(500).send('Error fetching job degrees');
+            }
+    
             // Render the job-details page with all fetched data
-            res.render('applicant_pages/job-details', { job, hardSkills, softSkills, certifications });
+            res.render('applicant_pages/job-details', { job, hardSkills, softSkills, certifications, degrees });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
-
+    
     getContactForm: async function(req, res) {
         res.render('applicant_pages/contactform', { errors: {} }); 
     },
