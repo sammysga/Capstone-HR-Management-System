@@ -22,7 +22,8 @@ const applicantController = {
         try {
             const { data: jobpositions, error } = await supabase
                 .from('jobpositions')
-                .select('jobId, jobTitle, jobDescrpt, isActiveJob');
+                .select('jobId, jobTitle, jobDescrpt, isActiveJob')
+                .eq('isActiveJob', true); // Filter for active jobs only
     
             if (error) {
                 console.error('Error fetching job positions:', error);
@@ -35,7 +36,6 @@ const applicantController = {
             res.status(500).send('Server error');
         }
     },
-    
 
     getJobDetails: async function(req, res) {
         try {
