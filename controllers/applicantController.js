@@ -53,17 +53,6 @@ const applicantController = {
                 return res.status(500).send('Error fetching job details');
             }
     
-            // Fetch job requirements
-            const { data: requirements, error: requirementsError } = await supabase
-                .from('jobrequirements')
-                .select('*')
-                .eq('jobId', jobId);
-            
-            if (requirementsError) {
-                console.error('Error fetching job requirements:', requirementsError);
-                return res.status(500).send('Error fetching job requirements');
-            }
-    
             // Fetch job skills
             const { data: jobSkills, error: jobSkillsError } = await supabase
                 .from('jobskills')
@@ -91,12 +80,13 @@ const applicantController = {
             }
     
             // Render the job-details page with all fetched data
-            res.render('applicant_pages/job-details', { job, requirements, hardSkills, softSkills, certifications });
+            res.render('applicant_pages/job-details', { job, hardSkills, softSkills, certifications });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
+    
     
     
     
