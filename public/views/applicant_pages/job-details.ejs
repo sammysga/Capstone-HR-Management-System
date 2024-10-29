@@ -75,20 +75,9 @@
         <!-- Job Requirements Section -->
         <div class="requirements">
             <h2>Job Requirements</h2>
-            <% if (requirements && requirements.length > 0) { %>
-                <ul>
-                    <% requirements.forEach(function(req) { %>
-                        <li><strong><%= req.jobReqName %>:</strong> <%= req.jobReqDescript %></li>
-                    <% }) %>
-                </ul>
-            <% } else { %>
-                <p>No requirements listed for this job.</p>
-            <% } %>
-        </div>
 
         <!-- Certification Requirements Section -->
-<div class="certifications">
-    <h2>Certification Requirements</h2>
+
     <% if (certifications && certifications.length > 0) { %>
         <ul>
             <% certifications.forEach(function(cert) { %>
