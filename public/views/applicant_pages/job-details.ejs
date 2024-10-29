@@ -88,7 +88,6 @@
     <% } %>
 
     <!-- Degree Requirements Section -->
-    <h2>Degree Requirements</h2>
     <% if (degrees && degrees.length > 0) { %>
         <ul>
             <% degrees.forEach(function(degree) { %>
@@ -98,7 +97,21 @@
     <% } else { %>
         <p>No degree requirements listed for this job.</p>
     <% } %>
+
+    <!-- Experience Requirements Section -->
+        <% if (experiences && experiences.length > 0) { %>
+            <ul>
+                <% experiences.forEach(function(experience) { %>
+                    <li><%= experience.jobReqExperienceType %>: <%= experience.jobReqExperienceDescrpt %></li>
+                <% }) %>
+            </ul>
+        <% } else { %>
+            <p>No experience required.</p>
+        <% } %>
+    
 </div>
+
+
 
 
   <!-- Job Skills Section -->

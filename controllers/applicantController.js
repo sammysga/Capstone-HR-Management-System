@@ -90,13 +90,25 @@ const applicantController = {
                 return res.status(500).send('Error fetching job degrees');
             }
     
+            // Fetch job experiences from jobreqexperiences
+            const { data: experiences, error: experiencesError } = await supabase
+                .from('jobreqexperiences')
+                .select('jobReqExperienceType, jobReqExperienceDescrpt')
+                .eq('jobId', jobId);
+            
+            if (experiencesError) {
+                console.error('Error fetching job experiences:', experiencesError);
+                return res.status(500).send('Error fetching job experiences');
+            }
+    
             // Render the job-details page with all fetched data
-            res.render('applicant_pages/job-details', { job, hardSkills, softSkills, certifications, degrees });
+            res.render('applicant_pages/job-details', { job, hardSkills, softSkills, certifications, degrees, experiences });
         } catch (err) {
             console.error('Server error:', err);
             res.status(500).send('Server error');
         }
     },
+    
     
     getContactForm: async function(req, res) {
         res.render('applicant_pages/contactform', { errors: {} }); 
