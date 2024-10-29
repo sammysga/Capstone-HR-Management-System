@@ -89,19 +89,17 @@
     <% } %>
 </div>
 
-       <!-- Job Skills Section -->
+  <!-- Job Skills Section -->
 <div class="skills">
     <h2>Skills</h2>
 
     <!-- Hard Skills Section -->
     <div class="hard-skills">
         <h3>Hard Skills</h3>
-        <% if (skills && skills.length > 0) { %>
+        <% if (hardSkills && hardSkills.length > 0) { %>
             <ul>
-                <% skills.forEach(function(skill) { %>
-                    <% if (skill.jobReqSkillType === "Hard") { %>
-                        <li><strong><%= skill.jobReqSkillName %>:</strong></li>
-                    <% } %>
+                <% hardSkills.forEach(function(skill) { %>
+                    <li><strong><%= skill.jobReqSkillName %></strong></li>
                 <% }) %>
             </ul>
         <% } else { %>
@@ -112,12 +110,10 @@
     <!-- Soft Skills Section -->
     <div class="soft-skills">
         <h3>Soft Skills</h3>
-        <% if (skills && skills.length > 0) { %>
+        <% if (softSkills && softSkills.length > 0) { %>
             <ul>
-                <% skills.forEach(function(skill) { %>
-                    <% if (skill.jobReqSkillType === "Soft") { %>
-                        <li><strong><%= skill.jobReqSkillName %>:</strong></li>
-                    <% } %>
+                <% softSkills.forEach(function(skill) { %>
+                    <li><strong><%= skill.jobReqSkillName %></strong></li>
                 <% }) %>
             </ul>
         <% } else { %>
