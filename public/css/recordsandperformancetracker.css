@@ -1,0 +1,214 @@
+/* Reset/Normalize CSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Common Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f8f8;
+    color: #333;
+    display: flex; /* Use flexbox for layout */
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 250px; /* Fixed width for the sidebar */
+    height: 100vh; /* Full viewport height */
+    background-color: #e8edf3;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Increased shadow depth */
+    padding: 20px;
+    position: fixed; /* Fixed position for the sidebar */
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Inter'; /* Use Inter font */
+    overflow-y: auto; /* Add scrollbar if needed */
+    z-index: 1000; /* Ensure sidebar stays above the content */
+}
+
+/* Main Content Styles */
+.main-content {
+    margin-left: 250px; /* Adjust margin to the width of the sidebar */
+    flex-grow: 1; /* Allow main content to grow and fill available space */
+    padding: 20px;
+    background-color: white; /* Background color for the main content */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for elevation */
+    height: 100vh; /* Full viewport height */
+    overflow-y: auto; /* Enable vertical scrolling if content overflows */
+}
+
+/* Heading Styles */
+h2.heading {
+    color: #07ACB9; /* Custom color for headings */
+    margin-bottom: 20px; /* Space below the heading */
+    font-size: 24px; /* Font size for heading */
+}
+
+/* Space between sections */
+.section {
+    margin-bottom: 40px; /* Space between sections */
+}
+
+/* Image Container Styles */
+.image-container {
+    margin-bottom: 20px; /* Space below the image */
+}
+
+/* Column Layout for Content Below Image */
+.columns {
+    display: flex; /* Use flexbox for alignment */
+    flex-wrap: wrap; /* Allow wrapping of columns */
+    justify-content: space-between; /* Space between columns */
+}
+
+/* Column Styles */
+.column {
+    flex: 1; /* Equal width for all columns */
+    min-width: 200px; /* Minimum width for responsiveness */
+    padding: 10px; /* Padding inside columns */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); /* Shadow for elevation */
+    border-radius: 4px; /* Rounded corners */
+    background-color: #f9f9f9; /* Background color for columns */
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+/* Hover effect for table rows */
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Three-column layout for specific tables */
+.three-column-table {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* Three equal columns */
+    gap: 10px; /* Space between columns */
+}
+
+/* Form Styles */
+form {
+    margin-bottom: 30px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #124A5C;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0c3e4a;
+}
+
+/* Stepper Styles */
+.stepper {
+    margin-top: 40px;
+}
+
+.stepper-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.step {
+    text-align: center;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #124A5C;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #124A5C;
+}
+
+/* Progress bar styles */
+.progress-bar {
+    width: 100%;
+    background-color: #f2f2f2;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress {
+    height: 10px;
+    background-color: #124A5C;
+    width: 0; /* Will be dynamically set */
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .stepper-container {
+        flex-direction: column;
+    }
+}
+
+/* General section styling */
+section {
+    margin-top: 40px; /* Adjust this value for desired spacing above each section */
+}
+
+/* Table styling */
+table {
+    margin-top: 20px; /* Space above the table */
+    margin-bottom: 40px; /* Space below the table */
+    width: 100%; /* Optional: Set width to 100% for responsiveness */
+    border-collapse: collapse; /* Optional: Collapse borders for a cleaner look */
+}
+
+/* Optional: Styling for table cells */
+th, td {
+    padding: 10px; /* Padding inside table cells */
+    border: 1px solid #ddd; /* Border for table cells */
+}
+
+/* Styles for centered content */
+.centered-content {
+    display: flex;
+    flex-direction: column; /* Arrange sections in a single column */
+    padding: 20px; /* Adjust padding as needed */
+    overflow-y: auto; /* Enable vertical scrolling for the content */
+    height: calc(100vh - 40px); /* Adjust height to fit within the main content */
+}
+
