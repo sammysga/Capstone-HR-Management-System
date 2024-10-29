@@ -72,12 +72,11 @@
         <!-- Simple Job Status Display -->
         <p><strong>Status:</strong> <%= job.isActiveJob ? "Active" : "Inactive" %></p>
 
-        <!-- Job Requirements Section -->
-        <div class="requirements">
-            <h2>Job Requirements</h2>
+<!-- Job Requirements Section -->
+<div class="requirements">
+    <h2>Job Requirements</h2>
 
-        <!-- Certification Requirements Section -->
-
+    <!-- Certification Requirements Section -->
     <% if (certifications && certifications.length > 0) { %>
         <ul>
             <% certifications.forEach(function(cert) { %>
@@ -87,7 +86,20 @@
     <% } else { %>
         <p>No certification requirements listed for this job.</p>
     <% } %>
+
+    <!-- Degree Requirements Section -->
+    <h2>Degree Requirements</h2>
+    <% if (degrees && degrees.length > 0) { %>
+        <ul>
+            <% degrees.forEach(function(degree) { %>
+                <li><strong><%= degree.jobReqDegreeType %>:</strong> <%= degree.jobReqDegreeDescrpt %></li>
+            <% }) %>
+        </ul>
+    <% } else { %>
+        <p>No degree requirements listed for this job.</p>
+    <% } %>
 </div>
+
 
   <!-- Job Skills Section -->
 <div class="skills">
