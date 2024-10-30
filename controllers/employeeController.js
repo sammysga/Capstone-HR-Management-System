@@ -120,6 +120,18 @@ updateUserInfo: async function(req, res) {
     }
 },
 
+getIdp: function (req, res) {
+    try {
+        // Render the employeeidp.ejs page
+        res.render('employeeidp', {
+            pageTitle: "Objective and Performance Review Tracker",
+        });
+    } catch (err) {
+        console.error("Error rendering the IDP page:", err);
+        res.status(500).send("An error occurred while loading the page");
+    }
+},
+
 getPersInfoCareerProg: async function(req, res) {
     try {
         const userId = req.session.user ? req.session.user.userId : null;
