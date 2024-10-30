@@ -88,6 +88,8 @@ router.get('/employee/leaverequest/requests', employeeController.getLeaveRequest
 router.post('/employee/leaverequest', employeeController.postLeaveBalancesByUserId); // To get leave balances
 router.get('/employee/leaverequest/pending', employeeController.fetchPendingRequestsCount);
 
+router.get('/employee/employeeidp', employeeController.getIdp);
+
 
 router.get('/employee/attendance', employeeController.getAttendance);
 router.post('/employee/attendance', employeeController.postAttendance);
