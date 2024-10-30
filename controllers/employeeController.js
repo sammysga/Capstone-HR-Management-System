@@ -122,6 +122,14 @@ updateUserInfo: async function(req, res) {
 
 getIdp: function (req, res) {
     try {
+        const userId = req.session.user ? req.session.user.userId : null;
+        
+        // Check if the user is logged in
+        if (!userId) {
+            req.flash('errors', { authError: 'User not logged in.' });
+            return res.redirect('/staff/login');
+        }
+        
         // Render the employeeidp.ejs page
         res.render('employeeidp', {
             pageTitle: "Objective and Performance Review Tracker",
