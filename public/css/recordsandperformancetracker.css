@@ -212,3 +212,64 @@ th, td {
     height: calc(100vh - 40px); /* Adjust height to fit within the main content */
 }
 
+ /* Stepper styling */
+ .stepper-container {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    width: 150px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: 0.3s ease;
+}
+.step:hover {
+    background-color: #f0f0f0;
+}
+.step-icon {
+    font-size: 24px;
+    color: #007bff;
+}
+.step-label {
+    margin-top: 8px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Objective Setting Form styling */
+.objective-setting-form {
+    display: none;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    margin-top: 20px;
+}
+
+/* Step styles for active and inactive states */
+.step.active .step-icon, .step.active .step-label {
+    color: #124A5C; /* Active color */
+    border-color: #124A5C;
+}
+
+.step.inactive .step-icon, .step.inactive .step-label {
+    color: #ddd; /* Faded color for inactive steps */
+    border-color: #ddd;
+}
+
+/* Modify the step icon border based on active/inactive state */
+.step-icon {
+    transition: border-color 0.3s, color 0.3s;
+}
+
+.step.inactive {
+    cursor: not-allowed;
+}
