@@ -553,6 +553,202 @@ const lineManagerController = {
         }
     },
 
+    // almost the same logic as hr but only by the same department is fetched.
+    getRecordsPerformanceTrackerByDepartmentId: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
+            try {
+                const userId = req.session.user.userId; // Get the logged-in user's userId
+                console.log('User ID:', userId); // Log the userId for debugging
+    
+                if (!userId) {
+                    req.flash('errors', { fetchError: 'User ID is not defined. Please log in again.' });
+                    return res.redirect('/staff/login');
+                }
+    
+                // Fetch data from useraccounts table
+                const { data: userData, error: userError } = await supabase
+                    .from('useraccounts')
+                    .select('userId, userEmail')
+                    .eq('userId', userId)
+                    .single(); // Get a single user account
+    
+                if (userError || !userData) {
+                    throw userError || new Error('Failed to fetch user data.');
+                }
+    
+                // Now fetch the associated staff account to get departmentId
+                const { data: staffData, error: staffError } = await supabase
+                    .from('staffaccounts')
+                    .select('departmentId')
+                    .eq('userId', userId)
+                    .single(); // Get a single staff record
+    
+                if (staffError || !staffData) {
+                    throw staffError || new Error('Failed to fetch staff data.');
+                }
+    
+                const deptId = staffData.departmentId; // Retrieve departmentId
+                console.log('Department ID:', deptId); // Log the departmentId for debugging
+    
+                if (!deptId) {
+                    req.flash('errors', { fetchError: 'Department ID is not defined. Please log in again.' });
+                    return res.redirect('/staff/login');
+                }
+    
+                // Fetch data from staffaccounts filtered by departmentId
+                const { data: employeeData, error: fetchError } = await supabase
+                    .from('staffaccounts')
+                    .select(`
+                        staffId, 
+                        userId, 
+                        departmentId, 
+                        jobId, 
+                        lastName, 
+                        firstName,
+                        useraccounts (
+                            userId, 
+                            userEmail
+                        ),
+                        departments (
+                            deptName
+                        ),
+                        jobpositions (
+                            jobTitle
+                        )
+                    `)
+                    .eq('departmentId', deptId) // Filter by departmentId
+                    .order('lastName', { ascending: true }); // Sort by lastName
+    
+                if (fetchError) {
+                    throw fetchError;
+                }
+    
+                // Map the fetched data to a structured employee list
+                const employeeList = employeeData.map(staff => ({
+                    userId: staff.userId,  // Include userId in the output
+                    lastName: staff.lastName || 'Unknown',
+                    firstName: staff.firstName || 'Unknown',
+                    deptName: staff.departments?.deptName || 'Unknown',
+                    jobTitle: staff.jobpositions?.jobTitle || 'No job title assigned',
+                    email: staff.useraccounts?.userEmail || 'N/A'
+                }));
+    
+                console.log("Employee data fetched successfully:", employeeList);
+    
+                const errors = req.flash('errors') || {};  
+                res.render('staffpages/linemanager_pages/managerrecordsperftracker', { errors, employees: employeeList });
+    
+            } catch (error) {
+                console.error('Error fetching Employee Records and Performance History data:', error);
+                req.flash('errors', { fetchError: 'Failed to fetch employee records. Please try again.' });
+                res.redirect('/linemanager/dashboard');
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+    
+
+    //TODO: Make another supabase table for emergency contact
+    //TODO: Backend for career progression onwards - ongoing, will prio objective and performance review tracker (charisse)
+
+    getRecordsPerformanceTrackerByUserId: async function(req, res) {
+        try {
+            const userId = req.params.userId;  // Retrieve userId from URL params
+            console.log('Fetching records for userId:', userId);
+    
+            if (!userId) {
+                req.flash('errors', { authError: 'User not logged in.' });
+                return res.redirect('/staff/login');
+            }
+    
+            // Single query to fetch all user-related data
+            const { data: userData, error } = await supabase
+                .from('useraccounts')
+                .select(`
+                    userEmail, 
+                    userRole, 
+                    staffaccounts (
+                        firstName, 
+                        lastName, 
+                        phoneNumber, 
+                        dateOfBirth, 
+                        emergencyContactName, 
+                        emergencyContactNumber, 
+                        employmentType, 
+                        hireDate, 
+                        staffId, 
+                        jobId,
+                        departmentId,
+                        departments (
+                            deptName
+                        ),
+                        jobpositions (
+                            jobTitle
+                        ),
+                        staffdegrees (
+                            degreeName, 
+                            universityName, 
+                            graduationYear
+                        ),
+                        staffcareerprogression (
+                            milestoneName, 
+                            startDate, 
+                            endDate
+                        ),
+                        staffexperiences (
+                            companyName, 
+                            startDate
+                        ),
+                        staffcertification!staffcertification_staffId_fkey (
+                            certificateName, 
+                            certDate
+                        )
+                    )
+                `)
+                .eq('userId', userId)
+                .single();
+    
+            if (error) throw error;
+    
+            console.log('Fetched user data:', userData);
+    
+            // Compile the userData into the format required for the template
+            const formattedUserData = {
+                userEmail: userData.userEmail || '',
+                userRole: userData.userRole || '',
+                firstName: userData.staffaccounts[0]?.firstName || '',
+                lastName: userData.staffaccounts[0]?.lastName || '',
+                phoneNumber: userData.staffaccounts[0]?.phoneNumber || '',
+                dateOfBirth: userData.staffaccounts[0]?.dateOfBirth || '',
+                emergencyContactName: userData.staffaccounts[0]?.emergencyContactName || '',
+                emergencyContactNumber: userData.staffaccounts[0]?.emergencyContactNumber || '',
+                employmentType: userData.staffaccounts[0]?.employmentType || '',
+                hireDate: userData.staffaccounts[0]?.hireDate || '',
+                jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || '',
+                departmentName: userData.staffaccounts[0]?.departments?.deptName || '',
+                milestones: userData.staffaccounts[0]?.staffcareerprogression || [],
+                degrees: userData.staffaccounts[0]?.staffdegrees || [],
+                experiences: userData.staffaccounts[0]?.staffexperiences || [],
+                certifications: userData.staffaccounts[0]?.staffcertification || []
+            };
+            
+            console.log('Compiled user data:', formattedUserData);
+    
+            res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', {
+                user: formattedUserData,
+                errors: req.flash('errors')
+            });
+        } catch (err) {
+            console.error('Error in getRecordsPerformanceTrackerByUserId controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading the personal info page.' });
+            res.redirect('staffpages/linemanager_pages/managerrecordsperftracker');
+        }
+    },
+    
+    
+
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
             if(err) {

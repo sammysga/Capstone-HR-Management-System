@@ -943,6 +943,15 @@ postAttendance: async function (req, res) {
     }
 },
 
+getViewPerformanceTimeline: function(req, res){
+    if (req.session.user && req.session.user.userRole === 'Employee') {
+        res.render('staffpages/employee_pages/employee-viewtimeline');
+    } else {
+        req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
+        res.redirect('/staff/login');
+    }
+},
+
 
 // getAttendance: async function (req, res) {
 //     // Check if the user is authenticated

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Objective and Performance Review Tracker</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Main content styling */
+        .main-content {
+            margin-left: 270px; /* Offset for the sidebar */
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+        }
+
+    
+    </style>
+</head>
+<body>
+    <%- include('../../partials/employee_partials') %>
+
+    <!-- Main content area -->
+    <div class="main-content">
+        <!-- Stepper Section -->
+        <section class="stepper">
+            <h2>Objective and Performance Review Tracker</h2>
+            <div class="stepper-container">
+                <div class="step" onclick="showObjectiveForm()">
+                    <div class="step-icon"><i class="fa fa-bullseye"></i></div>
+                    <div class="step-label">Objective Setting</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon"><i class="fa fa-users"></i></div>
+                    <div class="step-label">[1/4] 360 Degree Feedback</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon"><i class="fa fa-users"></i></div>
+                    <div class="step-label">[2/4] 360 Degree Feedback</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
+                    <div class="step-label">Mid-Year IDP</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon"><i class="fa fa-users"></i></div>
+                    <div class="step-label">[3/4] 360 Degree Feedback</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon"><i class="fa fa-users"></i></div>
+                    <div class="step-label">[4/4] 360 Degree Feedback</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
+                    <div class="step-label">Final-Year IDP</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Objective Setting Form (hidden by default) -->
+        <div class="objective-setting-form" id="objectiveSettingForm">
+            <h3>Objective Setting Form</h3>
+            <p>At the start of the work year, employees will collaborate with their line managers to conduct objective setting, where key performance objectives and individual goals will be discussed and established. The line manager will input these agreed-upon objectives into the system, consolidating them for tracking throughout the year. Once the objectives are finalized and inputted by the line manager, they will be reflected on the employee's performance records enabling to monitor their progress from the 360-degree feedback to be conducted quarterly.</p>
+        </div>
+    </div>
+
+    <!-- JavaScript to toggle form visibility -->
+    <script>
+        function toggleObjectiveForm() {
+            const form = document.getElementById('objectiveSettingForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+    const steps = document.querySelectorAll('.step');
+    const forms = {
+        objectiveSetting: document.getElementById('objectiveSettingForm')
+        // Add more mappings here if other steps have forms/content sections
+    };
+
+    // Initialize step states based on content presence
+    steps.forEach((step, index) => {
+        const formId = Object.keys(forms)[index];
+        const form = forms[formId];
+
+        if (form && form.innerHTML.trim() !== '') {
+            step.classList.add('active'); // Content exists, mark as active
+        } else {
+            step.classList.add('inactive'); // No content, mark as inactive
+        }
+    });
+
+    // Click event handler only for active steps
+    steps.forEach(step => {
+        if (step.classList.contains('active')) {
+            step.addEventListener('click', () => {
+                toggleObjectiveForm();
+            });
+        }
+    });
+});
+
+    </script>
+</body>
+</html>
+

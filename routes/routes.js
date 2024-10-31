@@ -62,7 +62,6 @@ router.get('/hr/joboffers', hrController.getJobOffers);
 router.get('/hr/addjoboffer', hrController.getAddJobOffer);
 router.post('/hr/addjoboffer', hrController.postAddJobOffer);
 router.get('/hr/editjoboffers', hrController.getEditJobOffers);
-
 router.get('/hr/records-performance-tracker', hrController.getRecordsPerformanceTracker);
 router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPerformanceTrackerByUserId);
 
@@ -89,6 +88,7 @@ router.post('/employee/leaverequest', employeeController.postLeaveBalancesByUser
 router.get('/employee/leaverequest/pending', employeeController.fetchPendingRequestsCount);
 
 router.get('/employee/employeeidp', employeeController.getIdp);
+router.get('/employee/viewtimeline', employeeController.getViewPerformanceTimeline);
 
 
 router.get('/employee/attendance', employeeController.getAttendance);
@@ -112,6 +112,8 @@ router.get('/linemanager/mrf', lineManagerController.getMRF);
 router.get('/linemanager/request-mrf', lineManagerController.getRequestMRF);
 router.get('/linemanager/mrf-list', lineManagerController.getMRFList);
 router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
+router.get('/linemanager/records-performance-tracker', lineManagerController.getRecordsPerformanceTrackerByDepartmentId);
+router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getRecordsPerformanceTrackerByUserId);
 
 
 
