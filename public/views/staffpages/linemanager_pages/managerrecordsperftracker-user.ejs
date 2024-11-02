@@ -272,11 +272,9 @@
                     <p><strong>Department:</strong> <%= user.departmentName %></p>
                     <p><strong>Performance Period:</strong> <span id="performanceDate"><%= new Date().toLocaleDateString('en-US') %></span></p>
             
-                    <!-- Hidden inputs for jobId, departmentId, and performancePeriod -->
                     <input type="hidden" name="userId" value="<%= user.userId %>">
                     <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
                     <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
-            
                     <table>
                         <thead>
                             <tr>
@@ -309,35 +307,36 @@
             
                     <div id="submitButtonContainer">
                         <button id="saveButton" type="button" onclick="saveObjectives()">Save</button>
-                        <button id="submitButton" type="button" onclick="submitToEmployee()">Submit to Assigned Employee</button>
                     </div>
                 </section>
             <% } else { %>
                 <!-- View-Only Page for Submitted Data -->
-    <section id="view-only-page" class="fade-out">
-        <h2>View Objectives and Performance Review Data</h2>
-        <p><strong>Submission Date:</strong> <span id="submissionDate"><%= new Date().toLocaleDateString('en-US') %></span></p>
-        <div class="step-icon"><i class="fa fa-check-circle"></i></div>
-        <p id="objectivesData">
-            <strong>Submitted Objectives:</strong>
-            <ul>
-                <% if (submittedObjectives && submittedObjectives.length > 0) { %>
-                    <% submittedObjectives.forEach(obj => { %>
-                        <li>
-                            <strong>KRA/Objectives:</strong> <%= obj.objectiveDescrpt %>, 
-                            <strong>KPI:</strong> <%= obj.objectiveKPI %>, 
-                            <strong>Target:</strong> <%= obj.objectiveTarget %>, 
-                            <strong>UOM:</strong> <%= obj.objectiveUOM %>, 
-                            <strong>Assigned Weight:</strong> <%= obj.objectiveAssignedWeight %>%
-                        </li>
-                    <% }); %>
-                <% } else { %>
-                    <li>No objectives submitted yet.</li>
-                <% } %>
-            </ul>
-        </p>
-    </section>
+                <section id="view-only-page" class="fade-out">
+                    <h2>View Objectives and Performance Review Data</h2>
+                    <p><strong>Submission Date:</strong> <span id="submissionDate"><%= new Date().toLocaleDateString('en-US') %></span></p>
+                    <div class="step-icon"><i class="fa fa-check-circle"></i></div>
+                    <p id="objectivesData">
+                        <strong>Submitted Objectives:</strong>
+                        <ul>
+                            <% if (submittedObjectives && submittedObjectives.length > 0) { %>
+                                <% submittedObjectives.forEach(obj => { %>
+                                    <li>
+                                        <strong>KRA/Objectives:</strong> <%= obj.objectiveDescrpt %>, 
+                                        <strong>KPI:</strong> <%= obj.objectiveKPI %>, 
+                                        <strong>Target:</strong> <%= obj.objectiveTarget %>, 
+                                        <strong>UOM:</strong> <%= obj.objectiveUOM %>, 
+                                        <strong>Assigned Weight:</strong> <%= obj.objectiveAssignedWeight %>%
+                                    </li>
+                                <% }); %>
+                            <% } else { %>
+                                <li>No objectives submitted yet.</li>
+                     bn       <% } %>
+                        </ul>
+                    </p>
+                    <button id="prepareFeedbackBtn" style="float: right; margin-top: 20px;">Proceed to Prepare 360 Degree Feedback</button>
+                </section>
             <% } %>
+            
             
             <script>
                 // Placeholder for viewState object
@@ -349,6 +348,7 @@
             
                 // Function to handle objective click
                 function handleObjectiveClick() {
+                    console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
                     if (!viewState.viewOnlyStatus.objectivesettings) {
                         showObjectiveForm();
                     }
@@ -356,6 +356,7 @@
             
                 // Function to show the objective form and fade out other sections
                 function showObjectiveForm() {
+                    console.log("Showing objective form.");
                     const objectiveForm = document.getElementById("objective-skill-progress-form");
                     objectiveForm.style.display = "block"; // Ensure the form is visible
             
@@ -379,6 +380,7 @@
             
                 // Function to add a new row in the progress table
                 function addRow() {
+                    console.log("Adding a new row to the progress table.");
                     const newRow = document.createElement('tr');
                     newRow.innerHTML = `
                         <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
@@ -394,6 +396,7 @@
             
                 // Function to remove a row from the progress table
                 function removeRow(button) {
+                    console.log("Removing a row from the progress table.");
                     const row = button.parentElement.parentElement; // Get the row to remove
                     row.remove(); // Remove the row from the table
                     updateTotalWeight(); // Update total weight after removing a row
@@ -411,86 +414,108 @@
             
                     // Update the total weight display
                     document.getElementById("totalWeight").value = totalWeight;
+                    console.log("Total weight updated:", totalWeight);
                 }
             
                 async function saveObjectives() {
-                    const jobId = document.getElementById("jobId").value;
-                    const departmentId = document.getElementById("departmentId").value;
-                    const performancePeriod = document.getElementById("performanceDate").textContent; // Get the performance period from the span
-            
-                    const objectives = [];
-                    const rows = document.querySelectorAll("#progress-table-body tr");
-            
-                    // Check if confirmation is checked
-                    const confirmationChecked = document.getElementById("confirmationCheckbox").checked;
-                    if (!confirmationChecked) {
-                        alert("Please confirm that you have reviewed the objectives before saving.");
-                        return;
-                    }
-            
-                    let totalWeight = 0; // Initialize total weight variable
-            
-                    rows.forEach(row => {
-                        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
-                        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
-                        const targetInput = row.querySelector('input[name="objectiveTarget"]');
-                        const uomInput = row.querySelector('input[name="objectiveUOM"]');
-                        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
-            
-                        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
-                            const weight = parseFloat(weightInput.value); // Parse weight as a float
-                            totalWeight += weight; // Accumulate total weight
-            
-                            const objective = {
-                                description: descriptionInput.value,
-                                kpi: kpiInput.value,
-                                target: targetInput.value,
-                                uom: uomInput.value,
-                                weight: weight,
-                            };
-                            objectives.push(objective);
-                        }
-                    });
-            
-                    // Check if total weight equals 100%
-                    if (totalWeight !== 100) {
-                        alert("Total assigned weight must be 100% to save.");
-                        return; // Return early if weight does not equal 100%
-                    }
-            
-                    if (objectives.length > 0) {
-                        try {
-                            const response = await fetch('/linemanager/records-performance-tracker/objectivesetting', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    jobId,
-                                    departmentId,
-                                    performancePeriod,
-                                    objectives,
-                                    totalWeight
-                                })
-                            });
-            
-                            const result = await response.json();
-            
-                            if (result.success) {
-                                alert(result.message); // Handle success
-                                displaySubmittedObjectives(objectives); // Display the submitted objectives
-                            } else {
-                                alert("Failed to save objectives: " + result.message);
-                            }
-                        } catch (error) {
-                            console.error("Error saving objectives:", error);
-                            alert("An error occurred while saving objectives.");
-                        }
-                    } else {
-                        alert("No objectives to save.");
-                    }
-                }
+    const userId = document.querySelector('input[name="userId"]').value;
+    const jobId = document.getElementById("jobId").value;
+    const performancePeriod = document.getElementById("performanceDate").textContent;
+
+    console.log("User  ID:", userId);
+    console.log("Job ID:", jobId);
+    console.log("Department ID:", departmentId);
+    console.log("Performance Period:", performancePeriod);
+
+    // Check if any required IDs are missing
+    if (!userId || !jobId || !departmentId) {
+        console.error("One or more required IDs are missing.");
+        alert("Please ensure all fields are filled out correctly before saving.");
+        return;
+    }
+
+    const objectives = [];
+    const rows = document.querySelectorAll("#progress-table-body tr");
+
+    // Check if confirmation is checked
+    const confirmationChecked = document.getElementById("confirmationCheckbox").checked;
+    if (!confirmationChecked) {
+        alert("Please confirm that you have reviewed the objectives before saving.");
+        return;
+    }
+
+    let totalWeight = 0; // Initialize total weight variable
+
+    rows.forEach(row => {
+        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
+        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
+        const targetInput = row.querySelector('input[name="objectiveTarget"]');
+        const uomInput = row.querySelector('input[name="objectiveUOM"]');
+        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
+
+        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
+            const weight = parseFloat(weightInput.value); // Parse weight as a float
+            totalWeight += weight; // Accumulate total weight
+
+            const objective = {
+                description: descriptionInput.value,
+                kpi: kpiInput.value,
+                target: targetInput.value,
+                uom: uomInput.value,
+                weight: weight,
+            };
+            objectives.push(objective);
+        }
+    });
+
+    console.log("Objectives to save:", objectives);
+
+    // Check if total weight equals 100%
+    if (totalWeight !== 100) {
+        alert("Total assigned weight must be 100% to save.");
+        return; // Return early if weight does not equal 100%
+    }
+
+    if (objectives.length > 0) {
+        try {
+            const response = await fetch(`/linemanager/records-performance-tracker/objectivesetting/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jobId,
+                    departmentId,
+                    performancePeriod,
+                    objectives,
+                    totalWeight
+                })
+            });
+
+            console.log("Response from server:", response);
+
+            const result = await response.json();
+            console.log("Result from server:", result);
+
+            if (result.success) {
+                alert(result.message); // Handle success
+                displaySubmittedObjectives(objectives); // Display the submitted objectives
+
+                // Redirect to the view-only page after successful save
+                window.location.href = `/linemanager/records-performance-tracker/${userId}`; // Adjust this URL as necessary
+            } else {
+                alert("Failed to save objectives: " + result.message);
+            }
+        } catch (error) {
+            console.error("Error saving objectives:", error);
+            alert("An error occurred while saving objectives.");
+        }
+    } else {
+        alert("No objectives to save.");
+    }
+}
             
                 // Function to display submitted objectives in the view-only section
                 function displaySubmittedObjectives(objectives) {
+                    console.log("Displaying submitted objectives.");
                     const objectivesData = document.getElementById("objectivesData");
                     objectivesData.innerHTML = ""; // Clear previous data
             
@@ -502,45 +527,6 @@
                     document.getElementById("submissionDate").textContent = new Date().toLocaleDateString('en-US');
                 }
             
-                async function submitToEmployee() {
-    // Logic for submitting to assigned employee, including confirmation
-    if (confirm("Are you sure you want to submit the objectives to the assigned employee?")) {
-        const submitButton = document.getElementById("submitButton"); // Assume you have a submit button with this ID
-        submitButton.disabled = true; // Disable button to prevent multiple submissions
-
-        const jobId = document.getElementById("jobId").value;
-        const departmentId = document.getElementById("departmentId").value;
-
-        try {
-            const response = await fetch('/linemanager/records-performance-tracker/submit-objectives', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    jobId,
-                    departmentId
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert(result.message); // Handle success
-                window.location.href = '/linemanager/records-performance-tracker/view'; // Update this path to your view-only page
-        }
-         else {
-                alert("Failed to submit objectives: " + result.message);
-            }
-        } catch (error) {
-            console.error("Error submitting objectives:", error);
-            alert("An error occurred while submitting objectives.");
-        } finally {
-            submitButton.disabled = false; // Re-enable button in both success and error scenarios
-        }
-    }
-}
-
             </script>
-
-
 </body>
 </html>
