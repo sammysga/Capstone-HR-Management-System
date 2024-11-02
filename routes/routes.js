@@ -5,7 +5,7 @@ const staffLoginController = require('../controllers/staffloginController');
 const hrController = require('../controllers/hrController');
 const employeeController = require('../controllers/employeeController');
 const lineManagerController = require('../controllers/lineManagerController');
-
+const chatbotController = require('../controllers/chatbotController');
 
 
 // Middleware to parse incoming request bodies
@@ -24,9 +24,12 @@ router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
 router.get('/job-details/:jobId', applicantController.getJobDetails);
-router.get('/chatbothome', applicantController.getChatbotPage);
+// router.get('/chatbothome', applicantController.getChatbotPage);
 router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);
 
+// Chatbot routes
+router.get('/chatbothome', chatbotController.getChatbotPage);
+router.post('/chatbot', chatbotController.handleChatbotMessage);
 
 // Staff Log in
 router.get('/staff/login', staffLoginController.getStaffLogin);
