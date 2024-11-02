@@ -123,6 +123,5 @@ router.get(
 );
 router.post('/linemanager/records-performance-tracker/objectivesetting/:userId', lineManagerController.saveObjectiveSettings);
 
-
 module.exports = router; 
 
