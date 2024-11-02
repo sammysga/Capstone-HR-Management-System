@@ -116,8 +116,12 @@ router.get('/linemanager/request-mrf', lineManagerController.getRequestMRF);
 router.get('/linemanager/mrf-list', lineManagerController.getMRFList);
 router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
 router.get('/linemanager/records-performance-tracker', lineManagerController.getRecordsPerformanceTrackerByDepartmentId);
-router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getRecordsPerformanceTrackerByUserId);
-
+router.get(
+    '/linemanager/records-performance-tracker/:userId',
+    lineManagerController.getRecordsPerformanceTrackerByUserId,
+    lineManagerController.getUserProgressView
+);
+router.post('/linemanager/records-performance-tracker/objectivesetting/:userId', lineManagerController.saveObjectiveSettings);
 
 
 module.exports = router; 
