@@ -468,9 +468,45 @@ const lineManagerController = {
         }
     },
 
-    getMRF: function(req, res){
+    getMRF: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/mrf');
+            try {
+                // Fetch MRF data
+                const { data: mrfList, error: mrfError } = await supabase
+                    .from('mrf')
+                    .select('positionTitle, requisitionDate, mrfId');
+    
+                if (mrfError) throw mrfError;
+    
+                // Fetch approval statuses
+                const { data: approvals, error: approvalError } = await supabase
+                    .from('mrf_approvals')
+                    .select('mrfId, approval_stage');
+    
+                if (approvalError) throw approvalError;
+    
+                // Check if approvals is an array
+                if (!Array.isArray(approvals)) {
+                    console.error("Approvals is not an array:", approvals);
+                    throw new Error("Approvals data is not in expected array format.");
+                }
+    
+                // Combine MRF data with approval statuses
+                const combinedData = mrfList.map(mrf => {
+                    const approval = approvals.find(a => a.mrfId === mrf.mrfId); 
+                    return {
+                        positionTitle: mrf.positionTitle,
+                        requisitionDate: mrf.requisitionDate,
+                        status: approval ? approval.approval_stage : 'Pending'
+                    };
+                });
+    
+                res.render('staffpages/linemanager_pages/mrf', { mrfRequests: combinedData });
+            } catch (error) {
+                console.error("Error in getMRF:", error);
+                req.flash('errors', { fetchError: 'Error fetching MRF data.' });
+                res.redirect('/staff/login');
+            }
         } else {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
@@ -511,7 +547,6 @@ const lineManagerController = {
         }
     },
     
-    
 
     submitMRF: async function(req, res) {
         if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
@@ -530,29 +565,67 @@ const lineManagerController = {
             requisitionType: req.body.requisitionType,
             employmentNature: req.body.employmentNature,
             employeeCategory: req.body.employeeCategory,
-            justification: req.body.justification,
-            requiredAttachments: req.body.requiredAttachments ? req.body.requiredAttachments.join(', ') : '', // Convert array to string
+            justification: req.body.justification || '', // Default to an empty string if undefined
+            requiredAttachments: req.body.requiredAttachments ? req.body.requiredAttachments.join(', ') : '',
             userId: req.session.user.userId,
+            status: 'Pending'
         };
     
+        console.log("MRF Data to be inserted:", mrfData);
+    
         try {
-            const { data: mrf, error } = await supabase
+            // Original insertion
+            const { data, error } = await supabase
                 .from('mrf')
-                .insert([mrfData]);
+                .insert([mrfData])
+                .select();
     
             if (error) {
-                throw error;
+                console.error("Supabase Error:", error.message, error.details);
+                throw error; // Rethrow or handle as needed
+            }
+    
+            if (!data || data.length === 0) {
+                throw new Error("No MRF data returned after insertion.");
+            }
+    
+            console.log("Inserted MRF data:", data);
+            console.log("Approval Status:", req.body.approvalStatus);
+    
+            // Approval logic
+            // TODO: mrf_approvals data not being inserted
+            if (req.body.approvalStatus === 'approved') {
+                const approvalData = {
+                    mrfId: data[0].id,
+                    staffId: req.session.user.userId,
+                    approval_stage: req.session.user.userRole,
+                    reviewerName: req.session.user.userName,
+                    reviewerDateSigned: new Date().toISOString()
+                };
+    
+                const { error: approvalError } = await supabase
+                    .from('mrf_approvals')
+                    .insert([approvalData]);
+    
+                if (approvalError) {
+                    console.error("Error inserting approval data:", approvalError);
+                    throw approvalError;
+                }
+    
+                console.log("Approval data inserted:", approvalData);
+            } else {
+                console.log("Approval checkbox was not checked.");
             }
     
             req.flash('success', { message: 'MRF Request submitted successfully!' });
             return res.redirect('/linemanager/mrf');
         } catch (error) {
-            console.error(error);
+            console.error("Error in MRF submission or approval insertion:", error);
             req.flash('errors', { submissionError: 'Failed to submit MRF. Please try again.' });
-            return res.redirect('/linemanager/request-mrf');
+            return res.redirect('/linemanager/mrf'); // Redirecting to /linemanager/mrf on error as well
         }
-    },
-
+    },       
+    
     // almost the same logic as hr but only by the same department is fetched.
     getRecordsPerformanceTrackerByDepartmentId: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
