@@ -273,3 +273,23 @@ th, td {
 .step.inactive {
     cursor: not-allowed;
 }
+.fade-out {
+    display: none; /* Hide the section */
+}
+
+.fade-in {
+    display: block; /* Show the section */
+    transition: opacity 0.5s ease-in-out; /* Optional for smooth effect */
+}
+
+
+.faded {
+    opacity: 0.5;
+}
+#progress-table-body input[type="text"],
+#progress-table-body input[type="number"] {
+    width: 100%; /* Full width of cell */
+    padding: 8px; /* Optional padding for consistency */
+    box-sizing: border-box; /* Include padding/border in width */
+    font-size: 1em; /* Ensure font size consistency */
+}
