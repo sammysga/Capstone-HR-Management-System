@@ -25,12 +25,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Financial Planning & Analysis - Financial Modeller</td>
-                        <td>October 14, 2025</td>
-                        <td>Line Manager</td>
-                    </tr>
-                    <!-- Add more rows here as needed -->
+                    <% mrfRequests.forEach(request => { %>
+                        <tr>
+                            <td><%= request.positionTitle %></td>
+                            <td><%= new Date(request.requisitionDate).toLocaleDateString() %></td>
+                            <td><%= request.status %></td>
+                        </tr>
+                    <% }) %>
                 </tbody>
             </table>
         </div>
