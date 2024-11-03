@@ -28,30 +28,42 @@
         th {
             background-color: #f2f2f2;
         }
-        /* Progress bar styling */
+        /* Enhanced progress bar styling */
         .progress {
             width: 100%;
-            background-color: #f3f3f3;
-            border-radius: 5px;
-            overflow: hidden;
+            background-color: #B4E3E3; /* Light gray background */
+            border-radius: 10px; /* Rounded corners */
+            height: 25px; /* Set height for the progress bar */
+            margin: 10px 0; /* Margin for spacing */
+            position: relative; /* For positioning text */
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); /* Soft inner shadow */
         }
         .progress-bar {
-            height: 20px;
+            height: 100%; /* Full height of the progress container */
             width: 0; /* Set width dynamically with inline style */
-            background-color: #4caf50; /* Green */
-            text-align: center; /* Centered text inside the bar */
-            line-height: 20px; /* Align text vertically */
-            color: white; /* Text color */
-            position: relative; /* Enable positioning for absolute elements */
+            background-color: #07ACB9; /* Single color instead of gradient */
+            border-radius: 10px; /* Rounded corners */
+            transition: width 0.4s ease-in-out; /* Smooth width transition */
         }
         .progress-text {
             position: absolute; /* Positioning text absolutely */
             left: 50%; /* Centering horizontally */
-            transform: translateX(-50%); /* Offset to center text */
             top: 50%; /* Centering vertically */
             transform: translate(-50%, -50%); /* Final centering */
             color: white; /* Text color */
             font-size: 14px; /* Adjust font size as needed */
+            font-weight: bold; /* Bold text for better visibility */
+            pointer-events: none; /* Prevent text from interfering with clicks */
+            line-height: 25px; /* Match this with the height of the progress bar */
+        }
+        /* Results section styling */
+        .results-section {
+            margin-top: 20px; /* Space between table and results section */
+            display: flex; /* Flexbox for alignment */
+            justify-content: space-between; /* Space out the headers */
+        }
+        .results-header {
+            font-weight: bold; /* Bold text for headers */
         }
     </style>
 </head>
@@ -84,9 +96,8 @@
                     <td>20%</td>
                     <td>
                         <div class="progress">
-                            <div class="progress-bar" style="width: 75%;">
-                                <span class="progress-text">15/20%</span>
-                            </div>
+                            <div class="progress-bar" style="width: 75%;"></div>
+                            <span class="progress-text">75%</span>
                         </div>
                     </td>
                 </tr>
@@ -98,9 +109,8 @@
                     <td>20%</td>
                     <td>
                         <div class="progress">
-                            <div class="progress-bar" style="width: 75%;">
-                                <span class="progress-text">15/20%</span>
-                            </div>
+                            <div class="progress-bar" style="width: 60%;"></div>
+                            <span class="progress-text">60%</span>
                         </div>
                     </td>
                 </tr>
@@ -112,9 +122,8 @@
                     <td>20%</td>
                     <td>
                         <div class="progress">
-                            <div class="progress-bar" style="width: 75%;">
-                                <span class="progress-text">15/20%</span>
-                            </div>
+                            <div class="progress-bar" style="width: 90%;"></div>
+                            <span class="progress-text">90%</span>
                         </div>
                     </td>
                 </tr>
@@ -126,9 +135,8 @@
                     <td>20%</td>
                     <td>
                         <div class="progress">
-                            <div class="progress-bar" style="width: 75%;">
-                                <span class="progress-text">15/20%</span>
-                            </div>
+                            <div class="progress-bar" style="width: 80%;"></div>
+                            <span class="progress-text">80%</span>
                         </div>
                     </td>
                 </tr>
@@ -140,9 +148,8 @@
                     <td>20%</td>
                     <td>
                         <div class="progress">
-                            <div class="progress-bar" style="width: 75%;">
-                                <span class="progress-text">15/20%</span>
-                            </div>
+                            <div class="progress-bar" style="width: 70%;"></div>
+                            <span class="progress-text">70%</span>
                         </div>
                     </td>
                 </tr>
@@ -154,14 +161,25 @@
                     <td>20%</td>
                     <td>
                         <div class="progress">
-                            <div class="progress-bar" style="width: 75%;">
-                                <span class="progress-text">15/20%</span>
-                            </div>
+                            <div class="progress-bar" style="width: 50%;"></div>
+                            <span class="progress-text">50%</span>
                         </div>
                     </td>
                 </tr>
             </tbody>
         </table>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <div>
+                <div class="results-header">Results as of the Latest 360 Feedback Recorded:</div>
+                <div>MM/DD/YYYY</div>
+            </div>
+            <div>
+                <div class="results-header">Total Current Weight Standing:</div>
+                <div>75%</div>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript for sidebar and navigation -->
