@@ -120,25 +120,10 @@ updateUserInfo: async function(req, res) {
     }
 },
 
-getEmployeeObjProg: async function(req, res) {
-    try {
-        const userId = req.session.user ? req.session.user.userId : null;
-        if (!userId) {
-            req.flash('errors', { authError: 'User not logged in.' });
-            return res.redirect('/staff/login');
-        }
-        
-        // Render the objective-based program page
-        res.render('/employee_pages/employeeobjectivebasedprog', {
-            errors: req.flash('errors')
-        });
-    } catch (err) {
-        console.error('Error in getEmployeeObjProg controller:', err);
-        req.flash('errors', { dbError: 'An error occurred while loading the objective-based program page.' });
-        res.redirect('/employee/dashboard');
-    }
+getEmployeeObjProg: function(req, res) {
+    // Render the page without any data, including user information
+    res.render('staffpages/employee_pages/employeeobjectivebasedprog');
 },
-
 
 getPersInfoCareerProg: async function(req, res) {
     try {
