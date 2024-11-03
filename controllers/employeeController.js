@@ -129,7 +129,7 @@ getEmployeeObjProg: async function(req, res) {
         }
         
         // Render the objective-based program page
-        res.render('/employee/employeeobjectivebasedprog', {
+        res.render('employee/employeeobjectivebasedprog', {
             errors: req.flash('errors')
         });
     } catch (err) {
@@ -138,6 +138,7 @@ getEmployeeObjProg: async function(req, res) {
         res.redirect('/employee/dashboard');
     }
 },
+
 
 getPersInfoCareerProg: async function(req, res) {
     try {
