@@ -3,51 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request for Offboarding</title>
-    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <title>Employee Objective-Based Program</title>
 </head>
 <body>
-    <%- include('../../partials/employee_partials') %>
-
-    <!-- JavaScript for sidebar and navigation -->
-    <script>
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
-        });
-
-        // Handle navigation for Performance Management links
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default link behavior
-                
-                // Perform the desired action or navigation
-                const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl; // Navigate to the target URL
-            });
-        });
-    </script>
+    <h1>Welcome to the Employee Objective-Based Program Page</h1>
+    <p>This page is currently under construction.</p>
 </body>
 </html>
