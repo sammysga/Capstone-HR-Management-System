@@ -268,253 +268,209 @@
             
                 </div>
             </section>
-            <form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/objectivesetting/<%= user.userId %>">
-                <% if (!viewState.viewOnlyStatus['objectivesettings']) { %>
-                    <section id="objective-skill-progress-form" class="fade-out">
-                        <h2>Objective-based Skill Quarterly Progress Overview</h2>
-                        <p class="employee-info"><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></p>
-                        <p><strong>Position:</strong> <%= user.jobTitle %></p>
-                        <p><strong>Company:</strong> Prime Infrastructure</p>
-                        <p><strong>Department:</strong> <%= user.departmentName %></p>
-                        <p><strong>Performance Period:</strong> <span id="performanceDate"><%= new Date().toLocaleDateString('en-US') %></span></p>
-                    
-                        <input type="hidden" name="userId" value="<%= user.userId %>">
-                        <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
-                        <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
-                        <table>
-                            <thead>
+            
+<form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/objectivesetting/<%= user.userId %>">
+    <section id="objective-skill-progress-form" class="fade-out" style="display: none;">
+        <h2>Objective-based Skill Quarterly Progress Overview</h2>
+        <p class="employee-info"><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></p>
+        <p><strong>Position:</strong> <%= user.jobTitle %></p>
+        <p><strong>Company:</strong> Prime Infrastructure</p>
+        <p><strong>Department:</strong> <%= user.departmentName %></p>
+        <p><strong>Performance Period:</strong> <span id="performanceDate"><%= viewState.performancePeriod || 'N/A' %></span></p>
+
+        <input type="hidden" name="userId" value="<%= user.userId %>">
+        <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
+        <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
+        <table>
+            <thead>
+                <tr>
+                    <th>KRA/Objectives</th>
+                    <th>KPI</th>
+                    <th>Target</th>
+                    <th>UOM</th>
+                    <th>Assigned Weight</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="progress-table-body">
+                <tr>
+                    <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
+                    <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
+                    <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
+                    <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
+                    <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
+                    <td><button type="button" onclick="removeRow(this)">Remove</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button id="addRowBtn" type="button" onclick="addRow()">Add Row</button>
+        <p><strong>Total Assigned Weight:</strong> <input id="totalWeight" type="number" value="0" readonly>%</p>
+
+        <label>
+            <input type="checkbox" id="confirmationCheckbox" required>
+            I confirm that the objective weights have been accurately consolidated and reviewed .
+        </label>
+
+        <div id="submitButtonContainer">
+            <button id="saveButton" type="submit">Save</button>
+        </div>
+    </section>
+
+    <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
+        <section id="view-only-page" class="fade-out" style="display: none;">
+            <h2>View Objectives and Performance Review Data</h2>
+            <p><strong>Performance Period:</strong> <span id="submissionDate"><%= viewState.performancePeriod ? viewState.performancePeriod : 'N/A' %></span></p>
+
+            <div id="objectivesData" class="view-only-section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>KRA/Objectives</th>
+                            <th>KPI</th>
+                            <th>Target</th>
+                            <th>UOM</th>
+                            <th>Assigned Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody id="view-only-table-body">
+                        <% if (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) { %>
+                            <% viewState.submittedObjectives.forEach(obj => { %>
                                 <tr>
-                                    <th>KRA/Objectives</th>
-                                    <th>KPI</th>
-                                    <th>Target</th>
-                                    <th>UOM</th>
-                                    <th>Assigned Weight</th>
-                                    <th>Actions</th>
+                                    <td><%= obj.objectiveDescrpt || 'N/A' %></td>
+                                    <td><%= obj.objectiveKPI || 'N/A' %></td>
+                                    <td><%= obj.objectiveTarget || 'N/A' %></td>
+                                    <td><%= obj.objectiveUOM || 'N/A' %></td>
+                                    <td><%= obj.objectiveAssignedWeight || 'N/A' %> %</td>
                                 </tr>
-                                <tr>
-                                    <th><small>Sample Input: Improve Customer Satisfaction</small></th>
-                                    <th><small>Sample Input: Satisfaction Rate</small></th>
-                                    <th><small>Sample Input: 90 (Numerical)</small></th>
-                                    <th><small>Sample Input: %</small></th>
-                                    <th><small>Sample Input: 20 (Input with no percentage)</small></th>
-                                    <th><small>Click to Remove a Row</small></th>
-                                </tr>
-                            </thead>
-                            <tbody id="progress-table-body">
-                                <tr>
-                                    <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
-                                    <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
-                                    <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
-                                    <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
-                                    <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
-                                    <td><button type="button" onclick="removeRow(this)">Remove</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <button id="addRowBtn" type="button" onclick="addRow()">Add Row</button>
-                        <p><strong>Total Assigned Weight:</strong> <input id="totalWeight" type="number" value="0" readonly>%</p>
-                    
-                        <label>
-                            <input type="checkbox" id="confirmationCheckbox" required>
-                            I confirm that the objective weights have been accurately consolidated and reviewed.
-                        </label>
-                    
-                        <div id="submitButtonContainer">
-                            <button id="saveButton" type="submit">Save</button>
-                        </div>
-                    </section>
-                <% } else { %>
-                    <!-- View-Only Page for Submitted Data -->
-                    <section id="view-only-page" class="fade-out">
-                        <h2>View Objectives and Performance Review Data</h2>
-                        <p><strong>Submission Date:</strong> <span id="submissionDate"><%= new Date().toLocaleDateString('en-US') %></span></p>
-                        
-                        <div class="step-icon"><i class="fa fa-check-circle"></i></div>
-                        <div id="objectivesData" class="view-only-section">
-                            <strong>Submitted Objectives:</strong>
-                            <ul>
-                                <% if (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) { %>
-                                    <% viewState.submittedObjectives.forEach(obj => { %>
-                                        <li>
-                                            <strong>KRA/Objectives:</strong> <%= obj.objectiveDescrpt %>, 
-                                            <strong>KPI:</strong> <%= obj.objectiveKPI %>, 
-                                            <strong>Target:</strong> <%= obj.objectiveTarget %>, 
-                                            <strong>UOM:</strong> <%= obj.objectiveUOM %>, 
-                                            <strong>Assigned Weight:</strong> <%= obj.objectiveAssignedWeight %>%
-                                        </li>
-                                    <% }); %>
-                                <% } else { %>
-                                    <li>No objectives submitted yet.</li>
-                                <% } %>
-                            </ul>
-                        </div>
-                        <button id="prepareFeedbackBtn" style="float: right; margin-top: 20px;">Proceed to Prepare 360 Degree Feedback</button>
-                    </section>
-                <% } %>
-            </form>
-            <script>
-                // Placeholder for viewState object
-                const viewState = {
-        viewOnlyStatus: {
-            objectivesettings: false // TODO: Change this value based on your logic
-        },
-        submittedObjectives: [] // Default to an empty array
-    };
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5">No objectives submitted yet.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <button id="prepareFeedbackBtn" style="float: right; margin-top: 20px;">Proceed to Prepare 360 Degree Feedback</button>
+        </section>
+    <% } %>
 
-    // Function to handle objective click
-    function handleObjectiveClick() {
-        console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
-        if (!viewState.viewOnlyStatus.objectivesettings) {
-            showObjectiveForm();
-        } else {
-            displaySubmittedObjectives(viewState.submittedObjectives); // Show existing objectives if in view-only mode
-        }
-    }
+    <div id="viewState" data-viewstate='<%= JSON.stringify(viewState) %>' style="display:none;"></div>
+</form>
 
-    function showObjectiveForm() {
-        console.log("Showing objective form.");
-        const objectiveForm = document.getElementById("objective-skill-progress-form");
-        if (objectiveForm) { // Check if the element exists
-            objectiveForm.style.display = "block"; // Ensure the form is visible
+<script>
+    // Parse viewState back into an object
+    const viewStateElement = document.getElementById('viewState');
+    const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
+    let userId = '<%= user.userId %>'; // Pass userId from server-side
+    let jobId = '<%= user.jobId %>'; // Pass jobId from server-side// Wait until the DOM is fully loaded
+    let submittedObjectives = viewState.submittedObjectives || []; // Initialize with submitted objectives
 
-            // Hide other sections
-            const otherSections = document.querySelectorAll('#attendance-logs, #objective-skill-progress, #skill-gap-analysis, #view-only-page');
-            otherSections.forEach(section => {
-                section.style.display = "none"; // Hide other sections
-            });
+    document.addEventListener("DOMContentLoaded", function () {
+    // Log the values for debugging
+    console.log("Submitted Objectives:", submittedObjectives);
+    console.log("User ID:", userId);
+    console.log("Job ID:", jobId);
 
-            // Fade out all other steps
-            document.querySelectorAll('.step').forEach(step => {
-                step.classList.add('faded');
-            });
+    // Set up the click event listener for the objectives button
+    const objectivesButton = document.getElementById("objectivesButton"); // Replace with your actual button ID
+    objectivesButton.addEventListener("click", handleObjectiveClick);
 
-            // Show the specific step for the objective form
-            const currentStep = document.querySelector('.step');
-            if (currentStep) {
-                currentStep.classList.remove('faded');
-            }
-        } else {
-            console.error("Objective form element not found.");
-        }
-    }
+});
 
-            
-                // Function to add a new row in the progress table
-                function addRow() {
-                    console.log("Adding a new row to the progress table.");
-                    const newRow = document.createElement('tr');
-                    newRow.innerHTML = `
-                        <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
-                        <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
-                        <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
-                        <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
-                        <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
-                        <td><button type="button" onclick="removeRow(this)">Remove</button></td>
-                    `;
-                    document.getElementById('progress-table-body').appendChild(newRow);
-                    updateTotalWeight(); // Update the total weight after adding a new row
-                }
-            
-                // Function to remove a row from the progress table
-                function removeRow(button) {
-                    console.log("Removing a row from the progress table.");
-                    const row = button.parentElement.parentElement; // Get the row to remove
-                    row.remove(); // Remove the row from the table
-                    updateTotalWeight(); // Update total weight after removing a row
-                }
-            
-                // Function to update the total weight
-                function updateTotalWeight() {
-                    const weightInputs = document.querySelectorAll('.weight-input');
-                    let totalWeight = 0;
-            
-                    weightInputs.forEach(input => {
-                        const weight = parseFloat(input.value) || 0; // Get weight, default to 0 if empty
-                        totalWeight += weight; // Accumulate total weight
-                    });
-            
-                    // Update the total weight display
-                    document.getElementById("totalWeight").value = totalWeight;
-                    console.log("Total weight updated:", totalWeight);
-                }
-            
-                async function saveObjectives() {
-                    const userId = document.querySelector('input[name="userId"]').value;
-                    const jobId = document.getElementById("jobId").value;
-                    const performancePeriod = document.getElementById("performanceDate").textContent;
-            
-                    const objectives = [];
-                    const rows = document.querySelectorAll("#progress-table-body tr");
-            
-                    rows.forEach(row => {
-                        const description = row.querySelector('input[name="objectiveDescrpt"]').value ;
-                        const kpi = row.querySelector('input[name="objectiveKPI"]').value;
-                        const target = row.querySelector('input[name="objectiveTarget"]').value;
-                        const uom = row.querySelector('input[name="objectiveUOM"]').value;
-                        const weight = parseFloat(row.querySelector('input[name="objectiveAssignedWeight"]').value) || 0;
-            
-                        if (description && kpi && target && uom && weight) {
-                            objectives.push({ description, kpi, target, uom, weight });
-                        }
-                    });
-            
-                    const totalWeight = parseFloat(document.getElementById("totalWeight").value);
-                    if (totalWeight !== 100) {
-                        alert("Total weight of all objectives must be 100%.");
-                        return;
-                    }
-            
-                    if (!document.getElementById("confirmationCheckbox").checked) {
-                        alert("Please confirm that the objective weights have been reviewed.");
-                        return;
-                    }
-            
-                    try {
-                        const response = await fetch(`/linemanager/records-performance-tracker/objectivesetting/${userId}`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ jobId, performancePeriod, objectives })
-                        });
-            
-                        const result = await response.json();
-                        if (response.ok && result.success) {
-                            alert(result.message); // Display success message
-                            displaySubmittedObjectives(objectives); // Display objectives in view-only section
-            
-                            // Fetch and display objectives on the redirected page
-                            fetchObjectives(userId);
-                        } else {
-                            alert("Failed to save objectives: " + result.message);
-                        }
-                    } catch (error) {
-                        alert("An error occurred. Please try again later.");
-                    }
-                }
-            
-                // Function to display submitted objectives in the view-only section
-                function displaySubmittedObjectives(objectives) {
-    console.log("Displaying submitted objectives.");
-    const objectivesData = document.getElementById("objectivesData");
-    objectivesData.innerHTML = ""; // Clear previous data
-
-    if (objectives && objectives.length > 0) {
-        objectives.forEach(obj => {
-            objectivesData.innerHTML += `<strong>KRA/Objectives:</strong> ${obj.objectiveDescrpt}, <strong>KPI:</strong> ${obj.objectiveKPI}, <strong>Target:</strong> ${obj.objectiveTarget}, <strong>UOM:</strong> ${obj.objectiveUOM}, <strong>Assigned Weight:</strong> ${obj.objectiveAssignedWeight}%<br>`;
-        });
+// Function to handle objective click
+function handleObjectiveClick() {
+    console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
+    
+    // Only update display if the objectives settings are not already visible
+    if (!viewState.viewOnlyStatus.objectivesettings) {
+        updateDisplay(); // Call the update function on click
     } else {
-        objectivesData.innerHTML = "No objectives found.";
+        // If view-only mode is active, update the display immediately
+        updateDisplay();
     }
-
-    // Set submission date to the current date
-    document.getElementById("submissionDate").textContent = new Date().toLocaleDateString('en-US');
 }
 
-// Call the function to display existing objectives when the page loads
-window.onload = function() {
-    if (viewState.viewOnlyStatus['objectivesettings'] && viewState.submittedObjectives && viewState.submittedObjectives.length > 0) {
-        displaySubmittedObjectives(viewState.submittedObjectives);
+// Function to update display based on view state
+function updateDisplay() {
+    // Hide all sections initially
+    document.getElementById("objective-skill-progress-form").style.display = "none"; 
+    document.getElementById("view-only-page").style.display = "none"; 
+
+    // Check the view state and submitted objectives
+    if (viewState.viewOnlyStatus.objectivesettings) {
+        // Show view-only page only if there are submitted objectives
+        if (submittedObjectives.length > 0) {
+            displaySubmittedObjectives(submittedObjectives);
+            document.getElementById("view-only-page").style.display = "block"; // Show view-only page
+        } else {
+            // Optionally show a message or do nothing if no objectives
+            console.log("No objectives submitted yet for view-only mode.");
+        }
+    } else {
+        showObjectiveForm(); // Show form if in edit mode
+        document.getElementById("objective-skill-progress-form").style.display = "block"; // Show the form
     }
-};
-            </script>
+}
+
+// Function to show the objective form
+function showObjectiveForm() {
+    console.log("Showing objective form.");
+    document.getElementById("objective-skill-progress-form").style.display = "block"; // Ensure form is visible
+}
+
+// Function to display submitted objectives
+function displaySubmittedObjectives(objectives) {
+    const tableBody = document.getElementById("view-only-table-body");
+    tableBody.innerHTML = ""; // Clear previous content
+
+    objectives.forEach(obj => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${obj.objectiveDescrpt || 'N/A'}</td>
+            <td>${obj.objectiveKPI || 'N/A'}</td>
+            <td>${obj.objectiveTarget || 'N/A'}</td>
+            <td>${obj.objectiveUOM || 'N/A'}</td>
+            <td>${obj.objectiveAssignedWeight || 'N/A'} %</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+// Function to remove a row from the objective form
+function removeRow(button) {
+    const row = button.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+    updateTotalWeight(); // Update total weight after removal
+}
+
+// Function to add a new row to the objective form
+function addRow() {
+    const tableBody = document.getElementById("progress-table-body");
+    const newRow = document.createElement("tr");
+    newRow.innerHTML = `
+        <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
+        <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
+        <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
+        <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
+        <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
+        <td><button type="button" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tableBody.appendChild(newRow);
+}
+
+// Function to update total weight in the form
+function updateTotalWeight() {
+    const weightInputs = document.querySelectorAll(".weight-input");
+    let totalWeight = 0;
+
+    weightInputs.forEach(input => {
+        totalWeight += parseFloat(input.value) || 0;
+    });
+
+    document.getElementById("totalWeight").value = totalWeight;
+}
+
+</script>
 </body>
 </html>
