@@ -82,6 +82,7 @@ router.post('/employee/update-all-info', employeeController.updateAllInfo);
 router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
+router.get('/employee/employeeobjprog', employeeController.getEmployeeObjProg);
 
 
 router.get('/employee/leaverequest', employeeController.getLeaveRequestForm); // To load the form
