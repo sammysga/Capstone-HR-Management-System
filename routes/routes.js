@@ -79,6 +79,7 @@ router.get('/employee/useracc', employeeController.getUserAccount);
 router.get('/employee/employeeoffboarding', employeeController.getEmployeeOffboarding);
 router.get('/employee/employeepersinfocareerprog', employeeController.getPersInfoCareerProg);
 router.get('/employee/employeeobjectivebasedprog', employeeController.getEmployeeObjProg);
+router.get('/employee/employeeskillsproggapanal', employeeController.getEmployeeSKillsProg);
 router.post('/employee/update-all-info', employeeController.updateAllInfo);
 router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
