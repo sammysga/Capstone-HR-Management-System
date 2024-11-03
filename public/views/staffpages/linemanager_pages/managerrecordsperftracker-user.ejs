@@ -178,7 +178,7 @@
             <section class="stepper">
                 <h2>Objective and Performance Review Tracker</h2>
                 <div class="stepper-container">
-                    <div class="step" onclick="handleObjectiveClick()">
+                    <div class="step" id="objectivesButton"> <!-- Add the ID here -->
                         <div class="step-icon"><i class="fa fa-bullseye"></i></div>
                         <div class="step-label">
                             Objective Setting
@@ -291,6 +291,14 @@
                     <th>Assigned Weight</th>
                     <th>Actions</th>
                 </tr>
+                <tr>
+                    <th><small>Sample Input: Improve Customer Satisfaction</small></th>
+                    <th><small>Sample Input: Satisfaction Rate</small></th>
+                    <th><small>Sample Input: 90 (Numerical)</small></th>
+                    <th><small>Sample Input: %</small></th>
+                    <th><small>Sample Input: 20 (Input with no percentage)</small></th>
+                    <th><small>Click to Remove a Row</small></th>
+                </tr>
             </thead>
             <tbody id="progress-table-body">
                 <tr>
@@ -366,50 +374,76 @@
     let jobId = '<%= user.jobId %>'; // Pass jobId from server-side// Wait until the DOM is fully loaded
     let submittedObjectives = viewState.submittedObjectives || []; // Initialize with submitted objectives
 
-    document.addEventListener("DOMContentLoaded", function () {
+
+// Ensure your document ready event listener is set correctly
+document.addEventListener("DOMContentLoaded", function () {
+    const objectivesButton = document.getElementById("objectivesButton");
+
     // Log the values for debugging
     console.log("Submitted Objectives:", submittedObjectives);
     console.log("User ID:", userId);
     console.log("Job ID:", jobId);
+    
+    if (objectivesButton) {
+        console.log('Objectives Button found:', objectivesButton);
+        objectivesButton.addEventListener("click", handleObjectiveClick);
+    } else {
+        console.error('Objectives Button not found in the DOM.');
+    }
 
-    // Set up the click event listener for the objectives button
-    const objectivesButton = document.getElementById("objectivesButton"); // Replace with your actual button ID
-    objectivesButton.addEventListener("click", handleObjectiveClick);
-
+    // Initial display update when the document is loaded
+    console.log('Document loaded. Updating display...');
 });
 
+//
 // Function to handle objective click
 function handleObjectiveClick() {
     console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
     
     // Only update display if the objectives settings are not already visible
     if (!viewState.viewOnlyStatus.objectivesettings) {
+        console.log("Switching to editable form.");
         updateDisplay(); // Call the update function on click
     } else {
-        // If view-only mode is active, update the display immediately
-        updateDisplay();
+        console.log("Switching to view-only mode.");
+        updateDisplay(); // Call the update function on click
     }
 }
-
 // Function to update display based on view state
 function updateDisplay() {
+    console.log('Updating display...');
+
     // Hide all sections initially
-    document.getElementById("objective-skill-progress-form").style.display = "none"; 
-    document.getElementById("view-only-page").style.display = "none"; 
+    const formSection = document.getElementById("objective-skill-progress-form");
+    const viewOnlySection = document.getElementById("view-only-page");
+
+    // Ensure elements exist before accessing their styles
+    if (formSection) {
+        formSection.style.display = "none"; 
+    } else {
+        console.error("Objective Skill Progress Form section not found.");
+    }
+
+    if (viewOnlySection) {
+        viewOnlySection.style.display = "none"; 
+    } else {
+        console.error("View Only Page section not found.");
+    }
 
     // Check the view state and submitted objectives
     if (viewState.viewOnlyStatus.objectivesettings) {
         // Show view-only page only if there are submitted objectives
         if (submittedObjectives.length > 0) {
             displaySubmittedObjectives(submittedObjectives);
-            document.getElementById("view-only-page").style.display = "block"; // Show view-only page
+            viewOnlySection.style.display = "block"; // Show view-only page
+            console.log("Showing view-only page with submitted objectives.");
         } else {
-            // Optionally show a message or do nothing if no objectives
             console.log("No objectives submitted yet for view-only mode.");
         }
     } else {
         showObjectiveForm(); // Show form if in edit mode
-        document.getElementById("objective-skill-progress-form").style.display = "block"; // Show the form
+        formSection.style.display = "block"; // Show the form
+        console.log("Showing editable objective form.");
     }
 }
 
