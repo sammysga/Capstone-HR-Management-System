@@ -82,7 +82,7 @@ router.post('/employee/update-all-info', employeeController.updateAllInfo);
 router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
-
+router.post('/employee/idp', employeeController.getIdp);
 
 router.get('/employee/leaverequest', employeeController.getLeaveRequestForm); // To load the form
 router.post('/employee/leaverequest', employeeController.submitLeaveRequest); // To submit a leave request
