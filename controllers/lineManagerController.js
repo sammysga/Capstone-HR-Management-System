@@ -1012,7 +1012,7 @@ const lineManagerController = {
     
             console.log("Objectives saved successfully.");
             // Redirecting to the view-only page after saving objectives
-            res.redirect(`/linemanager/records-performance-tracker/view/${userId}`); // Redirect to the view-only page
+            res.redirect(`/linemanager/records-performance-tracker/${userId}`); // Redirect to the view-only page
     
         } catch (error) {
             console.error("Error saving objective settings:", error);
