@@ -269,7 +269,7 @@
                 </div>
             </section>
             
-<form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/objectivesetting/<%= user.userId %>">
+<form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/<%= user.userId %>">
     <section id="objective-skill-progress-form" class="fade-out" style="display: none;">
         <h2>Objective-based Skill Quarterly Progress Overview</h2>
         <p class="employee-info"><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></p>
@@ -371,140 +371,242 @@
     const viewStateElement = document.getElementById('viewState');
     const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
     let userId = '<%= user.userId %>'; // Pass userId from server-side
-    let jobId = '<%= user.jobId %>'; // Pass jobId from server-side// Wait until the DOM is fully loaded
+    let jobId = '<%= user.jobId %>'; // Pass jobId from server-side
     let submittedObjectives = viewState.submittedObjectives || []; // Initialize with submitted objectives
 
+    // Ensure your document ready event listener is set correctly
+    document.addEventListener("DOMContentLoaded", function () {
+        const objectivesButton = document.getElementById("objectivesButton");
 
-// Ensure your document ready event listener is set correctly
-document.addEventListener("DOMContentLoaded", function () {
-    const objectivesButton = document.getElementById("objectivesButton");
+        // Log the values for debugging
+        console.log("Submitted Objectives:", submittedObjectives);
+        console.log("User ID:", userId);
+        console.log("Job ID:", jobId);
+        
+        if (objectivesButton) {
+            console.log('Objectives Button found:', objectivesButton);
+            objectivesButton.addEventListener("click", handleObjectiveClick);
+        } else {
+            console.error('Objectives Button not found in the DOM.');
+        }
 
-    // Log the values for debugging
-    console.log("Submitted Objectives:", submittedObjectives);
+        // Initial display update when the document is loaded
+        console.log('Document loaded. Updating display...');
+    });
+
+    // Function to handle objective click
+    function handleObjectiveClick() {
+        console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
+        
+        // Only update display if the objectives settings are not already visible
+        if (!viewState.viewOnlyStatus.objectivesettings) {
+            console.log("Switching to editable form.");
+            updateDisplay(); // Call the update function on click
+        } else {
+            console.log("Switching to view-only mode.");
+            updateDisplay(); // Call the update function on click
+        }
+    }
+
+    // Function to update display based on view state
+    function updateDisplay() {
+        console.log('Updating display...');
+
+        // Hide all sections initially
+        const formSection = document.getElementById("objective-skill-progress-form");
+        const viewOnlySection = document.getElementById("view-only-page");
+
+        // Ensure elements exist before accessing their styles
+        if (formSection) {
+            formSection.style.display = "none"; 
+        } else {
+            console.error("Objective Skill Progress Form section not found.");
+        }
+
+        if (viewOnlySection) {
+            viewOnlySection.style.display = "none"; 
+        } else {
+            console.error("View Only Page section not found.");
+        }
+
+        // Check the view state and submitted objectives
+        if (viewState.viewOnlyStatus.objectivesettings) {
+            // Show view-only page only if there are submitted objectives
+            if (submittedObjectives.length > 0) {
+                displaySubmittedObjectives(submittedObjectives);
+                viewOnlySection.style.display = "block"; // Show view-only page
+                console.log("Showing view-only page with submitted objectives.");
+            } else {
+                console.log("No objectives submitted yet for view-only mode.");
+            }
+        } else {
+            showObjectiveForm(); // Show form if in edit mode
+            formSection.style.display = "block"; // Show the form
+            console.log("Showing editable objective form.");
+        }
+    }
+
+    // Function to show the objective form
+    function showObjectiveForm() {
+        console.log("Showing objective form.");
+        document.getElementById("objective-skill-progress-form").style.display = "block"; // Ensure form is visible
+    }
+
+    // Function to display submitted objectives
+    function displaySubmittedObjectives(objectives) {
+        const tableBody = document.getElementById("view-only-table-body");
+        tableBody.innerHTML = ""; // Clear previous content
+
+        objectives.forEach(obj => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${obj.objectiveDescrpt || 'N/A'}</td>
+                <td>${obj.objectiveKPI || 'N/A'}</td>
+                <td>${obj.objectiveTarget || 'N/A'}</td>
+                <td>${obj.objectiveUOM || 'N/A'}</td>
+                <td>${obj.objectiveAssignedWeight || 'N/A'} %</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Function to remove a row from the objective form
+    function removeRow(button) {
+        const row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+        updateTotalWeight(); // Update total weight after removal
+    }
+
+    // Function to add a new row to the objective form
+    function addRow() {
+        const tableBody = document.getElementById("progress-table-body");
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+            <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
+            <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
+            <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
+            <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
+            <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
+            <td><button type="button" onclick="removeRow(this)">Remove</button></td>
+        `;
+        tableBody.appendChild(newRow);
+    }
+
+    // Function to update total weight in the form
+    function updateTotalWeight() {
+        const weightInputs = document.querySelectorAll(".weight-input");
+        let totalWeight = 0;
+
+        weightInputs.forEach(input => {
+            totalWeight += parseFloat(input.value) || 0;
+        });
+
+        document.getElementById("totalWeight").value = totalWeight;
+    }
+    async function saveObjectives() {
+    const departmentId = '<%= user.departmentId %>'; // Pass departmentId from server-side
+    const performancePeriod = document.getElementById("performanceDate").textContent;
+
     console.log("User ID:", userId);
     console.log("Job ID:", jobId);
-    
-    if (objectivesButton) {
-        console.log('Objectives Button found:', objectivesButton);
-        objectivesButton.addEventListener("click", handleObjectiveClick);
-    } else {
-        console.error('Objectives Button not found in the DOM.');
+    console.log("Department ID:", departmentId);
+    console.log("Performance Period:", performancePeriod);
+
+    // Validate required IDs
+    if (!userId || !jobId || !departmentId) {
+        console.error("One or more required IDs are missing.");
+        alert("Please ensure all fields are filled out correctly before saving.");
+        return;
     }
 
-    // Initial display update when the document is loaded
-    console.log('Document loaded. Updating display...');
-});
+    const objectives = [];
+    const rows = document.querySelectorAll("#progress-table-body tr");
 
-//
-// Function to handle objective click
-function handleObjectiveClick() {
-    console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
-    
-    // Only update display if the objectives settings are not already visible
-    if (!viewState.viewOnlyStatus.objectivesettings) {
-        console.log("Switching to editable form.");
-        updateDisplay(); // Call the update function on click
-    } else {
-        console.log("Switching to view-only mode.");
-        updateDisplay(); // Call the update function on click
-    }
-}
-// Function to update display based on view state
-function updateDisplay() {
-    console.log('Updating display...');
-
-    // Hide all sections initially
-    const formSection = document.getElementById("objective-skill-progress-form");
-    const viewOnlySection = document.getElementById("view-only-page");
-
-    // Ensure elements exist before accessing their styles
-    if (formSection) {
-        formSection.style.display = "none"; 
-    } else {
-        console.error("Objective Skill Progress Form section not found.");
+    // Ensure confirmation checkbox is checked
+    const confirmationChecked = document.getElementById("confirmationCheckbox").checked;
+    if (!confirmationChecked) {
+        alert("Please confirm that you have reviewed the objectives before saving.");
+        return;
     }
 
-    if (viewOnlySection) {
-        viewOnlySection.style.display = "none"; 
-    } else {
-        console.error("View Only Page section not found.");
-    }
-
-    // Check the view state and submitted objectives
-    if (viewState.viewOnlyStatus.objectivesettings) {
-        // Show view-only page only if there are submitted objectives
-        if (submittedObjectives.length > 0) {
-            displaySubmittedObjectives(submittedObjectives);
-            viewOnlySection.style.display = "block"; // Show view-only page
-            console.log("Showing view-only page with submitted objectives.");
-        } else {
-            console.log("No objectives submitted yet for view-only mode.");
-        }
-    } else {
-        showObjectiveForm(); // Show form if in edit mode
-        formSection.style.display = "block"; // Show the form
-        console.log("Showing editable objective form.");
-    }
-}
-
-// Function to show the objective form
-function showObjectiveForm() {
-    console.log("Showing objective form.");
-    document.getElementById("objective-skill-progress-form").style.display = "block"; // Ensure form is visible
-}
-
-// Function to display submitted objectives
-function displaySubmittedObjectives(objectives) {
-    const tableBody = document.getElementById("view-only-table-body");
-    tableBody.innerHTML = ""; // Clear previous content
-
-    objectives.forEach(obj => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${obj.objectiveDescrpt || 'N/A'}</td>
-            <td>${obj.objectiveKPI || 'N/A'}</td>
-            <td>${obj.objectiveTarget || 'N/A'}</td>
-            <td>${obj.objectiveUOM || 'N/A'}</td>
-            <td>${obj.objectiveAssignedWeight || 'N/A'} %</td>
-        `;
-        tableBody.appendChild(row);
-    });
-}
-
-// Function to remove a row from the objective form
-function removeRow(button) {
-    const row = button.parentNode.parentNode;
-    row.parentNode.removeChild(row);
-    updateTotalWeight(); // Update total weight after removal
-}
-
-// Function to add a new row to the objective form
-function addRow() {
-    const tableBody = document.getElementById("progress-table-body");
-    const newRow = document.createElement("tr");
-    newRow.innerHTML = `
-        <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
-        <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
-        <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
-        <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
-        <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
-        <td><button type="button" onclick="removeRow(this)">Remove</button></td>
-    `;
-    tableBody.appendChild(newRow);
-}
-
-// Function to update total weight in the form
-function updateTotalWeight() {
-    const weightInputs = document.querySelectorAll(".weight-input");
     let totalWeight = 0;
 
-    weightInputs.forEach(input => {
-        totalWeight += parseFloat(input.value) || 0;
+    rows.forEach(row => {
+        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
+        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
+        const targetInput = row.querySelector('input[name="objectiveTarget"]');
+        const uomInput = row.querySelector('input[name="objectiveUOM"]');
+        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
+
+        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
+            const weight = parseFloat(weightInput.value);
+            totalWeight += weight;
+
+            const objective = {
+                objectiveDescrpt: descriptionInput.value,
+                objectiveKPI: kpiInput.value,
+                objectiveTarget: targetInput.value,
+                objectiveUOM: uomInput.value,
+                objectiveAssignedWeight: weight,
+            };
+            objectives.push(objective);
+        }
     });
 
-    document.getElementById("totalWeight").value = totalWeight;
+    console.log("Objectives to save:", objectives);
+
+    // Validate total weight
+    if (totalWeight !== 100) {
+        alert("Total assigned weight must be 100% to save.");
+        return;
+    }
+
+    // Proceed if objectives are present
+    if (objectives.length > 0) {
+        try {
+            const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jobId,
+                    departmentId,
+                    performancePeriod,
+                    objectives,
+                    totalWeight
+                })
+            });
+
+            console.log("Response from server:", response);
+
+            // Check if the response was successful
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("Result from server:", result);
+
+            if (result.success) {
+                alert(result.message); // Handle success
+                displaySubmittedObjectives(objectives); // Display the submitted objectives
+
+                // Redirect to the view-only page after successful save
+                const viewUrl = `/linemanager/records-performance-tracker/${userId}`;
+                window.location.href = viewUrl;
+            } else {
+                alert("Failed to save objectives: " + result.message);
+            }
+        } catch (error) {
+            console.error("Error saving objectives:", error);
+            alert("An error occurred while saving objectives.");
+        }
+    } else {
+        alert("No objectives to save.");
+    }
 }
 
+
 </script>
+
 </body>
 </html>

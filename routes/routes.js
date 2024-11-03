@@ -123,7 +123,7 @@ router.get(
     lineManagerController.getRecordsPerformanceTrackerByUserId,
     lineManagerController.getUserProgressView
 );
-router.post('/linemanager/records-performance-tracker/objectivesetting/:userId', lineManagerController.saveObjectiveSettings);
+router.post('/linemanager/records-performance-tracker/:userId', lineManagerController.saveObjectiveSettings);
 
 module.exports = router; 
 
