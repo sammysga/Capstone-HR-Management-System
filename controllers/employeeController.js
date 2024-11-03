@@ -120,23 +120,22 @@ updateUserInfo: async function(req, res) {
     }
 },
 
-getIdp: function (req, res) {
+getEmployeeObjProg: async function(req, res) {
     try {
         const userId = req.session.user ? req.session.user.userId : null;
-        
-        // Check if the user is logged in
         if (!userId) {
             req.flash('errors', { authError: 'User not logged in.' });
             return res.redirect('/staff/login');
         }
         
-        // Render the employeeidp.ejs page
-        res.render('employeeidp', {
-            pageTitle: "Objective and Performance Review Tracker",
+        // Render the objective-based program page
+        res.render('/employee_pages/employeeobjectivebasedprog', {
+            errors: req.flash('errors')
         });
     } catch (err) {
-        console.error("Error rendering the IDP page:", err);
-        res.status(500).send("An error occurred while loading the page");
+        console.error('Error in getEmployeeObjProg controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while loading the objective-based program page.' });
+        res.redirect('/employee/dashboard');
     }
 },
 
