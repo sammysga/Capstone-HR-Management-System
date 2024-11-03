@@ -3,12 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request for Offboarding</title>
-    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <title>Employee Objective and Performance Review Tracker</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Main content styling */
+        .main-content {
+            margin-left: 270px; /* Offset for the sidebar */
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+        }
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        /* Progress bar styling */
+        .progress {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 20px;
+            width: 0; /* Set width dynamically with inline style */
+            background-color: #4caf50; /* Green */
+            text-align: center; /* Centered text inside the bar */
+            line-height: 20px; /* Align text vertically */
+            color: white; /* Text color */
+            position: relative; /* Enable positioning for absolute elements */
+        }
+        .progress-text {
+            position: absolute; /* Positioning text absolutely */
+            left: 50%; /* Centering horizontally */
+            transform: translateX(-50%); /* Offset to center text */
+            top: 50%; /* Centering vertically */
+            transform: translate(-50%, -50%); /* Final centering */
+            color: white; /* Text color */
+            font-size: 14px; /* Adjust font size as needed */
+        }
+    </style>
 </head>
 <body>
-    <%- include('../../partials/employee_partials') %>
+    <%- include('../../partials/employee_partials') %> <!-- Sidebar inclusion -->
+
+    <!-- Main content area -->
+    <div class="main-content">
+        <h2>Objective-Based Skill Quarterly Progress Overview</h2>
+        <p>This page is derived from the most recent 360-degree feedback scores, averaging input from HR and Line Managers. It presents an objective-based analysis, highlighting key strengths and areas for development in alignment with company objectives.</p>
+        
+        <!-- 6x6 Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>KRA/Objectives</th>
+                    <th>KPI</th>
+                    <th>Target</th>
+                    <th>UOM</th>
+                    <th>Assigned Weight</th>
+                    <th>Current Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Implement Learning Inventions</td>
+                    <td>Implementation</td>
+                    <td>100</td>
+                    <td>%</td>
+                    <td>20%</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 75%;">
+                                <span class="progress-text">15/20%</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Implement Learning Inventions</td>
+                    <td>Implementation</td>
+                    <td>100</td>
+                    <td>%</td>
+                    <td>20%</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 75%;">
+                                <span class="progress-text">15/20%</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Implement Learning Inventions</td>
+                    <td>Implementation</td>
+                    <td>100</td>
+                    <td>%</td>
+                    <td>20%</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 75%;">
+                                <span class="progress-text">15/20%</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Implement Learning Inventions</td>
+                    <td>Implementation</td>
+                    <td>100</td>
+                    <td>%</td>
+                    <td>20%</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 75%;">
+                                <span class="progress-text">15/20%</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Implement Learning Inventions</td>
+                    <td>Implementation</td>
+                    <td>100</td>
+                    <td>%</td>
+                    <td>20%</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 75%;">
+                                <span class="progress-text">15/20%</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Implement Learning Inventions</td>
+                    <td>Implementation</td>
+                    <td>100</td>
+                    <td>%</td>
+                    <td>20%</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 75%;">
+                                <span class="progress-text">15/20%</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <!-- JavaScript for sidebar and navigation -->
     <script>
