@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot</title>
     <style>
-        /*TO BE MOVED TO A DIFFERENT CSS FILE*/
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -70,6 +69,14 @@
             cursor: pointer;
             border-radius: 0 5px 5px 0;
         }
+        .job-button {
+            margin: 5px 0;
+            background-color: #e0e0e0;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -96,7 +103,6 @@
             }
         });
 
-        // Function to send a message to the server
         async function sendMessage(message) {
             console.log('Sending message:', message);
             try {
@@ -118,7 +124,6 @@
             }
         }
 
-        // Function to display messages in the chat
         function addMessage(sender, message) {
             const chatMessages = document.getElementById('chat-messages');
             const messageDiv = document.createElement('div');
@@ -128,7 +133,6 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Display initial chatbot message with job positions in buttons
         function displayInitialMessage(initialResponse) {
             const chatMessages = document.getElementById('chat-messages');
             const responseLines = initialResponse.split('\n');
@@ -137,7 +141,10 @@
                 if (line.startsWith('-')) {
                     const button = document.createElement('button');
                     button.innerText = line.slice(2);
-                    button.onclick = () => sendMessage(button.innerText);
+                    button.onclick = () => {
+                        addMessage('You', button.innerText);
+                        sendMessage(button.innerText);
+                    }; 
                     button.classList.add('job-button');
                     chatMessages.appendChild(button);
                 } else {
@@ -150,7 +157,6 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Display bot response with job position options
         function displayBotResponse(response) {
             const chatMessages = document.getElementById('chat-messages');
             const responseLines = response.split('\n');
@@ -159,21 +165,42 @@
                 if (line.startsWith('-')) {
                     const button = document.createElement('button');
                     button.innerText = line.slice(2);
-                    button.onclick = () => sendMessage(button.innerText);
+                    button.onclick = () => {
+                        addMessage('You', button.innerText);
+                        sendMessage(button.innerText);
+                    };
                     button.classList.add('job-button');
                     chatMessages.appendChild(button);
                 } else {
                     const messageDiv = document.createElement('div');
                     messageDiv.classList.add('message', 'bot-message');
-                    messageDiv.textContent = line;
+                    messageDiv.innerHTML = line;
                     chatMessages.appendChild(messageDiv);
                 }
             });
 
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            // Add prompt for rating
+            if (response.includes("Please rate each question from 1 to 5")) {
+                const ratingInputDiv = document.createElement('div');
+                ratingInputDiv.classList.add('message', 'bot-message');
+                ratingInputDiv.innerHTML = "Please rate your answers from 1 to 5:";
+                chatMessages.appendChild(ratingInputDiv);
+
+                for (let i = 1; i <= 5; i++) {
+                    const button = document.createElement('button');
+                    button.innerText = i; 
+                    button.onclick = () => {
+                        addMessage('You', button.innerText);
+                        sendMessage(button.innerText); 
+                    };
+                    button.classList.add('job-button');
+                    chatMessages.appendChild(button);
+                }
+            }
+
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
         }
 
-        // Fetch and display initial response from the server
         document.addEventListener("DOMContentLoaded", function() {
             const initialResponse = "<%= initialResponse %>";
             displayInitialMessage(initialResponse);
