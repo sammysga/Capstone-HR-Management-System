@@ -301,46 +301,53 @@ const lineManagerController = {
         }
     },
     
-
-    getUserAccount: async function (req, res) {
-        try {
-            const userId = req.session.user ? req.session.user.userId : null;
-            if (!userId) {
-                req.flash('errors', { authError: 'User not logged in.' });
-                return res.redirect('/staff/login');
-            }
-    
-            const { data: user, error } = await supabase
-                .from('useraccounts')
-                .select('userEmail, userRole')
-                .eq('userId', userId)
-                .single();
-    
-            const { data: staff, error: staffError } = await supabase
-                .from('staffaccounts')
-                .select('firstName, lastName')
-                .eq('userId', userId)
-                .single();
-    
-            if (error || staffError) {
-                console.error('Error fetching user or staff details:', error || staffError);
-                req.flash('errors', { dbError: 'Error fetching user data.' });
-                return res.redirect('/linemanager/dashboard');
-            }
-
-            const userData = {
-                ...user,
-                firstName: staff.firstName,
-                lastName: staff.lastName
-            };
-
-            res.render('staffpages/linemanager_pages/manageruseraccount', { user: userData });
-        } catch (err) {
-            console.error('Error in getUserAccount controller:', err);
-            req.flash('errors', { dbError: 'An error occured while loading the account page.' });
-            res.redirect('/linemanager/dashboard');
+ // Fetch user account information from Supabase
+ getUserAccount: async function(req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null; // Safely access userId
+        if (!userId) {
+            req.flash('errors', { authError: 'User not logged in.' });
+            return res.redirect('/staff/login');
         }
-    },
+
+        const { data: user, error } = await supabase
+            .from('useraccounts')
+            .select('userEmail, userRole')
+            .eq('userId', userId)
+            .single();
+
+        const { data: staff, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                firstName, 
+                lastName, 
+                departments(deptName), 
+                jobpositions(jobTitle)
+            `)
+            .eq('userId', userId)
+            .single();
+
+        if (error || staffError) {
+            console.error('Error fetching user or staff details:', error || staffError);
+            req.flash('errors', { dbError: 'Error fetching user data.' });
+            return res.redirect('/staff/employee/dashboard');
+        }
+
+        const userData = {
+            ...user,
+            firstName: staff.firstName,
+            lastName: staff.lastName,
+            deptName: staff.departments.deptName,
+            jobTitle: staff.jobpositions.jobTitle
+        };
+
+        res.render('staffpages/employee_pages/useracc', { user: userData });
+    } catch (err) {
+        console.error('Error in getUserAccount controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while loading the account page.' });
+        res.redirect('/staff/employee/dashboard');
+    }
+},
 
     updateUserInfo: async function (req, res) {
         try {
