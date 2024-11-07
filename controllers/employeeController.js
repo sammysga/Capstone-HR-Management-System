@@ -28,7 +28,12 @@ const employeeController = {
 
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
-            .select('firstName, lastName')
+            .select(`
+                firstName, 
+                lastName, 
+                departments(deptName), 
+                jobpositions(jobTitle)
+            `)
             .eq('userId', userId)
             .single();
 
@@ -41,7 +46,9 @@ const employeeController = {
         const userData = {
             ...user,
             firstName: staff.firstName,
-            lastName: staff.lastName
+            lastName: staff.lastName,
+            deptName: staff.departments.deptName,
+            jobTitle: staff.jobpositions.jobTitle
         };
 
         res.render('staffpages/employee_pages/useracc', { user: userData });
@@ -51,6 +58,7 @@ const employeeController = {
         res.redirect('/staff/employee/dashboard');
     }
 },
+
 
 // Password reset controller function
 resetPassword: async function(req, res) {
