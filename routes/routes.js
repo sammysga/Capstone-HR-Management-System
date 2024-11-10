@@ -80,7 +80,13 @@ router.get('/employee/employeeoffboarding', employeeController.getEmployeeOffboa
 router.get('/employee/employeepersinfocareerprog', employeeController.getPersInfoCareerProg);
 router.get('/employee/employeeobjectivebasedprog', employeeController.getEmployeeObjProg);
 router.get('/employee/employeeskillsproggapanal', employeeController.getEmployeeSKillsProg);
-router.post('/employee/update-all-info', employeeController.updateAllInfo);
+
+
+router.post('/employee/employeepersinfocareerprog/editpersonalinfo', employeeController.editPersonalInformation);
+router.post('/employee/employeepersinfocareerprog/editcareerprog', employeeController.editCareerProgression);
+router.post('/employee/employeepersinfocareerprog/editdeginfo', employeeController.editDegreeInformation);
+router.post('/employee/employeepersinfocareerprog/editexperiences', employeeController.editExperiences);
+router.post('/employee/employeepersinfocareerprog/editcertifations', employeeController.editCertifications);
 router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);

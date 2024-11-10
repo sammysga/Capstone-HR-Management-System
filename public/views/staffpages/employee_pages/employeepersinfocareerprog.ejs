@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Information & Career Progression</title>
-    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
     <style>
         .profile-container { 
             display: flex; 
@@ -33,263 +33,289 @@
             font-size: 1rem; 
             color: #666; 
         }
-        .form-input { 
-            width: 100%; 
-            padding: 10px; 
-            margin: 10px 0; 
+        .section { 
+            margin: 20px 0; 
+            position: relative; 
+        }
+        .section h2 { 
+            margin-bottom: 10px; 
+            display: inline-block;
+        }
+        .section .edit-btn { 
+            position: absolute; 
+            right: 0; 
+            top: 0; 
+            background: #124A5C; 
+            color: #fff; 
+            border: none; 
             border-radius: 5px; 
-            border: 1px solid #ccc; 
-            display: none; 
+            padding: 8px 15px; 
+            cursor: pointer; 
+            font-size: 1rem;
         }
         .form-text { 
             font-size: 1.1rem; 
             color: #09191F; 
         }
-        .milestone-container { 
-            margin: 30px 0; 
-        }
-        .milestone { 
-            position: relative; 
-            margin-left: 20px; 
-            margin-bottom: 30px; 
-        }
-        .milestone:before { 
-            content: ''; 
-            position: absolute; 
-            left: -10px; 
-            top: 0; 
-            height: 100%; 
-            border-left: 2px solid #124A5C; 
-        }
-        .milestone-label { 
-            position: relative; 
-            padding-left: 20px; 
-        }
-        .milestone-label h4 { 
-            margin: 0; 
-            font-size: 1.2rem; 
-            color: #124A5C; 
-        }
-        .milestone-label p { 
-            margin: 0; 
-            font-size: 1rem; 
-            color: #666; 
-        }
-        .section { 
-            margin: 20px 0; 
-        }
-        .section h2 { 
-            margin-bottom: 10px; 
-        }
-        .section p { 
-            margin: 5px 0; 
-            font-size: 1rem; 
-            color: #333; 
-        }
-
-        /* Set the initial display of the form to none */
         #editForm {
             display: none; 
         }
+        .edit-btn, .save-btn {
+            background-color: #124A5c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 5px;
+        }
+        .edit-btn:hover, .save-btn:hover {
+            background-color: #059ca4;
+        }
+        /* Align edit buttons */
+        .section button {
+            width: 160px;  /* Ensures consistent size across buttons */
+            text-align: center;
+        }
+
+        #viewPersonalInfo p, #editPersonalInfo p {
+        margin: 8px 0;
+    }
+
+    .save-btn {
+    display: none;
+}
+.edit-section {
+    display: none;
+}
 
     </style>
 </head>
 <body>
     <%- include('../../partials/employee_partials') %>
 
-    <!-- Main content area -->
     <div class="main-content">
-
-        <!-- Profile section -->
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <h3 id="display-name"><%= user.firstName %> <%= user.lastName %></h3> <!-- Display name -->
-                <p id="display-role"><%= user.userRole %></p> <!-- Display role -->
+                <h3 id="display-name"><%= user.firstName %> <%= user.lastName %></h3>
+                <p id="display-role"><%= user.userRole %></p>
             </div>
         </div>
 
-   <!-- Personal Information Section -->
-   <div id="personal-info">
-    <h2>Personal Information</h2>
-    <p>Name: <span id="nameDisplay"><%= user.firstName %> <%= user.lastName %></span></p>
-    <p>Phone: <span id="phoneDisplay"><%= user.phoneNumber %></span></p>
-    <p>Date of Birth: <span id="dobDisplay"><%= user.dateOfBirth %></span></p>
-    <p>Emergency Contact: <span id="emergencyDisplay"><%= user.emergencyContactName %> (<%= user.emergencyContactNumber %>)</span></p>
+        <div id="employment-details" class="section">
+            <h2>Employment Details</h2>
+            <p><strong>Job Title:</strong> <%= user.jobTitle %></p>
+            <p><strong>Department:</strong> <%= user.departmentName %></p>
+        </div>
 
-     <!-- Employment Details Section -->
-     <div id="employment-details">
-        <h2>Employment Details</h2>
-        <p>Job Title: <span id="jobTitleDisplay"><%= user.jobTitle %></span></p>
-        <p>Department: <span id="departmentDisplay"><%= user.departmentName %></span></p>
-        <p>Employment Type: <span id="employmentTypeDisplay"><%= user.employmentType %></span></p>
-        <p>Hire Date: <span id="hireDateDisplay"><%= user.hireDate %></span></p>
-    </div>
-
-    <!-- Career Progression Section -->
-    <div id="career-progression">
-        <h2>Career Progression</h2>
-        <% if (user.milestones.length > 0) { %>
-            <% user.milestones.forEach(function(milestone) { %>
-                <p>Milestone: <%= milestone.milestoneName %> (Start: <%= milestone.startDate %>, End: <%= milestone.endDate %>)</p>
-            <% }) %>
-        <% } else { %>
-            <p>No career progression milestones available.</p>
-        <% } %>
-    </div>
-
-    <!-- Degree Information Section -->
-    <div id="degree-info">
-        <h2>Degree Information</h2>
-        <% if (user.degrees.length > 0) { %>
-            <% user.degrees.forEach(function(degree) { %>
-                <p>Degree: <%= degree.degreeName %>, University: <%= degree.universityName %> (Graduation Year: <%= degree.graduationYear %>)</p>
-            <% }) %>
-        <% } else { %>
-            <p>No degrees available.</p>
-        <% } %>
-    </div>
-
-    <!-- Experience Section -->
-    <div id="experience">
-        <h2>Experience</h2>
-        <% if (user.experiences.length > 0) { %>
-            <% user.experiences.forEach(function(exp) { %>
-                <p>Company: <%= exp.companyName %>, Start Date: <%= exp.startDate %></p>
-            <% }) %>
-        <% } else { %>
-            <p>No experiences available.</p>
-        <% } %>
-    </div>
-
-    <!-- Certifications Section -->
-    <div id="certifications">
-        <h2>Certifications</h2>
-        <% if (user.certifications.length > 0) { %>
-            <% user.certifications.forEach(function(cert) { %>
-                <p>Certification: <%= cert.certificateName %>, Date: <%= cert.certDate %></p>
-            <% }) %>
-        <% } else { %>
-            <p>No certifications available.</p>
-        <% } %>
-    </div>
-
-    <!-- Hidden form for editing personal information -->
-    <form id="editForm" action="/employee/update-all-info" method="POST" class="edit-section">
-        <h3>Edit Personal Information</h3>
-        <input type="text" name="firstName" value="<%= user.firstName %>" required>
-        <input type="text" name="lastName" value="<%= user.lastName %>" required>
-        <input type="text" name="phoneNumber" value="<%= user.phoneNumber %>" required>
-        <input type="date" name="dateOfBirth" value="<%= user.dateOfBirth %>" required>
-        <input type="text" name="emergencyContactName" value="<%= user.emergencyContactName %>" required>
-        <input type="text" name="emergencyContactNumber" value="<%= user.emergencyContactNumber %>" required>
-
-        <!-- Employment Details Section
-        <h3>Edit Employment Details</h3>
-        <input type="text" name="jobTitle" value="<%= user.jobTitle %>" required> 
-        <input type="text" name="departmentName" value="<%= user.departmentName %>" required>
-        <input type="text" name="employmentType" value="<%= user.employmentType %>" required>
-        <input type="date" name="hireDate" value="<%= user.hireDate %>" required> -->
-
-        <!-- Career Progression Section -->
-        <h3>Edit Career Progression</h3>
-        <% user.milestones.forEach(function(milestone, index) { %>
-            <input type="text" name="milestones[<%= index %>].milestoneName" value="<%= milestone.milestoneName %>" required>
-            <input type="date" name="milestones[<%= index %>].startDate" value="<%= milestone.startDate %>" required>
-            <input type="date" name="milestones[<%= index %>].endDate" value="<%= milestone.endDate %>" required>
-        <% }) %>
-
-        <!-- Degree Information Section -->
-        <h3>Edit Degree Information</h3>
-        <% user.degrees.forEach(function(degree, index) { %>
-            <input type="text" name="degrees[<%= index %>].degreeName" value="<%= degree.degreeName %>" required>
-            <input type="text" name="degrees[<%= index %>].universityName" value="<%= degree.universityName %>" required>
-            <input type="number" name="degrees[<%= index %>].graduationYear" value="<%= degree.graduationYear %>" required>
-        <% }) %>
-
-        <!-- Experience Section -->
-        <h3>Edit Experience</h3>
-        <% user.experiences.forEach(function(exp, index) { %>
-            <input type="text" name="experiences[<%= index %>].companyName" value="<%= exp.companyName %>" required>
-            <input type="date" name="experiences[<%= index %>].startDate" value="<%= exp.startDate %>" required>
-        <% }) %>
-
-        <!-- Certifications Section -->
-        <h3>Edit Certifications</h3>
-        <% user.certifications.forEach(function(cert, index) { %>
-            <input type="text" name="certifications[<%= index %>].certificateName" value="<%= cert.certificateName %>" required>
-            <input type="date" name="certifications[<%= index %>].certDate" value="<%= cert.certDate %>" required>
-        <% }) %>
-
-            <!-- Upload Certificate Section -->
-    <h3>Upload New Certification</h3>
-    <form id="uploadCertificateForm" action="/employee/upload-certification" method="POST" enctype="multipart/form-data">
-        <input type="text" name="certificateName" placeholder="Certification Name" required>
-        <input type="file" name="certificationImage" accept="image/*" required>
+        <div id="personal-info" class="section">
+            <h2>Personal Information</h2>            
+            <!-- Display section -->
+            <div id="viewPersonalInfo">
+                <p><strong>First Name:</strong> <span id="display-firstName"><%= user.firstName %></span></p>
+                <p><strong>Last Name:</strong> <span id="display-lastName"><%= user.lastName %></span></p>
+                <p><strong>Phone:</strong> <span id="display-phone"><%= user.phoneNumber %></span></p>
+                <p><strong>Date of Birth:</strong> <span id="display-dob"><%= user.dateOfBirth %></span></p>
+                <p><strong>Emergency Contact Name:</strong> <span id="display-emergencyContactName"><%= user.emergencyContactName %></span></p>
+                <p><strong>Emergency Contact Number:</strong> <span id="display-emergencyContactNumber"><%= user.emergencyContactNumber %></span></p>
+            </div>
         
-
-        <!-- Submit button for the entire form -->
-        <button type="submit">Save All Changes</button>
+            <!-- Edit section (initially hidden) -->
+            <div id="editPersonalInfo" style="display: none;">
+                <p><strong>First Name:</strong> <input type="text" id="edit-firstName" value="<%= user.firstName %>"></p>
+                <p><strong>Last Name:</strong> <input type="text" id="edit-lastName" value="<%= user.lastName %>"></p>
+                <p><strong>Phone:</strong> <input type="text" id="edit-phone" value="<%= user.phoneNumber %>"></p>
+                <p><strong>Date of Birth:</strong> <input type="date" id="edit-dob" value="<%= user.dateOfBirth %>"></p>
+                <p><strong>Emergency Contact Name:</strong> <input type="text" id="edit-emergencyContactName" value="<%= user.emergencyContactName %>"></p>
+                <p><strong>Emergency Contact Number:</strong> <input type="text" id="edit-emergencyContactNumber" value="<%= user.emergencyContactNumber %>"></p>
+            </div>
         
-    </form>
-</div>
+            <button type="button" class="edit-btn" onclick="toggleEditPersonalInfoSection('PersonalInfo')">Edit Personal Information</button>
+            <button type="button" class="save-btn" style="display:none;" onclick="savePersonalInformation()">Save Changes</button>
+        </div>
+        
+        
+        <div id="career-progression" class="section">
+            <h2>Career Progression</h2>
+            <button type="button" class="edit-btn" onclick="toggleSection('careerProgressionForm')">Edit Career Progression</button>
+            <% if (user.milestones.length > 0) { %>
+                <% user.milestones.forEach(function(milestone) { %>
+                    <p><strong>Milestone:</strong> <%= milestone.milestoneName %> (<strong>Start:</strong> <%= milestone.startDate %>, <strong>End:</strong> <%= milestone.endDate %>)</p>
+                <% }) %>
+            <% } else { %>
+                <p>No career progression milestones available.</p>
+            <% } %>
+        </div>
 
-<!-- One button to reveal the entire form -->
-<button id="toggleEditBtn">Edit All</button>
+        <div id="degree-info" class="section">
+            <h2>Degree Information</h2>
+            <button type="button" class="edit-btn" onclick="toggleSection('degreeForm')">Edit Degree Information</button>
 
+            <% if (user.degrees.length > 0) { %>
+                <% user.degrees.forEach(function(degree) { %>
+                    <p><strong>Degree:</strong> <%= degree.degreeName %>, <strong>University:</strong> <%= degree.universityName %> (<strong>Graduation Year:</strong> <%= degree.graduationYear %>)</p>
+                <% }) %>
+            <% } else { %>
+                <p>No degrees available.</p>
+            <% } %>
+        </div>
+
+        <div id="experience" class="section">
+            <h2>Experience</h2>
+            <button type="button" class="edit-btn" onclick="toggleSection('experienceForm')">Edit Experiences</button>
+            <% if (user.experiences.length > 0) { %>
+                <% user.experiences.forEach(function(exp) { %>
+                    <p><strong>Company:</strong> <%= exp.companyName %>, <strong>Start Date:</strong> <%= exp.startDate %>, <strong>End Date:</strong> <%= exp.endDate %></p>
+                <% }) %>
+            <% } else { %>
+                <p>No experiences available.</p>
+            <% } %>
+        </div>
+
+        <div id="certifications" class="section">
+            <h2>Certifications</h2>
+            <button type="button" class="edit-btn" onclick="toggleSection('certificationForm')">Edit Certifications</button>
+
+            <% if (user.certifications.length > 0) { %>
+                <% user.certifications.forEach(function(cert) { %>
+                    <p><strong>Certification:</strong> <%= cert.certificateName %>, <strong>Date:</strong> <%= cert.certDate %></p>
+                <% }) %>
+            <% } else { %>
+                <p>No certifications available.</p>
+            <% } %>
+        </div>
+    </div>
     <script>
+// Function to toggle between view and edit modes for a section
+function toggleEditPersonalInfoSection(sectionId) {
+    // Log for debugging
+    console.log(`Toggling edit section for ${sectionId}`);
+    
+    // Get the relevant sections
+    const viewSection = document.getElementById(`view${sectionId}`); 
+    const editSection = document.getElementById(`edit${sectionId}`);
+    const editButton = document.querySelector(`#personal-info .edit-btn`);
+    const saveButton = document.querySelector(`#personal-info .save-btn`);
+    
+    // Log elements to check if they're being found
+    console.log(viewSection, editSection, editButton, saveButton);
 
-      // Toggle form visibility for all sections at once
-      document.getElementById('toggleEditBtn').addEventListener('click', function() {
-            var form = document.getElementById('editForm');
-            if (form.style.display === 'block') {
-                form.style.display = 'none';
-                this.textContent = 'Edit All';
-            } else {
-                form.style.display = 'block';
-                this.textContent = 'Cancel Edit';
+    // Ensure all elements exist
+    if (!viewSection || !editSection || !editButton || !saveButton) {
+        console.error(`One or more elements for section ${sectionId} are missing.`);
+        return;
+    }
+    
+    // Toggle visibility between view and edit sections
+    if (editSection.style.display === "none") {
+        // Switch to edit mode
+        editSection.style.display = "block";
+        viewSection.style.display = "none";
+        editButton.style.display = "none"; // Hide edit button
+        saveButton.style.display = "inline-block"; // Show save button
+    } else {
+        // Switch back to view mode
+        editSection.style.display = "none";
+        viewSection.style.display = "block";
+        editButton.style.display = "inline-block"; // Show edit button
+        saveButton.style.display = "none"; // Hide save button
+    }
+}
+
+async function savePersonalInformation() {
+    const firstName = document.getElementById('edit-firstName').value;
+    const lastName = document.getElementById('edit-lastName').value;
+    const phone = document.getElementById('edit-phone').value;
+    const dob = document.getElementById('edit-dob').value;
+    const emergencyContactName = document.getElementById('edit-emergencyContactName').value;
+    const emergencyContactNumber = document.getElementById('edit-emergencyContactNumber').value;
+
+    // Send data to the backend
+    const response = await fetch('/employee/employeepersinfocareerprog/editpersonalinfo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, lastName, phone, dob, emergencyContactName, emergencyContactNumber })
+    });
+
+    if (response.ok) {
+        alert("Personal information updated successfully.");
+        toggleEditPersonalInfoSection('PersonalInfo');  // Switch back to view mode
+        location.reload();  // Optionally reload the page
+    } else {
+        alert("Error updating personal information.");
+    }
+}
+
+// Initialize the "Save Changes" button functionality after DOM content is loaded
+document.addEventListener("DOMContentLoaded", () => {
+    // Ensuring the Save Changes button is correctly placed and triggered
+    const saveChangesButton = document.querySelector(".save-btn");
+    if (saveChangesButton) {
+        saveChangesButton.onclick = function() {
+            savePersonalInformation();  // Call the function to save personal information
+        };
+    }
+});
+        // Save functions for other sections (e.g., Career Progression, Degree Info, etc.)
+        async function saveCareerProgression() {
+            const position = document.getElementById('positionInput').value;
+            const response = await fetch('/employee/employeepersinfocareerprog/editcareerprogression', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ position })
+            });
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('positionDisplay').innerText = position;
+                toggleEdit('position');
             }
-        });
-
-
-
-                                    // Sidebar Navigation dont touch 
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
+        }
+    
+        async function saveDegreeInformation() {
+            const degree = document.getElementById('degreeInput').value;
+            const response = await fetch('/employee/employeepersinfocareerprog/editdegreeinfo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ degree })
             });
-        });
-
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('degreeDisplay').innerText = degree;
+                toggleEdit('degree');
+            }
+        }
+    
+        async function saveExperiences() {
+            const experienceYears = document.getElementById('experienceInput').value;
+            const response = await fetch('/employee/employeepersinfocareerprog/editexperience', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ experienceYears })
             });
-        });
-
-        // Handle navigation for Performance Management links
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default link behavior
-                
-                // Perform the desired action or navigation
-                const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl; // Navigate to the target URL
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('experienceDisplay').innerText = experienceYears;
+                toggleEdit('experience');
+            }
+        }
+    
+        async function saveCertifications() {
+            const certification = document.getElementById('certificationInput').value;
+            const response = await fetch('/employee/employeepersinfocareerprog/editcertification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ certification })
             });
-        });
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('certificationDisplay').innerText = certification;
+                toggleEdit('certification');
+            }
+        }
     </script>
+    
 </body>
 </html>
