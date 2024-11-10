@@ -798,33 +798,32 @@ updateJobOffer: async function(req, res) {
     
     getEditJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            const jobId = req.params.id; // Get job ID from the URL parameter
-            console.log('Requested Job ID:', jobId); // Debugging line to check ID
             try {
-                // Fetch the job offer from the 'jobpositions' table based on jobId
+                const jobId = req.params.id;  // Get jobId from URL params
+                console.log('Requested Job ID:', jobId);  // Log the requested job ID
+    
                 const { data: job, error } = await supabase
                     .from('jobpositions')
                     .select(`
                         *,
-                        departments (deptName)
+                        departments (deptName)  // Fetching the department name from the departments table
                     `)
-                    .eq('id', jobId)
-                    .single();
+                    .eq('id', jobId)  // Use the jobId to filter
+                    .single();  // Ensures only one result is returned
     
+                // Check if the job was found
                 if (error || !job) {
-                    throw new Error('Job not found');
+                    console.error(`Job with ID ${jobId} not found.`);
+                    req.flash('errors', { fetchError: 'Job not found.' });
+                    return res.redirect('/hr/joboffers');  // Redirect if job is not found
                 }
     
-                // Map department name for easier access in the view
-                const jobWithDeptName = {
-                    ...job,
-                    department: job.departments ? job.departments.deptName : 'Unknown'
-                };
+                console.log('Fetched Job:', job);  // Log the fetched job data
     
-                res.render('staffpages/hr_pages/hreditjoboffers', { job: jobWithDeptName });
+                res.render('staffpages/hr_pages/hreditjoboffers', { job: job });  // Pass job data to the view
             } catch (error) {
                 console.error('Error fetching job offer:', error);
-                req.flash('errors', { fetchError: 'Failed to load job offer. Please try again.' });
+                req.flash('errors', { fetchError: 'Failed to fetch job offer.' });
                 res.redirect('/hr/joboffers');
             }
         } else {
