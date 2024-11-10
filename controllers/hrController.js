@@ -1083,9 +1083,9 @@ const hrController = {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 console.log("Fetching performance tracker records...");
-    
-                // Fetch employee data with related tables
-                const { data: employeeData, error } = await supabase
+        
+                // Fetch staff-related data
+                const { data: staffData, error: staffError } = await supabase
                     .from('staffaccounts')
                     .select(`
                         staffId, 
@@ -1106,50 +1106,104 @@ const hrController = {
                         )
                     `)
                     .order('lastName', { ascending: true });
-    
-                if (error) throw error;
-    
-                console.log("Employee data fetched successfully:", employeeData);
-    
+        
+                if (staffError) throw staffError;
+        
+                console.log("Staff data fetched successfully:", staffData);
+        
+                // Fetch job-related data (job requirements)
+                const { data: jobReqCertifications, error: certificationsError } = await supabase
+                    .from('jobreqcertifications')
+                    .select(`
+                        jobId,
+                        jobReqCertificateId,
+                        jobReqCertificateDescrpt,
+                        jobReqCertificateType
+                    `);
+        
+                if (certificationsError) throw certificationsError;
+        
+                const { data: jobReqDegrees, error: degreesError } = await supabase
+                    .from('jobreqdegrees')
+                    .select(`
+                        jobId,
+                        jobReqDegreeId,
+                        jobReqDegreeType,
+                        jobReqDegreeDescrpt
+                    `);
+        
+                if (degreesError) throw degreesError;
+        
+                const { data: jobReqExperiences, error: experiencesError } = await supabase
+                    .from('jobreqexperiences')
+                    .select(`
+                        jobId,
+                        jobReqExperienceId,
+                        jobReqExperienceType,
+                        jobReqExperienceDescrpt
+                    `);
+        
+                if (experiencesError) throw experiencesError;
+        
+                const { data: jobReqSkills, error: skillsError } = await supabase
+                    .from('jobreqskills')
+                    .select(`
+                        jobId,
+                        jobReqSkillId,
+                        jobReqSkillType,
+                        jobReqSkillName
+                    `);
+        
+                if (skillsError) throw skillsError;
+        
                 // Map fetched data to a structured employee list grouped by department
-                const departmentMap = employeeData.reduce((acc, staff) => {
+                const departmentMap = staffData.reduce((acc, staff) => {
                     const deptName = staff.departments?.deptName || 'Unknown';
                     if (!acc[deptName]) {
                         acc[deptName] = [];
                     }
+        
+                    // Find job requirements by matching jobId
+                    const jobReqCertificationsByJob = jobReqCertifications.filter(cert => cert.jobId === staff.jobId);
+                    const jobReqDegreesByJob = jobReqDegrees.filter(degree => degree.jobId === staff.jobId);
+                    const jobReqExperiencesByJob = jobReqExperiences.filter(experience => experience.jobId === staff.jobId);
+                    const jobReqSkillsByJob = jobReqSkills.filter(skill => skill.jobId === staff.jobId);
+        
+                    // Check if any job requirements are missing
+                    const isJobRequirementsMissing = !(jobReqCertificationsByJob.length > 0 &&
+                        jobReqDegreesByJob.length > 0 &&
+                        jobReqExperiencesByJob.length > 0 &&
+                        jobReqSkillsByJob.length > 0);
+        
                     acc[deptName].push({
-                        userId: staff.userId,  // Include userId here
+                        userId: staff.userId,
                         jobTitle: staff.jobpositions?.jobTitle || 'No job title assigned',
                         lastName: staff.lastName,
                         firstName: staff.firstName,
-                        userEmail: staff.useraccounts?.userEmail || 'N/A'
+                        userEmail: staff.useraccounts?.userEmail || 'N/A',
+                        isJobRequirementsMissing,  // Flag indicating missing job requirements
+                        hasJobRequirements: !isJobRequirementsMissing,  // Flag for existing job requirements
+                        jobId: staff.jobId,
+                        jobReqCertifications: jobReqCertificationsByJob,
+                        jobReqDegrees: jobReqDegreesByJob,
+                        jobReqExperiences: jobReqExperiencesByJob,
+                        jobReqSkills: jobReqSkillsByJob
                     });
                     return acc;
                 }, {});
-    
-                console.log("Mapped department data:", departmentMap);
-    
-                // Convert map to an array for easy iteration in EJS
-                const departmentList = Object.keys(departmentMap).map(deptName => ({
-                    deptName,
-                    staff: departmentMap[deptName]
-                }));
-    
-                console.log("Department list ready for rendering:", departmentList);
-    
-                const errors = req.flash('errors') || {};
-                res.render('staffpages/hr_pages/hrrecordsperftracker', { errors, departments: departmentList });
-    
+        
+                // Render the data in the view
+                res.render('staffpages/hr_pages/hrrecordsperftracker', { departments: departmentMap });
+        
             } catch (error) {
-                console.error('Error fetching Employee Records and Performance History data:', error);
-                req.flash('errors', { fetchError: 'Failed to fetch employee records. Please try again.' });
-                res.redirect('/hr/dashboard');
+                console.error("Error fetching performance tracker data:", error);
+                res.status(500).send("Error fetching performance tracker data");
             }
         } else {
-            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/staff/login');
+            res.redirect('/login');
         }
-    },    
+    },
+      
     
     getRecordsPerformanceTrackerByUserId: async function(req, res) {
         try {

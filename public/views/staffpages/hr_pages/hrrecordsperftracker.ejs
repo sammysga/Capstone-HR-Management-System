@@ -5,108 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Employee's Records and Performance History</title>
     <link rel="stylesheet" href="/css/sidebar.css">
-    <link rel="stylesheet" href="/css/hr_page.css"> 
+    <link rel="stylesheet" href="/css/hr_page.css">
     <style>
-        /* Main Content Styles */
-        .main-content {
-            margin-left: 300px; /* Space for sidebar */
-            padding: 20px;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            box-sizing: border-box;
-            overflow-x: auto;
-        }
+/* Main Content Styles */
+.main-content {
+    margin-left: 300px; /* Space for sidebar */
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    box-sizing: border-box;
+    overflow-x: auto;
+}
 
-        /* Department Header Styles */
-        .department-header {
-            color: #07ACB9; /* Department header color */
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-top: 20px;
-        }
+/* Department Header Styles */
+.department-header {
+    color: #07ACB9; /* Department header color */
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-top: 20px;
+    padding-left: 20px; /* Indentation for Department */
+}
 
-        /* Table Styles */
-        .staff-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            table-layout: fixed; /* Ensures columns are equally spaced */
-        }
+/* Staff Table Styles */
+.staff-table-container {
+    margin-top: 10px;
+}
 
-        .staff-table th, .staff-table td {
-            padding: 12px;
-            border: 1px solid #ccc;
-            text-align: left;
-            vertical-align: middle;
-            word-wrap: break-word; /* Ensures long text wraps within the cell */
-        }
+.staff-table {
+    width: 100%; /* Full width for table */
+    margin-top: 10px;
+    table-layout: auto; /* Allows columns to adjust based on content */
+    border-collapse: collapse;
+    max-width: 100%; /* Ensure table spans the full available width */
+    overflow-x: auto; /* Enables horizontal scrolling for very wide tables */
+    margin-left: 20px; /* Align table with job title header */
+}
 
-        th {
-            background-color: #e0e4e8;
-            font-weight: 600;
-            text-align: center;
-        }
+.staff-table th, .staff-table td {
+    padding: 12px;
+    border: 1px solid #ccc;
+    text-align: left;
+    vertical-align: middle;
+    word-wrap: break-word; /* Ensures long text wraps within the cell */
+}
 
-        /* Set a consistent width for each column */
-        .staff-table th:nth-child(1), .staff-table td:nth-child(1) {
-            width: 25%; /* Job Position */
-        }
-        .staff-table th:nth-child(2), .staff-table td:nth-child(2) {
-            width: 25%; /* Last Name */
-        }
-        .staff-table th:nth-child(3), .staff-table td:nth-child(3) {
-            width: 25%; /* First Name */
-        }
-        .staff-table th:nth-child(4), .staff-table td:nth-child(4) {
-            width: 25%; /* Email */
-        }
+th {
+    background-color: #e0e4e8;
+    font-weight: 600;
+    text-align: center;
+}
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 10px;
-            }
-            .sidebar {
-                display: none;
-            }
-        }
+/* Style for the job position subheading */
+.job-title-header {
+    font-size: 1.2em;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 20px;
+    margin-top: 20px;
+}
+
+/* Align action buttons */
+.job-title-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Indentation for Job Title */
+.indent-job-title {
+    padding-left: 0; /* No indentation, align with the table */
+}
+
+/* Button Style */
+button {
+    background-color: #124A5C;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #058b8b;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 10px;
+    }
+    .sidebar {
+        display: none;
+    }
+}
+
     </style>
 </head>
 <body>
-    
+
     <%- include('../../partials/hr_partials') %>
     <div class="main-content">
         <h1>View Employee's Records and Performance History</h1>
         <div id="staffTableContainer">
-            <% if (departments && departments.length > 0) { %>
-                <% departments.forEach(function(department) { %>
-                    <div class="department-header"><%= department.deptName %></div>
-                    <table class="staff-table">
-                        <thead>
-                            <tr>
-                                <th>Job Position</th>
-                                <th>Last Name</th>
-                                <th>First Name</th>
-                                <th>Email</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (department.staff && department.staff.length > 0) { %>
-                                <% department.staff.forEach(function(staff) { %>
-                                    <tr onclick="window.location.href='/hr/records-performance-tracker/<%= staff.userId %>'">
-                                        <td><%= staff.jobTitle %></td>
-                                        <td><%= staff.lastName %></td>
-                                        <td><%= staff.firstName %></td>
-                                        <td><%= staff.userEmail %></td>
-                                    </tr>
-                                <% }); %>
-                            <% } else { %>
-                                <tr><td colspan="4">No staff members available</td></tr>
-                            <% } %>
-                        </tbody>
-                        
-                    </table>
+            <% if (departments && Object.keys(departments).length > 0) { %>
+                <% Object.keys(departments).forEach(function(departmentName) { %>
+                    <div class="department-header"><%= departmentName %></div>
+                    <div class="staff-table-container">
+                        <% let department = departments[departmentName]; %>
+                        <% if (department && department.length > 0) { %>
+                            <% let groupedByJobTitle = {}; %>
+                            <% department.forEach(function(staff) { %>
+                                <% if (!groupedByJobTitle[staff.jobTitle]) { %>
+                                    <% groupedByJobTitle[staff.jobTitle] = []; %>
+                                <% } %>
+                                <% groupedByJobTitle[staff.jobTitle].push(staff); %>
+                            <% }); %>
+    
+                            <% Object.keys(groupedByJobTitle).forEach(function(jobTitle) { %>
+                                <% let staffGroup = groupedByJobTitle[jobTitle]; %>
+                                <div class="job-title-header">
+                                    <span class="indent-job-title"><%= jobTitle %></span>
+                                    <div class="job-title-actions">
+                                        <% if (staffGroup[0].isJobRequirementsMissing) { %>
+                                            <button onclick="location.href='/hr/update-job-requirements/<%= staffGroup[0].jobId %>'">Update Job Requirements</button>
+                                        <% } else if (staffGroup[0].hasJobRequirements) { %>
+                                            <button onclick="location.href='/hr/edit-job-requirements/<%= staffGroup[0].jobId %>'">Edit Job Requirements</button>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <table class="staff-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Last Name</th>
+                                            <th>First Name</th>
+                                            <th>Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% staffGroup.forEach(function(staff) { %>
+                                            <tr>
+                                                <td><%= staff.lastName %></td>
+                                                <td><%= staff.firstName %></td>
+                                                <td><%= staff.userEmail %></td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            <% }); %>
+                        <% } else { %>
+                            <p>No staff members available</p>
+                        <% } %>
+                    </div>
                 <% }); %>
             <% } else { %>
                 <p>No departments available</p>
@@ -114,40 +168,34 @@
         </div>
     </div>
     
+    
 
-    <script>
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
+<script>
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
         });
-
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
-        });
-
-        document.querySelectorAll("tr[data-user-id]").forEach(row => {
-    row.addEventListener("click", () => {
-        const userId = row.getAttribute("data-user-id");
-        window.location.href = `/hr/records-performance-tracker/${userId}`;
     });
-});
 
-    </script>
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+</script>
+
 </body>
 </html>
