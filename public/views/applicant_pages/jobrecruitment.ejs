@@ -14,15 +14,14 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
         }
 
         .job-offers {
-            background-color: #fff;
-            padding: 20px;
-            margin: 20px auto;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            max-width: 900px;
+            padding: 50px 20px;
+            max-width: 1100px;
+            margin: 0 auto;
         }
 
         .job-offers h2 {
@@ -30,59 +29,52 @@
             font-weight: 600;
             color: #333;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 40px;
         }
 
         .job-listing {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
         }
 
         .job-item {
-            background-color: #f4f4f4;
+            background-color: #fff;
+            border: 2px solid #07ACB9; /* Colored border */
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             padding: 25px;
-            border-radius: 6px;
-            font-size: 1em;
-            color: #555;
-            transition: background-color 0.3s ease;
-            line-height: 1.6;
-            letter-spacing: 0.5px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .job-item:hover {
-            background-color: #e0e0e0;
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
 
         .job-item a {
             text-decoration: none;
             color: inherit;
-            transition: color 0.3s ease, text-decoration 0.3s ease;
-        }
-
-        .job-item a:hover {
-            color: #4CAF50;
-            text-decoration: underline;
         }
 
         .job-item .title {
             font-weight: 600;
-            font-size: 1.4em;
+            font-size: 1.6em;
             color: #2c2c2c;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .job-item .department {
-            font-size: 0.9em;
-            color: #757575;
-            margin-bottom: 10px;
+            font-size: 1em;
+            color: #4CAF50;
+            margin-bottom: 15px;
         }
 
         .job-item .description {
             font-weight: 400;
             font-size: 1em;
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .job-item .status {
@@ -92,22 +84,6 @@
 
         .job-item .inactive {
             color: #f44336;
-        }
-
-        .apply-button {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            text-align: center;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .apply-button:hover {
-            background-color: #45a049;
         }
     </style>
 </head>
@@ -123,12 +99,12 @@
                     <div class="job-item">
                         <a href="/job-details/<%= job.jobId %>">
                             <div class="title"><%= job.jobTitle %></div>
-                            <div class="department">                            </div>
+                            <div class="department"><%= job.department %></div>
+                            <div class="description">
+                                <%= job.jobDescrpt %>
+                            </div>
                             <div class="status">
                                 Status: <%= job.isActiveJob ? "This position is currently open!" : "This position is no longer accepting applications." %>
-                            </div>
-                            <div>
-                                <a class="apply-button" href="/job-details/<%= job.jobId %>">Apply Now!</a>
                             </div>
                         </a>
                     </div>
