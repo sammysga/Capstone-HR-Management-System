@@ -808,7 +808,7 @@ updateJobOffer: async function(req, res) {
                         *,
                         departments (deptName)  // Fetching the department name from the departments table
                     `)
-                    .eq('id', jobId)  // Use the jobId to filter
+                    .eq('jobId', jobId)  // Use the jobId to filter
                     .single();  // Ensures only one result is returned
     
                 // Check if the job was found
