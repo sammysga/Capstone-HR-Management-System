@@ -303,8 +303,7 @@ getPersInfoCareerProg: async function(req, res) {
         req.flash('errors', { dbError: 'An error occurred while loading the personal info page.' });
         res.redirect('/employee/useracc');
     }
-},
-editPersonalInformation: async function(req, res) {
+},editPersonalInformation: async function(req, res) {
     try {
         const userId = req.session.user ? req.session.user.userId : null;
         if (!userId) {
@@ -314,6 +313,9 @@ editPersonalInformation: async function(req, res) {
 
         const { firstName, lastName, phone, dateOfBirth, emergencyContactName, emergencyContactNumber } = req.body;
 
+        // Log the data received for debugging
+        console.log("Received data for update:", { firstName, lastName, phone, dateOfBirth, emergencyContactName, emergencyContactNumber });
+
         // Update the user information in Supabase
         const { error } = await supabase
             .from('staffaccounts')
@@ -321,7 +323,7 @@ editPersonalInformation: async function(req, res) {
                 firstName,
                 lastName,
                 phoneNumber: phone,
-                dateOfBirth,
+                dateOfBirth, // Ensure this is the correct field in your Supabase table
                 emergencyContactName,
                 emergencyContactNumber
             })
@@ -341,7 +343,6 @@ editPersonalInformation: async function(req, res) {
         res.json({ success: false, error: 'An error occurred while updating the information.' });
     }
 },
-
 
 editCareerProgression: async function(req, res) {
     try {

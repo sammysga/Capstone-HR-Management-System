@@ -224,20 +224,22 @@ function toggleEditPersonalInfoSection(sectionId) {
         saveButton.style.display = "none"; // Hide save button
     }
 }
-
 async function savePersonalInformation() {
     const firstName = document.getElementById('edit-firstName').value;
     const lastName = document.getElementById('edit-lastName').value;
     const phone = document.getElementById('edit-phone').value;
-    const dob = document.getElementById('edit-dob').value;
+    const dob = document.getElementById('edit-dob').value; // Ensure this is in the correct format
     const emergencyContactName = document.getElementById('edit-emergencyContactName').value;
     const emergencyContactNumber = document.getElementById('edit-emergencyContactNumber').value;
+
+    // Log the values for debugging
+    console.log("Saving Personal Information:", { firstName, lastName, phone, dob, emergencyContactName, emergencyContactNumber });
 
     // Send data to the backend
     const response = await fetch('/employee/employeepersinfocareerprog/editpersonalinfo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, phone, dob, emergencyContactName, emergencyContactNumber })
+        body: JSON.stringify({ firstName, lastName, phone, dateOfBirth: dob, emergencyContactName, emergencyContactNumber }) // Ensure dateOfBirth is correctly named
     });
 
     if (response.ok) {
