@@ -4,83 +4,117 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Employee's Records and Performance History</title>
-    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <link rel="stylesheet" href="/css/hr_page.css"> <!-- Linking HR Page CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_page.css"> 
     <style>
         /* Main Content Styles */
         .main-content {
-            margin-left: 300px; /* Space for the sidebar */
+            margin-left: 300px; /* Space for sidebar */
             padding: 20px;
-            font-family: 'Inter', sans-serif; /* Use Inter font */
-            min-height: 100vh; /* Full viewport height */
-            box-sizing: border-box; /* Include padding in total width and height */
-            overflow-x: auto; /* Allow horizontal scrolling */
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow-x: auto;
+        }
+
+        /* Department Header Styles */
+        .department-header {
+            color: #07ACB9; /* Department header color */
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 20px;
         }
 
         /* Table Styles */
-        table {
-            width: 100%; /* Full width for table */
-            border-collapse: collapse; /* Clean table borders */
-            overflow-x: auto; /* Horizontal scroll for table if necessary */
-            display: block; /* Allow scrolling */
+        .staff-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed; /* Ensures columns are equally spaced */
         }
 
-        /* Table Header Styles */
-        th, td {
-            padding: 10px; /* Add padding for table cells */
-            border: 1px solid #ccc; /* Border for table cells */
-            text-align: left; /* Align text to the left */
+        .staff-table th, .staff-table td {
+            padding: 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+            vertical-align: middle;
+            word-wrap: break-word; /* Ensures long text wraps within the cell */
         }
 
-        /* Header Styling */
         th {
-            background-color: #e0e4e8; /* Background color for headers */
+            background-color: #e0e4e8;
+            font-weight: 600;
+            text-align: center;
         }
 
-        /* Bold styling for labels */
-        strong {
-            font-weight: bold;
+        /* Set a consistent width for each column */
+        .staff-table th:nth-child(1), .staff-table td:nth-child(1) {
+            width: 25%; /* Job Position */
+        }
+        .staff-table th:nth-child(2), .staff-table td:nth-child(2) {
+            width: 25%; /* Last Name */
+        }
+        .staff-table th:nth-child(3), .staff-table td:nth-child(3) {
+            width: 25%; /* First Name */
+        }
+        .staff-table th:nth-child(4), .staff-table td:nth-child(4) {
+            width: 25%; /* Email */
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
             .main-content {
-                margin-left: 0; /* Remove sidebar margin on small screens */
-                padding: 10px; /* Adjust padding */
+                margin-left: 0;
+                padding: 10px;
             }
             .sidebar {
-                display: none; /* Hide sidebar on small screens if needed */
+                display: none;
             }
         }
     </style>
 </head>
 <body>
+    
     <%- include('../../partials/hr_partials') %>
     <div class="main-content">
         <h1>View Employee's Records and Performance History</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th><strong>Last Name</strong></th>
-                    <th><strong>First Name</strong></th>
-                    <th><strong>Department</strong></th>
-                    <th><strong>Job Position</strong></th>
-                    <th><strong>Email</strong></th>
-                </tr>
-            </thead>
-            <tbody>
-                <% employees.forEach(employee => { %>
-                    <tr onclick="window.location.href='/hr/records-performance-tracker/<%= employee.userId %>'">
-                        <td><%= employee.lastName %></td>
-                        <td><%= employee.firstName %></td>
-                        <td><%= employee.deptName || 'N/A' %></td>
-                        <td><%= employee.jobTitle || 'N/A' %></td>
-                        <td><%= employee.email %></td>
-                    </tr>
-                <% }) %>
-            </tbody>
-        </table>
-    </div>    
+        <div id="staffTableContainer">
+            <% if (departments && departments.length > 0) { %>
+                <% departments.forEach(function(department) { %>
+                    <div class="department-header"><%= department.deptName %></div>
+                    <table class="staff-table">
+                        <thead>
+                            <tr>
+                                <th>Job Position</th>
+                                <th>Last Name</th>
+                                <th>First Name</th>
+                                <th>Email</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (department.staff && department.staff.length > 0) { %>
+                                <% department.staff.forEach(function(staff) { %>
+                                    <tr onclick="window.location.href='/hr/records-performance-tracker/<%= staff.userId %>'">
+                                        <td><%= staff.jobTitle %></td>
+                                        <td><%= staff.lastName %></td>
+                                        <td><%= staff.firstName %></td>
+                                        <td><%= staff.userEmail %></td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr><td colspan="4">No staff members available</td></tr>
+                            <% } %>
+                        </tbody>
+                        
+                    </table>
+                <% }); %>
+            <% } else { %>
+                <p>No departments available</p>
+            <% } %>
+        </div>
+    </div>
+    
+
     <script>
         // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
@@ -97,7 +131,6 @@
                 if (content.style.display === 'block') {
                     content.style.display = 'none';
                 } else {
-                    // Hide all other collapsible contents
                     document.querySelectorAll('.collapsible-content').forEach(item => {
                         if (item !== content) {
                             item.style.display = 'none';
@@ -107,7 +140,14 @@
                 }
             });
         });
-    </script>
 
+        document.querySelectorAll("tr[data-user-id]").forEach(row => {
+    row.addEventListener("click", () => {
+        const userId = row.getAttribute("data-user-id");
+        window.location.href = `/hr/records-performance-tracker/${userId}`;
+    });
+});
+
+    </script>
 </body>
 </html>

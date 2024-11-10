@@ -1075,13 +1075,16 @@ const hrController = {
             console.error('Error submitting leave request:', error);
             res.status(500).json({ message: 'Internal server error', error: error.message });
         }
-    },
+    }, 
+
+    
+    //TODO: Backend for career progression onwards - ongoing, will prio objective and performance review tracker (charisse)
     getRecordsPerformanceTracker: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 console.log("Fetching performance tracker records...");
     
-                // Fetch data from the staffaccounts table, including nested related data
+                // Fetch employee data with related tables
                 const { data: employeeData, error } = await supabase
                     .from('staffaccounts')
                     .select(`
@@ -1104,24 +1107,38 @@ const hrController = {
                     `)
                     .order('lastName', { ascending: true });
     
-                if (error) {
-                    throw error;
-                }
+                if (error) throw error;
     
-                // Map the fetched data to a structured employee list
-                const employeeList = employeeData.map(staff => ({
-                    userId: staff.userId,  // Include userId in the output
-                    lastName: staff.lastName,
-                    firstName: staff.firstName,
-                    deptName: staff.departments?.deptName || 'Unknown',
-                    jobTitle: staff.jobpositions?.jobTitle || 'No job title assigned',
-                    email: staff.useraccounts?.userEmail || 'N/A'
+                console.log("Employee data fetched successfully:", employeeData);
+    
+                // Map fetched data to a structured employee list grouped by department
+                const departmentMap = employeeData.reduce((acc, staff) => {
+                    const deptName = staff.departments?.deptName || 'Unknown';
+                    if (!acc[deptName]) {
+                        acc[deptName] = [];
+                    }
+                    acc[deptName].push({
+                        userId: staff.userId,  // Include userId here
+                        jobTitle: staff.jobpositions?.jobTitle || 'No job title assigned',
+                        lastName: staff.lastName,
+                        firstName: staff.firstName,
+                        userEmail: staff.useraccounts?.userEmail || 'N/A'
+                    });
+                    return acc;
+                }, {});
+    
+                console.log("Mapped department data:", departmentMap);
+    
+                // Convert map to an array for easy iteration in EJS
+                const departmentList = Object.keys(departmentMap).map(deptName => ({
+                    deptName,
+                    staff: departmentMap[deptName]
                 }));
     
-                console.log("Employee data fetched successfully:", employeeList);
-                
-                const errors = req.flash('errors') || {};  
-                res.render('staffpages/hr_pages/hrrecordsperftracker', { errors, employees: employeeList });
+                console.log("Department list ready for rendering:", departmentList);
+    
+                const errors = req.flash('errors') || {};
+                res.render('staffpages/hr_pages/hrrecordsperftracker', { errors, departments: departmentList });
     
             } catch (error) {
                 console.error('Error fetching Employee Records and Performance History data:', error);
@@ -1132,11 +1149,8 @@ const hrController = {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
         }
-    },
-
-    //TODO: Make another supabase table for emergency contact
-    //TODO: Backend for career progression onwards - ongoing, will prio objective and performance review tracker (charisse)
-
+    },    
+    
     getRecordsPerformanceTrackerByUserId: async function(req, res) {
         try {
             const userId = req.params.userId;  // Retrieve userId from URL params
@@ -1149,51 +1163,50 @@ const hrController = {
     
             // Single query to fetch all user-related data
             const { data: userData, error } = await supabase
-    .from('useraccounts')
-    .select(`
-        userEmail, 
-        userRole, 
-        staffaccounts (
-            firstName, 
-            lastName, 
-            phoneNumber, 
-            dateOfBirth, 
-            emergencyContactName, 
-            emergencyContactNumber, 
-            employmentType, 
-            hireDate, 
-            staffId, 
-            jobId,
-            departmentId,
-            departments (
-                deptName
-            ),
-            jobpositions (
-                jobTitle
-            ),
-            staffdegrees (
-                degreeName, 
-                universityName, 
-                graduationYear
-            ),
-            staffcareerprogression (
-                milestoneName, 
-                startDate, 
-                endDate
-            ),
-            staffexperiences (
-                companyName, 
-                startDate
-            ),
-            staffcertification!staffcertification_staffId_fkey (
-                certificateName, 
-                certDate
-            )
-        )
-    `)
-    .eq('userId', userId)
-    .single();
-
+                .from('useraccounts')
+                .select(`
+                    userEmail, 
+                    userRole, 
+                    staffaccounts (
+                        firstName, 
+                        lastName, 
+                        phoneNumber, 
+                        dateOfBirth, 
+                        emergencyContactName, 
+                        emergencyContactNumber, 
+                        employmentType, 
+                        hireDate, 
+                        staffId, 
+                        jobId,
+                        departmentId,
+                        departments (
+                            deptName
+                        ),
+                        jobpositions (
+                            jobTitle
+                        ),
+                        staffdegrees (
+                            degreeName, 
+                            universityName, 
+                            graduationYear
+                        ),
+                        staffcareerprogression (
+                            milestoneName, 
+                            startDate, 
+                            endDate
+                        ),
+                        staffexperiences (
+                            companyName, 
+                            startDate
+                        ),
+                        staffcertification!staffcertification_staffId_fkey (
+                            certificateName, 
+                            certDate
+                        )
+                    )
+                `)
+                .eq('userId', userId)
+                .single();
     
             if (error) throw error;
     
@@ -1219,7 +1232,7 @@ const hrController = {
                 experiences: userData.staffaccounts[0]?.staffexperiences || [],
                 certifications: userData.staffaccounts[0]?.staffcertification || []
             };
-            
+    
             console.log('Compiled user data:', formattedUserData);
     
             res.render('staffpages/hr_pages/hrrecordsperftracker-user', {
