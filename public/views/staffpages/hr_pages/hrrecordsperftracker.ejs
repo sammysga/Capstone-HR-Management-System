@@ -148,7 +148,7 @@ button:hover {
                                     </thead>
                                     <tbody>
                                         <% staffGroup.forEach(function(staff) { %>
-                                            <tr>
+                                            <tr onclick="window.location.href='/hr/records-performance-tracker/<%= staff.userId %>'">
                                                 <td><%= staff.lastName %></td>
                                                 <td><%= staff.firstName %></td>
                                                 <td><%= staff.userEmail %></td>
