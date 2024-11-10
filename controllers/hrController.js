@@ -799,6 +799,7 @@ updateJobOffer: async function(req, res) {
     getEditJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             const jobId = req.params.id; // Get job ID from the URL parameter
+            console.log('Requested Job ID:', jobId); // Debugging line to check ID
             try {
                 // Fetch the job offer from the 'jobpositions' table based on jobId
                 const { data: job, error } = await supabase
