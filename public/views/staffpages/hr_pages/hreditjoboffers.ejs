@@ -14,12 +14,12 @@
             <div class="edit-header">
                 <h2 class="heading">Edit Job Offer</h2>
                 <div>
-                    <button class="cancel-btn">Cancel</button>
-                    <button class="save-btn">Save Changes</button>
+                    <button class="cancel-btn" onclick="window.history.back()">Cancel</button>
                 </div>
             </div>
             <div class="edit-form-container">
-                <form action="/hr/editjoboffers/<%= job.id %>" method="POST">
+                <!-- Updated form action to use job.jobId -->
+                <form action="/hr/editjoboffers/<%= job.jobId %>" method="POST">
                     <div class="form-group">
                         <label for="jobTitle">Job Title</label>
                         <input type="text" id="jobTitle" name="jobTitle" value="<%= job.jobTitle %>" required>
@@ -30,6 +30,7 @@
                             <!-- Populate options dynamically -->
                             <option value="Sales" <%= job.department === 'Sales' ? 'selected' : '' %>>Sales</option>
                             <option value="Marketing" <%= job.department === 'Marketing' ? 'selected' : '' %>>Marketing</option>
+                            <!-- Add other departments as needed -->
                         </select>
                     </div>
                     <div class="form-group">
@@ -40,6 +41,8 @@
                         <label for="isActiveHiring">Active Hiring</label>
                         <input type="checkbox" id="isActiveHiring" name="isActiveHiring" <%= job.isActiveHiring ? 'checked' : '' %>>
                     </div>
+                    <!-- Moved Save Changes button inside form to ensure form submission -->
+                    <button type="submit" class="save-btn">Save Changes</button>
                 </form>
             </div>
         </section>
