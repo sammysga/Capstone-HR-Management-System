@@ -243,7 +243,7 @@ getPersInfoCareerProg: async function(req, res) {
         // Fetch career progression milestones
         const { data: milestones, error: milestonesError } = await supabase
             .from('staffcareerprogression')
-            .select('milestoneName, startDate, endDate, isActive')
+            .select('milestoneName, startDate, endDate')
             .eq('staffId', staffId);
 
         console.log("Career milestones fetched.");
