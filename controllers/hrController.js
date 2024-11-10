@@ -801,7 +801,8 @@ updateJobOffer: async function(req, res) {
             try {
                 const jobId = req.params.id;  // Get jobId from URL params
                 console.log('Requested Job ID:', jobId);  // Log the requested job ID
-    
+        
+                // Fetch job details along with department information
                 const { data: job, error } = await supabase
                     .from('jobpositions')
                     .select(`
@@ -810,17 +811,78 @@ updateJobOffer: async function(req, res) {
                     `)
                     .eq('jobId', jobId)  // Use the jobId to filter
                     .single();  // Ensures only one result is returned
-    
+        
                 // Check if the job was found
                 if (error || !job) {
                     console.error(`Job with ID ${jobId} not found.`);
                     req.flash('errors', { fetchError: 'Job not found.' });
                     return res.redirect('/hr/joboffers');  // Redirect if job is not found
                 }
-    
+        
                 console.log('Fetched Job:', job);  // Log the fetched job data
-    
-                res.render('staffpages/hr_pages/hreditjoboffers', { job: job });  // Pass job data to the view
+        
+                // Fetch job skills
+                const { data: jobSkills, error: jobSkillsError } = await supabase
+                    .from('jobreqskills')
+                    .select('*')
+                    .eq('jobId', jobId);
+        
+                if (jobSkillsError) {
+                    console.error('Error fetching job skills:', jobSkillsError);
+                    req.flash('errors', { fetchError: 'Error fetching job skills.' });
+                    return res.redirect('/hr/joboffers');
+                }
+        
+                // Separate hard and soft skills
+                const hardSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Hard");
+                const softSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Soft");
+        
+                // Fetch job certifications
+                const { data: certifications, error: certificationsError } = await supabase
+                    .from('jobreqcertifications')
+                    .select('jobReqCertificateType, jobReqCertificateDescrpt')
+                    .eq('jobId', jobId);
+        
+                if (certificationsError) {
+                    console.error('Error fetching job certifications:', certificationsError);
+                    req.flash('errors', { fetchError: 'Error fetching job certifications.' });
+                    return res.redirect('/hr/joboffers');
+                }
+        
+                // Fetch job degrees
+                const { data: degrees, error: degreesError } = await supabase
+                    .from('jobreqdegrees')
+                    .select('jobReqDegreeType, jobReqDegreeDescrpt')
+                    .eq('jobId', jobId);
+        
+                if (degreesError) {
+                    console.error('Error fetching job degrees:', degreesError);
+                    req.flash('errors', { fetchError: 'Error fetching job degrees.' });
+                    return res.redirect('/hr/joboffers');
+                }
+        
+                // Fetch job experiences
+                const { data: experiences, error: experiencesError } = await supabase
+                    .from('jobreqexperiences')
+                    .select('jobReqExperienceType, jobReqExperienceDescrpt')
+                    .eq('jobId', jobId);
+        
+                if (experiencesError) {
+                    console.error('Error fetching job experiences:', experiencesError);
+                    req.flash('errors', { fetchError: 'Error fetching job experiences.' });
+                    return res.redirect('/hr/joboffers');
+                }
+        
+                // Render the job edit page with all the data
+                res.render('staffpages/hr_pages/hreditjoboffers', { 
+                    job, 
+                    hardSkills, 
+                    softSkills, 
+                    certifications, 
+                    degrees, 
+                    experiences
+                });
+        
             } catch (error) {
                 console.error('Error fetching job offer:', error);
                 req.flash('errors', { fetchError: 'Failed to fetch job offer.' });
@@ -831,6 +893,7 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
+    
     
     
 
