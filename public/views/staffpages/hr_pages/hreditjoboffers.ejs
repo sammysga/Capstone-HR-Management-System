@@ -43,7 +43,7 @@
                     <div class="skills-section">
                         <h3>Job Skills</h3>
                         <h4>Hard Skills</h4>
-                        <ul>
+                        <ul id="hardSkillsList">
                             <% hardSkills.forEach(skill => { %>
                                 <li>
                                     <label for="skill_<%= skill.jobReqSkillId %>"><%= skill.jobReqSkillType %>:</label>
@@ -51,8 +51,10 @@
                                 </li>
                             <% }); %>
                         </ul>
+                        <button type="button" class="add-btn" id="addHardSkill">Add More Hard Skills</button>
+
                         <h4>Soft Skills</h4>
-                        <ul>
+                        <ul id="softSkillsList">
                             <% softSkills.forEach(skill => { %>
                                 <li>
                                     <label for="skill_<%= skill.jobReqSkillId %>"><%= skill.jobReqSkillType %>:</label>
@@ -60,12 +62,13 @@
                                 </li>
                             <% }); %>
                         </ul>
+                        <button type="button" class="add-btn" id="addSoftSkill">Add More Soft Skills</button>
                     </div>
 
                     <!-- Certifications Section -->
                     <div class="certifications-section">
                         <h3>Certifications</h3>
-                        <ul>
+                        <ul id="certificationsList">
                             <% certifications.forEach(cert => { %>
                                 <li>
                                     <label for="cert_<%= cert.jobReqCertificateType %>"><%= cert.jobReqCertificateType %>:</label>
@@ -73,12 +76,13 @@
                                 </li>
                             <% }); %>
                         </ul>
+                        <button type="button" class="add-btn" id="addCertification">Add More Certifications</button>
                     </div>
 
                     <!-- Degrees Section -->
                     <div class="degrees-section">
                         <h3>Degrees</h3>
-                        <ul>
+                        <ul id="degreesList">
                             <% degrees.forEach(degree => { %>
                                 <li>
                                     <label for="degree_<%= degree.jobReqDegreeType %>"><%= degree.jobReqDegreeType %>:</label>
@@ -86,12 +90,13 @@
                                 </li>
                             <% }); %>
                         </ul>
+                        <button type="button" class="add-btn" id="addDegree">Add More Degrees</button>
                     </div>
 
                     <!-- Experience Section -->
                     <div class="experience-section">
                         <h3>Experience</h3>
-                        <ul>
+                        <ul id="experienceList">
                             <% experiences.forEach(exp => { %>
                                 <li>
                                     <label for="experience_<%= exp.jobReqExperienceType %>"><%= exp.jobReqExperienceType %>:</label>
@@ -99,6 +104,7 @@
                                 </li>
                             <% }); %>
                         </ul>
+                        <button type="button" class="add-btn" id="addExperience">Add More Experience</button>
                     </div>
 
                     <button type="submit" class="save-btn">Save Changes</button>
@@ -110,29 +116,30 @@
 </html>
 
 <script>
-    // Toggle active class for sidebar links
-    document.querySelectorAll('.sidebar ul li a').forEach(link => {
-        link.addEventListener('click', function() {
-            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
+    // Function to add new fields dynamically
+    function addField(listId, type) {
+        const list = document.getElementById(listId);
+        const newItem = document.createElement('li');
 
-    // Toggle collapsible content
-    document.querySelectorAll('.collapsible-header').forEach(header => {
-        header.addEventListener('click', function() {
-            var content = this.nextElementSibling;
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                // Hide all other collapsible contents
-                document.querySelectorAll('.collapsible-content').forEach(item => {
-                    if (item !== content) {
-                        item.style.display = 'none';
-                    }
-                });
-                content.style.display = 'block';
-            }
-        });
-    });
+        // Create the new input field with an appropriate label
+        let newField;
+        if (type === 'skill') {
+            newField = `<label for="newSkill">Skill Name:</label><input type="text" name="newSkill" required>`;
+        } else if (type === 'certification') {
+            newField = `<label for="newCertification">Certification Name:</label><input type="text" name="newCertification" required>`;
+        } else if (type === 'degree') {
+            newField = `<label for="newDegree">Degree Name:</label><input type="text" name="newDegree" required>`;
+        } else if (type === 'experience') {
+            newField = `<label for="newExperience">Experience Description:</label><input type="text" name="newExperience" required>`;
+        }
+        newItem.innerHTML = newField;
+        list.appendChild(newItem);
+    }
+
+    // Add event listeners for adding more fields
+    document.getElementById('addHardSkill').addEventListener('click', () => addField('hardSkillsList', 'skill'));
+    document.getElementById('addSoftSkill').addEventListener('click', () => addField('softSkillsList', 'skill'));
+    document.getElementById('addCertification').addEventListener('click', () => addField('certificationsList', 'certification'));
+    document.getElementById('addDegree').addEventListener('click', () => addField('degreesList', 'degree'));
+    document.getElementById('addExperience').addEventListener('click', () => addField('experienceList', 'experience'));
 </script>
