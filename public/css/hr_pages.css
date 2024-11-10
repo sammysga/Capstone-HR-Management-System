@@ -348,3 +348,100 @@
         width: calc(100% - 20px);
     }
 }
+
+/* Edit Job Offer */
+.edit-job-offer {
+    margin-top: 20px;
+}
+
+.edit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.edit-job-offer .heading {
+    font-size: 24px;
+    color: #07ACB9;
+}
+
+.save-btn, .cancel-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 15px;
+    text-decoration: none;
+}
+
+.save-btn {
+    background-color: #124A5C;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: rgba(101, 112, 129, 0.1);
+    color: #657081;
+}
+
+.save-btn:hover {
+    background-color: #059ca4;
+}
+
+.edit-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    background-color: #fff;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-size: 14px;
+    color: #555;
+}
+
+.form-group input, .form-group textarea, .form-group select {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-group textarea {
+    resize: vertical;
+    height: 100px;
+}
+
+.status-toggle {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.status-toggle label {
+    font-size: 16px;
+}
+
+.status-toggle input[type="checkbox"] {
+    transform: scale(1.5);
+}
+
+/* Mobile styling */
+@media (max-width: 768px) {
+    .edit-form-container {
+        padding: 15px;
+    }
+}
+
