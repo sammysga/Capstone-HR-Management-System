@@ -795,14 +795,43 @@ updateJobOffer: async function(req, res) {
             // No need to redirect here as JSON response is sent
         }
     },
-    getEditJobOffers: function(req, res) {
+    
+    getEditJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hreditjoboffers');
+            const jobId = req.params.id; // Get job ID from the URL parameter
+            try {
+                // Fetch the job offer from the 'jobpositions' table based on jobId
+                const { data: job, error } = await supabase
+                    .from('jobpositions')
+                    .select(`
+                        *,
+                        departments (deptName)
+                    `)
+                    .eq('id', jobId)
+                    .single();
+    
+                if (error || !job) {
+                    throw new Error('Job not found');
+                }
+    
+                // Map department name for easier access in the view
+                const jobWithDeptName = {
+                    ...job,
+                    department: job.departments ? job.departments.deptName : 'Unknown'
+                };
+    
+                res.render('staffpages/hr_pages/hreditjoboffers', { job: jobWithDeptName });
+            } catch (error) {
+                console.error('Error fetching job offer:', error);
+                req.flash('errors', { fetchError: 'Failed to load job offer. Please try again.' });
+                res.redirect('/hr/joboffers');
+            }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
         }
     },
+    
     
 
     getHRManageStaff: async function(req, res) {
