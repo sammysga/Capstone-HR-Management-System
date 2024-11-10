@@ -647,6 +647,40 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+
+    // Controller function to handle job offer update
+updateJobOffer: async function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'HR') {
+        try {
+            const jobId = req.params.id;
+            const { jobTitle, jobDescrpt, departmentId, jobType, isActiveHiring } = req.body;
+
+            // Update the job offer in the 'jobpositions' table
+            const { error } = await supabase
+                .from('jobpositions')
+                .update({
+                    jobTitle,
+                    jobDescrpt,
+                    departmentId,
+                    jobType,
+                    isActiveHiring
+                })
+                .eq('id', jobId);
+
+            if (error) throw error;
+
+            req.flash('success', { message: 'Job offer updated successfully!' });
+            res.redirect('/hr/joboffers');
+        } catch (error) {
+            console.error('Error updating job offer:', error);
+            req.flash('errors', { updateError: 'Failed to update job offer. Please try again.' });
+            res.redirect(`/hr/editjoboffers/${req.params.id}`);
+        }
+    } else {
+        req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+        res.redirect('/staff/login');
+    }
+},
     
     getAddJobOffer: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {

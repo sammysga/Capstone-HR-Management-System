@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Job Offer</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
+</head>
+<body>
+    <%- include('../../partials/hr_partials') %>
+    <div class="main-content">
+        <section class="edit-job-offer">
+            <div class="edit-header">
+                <h2 class="heading">Edit Job Offer</h2>
+                <div>
+                    <button class="cancel-btn">Cancel</button>
+                    <button class="save-btn">Save Changes</button>
+                </div>
+            </div>
+            <div class="edit-form-container">
+                <form action="/hr/updatejoboffer/<%= job.id %>" method="POST">
+                    <div class="form-group">
+                        <label for="jobTitle">Job Title</label>
+                        <input type="text" id="jobTitle" name="jobTitle" value="<%= job.jobTitle %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <select id="department" name="department" required>
+                            <!-- Populate options dynamically -->
+                            <option value="Sales" <%= job.department === 'Sales' ? 'selected' : '' %>>Sales</option>
+                            <option value="Marketing" <%= job.department === 'Marketing' ? 'selected' : '' %>>Marketing</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="jobDescrpt">Job Description</label>
+                        <textarea id="jobDescrpt" name="jobDescrpt" required><%= job.jobDescrpt %></textarea>
+                    </div>
+                    <div class="status-toggle">
+                        <label for="isActiveHiring">Active Hiring</label>
+                        <input type="checkbox" id="isActiveHiring" name="isActiveHiring" <%= job.isActiveHiring ? 'checked' : '' %>>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
