@@ -19,7 +19,7 @@
                 </div>
             </div>
             <div class="edit-form-container">
-                <form action="/hr/editjoboffers/:id<%= job.id %>" method="POST">
+                <form action="/hr/editjoboffers/<%= job.id %>" method="POST">
                     <div class="form-group">
                         <label for="jobTitle">Job Title</label>
                         <input type="text" id="jobTitle" name="jobTitle" value="<%= job.jobTitle %>" required>
