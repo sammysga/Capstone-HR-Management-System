@@ -8,15 +8,31 @@
     <link rel="stylesheet" href="/css/hr_pages.css">
     <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 </head>
 
 <style>
     h2 {
     margin-bottom: 20px; /* Adjust the value as needed for spacing */
 }
-.employee-info {
-    margin-top: 20px; /* Adjust the value as needed for spacing */
+.header-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Three equal columns */
+    grid-template-rows: repeat(2, auto); /* Two rows */
+    gap: 10px; /* Space between cells */
+    text-align: left; /* Left-align the content */
+    font-size: 1em;
 }
+
+.header-grid div {
+    padding: 5px;
+    font-weight: normal;
+}
+
+.header-grid strong {
+    font-weight: bold;
+}
+
 /* .step.disabled {
     pointer-events: none;
     opacity: 0.5;
@@ -288,14 +304,21 @@
             
             <form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/<%= user.userId %>">
                 <section id="objective-skill-progress-form" class="fade-out" style="display: none;">
-                    <h2>Objective-based Skill Quarterly Progress Overview</h2>
-                    <p class="employee-info"><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></p>
-                    <p><strong>Position:</strong> <%= user.jobTitle %></p>
-                    <p><strong>Company:</strong> Prime Infrastructure</p>
-                    <p><strong>Department:</strong> <%= user.departmentName %></p>
-                    <p><strong>Performance Period Year:</strong> <span id="performanceDate"><%= new Date().getFullYear() %></span></p>
+                    <h2>Annual Objective Setting Form</h2>
                     
+                    <div class="header-grid">
+                        <!-- Row 1 -->
+                        <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
+                        <div><strong>Position:</strong> <%= user.jobTitle %></div>
+                        <p><strong>Performance Period Year:</strong> <span id="performanceDate"><%= new Date().getFullYear() %></span></p>
+                        
+                        <!-- Row 2 -->
+                        <div><strong>Company:</strong> Prime Infrastructure</div>
+                        <div><strong>Department:</strong> <%= user.departmentName %></div>
+                    </div>
                     
+
+
                     <input type="hidden" name="userId" value="<%= user.userId %>">
                     <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
                     <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
@@ -335,7 +358,7 @@
                     <label>
                         <input type="checkbox" id="confirmationCheckbox" required>
                         I confirm that the objective weights have been accurately consolidated and reviewed.
-                    </label ```html
+                    </label 
                     <div id="submitButtonContainer">
                         <button id="saveButton" type="submit">Save</button>
                     </div>
@@ -343,11 +366,19 @@
             
                 <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
                     <section id="view-only-page" class="fade-out" style="display: none;">
-                        <h2>View Objectives and Performance Review Data</h2>
-                        <p><strong>Position:</strong> <%= user.jobTitle %></p>
-                        <p><strong>Company:</strong> Prime Infrastructure</p>
-                        <p><strong>Department:</strong> <%= user.departmentName %></p>
-                        <p><strong>Performance Period Year:</strong> <%= viewState.performancePeriodYear %></p>
+                        <h2>Submitted Annual Objective Setting Form</h2>
+                        <div class="header-grid">
+                            <!-- Row 1 -->
+                            <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
+                            <div><strong>Position:</strong> <%= user.jobTitle %></div>
+                            <div><strong>Performance Period Year:</strong> <%= viewState.performancePeriodYear %></div>
+                            
+                            <!-- Row 2 -->
+                            <div><strong>Company:</strong> Prime Infrastructure</div>
+                            <div><strong>Department:</strong> <%= user.departmentName %></div>
+                        </div>
+                        
+                        
                         <div id="objectivesData" class="view-only-section">
                             <table>
                                 <thead>
@@ -386,18 +417,38 @@
 
             <form id="feedbackForm" method="POST" action="/linemanager/360-degree-feedback/<%= user.userId %>">
                 <section id="feedback-section" class="fade-out" style="display: none;">
-                    <h2>360 Degree Feedback Questionnaire</h2>
-                    <p>Line Manager should need to create questions that can only be answered on a scale of 1 to 5, with 1 representing the lowest and 5 representing the highest. These questions should be focused on tracking progress toward specific objectives, enabling clear and measurable evaluation.</p>
-            
-                    <div class="employee-info">
-                        <p><strong>Employee Name:</strong> <%= user.firstName %> <%= user.lastName %></p>
-                        <p><strong>Position:</strong> <%= user.jobTitle %></p>
-                        <p><strong>Company:</strong> Prime Infrastructure</p>
-                        <p><strong>Department:</strong> <%= user.departmentName %></p>
+                    <div class="form-header">
+                        <h2>360 Degree Feedback Questionnaire</h2>
+                        <div class="date-inputs">
+                            <div class="date-input">
+                                <label for="startDate"><strong>Start Date:</strong></label>
+                                <input type="date" id="startDate" name="startDate" class="input-field" required>
+                            </div>
+                            
+                            <div class="date-input">
+                                <label for="endDate"><strong>End Date:</strong></label>
+                                <input type="date" id="endDate" name="endDate" class="input-field" required>
+                            </div>
+                        </div>
                     </div>
-            
-                    <p>Objective Questions</p>
-            
+                    
+                    <p>Line Manager should create questions that can only be answered on a scale of 1 to 5, with 1 representing the lowest and 5 representing the highest. These questions should be focused on tracking progress toward specific objectives, enabling clear and measurable evaluation.</p>
+                    
+                    <div class="feedback-header-grid">
+                        <!-- Row 1 -->
+                        <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
+                        <div><strong>Position:</strong> <%= user.jobTitle %></div>
+                        
+                        <!-- Row 2 -->
+                        <div><strong>Company:</strong> Prime Infrastructure</div>
+                        <div><strong>Department:</strong> <%= user.departmentName %></div>
+                    </div>
+                    
+                    <!-- Small Divider -->
+                    <hr class="divider" />
+                    
+                    <p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Objective Setting Questions</p>
+                    
                     <table>
                         <thead>
                             <tr>
@@ -412,12 +463,11 @@
                             <!-- Dynamic feedback rows will be added here -->
                         </tbody>
                     </table>
-            
+                    
                     <button id="addFeedbackRowBtn" type="button" onclick="addFeedbackRow()">Add Feedback Row</button>
                     <button id="saveFeedbackButton" type="submit">Save Feedback</button>
                 </section>
             </form>
-            
             <script>
 let currentStep = 0; // Track the current step
 
@@ -522,24 +572,6 @@ function showObjectiveForm() {
     document.getElementById("objective-skill-progress-form").style.display = "block"; // Ensure form is visible
 }
 
-// Function to show the feedback form
-function showFeedbackForm() {
-    // Hide the objective form and view-only section if they are visible
-    const formSection = document.getElementById("objective-skill-progress-form");
-    const viewOnlySection = document.getElementById("view-only-page");
-    if (formSection) {
-        formSection.style.display = "none"; // Hide objective form
-    }
-    if (viewOnlySection) {
-        viewOnlySection.style.display = "none"; // Hide view-only section
-    }
-
-    // Show the feedback section
-    const feedbackSection = document.getElementById("feedback-section");
-    feedbackSection.style.display = "block"; // Show feedback section
-    console.log("Feedback section is now visible.");
-}
-
 // Function to display submitted objectives
 function displaySubmittedObjectives(objectives) {
     const tableBody = document.getElementById("view-only-table-body");
@@ -579,6 +611,9 @@ function displaySubmittedObjectives(objectives) {
         tableBody.appendChild(newRow);
     }
             
+
+
+
                 // Function to update total weight in the form
                 function updateTotalWeight() {
                     const weightInputs = document.querySelectorAll(".weight-input");
@@ -692,42 +727,129 @@ function displaySubmittedObjectives(objectives) {
                         alert("No objectives to save.");
                     }
                 }
+                
+                function addFeedbackRow(objective) {
+    const tbody = document.getElementById('feedback-table-body');
+    const row = document.createElement('tr');
+
+    // Create a unique ID for the collapsible section
+    const rowId = `feedbackRow${tbody.children.length}`;
+
+    // Populate the main row with text display only
+    row.innerHTML = `
+        <td>
+            <button type="button" class="collapsible-button" onclick="toggleCollapse('${rowId}')">+</button>
+            <span>${objective.kraObjectives || 'KRA/Objectives'}</span>
+        </td>
+        <td>${objective.objectiveKPI || 'Engagement Rate'}</td>
+        <td>${objective.objectiveTarget || 15}</td>
+        <td>${objective.objectiveUOM || '%'}</td>
+        <td>${(objective.objectiveAssignedWeight * 100) || '25 %'}</td>
+    `;
+
+    tbody.appendChild(row);
+
+    // Create a new row for the input fields, initially hidden
+    const inputRow = document.createElement('tr');
+    inputRow.id = rowId;
+    inputRow.style.display = 'none'; // Initially hidden
+
+    inputRow.innerHTML = `
+    <td colspan="5">
+        <div style="margin-bottom: 10px;">
+            <label for="qualitativeInput">Question for Qualitative:</label>
+            <input id="qualitativeInput" type="text" placeholder="Input your qualitative question here." name="kraObjectivesInput" required style="width: 100%; box-sizing: border-box;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label for="starRating${tbody.children.length}">Rate from 1-5:</label>
+            <span style="font-size: 24px; cursor: pointer;" id="starRating${tbody.children.length}" data-rating="0">
+                <i class="fa-solid fa-star" data-value="1"></i>
+                <i class="fa-solid fa-star" data-value="2"></i>
+                <i class="fa-solid fa-star" data-value="3"></i>
+                <i class="fa-solid fa-star" data-value="4"></i>
+                <i class="fa-solid fa-star" data-value="5"></i>
+            </span>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                This rating will be visible to the employee.
+            </div>
+        </div>
+    </td>
+`;
+    tbody.appendChild(inputRow);
+
+    // Add click event listeners to the stars
+    const stars = document.querySelectorAll(`#starRating${tbody.children.length} .fa-star`);
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-value');
+            const starContainer = document.getElementById(`starRating${tbody.children.length}`);
+            starContainer.setAttribute('data-rating', rating);
+            updateStarDisplay(stars, rating);
+        });
+    });
+}
+
+// Function to toggle the visibility of the input row
+function toggleCollapse(rowId) {
+    const inputRow = document.getElementById(rowId);
+    if (inputRow.style.display === 'none') {
+        inputRow.style.display = '';
+    } else {
+        inputRow.style.display = 'none';
+    }
+}
 
 
-            
-                // Function to add a new feedback row
-                function addFeedbackRow() {
-                    const feedbackTableBody = document.getElementById("feedback-table-body");
-                    const newRow = document.createElement("tr");
-            
-                    // Create a unique ID for the collapsible section
-                    const rowId = `feedbackRow${feedbackTableBody.children.length}`;
-            
-                    newRow.innerHTML = `
-                        <td>
-                            <button type="button" onclick="toggleCollapse('${rowId}')">+</button>
-                            <span>KRA/Objectives</span>
-                            <div id="${rowId}" style="display: none;">
-                                <input type="text" placeholder="Input your question here under the corresponding objective." name="kraObjectives" required>
-                            </div>
-                        </td>
-                        <td><input type="text" placeholder="Input your question here under the corresponding objective." name="kpi" required></td>
-                        <td><input type="text" placeholder="Input your question here under the corresponding objective." name="target" required></td>
-                        <td><input type="text" placeholder="Input your question here under the corresponding objective." name="uom" required></td>
-                        <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="assignedWeight" min="0" max="100" required></td>
-                        <td><button type="button" onclick="removeRow(this)">Remove</button></td>
-                    `;
-                    feedbackTableBody.appendChild(newRow);
-                }
-            
-                function toggleCollapse(rowId) {
-                    const row = document.getElementById(rowId);
-                    if (row.style.display === "none") {
-                        row.style.display = "block"; // Show the input field
-                    } else {
-                        row.style.display = "none"; // Hide the input field
-                    }
-                }
+
+// Show Feedback Form
+function showFeedbackForm() {
+    // Hide the objective form and view-only section if they are visible
+    const formSection = document.getElementById("objective-skill-progress-form");
+    const viewOnlySection = document.getElementById("view-only-page");
+    if (formSection) {
+        formSection.style.display = "none"; // Hide objective form
+    }
+    if (viewOnlySection) {
+        viewOnlySection.style.display = "none"; // Hide view-only section
+    }
+
+    // Show the feedback section
+    const feedbackSection = document.getElementById("feedback-section");
+    feedbackSection.style.display = "block"; // Show feedback section
+
+    // Clear existing feedback rows
+    const feedbackTableBody = document.getElementById('feedback-table-body');
+    feedbackTableBody.innerHTML = ''; // Clear previous content
+
+    // Add feedback rows based on submitted objectives
+    submittedObjectives.forEach(objective => {
+        addFeedbackRow(objective); // Populate feedback rows with existing objectives
+    });
+
+    console.log("Feedback section is now visible with populated rows.");
+}
+
+// Function to update star display based on the rating
+function updateStarDisplay(stars, rating) {
+    stars.forEach(star => {
+        if (star.getAttribute('data-value') <= rating) {
+            star.classList.add('checked');
+        } else {
+            star.classList.remove('checked');
+        }
+    });
+}
+
+
+// Function to toggle the visibility of the input row
+function toggleCollapse(rowId) {
+    const inputRow = document.getElementById(rowId);
+    if (inputRow.style.display === 'none') {
+        inputRow.style.display = '';
+    } else {
+        inputRow.style.display = 'none';
+    }
+}
             </script>
             
             </body>
