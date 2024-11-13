@@ -815,20 +815,17 @@ const lineManagerController = {
             return res.redirect('/staff/login');
         }
     
-        // Define your tables and any specific fetch logic
         const tables = [
             {
                 name: 'objectivesettings',
                 filters: {
                     userId: user.userId,
                 },
-                viewOnlyKey: 'objectivesettings', // Key to set in viewOnlyStatus
+                viewOnlyKey: 'objectivesettings',
             },
-            // Add more tables as needed
         ];
     
         try {
-            // First, retrieve the jobId by joining useraccounts and staffaccounts
             const { data: jobData, error: jobError } = await supabase
                 .from('staffaccounts')
                 .select('jobId')
@@ -842,11 +839,12 @@ const lineManagerController = {
             }
     
             const jobId = jobData.jobId;
+            console.log('Fetched jobId:', jobId); // Log the fetched jobId
+    
             const viewOnlyStatus = {};
             let objectivesData = [];
-            let performancePeriod = null; // Initialize performancePeriod
+            let performancePeriodYear = null; // Changed variable name
     
-            // Fetch data for each table
             for (const table of tables) {
                 const { data, error } = await supabase
                     .from(table.name)
@@ -862,20 +860,17 @@ const lineManagerController = {
                 viewOnlyStatus[table.viewOnlyKey] = data.length > 0;
     
                 if (table.name === 'objectivesettings') {
-                    objectivesData = data; // Store objectives settings data
-                    
-                    // Extract the performancePeriod from objectivesData
+                    objectivesData = data;
+    
                     if (objectivesData.length > 0) {
-                        performancePeriod = objectivesData[0].performancePeriod; // Assuming the field name in the objectivesettings table is performancePeriod
-                        console.log("Fetched Performance Period:", performancePeriod);
+                        performancePeriodYear = objectivesData[0].performancePeriodYear; // Fetch only the year
+                        console.log("Fetched Performance Period Year:", performancePeriodYear);
                     } else {
                         console.warn("No objectives data found for the user.");
                     }
-                    
                 }
             }
     
-            // Fetch objectives related to the fetched objective settings
             if (objectivesData.length > 0) {
                 const objectiveSettingsIds = objectivesData.map(setting => setting.objectiveSettingsId);
     
@@ -890,23 +885,20 @@ const lineManagerController = {
                     return res.redirect('/linemanager/records-performance-tracker');
                 }
     
-                objectivesData = objectivesDataFetched; // Update objectivesData with fetched objectives
+                objectivesData = objectivesDataFetched;
             }
     
-            // Prepare the view state
             const viewState = {
                 success: true,
                 viewOnlyStatus,
                 userId: user.userId,
-                performancePeriod: performancePeriod, // Include the fetched performancePeriod
+                performancePeriodYear: performancePeriodYear, // Updated to use the year
                 jobId: jobId,
-                submittedObjectives: objectivesData
+                submittedObjectives: objectivesData // Ensure this is correctly populated
             };
     
-            // Log the view state for debugging
             console.log("View State:", viewState);
     
-            // Pass user data along with the view state to the EJS template
             res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', { viewState, user });
         } catch (error) {
             console.error('Error fetching user progress:', error);
@@ -926,11 +918,11 @@ const lineManagerController = {
     
             if (!userId) {
                 console.log("User  not authenticated");
-                return res.status(401).json({ success: false, message: "User  not authenticated" });
+                return res.status(401).json ({ success: false, message: "User   not authenticated" });
             }
     
-            // Get the current date in MM/DD/YYYY format
-            const performancePeriod = new Date().toLocaleDateString('en-US'); // MM/DD/YYYY format
+            // Get the current year
+            const performancePeriodYear = new Date().getFullYear(); // Just the year
     
             // Initialize completeJobId
             let completeJobId = jobId;
@@ -985,7 +977,7 @@ const lineManagerController = {
                 .insert({
                     userId,
                     jobId: completeJobId,
-                    performancePeriod // Using the formatted date
+                    performancePeriodYear // Store only the year
                 })
                 .select("objectiveSettingsId");
     
@@ -1009,7 +1001,7 @@ const lineManagerController = {
             console.log("Prepared objectives data for insertion:", objectivesData);
     
             const { error: objectivesError } = await supabase
-                .from ("objectivesettings_objectives")
+                .from("objectivesettings_objectives")
                 .insert(objectivesData);
     
             if (objectivesError) {
@@ -1024,7 +1016,7 @@ const lineManagerController = {
         } catch (error) {
             console.error("Error saving objective settings:", error);
             res.status(500).json({ success: false, message: "An error occurred while saving data" });
-        }
+     }
     },
     
     getLogoutButton: function(req, res) {

@@ -17,7 +17,10 @@
 .employee-info {
     margin-top: 20px; /* Adjust the value as needed for spacing */
 }
-
+/* .step.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+} */
 
 </style>
 
@@ -175,310 +178,394 @@
             </section>
 
 
-            <section class="stepper">
-                <h2>Objective and Performance Review Tracker</h2>
-                <div class="stepper-container">
-                    <div class="step" id="objectivesButton"> <!-- Add the ID here -->
-                        <div class="step-icon"><i class="fa fa-bullseye"></i></div>
-                        <div class="step-label">
-                            Objective Setting
-                            <% 
-                            // Log the viewOnlyStatus for debugging
-                            console.log(viewState.viewOnlyStatus); 
-                            %>
-                            <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
-                                (View-Only)
-                            <% } else { %>
-                                (Editable)
-                            <% } %>
-                        </div>
-                    </div>
-            
-                    <div class="step">
-                        <div class="step-icon"><i class="fa fa-users"></i></div>
-                        <div class="step-label">
-                            [1/4] 360 Degree Feedback
-                            <% if (viewState.viewOnlyStatus['360degreefeedback_1']) { %>
-                                (View-Only)
-                            <% } else { %>
-                                (Editable)
-                            <% } %>
-                        </div>
-                    </div>
-            
-                    <div class="step">
-                        <div class="step-icon"><i class="fa fa-users"></i></div>
-                        <div class="step-label">
-                            [2/4] 360 Degree Feedback
-                            <% if (viewState.viewOnlyStatus['360degreefeedback_2']) { %>
-                                (View-Only)
-                            <% } else { %>
-                                (Editable)
-                            <% } %>
-                        </div>
-                    </div>
-            
-                    <div class="step">
-                        <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
-                        <div class="step-label">
-                            Mid-Year IDP
-                            <% if (viewState.viewOnlyStatus.midyearidp) { %>
-                                (View-Only)
-                            <% } else { %>
-                                (Editable)
-                            <% } %>
-                        </div>
-                    </div>
-            
-                    <div class="step">
-                        <div class="step-icon"><i class="fa fa-users"></i></div>
-                        <div class="step-label">
-                            [3/4] 360 Degree Feedback
-                            <% if (viewState.viewOnlyStatus['360degreefeedback_3']) { %>
-                                (View-Only)
-                            <% } else { %>
-                                (Editable)
-                            <% } %>
-                        </div>
-                    </div>
-            
-                    <div class="step">
-                        <div class="step-icon"><i class="fa fa-users"></i></div>
-                        <div class="step-label">
-                            [4/4] 360 Degree Feedback
-                            <% if (viewState.viewOnlyStatus['360degreefeedback_4']) { %>
-                                (View-Only)
-                            <% } else { %>
-                                (Editable)
-                            <% } %>
-                        </div>
-                    </div>
-            
-                    <div class="step">
-                        <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
-                        <div class="step-label">
-                            Final-Year IDP
-                            <% if (viewState.viewOnlyStatus.finalyearidp) { %>
-                                (View-Only)
-                            <% } else { %>
-                                (Editable)
-                            <% } %>
-                        </div>
-                    </div>
-            
-                </div>
-            </section>
-            
-<form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/<%= user.userId %>">
-    <section id="objective-skill-progress-form" class="fade-out" style="display: none;">
-        <h2>Objective-based Skill Quarterly Progress Overview</h2>
-        <p class="employee-info"><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></p>
-        <p><strong>Position:</strong> <%= user.jobTitle %></p>
-        <p><strong>Company:</strong> Prime Infrastructure</p>
-        <p><strong>Department:</strong> <%= user.departmentName %></p>
-        <p><strong>Performance Period:</strong> <span id="performanceDate"><%= viewState.performancePeriod || 'N/A' %></span></p>
 
-        <input type="hidden" name="userId" value="<%= user.userId %>">
-        <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
-        <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
-        <table>
-            <thead>
-                <tr>
-                    <th>KRA/Objectives</th>
-                    <th>KPI</th>
-                    <th>Target</th>
-                    <th>UOM</th>
-                    <th>Assigned Weight</th>
-                    <th>Actions</th>
-                </tr>
-                <tr>
-                    <th><small>Sample Input: Improve Customer Satisfaction</small></th>
-                    <th><small>Sample Input: Satisfaction Rate</small></th>
-                    <th><small>Sample Input: 90 (Numerical)</small></th>
-                    <th><small>Sample Input: %</small></th>
-                    <th><small>Sample Input: 20 (Input with no percentage)</small></th>
-                    <th><small>Click to Remove a Row</small></th>
-                </tr>
-            </thead>
-            <tbody id="progress-table-body">
-                <tr>
-                    <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
-                    <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
-                    <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
-                    <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
-                    <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
-                    <td><button type="button" onclick="removeRow(this)">Remove</button></td>
-                </tr>
-            </tbody>
-        </table>
-        <button id="addRowBtn" type="button" onclick="addRow()">Add Row</button>
-        <p><strong>Total Assigned Weight:</strong> <input id="totalWeight" type="number" value="0" readonly>%</p>
-
-        <label>
-            <input type="checkbox" id="confirmationCheckbox" required>
-            I confirm that the objective weights have been accurately consolidated and reviewed .
-        </label>
-
-        <div id="submitButtonContainer">
-            <button id="saveButton" type="submit">Save</button>
-        </div>
-    </section>
-
-    <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
-        <section id="view-only-page" class="fade-out" style="display: none;">
-            <h2>View Objectives and Performance Review Data</h2>
-            <p><strong>Performance Period:</strong> <span id="submissionDate"><%= viewState.performancePeriod ? viewState.performancePeriod : 'N/A' %></span></p>
-
-            <div id="objectivesData" class="view-only-section">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>KRA/Objectives</th>
-                            <th>KPI</th>
-                            <th>Target</th>
-                            <th>UOM</th>
-                            <th>Assigned Weight</th>
-                        </tr>
-                    </thead>
-                    <tbody id="view-only-table-body">
-                        <% if (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) { %>
-                            <% viewState.submittedObjectives.forEach(obj => { %>
-                                <tr>
-                                    <td><%= obj.objectiveDescrpt || 'N/A' %></td>
-                                    <td><%= obj.objectiveKPI || 'N/A' %></td>
-                                    <td><%= obj.objectiveTarget || 'N/A' %></td>
-                                    <td><%= obj.objectiveUOM || 'N/A' %></td>
-                                    <td><%= obj.objectiveAssignedWeight || 'N/A' %> %</td>
-                                </tr>
-                            <% }); %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="5">No objectives submitted yet.</td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
+<section class="stepper">
+    <h2>Objective and Performance Review Tracker</h2>
+    <div class="stepper-container">
+        <div class="step <%= viewState.viewOnlyStatus['objectivesettings'] ? 'view-only' : 'accessible' %>" id="objectivesButton">
+            <div class="step-icon"><i class="fa fa-bullseye"></i></div>
+            <div class="step-label">
+                Objective Setting
+                <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
+                    (View-Only)
+                <% } else { %>
+                    (Editable)
+                <% } %>
             </div>
-            <button id="prepareFeedbackBtn" style="float: right; margin-top: 20px;">Proceed to Prepare 360 Degree Feedback</button>
-        </section>
-    <% } %>
+        </div>
 
-    <div id="viewState" data-viewstate='<%= JSON.stringify(viewState) %>' style="display:none;"></div>
-</form>
+        <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ1" data-quarter="1" onclick="showFeedbackForm()">
+            <div class="step-icon"><i class="fa fa-users"></i></div>
+            <div class="step-label">
+                [1/4] 360 Degree Feedback
+                <% if (viewState.viewOnlyStatus['360degreefeedbacks']) { %>
+                    (View-Only)
+                <% } else { %>
+                    (Editable)
+                <% } %>
+            </div>
+            <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0)) { %>
+                <div class="notice">You must submit objectives first.</div>
+            <% } %>
+        </div>
 
-<script>
-    // Parse viewState back into an object
-    const viewStateElement = document.getElementById('viewState');
-    const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
-    let userId = '<%= user.userId %>'; // Pass userId from server-side
-    let jobId = '<%= user.jobId %>'; // Pass jobId from server-side
-    let submittedObjectives = viewState.submittedObjectives || []; // Initialize with submitted objectives
+        <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['360degreefeedbacks']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ2" data-quarter="2">
+            <div class="step-icon"><i class="fa fa-users"></i></div>
+            <div class="step-label">
+                [2/4] 360 Degree Feedback
+                <% if (viewState.viewOnlyStatus['360degreefeedbacks']) { %>
+                    (View-Only)
+                <% } else { %>
+                    (Editable)
+                <% } %>
+            </div>
+            <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['360degreefeedbacks'])) { %>
+                <div class="notice">Complete the previous step first.</div>
+            <% } %>
+        </div>
 
-    // Ensure your document ready event listener is set correctly
-    document.addEventListener("DOMContentLoaded", function () {
-        const objectivesButton = document.getElementById("objectivesButton");
+        <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus.midyearidp) ? 'accessible' : 'disabled' %>" id="midYearIDP" onclick="navigateToStep('midyear')">
+            <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
+            <div class="step-label">
+                Mid-Year IDP
+                <% if (viewState.viewOnlyStatus.midyearidp) { %>
+                    (View-Only)
+                <% } else { %>
+                    (Editable)
+                <% } %>
+            </div>
+            <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['360degreefeedbacks'])) { %>
+                <div class="notice">Complete the previous steps first.</div>
+            <% } %>
+        </div>
 
-        // Log the values for debugging
-        console.log("Submitted Objectives:", submittedObjectives);
-        console.log("User ID:", userId);
-        console.log("Job ID:", jobId);
-        
-        if (objectivesButton) {
-            console.log('Objectives Button found:', objectivesButton);
-            objectivesButton.addEventListener("click", handleObjectiveClick);
+        <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['360degreefeedbacks']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ3" data-quarter="3">
+            <div class="step-icon"><i class="fa fa-users"></i></div>
+            <div class="step-label">
+                [3/4] 360 Degree Feedback
+                <% if (viewState.viewOnlyStatus['360degreefeedbacks']) { %>
+                    (View-Only)
+                <% } else { %>
+                    (Editable)
+                <% } %>
+            </div>
+            <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['360degreefeedbacks'])) { %>
+                <div class="notice">Complete the previous step first.</div>
+            <% } %>
+        </div>
+
+        <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['360degreefeedbacks']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ4" data-quarter="4">
+            <div class="step-icon"><i class="fa fa-users"></i></div>
+            <div class="step-label">
+                [4/4] 360 Degree Feedback
+                <% if (viewState.viewOnlyStatus['360degreefeedbacks']) { %>
+                    (View-Only)
+                <% } else { %>
+                    (Editable)
+                <% } %>
+            </div>
+            <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['360degreefeedbacks'])) { %>
+                <div class="notice">Complete the previous step first.</div>
+            <% } %>
+        </div>
+
+        <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['360degreefeedbacks']) ? 'accessible' : 'disabled' %>" id="finalYearIDP">
+            <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
+            <div class="step-label">
+                Final-Year IDP
+                <% if (viewState.viewOnlyStatus.finalyearidp) { %>
+                    (View-Only)
+                <% } else { %>
+                    (Editable)
+                <% } %>
+            </div>
+            <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['360degreefeedbacks'])) { %>
+                <div class="notice">Complete the previous steps first.</div>
+            <% } %>
+        </div>
+    </div>
+</section>
+            
+            <form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/<%= user.userId %>">
+                <section id="objective-skill-progress-form" class="fade-out" style="display: none;">
+                    <h2>Objective-based Skill Quarterly Progress Overview</h2>
+                    <p class="employee-info"><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></p>
+                    <p><strong>Position:</strong> <%= user.jobTitle %></p>
+                    <p><strong>Company:</strong> Prime Infrastructure</p>
+                    <p><strong>Department:</strong> <%= user.departmentName %></p>
+                    <p><strong>Performance Period Year:</strong> <span id="performanceDate"><%= new Date().getFullYear() %></span></p>
+                    
+                    
+                    <input type="hidden" name="userId" value="<%= user.userId %>">
+                    <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
+                    <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>KRA/Objectives</th>
+                                <th>KPI</th>
+                                <th>Target</th>
+                                <th>UOM</th>
+                                <th>Assigned Weight</th>
+                                <th>Actions</th>
+                            </tr>
+                            <tr>
+                                <th><small>Sample Input: Improve Customer Satisfaction</small></th>
+                                <th><small>Sample Input: Satisfaction Rate</small></th>
+                                <th><small>Sample Input: 90 (Numerical)</small></th>
+                                <th><small>Sample Input: %</small></th>
+                                <th><small>Sample Input: 20 (Input with no percentage)</small></th>
+                                <th><small>Click to Remove a Row</small></th>
+                            </tr>
+                        </thead>
+                        <tbody id="progress-table-body">
+                            <tr>
+                                <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
+                                <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
+                                <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
+                                <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
+                                <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
+                                <td><button type="button" onclick="removeRow(this)">Remove</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button id="addRowBtn" type="button" onclick="addRow()">Add Row</button>
+                    <p><strong>Total Assigned Weight:</strong> <input id="totalWeight" type="number" value="0" readonly>%</p>
+            
+                    <label>
+                        <input type="checkbox" id="confirmationCheckbox" required>
+                        I confirm that the objective weights have been accurately consolidated and reviewed.
+                    </label ```html
+                    <div id="submitButtonContainer">
+                        <button id="saveButton" type="submit">Save</button>
+                    </div>
+                </section>
+            
+                <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
+                    <section id="view-only-page" class="fade-out" style="display: none;">
+                        <h2>View Objectives and Performance Review Data</h2>
+                        <p><strong>Position:</strong> <%= user.jobTitle %></p>
+                        <p><strong>Company:</strong> Prime Infrastructure</p>
+                        <p><strong>Department:</strong> <%= user.departmentName %></p>
+                        <p><strong>Performance Period Year:</strong> <%= viewState.performancePeriodYear %></p>
+                        <div id="objectivesData" class="view-only-section">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>KRA/Objectives</th>
+                                        <th>KPI</th>
+                                        <th>Target</th>
+                                        <th>UOM</th>
+                                        <th>Assigned Weight</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="view-only-table-body">
+                                    <% if (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) { %>
+                                        <% viewState.submittedObjectives.forEach(obj => { %>
+                                            <tr>
+                                                <td><%= obj.objectiveDescrpt || 'N/A' %></td>
+                                                <td><%= obj.objectiveKPI || 'N/A' %></td>
+                                                <td><%= obj.objectiveTarget || 'N/A' %></td>
+                                                <td><%= obj.objectiveUOM || 'N/A' %></td>
+                                                <td><%= obj.objectiveAssignedWeight !== undefined ? (obj.objectiveAssignedWeight * 100).toFixed(2) + '%' : 'N/A' %></td>                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="5">No objectives submitted yet.</td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                <% } %>
+            
+                <div id="viewState" data-viewstate='<%= JSON.stringify(viewState) %>' style="display:none;"></div>
+            </form>
+            
+
+            <form id="feedbackForm" method="POST" action="/linemanager/360-degree-feedback/<%= user.userId %>">
+                <section id="feedback-section" class="fade-out" style="display: none;">
+                    <h2>360 Degree Feedback Questionnaire</h2>
+                    <p>Line Manager should need to create questions that can only be answered on a scale of 1 to 5, with 1 representing the lowest and 5 representing the highest. These questions should be focused on tracking progress toward specific objectives, enabling clear and measurable evaluation.</p>
+            
+                    <div class="employee-info">
+                        <p><strong>Employee Name:</strong> <%= user.firstName %> <%= user.lastName %></p>
+                        <p><strong>Position:</strong> <%= user.jobTitle %></p>
+                        <p><strong>Company:</strong> Prime Infrastructure</p>
+                        <p><strong>Department:</strong> <%= user.departmentName %></p>
+                    </div>
+            
+                    <p>Objective Questions</p>
+            
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>KRA/Objectives</th>
+                                <th>KPI</th>
+                                <th>Target</th>
+                                <th>UOM</th>
+                                <th>Assigned Weight</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedback-table-body">
+                            <!-- Dynamic feedback rows will be added here -->
+                        </tbody>
+                    </table>
+            
+                    <button id="addFeedbackRowBtn" type="button" onclick="addFeedbackRow()">Add Feedback Row</button>
+                    <button id="saveFeedbackButton" type="submit">Save Feedback</button>
+                </section>
+            </form>
+            
+            <script>
+let currentStep = 0; // Track the current step
+
+// Parse viewState back into an object
+const viewStateElement = document.getElementById('viewState');
+const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
+let userId = '<%= user.userId %>'; // Pass userId from server-side
+let jobId = viewState.jobId; // Use jobId from viewState
+let submittedObjectives = viewState.submittedObjectives || []; // Initialize with submitted objectives
+
+// Ensure your document ready event listener is set correctly
+document.addEventListener("DOMContentLoaded", function () {
+    const objectivesButton = document.getElementById("objectivesButton");
+    const feedbackSection = document.getElementById("feedback-section");
+    const saveButton = document.getElementById("saveButton"); // Save button for objectives
+
+    // Log the values for debugging
+    console.log("Submitted Objectives:", submittedObjectives);
+    console.log("User    ID:", userId);
+    console.log("Job ID:", jobId);
+    
+    if (objectivesButton) {
+        console.log('Objectives Button found:', objectivesButton);
+        objectivesButton.addEventListener("click", handleObjectiveClick);
+    } else {
+        console.error('Objectives Button not found in the DOM.');
+    }
+
+    // Add event listener for the save button
+    saveButton.addEventListener("click", saveObjectives); // Call saveObjectives on click
+
+    // Initial display update when the document is loaded
+    console.log('Document loaded. Updating display...');
+});
+// Function to handle objective click
+function handleObjectiveClick() {
+    console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
+
+    // Hide the feedback form when switching to objectives
+    const feedbackSection = document.getElementById("feedback-section");
+    feedbackSection.style.display = "none"; // Hide feedback section
+
+    // Get the form and view-only sections
+    const formSection = document.getElementById("objective-skill-progress-form");
+    const viewOnlySection = document.getElementById("view-only-page");
+
+    // Check if the view-only status is true
+    if (viewState.viewOnlyStatus.objectivesettings) {
+        // Show the view-only section
+        displaySubmittedObjectives(submittedObjectives); // Populate the view-only section with existing data
+        viewOnlySection.style.display = "block"; // Show view-only page
+        formSection.style.display = "none"; // Ensure the form is hidden
+        console.log("Showing view-only page with submitted objectives.");
+    } else {
+        // Show the editable form if in edit mode
+        formSection.style.display = "block"; // Show the form
+        viewOnlySection.style.display = "none"; // Ensure the view-only section is hidden
+        console.log("Showing editable objective form.");
+    }
+}
+
+// Function to update display based on view state
+function updateDisplay() {
+    console.log('Updating display...');
+
+    // Hide all sections initially
+    const formSection = document.getElementById("objective-skill-progress-form");
+    const viewOnlySection = document.getElementById("view-only-page");
+
+    // Ensure elements exist before accessing their styles
+    if (formSection) {
+        formSection.style.display = "none"; 
+    } else {
+        console.error("Objective Skill Progress Form section not found.");
+    }
+
+    if (viewOnlySection) {
+        viewOnlySection.style.display = "none"; 
+    } else {
+        console.error("View Only Page section not found.");
+    }
+
+    // Check the view state and submitted objectives
+    if (viewState.viewOnlyStatus.objectivesettings) {
+        // Show view-only page only if there are submitted objectives
+        if (submittedObjectives.length > 0) {
+            displaySubmittedObjectives(submittedObjectives);
+            viewOnlySection.style.display = "block"; // Show view-only page
+            console.log("Showing view-only page with submitted objectives.");
         } else {
-            console.error('Objectives Button not found in the DOM.');
+            console.log("No objectives submitted yet for view-only mode.");
         }
+    } else {
+        showObjectiveForm(); // Show form if in edit mode
+        formSection.style.display = "block"; // Show the form
+        console.log("Showing editable objective form.");
+    }
+}
+// Function to show the objective form
+function showObjectiveForm() {
+    console.log("Showing objective form.");
+    document.getElementById("objective-skill-progress-form").style.display = "block"; // Ensure form is visible
+}
 
-        // Initial display update when the document is loaded
-        console.log('Document loaded. Updating display...');
+// Function to show the feedback form
+function showFeedbackForm() {
+    // Hide the objective form and view-only section if they are visible
+    const formSection = document.getElementById("objective-skill-progress-form");
+    const viewOnlySection = document.getElementById("view-only-page");
+    if (formSection) {
+        formSection.style.display = "none"; // Hide objective form
+    }
+    if (viewOnlySection) {
+        viewOnlySection.style.display = "none"; // Hide view-only section
+    }
+
+    // Show the feedback section
+    const feedbackSection = document.getElementById("feedback-section");
+    feedbackSection.style.display = "block"; // Show feedback section
+    console.log("Feedback section is now visible.");
+}
+
+// Function to display submitted objectives
+function displaySubmittedObjectives(objectives) {
+    const tableBody = document.getElementById("view-only-table-body");
+    tableBody.innerHTML = ""; // Clear previous content
+
+    objectives.forEach(obj => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${obj.objectiveDescrpt || 'N/A'}</td>
+            <td>${obj.objectiveKPI || 'N/A'}</td>
+            <td>${obj.objectiveTarget || 'N/A'}</td>
+            <td>${obj.objectiveUOM || 'N/A'}</td>
+            <td>${(obj.objectiveAssignedWeight * 100) || 'N/A'} %</td>
+        `;
+        tableBody.appendChild(row);
     });
-
-    // Function to handle objective click
-    function handleObjectiveClick() {
-        console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
-        
-        // Only update display if the objectives settings are not already visible
-        if (!viewState.viewOnlyStatus.objectivesettings) {
-            console.log("Switching to editable form.");
-            updateDisplay(); // Call the update function on click
-        } else {
-            console.log("Switching to view-only mode.");
-            updateDisplay(); // Call the update function on click
-        }
-    }
-
-    // Function to update display based on view state
-    function updateDisplay() {
-        console.log('Updating display...');
-
-        // Hide all sections initially
-        const formSection = document.getElementById("objective-skill-progress-form");
-        const viewOnlySection = document.getElementById("view-only-page");
-
-        // Ensure elements exist before accessing their styles
-        if (formSection) {
-            formSection.style.display = "none"; 
-        } else {
-            console.error("Objective Skill Progress Form section not found.");
-        }
-
-        if (viewOnlySection) {
-            viewOnlySection.style.display = "none"; 
-        } else {
-            console.error("View Only Page section not found.");
-        }
-
-        // Check the view state and submitted objectives
-        if (viewState.viewOnlyStatus.objectivesettings) {
-            // Show view-only page only if there are submitted objectives
-            if (submittedObjectives.length > 0) {
-                displaySubmittedObjectives(submittedObjectives);
-                viewOnlySection.style.display = "block"; // Show view-only page
-                console.log("Showing view-only page with submitted objectives.");
-            } else {
-                console.log("No objectives submitted yet for view-only mode.");
-            }
-        } else {
-            showObjectiveForm(); // Show form if in edit mode
-            formSection.style.display = "block"; // Show the form
-            console.log("Showing editable objective form.");
-        }
-    }
-
-    // Function to show the objective form
-    function showObjectiveForm() {
-        console.log("Showing objective form.");
-        document.getElementById("objective-skill-progress-form").style.display = "block"; // Ensure form is visible
-    }
-
-    // Function to display submitted objectives
-    function displaySubmittedObjectives(objectives) {
-        const tableBody = document.getElementById("view-only-table-body");
-        tableBody.innerHTML = ""; // Clear previous content
-
-        objectives.forEach(obj => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${obj.objectiveDescrpt || 'N/A'}</td>
-                <td>${obj.objectiveKPI || 'N/A'}</td>
-                <td>${obj.objectiveTarget || 'N/A'}</td>
-                <td>${obj.objectiveUOM || 'N/A'}</td>
-                <td>${obj.objectiveAssignedWeight || 'N/A'} %</td>
-            `;
-            tableBody.appendChild(row);
-        });
-    }
-
-    // Function to remove a row from the objective form
-    function removeRow(button) {
-        const row = button.parentNode.parentNode;
-        row.parentNode.removeChild(row);
-        updateTotalWeight(); // Update total weight after removal
-    }
-
-    // Function to add a new row to the objective form
-    function addRow() {
+}
+                // Function to remove a row from the objective form
+                function removeRow(button) {
+                    const row = button.parentNode.parentNode;
+                    row.parentNode.removeChild(row);
+                    updateTotalWeight(); // Update total weight after removal
+                }
+            
+                // Function to add a new row to the objective form
+                function addRow() {
         const tableBody = document.getElementById("progress-table-body");
         const newRow = document.createElement("tr");
         newRow.innerHTML = `
@@ -491,122 +578,157 @@
         `;
         tableBody.appendChild(newRow);
     }
+            
+                // Function to update total weight in the form
+                function updateTotalWeight() {
+                    const weightInputs = document.querySelectorAll(".weight-input");
+                    let totalWeight = 0;
+            
+                    weightInputs.forEach(input => {
+                        totalWeight += parseFloat(input.value) || 0;
+                    });
+            
+                    document.getElementById("totalWeight").value = totalWeight;
+                }
+            
+                // Function to save objectives
+                async function saveObjectives() {
+                    const departmentId = '<%= user.departmentId %>'; // Pass departmentId from server-side
+                    const performancePeriodYear = document.getElementById("performanceDate").textContent;
+            
+                    console.log("User  ID:", userId);
+                    console.log("Job ID:", jobId);
+                    console.log("Performance Period Year:", performancePeriodYear);
+            
+                    // Validate required IDs
+                    if (!userId || !jobId ) {
+                        console.error("One or more required IDs are missing.");
+                        alert("Please ensure all fields are filled out correctly before saving.");
+                        return;
+                    }
+            
+                    const objectives = [];
+                    const rows = document.querySelectorAll("#progress-table-body tr");
+            
+                    // Ensure confirmation checkbox is checked
+                    const confirmationChecked = document.getElementById("confirmationCheckbox").checked;
+                    if (!confirmationChecked) {
+                        alert("Please confirm that you have reviewed the objectives before saving.");
+                        return;
+                    }
+            
+                    let totalWeight = 0;
+            
+                    rows.forEach(row => {
+                        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
+                        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
+                        const targetInput = row.querySelector('input[name="objectiveTarget"]');
+                        const uomInput = row.querySelector('input[name="objectiveUOM"]');
+                        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
+            
+                        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
+                            const weight = parseFloat(weightInput.value);
+                            totalWeight += weight;
+            
+                            const objective = {
+                                objectiveDescrpt: descriptionInput.value,
+                                objectiveKPI: kpiInput.value,
+                                objectiveTarget: targetInput.value,
+                                objectiveUOM: uomInput.value,
+                                objectiveAssignedWeight: weight,
+                            };
+                            objectives.push(objective);
+                        }
+                    });
+            
+                    console.log("Objectives to save:", objectives);
+            
+                    // Validate total weight
+                    if (totalWeight !== 100) {
+                        alert("Total assigned weight must be 100% to save.");
+                        return;
+                    }
+            
+                    // Proceed if objectives are present
+                    if (objectives.length > 0) {
+                        try {
+                            const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    jobId,
+                                    departmentId,
+                                    performancePeriodYear,
+                                    objectives,
+                                    totalWeight
+                                })
+                            });
+            
+                            console.log("Response from server:", response);
+            
+                            // Check if the response was successful
+                            if (!response.ok) {
+                                throw new Error(`Server responded with status ${response.status}`);
+                            }
+            
+                            const result = await response.json();
+                            console.log("Result from server:", result);
+            
+                            if (result.success) {
+                                alert(result.message); // Handle success
+                                displaySubmittedObjectives(objectives); // Display the submitted objectives
+            
+                                // Redirect to the view-only page after successful save
+                                const viewUrl = `/linemanager/records-performance-tracker/${userId}`;
+                                window.location.href = viewUrl;
+                            } else {
+                                alert("Failed to save objectives: " + result.message);
+                            }
+                        } catch (error) {
+                            console.error("Error saving objectives:", error);
+                            alert("An error occurred while saving objectives.");
+                        }
+                    } else {
+                        alert("No objectives to save.");
+                    }
+                }
 
-    // Function to update total weight in the form
-    function updateTotalWeight() {
-        const weightInputs = document.querySelectorAll(".weight-input");
-        let totalWeight = 0;
 
-        weightInputs.forEach(input => {
-            totalWeight += parseFloat(input.value) || 0;
-        });
-
-        document.getElementById("totalWeight").value = totalWeight;
-    }
-    async function saveObjectives() {
-    const departmentId = '<%= user.departmentId %>'; // Pass departmentId from server-side
-    const performancePeriod = document.getElementById("performanceDate").textContent;
-
-    console.log("User ID:", userId);
-    console.log("Job ID:", jobId);
-    console.log("Department ID:", departmentId);
-    console.log("Performance Period:", performancePeriod);
-
-    // Validate required IDs
-    if (!userId || !jobId || !departmentId) {
-        console.error("One or more required IDs are missing.");
-        alert("Please ensure all fields are filled out correctly before saving.");
-        return;
-    }
-
-    const objectives = [];
-    const rows = document.querySelectorAll("#progress-table-body tr");
-
-    // Ensure confirmation checkbox is checked
-    const confirmationChecked = document.getElementById("confirmationCheckbox").checked;
-    if (!confirmationChecked) {
-        alert("Please confirm that you have reviewed the objectives before saving.");
-        return;
-    }
-
-    let totalWeight = 0;
-
-    rows.forEach(row => {
-        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
-        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
-        const targetInput = row.querySelector('input[name="objectiveTarget"]');
-        const uomInput = row.querySelector('input[name="objectiveUOM"]');
-        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
-
-        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
-            const weight = parseFloat(weightInput.value);
-            totalWeight += weight;
-
-            const objective = {
-                objectiveDescrpt: descriptionInput.value,
-                objectiveKPI: kpiInput.value,
-                objectiveTarget: targetInput.value,
-                objectiveUOM: uomInput.value,
-                objectiveAssignedWeight: weight,
-            };
-            objectives.push(objective);
-        }
-    });
-
-    console.log("Objectives to save:", objectives);
-
-    // Validate total weight
-    if (totalWeight !== 100) {
-        alert("Total assigned weight must be 100% to save.");
-        return;
-    }
-
-    // Proceed if objectives are present
-    if (objectives.length > 0) {
-        try {
-            const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    jobId,
-                    departmentId,
-                    performancePeriod,
-                    objectives,
-                    totalWeight
-                })
-            });
-
-            console.log("Response from server:", response);
-
-            // Check if the response was successful
-            if (!response.ok) {
-                throw new Error(`Server responded with status ${response.status}`);
-            }
-
-            const result = await response.json();
-            console.log("Result from server:", result);
-
-            if (result.success) {
-                alert(result.message); // Handle success
-                displaySubmittedObjectives(objectives); // Display the submitted objectives
-
-                // Redirect to the view-only page after successful save
-                const viewUrl = `/linemanager/records-performance-tracker/${userId}`;
-                window.location.href = viewUrl;
-            } else {
-                alert("Failed to save objectives: " + result.message);
-            }
-        } catch (error) {
-            console.error("Error saving objectives:", error);
-            alert("An error occurred while saving objectives.");
-        }
-    } else {
-        alert("No objectives to save.");
-    }
-}
-
-
-</script>
-
-</body>
-</html>
+            
+                // Function to add a new feedback row
+                function addFeedbackRow() {
+                    const feedbackTableBody = document.getElementById("feedback-table-body");
+                    const newRow = document.createElement("tr");
+            
+                    // Create a unique ID for the collapsible section
+                    const rowId = `feedbackRow${feedbackTableBody.children.length}`;
+            
+                    newRow.innerHTML = `
+                        <td>
+                            <button type="button" onclick="toggleCollapse('${rowId}')">+</button>
+                            <span>KRA/Objectives</span>
+                            <div id="${rowId}" style="display: none;">
+                                <input type="text" placeholder="Input your question here under the corresponding objective." name="kraObjectives" required>
+                            </div>
+                        </td>
+                        <td><input type="text" placeholder="Input your question here under the corresponding objective." name="kpi" required></td>
+                        <td><input type="text" placeholder="Input your question here under the corresponding objective." name="target" required></td>
+                        <td><input type="text" placeholder="Input your question here under the corresponding objective." name="uom" required></td>
+                        <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="assignedWeight" min="0" max="100" required></td>
+                        <td><button type="button" onclick="removeRow(this)">Remove</button></td>
+                    `;
+                    feedbackTableBody.appendChild(newRow);
+                }
+            
+                function toggleCollapse(rowId) {
+                    const row = document.getElementById(rowId);
+                    if (row.style.display === "none") {
+                        row.style.display = "block"; // Show the input field
+                    } else {
+                        row.style.display = "none"; // Hide the input field
+                    }
+                }
+            </script>
+            
+            </body>
+            </html>
