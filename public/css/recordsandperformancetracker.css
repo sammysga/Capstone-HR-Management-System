@@ -432,8 +432,18 @@ button:hover {
 /*STAR RATING*/
 .fa-star {
     color: #ccc; /* Default color for unselected stars */
+    font-size: 30px;
 }
 
-.fa-star.checked {
-    color: gold; /* Color for selected stars */
+.checked {
+    color: #FFD43B; /* Yellow color */
+}
+
+.gray-button {
+    background-color: gray;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
 }

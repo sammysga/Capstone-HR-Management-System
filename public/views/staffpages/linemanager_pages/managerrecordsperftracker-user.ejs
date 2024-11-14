@@ -432,8 +432,13 @@
                         </div>
                     </div>
                     
-                    <p>Line Manager should create questions that can only be answered on a scale of 1 to 5, with 1 representing the lowest and 5 representing the highest. These questions should be focused on tracking progress toward specific objectives, enabling clear and measurable evaluation.</p>
-                    
+<!-- Instructions Label -->
+<h3 style="font-weight: bold; font-size: 1.2em; margin-top: 20px;">Instructions</h3>
+<br>
+<!-- Instructions Content -->
+<p><strong>Setting Start and End Date:</strong> When creating a 360-degree feedback questionnaire, it is essential to set a start and end date. This schedule will automatically notify employees through the system, ensuring that they are aware of the timeframe for providing feedback.</p>
+
+<p><strong>Setting of Guide Questions:</strong> The Line Manager should prepare guide questions that support co-employees in providing both qualitative and quantitative feedback for each role-specific objective. Additionally, employees will rate the hard and soft skills required for the job, offering qualitative comments and quantitative scores. These structured questions enable clear, measurable evaluations and ensure alignment with the objectives being tracked.</p>                    
                     <div class="feedback-header-grid">
                         <!-- Row 1 -->
                         <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
@@ -463,9 +468,36 @@
                             <!-- Dynamic feedback rows will be added here -->
                         </tbody>
                     </table>
+
+<!-- Hard Skills Table -->
+<p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Hard Skills</p>
+<table id="hardSkillsTable">
+    <thead>
+        <tr>
+            <th>Skill Name</th>
+        </tr>
+    </thead>
+    <tbody id="hard-skills-table-body">
+        <!-- Hard skill rows will be dynamically inserted here -->
+    </tbody>
+</table>
+
+<!-- Soft Skills Table -->
+<p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Soft Skills</p>
+<table id="softSkillsTable">
+    <thead>
+        <tr>
+            <th>Skill Name</th>
+        </tr>
+    </thead>
+    <tbody id="soft-skills-table-body">
+        <!-- Soft skill rows will be dynamically inserted here -->
+    </tbody>
+</table>
+
+
                     
-                    <button id="addFeedbackRowBtn" type="button" onclick="addFeedbackRow()">Add Feedback Row</button>
-                    <button id="saveFeedbackButton" type="submit">Save Feedback</button>
+                    <button id="saveFeedbackButton" type="submit">Save Questionnaire</button>
                 </section>
             </form>
             <script>
@@ -477,6 +509,10 @@ const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
 let userId = '<%= user.userId %>'; // Pass userId from server-side
 let jobId = viewState.jobId; // Use jobId from viewState
 let submittedObjectives = viewState.submittedObjectives || []; // Initialize with submitted objectives
+// Make sure to define hardSkills and softSkills as global variables
+const hardSkills = viewState.hardSkills || []; // Default to empty array if not defined
+    const softSkills = viewState.softSkills || []; // Default to empty array if not defined
+
 
 // Ensure your document ready event listener is set correctly
 document.addEventListener("DOMContentLoaded", function () {
@@ -728,7 +764,137 @@ function displaySubmittedObjectives(objectives) {
                     }
                 }
                 
-                function addFeedbackRow(objective) {
+                function addFormFeedbackRow(objective) {
+    const tbody = document.getElementById('feedback-table-body');
+    const row = document.createElement('tr');
+
+    // Populate the main row with text display only
+    row.innerHTML = `
+    <td><strong>${objective.objectiveDescrpt || 'N/A'}</strong></td>
+    <td><strong>${objective.objectiveKPI || 'N/A'}</strong></td>
+    <td><strong>${objective.objectiveTarget || 'N/A'}</strong></td>
+    <td><strong>${objective.objectiveUOM || '%'}</strong></td>
+    <td><strong>${(objective.objectiveAssignedWeight * 100) || 'N/A'} %</strong></td>
+`;
+
+    tbody.appendChild(row);
+
+    // Create a new row for the input fields
+    const inputRow = document.createElement('tr');
+
+    inputRow.innerHTML = `
+    <td colspan="5">
+        <div style="margin-bottom: 10px;">
+            <label for="qualitativeInput"> ▶ Guide Question here for qualitative and quantitative feedback:</label>
+            <input id="qualitativeInput" type="text" placeholder="Input your guide question here." name="kraObjectivesInput" required style="width: 100%; box-sizing: border-box;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <button type="button" onclick="toggleRatingSection('ratingSection${tbody.children.length}')" style="background-color: gray; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
+                View Rater's View
+            </button>
+            <div id="ratingSection${tbody.children.length}" style="display: none; margin-top: 10px;">
+                <div style="margin-bottom: 10px;">
+                    <label>Quantitative (Rating Scale):</label>
+                    <div style="font-size: 14px; margin-top: 5px;">
+                        Rate from 1-5 based on how well the individual achieved the target or goal related to the guide question.
+                    </div>
+                    <span style="font-size: 24px; cursor: pointer;" id="starRating${tbody.children.length}" data-rating="0">
+                        <i class="fa-solid fa-star" data-value="1"></i>
+                        <i class="fa-solid fa-star" data-value="2"></i>
+                        <i class="fa-solid fa-star" data-value="3"></i>
+                        <i class="fa-solid fa-star" data-value="4"></i>
+                        <i class="fa-solid fa-star" data-value="5"></i>
+                    </span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label>Qualitative (Open-ended):</label>
+                    <div style="font-size: 14px; margin-top: 5px;">
+                       Provide qualitative feedback on the guide question to assess if the target was achieved.
+                    </div>
+                    <input type="text" placeholder="Place your Qualitative feedback here." style="width: 100%; box-sizing: border-box;" readonly>
+                </div>
+            </div>
+        </div>
+    </td>
+    `;
+
+    tbody.appendChild(inputRow);
+
+    // Add click event listeners to the stars
+    const stars = document.querySelectorAll(`#starRating${tbody.children.length} .fa-star`);
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-value');
+            const starContainer = document.getElementById(`starRating${tbody.children.length}`);
+            starContainer.setAttribute('data-rating', rating);
+            updateStarDisplay(stars, rating);
+        });
+    });
+}
+
+ // Function to update 360 degree feedback hard and soft skill rows
+ function addFormFeedbackSkillsRows(skills, skillType) {
+    const skillTableBody = document.querySelector(`#${skillType}-skills-table-body`);
+
+    // Check if the table body exists
+    if (!skillTableBody) {
+        console.log("Skill table body not found for:", skillType);
+        return;
+    }
+
+    // Iterate over the array of skills and add each one
+    skills.forEach(skill => {
+        // Create the skill row
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <span><strong>${skill.jobReqSkillName}</strong></span>
+            </td>
+        `;
+        skillTableBody.appendChild(row);
+
+        // Create a new row for input fields
+        const inputRow = document.createElement('tr');
+        const starRatingId = `${skillType}SkillRow${skill.jobReqSkillName}Rating`;
+
+        // Create a unique ID for the collapsible section
+        const ratingSectionId = `ratingSection${skill.jobReqSkillName.replace(/\s+/g, '_')}`; // Replace spaces for valid ID
+
+        inputRow.innerHTML = `
+        <td colspan="1">
+            <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" style="background-color: gray; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
+                View Rater's View
+            </button>
+            <div id="${ratingSectionId}" style="display: none; margin-top: 10px;">
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Quantitative (Rating Scale):</strong></label>
+                    <div style="font-size: 14px; margin-top: 5px;">
+                        Rate from 1 to 5 based on the corresponding skill performed during the quarter.
+                    </div>
+                    <span style="font-size: 24px; cursor: pointer;" id="${starRatingId}" data-rating="0">
+                        <i class="fa-solid fa-star" data-value="1" onclick="setRating('${starRatingId}', 1)"></i>
+                        <i class="fa-solid fa-star" data-value="2" onclick="setRating('${starRatingId}', 2)"></i>
+                        <i class="fa-solid fa-star" data-value="3" onclick="setRating('${starRatingId}', 3)"></i>
+                        <i class="fa-solid fa-star" data-value="4" onclick="setRating('${starRatingId}', 4)"></i>
+                        <i class="fa-solid fa-star" data-value="5" onclick="setRating('${starRatingId}', 5)"></i>
+                    </span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Qualitative (Open-ended):</strong></label>
+                    <div style="font-size: 14px; margin-top: 5px;">
+                        Provide qualitative feedback based on the corresponding skill performed during the quarter.
+                    </div>
+                    <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;">
+                </div>
+            </div>
+        </td>
+        `;
+
+        skillTableBody.appendChild(inputRow);
+    });
+}
+// Function to add feedback row for 360 degree feedback
+function add360FeedbackRow(objective) {
     const tbody = document.getElementById('feedback-table-body');
     const row = document.createElement('tr');
 
@@ -754,6 +920,9 @@ function displaySubmittedObjectives(objectives) {
     inputRow.id = rowId;
     inputRow.style.display = 'none'; // Initially hidden
 
+    // Create a unique ID for the star rating
+    const starRatingId = `starRating${tbody.children.length}`;
+
     inputRow.innerHTML = `
     <td colspan="5">
         <div style="margin-bottom: 10px;">
@@ -761,95 +930,110 @@ function displaySubmittedObjectives(objectives) {
             <input id="qualitativeInput" type="text" placeholder="Input your qualitative question here." name="kraObjectivesInput" required style="width: 100%; box-sizing: border-box;">
         </div>
         <div style="margin-bottom: 10px;">
-            <label for="starRating${tbody.children.length}">Rate from 1-5:</label>
-            <span style="font-size: 24px; cursor: pointer;" id="starRating${tbody.children.length}" data-rating="0">
+            <label for="${starRatingId}">Rate from 1-5:</label>
+            <span id="${starRatingId}" data-rating="0">
                 <i class="fa-solid fa-star" data-value="1"></i>
                 <i class="fa-solid fa-star" data-value="2"></i>
                 <i class="fa-solid fa-star" data-value="3"></i>
                 <i class="fa-solid fa-star" data-value="4"></i>
-                <i class="fa-solid fa-star" data-value="5"></i>
+                <i class="fa-solid
+fa-star" data-value="5"></i>
             </span>
             <div style="font-size: 12px; color: #666; margin-top: 5px;">
                 This rating will be visible to the employee.
             </div>
         </div>
     </td>
-`;
+    `;
     tbody.appendChild(inputRow);
 
-    // Add click event listeners to the stars
-    const stars = document.querySelectorAll(`#starRating${tbody.children.length} .fa-star`);
+    // Add click event listeners to the stars in the current row
+    const stars = inputRow.querySelectorAll(`#${starRatingId} .fa-star`);
     stars.forEach(star => {
         star.addEventListener('click', function() {
             const rating = this.getAttribute('data-value');
-            const starContainer = document.getElementById(`starRating${tbody.children.length}`);
+            const starContainer = document.getElementById(starRatingId);
             starContainer.setAttribute('data-rating', rating);
             updateStarDisplay(stars, rating);
         });
     });
 }
 
-// Function to toggle the visibility of the input row
-function toggleCollapse(rowId) {
-    const inputRow = document.getElementById(rowId);
-    if (inputRow.style.display === 'none') {
-        inputRow.style.display = '';
+
+// Function to toggle the visibility of the rating section
+function toggleRatingSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section.style.display === 'none') {
+        section.style.display = 'block'; // Show the rating section
     } else {
-        inputRow.style.display = 'none';
+        section.style.display = 'none'; // Hide the rating section
     }
-}
-
-
-
-// Show Feedback Form
-function showFeedbackForm() {
-    // Hide the objective form and view-only section if they are visible
-    const formSection = document.getElementById("objective-skill-progress-form");
-    const viewOnlySection = document.getElementById("view-only-page");
-    if (formSection) {
-        formSection.style.display = "none"; // Hide objective form
-    }
-    if (viewOnlySection) {
-        viewOnlySection.style.display = "none"; // Hide view-only section
-    }
-
-    // Show the feedback section
-    const feedbackSection = document.getElementById("feedback-section");
-    feedbackSection.style.display = "block"; // Show feedback section
-
-    // Clear existing feedback rows
-    const feedbackTableBody = document.getElementById('feedback-table-body');
-    feedbackTableBody.innerHTML = ''; // Clear previous content
-
-    // Add feedback rows based on submitted objectives
-    submittedObjectives.forEach(objective => {
-        addFeedbackRow(objective); // Populate feedback rows with existing objectives
-    });
-
-    console.log("Feedback section is now visible with populated rows.");
 }
 
 // Function to update star display based on the rating
 function updateStarDisplay(stars, rating) {
     stars.forEach(star => {
         if (star.getAttribute('data-value') <= rating) {
-            star.classList.add('checked');
+            star.classList.add('checked'); // Add checked class for selected stars
         } else {
-            star.classList.remove('checked');
+            star.classList.remove('checked'); // Remove checked class for unselected stars
         }
     });
 }
 
-
-// Function to toggle the visibility of the input row
-function toggleCollapse(rowId) {
-    const inputRow = document.getElementById(rowId);
-    if (inputRow.style.display === 'none') {
-        inputRow.style.display = '';
-    } else {
-        inputRow.style.display = 'none';
+function setRating(rowId, rating) {
+    const starRating = document.getElementById(`${rowId}Rating`);
+    
+    // Get all star icons (they are <i> elements)
+    const stars = starRating.getElementsByTagName('i');
+    
+    // Loop through the stars and apply the "checked" class based on the rating
+    for (let i = 0; i < stars.length; i++) {
+        if (i < rating) {
+            stars[i].classList.add('checked');  // Add "checked" class for selected stars
+        } else {
+            stars[i].classList.remove('checked');  // Remove "checked" class for unselected stars
+        }
     }
+    
+    // Update the data-rating attribute to reflect the selected rating
+    starRating.setAttribute('data-rating', rating);
 }
+
+// Show Feedback Form
+function showFeedbackForm() {
+        // Hide the objective form and view-only section if they are visible
+        const formSection = document.getElementById("objective-skill-progress-form");
+        const viewOnlySection = document.getElementById("view-only-page");
+        if (formSection) {
+            formSection.style.display = "none"; // Hide objective form
+        }
+        if (viewOnlySection) {
+            viewOnlySection.style.display = "none"; // Hide view-only section
+        }
+
+        // Show the feedback section
+        const feedbackSection = document.getElementById("feedback-section");
+        feedbackSection.style.display = "block"; // Show feedback section
+
+        // Clear existing feedback rows
+        const feedbackTableBody = document.getElementById('feedback-table-body');
+        feedbackTableBody.innerHTML = ''; // Clear previous content
+
+        // Add feedback rows based on submitted objectives
+        submittedObjectives.forEach(objective => {
+            addFormFeedbackRow(objective); // Populate feedback rows with existing objectives
+        });
+
+        // Add hard skills to the feedback form
+        addFormFeedbackSkillsRows(hardSkills, 'hard');
+
+        // Add soft skills to the feedback form
+        addFormFeedbackSkillsRows(softSkills, 'soft');
+
+        console.log("Feedback section is now visible with populated rows.");
+    }
+
             </script>
             
             </body>
