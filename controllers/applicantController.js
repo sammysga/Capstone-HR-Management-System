@@ -9,13 +9,22 @@ const applicantController = {
         res.render('applicant_pages/signup', { errors: {} });
     },
 
-    getAboutPage: async function(req, res) {
-        const announcements = [
-            "New sustainability initiative launching next month!",
-            "Annual company meeting scheduled for next week.",
-            "Prime Infra wins infrastructure award for 2024."
-        ];
-        res.render('applicant_pages/about', { announcements });
+    getAboutPage: async function (req, res) {
+        try {
+            const { data: announcements, error } = await supabase
+                .from('announcements')
+                .select('announcementID, subject, imageUrl, content');
+
+            if (error) {
+                console.error("Error fetching announcements:", error);
+                return res.status(500).send("Error fetching announcements.");
+            }
+
+            res.render('applicant_pages/about', { announcements });
+        } catch (error) {
+            console.error("Unexpected error:", error);
+            res.status(500).send("Unexpected error occurred.");
+        }
     },
 
     getJobRecruitment: async function(req, res) {
