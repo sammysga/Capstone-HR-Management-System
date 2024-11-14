@@ -132,6 +132,7 @@ router.get(
     lineManagerController.getUserProgressView
 );
 router.post('/linemanager/records-performance-tracker/:userId', lineManagerController.saveObjectiveSettings);
+router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.saveQ1_360DegreeFeedback);
 
 module.exports = router; 
 
