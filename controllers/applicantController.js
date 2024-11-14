@@ -331,7 +331,10 @@ const applicantController = {
             res.status(500).send('Internal Server Error');
         }
     },
-    
+
+    getOnboarding: async function(req, res) {
+        res.render('applicant_pages/onboarding', { errors: {} });
+    },
 
     // commented out login submit solution only for external applicants
 

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding - First Day Checklist</title>
+    <link rel="stylesheet" href="/public/css/applicant_onboarding.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="/images/prime-infra-logo.png" alt="Prime Infra Logo" class="logo">
+            <h2>Onboarding</h2>
+        </div>
+
+        <h3>1. Accomplishing of First Day Checklist</h3>
+        
+        <form action="/submit-checklist" method="POST">
+            <div class="checklist">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Activities</th>
+                            <th>Where</th>
+                            <th>Contact Person</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% activities.forEach(activity => { %>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="activities" value="<%= activity.name %>">
+                                    <%= activity.name %>
+                                </td>
+                                <td><%= activity.location %></td>
+                                <td><%= activity.contact %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+                <div class="notes">
+                    <label for="notes">Notes:</label>
+                    <textarea name="notes" id="notes" rows="4"></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">Proceed to Account Creation</button>
+        </form>
+    </div>
+</body>
+</html>
