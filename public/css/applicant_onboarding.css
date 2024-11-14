@@ -1,0 +1,59 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    width: 60%;
+    margin: auto;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+}
+
+.header .logo {
+    width: 50px;
+    margin-right: 10px;
+}
+
+h3 {
+    color: #07ACB9;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.notes {
+    margin-top: 20px;
+}
+
+.notes label {
+    font-weight: bold;
+}
+
+textarea {
+    width: 100%;
+    padding: 8px;
+}
+
+.btn-submit {
+    padding: 10px 20px;
+    background-color: #007b80;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+}
