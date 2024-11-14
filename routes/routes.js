@@ -13,7 +13,7 @@ router.use(express.urlencoded({ extended: true }));
 
 
 // Route to render the public home page
-router.get('/', applicantController.getPublicHome);
+router.get('/', applicantController.getAboutPage);
 router.get('/applicant/signup', applicantController.getApplicantRegisterPage);
 router.post('/applicant/signup', applicantController.handleRegisterPage);
 router.get('/applicant/login', applicantController.getApplicantLogin);
