@@ -887,15 +887,40 @@ const lineManagerController = {
     
                 objectivesData = objectivesDataFetched;
             }
+
+             // Fetch job requirements skills based on jobId
+        const { data: skillsData, error: skillsError } = await supabase
+        .from('jobreqskills')
+        .select('jobReqSkillType, jobReqSkillName')
+        .eq('jobId', jobId);
+
+        console.log("Fetched Skills Data:", skillsData);
+
+        if (skillsError) {
+        console.error('Error fetching job requirements skills:', skillsError);
+        req.flash('errors', { fetchError: 'Error fetching skills data. Please try again.' });
+        return res.redirect('/linemanager/records-performance-tracker');
+        }
+
+        // Classify skills into Hard and Soft
+        const hardSkills = skillsData ? skillsData.filter(skill => skill.jobReqSkillType === 'Hard') : [];
+        const softSkills = skillsData ? skillsData.filter(skill => skill.jobReqSkillType === 'Soft') : [];
+        
+        console.log("Classified Hard Skills:", hardSkills);
+        console.log("Classified Soft Skills:", softSkills);
+        
     
-            const viewState = {
-                success: true,
-                viewOnlyStatus,
-                userId: user.userId,
-                performancePeriodYear: performancePeriodYear, // Updated to use the year
-                jobId: jobId,
-                submittedObjectives: objectivesData // Ensure this is correctly populated
-            };
+        const viewState = {
+            success: true,
+            viewOnlyStatus,
+            userId: user.userId,
+            performancePeriodYear,
+            jobId,
+            submittedObjectives: objectivesData,
+            hardSkills,
+            softSkills
+        };
+
     
             console.log("View State:", viewState);
     
