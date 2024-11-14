@@ -80,7 +80,7 @@
                 <% announcements.forEach(announcement => { %>
                     <div class="announcement-item">
                         <div class="subject"><%= announcement.subject %></div>
-                        <div class="timestamp">Posted on: <%= new Date(announcement.created_at).toLocaleDateString() %></div>
+                        <div class="timestamp">Posted on: <%= new Date(announcement.createdAt).toLocaleDateString() %></div>
                         <div class="description"><%= announcement.content %></div>
                         <% if (announcement.imageUrl) { %>
                             <img src="<%= announcement.imageUrl %>" alt="Announcement Image">

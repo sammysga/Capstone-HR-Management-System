@@ -13,19 +13,20 @@ const applicantController = {
         try {
             const { data: announcements, error } = await supabase
                 .from('announcements')
-                .select('announcementID, subject, imageUrl, content');
-
+                .select('announcementID, subject, imageUrl, content, createdAt');
+    
             if (error) {
                 console.error("Error fetching announcements:", error);
                 return res.status(500).send("Error fetching announcements.");
             }
-
+    
             res.render('applicant_pages/about', { announcements });
         } catch (error) {
             console.error("Unexpected error:", error);
             res.status(500).send("Unexpected error occurred.");
         }
     },
+    
 
     getJobRecruitment: async function(req, res) {
         try {
