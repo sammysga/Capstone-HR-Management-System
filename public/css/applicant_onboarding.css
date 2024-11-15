@@ -1,30 +1,65 @@
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
 }
 
-.container {
-    width: 60%;
-    margin: auto;
-    padding: 20px;
+/* Header styles */
+.header-container {
+    background-color: #fff;
+    padding: 20px 0;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
 .header {
     display: flex;
     align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .header .logo {
-    width: 50px;
-    margin-right: 10px;
+    position: absolute;
+    left: 3%;
+    width: 200px;
 }
 
-h3 {
+.header h1 {
+    font-size: 2em;
     color: #07ACB9;
-    margin-bottom: 20px;
+    margin: 0;
 }
 
+/* Subheader for section title */
+.subheader {
+    font-size: 1.5em;
+    color: #333;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 50px;
+    margin-bottom: 60px;
+}
+
+/* Checklist guide aligned to the left */
+.table-header-left {
+    font-size: 1.2em;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 10px;
+    margin-left: 10%;
+}
+
+/* Table styles */
 table {
-    width: 100%;
+    width: 80%;
+    margin: 0 auto;
     border-collapse: collapse;
     margin-bottom: 20px;
 }
@@ -35,25 +70,97 @@ table th, table td {
     border-bottom: 1px solid #ddd;
 }
 
+table th {
+    background-color: #f2f2f2;
+    color: #333;
+    font-weight: bold;
+}
+
+.table-checkbox {
+    transform: scale(1.3); 
+    color: gray;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+table input[type="checkbox"]:checked + span {
+    text-decoration: line-through; /* Cross out text when checkbox is checked */
+    color: gray;
+}
+
+table input[type="checkbox"] {
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border: 2px solid gray;
+    border-radius: 3px;
+    margin-right: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+table input[type="checkbox"]:checked::before {
+    content: "✓";
+    position: absolute;
+    font-size: 18px;
+    color: white;
+    background-color: #07ACB9;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+}
+
+/* Notes section */
 .notes {
-    margin-top: 20px;
+    width: 80%;
+    margin: 20px auto;
 }
 
 .notes label {
+    display: block;
     font-weight: bold;
+    margin-bottom: 7px;
+}
+
+/* Non-editable notes styling */
+.non-editable-notes {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    color: #333;
+    min-height: 80px; 
+    resize: none;
+    cursor: not-allowed;
 }
 
 textarea {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
 }
 
+/* Button styles */
 .btn-submit {
-    padding: 10px 20px;
-    background-color: #007b80;
+    display: block;
+    padding: 15px 24px;
+    background-color: #124A5C;
     color: #fff;
     border: none;
+    border-radius: 10px;
+    font-size: 15px;
     cursor: pointer;
-    font-size: 16px;
-    border-radius: 5px;
+    text-align: center;
+    margin: 30px auto;
+    transition: background-color 0.3s;
+}
+
+.btn-submit:hover {
+    background-color: #059ca4;
 }

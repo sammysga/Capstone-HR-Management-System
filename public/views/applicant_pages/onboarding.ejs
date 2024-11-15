@@ -3,49 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Onboarding - First Day Checklist</title>
-    <link rel="stylesheet" href="/public/css/applicant_onboarding.css">
+    <title>Onboarding</title>
+    <link rel="stylesheet" href="/css/applicant_onboarding.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Header with logo on the left and title centered -->
+    <div class="header-container">
         <div class="header">
-            <img src="/images/prime-infra-logo.png" alt="Prime Infra Logo" class="logo">
-            <h2>Onboarding</h2>
+            <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Prime Infra Logo" class="logo">
+            <h1>Onboarding</h1>
         </div>
-
-        <h3>1. Accomplishing of First Day Checklist</h3>
-        
-        <form action="/submit-checklist" method="POST">
-            <div class="checklist">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Activities</th>
-                            <th>Where</th>
-                            <th>Contact Person</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% activities.forEach(activity => { %>
-                            <tr>
-                                <td>
-                                    <input type="checkbox" name="activities" value="<%= activity.name %>">
-                                    <%= activity.name %>
-                                </td>
-                                <td><%= activity.location %></td>
-                                <td><%= activity.contact %></td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
-                <div class="notes">
-                    <label for="notes">Notes:</label>
-                    <textarea name="notes" id="notes" rows="4"></textarea>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-submit">Proceed to Account Creation</button>
-        </form>
     </div>
+
+    <!-- Subheader for checklist section -->
+    <div class="subheader">1. Accomplishing of First Day Checklist</div>
+
+    <!-- Checklist Guide title aligned with the left side of the screen -->
+    <div class="table-header-left">First Day Checklist Guide for Applicant</div>
+
+    <!-- Table with checklist items -->
+    <table>
+        <thead>
+            <tr>
+                <th>Activities</th>
+                <th>Where</th>
+                <th>Contact Person</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><label><input type="checkbox" class="table-checkbox"><span>Finding your Workstation + Meeting your Team</span></label></td>
+                <td>20th Floor, Facilities</td>
+                <td>Kyrah Santos</td>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" class="table-checkbox"><span>Creation of company ID</span></label></td>
+                <td>HR Department</td>
+                <td>Lia Bacani</td>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" class="table-checkbox"><span>Building/Door access</span></label></td>
+                <td>Security Office</td>
+                <td>Paul Bulaon</td>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" class="table-checkbox"><span>Claim IT equipment</span></label></td>
+                <td>IT Department</td>
+                <td>IT Staff</td>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" class="table-checkbox"><span>Quick Tour of the office</span></label></td>
+                <td>Facilities</td>
+                <td>Moises Oblepias</td>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" class="table-checkbox"><span>Contract Signing</span></label></td>
+                <td>HR Department</td>
+                <td>Lia Bacani</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Notes section (non-editable for applicant) -->
+    <div class="notes">
+        <label for="notes">Notes:</label>
+        <div id="notes" class="non-editable-notes">
+            Add any notes here...
+        </div>
+    </div>
+
+
+    <!-- Submit button -->
+    <button class="btn-submit">Proceed to Account Creation</button>
 </body>
 </html>
