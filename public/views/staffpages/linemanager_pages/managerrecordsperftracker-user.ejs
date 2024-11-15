@@ -413,10 +413,19 @@
             
                 <div id="viewState" data-viewstate='<%= JSON.stringify(viewState) %>' style="display:none;"></div>
             </form>
+
+
+
+<!-- Edits allowed when not on scheduled date yet. -->
+<div id="feedback-status" style="text-align: center; margin-top: 20px; display: none;">
+    <p id="feedback-message"></p>
+    <button id="edit-questionnaire-button" style="display: none;" onclick="editQuestionnaire()">Edit Questionnaire</button>
+</div>
+
             
 
-            <form id="feedbackForm" method="POST" action="/linemanager/360-degree-feedback/<%= user.userId %>">
-                <section id="feedback-section" class="fade-out" style="display: none;">
+<form id="feedbackForm" method="POST" action="/linemanager/records-performance-tracker/questionnaire/<%= user.userId %>">                
+    <section id="feedback-section" class="fade-out" style="display: none;">
                     <div class="form-header">
                         <h2>360 Degree Feedback Questionnaire</h2>
                         <div class="date-inputs">
@@ -493,11 +502,19 @@
     <tbody id="soft-skills-table-body">
         <!-- Soft skill rows will be dynamically inserted here -->
     </tbody>
+
+        <!-- Feedback Status div placed inside the feedback form -->
+
+    <div id="feedback-status" style="text-align: center; margin-top: 20px; display: none;">
+        <p id="feedback-message"></p>
+        <button id="edit-questionnaire-button" style="display: none;" onclick="editQuestionnaire()">Edit Questionnaire</button>
+    </div>
+
 </table>
 
 
                     
-                    <button id="saveFeedbackButton" type="submit">Save Questionnaire</button>
+                    <button id="saveQ1_360FeedbackPresetButton" type="submit">Save Questionnaire</button>
                 </section>
             </form>
             <script>
@@ -519,6 +536,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const objectivesButton = document.getElementById("objectivesButton");
     const feedbackSection = document.getElementById("feedback-section");
     const saveButton = document.getElementById("saveButton"); // Save button for objectives
+    const saveQ1_360FeedbackPresetButton = document.getElementById("saveQ1_360FeedbackPresetButton"); // Save button for objectives
+
+
 
     // Log the values for debugging
     console.log("Submitted Objectives:", submittedObjectives);
@@ -534,7 +554,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Add event listener for the save button
     saveButton.addEventListener("click", saveObjectives); // Call saveObjectives on click
+   // Add event listener for the feedback save button
+   saveQ1_360FeedbackPresetButton.addEventListener("click", async (event) => {
+        event.preventDefault(); // Prevent default form submission
+        await saveQ1_360Feedback(); // Call the function to save feedback
+    });
 
+    // Get the current date
+    const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    
+    // Get the feedback status container and message
+    const feedbackStatus = document.getElementById('feedback-status');
+    const feedbackMessage = document.getElementById('feedback-message');
+    const editButton = document.getElementById('edit-questionnaire-button');
+    
+    // Check if the current date is before the scheduled end date
+    const endDate = document.getElementById('endDate').value; // Get end date value here
+    if (currentDate < endDate) {
+        // Display confirmation message with ability to edit
+        feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are allowed before the scheduled date.`;
+        feedbackStatus.style.display = 'block';
+        editButton.style.display = 'inline-block';  // Show the Edit button
+    } else {
+        // Display confirmation message without the Edit option
+        feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are not allowed after the scheduled date.`;
+        feedbackStatus.style.display = 'block';
+    }
+    
     // Initial display update when the document is loaded
     console.log('Document loaded. Updating display...');
 });
@@ -893,71 +939,6 @@ function displaySubmittedObjectives(objectives) {
         skillTableBody.appendChild(inputRow);
     });
 }
-// Function to add feedback row for 360 degree feedback
-function add360FeedbackRow(objective) {
-    const tbody = document.getElementById('feedback-table-body');
-    const row = document.createElement('tr');
-
-    // Create a unique ID for the collapsible section
-    const rowId = `feedbackRow${tbody.children.length}`;
-
-    // Populate the main row with text display only
-    row.innerHTML = `
-        <td>
-            <button type="button" class="collapsible-button" onclick="toggleCollapse('${rowId}')">+</button>
-            <span>${objective.kraObjectives || 'KRA/Objectives'}</span>
-        </td>
-        <td>${objective.objectiveKPI || 'Engagement Rate'}</td>
-        <td>${objective.objectiveTarget || 15}</td>
-        <td>${objective.objectiveUOM || '%'}</td>
-        <td>${(objective.objectiveAssignedWeight * 100) || '25 %'}</td>
-    `;
-
-    tbody.appendChild(row);
-
-    // Create a new row for the input fields, initially hidden
-    const inputRow = document.createElement('tr');
-    inputRow.id = rowId;
-    inputRow.style.display = 'none'; // Initially hidden
-
-    // Create a unique ID for the star rating
-    const starRatingId = `starRating${tbody.children.length}`;
-
-    inputRow.innerHTML = `
-    <td colspan="5">
-        <div style="margin-bottom: 10px;">
-            <label for="qualitativeInput">Question for Qualitative:</label>
-            <input id="qualitativeInput" type="text" placeholder="Input your qualitative question here." name="kraObjectivesInput" required style="width: 100%; box-sizing: border-box;">
-        </div>
-        <div style="margin-bottom: 10px;">
-            <label for="${starRatingId}">Rate from 1-5:</label>
-            <span id="${starRatingId}" data-rating="0">
-                <i class="fa-solid fa-star" data-value="1"></i>
-                <i class="fa-solid fa-star" data-value="2"></i>
-                <i class="fa-solid fa-star" data-value="3"></i>
-                <i class="fa-solid fa-star" data-value="4"></i>
-                <i class="fa-solid
-fa-star" data-value="5"></i>
-            </span>
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                This rating will be visible to the employee.
-            </div>
-        </div>
-    </td>
-    `;
-    tbody.appendChild(inputRow);
-
-    // Add click event listeners to the stars in the current row
-    const stars = inputRow.querySelectorAll(`#${starRatingId} .fa-star`);
-    stars.forEach(star => {
-        star.addEventListener('click', function() {
-            const rating = this.getAttribute('data-value');
-            const starContainer = document.getElementById(starRatingId);
-            starContainer.setAttribute('data-rating', rating);
-            updateStarDisplay(stars, rating);
-        });
-    });
-}
 
 
 // Function to toggle the visibility of the rating section
@@ -1034,7 +1015,166 @@ function showFeedbackForm() {
         console.log("Feedback section is now visible with populated rows.");
     }
 
-            </script>
+
+    async function saveQ1_360Feedback() {
+    const startDate = document.getElementById('startDate').value; // Capture start date from input
+    const endDate = document.getElementById('endDate').value; // Capture end date from input
+
+    console.log("Questionnaire User ID:", userId);
+    console.log("Questionnaire Job ID:", jobId);
+    console.log("Questionnaire Start Date:", startDate);
+    console.log("Questionnaire End Date:", endDate);
+
+    // Validate required fields
+    if (!userId || !jobId || !startDate || !endDate) {
+        console.error("One or more required fields are missing.");
+        alert("Please ensure all fields are filled out correctly before saving.");
+        return;
+    }
+
+    const feedbackData = {
+        questions: [],
+        skills: [] // Assuming you might want to collect skills later
+    };
+
+    // Collect qualitative questions from the input fields
+    const feedbackRows = document.querySelectorAll('#feedback-table-body tr');
+    feedbackRows.forEach(row => {
+        const qualitativeInput = row.querySelector('input[name="kraObjectivesInput"]'); // Get qualitative question input
+
+        if (qualitativeInput && qualitativeInput.value.trim()) { // Ensure input is not empty
+            feedbackData.questions.push({
+                qualitativeQuestion: qualitativeInput.value.trim() // Save qualitative question
+            });
+        }
+    });
+
+    // Check if any questions were added
+    if (feedbackData.questions.length === 0) {
+        alert("Please provide at least one qualitative question.");
+        return;
+    }
+
+    console.log("Feedback data to save:", feedbackData);
+
+    // Proceed to send the feedback data to the server
+    try {
+        const response = await fetch(`/linemanager/records-performance-tracker/questionnaire/${userId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId, // Include userId here
+                jobId,
+                startDate,
+                endDate,
+                feedbackData
+            })
+        });
+
+        console.log("Response from server:", response);
+
+        // Check if the response was successful
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Result from server:", result);
+
+        if (result.success) {
+            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+        } else {
+            alert("Failed to save feedback: " + result.message);
+        }
+    } catch (error) {
+        console.error("Error saving feedback:", error);
+        alert("An error occurred while saving feedback.");
+    }
+}
+// Function to add feedback row for 360 degree feedback
+function add360FeedbackRow(objective) {
+    const tbody = document.getElementById('feedback-table-body');
+    const row = document.createElement('tr');
+
+    // Create a unique ID for the collapsible section
+    const rowId = `feedbackRow${tbody.children.length}`;
+
+    // Populate the main row with text display only
+    row.innerHTML = `
+        <td>
+            <button type="button" class="collapsible-button" onclick="toggleCollapse('${rowId}')">+</button>
+            <span>${objective.kraObjectives || 'KRA/Objectives'}</span>
+        </td>
+        <td>${objective.objectiveKPI || 'Engagement Rate'}</td>
+        <td>${objective.objectiveTarget || 15}</td>
+        <td>${objective.objectiveUOM || '%'}</td>
+        <td>${(objective.objectiveAssignedWeight * 100) || '25 %'}</td>
+    `;
+
+    tbody.appendChild(row);
+
+    // Create a new row for the input fields, initially hidden
+    const inputRow = document.createElement('tr');
+    inputRow.id = rowId;
+    inputRow.style.display = 'none'; // Initially hidden
+
+    // Create a unique ID for the star rating
+    const starRatingId = `starRating${tbody.children.length}`;
+
+    inputRow.innerHTML = `
+    <td colspan="5">
+        <div style="margin-bottom: 10px;">
+            <label for="qualitativeInput">Question for Qualitative:</label>
+            <input id="qualitativeInput" type="text" placeholder="Input your qualitative question here." name="kraObjectivesInput" required style="width: 100%; box-sizing: border-box;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label for="${starRatingId}">Rate from 1-5:</label>
+            <span id="${starRatingId}" data-rating="0">
+                <i class="fa-solid fa-star" data-value="1"></i>
+                <i class="fa-solid fa-star" data-value="2"></i>
+                <i class="fa-solid fa-star" data-value="3"></i>
+                <i class="fa-solid fa-star" data-value="4"></i>
+                <i class="fa-solid
+fa-star" data-value="5"></i>
+            </span>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                This rating will be visible to the employee.
+            </div>
+        </div>
+    </td>
+    `;
+    tbody.appendChild(inputRow);
+
+    // Add click event listeners to the stars in the current row
+    const stars = inputRow.querySelectorAll(`#${starRatingId} .fa-star`);
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-value');
+            const starContainer = document.getElementById(starRatingId);
+            starContainer.setAttribute('data-rating', rating);
+            updateStarDisplay(stars, rating);
+        });
+    });
+}
+
+// Function to allow editing of the questionnaire
+function editQuestionnaire() {
+    // Allow the user to edit the questionnaire
+    // You can either redirect the user to an edit page or re-enable the form elements
+    alert('You can now edit the questionnaire.');
+
+    // Make the feedback form visible again
+    document.getElementById('feedback-section').style.display = 'block';
+
+    // Hide the feedback status section and button
+    document.getElementById('feedback-status').style.display = 'none';
+
+    // Optionally, you could reset form inputs or perform other actions needed for editing:
+    // For example, resetting form fields:
+    document.getElementById('feedbackForm').reset();
+}
+
+</script>
             
             </body>
             </html>
