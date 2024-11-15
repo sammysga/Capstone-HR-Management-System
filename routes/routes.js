@@ -27,6 +27,7 @@ router.get('/job-details/:jobId', applicantController.getJobDetails);
 // router.get('/chatbothome', applicantController.getChatbotPage);
 router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);
 router.get('/onboarding', applicantController.getOnboarding);
+router.get('/onboarding/createaccount', applicantController.getOnboardingCreateAccount);
 
 // Chatbot routes
 router.get('/chatbothome', chatbotController.getChatbotPage);

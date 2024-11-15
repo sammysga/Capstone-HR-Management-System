@@ -1,0 +1,109 @@
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header styles */
+.header-container {
+    background-color: #fff;
+    padding: 20px 0;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.header .logo {
+    position: absolute;
+    left: 3%;
+    width: 80px;
+}
+
+.header h1 {
+    font-size: 2em;
+    color: #07ACB9;
+    margin: 0;
+}
+
+/* Section title */
+.subheader {
+    font-size: 1.8em;
+    color: #333;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+/* Form container */
+.form-container {
+    width: 60%;
+    margin: 0 auto;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Form group */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    color: #333;
+}
+
+.form-group input[disabled] {
+    background-color: #f1f1f1;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* Emergency contact fields */
+.form-group input[type="text"] + input[type="text"] {
+    margin-top: 10px;
+}
+
+/* Button styles */
+.btn-submit {
+    display: block;
+    padding: 15px 24px;
+    background-color: #124A5C;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+    margin: 30px auto 0;
+    transition: background-color 0.3s;
+}
+
+.btn-submit:hover {
+    background-color: #059ca4;
+}

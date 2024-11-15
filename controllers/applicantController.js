@@ -346,6 +346,10 @@ const applicantController = {
         res.render('applicant_pages/onboarding', { errors: {} });
     },
 
+    getOnboardingCreateAccount: async function(req, res) {
+        res.render('applicant_pages/onboarding-create-account', { errors: {} });
+    },
+
     // commented out login submit solution only for external applicants
 
     // handleLoginSubmit: async function (req, res) {
