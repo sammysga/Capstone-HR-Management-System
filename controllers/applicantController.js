@@ -350,6 +350,10 @@ const applicantController = {
         res.render('applicant_pages/onboarding-employee-records', { errors: {} });
     },
 
+    getOnboardingWaitOSD: async function(req, res) {
+        res.render('applicant_pages/onboarding-objective-wait', { errors: {} });
+    },
+
     // commented out login submit solution only for external applicants
 
     // handleLoginSubmit: async function (req, res) {

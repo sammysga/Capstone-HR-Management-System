@@ -28,6 +28,7 @@ router.get('/job-details/:jobId', applicantController.getJobDetails);
 router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);
 router.get('/onboarding', applicantController.getOnboarding);
 router.get('/onboarding/employee-records', applicantController.getOnboardingEmployeeRecords);
+router.get('/onboarding/osd-wait', applicantController.getOnboardingWaitOSD);
 
 // Chatbot routes
 router.get('/chatbothome', chatbotController.getChatbotPage);
