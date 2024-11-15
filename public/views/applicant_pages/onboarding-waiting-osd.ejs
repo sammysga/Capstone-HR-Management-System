@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Onboarding</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f9f9f9;
@@ -25,7 +27,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
+            margin-top: 10px;
+            margin-bottom: 10px;
         }
 
         .header .logo {
@@ -40,14 +43,40 @@
             margin: 0;
         }
 
+        /* Main content area */
+        .content-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding-top: 100px; /* Offset for fixed header */
+        }
+
         /* Section title */
         .subheader {
             font-size: 1.8em;
             color: #333;
             font-weight: bold;
             text-align: center;
-            margin-top: 20px;
-            margin-bottom: 30px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Message style */
+        .message {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .message label {
+            display: block;
+            font-size: 1em;
+            color: #333;
         }
     </style>
 </head>
@@ -60,14 +89,17 @@
         </div>
     </div>
 
-    <!-- Section Title -->
-    <div class="subheader">
-        5. Waiting for Final Objective Setting Document
-    </div>
+    <!-- Main content centered below the header -->
+    <div class="content-container">
+        <!-- Section Title -->
+        <div class="subheader">
+            5. Waiting for Final Objective Setting Document
+        </div>
 
-    <!-- Form Fields -->
-    <div class="message">
-        <label>Kindly cooperate with your Line Manager on his screen in accomplishing the Objective Setting Form. Your screen will be updated once this has been finalized by the Line Manager.</label>
+        <!-- Message -->
+        <div class="message">
+            <label>Kindly cooperate with your Line Manager on his screen in accomplishing the Objective Setting Form. Your screen will be updated once this has been finalized by the Line Manager.</label>
+        </div>
     </div>
 </body>
 </html>
