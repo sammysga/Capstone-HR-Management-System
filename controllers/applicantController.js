@@ -351,7 +351,11 @@ const applicantController = {
     },
 
     getOnboardingWaitOSD: async function(req, res) {
-        res.render('applicant_pages/onboarding-objective-wait', { errors: {} });
+        res.render('applicant_pages/onboarding-waiting-osd', { errors: {} });
+    },
+
+    getOnboardingWaObjectiveSetting: async function(req, res) {
+        res.render('applicant_pages/onboarding-object-setting', { errors: {} });
     },
 
     // commented out login submit solution only for external applicants
