@@ -346,8 +346,8 @@ const applicantController = {
         res.render('applicant_pages/onboarding', { errors: {} });
     },
 
-    getOnboardingCreateAccount: async function(req, res) {
-        res.render('applicant_pages/onboarding-create-account', { errors: {} });
+    getOnboardingEmployeeRecords: async function(req, res) {
+        res.render('applicant_pages/onboarding-employee-records', { errors: {} });
     },
 
     // commented out login submit solution only for external applicants
