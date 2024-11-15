@@ -27,7 +27,7 @@ body {
 .header .logo {
     position: absolute;
     left: 3%;
-    width: 80px;
+    width: 200px;
 }
 
 .header h1 {
@@ -46,19 +46,10 @@ body {
     margin-bottom: 30px;
 }
 
-/* Form container */
-.form-container {
-    width: 60%;
-    margin: 0 auto;
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-}
-
 /* Form group */
 .form-group {
-    margin-bottom: 20px;
+    width: 60%;
+    margin: 0 auto 20px auto;
 }
 
 .form-group label {
@@ -89,9 +80,21 @@ body {
     margin-top: 10px;
 }
 
+
+/* Emergency contact fields */
+.emergency-contact-fields {
+    display: flex;
+    gap: 10px; /* Adjust space between inputs */
+}
+
+.emergency-contact-fields input[type="text"] {
+    width: 100%; /* Adjust width to fit them properly in the container */
+}
+
 /* Button styles */
 .btn-submit {
     display: block;
+    width: 60%;
     padding: 15px 24px;
     background-color: #124A5C;
     color: #fff;
@@ -100,7 +103,7 @@ body {
     font-size: 16px;
     cursor: pointer;
     text-align: center;
-    margin: 30px auto 0;
+    margin: 30px auto;
     transition: background-color 0.3s;
 }
 

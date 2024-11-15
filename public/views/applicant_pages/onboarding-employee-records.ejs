@@ -11,7 +11,7 @@
     <!-- Header -->
     <div class="header-container">
         <div class="header">
-            <img src="logo.png" alt="Prime Infra Logo" class="logo">
+            <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Prime Infra Logo" class="logo">
             <h1>Onboarding</h1>
         </div>
     </div>
@@ -21,61 +21,62 @@
         3. Required Information for Employee Records
     </div>
 
-    <!-- Form Container -->
-    <div class="form-container">
-        <form>
-            <div class="form-group">
-                <label>Department *</label>
-                <input type="text" value="Finance" disabled>
-            </div>
-            <div class="form-group">
-                <label>Job Title *</label>
-                <input type="text" value="Financial Analyst" disabled>
-            </div>
-            <div class="form-group">
-                <label>Last Name *</label>
-                <input type="text" placeholder="Input your Last Name">
-            </div>
-            <div class="form-group">
-                <label>First Name *</label>
-                <input type="text" placeholder="Input your First Name">
-            </div>
-            <div class="form-group">
-                <label>M.I. *</label>
-                <input type="text" placeholder="Input your Middle Initial">
-            </div>
-            <div class="form-group">
-                <label>Birthdate (mm/dd/yyyy) *</label>
-                <input type="text" placeholder="Input your Birthdate (mm/dd/yyyy)">
-            </div>
-            <div class="form-group">
-                <label>Given Prime Infrastructure Email Address *</label>
-                <input type="email" placeholder="Input your Email">
-            </div>
-            <div class="form-group">
-                <label>Active Phone Number *</label>
-                <input type="text" placeholder="Input your Active Phone Number">
-            </div>
-            <div class="form-group">
-                <label>Emergency Contact Person *</label>
-                <input type="text" placeholder="Input Emergency Contact Last Name">
-                <input type="text" placeholder="Input Emergency Contact First Name">
-            </div>
-            <div class="form-group">
-                <label>Emergency Contact Person's Phone Number *</label>
-                <input type="text" placeholder="Input Emergency Contact Phone Number">
-            </div>
-            <div class="form-group">
-                <label>Set your Password *</label>
-                <input type="password" placeholder="Input to Set your Password">
-            </div>
-            <div class="form-group">
-                <label>Confirm your Password *</label>
-                <input type="password" placeholder="Input to Confirm your Password">
-            </div>
-            <button type="submit" class="btn-submit">Proceed to Employee Account Creation</button>
-        </form>
+    <!-- Form Fields -->
+    <div class="form-group">
+        <label>Department *</label>
+        <!--TO DO: fetch data from db-->
+        <input type="text" value="Finance" disabled>
     </div>
-
+    <div class="form-group">
+        <label>Job Title *</label>
+        <!--TO DO: fetch data from db-->
+        <input type="text" value="Financial Analyst" disabled>
+    </div>
+    <div class="form-group">
+        <label>Last Name *</label>
+        <input type="text" placeholder="Input your Last Name" required>
+    </div>
+    <div class="form-group">
+        <label>First Name *</label>
+        <input type="text" placeholder="Input your First Name" required>
+    </div>
+    <div class="form-group">
+        <label>M.I. *</label>
+        <input type="text" placeholder="Input your Middle Initial" required>
+    </div>
+    <div class="form-group">
+        <label>Birthdate (mm/dd/yyyy) *</label>
+        <input type="text" placeholder="Input your Birthdate" required>
+    </div>
+    <div class="form-group">
+        <label>Given Prime Infrastructure Email Address *</label>
+        <input type="email" placeholder="Input your Email" required>
+    </div>
+    <div class="form-group">
+        <label>Active Phone Number *</label>
+        <input type="text" placeholder="Input your Active Phone Number" required>
+    </div>
+    <div class="form-group">
+        <label>Emergency Contact Person *</label>
+        <div class="emergency-contact-fields">
+            <input type="text" placeholder="First Name" required>
+            <input type="text" placeholder="Last Name" required>
+        </div>
+    </div>    
+    <div class="form-group">
+        <label>Emergency Contact Person's Phone Number *</label>
+        <input type="text" placeholder="Input Emergency Contact Phone Number" required>
+    </div>
+    <div class="form-group">
+        <label>Set your Password *</label>
+        <input type="password" placeholder="Input to Set your Password" required>
+    </div>
+    <div class="form-group">
+        <label>Confirm your Password *</label>
+        <input type="password" placeholder="Input to Confirm your Password" required>
+    </div>
+    
+    <!-- Submit Button -->
+    <button type="submit" class="btn-submit">Proceed to Employee Account Creation</button>
 </body>
 </html>
