@@ -354,7 +354,7 @@ const applicantController = {
         res.render('applicant_pages/onboarding-waiting-osd', { errors: {} });
     },
 
-    getOnboardingWaObjectiveSetting: async function(req, res) {
+    getOnboardingObjectiveSetting: async function(req, res) {
         res.render('applicant_pages/onboarding-object-setting', { errors: {} });
     },
 
