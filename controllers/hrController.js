@@ -65,7 +65,6 @@ const hrController = {
                 }));
     
                 // Apply filters
-                leaves = filterByDateRange(leaves, 'filedDate');
                 leaves = filterByDepartment(leaves, 'department');
     
                 return leaves;
