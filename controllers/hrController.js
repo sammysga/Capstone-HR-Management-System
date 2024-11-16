@@ -61,7 +61,7 @@ const hrController = {
             };
     
             // Fetch all leave data (without any filters)
-            const allLeaves = await fetchAndFormatLeaves(); // Fetch all leaves
+            const allLeaves = await fetchAndFormatLeaves(); // This will fetch all the leaves and store in allLeaves
     
             // Define approvedLeaves by filtering allLeaves with status 'approved'
             const approvedLeaves = allLeaves.filter(leave => leave.status === 'Approved');
