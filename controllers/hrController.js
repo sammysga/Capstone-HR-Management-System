@@ -72,6 +72,9 @@ const hrController = {
     
             // Fetch the leave data (filtered by department if necessary)
             const formattedLeaves = await fetchAndFormatLeaves(null, departmentFilter);
+            
+            // Fetch and format approved leaves
+            const formattedApprovedLeaves = await fetchAndFormatLeaves('Approved', departmentFilter);
     
             // Fetch attendance logs
             const fetchAttendanceLogs = async () => {
@@ -183,6 +186,7 @@ const hrController = {
             return res.redirect('/hr/dashboard');
         }
     },
+    
     
     
     
