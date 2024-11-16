@@ -16,27 +16,6 @@ const hrController = {
         try {
             const { filter, department } = req.query;
     
-            // Helper to filter data by date range
-            const filterByDateRange = (data, dateField) => {
-                const now = new Date();
-                let filteredData = data;
-    
-                if (filter === 'daily') {
-                    const today = now.toISOString().split('T')[0];
-                    filteredData = data.filter(item => item[dateField] === today);
-                } else if (filter === 'weekly') {
-                    const weekAgo = new Date();
-                    weekAgo.setDate(now.getDate() - 7);
-                    filteredData = data.filter(item => new Date(item[dateField]) >= weekAgo);
-                } else if (filter === 'monthly') {
-                    const monthAgo = new Date();
-                    monthAgo.setMonth(now.getMonth() - 1);
-                    filteredData = data.filter(item => new Date(item[dateField]) >= monthAgo);
-                }
-    
-                return filteredData;
-            };
-    
             // Helper to filter by department
             const filterByDepartment = (data, departmentField) => {
                 return department ? data.filter(item => item[departmentField] === department) : data;
