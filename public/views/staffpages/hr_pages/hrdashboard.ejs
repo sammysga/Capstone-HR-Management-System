@@ -56,19 +56,6 @@
     <div class="main-content">
         <h2>HR Dashboard</h2>
 
-        <!-- Department Filter -->
-        <div class="filter-container">
-            <label for="departmentFilter">Filter by Department:</label>
-            <select id="departmentFilter">
-                <option value="all">All</option>
-                <option value="IT">IT</option>
-                <option value="HR">HR</option>
-                <option value="Finance">Finance</option>
-                <option value="Marketing">Marketing</option>
-                <!-- Add more departments as needed -->
-            </select>
-        </div>
-        
         <!-- Attendance Logs Section -->
         <section class="attendance-logs">
             <h2>Attendance Logs</h2>
@@ -214,24 +201,6 @@
 
         <!-- JavaScript for sidebar functionality -->
         <script>
-
- // Function to filter table rows based on department selection
- document.getElementById('departmentFilter').addEventListener('change', function() {
-                var selectedDepartment = this.value;
-                var tables = document.querySelectorAll('table');
-                
-                tables.forEach(table => {
-                    var rows = table.querySelectorAll('.attendanceRow');
-                    rows.forEach(row => {
-                        var department = row.cells[3].textContent; // Get department from the 4th column (0-based index)
-                        if (selectedDepartment === 'all' || department === selectedDepartment) {
-                            row.style.display = ''; // Show the row
-                        } else {
-                            row.style.display = 'none'; // Hide the row
-                        }
-                    });
-                });
-            });
 
             // Toggle active class for sidebar links
             document.querySelectorAll('.sidebar ul li a').forEach(link => {
