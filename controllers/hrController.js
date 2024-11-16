@@ -14,7 +14,6 @@ const hrController = {
         }
     
         try {
-<<<<<<< HEAD
             // Function to fetch and format manpower requisition forms
             const fetchAndFormatMRFData = async () => {
                 const { data: mrfList, error: mrfError } = await supabase
@@ -56,11 +55,6 @@ const hrController = {
             // Common function to fetch and format leave data
             const fetchAndFormatLeaves = async (statusFilter = null) => {
                 const query = supabase
-=======
-            // Function to fetch and format leave data with department filter
-            const fetchAndFormatLeaves = async (statusFilter = null, departmentFilter = null) => {
-                let query = supabase
->>>>>>> 1ebd401f8bbd77024410b56d60a92c8db1f10a59
                     .from('leaverequests')
                     .select(`
                         leaveRequestId, 
@@ -198,13 +192,8 @@ const hrController = {
     
             // Initialize attendanceLogs variable
             let attendanceLogs = [];
-<<<<<<< HEAD
             let manpowerRequisitions = await fetchAndFormatMRFData();
 
-=======
-            const departmentFilter = req.query.department || null;  // Getting department filter from query string
-    
->>>>>>> 1ebd401f8bbd77024410b56d60a92c8db1f10a59
             if (req.session.user.userRole === 'Line Manager') {
                 const formattedLeaves = await fetchAndFormatLeaves(null, departmentFilter);
                 attendanceLogs = await fetchAttendanceLogs(departmentFilter);
