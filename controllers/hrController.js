@@ -61,7 +61,10 @@ const hrController = {
             };
     
             // Fetch all leave data (without any filters)
-            const allLeaves = await fetchAndFormatLeaves();  // This line will fetch all leaves
+            const allLeaves = await fetchAndFormatLeaves(); // Fetch all leaves
+    
+            // Define approvedLeaves by filtering allLeaves with status 'approved'
+            const approvedLeaves = allLeaves.filter(leave => leave.status === 'Approved');
     
             // Fetch departments for filtering
             const { data: departments, error: departmentError } = await supabase
@@ -171,7 +174,8 @@ const hrController = {
     
             // Render HR dashboard page with the filtered data
             return res.render('staffpages/hr_pages/hrdashboard', {
-                formattedLeaves: allLeaves, // Pass allLeaves here
+                approvedLeaves,  // Pass approvedLeaves here
+                formattedLeaves, // Pass formattedLeaves if you need them
                 attendanceLogs: formattedAttendanceDisplay,
                 departments,  // Pass the departments to the template for the filter dropdown
                 departmentFilter,  // Pass the selected department filter to the template
