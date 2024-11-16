@@ -170,7 +170,7 @@ const hrController = {
             return res.render('staffpages/hr_pages/hrdashboard', {
                 formattedLeaves,
                 attendanceLogs: formattedAttendanceDisplay,
-                approvedleaves,
+                approveLeaves:formattedLeaves,
                 departments,  // Pass the departments to the template for the filter dropdown
                 departmentFilter,  // Pass the selected department filter to the template
                 successMessage: req.flash('success'),
