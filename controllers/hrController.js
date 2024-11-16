@@ -14,6 +14,7 @@ const hrController = {
         }
     
         try {
+<<<<<<< HEAD
             // Function to fetch and format manpower requisition forms
             const fetchAndFormatMRFData = async () => {
                 const { data: mrfList, error: mrfError } = await supabase
@@ -55,6 +56,11 @@ const hrController = {
             // Common function to fetch and format leave data
             const fetchAndFormatLeaves = async (statusFilter = null) => {
                 const query = supabase
+=======
+            // Function to fetch and format leave data with department filter
+            const fetchAndFormatLeaves = async (statusFilter = null, departmentFilter = null) => {
+                let query = supabase
+>>>>>>> 1ebd401f8bbd77024410b56d60a92c8db1f10a59
                     .from('leaverequests')
                     .select(`
                         leaveRequestId, 
@@ -78,12 +84,13 @@ const hrController = {
                         )
                     `)
                     .order('created_at', { ascending: false });
-                
+    
                 if (statusFilter) query.eq('status', statusFilter);
-                
+                if (departmentFilter) query.eq('useraccounts.staffaccounts.departments.deptName', departmentFilter);
+    
                 const { data, error } = await query;
                 if (error) throw error;
-                
+    
                 return data.map(leave => ({
                     lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
                     firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
@@ -96,9 +103,9 @@ const hrController = {
                 }));
             };
     
-            // Function to fetch attendance logs
-            const fetchAttendanceLogs = async () => {
-                const { data: attendanceLogs, error: attendanceError } = await supabase
+            // Function to fetch attendance logs with department filter
+            const fetchAttendanceLogs = async (departmentFilter = null) => {
+                let query = supabase
                     .from('attendance')
                     .select(`
                         userId, 
@@ -119,6 +126,10 @@ const hrController = {
                         )
                     `)
                     .order('attendanceDate', { ascending: false });
+    
+                if (departmentFilter) query.eq('useraccounts.staffaccounts.departments.deptName', departmentFilter);
+    
+                const { data: attendanceLogs, error: attendanceError } = await query;
     
                 if (attendanceError) {
                     console.error('Error fetching attendance logs:', attendanceError);
@@ -187,13 +198,18 @@ const hrController = {
     
             // Initialize attendanceLogs variable
             let attendanceLogs = [];
+<<<<<<< HEAD
             let manpowerRequisitions = await fetchAndFormatMRFData();
 
+=======
+            const departmentFilter = req.query.department || null;  // Getting department filter from query string
+    
+>>>>>>> 1ebd401f8bbd77024410b56d60a92c8db1f10a59
             if (req.session.user.userRole === 'Line Manager') {
-                const formattedLeaves = await fetchAndFormatLeaves();
-                attendanceLogs = await fetchAttendanceLogs();
+                const formattedLeaves = await fetchAndFormatLeaves(null, departmentFilter);
+                attendanceLogs = await fetchAttendanceLogs(departmentFilter);
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
-                
+    
                 return res.render('staffpages/hr_pages/hrdashboard', {
                     formattedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
@@ -204,13 +220,13 @@ const hrController = {
     
             } else if (req.session.user.userRole === 'HR') {
                 const [formattedAllLeaves, formattedApprovedLeaves] = await Promise.all([
-                    fetchAndFormatLeaves(),
-                    fetchAndFormatLeaves('Approved')
+                    fetchAndFormatLeaves(null, departmentFilter),
+                    fetchAndFormatLeaves('Approved', departmentFilter)
                 ]);
     
-                attendanceLogs = await fetchAttendanceLogs();
+                attendanceLogs = await fetchAttendanceLogs(departmentFilter);
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
-        
+    
                 return res.render('staffpages/hr_pages/hrdashboard', { 
                     allLeaves: formattedAllLeaves, 
                     approvedLeaves: formattedApprovedLeaves,
@@ -226,6 +242,7 @@ const hrController = {
             return res.redirect('/hr/dashboard');
         }
     },
+    
     
     getManageLeaveTypes: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
