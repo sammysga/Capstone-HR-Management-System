@@ -146,6 +146,7 @@ const hrController = {
                 attendanceLogs: finalAttendanceLogs,
                 allLeaves,
                 approvedLeaves,
+                departments,  // Pass departments to the view
                 successMessage: req.flash('success'),
                 errorMessage: req.flash('errors')
             });
