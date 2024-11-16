@@ -63,7 +63,7 @@ const hrController = {
             // Fetch departments for filtering
             const { data: departments, error: departmentError } = await supabase
                 .from('departments')
-                .select('id, deptName'); // Fetch only id and deptName
+                .select('deptName'); // Fetch only id and deptName
     
             if (departmentError) throw departmentError;
     
