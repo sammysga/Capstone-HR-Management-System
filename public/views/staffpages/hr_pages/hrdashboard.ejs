@@ -56,18 +56,6 @@
     <div class="main-content">
         <h2>HR Dashboard</h2>
 
-
-        <form action="/hr/dashboard" method="GET">
-            <label for="departmentFilter">Filter by Department:</label>
-            <select name="departmentFilter" id="departmentFilter">
-                <% departments.forEach(department => { %>
-                    <option value="<%= department.id %>" <%= department.id == departmentFilter ? 'selected' : '' %>><%= department.deptName %></option>
-                <% }); %>
-                <option value="">All</option>
-            </select>
-            
-            <button type="submit">Filter</button>
-        </form>
         
         <!-- Attendance Logs Section -->
         <section class="attendance-logs">
