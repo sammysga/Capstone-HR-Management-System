@@ -14,6 +14,44 @@ const hrController = {
         }
     
         try {
+            // Function to fetch and format manpower requisition forms
+            const fetchAndFormatMRFData = async () => {
+                const { data: mrfList, error: mrfError } = await supabase
+                    .from('mrf')
+                    .select('positionTitle, requisitionDate, mrfId, departmentId');
+
+                if (mrfError) throw mrfError;
+
+                // Fetch approval statuses
+                const { data: approvals, error: approvalError } = await supabase
+                    .from('mrf_approvals')
+                    .select('mrfId, reviewerName, approval_stage');
+
+                if (approvalError) throw approvalError;
+
+                // Fetch departments
+                const { data: departments, error: deptError } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName');
+                
+                if (deptError) throw deptError;
+
+                const combinedData = mrfList.map(mrf => {
+                    const approval = approvals.find(a => a.mrfId === mrf.mrfId);
+                    const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
+
+                    return {
+                        requisitioner: approval ? approval.reviewerName : 'Pending',
+                        department: department,
+                        jobPosition: mrf.positionTitle,
+                        requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
+                        status: approval ? approval.approval_stage: 'Pending'
+                    };
+                });
+
+                return combinedData;
+            };
+
             // Common function to fetch and format leave data
             const fetchAndFormatLeaves = async (statusFilter = null) => {
                 const query = supabase
@@ -149,6 +187,8 @@ const hrController = {
     
             // Initialize attendanceLogs variable
             let attendanceLogs = [];
+            let manpowerRequisitions = await fetchAndFormatMRFData();
+
             if (req.session.user.userRole === 'Line Manager') {
                 const formattedLeaves = await fetchAndFormatLeaves();
                 attendanceLogs = await fetchAttendanceLogs();
@@ -157,6 +197,7 @@ const hrController = {
                 return res.render('staffpages/hr_pages/hrdashboard', {
                     formattedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
+                    manpowerRequisitions,
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors'),
                 });
@@ -174,6 +215,7 @@ const hrController = {
                     allLeaves: formattedAllLeaves, 
                     approvedLeaves: formattedApprovedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
+                    manpowerRequisitions,
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors'),
                 });
