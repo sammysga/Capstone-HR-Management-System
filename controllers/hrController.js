@@ -14,9 +14,9 @@ const hrController = {
         }
     
         try {
-            // Function to fetch and format leave data
+            // Function to fetch and format leave data with department filter
             const fetchAndFormatLeaves = async (statusFilter = null, departmentFilter = null) => {
-                const query = supabase
+                let query = supabase
                     .from('leaverequests')
                     .select(`
                         leaveRequestId, 
@@ -41,9 +41,8 @@ const hrController = {
                     `)
                     .order('created_at', { ascending: false });
     
-                // Apply filters if provided
                 if (statusFilter) query.eq('status', statusFilter);
-                if (departmentFilter) query.eq('useraccounts.staffaccounts.departmentId', departmentFilter);
+                if (departmentFilter) query.eq('useraccounts.staffaccounts.departments.deptName', departmentFilter);
     
                 const { data, error } = await query;
                 if (error) throw error;
@@ -60,28 +59,9 @@ const hrController = {
                 }));
             };
     
-            // Fetch all leave data (without any filters)
-            const allLeaves = await fetchAndFormatLeaves(); // This will fetch all the leaves and store in allLeaves
-    
-            // Define approvedLeaves by filtering allLeaves with status 'approved'
-            const approvedLeaves = allLeaves.filter(leave => leave.status === 'Approved');
-    
-            // Fetch departments for filtering
-            const { data: departments, error: departmentError } = await supabase
-                .from('departments')
-                .select('deptName'); // Fetch only id and deptName
-    
-            if (departmentError) throw departmentError;
-    
-            // Get the department filter from the request query
-            const departmentFilter = req.query.departmentFilter || null;
-    
-            // Fetch the leave data (filtered by department if necessary)
-            const formattedLeaves = await fetchAndFormatLeaves(null, departmentFilter);
-    
-            // Fetch attendance logs
-            const fetchAttendanceLogs = async () => {
-                const { data: attendanceLogs, error: attendanceError } = await supabase
+            // Function to fetch attendance logs with department filter
+            const fetchAttendanceLogs = async (departmentFilter = null) => {
+                let query = supabase
                     .from('attendance')
                     .select(`
                         userId, 
@@ -102,6 +82,10 @@ const hrController = {
                         )
                     `)
                     .order('attendanceDate', { ascending: false });
+    
+                if (departmentFilter) query.eq('useraccounts.staffaccounts.departments.deptName', departmentFilter);
+    
+                const { data: attendanceLogs, error: attendanceError } = await query;
     
                 if (attendanceError) {
                     console.error('Error fetching attendance logs:', attendanceError);
@@ -168,30 +152,45 @@ const hrController = {
                 });
             };
     
-            // Fetch and format attendance logs
-            const attendanceLogs = await fetchAttendanceLogs();
-            const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+            // Initialize attendanceLogs variable
+            let attendanceLogs = [];
+            const departmentFilter = req.query.department || null;  // Getting department filter from query string
     
-            // Render HR dashboard page with the filtered data
-            return res.render('staffpages/hr_pages/hrdashboard', {
-                approvedLeaves,  // Pass approvedLeaves here
-                formattedLeaves, // Pass formattedLeaves if you need them
-                attendanceLogs: formattedAttendanceDisplay,
-                departments,  // Pass the departments to the template for the filter dropdown
-                departmentFilter,  // Pass the selected department filter to the template
-                successMessage: req.flash('success'),
-                errorMessage: req.flash('errors'),
-            });
+            if (req.session.user.userRole === 'Line Manager') {
+                const formattedLeaves = await fetchAndFormatLeaves(null, departmentFilter);
+                attendanceLogs = await fetchAttendanceLogs(departmentFilter);
+                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
+                return res.render('staffpages/hr_pages/hrdashboard', {
+                    formattedLeaves,
+                    attendanceLogs: formattedAttendanceDisplay,
+                    successMessage: req.flash('success'),
+                    errorMessage: req.flash('errors'),
+                });
+    
+            } else if (req.session.user.userRole === 'HR') {
+                const [formattedAllLeaves, formattedApprovedLeaves] = await Promise.all([
+                    fetchAndFormatLeaves(null, departmentFilter),
+                    fetchAndFormatLeaves('Approved', departmentFilter)
+                ]);
+    
+                attendanceLogs = await fetchAttendanceLogs(departmentFilter);
+                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+    
+                return res.render('staffpages/hr_pages/hrdashboard', { 
+                    allLeaves: formattedAllLeaves, 
+                    approvedLeaves: formattedApprovedLeaves,
+                    attendanceLogs: formattedAttendanceDisplay,
+                    successMessage: req.flash('success'),
+                    errorMessage: req.flash('errors'),
+                });
+            }
         } catch (err) {
             console.error('Error fetching data for the dashboard:', err);
             req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
             return res.redirect('/hr/dashboard');
         }
     },
-    
-    
-    
     
     
     getManageLeaveTypes: async function(req, res) {
