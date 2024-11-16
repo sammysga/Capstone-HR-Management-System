@@ -48,6 +48,18 @@
         .manage-leaves-button:hover {
             background-color: #1a5f78; /* Darker shade for hover effect */
         }
+
+        .filter-form {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .filter-form select, .filter-form button {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        
     </style>
 </head>
 <body>
@@ -55,6 +67,25 @@
     <!-- Main content -->
     <div class="main-content">
         <h2>HR Dashboard</h2>
+
+        <!-- Filter Form -->
+                <form id="filterForm" method="GET" action="/hr/dashboard" class="filter-form">
+                    <select name="filter" id="filter">
+                        <option value="">Filter by</option>
+                        <option value="daily" <%= filter === 'daily' ? 'selected' : '' %>>Daily</option>
+                        <option value="weekly" <%= filter === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                        <option value="monthly" <%= filter === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                    </select>
+                    <select name="department" id="department">
+                        <option value="">All Departments</option>
+                        <% if (departments) { %>
+                            <% departments.forEach(dept => { %>
+                                <option value="<%= dept.deptName %>" <%= selectedDept === dept.deptName ? 'selected' : '' %>><%= dept.deptName %></option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                    <button type="submit" class="manage-leaves-button">Apply</button>
+                </form>
 
         <!-- Attendance Logs Section -->
         <section class="attendance-logs">
