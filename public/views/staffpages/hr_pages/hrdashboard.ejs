@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,65 +8,55 @@
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
 
     <style>
-        /* Styling for the Dashboard */
+        /* Adding styles for the dashboard */
         h2 {
-            color: #2385B0;
-            margin-left: 40px;
+            color: #2385B0; /* Color for the dashboard title */
+            margin-left: 40px; /* Increased space from the left */
         }
-
         h3 {
-            margin-left: 40px;
+            margin-left: 40px; /* Increased space from the left for the sub-header */
         }
-
         .content {
-            margin-left: 220px;
-            padding: 20px;
-            background-color: white;
+            margin-left: 220px; /* Adjust based on your sidebar width to prevent overlap */
+            padding: 20px; /* Adding some padding for better spacing */
+            background-color: white; /* Set background color to white for the entire content area */
         }
-
         table {
-            width: 80%;
-            border-collapse: collapse;
-            margin: 20px auto 80px;
+            width: 80%; /* Full width for the table */
+            border-collapse: collapse; /* Collapse borders */
+            margin: 20px auto 80px; /* Center table and add space above and below */
         }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
+        th, td {
+            border: 1px solid #ddd; /* Border for table cells */
+            padding: 10px; /* Padding for table cells */
+            text-align: left; /* Left-align text */
         }
-
         th {
-            background-color: #f2f2f2;
+            background-color: #f2f2f2; /* Light gray background for headers */
         }
-
         tr:hover {
-            background-color: #f1f1f1;
+            background-color: #f1f1f1; /* Hover effect for table rows */
         }
-
         .manage-leaves-button {
             padding: 10px 15px;
-            background-color: #2385B0;
+            background-color: #2385B0; /* Your preferred color */
             color: white;
             text-decoration: none;
             border-radius: 5px;
             transition: background-color 0.3s;
         }
-
         .manage-leaves-button:hover {
-            background-color: #1a5f78;
+            background-color: #1a5f78; /* Darker shade for hover effect */
         }
     </style>
 </head>
-
 <body>
     <%- include('../../partials/hr_partials') %>
     <!-- Main content -->
     <div class="main-content">
         <h2>HR Dashboard</h2>
 
-        <!-- Department Filter Form -->
+
         <form action="/hr/dashboard" method="GET">
             <label for="departmentFilter">Filter by Department:</label>
             <select name="departmentFilter" id="departmentFilter">
@@ -76,9 +65,10 @@
                 <% }); %>
                 <option value="">All</option>
             </select>
+            
             <button type="submit">Filter</button>
         </form>
-
+        
         <!-- Attendance Logs Section -->
         <section class="attendance-logs">
             <h2>Attendance Logs</h2>
@@ -119,7 +109,7 @@
         </section>
 
         <!-- Manpower Requisition Forms Section -->
-        <div class="manpower-requisition">
+         <div class="manpower-requisition">
             <h3>Manpower Requisition Forms</h3>
             <table>
                 <thead>
@@ -180,7 +170,7 @@
             </table>
         </div>
 
-        <!-- All Leave Requests Table with Manage Leaves Button -->
+        <!-- All Leave Requests Table -->
         <div class="allLeaves">
             <div style="display: flex; align-items: center;">
                 <h3 style="margin-right: 10px;">All Leave Requests</h3>
@@ -222,36 +212,35 @@
             </table>
         </div>
 
-    </div> <!-- End of main content -->
+        <!-- JavaScript for sidebar functionality -->
+        <script>
 
-    <!-- JavaScript for sidebar functionality -->
-    <script>
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
+            // Toggle active class for sidebar links
+            document.querySelectorAll('.sidebar ul li a').forEach(link => {
+                link.addEventListener('click', function() {
+                    document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                    this.classList.add('active');
+                });
             });
-        });
 
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
+            // Toggle collapsible content
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    var content = this.nextElementSibling;
+                    if (content.style.display === 'block') {
+                        content.style.display = 'none';
+                    } else {
+                        // Hide all other collapsible contents
+                        document.querySelectorAll('.collapsible-content').forEach(item => {
+                            if (item !== content) {
+                                item.style.display = 'none';
+                            }
+                        });
+                        content.style.display = 'block';
+                    }
+                });
             });
-        });
-    </script>
+        </script>
+    </div>
 </body>
-
 </html>
