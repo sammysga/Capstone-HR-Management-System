@@ -146,6 +146,37 @@ const hrController = {
                     };
                 });
             };
+
+            // // Function to fetch and format MRF data
+            // const fetchManpowerRequisitions = async () => {
+            //     const { data: requisitions, error: requisitionError } = await supabase
+            //         .from('mrf')
+            //         .select(`
+            //             mrfId,
+            //             positionTitle, 
+            //             requisitionDate,
+            //             status,
+            //             useraccounts (
+            //                 firstName, 
+            //                 lastName, 
+            //                 departments (deptName)
+            //             )
+            //         `)
+            //         .order('requisitionDate', { ascending: false });
+                
+            //     if (requisitionError) {
+            //         console.error('Error fetching requisition data for HR dashboard:', requisitionError);
+            //         throw new Error('Error fetching requisition data.');
+            //     }
+
+            //     return requisitions.map(req => ({
+            //         requisitionerName: `${req.staffaccounts?.firstName || 'N/A'} ${req.staffaccounts?.lastName || 'N/A'}`, // Full name of the requisitioner
+            //         department: req.staffaccounts?.departments?.deptName || 'N/A',  // Department name
+            //         position: req.positionTitle || 'N/A',  // Position title requested
+            //         requestDate: req.requisitionDate ? new Date(req.requisitionDate).toISOString().split('T')[0] : 'N/A',  // Date formatting
+            //         status: req.status || 'Pending'  // Status of the requisition
+            //     }));
+            // };
     
             // Initialize attendanceLogs variable
             let attendanceLogs = [];
@@ -153,12 +184,14 @@ const hrController = {
                 const formattedLeaves = await fetchAndFormatLeaves();
                 attendanceLogs = await fetchAttendanceLogs();
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+                // const formattedManpowerRequisitions = await fetchManpowerRequisitions();
                 
                 return res.render('staffpages/hr_pages/hrdashboard', {
                     formattedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
                     successMessage: req.flash('success'),
-                    errorMessage: req.flash('errors')
+                    errorMessage: req.flash('errors'),
+                    // manpowerRequisitions: formattedManpowerRequisitions
                 });
     
             } else if (req.session.user.userRole === 'HR') {
@@ -169,13 +202,15 @@ const hrController = {
     
                 attendanceLogs = await fetchAttendanceLogs();
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+                // const formattedManpowerRequisitions = await fetchManpowerRequisitions();
         
                 return res.render('staffpages/hr_pages/hrdashboard', { 
                     allLeaves: formattedAllLeaves, 
                     approvedLeaves: formattedApprovedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
                     successMessage: req.flash('success'),
-                    errorMessage: req.flash('errors')
+                    errorMessage: req.flash('errors'),
+                    // manpowerRequisitions: formattedManpowerRequisitions
                 });
             }
         } catch (err) {
