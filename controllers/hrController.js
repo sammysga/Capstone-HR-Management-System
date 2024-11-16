@@ -14,14 +14,14 @@ const hrController = {
         }
     
         try {
-            const { filter, department } = req.query;
+            const { department } = req.query;
     
             // Helper to filter by department
             const filterByDepartment = (data, departmentField) => {
                 return department ? data.filter(item => item[departmentField] === department) : data;
             };
     
-            // Fetch and filter leave requests
+            // Fetch and format leave requests
             const fetchAndFormatLeaves = async (statusFilter = null) => {
                 const query = supabase
                     .from('leaverequests')
@@ -64,13 +64,13 @@ const hrController = {
                     status: leave.status || 'Pending'
                 }));
     
-                // Apply filters
+                // Apply department filter
                 leaves = filterByDepartment(leaves, 'department');
     
                 return leaves;
             };
     
-            // Fetch and filter attendance logs
+            // Fetch and format attendance logs
             const fetchAttendanceLogs = async () => {
                 const { data: attendanceLogs, error } = await supabase
                     .from('attendance')
@@ -133,9 +133,10 @@ const hrController = {
             const attendanceLogs = await fetchAttendanceLogs();
             const formattedAttendanceLogs = formatAttendanceLogs(attendanceLogs);
     
-            const filteredAttendanceLogs = filterByDateRange(formattedAttendanceLogs, 'date');
-            const finalAttendanceLogs = filterByDepartment(filteredAttendanceLogs, 'department');
+            // Apply department filter to attendance logs
+            const finalAttendanceLogs = filterByDepartment(formattedAttendanceLogs, 'department');
     
+            // Fetch leave requests
             const [allLeaves, approvedLeaves] = await Promise.all([
                 fetchAndFormatLeaves(),
                 fetchAndFormatLeaves('Approved')
@@ -154,6 +155,7 @@ const hrController = {
             return res.redirect('/hr/dashboard');
         }
     },
+    
     
     
     getManageLeaveTypes: async function(req, res) {
