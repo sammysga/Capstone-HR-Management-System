@@ -14,8 +14,8 @@ const hrController = {
         }
     
         try {
-            // Function to fetch and format leave data
-            const fetchAndFormatLeaves = async (statusFilter = null, departmentFilter = null) => {
+            // Common function to fetch and format leave data
+            const fetchAndFormatLeaves = async (statusFilter = null) => {
                 const query = supabase
                     .from('leaverequests')
                     .select(`
@@ -41,9 +41,7 @@ const hrController = {
                     `)
                     .order('created_at', { ascending: false });
     
-                // Apply filters if provided
                 if (statusFilter) query.eq('status', statusFilter);
-                if (departmentFilter) query.eq('useraccounts.staffaccounts.departmentId', departmentFilter);
     
                 const { data, error } = await query;
                 if (error) throw error;
@@ -60,20 +58,7 @@ const hrController = {
                 }));
             };
     
-            // Fetch departments for filtering
-            const { data: departments, error: departmentError } = await supabase
-                .from('departments')
-                .select('departmentId, deptName'); // Fetch only id and deptName
-    
-            if (departmentError) throw departmentError;
-    
-            // Get the department filter from the request query
-            const departmentFilter = req.query.departmentFilter || null;
-    
-            // Fetch the leave data (filtered by department if necessary)
-            const formattedLeaves = await fetchAndFormatLeaves(null, departmentFilter);
-    
-            // Fetch attendance logs
+            // Function to fetch attendance logs
             const fetchAttendanceLogs = async () => {
                 const { data: attendanceLogs, error: attendanceError } = await supabase
                     .from('attendance')
@@ -162,28 +147,48 @@ const hrController = {
                 });
             };
     
-            // Fetch and format attendance logs
-            const attendanceLogs = await fetchAttendanceLogs();
-            const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+            // Initialize attendanceLogs variable
+            let attendanceLogs = [];
     
-            // Render HR dashboard page with the filtered data
-            return res.render('staffpages/hr_pages/hrdashboard', {
-                formattedLeaves,
-                attendanceLogs: formattedAttendanceDisplay,
-                approveLeaves:formattedLeaves,
-                departments,  // Pass the departments to the template for the filter dropdown
-                departmentFilter,  // Pass the selected department filter to the template
-                successMessage: req.flash('success'),
-                errorMessage: req.flash('errors'),
-            });
+            if (req.session.user.userRole === 'Line Manager') {
+                // Fetch and format leaves for Line Manager
+                const formattedLeaves = await fetchAndFormatLeaves();
+                // Fetch attendance logs
+                attendanceLogs = await fetchAttendanceLogs();
+                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
+                return res.render('staffpages/hr_pages/hrdashboard', {
+                    formattedLeaves,
+                    attendanceLogs: formattedAttendanceDisplay,
+                    successMessage: req.flash('success'),
+                    errorMessage: req.flash('errors'),
+                });
+    
+            } else if (req.session.user.userRole === 'HR') {
+                // Fetch leaves for HR: all and approved
+                const [formattedAllLeaves, formattedApprovedLeaves] = await Promise.all([
+                    fetchAndFormatLeaves(),
+                    fetchAndFormatLeaves('Approved')
+                ]);
+    
+                // Fetch attendance logs
+                attendanceLogs = await fetchAttendanceLogs();
+                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+    
+                return res.render('staffpages/hr_pages/hrdashboard', { 
+                    allLeaves: formattedAllLeaves, 
+                    approvedLeaves: formattedApprovedLeaves,
+                    attendanceLogs: formattedAttendanceDisplay,
+                    successMessage: req.flash('success'),
+                    errorMessage: req.flash('errors'),
+                });
+            }
         } catch (err) {
             console.error('Error fetching data for the dashboard:', err);
             req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
             return res.redirect('/hr/dashboard');
         }
     },
-    
     
     
     getManageLeaveTypes: async function(req, res) {
