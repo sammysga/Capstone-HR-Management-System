@@ -608,11 +608,33 @@ const lineManagerController = {
     
             // Approval logic
             if (req.body.approvalStatus === 'approved') {
+                let reviewerName;
+    
+                // Fetch the reviewer's name if it's missing from the session
+                if (!req.session.user.userName) {
+                    const { data: staffData, error: staffError } = await supabase
+                        .from('staffaccounts')
+                        .select('firstName, lastName')
+                        .eq('userId', req.session.user.userId)
+                        .single();
+    
+                    if (staffError) {
+                        console.error("Error fetching staff details:", staffError.message, staffError.details);
+                        throw staffError;
+                    }
+    
+                    reviewerName = `${staffData.firstName} ${staffData.lastName}`.trim();
+                } else {
+                    reviewerName = req.session.user.userName;
+                }
+    
+                console.log("Reviewer Name:", reviewerName);
+    
                 const approvalData = {
                     mrfId: data[0].mrfId,
                     staffId: req.session.user.userId,
                     approval_stage: req.session.user.userRole,
-                    reviewerName: req.session.user.userName, // TODO: reviewerName not being displayed in DB  
+                    reviewerName, 
                     reviewerDateSigned: new Date().toISOString()
                 };
     
@@ -639,7 +661,7 @@ const lineManagerController = {
             req.flash('errors', { submissionError: 'Failed to submit MRF. Please try again.' });
             return res.redirect('/linemanager/mrf'); // Redirecting to /linemanager/mrf on error as well
         }
-    },
+    },    
     
     // almost the same logic as hr but only by the same department is fetched.
     getRecordsPerformanceTrackerByDepartmentId: async function (req, res) {
