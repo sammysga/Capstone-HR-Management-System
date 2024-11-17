@@ -128,16 +128,13 @@
                                 <td><%= req.jobPosition %></td>
                                 <td><%= req.requestDate %></td>
                                 <td>
-                                    <% console.log(req.mrfId); %>
                                     <% if (req.status === 'Pending') { %>
                                         <button class="action-required-btn" data-mrfid="<%= req.mrfId %>">Action Required</button>
-                                        <!-- View MRF Link -->
-                                        <a href="/hr/view-mrf/<%= req.mrfId %>" class="view-mrf-link">View MRF</a>
                                     <% } else { %>
                                         <%= req.status %>
-                                        <!-- Always show the View MRF link regardless of status -->
-                                        <a href="/hr/view-mrf/<%= req.mrfId %>" class="view-mrf-link">View MRF</a>
                                     <% } %>
+                                    <!-- View MRF Link -->
+                                    <a href="/hr/view-mrf/<%= req.mrfId %>" class="view-mrf-link">View MRF</a>
                                 </td>
                             </tr>
                         <% }); %>

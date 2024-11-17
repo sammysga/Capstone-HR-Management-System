@@ -45,7 +45,8 @@ const hrController = {
                         department: department,
                         jobPosition: mrf.positionTitle,
                         requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
-                        status: approval ? approval.approval_stage: 'Pending'
+                        status: approval ? approval.approval_stage: 'Pending',
+                        mrfId: mrf.mrfId
                     };
                 });
 
