@@ -106,7 +106,7 @@
             </table>
         </section>
 
-         <!-- Manpower Requisition Forms Section -->
+        <!-- Manpower Requisition Forms Section -->
         <div class="manpower-requisition">
             <h3>Manpower Requisition Forms</h3>
             <table>
@@ -128,6 +128,7 @@
                                 <td><%= req.jobPosition %></td>
                                 <td><%= req.requestDate %></td>
                                 <td>
+                                    <% console.log(req.mrfId); %>
                                     <% if (req.status === 'Pending') { %>
                                         <button class="action-required-btn" data-mrfid="<%= req.mrfId %>">Action Required</button>
                                         <!-- View MRF Link -->
