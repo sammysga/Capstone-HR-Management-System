@@ -679,18 +679,15 @@ const hrController = {
     
                     if (mrfError) throw mrfError;
     
-                    // Render the MRF view page with the fetched data
-                    res.render('staffpages/hr_pages/hr-view-mrf', { mrf: mrfData });
+                    res.render( 'staffpages/hr_pages/hr-view-mrf',{ mrf: mrfData });
                 } else {
-                    // Handle the case where no ID is provided
-                    // For example, render a list of MRFs
                     const { data: mrfList, error: listError } = await supabase
                         .from('mrf')
                         .select('*');
     
                     if (listError) throw listError;
     
-                    res.render('staffpages/hr_pages/hr-list-mrf', { mrfList });
+                    res.render('/hr/dashboard', { mrfList });
                 }
             } catch (error) {
                 console.error("Error in getViewMRF:", error);
