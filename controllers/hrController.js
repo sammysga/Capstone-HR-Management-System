@@ -10,17 +10,21 @@ const hrController = {
 
       // Function to format attendance logs
       formatAttendanceLogs: (attendanceLogs) => {
-        return attendanceLogs.map(log => ({
-            userId: log.userId,
-            fullName: `${log.useraccounts?.staffaccounts[0]?.firstName} ${log.useraccounts?.staffaccounts[0]?.lastName}`,
-            department: log.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
-            jobTitle: log.useraccounts?.staffaccounts[0]?.jobpositions?.jobTitle || 'N/A',
-            attendanceDate: log.attendanceDate ? new Date(log.attendanceDate).toISOString().split('T')[0] : 'N/A',
-            attendanceAction: log.attendanceAction || 'N/A',
-            attendanceTime: log.attendanceTime ? new Date(log.attendanceTime).toLocaleString() : 'N/A',
-        }));
+        return attendanceLogs.map(log => {
+            const userAccount = log.useraccounts?.staffaccounts?.[0];
+            return {
+                userId: log.userId,
+                fullName: userAccount ? `${userAccount.firstName} ${userAccount.lastName}` : 'N/A',
+                department: userAccount?.departments?.deptName || 'N/A',
+                jobTitle: userAccount?.jobpositions?.jobTitle || 'N/A',
+                attendanceDate: log.attendanceDate ? new Date(log.attendanceDate).toISOString().split('T')[0] : 'N/A',
+                attendanceAction: log.attendanceAction || 'N/A',
+                attendanceTime: log.attendanceTime ? new Date(log.attendanceTime).toLocaleString() : 'N/A',
+            };
+        });
     },
     
+
     getHRDashboard: async function(req, res) {
         if (!req.session.user) {
             req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
