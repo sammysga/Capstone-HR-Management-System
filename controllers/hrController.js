@@ -7,6 +7,20 @@ const flash = require('connect-flash/lib/flash');
 const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
 
 const hrController = {
+
+      // Function to format attendance logs
+      formatAttendanceLogs: (attendanceLogs) => {
+        return attendanceLogs.map(log => ({
+            userId: log.userId,
+            fullName: `${log.useraccounts?.staffaccounts[0]?.firstName} ${log.useraccounts?.staffaccounts[0]?.lastName}`,
+            department: log.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+            jobTitle: log.useraccounts?.staffaccounts[0]?.jobpositions?.jobTitle || 'N/A',
+            attendanceDate: log.attendanceDate ? new Date(log.attendanceDate).toISOString().split('T')[0] : 'N/A',
+            attendanceAction: log.attendanceAction || 'N/A',
+            attendanceTime: log.attendanceTime ? new Date(log.attendanceTime).toLocaleString() : 'N/A',
+        }));
+    },
+    
     getHRDashboard: async function(req, res) {
         if (!req.session.user) {
             req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
