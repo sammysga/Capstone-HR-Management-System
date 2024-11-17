@@ -72,6 +72,7 @@ router.get('/hr/editjoboffers/:id', hrController.getEditJobOffers);
 router.post('/hr/editjoboffers/:id', hrController.updateJobOffer);
 router.get('/hr/records-performance-tracker', hrController.getRecordsPerformanceTracker);
 router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPerformanceTrackerByUserId);
+router.get('hr/view-mrf', hrController.getViewMRF);
 router.get('/hr/view-mrf/:id', hrController.getViewMRF);
 
 

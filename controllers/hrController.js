@@ -661,49 +661,37 @@ const hrController = {
     getViewMRF: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                // Get MRF ID from the URL parameter
+                // Check if an ID is provided
                 const mrfId = req.params.id;
     
-                // Check if mrfId is valid (not undefined or null)
-                if (!mrfId || isNaN(mrfId)) {
-                    throw new Error('Invalid MRF ID');
+                if (mrfId) {
+                    // Handle the case where an ID is provided
+                    if (isNaN(mrfId)) {
+                        return res.status(400).send('Invalid MRF ID');
+                    }
+    
+                    // Fetch MRF details for the given mrfId
+                    const { data: mrfData, error: mrfError } = await supabase
+                        .from('mrf')
+                        .select('*')
+                        .eq('mrfId', mrfId)
+                        .single();
+    
+                    if (mrfError) throw mrfError;
+    
+                    // Render the MRF view page with the fetched data
+                    res.render('staffpages/hr_pages/hr-view-mrf', { mrf: mrfData });
+                } else {
+                    // Handle the case where no ID is provided
+                    // For example, render a list of MRFs
+                    const { data: mrfList, error: listError } = await supabase
+                        .from('mrf')
+                        .select('*');
+    
+                    if (listError) throw listError;
+    
+                    res.render('staffpages/hr_pages/hr-list-mrf', { mrfList });
                 }
-    
-                // Fetch MRF details for the given mrfId
-                const { data: mrfData, error: mrfError } = await supabase
-                    .from('mrf')
-                    .select('*')
-                    .eq('mrfId', mrfId)  // Filter by MRF ID
-                    .single();  // Get a single result
-    
-                if (mrfError) throw mrfError;
-    
-                // Ensure mrfData contains all required fields and sanitize them
-                mrfData.mrfId = mrfData.mrfId || null;
-                mrfData.numPersonsRequisitioned = mrfData.numPersonsRequisitioned || 0;
-                mrfData.requisitionDate = mrfData.requisitionDate || 'N/A';
-                mrfData.requiredDate = mrfData.requiredDate || 'N/A';
-    
-                // Fetch approval statuses for the given mrfId
-                const { data: approvalData, error: approvalError } = await supabase
-                    .from('mrf_approvals')
-                    .select('approval_stage, reviewerName, reviewerDateSigned')
-                    .eq('mrfId', mrfId);
-    
-                if (approvalError) throw approvalError;
-    
-                // Combine MRF details with approval statuses
-                const combinedData = {
-                    mrf: mrfData,
-                    approvals: approvalData
-                };
-    
-                // Log the combined data to check its structure
-                console.log(combinedData);  // This is where you should log the data
-    
-                // Render the MRF view page with combined data
-                res.render('staffpages/hr_pages/hr-view-mrf', { combinedData });
-    
             } catch (error) {
                 console.error("Error in getViewMRF:", error);
                 req.flash('errors', { fetchError: 'Error fetching MRF details. Please try again later.' });
