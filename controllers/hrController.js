@@ -12,11 +12,8 @@ const hrController = {
             req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
             return res.redirect('/staff/login');
         }
-        const attendanceLogs = await getAttendanceLogs();  // Fetch from DB
-        const formattedAttendanceLogs = formatAttendanceLogs(attendanceLogs);  // Format the logs
-
+    
         try {
-            
             // Fetching departments for the filter
             const { data: departments, error: deptError } = await supabase
                 .from('departments')
@@ -163,14 +160,13 @@ const hrController = {
                     fetchAndFormatLeaves(),
                     fetchAndFormatLeaves('Approved', departmentFilter)
                 ]);
-                
+    
                 attendanceLogs = await fetchAttendanceLogs(departmentFilter);
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
                 return res.render('staffpages/hr_pages/hrdashboard', { 
                     allLeaves: formattedAllLeaves, 
                     approvedLeaves: formattedApprovedLeaves,
-                    attendanceLogs: formattedAttendanceLogs, 
                     attendanceLogs: formattedAttendanceDisplay,
                     manpowerRequisitions,
                     departments,
