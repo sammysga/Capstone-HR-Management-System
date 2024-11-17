@@ -661,38 +661,21 @@ const hrController = {
     getViewMRF: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                // Check if an ID is provided
-                const mrfId = req.params.id;
+                const mrfId = req.params.id; 
     
-                if (mrfId) {
-                    // Handle the case where an ID is provided
-                    if (isNaN(mrfId)) {
-                        return res.status(400).send('Invalid MRF ID');
-                    }
+                const { data: mrfData, error: mrfError } = await supabase
+                    .from('mrf')
+                    .select('*')
+                    .eq('mrfId', mrfId)
+                    .single(); 
+
+                if (mrfError) throw mrfError;
     
-                    // Fetch MRF details for the given mrfId
-                    const { data: mrfData, error: mrfError } = await supabase
-                        .from('mrf')
-                        .select('*')
-                        .eq('mrfId', mrfId)
-                        .single();
-    
-                    if (mrfError) throw mrfError;
-    
-                    res.render( 'staffpages/hr_pages/hr-view-mrf',{ mrf: mrfData });
-                } else {
-                    const { data: mrfList, error: listError } = await supabase
-                        .from('mrf')
-                        .select('*');
-    
-                    if (listError) throw listError;
-    
-                    res.render('/hr/dashboard', { mrfList });
-                }
+                res.render('staffpages/hr_pages/hr-view-mrf', { mrf: mrfData });
             } catch (error) {
                 console.error("Error in getViewMRF:", error);
                 req.flash('errors', { fetchError: 'Error fetching MRF details. Please try again later.' });
-                res.redirect('/hr/dashboard');
+                res.redirect('/hr/dashboard'); 
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
