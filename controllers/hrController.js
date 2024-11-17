@@ -14,9 +14,47 @@ const hrController = {
         }
     
         try {
-            // Function to fetch and format leave data with department filter
-            const fetchAndFormatLeaves = async (statusFilter = null, departmentFilter = null) => {
-                let query = supabase
+            // Function to fetch and format manpower requisition forms
+            const fetchAndFormatMRFData = async () => {
+                const { data: mrfList, error: mrfError } = await supabase
+                    .from('mrf')
+                    .select('positionTitle, requisitionDate, mrfId, departmentId');
+
+                if (mrfError) throw mrfError;
+
+                // Fetch approval statuses
+                const { data: approvals, error: approvalError } = await supabase
+                    .from('mrf_approvals')
+                    .select('mrfId, reviewerName, approval_stage');
+
+                if (approvalError) throw approvalError;
+
+                // Fetch departments
+                const { data: departments, error: deptError } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName');
+                
+                if (deptError) throw deptError;
+
+                const combinedData = mrfList.map(mrf => {
+                    const approval = approvals.find(a => a.mrfId === mrf.mrfId);
+                    const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
+
+                    return {
+                        requisitioner: approval ? approval.reviewerName : 'Pending',
+                        department: department,
+                        jobPosition: mrf.positionTitle,
+                        requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
+                        status: approval ? approval.approval_stage: 'Pending'
+                    };
+                });
+
+                return combinedData;
+            };
+
+            // Common function to fetch and format leave data
+            const fetchAndFormatLeaves = async (statusFilter = null) => {
+                const query = supabase
                     .from('leaverequests')
                     .select(`
                         leaveRequestId, 
@@ -40,13 +78,12 @@ const hrController = {
                         )
                     `)
                     .order('created_at', { ascending: false });
-    
+                
                 if (statusFilter) query.eq('status', statusFilter);
-                if (departmentFilter) query.eq('useraccounts.staffaccounts.departments.deptName', departmentFilter);
-    
+                
                 const { data, error } = await query;
                 if (error) throw error;
-    
+                
                 return data.map(leave => ({
                     lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
                     firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
@@ -60,8 +97,8 @@ const hrController = {
             };
     
             // Function to fetch attendance logs with department filter
-            const fetchAttendanceLogs = async (departmentFilter = null) => {
-                let query = supabase
+            const fetchAttendanceLogs = async () => {
+                const { data: attendanceLogs, error: attendanceError } = await supabase
                     .from('attendance')
                     .select(`
                         userId, 
@@ -82,10 +119,6 @@ const hrController = {
                         )
                     `)
                     .order('attendanceDate', { ascending: false });
-    
-                if (departmentFilter) query.eq('useraccounts.staffaccounts.departments.deptName', departmentFilter);
-    
-                const { data: attendanceLogs, error: attendanceError } = await query;
     
                 if (attendanceError) {
                     console.error('Error fetching attendance logs:', attendanceError);
@@ -154,33 +187,35 @@ const hrController = {
     
             // Initialize attendanceLogs variable
             let attendanceLogs = [];
-            const departmentFilter = req.query.department || null;  // Getting department filter from query string
-    
+            let manpowerRequisitions = await fetchAndFormatMRFData();
+
             if (req.session.user.userRole === 'Line Manager') {
-                const formattedLeaves = await fetchAndFormatLeaves(null, departmentFilter);
-                attendanceLogs = await fetchAttendanceLogs(departmentFilter);
+                const formattedLeaves = await fetchAndFormatLeaves();
+                attendanceLogs = await fetchAttendanceLogs();
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
                 return res.render('staffpages/hr_pages/hrdashboard', {
                     formattedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
+                    manpowerRequisitions,
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors'),
                 });
     
             } else if (req.session.user.userRole === 'HR') {
                 const [formattedAllLeaves, formattedApprovedLeaves] = await Promise.all([
-                    fetchAndFormatLeaves(null, departmentFilter),
-                    fetchAndFormatLeaves('Approved', departmentFilter)
+                    fetchAndFormatLeaves(),
+                    fetchAndFormatLeaves('Approved')
                 ]);
     
-                attendanceLogs = await fetchAttendanceLogs(departmentFilter);
+                attendanceLogs = await fetchAttendanceLogs();
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
                 return res.render('staffpages/hr_pages/hrdashboard', { 
                     allLeaves: formattedAllLeaves, 
                     approvedLeaves: formattedApprovedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
+                    manpowerRequisitions,
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors'),
                 });
