@@ -96,7 +96,7 @@
             </table>
         </section>
 
-        <!-- Manpower Requisition Forms Section -->
+         <!-- Manpower Requisition Forms Section -->
          <div class="manpower-requisition">
             <h3>Manpower Requisition Forms</h3>
             <table>
@@ -110,13 +110,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Jane Smith</td>
-                        <td>IT</td>
-                        <td>Software Developer</td>
-                        <td>2024-11-10</td>
-                        <td>Approved</td>
-                    </tr>
+                    <% if (manpowerRequisitions && manpowerRequisitions.length > 0) { %>
+                        <% manpowerRequisitions.forEach(req => { %>
+                            <tr>
+                                <td><%= req.requisitioner %></td>
+                                <td><%= req.department %></td>
+                                <td><%= req.jobPosition %></td>
+                                <td><%= req.requestDate %></td>
+                                <td><%= req.status %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5">No manpower requisition forms available.</td>
+                        </tr>
+                    <% } %>
                 </tbody>
             </table>
         </div>
