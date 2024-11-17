@@ -185,6 +185,7 @@ const hrController = {
                 return res.render('staffpages/hr_pages/hrdashboard', { 
                     allLeaves: formattedAllLeaves, 
                     approvedLeaves: formattedApprovedLeaves,
+                    attendanceLogs: this.formatAttendanceLogs, 
                     attendanceLogs: formattedAttendanceDisplay,
                     manpowerRequisitions,
                     departments,
