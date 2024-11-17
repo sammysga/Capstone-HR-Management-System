@@ -48,6 +48,16 @@
         .manage-leaves-button:hover {
             background-color: #1a5f78; /* Darker shade for hover effect */
         }
+        .action-required-btn {
+            background-color: #2385B0;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .action-required-btn:hover {
+            background-color: #1a5f78;
+        }
     </style>
 </head>
 <body>
@@ -97,7 +107,7 @@
         </section>
 
          <!-- Manpower Requisition Forms Section -->
-         <div class="manpower-requisition">
+        <div class="manpower-requisition">
             <h3>Manpower Requisition Forms</h3>
             <table>
                 <thead>
@@ -117,7 +127,13 @@
                                 <td><%= req.department %></td>
                                 <td><%= req.jobPosition %></td>
                                 <td><%= req.requestDate %></td>
-                                <td><%= req.status %></td>
+                                <td>
+                                    <% if (req.status === 'Pending') { %>
+                                        <button class="action-required-btn" data-mrfid="<%= req.mrfId %>">Action Required</button>
+                                    <% } else { %>
+                                        <%= req.status %>
+                                    <% } %>
+                                </td>
                             </tr>
                         <% }); %>
                     <% } else { %>
@@ -128,6 +144,7 @@
                 </tbody>
             </table>
         </div>
+
 
         <!-- Approved Leave Requests Table -->
         <div class="approvedLeaves">

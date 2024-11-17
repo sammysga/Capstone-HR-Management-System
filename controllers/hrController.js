@@ -658,6 +658,30 @@ const hrController = {
         }
     },
 
+    getViewMRF: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const mrfId = req.params.id;
+                const mrf = await MRF.findById(mrfId);
+    
+                if (!mrf) {
+                    req.flash('errors', { mrfError: 'Manpower Requisition Form not found.' });
+                    return res.redirect('/hr/dashboard'); 
+                }
+    
+                res.render('staffpages/hr_pages/hr-view-mrf', { mrf }); 
+    
+            } catch (error) {
+                console.error(error);
+                req.flash('errors', { dbError: 'Error fetching MRF data. Please try again later.' });
+                res.redirect('/hr/dashboard'); 
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
     getJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
