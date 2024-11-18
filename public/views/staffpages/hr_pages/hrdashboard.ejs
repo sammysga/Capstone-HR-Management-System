@@ -56,6 +56,7 @@
     <div class="main-content">
         <h2>HR Dashboard</h2>
 
+        
         <!-- Attendance Logs Section -->
         <section class="attendance-logs">
             <h2>Attendance Logs</h2>
@@ -94,6 +95,39 @@
                 </tbody>
             </table>
         </section>
+
+         <!-- Manpower Requisition Forms Section -->
+         <div class="manpower-requisition">
+            <h3>Manpower Requisition Forms</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Requisitioner</th>
+                        <th>Department</th>
+                        <th>Job Position</th>
+                        <th>Request Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (manpowerRequisitions && manpowerRequisitions.length > 0) { %>
+                        <% manpowerRequisitions.forEach(req => { %>
+                            <tr>
+                                <td><%= req.requisitioner %></td>
+                                <td><%= req.department %></td>
+                                <td><%= req.jobPosition %></td>
+                                <td><%= req.requestDate %></td>
+                                <td><%= req.status %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5">No manpower requisition forms available.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
 
         <!-- Approved Leave Requests Table -->
         <div class="approvedLeaves">
@@ -176,6 +210,7 @@
 
         <!-- JavaScript for sidebar functionality -->
         <script>
+
             // Toggle active class for sidebar links
             document.querySelectorAll('.sidebar ul li a').forEach(link => {
                 link.addEventListener('click', function() {
