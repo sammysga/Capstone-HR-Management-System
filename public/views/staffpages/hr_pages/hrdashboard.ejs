@@ -48,6 +48,16 @@
         .manage-leaves-button:hover {
             background-color: #1a5f78; /* Darker shade for hover effect */
         }
+        .action-required-btn {
+            background-color: #2385B0;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .action-required-btn:hover {
+            background-color: #1a5f78;
+        }
     </style>
 </head>
 <body>
@@ -96,8 +106,8 @@
             </table>
         </section>
 
-         <!-- Manpower Requisition Forms Section -->
-         <div class="manpower-requisition">
+        <!-- Manpower Requisition Forms Section -->
+        <div class="manpower-requisition">
             <h3>Manpower Requisition Forms</h3>
             <table>
                 <thead>
@@ -117,7 +127,16 @@
                                 <td><%= req.department %></td>
                                 <td><%= req.jobPosition %></td>
                                 <td><%= req.requestDate %></td>
-                                <td><%= req.status %></td>
+                                <td>
+                                    <!-- Show button for pending requisitions -->
+                                    <% if (req.status === 'Pending') { %>
+                                        <!-- Button for pending requisition -->
+                                        <button class="action-required-btn" data-mrfid="<%= req.mrfId %>"><%= req.actionButtonText %></button>
+                                    <% } else { %>
+                                        <!-- Display status for approved/disapproved requisition -->
+                                        <%= req.status %>
+                                    <% } %>
+                                </td>
                             </tr>
                         <% }); %>
                     <% } else { %>
@@ -125,7 +144,7 @@
                             <td colspan="5">No manpower requisition forms available.</td>
                         </tr>
                     <% } %>
-                </tbody>
+                </tbody>                
             </table>
         </div>
 
@@ -210,6 +229,13 @@
 
         <!-- JavaScript for sidebar functionality -->
         <script>
+
+            document.querySelectorAll('.action-required-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const mrfId = this.getAttribute('data-mrfid');
+                    window.location.href = `/hr/view-mrf/${mrfId}`;  // Redirect to the MRF page
+                });
+            });
 
             // Toggle active class for sidebar links
             document.querySelectorAll('.sidebar ul li a').forEach(link => {
