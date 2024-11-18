@@ -218,6 +218,7 @@ const hrController = {
             // Initialize variables and fetch data
             let attendanceLogs = [];
             let manpowerRequisitions = await fetchAndFormatMRFData(departmentFilter, statusFilter);
+            let departments = []; // Initialize an empty array for departments
     
             if (req.session.user.userRole === 'Line Manager') {
                 const formattedLeaves = await fetchAndFormatLeaves();
@@ -240,26 +241,27 @@ const hrController = {
                 attendanceLogs = await fetchAttendanceLogs();
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
-                return res.render('staffpages/hr_pages/hrdashboard', { 
-                    allLeaves: formattedAllLeaves, 
-                    approvedLeaves: formattedApprovedLeaves,
-                    attendanceLogs: formattedAttendanceDisplay,
-                    departments: departments, 
+                return res.render('staffpages/hr_pages/hrdashboard', {
+                    formattedAllLeaves,
+                    formattedApprovedLeaves,
+                    formattedAttendanceDisplay,
                     manpowerRequisitions,
+                    departments,
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors'),
                 });
             } else {
-                req.flash('errors', { authError: 'Unauthorized access!' });
+                req.flash('errors', { authError: 'Unauthorized role' });
                 return res.redirect('/staff/login');
             }
     
         } catch (error) {
-            console.error('Error fetching HR Dashboard data:', error);
-            req.flash('errors', { authError: 'An error occurred while fetching the dashboard data.' });
+            console.error(error);
+            req.flash('errors', { authError: 'Error retrieving data from the database' });
             return res.redirect('/staff/login');
         }
     },
+    
     
     
     
