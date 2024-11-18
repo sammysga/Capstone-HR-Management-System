@@ -243,7 +243,7 @@ const hrController = {
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
                 return res.render('staffpages/hr_pages/hrdashboard', {
-                    departments, // Pass the departments to the view
+                    departments: departments,        // Ensure departments are passed as an object property
                     formattedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
                     manpowerRequisitions,
