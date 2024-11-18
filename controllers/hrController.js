@@ -45,7 +45,7 @@ const hrController = {
                 
                     let status = mrf.status || 'Pending'; // default to pending
 
-                    const buttonText = (status === 'Pending') ? 'Action Required' : 'View MRF';
+                    const buttonText = (status === 'Pending') ? 'Action Required' : '';
 
                     return {
                         requisitioner: requisitionerName,
