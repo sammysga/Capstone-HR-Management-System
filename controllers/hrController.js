@@ -125,6 +125,7 @@ const hrController = {
     
             // Render dashboard
             return res.render('staffpages/hr_pages/hrdashboard', {
+                approvedLeaves,
                 manpowerRequisitions,
                 attendanceLogs,
                 successMessage: req.flash('success'),
