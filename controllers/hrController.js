@@ -240,12 +240,12 @@ const hrController = {
             } else {
                 // Handle other roles or errors
                 req.flash('error', 'Unauthorized. Access only for authorized users.');
-                return res.redirect('/staff/login');
+                return res.redirect('/hr/dashboard');
             }
         } catch (error) {
             console.error('Error in getHRDashboard:', error);
             req.flash('error', 'There was an error processing the request.');
-            return res.redirect('/staff/login');
+            return res.redirect('/hr/dashboard');
         }
     },
     
