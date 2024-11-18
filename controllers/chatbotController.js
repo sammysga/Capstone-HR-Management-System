@@ -190,10 +190,14 @@ handleFileUpload: async function(req, res) {
 
         // Generate the public URL for the uploaded file
         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`; // Replace with your actual Supabase URL
-
+        console.log('User ID:', req.session.userId);  // Log to check the user ID
         // Insert file metadata into the database (optional)
         const { userId } = req.session; // Assuming you're storing user ID in the session or passed through request
-        console.log('User ID:', req.session.userId);  // Log to check the user ID
+        if (!userId) {
+            console.error('User not authenticated.');
+            return res.status(403).send('User not authenticated.');
+        }
+        
         const { data: insertedFile, error: insertError } = await supabase
             .from('user_files') // Your table for storing file metadata
             .insert([{
