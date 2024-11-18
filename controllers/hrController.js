@@ -25,7 +25,7 @@ const hrController = {
                 // Fetch approval statuses
                 const { data: approvals, error: approvalError } = await supabase
                     .from('mrf_approvals')
-                    .select('mrfId, approval_stage')
+                    .select('mrfId, approval_stage, reviewerName')
                     .order('reviewerDateSigned', { ascending: false });
 
                 if (approvalError) throw approvalError;
