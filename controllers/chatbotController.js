@@ -158,8 +158,8 @@ const chatbotController = {
 handleFileUpload: async function(req, res) {
     try {
         // Check if the user is authenticated
-        const user = supabase.auth.user();
-        if (!user) {
+        const { data: user, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
             return res.status(403).send('User not authenticated.');
         }
 
