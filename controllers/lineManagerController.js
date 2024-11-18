@@ -482,16 +482,16 @@ const lineManagerController = {
                 const { data: mrfList, error: mrfError } = await supabase
                     .from('mrf')
                     .select('positionTitle, requisitionDate, mrfId, status'); // include status in query
-    
+            
                 if (mrfError) throw mrfError;
-    
+        
                 // Fetch approval statuses
                 const { data: approvals, error: approvalError } = await supabase
                     .from('mrf_approvals')
                     .select('mrfId, approval_stage');
-    
+        
                 if (approvalError) throw approvalError;
-    
+        
                 // Combine MRF data with approval statuses
                 const combinedData = mrfList.map(mrf => {
                     const approval = approvals.find(a => a.mrfId === mrf.mrfId);
@@ -503,7 +503,7 @@ const lineManagerController = {
                         mrfId: mrf.mrfId
                     };
                 });
-    
+        
                 res.render('staffpages/linemanager_pages/mrf', { mrfRequests: combinedData });
             } catch (error) {
                 console.error("Error in getMRF:", error);
@@ -514,7 +514,7 @@ const lineManagerController = {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
         }
-    },    
+    },
 
     getMRFList: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
