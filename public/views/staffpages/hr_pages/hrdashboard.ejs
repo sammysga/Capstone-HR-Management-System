@@ -66,7 +66,35 @@
     <div class="main-content">
         <h2>HR Dashboard</h2>
 
-        
+        <!-- Filters Section -->
+        <section>
+            <form id="filter-form" action="/hr/dashboard" method="GET" style="margin: 20px;">
+                <label for="filter-department">Department:</label>
+                <select name="filterDepartment" id="filter-department">
+                    <option value="">All</option>
+                    <% if (departments && departments.length > 0) { %>
+                        <% departments.forEach(department => { %>
+                            <option value="<%= department.departmentName %>"><%= department.departmentName %></option>
+                        <% }); %>
+                    <% } %>
+                </select>
+
+                <label for="filter-date">Date:</label>
+                <input type="date" name="filterDate" id="filter-date" value="<%= filterDate || '' %>">
+
+                <label for="filter-status">Status:</label>
+                <select name="filterStatus" id="filter-status">
+                    <option value="">All</option>
+                    <option value="Approved" <%= filterStatus === 'Approved' ? 'selected' : '' %>>Approved</option>
+                    <option value="Pending" <%= filterStatus === 'Pending' ? 'selected' : '' %>>Pending</option>
+                    <option value="Rejected" <%= filterStatus === 'Rejected' ? 'selected' : '' %>>Rejected</option>
+                </select>
+
+                <button type="submit">Apply Filters</button>
+                <a href="/hr/dashboard" style="margin-left: 10px;">Reset Filters</a>
+            </form>
+        </section>
+
         <!-- Attendance Logs Section -->
         <section class="attendance-logs">
             <h2>Attendance Logs</h2>
