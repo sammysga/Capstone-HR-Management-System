@@ -36,7 +36,11 @@ const hrController = {
                 const { data: departments, error: deptError } = await supabase
                     .from('departments')
                     .select('departmentId, deptName');
-                if (deptError) throw deptError;
+                    console.log('Departments Data:', departments);  // Log it to check
+                    if (deptError) {
+                        console.error(deptError);
+                        departments = [];  // Ensure departments is defined even if there's an error
+                    }
     
                 return mrfList.map(mrf => {
                     const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
