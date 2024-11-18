@@ -148,14 +148,22 @@
                 <!-- Review & Approvals Section -->
                 <div class="form-section">
                     <h2>Review & Approvals</h2>
+
+                    <!-- Only one of the checkboxes should be checked -->
                     <div class="toggle-item">
-                        <input type="checkbox" id="hrApproval" name="hrApproval" value="approved" <%= mrf.approvalStatus === 'approved' ? 'checked' : '' %> required>
+                        <input type="checkbox" id="hrApproval" name="hrApproval" value="approved" <%= mrf.approvalStatus === 'approved' ? 'checked' : '' %> onclick="toggleReasonInput()">
                         <label for="hrApproval">I approve this requisition.</label>
                     </div>
 
                     <div class="toggle-item">
-                        <input type="checkbox" id="hrDisapproval" name="hrDisapproval" value="disapproved" <%= mrf.approvalStatus === 'disapproved' ? 'checked' : '' %> required>
+                        <input type="checkbox" id="hrDisapproval" name="hrDisapproval" value="disapproved" <%= mrf.approvalStatus === 'disapproved' ? 'checked' : '' %> onclick="toggleReasonInput()">
                         <label for="hrDisapproval">I disapprove this requisition.</label>
+                    </div>
+
+                    <!-- Reason Input for Disapproval -->
+                    <div id="disapprovalReason">
+                        <label for="disapprovalReasonText">Reason for Disapproval:</label>
+                        <textarea id="disapprovalReasonText" name="disapprovalReason" placeholder="Enter reason for disapproval here"></textarea>
                     </div>
                 </div>
 
@@ -164,5 +172,22 @@
             </form>
         </div>
     </div>
+
+    <script>
+        // function to handle checkbox selection
+        function toggleReasonInput() {
+            const approvalChecked = document.getElementById('hrApproval').checked;
+            const disapprovalChecked = document.getElementById('hrDisapproval').checked;
+
+            // Only one checkbox can be selected at a time
+            if (approvalChecked) {
+                document.getElementById('hrDisapproval').checked = false;
+                document.getElementById('disapprovalReason').style.display = 'none';
+            } else if (disapprovalChecked) {
+                document.getElementById('hrApproval').checked = false;
+                document.getElementById('disapprovalReason').style.display = 'block';
+            }
+        }
+    </script>
 </body>
 </html>
