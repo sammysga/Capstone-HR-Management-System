@@ -73,8 +73,10 @@
         <option value="">All Departments</option>
         <% if (departments && departments.length > 0) { %>
             <% departments.forEach(department => { %>
-                <option value="<%= department %>"><%= department %></option>
+                <option value="<%= department.departmentId %>"><%= department.deptName %></option>
             <% }); %>
+        <% } else { %>
+            <option>No Departments Available</option>
         <% } %>
     </select>
 </div>
