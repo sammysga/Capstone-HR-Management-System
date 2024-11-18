@@ -19,7 +19,7 @@ const hrController = {
         const dateFilter = req.query.date || null;
     
         try {
-            // Fetch and format MRF data with filtering
+            // Function to fetch and format MRF data with filtering
             const fetchAndFormatMRFData = async (departmentFilter, statusFilter) => {
                 let query = supabase
                     .from('mrf')
@@ -60,9 +60,53 @@ const hrController = {
                 });
             };
     
-            // Fetch and format attendance logs with filtering
-            const fetchAndFormatAttendanceLogs = async (dateFilter) => {
+            // Common function to fetch and format leave data with filtering
+            const fetchAndFormatLeaves = async (statusFilter = null) => {
                 const query = supabase
+                    .from('leaverequests')
+                    .select(`
+                        leaveRequestId, 
+                        userId, 
+                        created_at, 
+                        leaveTypeId, 
+                        fromDate, 
+                        untilDate, 
+                        status,
+                        useraccounts (
+                            userId, 
+                            userEmail,
+                            staffaccounts (
+                                departments (deptName), 
+                                lastName, 
+                                firstName
+                            )
+                        ), 
+                        leave_types (
+                            typeName
+                        )
+                    `)
+                    .order('created_at', { ascending: false });
+    
+                if (statusFilter) query.eq('status', statusFilter);
+    
+                const { data, error } = await query;
+                if (error) throw error;
+    
+                return data.map(leave => ({
+                    lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+                    firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+                    department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+                    filedDate: leave.created_at ? new Date(leave.created_at).toISOString().split('T')[0] : 'N/A',
+                    type: leave.leave_types?.typeName || 'N/A',
+                    startDate: leave.fromDate || 'N/A',
+                    endDate: leave.untilDate || 'N/A',
+                    status: leave.status || 'Pending'
+                }));
+            };
+    
+            // Function to fetch attendance logs with department filter
+            const fetchAttendanceLogs = async () => {
+                const { data: attendanceLogs, error: attendanceError } = await supabase
                     .from('attendance')
                     .select(`
                         userId, 
@@ -72,76 +116,150 @@ const hrController = {
                         useraccounts (
                             userId, 
                             staffaccounts (
+                                staffId,
                                 firstName, 
-                                lastName, 
-                                departmentId,
-                                departments: departmentId (deptName)
+                                lastName,
+                                departmentId, 
+                                jobId,
+                                departments: departmentId ("deptName"),
+                                jobpositions: jobId ("jobTitle")
                             )
                         )
-                    `);
+                    `)
+                    .order('attendanceDate', { ascending: false });
     
-                // Apply date filter
-                if (dateFilter) query.eq('attendanceDate', dateFilter);
+                if (attendanceError) {
+                    console.error('Error fetching attendance logs:', attendanceError);
+                    throw new Error('Error fetching attendance logs.');
+                }
     
-                const { data: attendanceLogs, error: attendanceError } = await query;
-                if (attendanceError) throw attendanceError;
+                return attendanceLogs;
+            };
     
-                return attendanceLogs.reduce((acc, log) => {
-                    const existing = acc.find(a => a.userId === log.userId && a.date === log.attendanceDate);
+            // Format attendance logs
+            const formatAttendanceLogs = (attendanceLogs, selectedDate = null) => {
+                const filterDate = selectedDate || new Date().toISOString().split('T')[0];
     
-                    if (log.attendanceAction === 'Time In') {
-                        if (existing) {
-                            existing.timeIn = log.attendanceTime;
-                        } else {
-                            acc.push({
-                                userId: log.userId,
-                                date: log.attendanceDate,
-                                timeIn: log.attendanceTime,
-                                timeOut: null,
-                                department: log.useraccounts.staffaccounts.departments?.deptName || 'N/A',
-                                firstName: log.useraccounts.staffaccounts.firstName || 'N/A',
-                                lastName: log.useraccounts.staffaccounts.lastName || 'N/A',
-                            });
+                const formattedAttendanceLogs = attendanceLogs
+                    .filter(attendance => attendance.attendanceDate === filterDate)
+                    .reduce((acc, attendance) => {
+                        const attendanceDate = attendance.attendanceDate;
+                        const attendanceTime = attendance.attendanceTime || '00:00:00';
+                        const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
+                        const localDate = new Date(attendanceDate);
+                        localDate.setHours(hours, minutes, seconds);
+    
+                        const userId = attendance.userId;
+                        const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
+    
+                        if (attendance.attendanceAction === 'Time In') {
+                            if (existingEntry) {
+                                existingEntry.timeIn = localDate;
+                            } else {
+                                acc.push({
+                                    userId,
+                                    date: attendanceDate,
+                                    timeIn: localDate,
+                                    timeOut: null,
+                                    useraccounts: attendance.useraccounts
+                                });
+                            }
+                        } else if (attendance.attendanceAction === 'Time Out') {
+                            if (existingEntry) {
+                                existingEntry.timeOut = localDate;
+                            } else {
+                                acc.push({
+                                    userId,
+                                    date: attendanceDate,
+                                    timeIn: null,
+                                    timeOut: localDate,
+                                    useraccounts: attendance.useraccounts
+                                });
+                            }
                         }
-                    } else if (log.attendanceAction === 'Time Out') {
-                        if (existing) {
-                            existing.timeOut = log.attendanceTime;
+    
+                        return acc;
+                    }, []);
+    
+                return formattedAttendanceLogs.map(log => {
+                    let activeWorkingHours = 0;
+                    let timeOutMessage = '';
+                    const now = new Date();
+    
+                    if (log.timeIn) {
+                        const endOfDay = new Date(log.date);
+                        endOfDay.setHours(23, 59, 59, 999);
+                        const endTime = log.timeOut || now;
+    
+                        if (!log.timeOut && endTime <= endOfDay) {
+                            timeOutMessage = `(In Work)`;
+                            activeWorkingHours = (endTime - log.timeIn) / 3600000;
+                        } else if (!log.timeOut && endTime > endOfDay) {
+                            timeOutMessage = `(User did not Record Time Out)`;
+                            activeWorkingHours = (endOfDay - log.timeIn) / 3600000;
+                        } else {
+                            activeWorkingHours = (log.timeOut - log.timeIn) / 3600000;
                         }
                     }
     
-                    return acc;
-                }, []);
+                    return {
+                        department: log.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+                        firstName: log.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+                        lastName: log.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+                        jobTitle: log.useraccounts?.staffaccounts[0]?.jobpositions?.jobTitle || 'N/A',
+                        date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
+                        timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
+                        timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : timeOutMessage,
+                        activeWorkingHours: activeWorkingHours.toFixed(2)
+                    };
+                });
             };
     
-            // Fetch data with filters applied
-            const manpowerRequisitions = await fetchAndFormatMRFData(departmentFilter, statusFilter);
-            const attendanceLogs = await fetchAndFormatAttendanceLogs(dateFilter);
+            // Initialize variables and fetch data
+            let attendanceLogs = [];
+            let manpowerRequisitions = await fetchAndFormatMRFData(departmentFilter, statusFilter);
     
-            // Fetch departments for the dropdown (already fetched in MRF function)
-            const { data: departments, error: deptError } = await supabase
-                .from('departments')
-                .select('departmentId, deptName');
-            if (deptError) throw deptError;
+            if (req.session.user.userRole === 'Line Manager') {
+                const formattedLeaves = await fetchAndFormatLeaves();
+                attendanceLogs = await fetchAttendanceLogs();
+                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
-            // Render dashboard
-            return res.render('staffpages/hr_pages/hrdashboard', {
-                approvedLeaves,
-                manpowerRequisitions,
-                attendanceLogs,
-                successMessage: req.flash('success'),
-                errorMessage: req.flash('errors'),
-                departments: departments, // Pass departments for filtering
-                filterDepartment: departmentFilter, // Pass departmentFilter for highlighting the selected option
-                filterStatus: statusFilter, // Make sure to pass filterStatus
-                filterDate: dateFilter // Pass filterDate if needed
-            });
+                return res.render('staffpages/hr_pages/hrdashboard', {
+                    formattedLeaves,
+                    attendanceLogs: formattedAttendanceDisplay,
+                    manpowerRequisitions,
+                    successMessage: req.flash('success'),
+                    errorMessage: req.flash('errors'),
+                });
+            } else if (req.session.user.userRole === 'HR') {
+                const [formattedAllLeaves, formattedApprovedLeaves] = await Promise.all([
+                    fetchAndFormatLeaves(),
+                    fetchAndFormatLeaves('Approved')
+                ]);
     
-        } catch (err) {
-            console.error('Error fetching data for the dashboard:', err);
-            req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
-            return res.redirect('/hr/dashboard');
+                attendanceLogs = await fetchAttendanceLogs();
+                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+    
+                return res.render('staffpages/hr_pages/hrdashboard', { 
+                    allLeaves: formattedAllLeaves, 
+                    approvedLeaves: formattedApprovedLeaves,
+                    attendanceLogs: formattedAttendanceDisplay,
+                    manpowerRequisitions,
+                    successMessage: req.flash('success'),
+                    errorMessage: req.flash('errors'),
+                });
+            } else {
+                req.flash('errors', { authError: 'Unauthorized access!' });
+                return res.redirect('/staff/login');
+            }
+    
+        } catch (error) {
+            console.error('Error fetching HR Dashboard data:', error);
+            req.flash('errors', { authError: 'An error occurred while fetching the dashboard data.' });
+            return res.redirect('/staff/login');
         }
     },
+    
     
     
     
