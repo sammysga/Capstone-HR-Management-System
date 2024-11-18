@@ -225,6 +225,7 @@ const hrController = {
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
                 return res.render('staffpages/hr_pages/hrdashboard', {
+                    departments: departments,        // Ensure departments are passed as an object property
                     formattedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
                     manpowerRequisitions,
@@ -255,7 +256,7 @@ const hrController = {
         } catch (error) {
             console.error(error);
             req.flash('errors', { generalError: 'Something went wrong. Please try again later.' });
-            return res.redirect('/staff/hr/dashboard');
+            return res.redirect('staffpages/hr_pages/hrdashboard');
         }
     },
     
