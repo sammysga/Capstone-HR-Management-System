@@ -72,8 +72,8 @@
         <label for="filter-department">Department:</label>
         <select name="filterDepartment" id="filter-department">
             <option value="">All</option>
-            <% if (departments && departments.length > 0) { %>
-                <% departments.forEach(department => { %>
+            <% if (department && department.length > 0) { %>
+                <% department.forEach(department => { %>
                     <option value="<%= department.deptName %>" 
                             <%= department.deptName === filterDepartment ? 'selected' : '' %>>
                         <%= department.deptName %>
