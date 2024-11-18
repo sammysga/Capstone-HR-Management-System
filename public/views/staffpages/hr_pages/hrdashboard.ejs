@@ -327,21 +327,27 @@
                 }
             });
         
-            // Line Chart: All Leave Requests
+            // Line Chart: All Leave Requests<!-- Logs Section -->
             const leaveData = <%- JSON.stringify(allLeaves) %>;
-            const leaveDates = leaveData.map(leave => leave.filedDate);
-            const leaveCounts = leaveDates.reduce((acc, date) => {
-                acc[date] = (acc[date] || 0) + 1;
+            const leaveWeeklyCounts = leaveData.reduce((acc, leave) => {
+                // Convert date to week number
+                const leaveDate = new Date(leave.filedDate);
+                const startOfYear = new Date(leaveDate.getFullYear(), 0, 1);
+                const weekNumber = Math.ceil(((leaveDate - startOfYear) / (24 * 60 * 60 * 1000) + startOfYear.getDay() + 1) / 7);
+
+                const weekKey = `Week ${weekNumber}, ${leaveDate.getFullYear()}`;
+                acc[weekKey] = (acc[weekKey] || 0) + 1;
                 return acc;
             }, {});
-        
+
+            // Prepare data for the chart
             new Chart(document.getElementById('leaveRequestsChart'), {
                 type: 'line',
                 data: {
-                    labels: Object.keys(leaveCounts),
+                    labels: Object.keys(leaveWeeklyCounts),
                     datasets: [{
-                        label: 'Leave Requests',
-                        data: Object.values(leaveCounts),
+                        label: 'Weekly Leave Requests',
+                        data: Object.values(leaveWeeklyCounts),
                         borderColor: '#FF6384',
                         tension: 0.3,
                         fill: false,
@@ -350,7 +356,10 @@
                 options: {
                     responsive: true,
                     plugins: { legend: { display: true } },
-                    scales: { x: { title: { display: true, text: 'Dates' } }, y: { title: { display: true, text: 'Count' } } }
+                    scales: { 
+                        x: { title: { display: true, text: 'Weeks' } },
+                        y: { title: { display: true, text: 'Count' } }
+                    }
                 }
             });
         </script>        
