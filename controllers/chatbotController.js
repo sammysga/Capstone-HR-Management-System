@@ -206,7 +206,7 @@ handleFileUpload: async function(req, res) {
         const { data: insertedFile, error: insertError } = await supabase
             .from('user_files') // Your table for storing file metadata
             .insert([{
-                user_Id: userId,     // Use the authenticated user's ID
+                userId: userId,     // Use the authenticated user's ID
                 file_name: file.name, // File name
                 file_url: fileUrl,    // Public URL of the uploaded file
                 uploaded_at: new Date(),
