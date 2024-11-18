@@ -1,50 +1,10 @@
 const supabase = require('../public/config/supabaseClient');
 const bcrypt = require('bcrypt');
-const { getJobDetails } = require('./applicantController');
-const multer = require('multer');
+const expressFileUpload = require('express-fileupload');
 const path = require('path');
-const fs = require('fs');
-
-// Setup Multer for file uploads
-const upload = multer({
-    dest: path.join(__dirname, '../uploads'), // Temporary folder to store uploaded files
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = ['application/pdf'];
-        if (!allowedTypes.includes(file.mimetype)) {
-            return cb(new Error('Only PDF files are allowed.'));
-        }
-        cb(null, true);
-    },
-});
+const { getJobDetails } = require('./applicantController');
 
 const chatbotController = {
-
-      // New function to handle file uploads
-      handleFileUpload: async function(req, res) {
-        try {
-            const file = req.file;
-
-            if (!file) {
-                return res.status(400).json({ message: 'No file uploaded.' });
-            }
-
-            // Move the file to a permanent location (e.g., user-specific folder)
-            const userFolder = path.join(__dirname, '../uploads', req.session.userId || 'guest');
-            if (!fs.existsSync(userFolder)) {
-                fs.mkdirSync(userFolder, { recursive: true });
-            }
-
-            const newFilePath = path.join(userFolder, file.originalname);
-            fs.renameSync(file.path, newFilePath);
-
-            console.log(`File uploaded successfully: ${newFilePath}`);
-            res.json({ message: 'File uploaded successfully.' });
-        } catch (error) {
-            console.error('Error handling file upload:', error);
-            res.status(500).json({ message: 'Error uploading file.' });
-        }
-    },
 
     // Function to render chatbot page with the initial greeting
     getChatbotPage: async function(req, res) {
@@ -63,7 +23,7 @@ const chatbotController = {
         }
     },
     
-     // Updated chatbot message handler to handle file upload prompts
+    // Function to handle incoming chatbot messages
     handleChatbotMessage: async function(req, res) {
         try {
             const userMessage = req.body.message.toLowerCase();
@@ -71,17 +31,17 @@ const chatbotController = {
             let botResponse;
             const positions = await chatbotController.getJobPositionsList();
             const selectedPosition = positions.find(position => userMessage.includes(position.toLowerCase()));
-
+    
             if (selectedPosition) {
                 req.session.selectedPosition = selectedPosition;
                 const jobDetails = await chatbotController.getJobDetails(selectedPosition);
-
+                
                 if (jobDetails) {
                     const jobInfo = `You have chosen *${selectedPosition}*. Here are the details of the chosen job:\n` +
-                        `Job Title: ${jobDetails.jobTitle}\n` +
-                        `Job Description: ${jobDetails.jobDescrpt}\n` +
-                        `Would you like to proceed with your application?\n- Yes\n- No`;
-
+                    `Job Title: ${jobDetails.jobTitle}\n` +
+                    `Job Description: ${jobDetails.jobDescrpt}\n` + 
+                    `Would you like to proceed with your application?\n- Yes\n- No`;
+                    
                     botResponse = jobInfo;
                 } else {
                     botResponse = "Sorry, I couldn't find the job details.";
@@ -89,13 +49,13 @@ const chatbotController = {
             } else if (userMessage.includes('yes')) {
                 const jobId = (await chatbotController.getJobDetails(req.session.selectedPosition)).jobId;
                 const questions = await chatbotController.getScreeningQuestions(jobId);
-
-                req.session.screeningQuestions = questions;
-                req.session.currentQuestionIndex = 0;
-
+                
+                req.session.screeningQuestions = questions; 
+                req.session.currentQuestionIndex = 0; 
+    
                 if (questions.length) {
                     botResponse = `Great! Now it’s time to check if you are the right applicant for this position! Please rate the following questions based on how they apply to you: 5 - applies 100% to you, 1 - not at all:\n` +
-                        `1. ${questions[0]}`;
+                    `1. ${questions[0]}`;
                 } else {
                     botResponse = "No screening questions available for this position.";
                 }
@@ -104,21 +64,23 @@ const chatbotController = {
             } else if (req.session.screeningQuestions) {
                 const questions = req.session.screeningQuestions;
                 const currentIndex = req.session.currentQuestionIndex;
-
-                if (currentIndex < questions.length - 1) {
+    
+                if (currentIndex < questions.length) {
+                    // TODO: store the user's answer
                     botResponse = `Thank you for your answer! Here’s the next question:\n${currentIndex + 2}. ${questions[currentIndex + 1]}`;
-                    req.session.currentQuestionIndex++;
+                    req.session.currentQuestionIndex++; 
                 } else {
-                    botResponse = "You have completed the screening questions. Please upload your certifications and resume as PDF files. Type 'done' when finished.";
-                    delete req.session.screeningQuestions;
-                    delete req.session.currentQuestionIndex;
+                    botResponse = "You have completed the screening questions. Please upload your certifications and resume. Type 'done' when finished.";
+                    delete req.session.screeningQuestions; 
+                    delete req.session.currentQuestionIndex; 
                 }
             } else if (userMessage === 'done') {
-                botResponse = "Thank you! Your application is complete. We will review your submissions and get back to you.";
+                botResponse = "Thank you! Your application is complete.";
+                // TODO: saving the uploaded files or any final processing
             } else {
                 botResponse = 'Here are our current job openings:\n' + positions.map(pos => `- ${pos}`).join('\n') + '\nPlease select a position.';
             }
-
+    
             console.log('Bot response:', botResponse);
             res.json({ response: botResponse });
         } catch (error) {
@@ -188,10 +150,34 @@ const chatbotController = {
             console.error('Error fetching job details:', error);
             return null; 
         }
-    }    
+    },
+
+    // Function to handle file uploads
+    handleFileUpload: async function(req, res) {
+        try {
+            if (!req.files || !req.files.file) {
+                return res.status(400).send('No file uploaded.');
+            }
+
+            const file = req.files.file;
+            const filePath = path.join(__dirname, '../uploads', file.name);
+
+            // Save the file to the server
+            await file.mv(filePath);
+
+            // Optionally, upload to Supabase Storage or any other cloud service
+            // const { data, error } = await supabase.storage
+            //   .from('uploads')
+            //   .upload(file.name, file.data);
+
+            // You can also store file paths in the database
+            console.log('File uploaded successfully:', file.name);
+            res.send('File uploaded successfully!');
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            res.status(500).send('Error uploading file.');
+        }
+    }
 };
 
-module.exports = {
-    chatbotController,
-    upload, // Export Multer configuration for file uploads
-};
+module.exports = chatbotController;
