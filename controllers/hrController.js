@@ -701,7 +701,13 @@ const hrController = {
             return res.redirect('/staff/login');
         }
     
-        console.log("Request Body:", req.body); 
+        console.log("Request Body:", req.body);  
+    
+        if (!req.body.mrfId) {
+            console.error("Missing mrfId in request body");
+            req.flash('errors', { submissionError: 'MRF ID is missing. Please try again.' });
+            return res.redirect('/hr/dashboard');
+        }
     
         // Approval/Disapproval logic
         const approvalStatus = req.body.hrApproval ? 'approved' : (req.body.hrDisapproval ? 'disapproved' : 'pending');
@@ -725,17 +731,17 @@ const hrController = {
     
         try {
             const { data: approvalDataInserted, error: approvalError } = await supabase
-            .from('mrf_approvals')
-            .insert([approvalData])
-            .select();
-
+                .from('mrf_approvals')
+                .insert([approvalData])
+                .select();
+    
             if (approvalError) {
                 console.error("Supabase Error (Insert Approval):", approvalError.message, approvalError.details);
                 throw approvalError;
             }
-
+    
             console.log("Approval data inserted:", approvalDataInserted);
-
+    
             req.flash('success', { message: 'MRF Approval/Disapproval submitted successfully!' });
             return res.redirect('/hr/dashboard');  
     
@@ -744,7 +750,7 @@ const hrController = {
             req.flash('errors', { submissionError: 'Failed to submit MRF approval. Please try again.' });
             return res.redirect('/hr/dashboard');
         }
-    },
+    },    
     
     getJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
