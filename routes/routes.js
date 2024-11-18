@@ -34,7 +34,7 @@ router.get('/onboarding/objective-setting-view', applicantController.getOnboardi
 // Chatbot routes
 router.get('/chatbothome', chatbotController.getChatbotPage);
 router.post('/chatbot', chatbotController.handleChatbotMessage);
-router.post('/upload', chatbotController.handleFileUpload); // Directly use the controller method for file handling
+router.post('/upload', expressFileUpload(), handleFileUpload); // 'file' is the field name in the form
 
 // Staff Log in
 router.get('/staff/login', staffLoginController.getStaffLogin);
