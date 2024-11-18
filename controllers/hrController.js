@@ -32,17 +32,17 @@ const hrController = {
     
                 // Fetch departments
                 const { data: departments, error: deptError } = await supabase
-    .from('departments')
-    .select('departmentId, deptName'); // Fetch departments from the database
-    console.log('Departments:', departments);
+                    .from('departments')
+                    .select('departmentId, deptName'); // Fetch departments from the database
+    
                 if (deptError) throw deptError;
     
                 const combinedData = mrfList.map(mrf => {
                     const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
                     const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
-                
+    
                     const requisitionerName = latestApproval ? latestApproval.reviewerName : 'Pending';
-                
+    
                     let status = mrf.status || 'Pending'; // default to pending
     
                     const buttonText = (status === 'Pending') ? 'Action Required' : '';
@@ -52,11 +52,11 @@ const hrController = {
                         department: department,
                         jobPosition: mrf.positionTitle,
                         requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
-                        status: status,  
+                        status: status,
                         mrfId: mrf.mrfId,
-                        actionButtonText: buttonText 
+                        actionButtonText: buttonText
                     };
-                });                 
+                });
     
                 return combinedData;
             };
@@ -87,12 +87,12 @@ const hrController = {
                         )
                     `)
                     .order('created_at', { ascending: false });
-                
+    
                 if (statusFilter) query.eq('status', statusFilter);
-                
+    
                 const { data, error } = await query;
                 if (error) throw error;
-                
+    
                 return data.map(leave => ({
                     lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
                     firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
@@ -135,7 +135,6 @@ const hrController = {
                 }
     
                 return attendanceLogs.filter(attendance => {
-                    // Use the selected date or default to the current date
                     const filterDate = selectedDate || new Date().toISOString().split('T')[0];
                     return attendance.attendanceDate === filterDate;
                 });
@@ -244,17 +243,19 @@ const hrController = {
     
                 return res.render('staffpages/hr_pages/hrdashboard', {
                     departments: departments,        // Ensure departments are passed as an object property
-                    formattedLeaves,
+                    formattedLeaves: formattedAllLeaves,  // Pass formatted leaves
+                    approvedLeaves: formattedApprovedLeaves, // If needed
                     attendanceLogs: formattedAttendanceDisplay,
                     manpowerRequisitions,
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors'),
                 });
             }
+    
         } catch (error) {
-            console.error('Error fetching data for HR Dashboard:', error);
-            req.flash('errors', { dashboardError: 'An error occurred while fetching data. Please try again later.' });
-            res.redirect('/staff/login');
+            console.error(error);
+            req.flash('errors', { generalError: 'Something went wrong. Please try again later.' });
+            return res.redirect('/staff/hr/dashboard');
         }
     },
     
