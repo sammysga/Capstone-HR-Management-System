@@ -746,6 +746,7 @@ const hrController = {
         };
     
         try {
+            // Insert approval data into the mrf_approvals table
             const { data: approvalDataInserted, error: approvalError } = await supabase
                 .from('mrf_approvals')
                 .insert([approvalData])
@@ -758,6 +759,19 @@ const hrController = {
     
             console.log("Approval data inserted:", approvalDataInserted);
     
+            // Update the status of the MRF in the mrf table
+            const { data: mrfDataUpdated, error: mrfUpdateError } = await supabase
+                .from('mrf')
+                .update({ approvalStatus: approvalStatus })
+                .match({ mrfId: req.body.mrfId });
+    
+            if (mrfUpdateError) {
+                console.error("Error updating MRF status:", mrfUpdateError.message, mrfUpdateError.details);
+                throw mrfUpdateError;
+            }
+    
+            console.log("MRF status updated:", mrfDataUpdated);
+    
             req.flash('success', { message: 'MRF Approval/Disapproval submitted successfully!' });
             return res.redirect('/hr/dashboard');  
     
@@ -766,7 +780,7 @@ const hrController = {
             req.flash('errors', { submissionError: 'Failed to submit MRF approval. Please try again.' });
             return res.redirect('/hr/dashboard');
         }
-    },    
+    },
     
     getJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
