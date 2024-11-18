@@ -173,47 +173,53 @@
 
         // File upload handler
         document.getElementById('upload-button').addEventListener('click', async () => {
-            const fileInput = document.getElementById('file-input');
-            if (fileInput.files.length === 0) {
-                alert('Please select a PDF file to upload.');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            if (file.type !== 'application/pdf') {
-                alert('Only PDF files are allowed.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!response.ok) throw new Error('Failed to upload file');
-
-                const result = await response.text();
-                alert(result);
-                addMessage('Bot', 'Your PDF has been uploaded successfully!');
-            } catch (error) {
-                console.error('Error uploading file:', error);
-                alert('Failed to upload PDF. Please try again.');
-            }
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const initialResponse = "<%= initialResponse %>";
-            displayInitialMessage(initialResponse);
-            console.log('Initial response being displayed:', initialResponse);
-        });
-
-        function displayInitialMessage(message) {
-            addMessage("Bot", message);
+        const fileInput = document.getElementById('file-input');
+        if (fileInput.files.length === 0) {
+            alert('Please select a PDF file to upload.');
+            return;
         }
+
+        const file = fileInput.files[0];
+        if (file.type !== 'application/pdf') {
+            alert('Only PDF files are allowed.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) throw new Error('Failed to upload file');
+
+            // Get the response text which should contain the file URL
+            const result = await response.text();
+            alert(result);  // Optionally, alert the user with the result message
+
+            // Display a message to the chat indicating successful upload
+            const fileUrl = result;  // Assuming the result contains the file URL
+            addMessage('Bot', `Your PDF has been uploaded successfully! You can access it here: ${fileUrl}`);
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            alert('Failed to upload PDF. Please try again.');
+        }
+    });
+
+    // Initialize the page with an initial response
+    document.addEventListener("DOMContentLoaded", function() {
+        const initialResponse = "<%= initialResponse %>";
+        displayInitialMessage(initialResponse);
+        console.log('Initial response being displayed:', initialResponse);
+    });
+
+    // Function to display the initial message
+    function displayInitialMessage(message) {
+        addMessage("Bot", message);
+    }
     </script>
 </body>
 </html>
