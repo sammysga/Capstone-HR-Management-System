@@ -70,7 +70,7 @@
   <section>
     <form id="filter-form" action="/hr/dashboard" method="GET" style="margin: 20px;">
         <label for="filter-department">Department:</label>
-        <select name="filterDepartment" id="filter-department">
+        <select name="deparmentFilter" id="filter-department">
             <option value="">All</option>
             <% if (departments && departments.length > 0) { %>
                 <% departments.forEach(department => { %>
