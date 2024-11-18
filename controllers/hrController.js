@@ -12,51 +12,50 @@ const hrController = {
             req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
             return res.redirect('/staff/login');
         }
-    
+        const departmentFilter = req.query.filterDepartment || null; // The filter value will now be deptName
         try {
-            // Fetch and format MRF data with filtering
-            const fetchAndFormatMRFData = async (departmentFilter, statusFilter) => {
-                let query = supabase
-                    .from('mrf')
-                    .select('positionTitle, requisitionDate, mrfId, departmentId, status');
-    
-                // Apply filters
-                if (departmentFilter) query.eq('departmentId', departmentFilter);
-                if (statusFilter) query.eq('status', statusFilter);
-    
-                const { data: mrfList, error: mrfError } = await query;
-                if (mrfError) throw mrfError;
-    
-                const { data: approvals, error: approvalError } = await supabase
-                    .from('mrf_approvals')
-                    .select('mrfId, approval_stage, reviewerName')
-                    .order('reviewerDateSigned', { ascending: true });
-                if (approvalError) throw approvalError;
-    
-                const { data: departments, error: deptError } = await supabase
-                    .from('departments')
-                    .select('departmentId, deptName');
-                    console.log('Departments Data:', departments);  // Log it to check
-                    if (deptError) {
-                        console.error(deptError);
-                        departments = [];  // Ensure departments is defined even if there's an error
-                    }
-    
-                return mrfList.map(mrf => {
-                    const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
-                    const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
-    
-                    return {
-                        requisitioner: latestApproval?.reviewerName || 'Pending',
-                        department: department,
-                        jobPosition: mrf.positionTitle,
-                        requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
-                        status: mrf.status || 'Pending',
-                        mrfId: mrf.mrfId,
-                        actionButtonText: mrf.status === 'Pending' ? 'Action Required' : ''
-                    };
-                });
-            };
+            // Extract filters from query parameters
+
+
+// Fetch and format MRF data with filtering
+const fetchAndFormatMRFData = async (departmentFilter, statusFilter) => {
+    let query = supabase
+        .from('mrf')
+        .select('positionTitle, requisitionDate, mrfId, departmentId, status');
+
+    // Apply filters
+    if (departmentFilter) query.eq('deptName', departmentFilter); // Filter by deptName instead of departmentId
+    if (statusFilter) query.eq('status', statusFilter);
+
+    const { data: mrfList, error: mrfError } = await query;
+    if (mrfError) throw mrfError;
+
+    const { data: approvals, error: approvalError } = await supabase
+        .from('mrf_approvals')
+        .select('mrfId, approval_stage, reviewerName')
+        .order('reviewerDateSigned', { ascending: true });
+    if (approvalError) throw approvalError;
+
+    const { data: departments, error: deptError } = await supabase
+        .from('departments')
+        .select('departmentId, deptName');
+    if (deptError) throw deptError;
+
+    return mrfList.map(mrf => {
+        const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
+        const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
+
+        return {
+            requisitioner: latestApproval?.reviewerName || 'Pending',
+            department: department,
+            jobPosition: mrf.positionTitle,
+            requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
+            status: mrf.status || 'Pending',
+            mrfId: mrf.mrfId,
+            actionButtonText: mrf.status === 'Pending' ? 'Action Required' : ''
+        };
+    });
+};
     
             // Fetch and format attendance logs with filtering
             const fetchAndFormatAttendanceLogs = async (dateFilter) => {

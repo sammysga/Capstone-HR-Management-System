@@ -66,18 +66,18 @@
     <div class="main-content">
         <h2>HR Dashboard</h2>
 
-        <!-- Filters Section -->
-        <section>
-            <form id="filter-form" action="/hr/dashboard" method="GET" style="margin: 20px;">
-                <label for="filter-department">Department:</label>
-                <select name="filterDepartment" id="filter-department">
-                    <option value="">All</option>
-                    <% if (departments && departments.length > 0) { %>
-                        <% departments.forEach(department => { %>
-                            <option value="<%= department.departmentId %>"><%= department.deptName %></option>
-                        <% }); %>
-                    <% } %>
-                </select>
+<!-- Filters Section -->
+<section>
+    <form id="filter-form" action="/hr/dashboard" method="GET" style="margin: 20px;">
+        <label for="filter-department">Department:</label>
+        <select name="filterDepartment" id="filter-department">
+            <option value="">All</option>
+            <% if (departments && departments.length > 0) { %>
+                <% departments.forEach(department => { %>
+                    <option value="<%= department.deptName %>"><%= department.deptName %></option>
+                <% }); %>
+            <% } %>
+        </select>
 
                 <label for="filter-date">Date:</label>
                 <input type="date" name="filterDate" id="filter-date" value="<%= filterDate || '' %>">
