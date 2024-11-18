@@ -40,9 +40,9 @@ const hrController = {
                 const combinedData = mrfList.map(mrf => {
                     const firstApproval = approvals.find(a => a.mrfId === mrf.mrfId);
                     const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
-            
+                
                     const requisitionerName = firstApproval ? firstApproval.reviewerName : 'Pending';
-            
+                
                     let status = 'Pending'; // default to pending
                     const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
                     if (latestApproval) {
@@ -52,11 +52,11 @@ const hrController = {
                             status = 'Disapproved';
                         }
                     }
-
+                
                     const buttonText = (status === 'Pending') ? 'Action Required' : 'View MRF';
-            
+                
                     return {
-                        requisitioner: requisitionerName,  
+                        requisitioner: requisitionerName,
                         department: department,
                         jobPosition: mrf.positionTitle,
                         requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
@@ -64,7 +64,7 @@ const hrController = {
                         mrfId: mrf.mrfId,
                         actionButtonText: buttonText
                     };
-                });
+                });                
 
                 return combinedData;
             };
