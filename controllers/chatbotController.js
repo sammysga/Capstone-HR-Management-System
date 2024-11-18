@@ -191,7 +191,6 @@ handleFileUpload: async function(req, res) {
 
         // Generate the public URL for the uploaded file
         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`; // Replace with your actual Supabase URL
-        console.log('User ID:', userId);  // Log to check the user ID
         
         // Insert file metadata into the database (optional)
         const { data: insertedFile, error: insertError } = await supabase
