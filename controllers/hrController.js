@@ -18,7 +18,7 @@ const hrController = {
             const fetchAndFormatMRFData = async () => {
                 const { data: mrfList, error: mrfError } = await supabase
                     .from('mrf')
-                    .select('positionTitle, requisitionDate, mrfId, departmentId');
+                    .select('positionTitle, requisitionDate, mrfId, departmentId, status');
 
                 if (mrfError) throw mrfError;
 
@@ -43,15 +43,7 @@ const hrController = {
                 
                     const requisitionerName = latestApproval ? latestApproval.reviewerName : 'Pending';
                 
-                    let status = 'Pending'; // default to pending
-
-                    if (latestApproval) {
-                        if (latestApproval.approval_stage === 'approved') {
-                            status = 'Approved';
-                        } else if (latestApproval.approval_stage === 'disapproved') {
-                            status = 'Disapproved';
-                        }
-                    }
+                    let status = mrf.status || 'Pending'; // default to pending
 
                     const buttonText = (status === 'Pending') ? 'Action Required' : 'View MRF';
 
@@ -725,11 +717,9 @@ const hrController = {
             return res.redirect('/hr/dashboard');
         }
     
-        // Get the approval status (either approved, disapproved, or pending)
         const approvalStatus = req.body.hrApproval ? 'approved' : (req.body.hrDisapproval ? 'disapproved' : 'pending');
         const disapprovalReason = req.body.disapprovalReason || ''; 
     
-        // Ensure the approval status is valid
         if (!['approved', 'disapproved', 'pending'].includes(approvalStatus)) {
             console.error('Invalid approval status:', approvalStatus);
             req.flash('errors', { submissionError: 'Invalid approval status. Please try again.' });
@@ -747,7 +737,6 @@ const hrController = {
         };
     
         try {
-            // Insert approval data into the mrf_approvals table
             const { data: approvalDataInserted, error: approvalError } = await supabase
                 .from('mrf_approvals')
                 .insert([approvalData])
@@ -760,8 +749,7 @@ const hrController = {
     
             console.log("Approval data inserted:", approvalDataInserted);
     
-            // Now, we need to update the 'status' field in the 'mrf' table
-            let newMrfStatus = "Action Required";  // Default status if no decision has been made
+            let newMrfStatus = "Action Required";  
             
             if (approvalStatus === 'approved') {
                 newMrfStatus = "Approved";
@@ -769,12 +757,11 @@ const hrController = {
                 newMrfStatus = "Disapproved";
             }
     
-            // Update the status in the 'mrf' table
             const { data: mrfUpdateData, error: mrfUpdateError } = await supabase
                 .from('mrf')
                 .update({ status: newMrfStatus })  // Update status in mrf table
-                .eq('mrfId', req.body.mrfId)  // Use the mrfId to target the correct MRF
-                .select();  // Fetch the updated record (optional)
+                .eq('mrfId', req.body.mrfId) 
+                .select(); 
     
             if (mrfUpdateError) {
                 console.error("Error updating MRF status:", mrfUpdateError.message, mrfUpdateError.details);
@@ -783,7 +770,6 @@ const hrController = {
     
             console.log("MRF status updated:", mrfUpdateData);
     
-            // Display a success message to the user and redirect
             req.flash('success', { message: 'MRF Approval/Disapproval submitted successfully!' });
             return res.redirect('/hr/dashboard');  
     
