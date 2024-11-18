@@ -52,7 +52,7 @@ const hrController = {
                     }
 
                     return {
-                        requisitioner: approval ? approval.reviewerName : 'Pending',
+                        requisitioner: latestApproval ? latestApproval.reviewerName : 'Pending',
                         department: department,
                         jobPosition: mrf.positionTitle,
                         requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
