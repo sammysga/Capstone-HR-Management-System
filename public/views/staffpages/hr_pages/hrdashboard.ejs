@@ -66,6 +66,19 @@
     <div class="main-content">
         <h2>HR Dashboard</h2>
 
+        <!-- Filter by Department -->
+<div style="margin-bottom: 20px;">
+    <label for="departmentFilter">Filter by Department: </label>
+    <select id="departmentFilter">
+        <option value="">All Departments</option>
+        <% if (departments && departments.length > 0) { %>
+            <% departments.forEach(department => { %>
+                <option value="<%= department %>"><%= department %></option>
+            <% }); %>
+        <% } %>
+    </select>
+</div>
+
         
         <!-- Attendance Logs Section -->
         <section class="attendance-logs">
@@ -229,6 +242,20 @@
 
         <!-- JavaScript for sidebar functionality -->
         <script>
+
+document.getElementById('departmentFilter').addEventListener('change', function() {
+        const selectedDepartment = this.value;
+        const rows = document.querySelectorAll('.attendance-logs tbody tr');
+        
+        rows.forEach(row => {
+            const departmentCell = row.cells[3]; // Assuming department is in the 4th column (index 3)
+            if (selectedDepartment === "" || departmentCell.textContent.trim() === selectedDepartment) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
 
             document.querySelectorAll('.action-required-btn').forEach(button => {
                 button.addEventListener('click', function() {
