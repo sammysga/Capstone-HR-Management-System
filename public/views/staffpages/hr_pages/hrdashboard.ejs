@@ -327,7 +327,7 @@
                 }
             });
         
-            // Line Chart: All Leave Requests<!-- Logs Section -->
+            // Line Chart: All Leave Request
             const leaveData = <%- JSON.stringify(allLeaves) %>;
             const leaveWeeklyCounts = leaveData.reduce((acc, leave) => {
                 // Convert date to week number
@@ -340,7 +340,6 @@
                 return acc;
             }, {});
 
-            // Prepare data for the chart
             new Chart(document.getElementById('leaveRequestsChart'), {
                 type: 'line',
                 data: {
