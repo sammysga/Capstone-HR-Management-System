@@ -122,6 +122,7 @@ const hrController = {
                 attendanceLogs,
                 successMessage: req.flash('success'),
                 errorMessage: req.flash('errors'),
+                departments
             });
     
         } catch (err) {
