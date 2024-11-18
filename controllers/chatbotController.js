@@ -154,16 +154,27 @@ const chatbotController = {
         }
     },
 
- // Function to handle file uploads
+// Function to handle file uploads
 handleFileUpload: async function(req, res) {
     try {
+        // Check if user is authenticated (check session or JWT)
+        const session = await supabase.auth.getSession();  // Get session using supabase.js (if you're using supabase-js)
+        
+        // If the session is not valid or there's no user, return an error
+        if (!session || !session.user) {
+            return res.status(403).send('User not authenticated.');
+        }
+
+        const userId = session.user.id; // Extract the user ID from the session
+        console.log('Authenticated User ID:', userId); // Debug the user ID
+        
         // Check if file is uploaded
         if (!req.files || !req.files.file) {
             return res.status(400).send('No file uploaded.');
         }
 
         const file = req.files.file;
-
+        
         // Define the local file path
         const filePath = path.join(__dirname, '../uploads', file.name); // Use the uploads folder path
 
@@ -192,18 +203,15 @@ handleFileUpload: async function(req, res) {
         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`; // Replace with your actual Supabase URL
 
         // Insert file metadata into the database (optional)
-        const { user_Id } = req.session; // Assuming you're storing user ID in the session or passed through request
-        
         const { data: insertedFile, error: insertError } = await supabase
             .from('user_files') // Your table for storing file metadata
             .insert([{
-                user_Id: user_Id,     // User who uploaded the file
+                user_id: userId,     // Use the authenticated user's ID
                 file_name: file.name, // File name
                 file_url: fileUrl,    // Public URL of the uploaded file
                 uploaded_at: new Date(),
                 file_size: file.size  // File size in bytes
             }]);
-
 
         if (insertError) {
             console.error('Error inserting file metadata:', insertError);
@@ -211,13 +219,14 @@ handleFileUpload: async function(req, res) {
         }
 
         // Return a success message with the file URL
-        res.send(fileUrl); // Send back the file URL instead of just a success message
+        res.send(`File uploaded successfully! File URL: ${fileUrl}`);
 
     } catch (error) {
         console.error('Error uploading file:', error);
         res.status(500).send('Error uploading file.');
     }
 }
+
 
 };
 
