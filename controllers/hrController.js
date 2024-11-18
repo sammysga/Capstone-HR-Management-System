@@ -125,7 +125,7 @@ const fetchAndFormatMRFData = async (departmentFilter, statusFilter) => {
                 attendanceLogs,
                 successMessage: req.flash('success'),
                 errorMessage: req.flash('errors'),
-                departments
+                departments: departments
             });
     
         } catch (err) {
