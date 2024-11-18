@@ -136,11 +136,6 @@
                                         <!-- Display status for approved/disapproved requisition -->
                                         <%= req.status %>
                                     <% } %>
-                
-                                    <!-- If approved or disapproved, provide a link to view the MRF -->
-                                    <% if (req.status !== 'Pending') { %>
-                                        <a href="/hr/view-mrf/<%= req.mrfId %>" class="view-mrf-link">View MRF</a>
-                                    <% } %>
                                 </td>
                             </tr>
                         <% }); %>
