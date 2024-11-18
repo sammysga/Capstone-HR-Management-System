@@ -34,6 +34,7 @@ router.get('/onboarding/objective-setting-view', applicantController.getOnboardi
 // Chatbot routes
 router.get('/chatbothome', chatbotController.getChatbotPage);
 router.post('/chatbot', chatbotController.handleChatbotMessage);
+router.post('/upload', upload.single('file'), chatbotController.handleFileUpload);
 
 // Staff Log in
 router.get('/staff/login', staffLoginController.getStaffLogin);
