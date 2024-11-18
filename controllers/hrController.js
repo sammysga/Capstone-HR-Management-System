@@ -137,18 +137,23 @@ const hrController = {
                 return attendanceLogs;
             };
     
-            // Function to format attendance logs
-            const formatAttendanceLogs = (attendanceLogs) => {
-                const formattedAttendanceLogs = attendanceLogs.reduce((acc, attendance) => {
+          // Function to format attendance logs
+          const formatAttendanceLogs = (attendanceLogs, selectedDate = null) => {
+            // Use the selected date or default to the current date
+            const filterDate = selectedDate || new Date().toISOString().split('T')[0];
+        
+            const formattedAttendanceLogs = attendanceLogs
+                .filter(attendance => attendance.attendanceDate === filterDate) // Filter logs by the selected or current date
+                .reduce((acc, attendance) => {
                     const attendanceDate = attendance.attendanceDate;
                     const attendanceTime = attendance.attendanceTime || '00:00:00';
                     const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
                     const localDate = new Date(attendanceDate);
                     localDate.setHours(hours, minutes, seconds);
-    
+        
                     const userId = attendance.userId;
                     const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
-    
+        
                     if (attendance.attendanceAction === 'Time In') {
                         if (existingEntry) {
                             existingEntry.timeIn = localDate;
@@ -174,25 +179,44 @@ const hrController = {
                             });
                         }
                     }
-    
+        
                     return acc;
                 }, []);
-    
-                return formattedAttendanceLogs.map(log => {
-                    const activeWorkingHours = log.timeIn && log.timeOut ? (log.timeOut - log.timeIn) / 3600000 : 0;
-    
-                    return {
-                        department: log.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
-                        firstName: log.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
-                        lastName: log.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
-                        jobTitle: log.useraccounts?.staffaccounts[0]?.jobpositions?.jobTitle || 'N/A',
-                        date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
-                        timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
-                        timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : 'N/A',
-                        activeWorkingHours: activeWorkingHours.toFixed(2)
-                    };
-                });
-            };
+        
+            return formattedAttendanceLogs.map(log => {
+                let activeWorkingHours = 0;
+                let timeOutMessage = '';
+                const now = new Date();
+        
+                if (log.timeIn) {
+                    const endOfDay = new Date(log.date);
+                    endOfDay.setHours(23, 59, 59, 999); // End of the day
+                    const endTime = log.timeOut || now;
+        
+                    if (!log.timeOut && endTime <= endOfDay) {
+                        timeOutMessage = `(In Work)`;
+                        activeWorkingHours = (endTime - log.timeIn) / 3600000; // Calculate hours
+                    } else if (!log.timeOut && endTime > endOfDay) {
+                        timeOutMessage = `(User did not Record Time Out)`;
+                        activeWorkingHours = (endOfDay - log.timeIn) / 3600000; // Up to end of day
+                    } else {
+                        activeWorkingHours = (log.timeOut - log.timeIn) / 3600000; // Normal calculation
+                    }
+                }
+        
+                return {
+                    department: log.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+                    firstName: log.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+                    lastName: log.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+                    jobTitle: log.useraccounts?.staffaccounts[0]?.jobpositions?.jobTitle || 'N/A',
+                    date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
+                    timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
+                    timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : timeOutMessage,
+                    activeWorkingHours: activeWorkingHours.toFixed(2)
+                };
+            });
+        };
+        
     
             // Initialize attendanceLogs variable
             let attendanceLogs = [];

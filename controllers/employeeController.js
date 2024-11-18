@@ -1106,7 +1106,6 @@ getAttendance: async function (req, res) {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 },
-
 postAttendance: async function (req, res) {
     // Check if the user is authenticated
     if (!req.session.user || !req.session.user.userId) {
@@ -1114,11 +1113,11 @@ postAttendance: async function (req, res) {
     }
 
     // Destructure the relevant fields from the request body
-    const { attendanceAction } = req.body; // Expecting attendanceAction (Time In or Time Out)
+    const { attendanceAction, attendanceTime, selectedDate } = req.body; // Include selectedDate if available
 
     // Ensure mandatory fields are provided
-    if (!attendanceAction) {
-        return res.status(400).json({ message: 'Attendance action is required (Time In or Time Out).' });
+    if (!attendanceAction || !attendanceTime) {
+        return res.status(400).json({ message: 'Attendance action and time are required.' });
     }
 
     try {
@@ -1135,20 +1134,23 @@ postAttendance: async function (req, res) {
 
         const { staffId, firstName, lastName } = userData;
 
-        // Get the current date and time
+        // Determine the attendance date (use selectedDate or default to yesterday's date)
         const currentDate = new Date();
-        const attendanceDate = currentDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        const attendanceTime = currentDate.toTimeString().split(' ')[0]; // Format: HH:MM:SS
+        const yesterday = new Date(currentDate);
+        yesterday.setDate(currentDate.getDate() - 1);  // Set the date to yesterday
+
+        // If no selectedDate is provided, default to yesterday's date
+        const attendanceDate = selectedDate || yesterday.toISOString().split('T')[0]; // Use selectedDate or yesterday if not provided
 
         // Insert the attendance record into the attendance table using userId
         const { error: insertError } = await supabase
             .from('attendance')
             .insert([
                 {
-                    userId: req.session.user.userId, // Add userId directly
-                    attendanceDate,       // Current date
-                    attendanceTime,       // Current time
-                    attendanceAction      // Action: Time In or Time Out
+                    userId: req.session.user.userId,  // Add userId directly
+                    attendanceDate,                   // Use selectedDate or default to yesterday
+                    attendanceTime,                   // User-provided time
+                    attendanceAction                  // Action: Time In or Time Out
                 }
             ]);
 
@@ -1165,6 +1167,8 @@ postAttendance: async function (req, res) {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 },
+
+
 
 getViewPerformanceTimeline: function(req, res){
     if (req.session.user && req.session.user.userRole === 'Employee') {
