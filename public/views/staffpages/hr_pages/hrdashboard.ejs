@@ -62,25 +62,24 @@
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
-    <!-- Main content -->
     <div class="main-content">
         <h2>HR Dashboard</h2>
 
-  <!-- Filters Section -->
-  <section>
-    <form id="filter-form" action="/hr/dashboard" method="GET" style="margin: 20px;">
-        <label for="filter-department">Department:</label>
-        <select name="filterDepartment" id="filter-department">
-            <option value="">All</option>
-            <% if (departments && departments.length > 0) { %>
-                <% departments.forEach(department => { %>
-                    <option value="<%= departments.deptName %>" 
-                            <%= departments.deptName === filterDepartment ? 'selected' : '' %>>
-                        <%= departments.deptName %>
-                    </option>
-                <% }); %>
-            <% } %>
-        </select>
+        <!-- Filters Section -->
+        <section>
+            <form id="filter-form" action="/hr/dashboard" method="GET" style="margin: 20px;">
+                <label for="filter-department">Department:</label>
+                <select name="filterDepartment" id="filter-department">
+                    <option value="">All</option>
+                    <% if (departments && departments.length > 0) { %>
+                        <% departments.forEach(department => { %>
+                            <option value="<%= department.deptName %>" 
+                                <%= department.deptName === filterDepartment ? 'selected' : '' %>>
+                                <%= department.deptName %>
+                            </option>
+                        <% }); %>
+                    <% } %>
+                </select>
 
                 <label for="filter-date">Date:</label>
                 <input type="date" name="filterDate" id="filter-date" value="<%= filterDate || '' %>">
@@ -159,12 +158,9 @@
                                 <td><%= req.jobPosition %></td>
                                 <td><%= req.requestDate %></td>
                                 <td>
-                                    <!-- Show button for pending requisitions -->
                                     <% if (req.status === 'Pending') { %>
-                                        <!-- Button for pending requisition -->
                                         <button class="action-required-btn" data-mrfid="<%= req.mrfId %>"><%= req.actionButtonText %></button>
                                     <% } else { %>
-                                        <!-- Display status for approved/disapproved requisition -->
                                         <%= req.status %>
                                     <% } %>
                                 </td>
@@ -220,7 +216,6 @@
         <div class="allLeaves">
             <div style="display: flex; align-items: center;">
                 <h3 style="margin-right: 10px;">All Leave Requests</h3>
-                <!-- Manage Leaves Button -->
                 <a href="/hr/manageleavetypes" class="manage-leaves-button">Manage Leave Types</a>
             </div>
 
