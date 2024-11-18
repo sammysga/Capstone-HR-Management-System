@@ -137,7 +137,6 @@
                                         <%= req.status %>
                                     <% } %>
 
-                                    <!-- Conditionally render the "View MRF" link based on status -->
                                     <% if (req.status !== 'Pending') { %>
                                         <a href="/hr/view-mrf/<%= req.mrfId %>" class="view-mrf-link">View MRF</a>
                                     <% } %>
@@ -235,6 +234,13 @@
 
         <!-- JavaScript for sidebar functionality -->
         <script>
+
+            document.querySelectorAll('.action-required-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const mrfId = this.getAttribute('data-mrfid');
+                    window.location.href = `/hr/view-mrf/${mrfId}`;  // Redirect to the MRF page
+                });
+            });
 
             // Toggle active class for sidebar links
             document.querySelectorAll('.sidebar ul li a').forEach(link => {
