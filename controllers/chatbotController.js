@@ -193,7 +193,7 @@ handleFileUpload: async function(req, res) {
 
         // Insert file metadata into the database (optional)
         const { userId } = req.session; // Assuming you're storing user ID in the session or passed through request
-        
+        console.log('User ID:', req.session.userId);  // Log to check the user ID
         const { data: insertedFile, error: insertError } = await supabase
             .from('user_files') // Your table for storing file metadata
             .insert([{
