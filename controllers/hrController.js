@@ -38,7 +38,7 @@ const fetchAndFormatMRFData = async (departmentFilter, statusFilter) => {
 
     const { data: departments, error: deptError } = await supabase
         .from('departments')
-        .select('departmentId, deptName');
+        .select('deptName');
     if (deptError) throw deptError;
 
     return mrfList.map(mrf => {
