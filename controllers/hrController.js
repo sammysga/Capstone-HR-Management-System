@@ -34,7 +34,7 @@ const hrController = {
                 const { data: departments, error: deptError } = await supabase
     .from('departments')
     .select('departmentId, deptName'); // Fetch departments from the database
-                
+    console.log('Departments:', departments);
                 if (deptError) throw deptError;
     
                 const combinedData = mrfList.map(mrf => {
