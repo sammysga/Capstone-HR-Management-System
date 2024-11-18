@@ -128,15 +128,16 @@
                                 <td><%= req.jobPosition %></td>
                                 <td><%= req.requestDate %></td>
                                 <td>
-                                    <!-- Check the status to determine the button text -->
+                                    <!-- Show button for pending requisitions -->
                                     <% if (req.status === 'Pending') { %>
                                         <!-- Button for pending requisition -->
                                         <button class="action-required-btn" data-mrfid="<%= req.mrfId %>"><%= req.actionButtonText %></button>
                                     <% } else { %>
-                                        <!-- Status text for approved/disapproved requisition -->
+                                        <!-- Display status for approved/disapproved requisition -->
                                         <%= req.status %>
                                     <% } %>
-
+                
+                                    <!-- If approved or disapproved, provide a link to view the MRF -->
                                     <% if (req.status !== 'Pending') { %>
                                         <a href="/hr/view-mrf/<%= req.mrfId %>" class="view-mrf-link">View MRF</a>
                                     <% } %>
@@ -148,7 +149,7 @@
                             <td colspan="5">No manpower requisition forms available.</td>
                         </tr>
                     <% } %>
-                </tbody>
+                </tbody>                
             </table>
         </div>
 

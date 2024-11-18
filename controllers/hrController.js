@@ -38,13 +38,13 @@ const hrController = {
                 if (deptError) throw deptError;
 
                 const combinedData = mrfList.map(mrf => {
-                    const firstApproval = approvals.find(a => a.mrfId === mrf.mrfId);
+                    const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
                     const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
                 
-                    const requisitionerName = firstApproval ? firstApproval.reviewerName : 'Pending';
+                    const requisitionerName = latestApproval ? latestApproval.reviewerName : 'Pending';
                 
                     let status = 'Pending'; // default to pending
-                    const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
+
                     if (latestApproval) {
                         if (latestApproval.approval_stage === 'approved') {
                             status = 'Approved';
