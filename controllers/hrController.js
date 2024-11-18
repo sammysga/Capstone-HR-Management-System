@@ -129,7 +129,10 @@ const hrController = {
                 attendanceLogs,
                 successMessage: req.flash('success'),
                 errorMessage: req.flash('errors'),
-                departments: departments // Pass departments for filtering
+                departments: departments, // Pass departments for filtering
+                filterDepartment: departmentFilter, // Pass departmentFilter for highlighting the selected option
+                filterStatus: statusFilter, // Make sure to pass filterStatus
+                filterDate: dateFilter // Pass filterDate if needed
             });
     
         } catch (err) {
