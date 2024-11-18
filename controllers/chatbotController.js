@@ -155,24 +155,56 @@ const chatbotController = {
     // Function to handle file uploads
     handleFileUpload: async function(req, res) {
         try {
+            // Check if file is uploaded
             if (!req.files || !req.files.file) {
                 return res.status(400).send('No file uploaded.');
             }
 
             const file = req.files.file;
-            const filePath = path.join(__dirname, '../uploads', file.name);
+            const filePath = path.join(__dirname, '../uploads', file.name); // Local path for saving the file
 
-            // Save the file to the server
+            // Save the file to the server locally (optional)
             await file.mv(filePath);
 
-            // Optionally, upload to Supabase Storage or any other cloud service
-            // const { data, error } = await supabase.storage
-            //   .from('uploads')
-            //   .upload(file.name, file.data);
+            // Upload file to Supabase Storage
+            const { data, error } = await supabase.storage
+                .from('uploads') // Your Supabase bucket name
+                .upload(file.name, file.data, {
+                    cacheControl: '3600',  // Cache control header
+                    upsert: false,         // Prevent overwriting files with the same name
+                });
 
-            // You can also store file paths in the database
-            console.log('File uploaded successfully:', file.name);
-            res.send('File uploaded successfully!');
+            if (error) {
+                console.error('Error uploading file to Supabase:', error);
+                return res.status(500).send('Error uploading file to Supabase.');
+            }
+
+            // Generate the public URL for the uploaded file
+            const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`; // Replace with your actual Supabase URL
+
+            // Insert file metadata into the database (optional, for saving uploaded file info)
+            const { user_id } = req.session; // Assuming you're storing user ID in the session or passed through request
+            
+            const { data: insertedFile, error: insertError } = await supabase
+                .from('user_files') // Your table for storing file metadata
+                .insert([
+                    { 
+                        user_id: user_id,     // User who uploaded the file
+                        file_name: file.name, // File name
+                        file_url: fileUrl,    // Public URL of the uploaded file
+                        uploaded_at: new Date(),
+                        file_size: file.size  // File size in bytes
+                    }
+                ]);
+
+            if (insertError) {
+                console.error('Error inserting file metadata:', insertError);
+                return res.status(500).send('Error inserting file metadata into database.');
+            }
+
+            // Return a success message with the file URL
+            res.send(`File uploaded successfully! File URL: ${fileUrl}`);
+
         } catch (error) {
             console.error('Error uploading file:', error);
             res.status(500).send('Error uploading file.');
