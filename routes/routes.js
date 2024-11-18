@@ -73,7 +73,7 @@ router.post('/hr/editjoboffers/:id', hrController.updateJobOffer);
 router.get('/hr/records-performance-tracker', hrController.getRecordsPerformanceTracker);
 router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPerformanceTrackerByUserId);
 router.get('/hr/view-mrf/:id', hrController.getViewMRF);
-
+router.post('/hr/view-mrf/:id', hrController.submitMRF);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);

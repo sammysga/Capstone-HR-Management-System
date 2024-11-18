@@ -694,6 +694,56 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+
+    submitMRF: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            return res.redirect('/staff/login');
+        }
+    
+        console.log("Request Body:", req.body); 
+    
+        // Approval/Disapproval logic
+        const approvalStatus = req.body.hrApproval ? 'approved' : (req.body.hrDisapproval ? 'disapproved' : 'pending');
+        const disapprovalReason = req.body.disapprovalReason || ''; 
+    
+        if (!['approved', 'disapproved', 'pending'].includes(approvalStatus)) {
+            console.error('Invalid approval status:', approvalStatus);
+            req.flash('errors', { submissionError: 'Invalid approval status. Please try again.' });
+            return res.redirect('/hr/dashboard');
+        }
+    
+        const approvalData = {
+            mrfId: req.body.mrfId,  
+            staffId: req.session.user.userId,
+            approval_stage: req.session.user.userRole,
+            reviewerName: req.session.user.userName || 'HR',  
+            reviewerDateSigned: new Date().toISOString(),
+            approvalStatus: approvalStatus,  // 'approved' or 'disapproved' or 'pending'
+            disapprovalReason: disapprovalReason 
+        };
+    
+        try {
+            const { data, error } = await supabase
+                .from('mrf_approvals')
+                .upsert([approvalData], { onConflict: ['mrfId', 'staffId'] });
+    
+            if (error) {
+                console.error("Supabase Error (MRF Approvals):", error.message, error.details);
+                throw error;
+            }
+    
+            console.log("Approval data inserted:", approvalData);
+    
+            req.flash('success', { message: 'MRF Approval/Disapproval submitted successfully!' });
+            return res.redirect('/hr/dashboard');
+    
+        } catch (error) {
+            console.error("Error in MRF submission or approval insertion:", error);
+            req.flash('errors', { submissionError: 'Failed to submit MRF approval. Please try again.' });
+            return res.redirect('/hr/dashboard');
+        }
+    },
     
     getJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
