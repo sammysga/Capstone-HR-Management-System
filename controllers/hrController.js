@@ -37,9 +37,9 @@ const fetchAndFormatMRFData = async (departmentFilter, statusFilter) => {
     if (approvalError) throw approvalError;
 
     const { data: departments, error: deptError } = await supabase
-        .from('departments')
-        .select('deptName');
-    if (deptError) throw deptError;
+    .from('departments')
+    .select('departmentId, deptName');
+if (deptError) throw deptError;
 
     return mrfList.map(mrf => {
         const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
