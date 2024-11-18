@@ -725,10 +725,11 @@ const hrController = {
             return res.redirect('/hr/dashboard');
         }
     
-        // Approval/Disapproval logic
+        // Get the approval status (either approved, disapproved, or pending)
         const approvalStatus = req.body.hrApproval ? 'approved' : (req.body.hrDisapproval ? 'disapproved' : 'pending');
         const disapprovalReason = req.body.disapprovalReason || ''; 
     
+        // Ensure the approval status is valid
         if (!['approved', 'disapproved', 'pending'].includes(approvalStatus)) {
             console.error('Invalid approval status:', approvalStatus);
             req.flash('errors', { submissionError: 'Invalid approval status. Please try again.' });
@@ -759,19 +760,30 @@ const hrController = {
     
             console.log("Approval data inserted:", approvalDataInserted);
     
-            // Update the status of the MRF in the mrf table
-            const { data: mrfDataUpdated, error: mrfUpdateError } = await supabase
+            // Now, we need to update the 'status' field in the 'mrf' table
+            let newMrfStatus = "Action Required";  // Default status if no decision has been made
+            
+            if (approvalStatus === 'approved') {
+                newMrfStatus = "Approved";
+            } else if (approvalStatus === 'disapproved') {
+                newMrfStatus = "Disapproved";
+            }
+    
+            // Update the status in the 'mrf' table
+            const { data: mrfUpdateData, error: mrfUpdateError } = await supabase
                 .from('mrf')
-                .update({ approvalStatus: approvalStatus })
-                .match({ mrfId: req.body.mrfId });
+                .update({ status: newMrfStatus })  // Update status in mrf table
+                .eq('mrfId', req.body.mrfId)  // Use the mrfId to target the correct MRF
+                .select();  // Fetch the updated record (optional)
     
             if (mrfUpdateError) {
                 console.error("Error updating MRF status:", mrfUpdateError.message, mrfUpdateError.details);
                 throw mrfUpdateError;
             }
     
-            console.log("MRF status updated:", mrfDataUpdated);
+            console.log("MRF status updated:", mrfUpdateData);
     
+            // Display a success message to the user and redirect
             req.flash('success', { message: 'MRF Approval/Disapproval submitted successfully!' });
             return res.redirect('/hr/dashboard');  
     
@@ -780,7 +792,7 @@ const hrController = {
             req.flash('errors', { submissionError: 'Failed to submit MRF approval. Please try again.' });
             return res.redirect('/hr/dashboard');
         }
-    },
+    },    
     
     getJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
