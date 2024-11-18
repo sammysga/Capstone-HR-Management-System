@@ -154,36 +154,41 @@ const chatbotController = {
         }
     },
 
- // Function to handle file uploads
+// Function to handle file uploads
 handleFileUpload: async function(req, res) {
     try {
-        // Check if the user is authenticated
-        const { data: user, error: authError } = await supabase.auth.getUser();
+        // Get token from request header or session (depending on how you authenticate the user)
+        const token = req.headers['authorization'] || req.session.token;
+        
+        if (!token) {
+            return res.status(403).send('User not authenticated.');
+        }
+
+        // Set the token in Supabase client
+        const { data: user, error: authError } = await supabase.auth.setAuth(token);
         if (authError || !user) {
             return res.status(403).send('User not authenticated.');
         }
 
+        // Handle file upload after user authentication
         const { file } = req.files;
         if (!file) {
             return res.status(400).send('No file uploaded.');
         }
-        // Define the local file path
-        const filePath = path.join(__dirname, '../uploads', file.name); // Use the uploads folder path
 
-        // Ensure the uploads folder exists
+        const filePath = path.join(__dirname, '../uploads', file.name);
         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
             fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
         }
 
-        // Save the file to the server locally
         await file.mv(filePath);
 
         // Upload file to Supabase Storage
         const { data, error } = await supabase.storage
-            .from('uploads') // Your Supabase bucket name
+            .from('uploads')
             .upload(file.name, file.data, {
-                cacheControl: '3600',  // Cache control header
-                upsert: false,         // Prevent overwriting files with the same name
+                cacheControl: '3600',
+                upsert: false,
             });
 
         if (error) {
@@ -191,40 +196,31 @@ handleFileUpload: async function(req, res) {
             return res.status(500).send('Error uploading file to Supabase.');
         }
 
-        // Generate the public URL for the uploaded file
-        const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`; // Replace with your actual Supabase URL
-        console.log('User ID:', req.session.userId);  // Log to check the user ID
-        // Insert file metadata into the database (optional)
-        const { userId } = req.session; // Assuming you're storing user ID in the session or passed through request
-        if (!userId) {
-            console.error('User not authenticated.');
-            return res.status(403).send('User not authenticated.');
-        }
-        
-        const { data: insertedFile, error: insertError } = await supabase
-            .from('user_files') // Your table for storing file metadata
-            .insert([{
-                userId: userId,     // User who uploaded the file
-                file_name: file.name, // File name
-                file_url: fileUrl,    // Public URL of the uploaded file
-                uploaded_at: new Date(),
-                file_size: file.size  // File size in bytes
-            }]);
+        const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`;
 
+        // Insert file metadata into the database
+        const { data: insertedFile, error: insertError } = await supabase
+            .from('user_files')
+            .insert([{
+                userId: user.id, // Use the authenticated user's ID
+                file_name: file.name,
+                file_url: fileUrl,
+                uploaded_at: new Date(),
+                file_size: file.size
+            }]);
 
         if (insertError) {
             console.error('Error inserting file metadata:', insertError);
             return res.status(500).send('Error inserting file metadata into database.');
         }
 
-        // Return a success message with the file URL
-        res.send(fileUrl); // Send back the file URL instead of just a success message
-
+        res.send(fileUrl); // Return the file URL
     } catch (error) {
         console.error('Error uploading file:', error);
         res.status(500).send('Error uploading file.');
     }
 }
+
 
 };
 
