@@ -671,8 +671,19 @@ const hrController = {
                     .single(); 
 
                 if (mrfError) throw mrfError;
+
+                const { data: departmentData, error: deptError } = await supabase
+                    .from('departments')
+                    .select('deptName')
+                    .eq('departmentId', mrfData.departmentId)
+                    .single();
+
+                if (deptError) throw deptError;
     
-                res.render('staffpages/hr_pages/hr-view-mrf', { mrf: mrfData });
+                res.render('staffpages/hr_pages/hr-view-mrf', { 
+                    mrf: mrfData,
+                    department: departmentData ? departmentData.deptName : 'N/A' 
+                });
             } catch (error) {
                 console.error("Error in getViewMRF:", error);
                 req.flash('errors', { fetchError: 'Error fetching MRF details. Please try again later.' });
