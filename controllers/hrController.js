@@ -138,7 +138,7 @@ const hrController = {
     
             // Format attendance logs
             const formatAttendanceLogs = (attendanceLogs, selectedDate = null) => {
-                const filterDate = selectedDate || new Date().toISOString().split('T')[0];
+                const filterDate = selectedDate || dateFilter || new Date().toISOString().split('T')[0]; // Use dateFilter or default to today
     
                 const formattedAttendanceLogs = attendanceLogs
                     .filter(attendance => attendance.attendanceDate === filterDate)
@@ -223,44 +223,32 @@ const hrController = {
             if (req.session.user.userRole === 'Line Manager') {
                 const formattedLeaves = await fetchAndFormatLeaves();
                 attendanceLogs = await fetchAttendanceLogs();
-                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs, dateFilter);
     
                 return res.render('staffpages/hr_pages/hrdashboard', {
                     formattedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
                     manpowerRequisitions,
                     successMessage: req.flash('success'),
-                    errorMessage: req.flash('errors'),
-                });
-            } else if (req.session.user.userRole === 'HR') {
-                const [formattedAllLeaves, formattedApprovedLeaves] = await Promise.all([
-                    fetchAndFormatLeaves(),
-                    fetchAndFormatLeaves('Approved')
-                ]);
-    
-                attendanceLogs = await fetchAttendanceLogs();
-                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
-    
-                return res.render('staffpages/hr_pages/hrdashboard', {
-                    formattedAllLeaves,
-                    formattedApprovedLeaves,
-                    formattedAttendanceDisplay,
-                    manpowerRequisitions,
-                    departments,
-                    successMessage: req.flash('success'),
-                    errorMessage: req.flash('errors'),
+                    errorMessage: req.flash('error'),
+                    formattedDepartments: departments,
+                    userRole: req.session.user.userRole,
+                    currentUserFirstName: req.session.user.firstName,
+                    currentUserLastName: req.session.user.lastName,
+                    currentUserJobTitle: req.session.user.jobTitle
                 });
             } else {
-                req.flash('errors', { authError: 'Unauthorized role' });
+                // Handle other roles or errors
+                req.flash('error', 'Unauthorized. Access only for authorized users.');
                 return res.redirect('/staff/login');
             }
-    
         } catch (error) {
-            console.error(error);
-            req.flash('errors', { authError: 'Error retrieving data from the database' });
+            console.error('Error in getHRDashboard:', error);
+            req.flash('error', 'There was an error processing the request.');
             return res.redirect('/staff/login');
         }
     },
+    
     
     
     
