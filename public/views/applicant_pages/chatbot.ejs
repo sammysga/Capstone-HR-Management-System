@@ -77,6 +77,13 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        .file-upload-container {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .file-upload-container input {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -86,6 +93,12 @@
         <div class="chat-input">
             <input type="text" id="user-input" placeholder="Type your message..." />
             <button id="send-button">Send</button>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="file-upload-container">
+            <input type="file" id="file-input" accept="application/pdf" />
+            <button id="upload-button">Upload PDF</button>
         </div>
     </div>
 
@@ -133,30 +146,6 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function displayInitialMessage(initialResponse) {
-            const chatMessages = document.getElementById('chat-messages');
-            const responseLines = initialResponse.split('\n');
-
-            responseLines.forEach(line => {
-                if (line.startsWith('-')) {
-                    const button = document.createElement('button');
-                    button.innerText = line.slice(2);
-                    button.onclick = () => {
-                        addMessage('You', button.innerText);
-                        sendMessage(button.innerText);
-                    }; 
-                    button.classList.add('job-button');
-                    chatMessages.appendChild(button);
-                } else {
-                    const textNode = document.createElement('div');
-                    textNode.classList.add('message', 'bot-message');
-                    textNode.innerText = line;
-                    chatMessages.appendChild(textNode);
-                }
-            });
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
         function displayBotResponse(response) {
             const chatMessages = document.getElementById('chat-messages');
             const responseLines = response.split('\n');
@@ -179,27 +168,42 @@
                 }
             });
 
-            // Add prompt for rating
-            if (response.includes("Please rate each question from 1 to 5")) {
-                const ratingInputDiv = document.createElement('div');
-                ratingInputDiv.classList.add('message', 'bot-message');
-                ratingInputDiv.innerHTML = "Please rate your answers from 1 to 5:";
-                chatMessages.appendChild(ratingInputDiv);
-
-                for (let i = 1; i <= 5; i++) {
-                    const button = document.createElement('button');
-                    button.innerText = i; 
-                    button.onclick = () => {
-                        addMessage('You', button.innerText);
-                        sendMessage(button.innerText); 
-                    };
-                    button.classList.add('job-button');
-                    chatMessages.appendChild(button);
-                }
-            }
-
             chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
         }
+
+        // File upload handler
+        document.getElementById('upload-button').addEventListener('click', async () => {
+            const fileInput = document.getElementById('file-input');
+            if (fileInput.files.length === 0) {
+                alert('Please select a PDF file to upload.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== 'application/pdf') {
+                alert('Only PDF files are allowed.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error('Failed to upload file');
+
+                const result = await response.text();
+                alert(result);
+                addMessage('Bot', 'Your PDF has been uploaded successfully!');
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('Failed to upload PDF. Please try again.');
+            }
+        });
 
         document.addEventListener("DOMContentLoaded", function() {
             const initialResponse = "<%= initialResponse %>";
