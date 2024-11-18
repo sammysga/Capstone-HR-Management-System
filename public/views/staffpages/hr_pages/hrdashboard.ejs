@@ -75,7 +75,7 @@
             <% if (departments && departments.length > 0) { %>
                 <% departments.forEach(department => { %>
                     <option value="<%= departments.deptName %>" 
-                            <%= department.deptName === filterDepartment ? 'selected' : '' %>>
+                            <%= departments.deptName === filterDepartment ? 'selected' : '' %>>
                         <%= departments.deptName %>
                     </option>
                 <% }); %>
