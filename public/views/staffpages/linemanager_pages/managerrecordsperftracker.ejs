@@ -70,15 +70,22 @@
             </thead>
             <tbody>
                 <% employees.forEach(employee => { %>
-                    <tr onclick="window.location.href='/linemanager/records-performance-tracker/<%= employee.userId %>'">
-                        <td><%= employee.lastName %></td>
-                        <td><%= employee.firstName %></td>
-                        <td><%= employee.deptName || 'N/A' %></td>
-                        <td><%= employee.jobTitle || 'N/A' %></td>
-                        <td><%= employee.email %></td>
-                    </tr>
+                    <% if (employee.userId) { %>
+                        <tr onclick="window.location.href='/linemanager/records-performance-tracker/<%= employee.userId %>'">
+                            <td><%= employee.lastName %></td>
+                            <td><%= employee.firstName %></td>
+                            <td><%= employee.deptName || 'N/A' %></td>
+                            <td><%= employee.jobTitle || 'N/A' %></td>
+                            <td><%= employee.email %></td>
+                        </tr>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5">No ID available</td>
+                        </tr>
+                    <% } %>
                 <% }) %>
             </tbody>
+            
         </table>
     </div>    
     <script>
