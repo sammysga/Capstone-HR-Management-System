@@ -172,67 +172,71 @@
         }
 
         // File upload handler
-document.getElementById('upload-button').addEventListener('click', async () => {
-    const fileInput = document.getElementById('file-input');
-    if (fileInput.files.length === 0) {
-        alert('Please select a PDF file to upload.');
-        return;
+    document.getElementById('upload-button').addEventListener('click', async () => {
+        const fileInput = document.getElementById('file-input');
+        if (fileInput.files.length === 0) {
+            alert('Please select a PDF file to upload.');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        if (file.type !== 'application/pdf') {
+            alert('Only PDF files are allowed.');
+            return;
+        }
+
+        // Create a temporary session or use a generated user ID
+        const userId = getOrCreateTemporaryUserId(); // Function to get or create a temporary user ID
+
+        // Create FormData and append the file
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('userId', userId);  // Add the user ID to the form data
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) throw new Error('Failed to upload file');
+
+            // Get the response text which should contain the file URL
+            const result = await response.text();
+            alert(result);  // Optionally, alert the user with the result message
+
+            // Display a message to the chat indicating successful upload
+            const fileUrl = result;  // Assuming the result contains the file URL
+            addMessage('Bot', `Your PDF has been uploaded successfully! You can access it here: ${fileUrl}`);
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            alert('Failed to upload PDF. Please try again.');
+        }
+    });
+
+    // Function to create or retrieve a temporary user ID
+    function getOrCreateTemporaryUserId() {
+        // Check if there's an existing user ID in sessionStorage or localStorage
+        let userId = sessionStorage.getItem('userId');
+        if (!userId) {
+            // If no user ID exists, generate one and save it
+            userId = 'user_' + Math.random().toString(36).substr(2, 9);
+            sessionStorage.setItem('userId', userId); // Store the temporary user ID
+        }
+        return userId;
     }
 
-    const file = fileInput.files[0];
-    if (file.type !== 'application/pdf') {
-        alert('Only PDF files are allowed.');
-        return;
+    // Initialize the page with an initial response
+    document.addEventListener("DOMContentLoaded", function() {
+        const initialResponse = "<%= initialResponse %>";
+        displayInitialMessage(initialResponse);
+        console.log('Initial response being displayed:', initialResponse);
+    });
+
+    // Function to display the initial message
+    function displayInitialMessage(message) {
+        addMessage("Bot", message);
     }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    // Get the user's access token from Supabase
-    const { data: userId } = await supabase.auth.getUser();
-    if (!user) {
-        alert('You need to be logged in to upload files.');
-        return;
-    }
-
-    // Add the token to the request headers for authentication
-    const token = user.access_token;
-
-    try {
-        const response = await fetch('/upload', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,  // Include the token in the header
-            },
-            body: formData,
-        });
-
-        if (!response.ok) throw new Error('Failed to upload file');
-
-        // Get the response text which should contain the file URL
-        const result = await response.text();
-        alert(result);  // Optionally, alert the user with the result message
-
-        // Display a message to the chat indicating successful upload
-        const fileUrl = result;  // Assuming the result contains the file URL
-        addMessage('Bot', `Your PDF has been uploaded successfully! You can access it here: ${fileUrl}`);
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        alert('Failed to upload PDF. Please try again.');
-    }
-});
-
-// Initialize the page with an initial response
-document.addEventListener("DOMContentLoaded", function() {
-    const initialResponse = "<%= initialResponse %>";
-    displayInitialMessage(initialResponse);
-    console.log('Initial response being displayed:', initialResponse);
-});
-
-// Function to display the initial message
-function displayInitialMessage(message) {
-    addMessage("Bot", message);
-}
 
     </script>
 </body>
