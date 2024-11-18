@@ -566,6 +566,8 @@ const lineManagerController = {
             return res.redirect('/staff/login');
         }
     
+        console.log("Request Body:", req.body); // Log the entire form data
+    
         const mrfData = {
             jobGrade: req.body.jobGrade,
             positionTitle: req.body.positionTitle,
@@ -586,15 +588,15 @@ const lineManagerController = {
         console.log("MRF Data to be inserted:", mrfData);
     
         try {
-            // Original insertion
+            // Insert MRF
             const { data, error } = await supabase
                 .from('mrf')
                 .insert([mrfData])
                 .select();
     
             if (error) {
-                console.error("Supabase Error:", error.message, error.details);
-                throw error; // Rethrow or handle as needed
+                console.error("Supabase Error (MRF):", error.message, error.details);
+                throw error;
             }
     
             if (!data || data.length === 0) {
@@ -602,25 +604,53 @@ const lineManagerController = {
             }
     
             console.log("Inserted MRF data:", data);
+    
+            // Log the approval status from the form
             console.log("Approval Status:", req.body.approvalStatus);
     
+            // Log the MRF ID
+            console.log("Inserted MRF ID:", data[0].mrfId);
+    
             // Approval logic
-            // TODO: mrf_approvals data not being inserted
             if (req.body.approvalStatus === 'approved') {
+                let reviewerName;
+    
+                // Fetch the reviewer's name if it's missing from the session
+                if (!req.session.user.userName) {
+                    const { data: staffData, error: staffError } = await supabase
+                        .from('staffaccounts')
+                        .select('firstName, lastName')
+                        .eq('userId', req.session.user.userId)
+                        .single();
+    
+                    if (staffError) {
+                        console.error("Error fetching staff details:", staffError.message, staffError.details);
+                        throw staffError;
+                    }
+    
+                    reviewerName = `${staffData.firstName} ${staffData.lastName}`.trim();
+                } else {
+                    reviewerName = req.session.user.userName;
+                }
+    
+                console.log("Reviewer Name:", reviewerName);
+    
                 const approvalData = {
-                    mrfId: data[0].id,
+                    mrfId: data[0].mrfId,
                     staffId: req.session.user.userId,
                     approval_stage: req.session.user.userRole,
-                    reviewerName: req.session.user.userName,
+                    reviewerName, 
                     reviewerDateSigned: new Date().toISOString()
                 };
+    
+                console.log("Approval Data to be inserted:", approvalData);
     
                 const { error: approvalError } = await supabase
                     .from('mrf_approvals')
                     .insert([approvalData]);
     
                 if (approvalError) {
-                    console.error("Error inserting approval data:", approvalError);
+                    console.error("Supabase Error (MRF Approvals):", approvalError.message, approvalError.details);
                     throw approvalError;
                 }
     
@@ -636,7 +666,7 @@ const lineManagerController = {
             req.flash('errors', { submissionError: 'Failed to submit MRF. Please try again.' });
             return res.redirect('/linemanager/mrf'); // Redirecting to /linemanager/mrf on error as well
         }
-    },       
+    },    
     
     // almost the same logic as hr but only by the same department is fetched.
     getRecordsPerformanceTrackerByDepartmentId: async function (req, res) {
