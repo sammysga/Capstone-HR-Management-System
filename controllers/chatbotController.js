@@ -157,13 +157,16 @@ const chatbotController = {
  // Function to handle file uploads
 handleFileUpload: async function(req, res) {
     try {
-        // Check if file is uploaded
-        if (!req.files || !req.files.file) {
-            return res.status(400).send('No file uploaded.');
+        // Check if the user is authenticated
+        const user = supabase.auth.user();
+        if (!user) {
+            return res.status(403).send('User not authenticated.');
         }
 
-        const file = req.files.file;
-
+        const { file } = req.files;
+        if (!file) {
+            return res.status(400).send('No file uploaded.');
+        }
         // Define the local file path
         const filePath = path.join(__dirname, '../uploads', file.name); // Use the uploads folder path
 
