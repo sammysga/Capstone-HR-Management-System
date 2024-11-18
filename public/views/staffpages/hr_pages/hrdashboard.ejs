@@ -128,13 +128,19 @@
                                 <td><%= req.jobPosition %></td>
                                 <td><%= req.requestDate %></td>
                                 <td>
+                                    <!-- Check the status to determine the button text -->
                                     <% if (req.status === 'Pending') { %>
+                                        <!-- Button for pending requisition -->
                                         <button class="action-required-btn" data-mrfid="<%= req.mrfId %>">Action Required</button>
                                     <% } else { %>
+                                        <!-- Status text for approved/disapproved requisition -->
                                         <%= req.status %>
                                     <% } %>
-                                    <!-- View MRF Link -->
-                                    <a href="/hr/view-mrf/<%= req.mrfId %>" class="view-mrf-link">View MRF</a>
+
+                                    <!-- Conditionally render the "View MRF" link based on status -->
+                                    <% if (req.status !== 'Pending') { %>
+                                        <a href="/hr/view-mrf/<%= req.mrfId %>" class="view-mrf-link">View MRF</a>
+                                    <% } %>
                                 </td>
                             </tr>
                         <% }); %>
@@ -146,6 +152,7 @@
                 </tbody>
             </table>
         </div>
+
 
         <!-- Approved Leave Requests Table -->
         <div class="approvedLeaves">

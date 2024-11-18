@@ -52,6 +52,8 @@ const hrController = {
                             status = 'Disapproved';
                         }
                     }
+
+                    const buttonText = (status === 'Pending') ? 'Action Required' : 'View MRF';
             
                     return {
                         requisitioner: requisitionerName,  
@@ -59,7 +61,8 @@ const hrController = {
                         jobPosition: mrf.positionTitle,
                         requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
                         status: status,
-                        mrfId: mrf.mrfId
+                        mrfId: mrf.mrfId,
+                        actionButtonText: buttonText
                     };
                 });
 
