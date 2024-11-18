@@ -163,6 +163,8 @@ handleFileUpload: async function(req, res) {
         }
 
         const file = req.files.file;
+        
+        // Check if user is authenticated, if not, use 'anonymous'
         const userId = req.body.userId || 'anonymous'; // If userId is not provided, mark as 'anonymous'
 
         // Define the local file path
@@ -216,6 +218,7 @@ handleFileUpload: async function(req, res) {
         res.status(500).send('Error uploading file.');
     }
 }
+
 
 
 };
