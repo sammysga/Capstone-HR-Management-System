@@ -154,8 +154,7 @@ const chatbotController = {
         }
     },
 
-    // Function to handle file uploads
-    // Function to handle file uploads
+ // Function to handle file uploads
 handleFileUpload: async function(req, res) {
     try {
         // Check if file is uploaded
@@ -164,7 +163,7 @@ handleFileUpload: async function(req, res) {
         }
 
         const file = req.files.file;
-        
+
         // Define the local file path
         const filePath = path.join(__dirname, '../uploads', file.name); // Use the uploads folder path
 
@@ -205,19 +204,21 @@ handleFileUpload: async function(req, res) {
                 file_size: file.size  // File size in bytes
             }]);
 
+
         if (insertError) {
             console.error('Error inserting file metadata:', insertError);
             return res.status(500).send('Error inserting file metadata into database.');
         }
 
         // Return a success message with the file URL
-        res.send(`File uploaded successfully! File URL: ${fileUrl}`);
+        res.send(fileUrl); // Send back the file URL instead of just a success message
 
     } catch (error) {
         console.error('Error uploading file:', error);
         res.status(500).send('Error uploading file.');
     }
 }
+
 };
 
 module.exports = chatbotController;
