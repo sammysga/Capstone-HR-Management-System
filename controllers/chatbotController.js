@@ -3,6 +3,8 @@ const bcrypt = require('bcrypt');
 const expressFileUpload = require('express-fileupload');
 const path = require('path');
 const { getJobDetails } = require('./applicantController');
+const fs = require('fs');
+const path = require('path');
 
 const chatbotController = {
 
