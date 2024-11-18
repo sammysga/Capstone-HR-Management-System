@@ -32,8 +32,8 @@ const hrController = {
     
                 // Fetch departments
                 const { data: departments, error: deptError } = await supabase
-                    .from('departments')
-                    .select('departmentId, deptName');
+    .from('departments')
+    .select('departmentId, deptName'); // Fetch departments from the database
                 
                 if (deptError) throw deptError;
     
@@ -242,10 +242,10 @@ const hrController = {
                 attendanceLogs = await fetchAttendanceLogs(selectedDate); // Pass the selectedDate
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
-                return res.render('staffpages/hr_pages/hrdashboard', { 
-                    allLeaves: formattedAllLeaves, 
-                    approvedLeaves: formattedApprovedLeaves, 
-                    attendanceLogs: formattedAttendanceDisplay, 
+                return res.render('staffpages/hr_pages/hrdashboard', {
+                    departments, // Pass the departments to the view
+                    formattedLeaves,
+                    attendanceLogs: formattedAttendanceDisplay,
                     manpowerRequisitions,
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors'),
