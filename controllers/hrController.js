@@ -26,7 +26,7 @@ const hrController = {
                 const { data: approvals, error: approvalError } = await supabase
                     .from('mrf_approvals')
                     .select('mrfId, approval_stage, reviewerName')
-                    .order('reviewerDateSigned', { ascending: false });
+                    .order('reviewerDateSigned', { ascending: true });
 
                 if (approvalError) throw approvalError;
 
@@ -38,11 +38,13 @@ const hrController = {
                 if (deptError) throw deptError;
 
                 const combinedData = mrfList.map(mrf => {
-                    const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
+                    const firstApproval = approvals.find(a => a.mrfId === mrf.mrfId);
                     const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
-
-                    // Determine the status
+            
+                    const requisitionerName = firstApproval ? firstApproval.reviewerName : 'Pending';
+            
                     let status = 'Pending'; // default to pending
+                    const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
                     if (latestApproval) {
                         if (latestApproval.approval_stage === 'approved') {
                             status = 'Approved';
@@ -50,9 +52,9 @@ const hrController = {
                             status = 'Disapproved';
                         }
                     }
-
+            
                     return {
-                        requisitioner: latestApproval ? latestApproval.reviewerName : 'Pending',
+                        requisitioner: requisitionerName,  
                         department: department,
                         jobPosition: mrf.positionTitle,
                         requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
