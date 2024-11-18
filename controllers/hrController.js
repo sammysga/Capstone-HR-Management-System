@@ -244,6 +244,7 @@ const hrController = {
                     allLeaves: formattedAllLeaves, 
                     approvedLeaves: formattedApprovedLeaves,
                     attendanceLogs: formattedAttendanceDisplay,
+                    departments: departments, 
                     manpowerRequisitions,
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors'),
