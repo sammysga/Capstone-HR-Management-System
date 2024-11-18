@@ -486,33 +486,29 @@ const lineManagerController = {
                 // Fetch MRF data
                 const { data: mrfList, error: mrfError } = await supabase
                     .from('mrf')
-                    .select('positionTitle, requisitionDate, mrfId');
-    
+                    .select('positionTitle, requisitionDate, mrfId, status'); // include status in query
+            
                 if (mrfError) throw mrfError;
-    
+        
                 // Fetch approval statuses
                 const { data: approvals, error: approvalError } = await supabase
                     .from('mrf_approvals')
                     .select('mrfId, approval_stage');
-    
+        
                 if (approvalError) throw approvalError;
-    
-                // Check if approvals is an array
-                if (!Array.isArray(approvals)) {
-                    console.error("Approvals is not an array:", approvals);
-                    throw new Error("Approvals data is not in expected array format.");
-                }
-    
+        
                 // Combine MRF data with approval statuses
                 const combinedData = mrfList.map(mrf => {
-                    const approval = approvals.find(a => a.mrfId === mrf.mrfId); 
+                    const approval = approvals.find(a => a.mrfId === mrf.mrfId);
+                    const status = approval ? approval.approval_stage : mrf.status || 'Pending'; // Default to 'Pending' if no approval data
                     return {
                         positionTitle: mrf.positionTitle,
                         requisitionDate: mrf.requisitionDate,
-                        status: approval ? approval.approval_stage : 'Pending'
+                        status: status,
+                        mrfId: mrf.mrfId
                     };
                 });
-    
+        
                 res.render('staffpages/linemanager_pages/mrf', { mrfRequests: combinedData });
             } catch (error) {
                 console.error("Error in getMRF:", error);
@@ -666,7 +662,7 @@ const lineManagerController = {
             req.flash('errors', { submissionError: 'Failed to submit MRF. Please try again.' });
             return res.redirect('/linemanager/mrf'); // Redirecting to /linemanager/mrf on error as well
         }
-    },    
+    },      
     
     // almost the same logic as hr but only by the same department is fetched.
     getRecordsPerformanceTrackerByDepartmentId: async function (req, res) {

@@ -18,14 +18,15 @@ const hrController = {
             const fetchAndFormatMRFData = async () => {
                 const { data: mrfList, error: mrfError } = await supabase
                     .from('mrf')
-                    .select('positionTitle, requisitionDate, mrfId, departmentId');
+                    .select('positionTitle, requisitionDate, mrfId, departmentId, status');
 
                 if (mrfError) throw mrfError;
 
                 // Fetch approval statuses
                 const { data: approvals, error: approvalError } = await supabase
                     .from('mrf_approvals')
-                    .select('mrfId, reviewerName, approval_stage');
+                    .select('mrfId, approval_stage, reviewerName')
+                    .order('reviewerDateSigned', { ascending: true });
 
                 if (approvalError) throw approvalError;
 
@@ -37,17 +38,25 @@ const hrController = {
                 if (deptError) throw deptError;
 
                 const combinedData = mrfList.map(mrf => {
-                    const approval = approvals.find(a => a.mrfId === mrf.mrfId);
+                    const latestApproval = approvals.find(a => a.mrfId === mrf.mrfId);
                     const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
+                
+                    const requisitionerName = latestApproval ? latestApproval.reviewerName : 'Pending';
+                
+                    let status = mrf.status || 'Pending'; // default to pending
+
+                    const buttonText = (status === 'Pending') ? 'Action Required' : '';
 
                     return {
-                        requisitioner: approval ? approval.reviewerName : 'Pending',
+                        requisitioner: requisitionerName,
                         department: department,
                         jobPosition: mrf.positionTitle,
                         requestDate: new Date(mrf.requisitionDate).toISOString().split('T')[0],
-                        status: approval ? approval.approval_stage: 'Pending'
+                        status: status,  
+                        mrfId: mrf.mrfId,
+                        actionButtonText: buttonText 
                     };
-                });
+                });                
 
                 return combinedData;
             };
@@ -657,6 +666,119 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+
+    getViewMRF: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const mrfId = req.params.id; 
+    
+                const { data: mrfData, error: mrfError } = await supabase
+                    .from('mrf')
+                    .select('*')
+                    .eq('mrfId', mrfId)
+                    .single(); 
+
+                if (mrfError) throw mrfError;
+
+                const { data: departmentData, error: deptError } = await supabase
+                    .from('departments')
+                    .select('deptName')
+                    .eq('departmentId', mrfData.departmentId)
+                    .single();
+
+                if (deptError) throw deptError;
+    
+                res.render('staffpages/hr_pages/hr-view-mrf', { 
+                    mrf: mrfData,
+                    department: departmentData ? departmentData.deptName : 'N/A' 
+                });
+            } catch (error) {
+                console.error("Error in getViewMRF:", error);
+                req.flash('errors', { fetchError: 'Error fetching MRF details. Please try again later.' });
+                res.redirect('/hr/dashboard'); 
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
+    submitMRF: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            return res.redirect('/staff/login');
+        }
+    
+        console.log("Request Body:", req.body);  
+    
+        if (!req.body.mrfId) {
+            console.error("Missing mrfId in request body");
+            req.flash('errors', { submissionError: 'MRF ID is missing. Please try again.' });
+            return res.redirect('/hr/dashboard');
+        }
+    
+        const approvalStatus = req.body.hrApproval ? 'approved' : (req.body.hrDisapproval ? 'disapproved' : 'pending');
+        const disapprovalReason = req.body.disapprovalReason || ''; 
+    
+        if (!['approved', 'disapproved', 'pending'].includes(approvalStatus)) {
+            console.error('Invalid approval status:', approvalStatus);
+            req.flash('errors', { submissionError: 'Invalid approval status. Please try again.' });
+            return res.redirect('/hr/dashboard');
+        }
+    
+        const approvalData = {
+            mrfId: req.body.mrfId,  
+            staffId: req.session.user.userId,
+            approval_stage: req.session.user.userRole,
+            reviewerName: req.session.user.userName || 'HR',  
+            reviewerDateSigned: new Date().toISOString(),
+            approvalStatus: approvalStatus,  // 'approved' or 'disapproved' or 'pending'
+            disapprovalReason: disapprovalReason 
+        };
+    
+        try {
+            const { data: approvalDataInserted, error: approvalError } = await supabase
+                .from('mrf_approvals')
+                .insert([approvalData])
+                .select();
+    
+            if (approvalError) {
+                console.error("Supabase Error (Insert Approval):", approvalError.message, approvalError.details);
+                throw approvalError;
+            }
+    
+            console.log("Approval data inserted:", approvalDataInserted);
+    
+            let newMrfStatus = "Action Required";  
+            
+            if (approvalStatus === 'approved') {
+                newMrfStatus = "Approved";
+            } else if (approvalStatus === 'disapproved') {
+                newMrfStatus = "Disapproved";
+            }
+    
+            const { data: mrfUpdateData, error: mrfUpdateError } = await supabase
+                .from('mrf')
+                .update({ status: newMrfStatus })  // Update status in mrf table
+                .eq('mrfId', req.body.mrfId) 
+                .select(); 
+    
+            if (mrfUpdateError) {
+                console.error("Error updating MRF status:", mrfUpdateError.message, mrfUpdateError.details);
+                throw mrfUpdateError;
+            }
+    
+            console.log("MRF status updated:", mrfUpdateData);
+    
+            req.flash('success', { message: 'MRF Approval/Disapproval submitted successfully!' });
+            return res.redirect('/hr/dashboard');  
+    
+        } catch (error) {
+            console.error("Error in MRF submission or approval insertion:", error);
+            req.flash('errors', { submissionError: 'Failed to submit MRF approval. Please try again.' });
+            return res.redirect('/hr/dashboard');
+        }
+    },  
 
     getJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Manpower Requisition Form</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/linemanager.css">
+    <style>
+        /* Basic styling to make the form look similar to the original form */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h1 {
+            color: #124A5C;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            background-color: #f5f5f5;
+        }
+
+        input[readonly], select[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        button {
+            background-color: #07ACB9;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #065d6a;
+        }
+
+        .toggle-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toggle-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .form-section h2 {
+            color: #124A5C;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/linemanager_partials') %>
+    <div class="main-content">
+        <div class="content">
+            <h1>Manpower Requisition Form - View Only</h1>
+
+            <form action="/hr/view-mrf/:id" method="POST">
+                <!-- Position Details Section -->
+                <div class="form-section">
+                    <h2>Position Details</h2>
+                    <label for="positionTitle">Position Title:</label>
+                    <input type="text" id="positionTitle" name="positionTitle" value="<%= mrf.positionTitle %>" readonly>
+
+                    <label for="jobGrade">Job Grade:</label>
+                    <input type="text" id="jobGrade" name="jobGrade" value="<%= mrf.jobGrade %>" readonly>
+
+                    <label for="sectionDept">Section/Department:</label>
+                    <input type="text" id="sectionDept" name="department" value="<%= department %>" readonly>                    
+
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" name="location" value="<%= mrf.location %>" readonly>
+
+                    <label for="dateRequisitioned">Date Requisitioned:</label>
+                    <input type="text" id="dateRequisitioned" name="requisitionDate" value="<%= mrf.requisitionDate %>" readonly>
+
+                    <label for="dateRequired">Date Required:</label>
+                    <input type="text" id="dateRequired" name="requiredDate" value="<%= mrf.requiredDate %>" readonly>
+
+                    <label for="numPersons">No. of Persons Requisitioned:</label>
+                    <input type="text" id="numPersons" name="numPersonsRequisitioned" value="<%= mrf.numPersonsRequisitioned %>" readonly>
+                </div>
+
+                <!-- Job Specifications Section -->
+                <div class="form-section">
+                    <h2>Job Specifications</h2>
+                    <label for="reqType">Type of Requisition:</label>
+                    <input type="text" id="reqType" name="requisitionType" value="<%= mrf.requisitionType %>" readonly>
+
+                    <label for="replacementReason">Replacement Reason:</label>
+                    <input type="text" id="replacementReason" name="replacementReason" value="<%= mrf.replacementReason %>" readonly>
+
+                    <label for="employmentNature">Nature of Employment:</label>
+                    <input type="text" id="employmentNature" name="employmentNature" value="<%= mrf.employmentNature %>" readonly>
+
+                    <label for="empCategory">Employee Category:</label>
+                    <input type="text" id="empCategory" name="employeeCategory" value="<%= mrf.employeeCategory %>" readonly>
+                </div>
+
+                <!-- Required Attachments Section -->
+                <div class="form-section">
+                    <h2>Required Attachments</h2>
+                    <label>Required Attachments:</label>
+                    <div class="toggle-container">
+                        <div class="toggle-item">
+                            <input type="checkbox" id="jobDescription" name="requiredAttachments[]" value="Job Description" <%= mrf.requiredAttachments.includes('Job Description') ? 'checked' : '' %> disabled>
+                            <label for="jobDescription">Job Description for regular/permanent positions</label>
+                        </div>
+                        <div class="toggle-item">
+                            <input type="checkbox" id="jobScope" name="requiredAttachments[]" value="Job Scope" <%= mrf.requiredAttachments.includes('Job Scope') ? 'checked' : '' %> disabled>
+                            <label for="jobScope">Job Scope for Contractual positions</label>
+                        </div>
+                        <div class="toggle-item">
+                            <input type="checkbox" id="others" name="requiredAttachments[]" value="Others" <%= mrf.requiredAttachments.includes('Others') ? 'checked' : '' %> disabled>
+                            <label for="others">Others: <%= mrf.otherAttachments %></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden field to include the mrfId -->
+                <input type="hidden" name="mrfId" value="<%= mrf.mrfId %>">
+
+                <!-- Review & Approvals Section -->
+                <div class="form-section">
+                    <h2>Review & Approvals</h2>
+
+                    <!-- Only one of the checkboxes should be checked -->
+                    <div class="toggle-item">
+                        <input type="checkbox" id="hrApproval" name="hrApproval" value="approved" <%= mrf.approvalStatus === 'approved' ? 'checked' : '' %> onclick="toggleReasonInput()">
+                        <label for="hrApproval">I approve this requisition.</label>
+                    </div>
+
+                    <div class="toggle-item">
+                        <input type="checkbox" id="hrDisapproval" name="hrDisapproval" value="disapproved" <%= mrf.approvalStatus === 'disapproved' ? 'checked' : '' %> onclick="toggleReasonInput()">
+                        <label for="hrDisapproval">I disapprove this requisition.</label>
+                    </div>
+
+                    <!-- Reason Input for Disapproval -->
+                    <div id="disapprovalReason">
+                        <label for="disapprovalReasonText">Reason for Disapproval:</label>
+                        <textarea id="disapprovalReasonText" name="disapprovalReason" placeholder="Enter reason for disapproval here"></textarea>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit">Submit Approval</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // function to handle checkbox selection
+        function toggleReasonInput() {
+            const approvalChecked = document.getElementById('hrApproval').checked;
+            const disapprovalChecked = document.getElementById('hrDisapproval').checked;
+
+            // Only one checkbox can be selected at a time
+            if (approvalChecked) {
+                document.getElementById('hrDisapproval').checked = false;
+                document.getElementById('disapprovalReason').style.display = 'none';
+            } else if (disapprovalChecked) {
+                document.getElementById('hrApproval').checked = false;
+                document.getElementById('disapprovalReason').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
