@@ -127,13 +127,21 @@ router.get('/linemanager/request-mrf', lineManagerController.getRequestMRF);
 router.get('/linemanager/mrf-list', lineManagerController.getMRFList);
 router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
 router.get('/linemanager/records-performance-tracker', lineManagerController.getRecordsPerformanceTrackerByDepartmentId);
-router.get(
-    '/linemanager/records-performance-tracker/:userId',
+// Route for viewing an employee's performance tracker without a quarter
+// Route for viewing an employee's performance tracker without a quarter
+router.get('/linemanager/records-performance-tracker/:userId', 
     lineManagerController.getRecordsPerformanceTrackerByUserId,
-    lineManagerController.getUserProgressView
-);
+    lineManagerController.getUserProgressView);
+
+// Route for viewing an employee's performance tracker with a quarter
+router.get('/linemanager/records-performance-tracker/:userId/:quarter', 
+    lineManagerController.fetchFeedbackData,
+    lineManagerController.getUserProgressView);
 router.post('/linemanager/records-performance-tracker/:userId', lineManagerController.saveObjectiveSettings);
 router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.saveQ1_360DegreeFeedback);
+// router.get(s'/linemanager/records-performance-tracker/submitted-data/:userId', lineManagerController.getSavedQuestionnaire);
+
+
 
 module.exports = router; 
 
