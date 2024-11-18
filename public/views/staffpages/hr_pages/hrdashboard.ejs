@@ -131,7 +131,7 @@
                                     <!-- Check the status to determine the button text -->
                                     <% if (req.status === 'Pending') { %>
                                         <!-- Button for pending requisition -->
-                                        <button class="action-required-btn" data-mrfid="<%= req.mrfId %>">Action Required</button>
+                                        <button class="action-required-btn" data-mrfid="<%= req.mrfId %>"><%= req.actionButtonText %></button>
                                     <% } else { %>
                                         <!-- Status text for approved/disapproved requisition -->
                                         <%= req.status %>
@@ -151,7 +151,6 @@
                 </tbody>
             </table>
         </div>
-
 
         <!-- Approved Leave Requests Table -->
         <div class="approvedLeaves">
