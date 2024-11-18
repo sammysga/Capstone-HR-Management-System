@@ -724,19 +724,20 @@ const hrController = {
         };
     
         try {
-            const { data, error } = await supabase
-                .from('mrf_approvals')
-                .upsert([approvalData], { onConflict: ['mrfId', 'staffId'] });
-    
-            if (error) {
-                console.error("Supabase Error (MRF Approvals):", error.message, error.details);
-                throw error;
+            const { data: approvalDataInserted, error: approvalError } = await supabase
+            .from('mrf_approvals')
+            .insert([approvalData])
+            .select();
+
+            if (approvalError) {
+                console.error("Supabase Error (Insert Approval):", approvalError.message, approvalError.details);
+                throw approvalError;
             }
-    
-            console.log("Approval data inserted:", approvalData);
-    
+
+            console.log("Approval data inserted:", approvalDataInserted);
+
             req.flash('success', { message: 'MRF Approval/Disapproval submitted successfully!' });
-            return res.redirect('/hr/dashboard');
+            return res.redirect('/hr/dashboard');  
     
         } catch (error) {
             console.error("Error in MRF submission or approval insertion:", error);
