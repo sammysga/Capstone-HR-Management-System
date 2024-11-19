@@ -753,7 +753,7 @@ const lineManagerController = {
     
                 // Map the fetched data to a structured employee list
                 const employeeList = employeeData.map(staff => ({
-                    userId: staff.userId,  // Include userId in the output
+                    userId: staff.userId || 'Unknown',  // Ensure userId exists
                     lastName: staff.lastName || 'Unknown',
                     firstName: staff.firstName || 'Unknown',
                     deptName: staff.departments?.deptName || 'Unknown',
@@ -776,293 +776,341 @@ const lineManagerController = {
             res.redirect('/staff/login');
         }
     },
-
     getRecordsPerformanceTrackerByUserId: async function(req, res, next) {
-        if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            try {
-                const userId = req.params.userId;
-                console.log('Fetching records for userId:', userId);
-        
-                if (!userId) {
-                    req.flash('errors', { authError: 'User not logged in.' });
-                    return res.redirect('/staff/login');
-                }
-        
-                // Fetch user-related data
-                const { data: userData, error } = await supabase
-                    .from('useraccounts')
-                    .select(`
-                        userId,
-                        userEmail, 
-                        userRole, 
-                        staffaccounts (
-                            firstName, 
-                            lastName, 
-                            phoneNumber, 
-                            dateOfBirth, 
-                            emergencyContactName, 
-                            emergencyContactNumber, 
-                            employmentType, 
-                            hireDate, 
-                            staffId, 
-                            jobId,
-                            departmentId,
-                            departments ( deptName ),
-                            jobpositions ( jobTitle ),
-                            staffdegrees ( degreeName, universityName, graduationYear ),
-                            staffcareerprogression ( milestoneName, startDate, endDate ),
-                            staffexperiences ( companyName, startDate ),
-                            staffcertification!staffcertification_staffId_fkey ( certificateName, certDate )
-                        )
-                    `)
-                    .eq('userId', userId)
-                    .single();
-        
-                if (error) throw error;
-        
-                console.log('Fetched user data:', userData);
-        
-                // Compile the userData into the format required for the template
-                const formattedUserData = {
-                    userId: userData.userId,
-                    userEmail: userData.userEmail || '',
-                    userRole: userData.userRole || '',
-                    firstName: userData.staffaccounts[0]?.firstName || '',
-                    lastName: userData.staffaccounts[0]?.lastName || '',
-                    phoneNumber: userData.staffaccounts[0]?.phoneNumber || '',
-                    dateOfBirth: userData.staffaccounts[0]?.dateOfBirth || '',
-                    emergencyContactName: userData.staffaccounts[0]?.emergencyContactName || '',
-                    emergencyContactNumber: userData.staffaccounts[0]?.emergencyContactNumber || '',
-                    employmentType: userData.staffaccounts[0]?.employmentType || '',
-                    hireDate: userData.staffaccounts[0]?.hireDate || '',
-                    jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || '',
-                    departmentName: userData.staffaccounts[0]?.departments?.deptName || '',
-                    milestones: userData.staffaccounts[0]?.staffcareerprogression || [],
-                    degrees: userData.staffaccounts[0]?.staffdegrees || [],
-                    experiences: userData.staffaccounts[0]?.staffexperiences || [],
-                    certifications: userData.staffaccounts[0]?.staffcertification || []
-                };
-        
-                req.user = formattedUserData;
-                next();
-            } catch (err) {
-                console.error('Error in getRecordsPerformanceTrackerByUserId controller:', err);
-                req.flash('errors', { dbError: 'An error occurred while loading the personal info page.' });
-                res.redirect('/staffpages/linemanager_pages/managerrecordsperftracker');
+        try {
+            const userId = req.params.userId;
+            console.log('Fetching records for userId:', userId);
+    
+            if (!userId) {
+                req.flash('errors', { authError: 'User not logged in.' });
+                return res.redirect('/staff/login');
             }
-            
-        }else {
+    
+            // Fetch user-related data
+            const { data: userData, error } = await supabase
+                .from('useraccounts')
+                .select(`
+                    userId,
+                    userEmail, 
+                    userRole, 
+                    staffaccounts (
+                        firstName, 
+                        lastName, 
+                        phoneNumber, 
+                        dateOfBirth, 
+                        emergencyContactName, 
+                        emergencyContactNumber, 
+                        employmentType, 
+                        hireDate, 
+                        staffId, 
+                        jobId,
+                        departmentId,
+                        departments ( deptName ),
+                        jobpositions ( jobTitle ),
+                        staffdegrees ( degreeName, universityName, graduationYear ),
+                        staffcareerprogression ( milestoneName, startDate, endDate ),
+                        staffexperiences ( companyName, startDate ),
+                        staffcertification!staffcertification_staffId_fkey ( certificateName, certDate )
+                    )
+                `)
+                .eq('userId', userId)
+                .single();
+    
+            if (error) throw error;
+    
+            console.log('Fetched user data:', userData);
+    
+            // Compile the userData into the format required for the template
+            const formattedUserData = {
+                userId: userData.userId,
+                userEmail: userData.userEmail || '',
+                userRole: userData.userRole || '',
+                firstName: userData.staffaccounts[0]?.firstName || '',
+                lastName: userData.staffaccounts[0]?.lastName || '',
+                phoneNumber: userData.staffaccounts[0]?.phoneNumber || '',
+                dateOfBirth: userData.staffaccounts[0]?.dateOfBirth || '',
+                emergencyContactName: userData.staffaccounts[0]?.emergencyContactName || '',
+                emergencyContactNumber: userData.staffaccounts[0]?.emergencyContactNumber || '',
+                employmentType: userData.staffaccounts[0]?.employmentType || '',
+                hireDate: userData.staffaccounts[0]?.hireDate || '',
+                jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || '',
+                departmentName: userData.staffaccounts[0]?.departments?.deptName || '',
+                milestones: userData.staffaccounts[0]?.staffcareerprogression || [],
+                degrees: userData.staffaccounts[0]?.staffdegrees || [],
+                experiences: userData.staffaccounts[0]?.staffexperiences || [],
+                certifications: userData.staffaccounts[0]?.staffcertification || []
+            };
+    
+            req.user = formattedUserData;
+            next();
+        } catch (err) {
+            console.error('Error in getRecordsPerformanceTrackerByUserId controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading the personal info page.' });
+            res.redirect('/staffpages/linemanager_pages/managerrecordsperftracker');
+        }
+    },
+    getUserProgressView: async function(req, res) {
+        const user = req.user;
+        console.log('Fetching records for userId:', user?.userId);
+    
+        if (!user) {
             req.flash('errors', { authError: 'Unauthorized. Please log in to access this view.' });
             return res.redirect('/staff/login');
-    }
-},
+        }
     
-fetchFeedbackData: async (req, res, next) => {
-    if (req.session.user && req.session.user.userRole === 'Line Manager') {
-        const userId = req.params.userId;
-        const quarter = req.params.quarter;
-
-        console.log(`[fetchFeedbackData] Start - Fetching feedback for userId: ${userId}, Quarter: ${quarter}`);
-
         try {
-            const { data: feedbackData, error: feedbackError } = await supabase
-                .from('feedbacks')
-                .select('*')
-                .eq('userId', userId);
-
-            if (feedbackError) {
-                console.error(`[fetchFeedbackData] Error fetching feedback data:`, feedbackError.message);
-                return res.status(500).json({ success: false, message: 'Error fetching feedback data.' });
-            }
-
-            console.log(`[fetchFeedbackData] Feedback Data Retrieved:`, feedbackData);
-
-            const feedbacksByQuarter = { Q1: [], Q2: [], Q3: [], Q4: [] };
-
-            if (!feedbackData || feedbackData.length === 0) {
-                console.log('[fetchFeedbackData] No feedback found for user.');
-                req.feedbacksByQuarter = feedbacksByQuarter;
-                req.questionnaire = [];
-                return next();
-            }
-
-            await Promise.all(
-                feedbackData.map(async (feedback) => {
-                    console.log(`[fetchFeedbackData] Processing feedback for quarter: ${feedback.quarter}`, feedback);
-
-                    if (feedback.quarter) {
-                        feedbacksByQuarter[feedback.quarter].push(feedback);
-                    } else {
-                        console.warn(`[fetchFeedbackData] Feedback record without a valid quarter:`, feedback);
-                    }
-                })
-            );
-
-            console.log(`[fetchFeedbackData] Feedbacks by Quarter:`, feedbacksByQuarter);
-
-            req.feedbacksByQuarter = feedbacksByQuarter;
-            req.feedback = feedbacksByQuarter[quarter]?.[0] || null; // Adjusted for null fallback
-
-            console.log(`[fetchFeedbackData] Feedback for requested quarter (${quarter}):`, req.feedback);
-
-            next();
-        } catch (error) {
-            console.error(`[fetchFeedbackData] Unexpected error:`, error);
-            return res.status(500).json({ success: false, message: 'An unexpected error occurred.' });
-        }
-    } else {
-        req.flash('errors', { authError: 'Unauthorized. Please log in.' });
-        return res.redirect('/staff/login');
-    }
-},
-getUserProgressView: async function (req, res) {
-    const user = req.user;
-    console.log('Fetching records for userId:', user?.userId);
-
-    if (!user || !user.userId) {
-        req.flash('errors', { authError: 'Unauthorized. Please log in to access this view.' });
-        return res.redirect('/staff/login');
-    }
-
-    const tables = [
-        {
-            name: 'objectivesettings',
-            filters: { userId: user.userId },
-            viewOnlyKey: 'objectivesettings',
-        },
-    ];
-
-    let viewOnlyStatus = {};
-    let objectivesData = [];  // switched to let
-    let performancePeriodYear = null;
-    let feedbackData = [];  // switched to let
-
-    try {
-        const { data: jobData, error: jobError } = await supabase
-            .from('staffaccounts')
-            .select('jobId')
-            .eq('userId', user.userId)
-            .single();
-
-        if (jobError || !jobData) {
-            console.error('Error fetching jobId:', jobError);
-            req.flash('errors', { fetchError: 'Error fetching job information. Please try again.' });
-            return res.redirect('/linemanager/records-performance-tracker');
-        }
-
-        const jobId = jobData.jobId;
-        console.log('Fetched jobId:', jobId);
-
-        for (const table of tables) {
-            const { name, filters, viewOnlyKey } = table;
-            const { data, error } = await supabase.from(name).select('*').match(filters);
-
-            if (error) {
-                console.error(`Error fetching data from ${name}:`, error);
-                req.flash('errors', { fetchError: `Error fetching ${name} data. Please try again.` });
+            const { data: jobData, error: jobError } = await supabase
+                .from('staffaccounts')
+                .select('jobId')
+                .eq('userId', user.userId)
+                .single();
+    
+            if (jobError || !jobData) {
+                console.error('Error fetching jobId:', jobError);
+                req.flash('errors', { fetchError: 'Error fetching job information. Please try again.' });
                 return res.redirect('/linemanager/records-performance-tracker');
             }
-
-            viewOnlyStatus[viewOnlyKey] = data.length > 0;
-
-            if (name === 'objectivesettings') {
-                objectivesData = data;
-
-                if (objectivesData.length > 0) {
-                    performancePeriodYear = objectivesData[0].performancePeriodYear;
-                    console.log("Fetched Performance Period Year:", performancePeriodYear);
+    
+            const jobId = jobData.jobId;
+            console.log('Fetched jobId:', jobId);
+    
+            // Fetch feedbacks across quarters
+            const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4'];
+            const feedbackData = {};
+    
+            for (const table of feedbackTables) {
+                const { data, error } = await supabase
+                    .from(table)
+                    .select('*')
+                    .eq('userId', user.userId)
+                    .eq('jobId', jobId);
+    
+                if (error) {
+                    console.error(`Error fetching feedback data from ${table}:`, error);
+                    req.flash('errors', { fetchError: `Error fetching data for ${table}. Please try again.` });
+                    return res.redirect('/linemanager/records-performance-tracker');
+                }
+    
+                feedbackData[table] = data;
+            }
+    
+            console.log("Feedback Data:", feedbackData);
+    
+            // Fetch objectives settings
+            const { data: objectiveSettings, error: objectivesError } = await supabase
+                .from('objectivesettings')
+                .select('*')
+                .eq('userId', user.userId);
+    
+            if (objectivesError) {
+                console.error('Error fetching objectives settings:', objectivesError);
+                req.flash('errors', { fetchError: 'Error fetching objectives settings. Please try again.' });
+                return res.redirect('/linemanager/records-performance-tracker');
+            }
+    
+            let submittedObjectives = [];
+            let objectiveQuestions = [];
+    
+            if (objectiveSettings.length > 0) {
+                const objectiveSettingsIds = objectiveSettings.map(setting => setting.objectiveSettingsId);
+    
+                // Fetch the actual objectives related to the settings
+                const { data: objectivesData, error: objectivesFetchError } = await supabase
+                    .from('objectivesettings_objectives')
+                    .select('*')
+                    .in('objectiveSettingsId', objectiveSettingsIds);
+    
+                if (objectivesFetchError) {
+                    console.error('Error fetching objectives:', objectivesFetchError);
+                    req.flash('errors', { fetchError: 'Error fetching objectives. Please try again.' });
+                    return res.redirect('/linemanager/records-performance-tracker');
+                }
+    
+                submittedObjectives = objectivesData;
+    
+                // Fetch questions related to the objectives
+                const { data: objectiveQuestionData, error: questionError } = await supabase
+                    .from('feedbacks_questions-objectives')  // Ensure this table name is correct
+                    .select('objectiveId, objectiveQualiQuestion')  // Include objectiveId
+                    .in('objectiveId', submittedObjectives.map(obj => obj.objectiveId));  // Ensure you are filtering by objectiveId
+    
+                if (questionError) {
+                    console.error('Error fetching objective questions:', questionError);
+                    req.flash('errors', { fetchError: 'Error fetching objective questions. Please try again.' });
+                    return res.redirect('/linemanager/records-performance-tracker');
+                }
+    
+                objectiveQuestions = objectiveQuestionData;  // This should now contain objectiveId and question
+            }
+    
+            // Now, map the `objectiveQuestions` to `submittedObjectives`
+            submittedObjectives = submittedObjectives.map(obj => {
+                const question = objectiveQuestions.find(q => q.objectiveId === obj.objectiveId);
+                return {
+                    ...obj,
+                    objectiveQualiQuestion: question ? question.objectiveQualiQuestion : 'No question available'
+                };
+            });
+    
+            // Fetch job requirements skills based on jobId
+            const { data: skillsData, error: skillsError } = await supabase
+                .from('jobreqskills')
+                .select('jobReqSkillType, jobReqSkillName')
+                .eq('jobId', jobId);
+    
+            if (skillsError) {
+                console.error('Error fetching job requirements skills:', skillsError);
+                req.flash('errors', { fetchError : 'Error fetching skills data. Please try again.' });
+                return res.redirect('/linemanager/records-performance-tracker');
+            }
+    
+            // Classify skills into Hard and Soft
+            const hardSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Hard') || [];
+            const softSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Soft') || [];
+            console.log("Classified Hard Skills:", hardSkills);
+            console.log("Classified Soft Skills:", softSkills);
+    
+            // Example logic to fetch skill questions (extend as needed)
+            const skillQuestions = []; // Add skill question fetch logic here
+            console.log("Skill Questions:", skillQuestions);
+    
+            // Feedback answers - placeholder for fetch logic
+            const feedbackAnswers = []; // Add feedback answer fetch logic here
+    
+            // Initialize viewState
+            const viewState = {
+                success: true,
+                userId: user.userId,
+                jobId,
+                feedbacks: feedbackData,
+                hardSkills,
+                softSkills,
+                skillQuestions,
+                objectiveQuestions,
+                feedbackAnswers,
+                viewOnlyStatus: {
+                    objectivesettings: objectiveSettings.length > 0,
+                },
+                submittedObjectives,
+            };
+    
+            console.log("View State:", viewState);
+    
+            res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', { viewState, user });
+        } catch (error) {
+            console.error('Error fetching user progress:', error);
+            req.flash('errors', { fetchError: 'Error fetching user progress. Please try again.' });
+            res.redirect('/linemanager/records-performance-tracker');
+        }
+    },
+    
+    saveObjectiveSettings: async function(req, res) {
+        try {
+            const userId = req.body.userId;
+            console.log("User  ID in saveObjectiveSettings:", userId);
+    
+            const { jobId, objectiveDescrpt, objectiveKPI, objectiveTarget, objectiveUOM, objectiveAssignedWeight } = req.body;
+    
+            console.log("Request body:", req.body);
+    
+            if (!userId) {
+                console.log("User  not authenticated");
+                return res.status(401).json({ success: false, message: "User   not authenticated" });
+            }
+    
+            // Get the current year
+            const performancePeriodYear = new Date().getFullYear(); // Just the year
+    
+            // Initialize completeJobId
+            let completeJobId = jobId;
+    
+            // Fetch from staffaccounts if jobId is missing
+            if (!jobId) {
+                console.log("Fetching missing jobId from staffaccounts table");
+    
+                const { data: staffAccountData, error } = await supabase
+                    .from("staffaccounts")
+                    .select("jobId")
+                    .eq("userId", userId)
+                    .single();
+    
+                if (error) {
+                    console.error("Error fetching jobId:", error.message);
+                    return res.status(500).json({ success: false, message: error.message });
+                }
+    
+                completeJobId = staffAccountData?.jobId || jobId; // Fallback to existing jobId if staffAccountData is not found
+            }
+    
+            // Check if jobId is still missing after fetching
+            if (!completeJobId) {
+                return res.status(400).json({ success: false, message: "Unable to retrieve jobId. Please provide it or ensure your user account has this information." });
+            }
+    
+            // Validate objectives format
+            const objectives = [];
+            if (req.body.objectiveDescrpt) {
+                for (let i = 0; i < req.body.objectiveDescrpt.length; i++) {
+                    if (req.body.objectiveDescrpt[i] && req.body.objectiveKPI[i] && req.body.objectiveTarget[i] && req.body.objectiveUOM[i] && req.body.objectiveAssignedWeight[i]) {
+                        objectives.push({
+                            description: req.body.objectiveDescrpt[i],
+                            kpi: req.body.objectiveKPI[i],
+                            target: req.body.objectiveTarget[i],
+                            uom: req.body.objectiveUOM[i],
+                            weight: req.body.objectiveAssignedWeight[i]
+                        });
+                    }
                 }
             }
-        }
-
-        // Fetch additional objectives data if it exists
-        if (objectivesData.length > 0) {
-            const objectiveSettingsIds = objectivesData.map(setting => setting.objectiveSettingsId);
-            const { data: objectivesDataFetched, error: objectivesError } = await supabase
-                .from('objectivesettings_objectives')
-                .select('*')
-                .in('objectiveSettingsId', objectiveSettingsIds);
-
-            if (objectivesError || !objectivesDataFetched.length) {
-                console.error('Error fetching objectives:', objectivesError || 'No objectives data found');
-                objectivesData = [];
-            } else {
-                objectivesData = objectivesDataFetched;
+    
+            if (objectives.length === 0) {
+                return res.status(400).json({ success: false, message: "Invalid objectives data format" });
             }
-        }
-
-        const submittedObjectives = objectivesData.length > 0 ? objectivesData : [];
-
-        const { data: feedbacks, error: feedbackError } = await supabase
-            .from('feedbacks')
-            .select('setStartDate, setEndDate, quarter, feedbackId')
-            .eq('userId', user.userId)
-            .eq('year', performancePeriodYear);
-
-        if (feedbackError || !feedbacks.length) {
-            console.error('Error fetching feedback data:', feedbackError || 'No feedback data found');
-            feedbackData = [];
-        } else {
-            feedbackData = feedbacks;
-        }
-
-        const feedbacksByQuarter = { Q1: [], Q2: [], Q3: [], Q4: [] };
-        feedbackData.forEach((feedback) => {
-            if (feedback.quarter && feedbacksByQuarter[feedback.quarter]) {
-                feedbacksByQuarter[feedback.quarter].push(feedback);
-            } else {
-                console.warn('[getUserProgressView] Feedback record without a valid quarter:', feedback);
+    
+            console.log("Inserting data into objectivesettings table for user:", userId);
+    
+            const { data: objectiveSettingsData, error: objectiveSettingsError } = await supabase
+                .from("objectivesettings")
+                .insert({
+                    userId,
+                    jobId: completeJobId,
+                    performancePeriodYear // Store only the year
+                })
+                .select("objectiveSettingsId");
+    
+            if (objectiveSettingsError) {
+                console.error("Error inserting into objectivesettings table:", objectiveSettingsError.message);
+                return res.status(500).json({ success: false, message: objectiveSettingsError.message });
             }
-        });
-
-        console.log("Feedbacks by Quarter:", feedbacksByQuarter);
-
-
-        let skillsData = [];  // switched to let
-        const { data: jobSkillsData, error: skillsError } = await supabase
-            .from('jobreqskills')
-            .select('jobReqSkillType, jobReqSkillName')
-            .eq('jobId', jobId);
-
-        if (skillsError || !jobSkillsData.length) {
-            console.error('Error fetching job requirements skills:', skillsError || 'No skills data found');
-            skillsData = [];
-        } else {
-            skillsData = jobSkillsData;
+    
+            const objectiveSettingsId = objectiveSettingsData[0].objectiveSettingsId;
+            console.log("Objective Settings Inserted:", objectiveSettingsId);
+    
+            // Insert associated objectives into objectivesettings_objectives
+            const objectiveEntries = objectives.map(objective => ({
+                objectiveSettingsId,
+                objectiveDescrpt: objective.description,
+                objectiveKPI: objective.kpi,
+                objectiveTarget: objective.target,
+                objectiveUOM: objective.uom,
+                objectiveAssignedWeight: objective.weight
+            }));
+    
+            const { error: objectivesInsertError } = await supabase
+                .from("objectivesettings_objectives")
+                .insert(objectiveEntries);
+    
+            if (objectivesInsertError) {
+                console.error("Error inserting objectives:", objectivesInsertError.message);
+                return res.status(500).json({ success: false, message: objectivesInsertError.message });
+            }
+    
+            res.json({ success: true, message: "Objective settings saved successfully!" });
+        } catch (error) {
+            console.error("Error saving objective settings:", error);
+            res.status(500).json({ success: false, message: error.message });
         }
-
-        const hardSkills = skillsData.filter(skill => skill.jobReqSkillType === 'Hard');
-        const softSkills = skillsData.filter(skill => skill.jobReqSkillType === 'Soft');
-
-        console.log('Classified Hard Skills:', hardSkills);
-        console.log('Classified Soft Skills:', softSkills);
-
-        const viewState = {
-            success: true,
-            viewOnlyStatus,
-            userId: user.userId,
-            performancePeriodYear,
-            jobId,
-            submittedObjectives,
-            feedbacks: feedbackData,
-            feedbacksByQuarter,
-            objectives: objectivesData || [],
-            hardSkills,
-            softSkills,
-        };
-
-        console.log("ViewState Object:", viewState);
-
-        return res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', { viewState, user });
-
-    } catch (error) {
-        console.error('Unexpected error fetching user progress:', error);
-        req.flash('errors', { fetchError: 'Unexpected error fetching user progress. Please try again.' });
-        return res.redirect('/linemanager/records-performance-tracker');
-    }
-},
-
-
+    },    
     saveObjectiveSettings: async function(req, res) {
         try {
             const userId = req.body.userId;

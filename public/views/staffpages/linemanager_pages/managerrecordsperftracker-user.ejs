@@ -186,7 +186,6 @@
                 </table>
             </section>
 
-
             <section class="stepper">
                 <h2>Objective and Performance Review Tracker</h2>
                 <div class="stepper-container">
@@ -202,269 +201,259 @@
                             <% } %>
                         </div>
                     </div>
-                            <div class="step <%= (new Date() > new Date(viewState.setStartDate) ? 
-                                (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0 ? 'view-only' : 'accessible') : 
-                                (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 ? 'accessible' : 'disabled')) %>" 
-                                id="feedbackButtonQ1" data-quarter="Q1" onclick="showFeedbackForm('Q1', '<%= viewState.userId %>')">
-                                <div class="step-icon"><i class="fa fa-users"></i></div>
-                                <div class="step-label">
-                                    [1/4] 360 Degree Feedback
-                                    <% if (new Date() > new Date(viewState.setStartDate) && viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0) { %>
-                                        (View-Only)
+            
+                    <!-- Feedback Q1 -->
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ1" data-quarter="1" onclick="showFeedbackForm()">
+                        <div class="step-icon"><i class="fa fa-users"></i></div>
+                        <div class="step-label">
+                            [1/4] 360 Degree Feedback
+                            <% if (viewState.viewOnlyStatus['feedbacks_Q1']) { %>
+                                (View-Only)
+                            <% } else { %>
+                                (Editable)
+                            <% } %>
+                        </div>
+                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0)) { %>
+                            <div class="notice">You must submit objectives first.</div>
+                        <% } %>
+                    </div>
+            
+                    <!-- Feedback Q2 -->
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q1']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ2" data-quarter="2" onclick="showFeedbackForm()">
+                        <div class="step-icon"><i class="fa fa-users"></i></div>
+                        <div class="step-label">
+                            [2/4] 360 Degree Feedback
+                            <% if (viewState.viewOnlyStatus['feedbacks_Q2']) { %>
+                                (View-Only)
+                            <% } else { %>
+                                (Editable)
+                            <% } %>
+                        </div>
+                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q1'])) { %>
+                            <div class="notice">Complete the previous step first.</div>
+                        <% } %>
+                    </div>
+            
+                    <!-- Mid-Year IDP -->
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2']) ? 'accessible' : 'disabled' %>" id="midYearIDP" onclick="navigateToStep('midyear')">
+                        <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
+                        <div class="step-label">
+                            Mid-Year IDP
+                            <% if (viewState.viewOnlyStatus.midyearidp) { %>
+                                (View-Only)
+                            <% } else { %>
+                                (Editable)
+                            <% } %>
+                        </div>
+                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2'])) { %>
+                            <div class="notice">Complete the previous steps first.</div>
+                        <% } %>
+                    </div>
+            
+                    <!-- Feedback Q3 -->
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ3" data-quarter="3" onclick="showFeedbackForm()">
+                        <div class="step-icon"><i class="fa fa-users"></i></div>
+                        <div class="step-label">
+                            [3/4] 360 Degree Feedback
+                            <% if (viewState.viewOnlyStatus['feedbacks_Q3']) { %>
+                                (View-Only)
+                            <% } else { %>
+                                (Editable)
+                            <% } %>
+                        </div>
+                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2'])) { %>
+                            <div class="notice">Complete the previous step first.</div>
+                        <% } %>
+                    </div>
+            
+                    <!-- Feedback Q4 -->
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ4" data-quarter="4" onclick="showFeedbackForm()">
+                        <div class="step-icon"><i class="fa fa-users"></i></div>
+                        <div class="step-label">
+                            [4/4] 360 Degree Feedback
+                            <% if (viewState.viewOnlyStatus['feedbacks_Q4']) { %>
+                                (View-Only)
+                            <% } else { %>
+                                (Editable)
+                            <% } %>
+                        </div>
+                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3'])) { %>
+                            <div class="notice">Complete the previous step first.</div>
+                        <% } %>
+                    </div>
+            
+                    <!-- Final-Year IDP -->
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q4']) ? 'accessible' : 'disabled' %>" id="finalYearIDP">
+                        <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
+                        <div class="step-label">
+                            Final-Year IDP
+                            <% if (viewState.viewOnlyStatus.finalyearidp) { %>
+                                (View-Only)
+                            <% } else { %>
+                                (Editable)
+                            <% } %>
+                        </div>
+                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q4'])) { %>
+                            <div class="notice">Complete the previous steps first.</div>
+                        <% } %>
+                    </div>
+                </div>
+            </section>
+            
+
+                        
+            <form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/<%= user.userId %>">
+                <section id="objective-skill-progress-form" class="fade-out" style="display: none;">
+                    <h2>Annual Objective Setting Form</h2>
+                    
+                    <div class="header-grid">
+                        <!-- Row 1 -->
+                        <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
+                        <div><strong>Position:</strong> <%= user.jobTitle %></div>
+                        <p><strong>Performance Period Year:</strong> <span id="performanceDate"><%= new Date().getFullYear() %></span></p>
+                        
+                        <!-- Row 2 -->
+                        <div><strong>Company:</strong> Prime Infrastructure</div>
+                        <div><strong>Department:</strong> <%= user.departmentName %></div>
+                    </div>
+                    
+
+
+                    <input type="hidden" name="userId" value="<%= user.userId %>">
+                    <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
+                    <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>KRA/Objectives</th>
+                                <th>KPI</th>
+                                <th>Target</th>
+                                <th>UOM</th>
+                                <th>Assigned Weight</th>
+                                <th>Actions</th>
+                            </tr>
+                            <tr>
+                                <th><small>Sample Input: Improve Customer Satisfaction</small></th>
+                                <th><small>Sample Input: Satisfaction Rate</small></th>
+                                <th><small>Sample Input: 90 (Numerical)</small></th>
+                                <th><small>Sample Input: %</small></th>
+                                <th><small>Sample Input: 20 (Input with no percentage)</small></th>
+                                <th><small>Click to Remove a Row</small></th>
+                            </tr>
+                        </thead>
+                        <tbody id="progress-table-body">
+                            <tr>
+                                <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
+                                <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
+                                <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
+                                <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
+                                <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
+                                <td><button type="button" onclick="removeRow(this)">Remove</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button id="addRowBtn" type="button" onclick="addRow()">Add Row</button>
+                    <p><strong>Total Assigned Weight:</strong> <input id="totalWeight" type="number" value="0" readonly>%</p>
+            
+                    <label>
+                        <input type="checkbox" id="confirmationCheckbox" required>
+                        I confirm that the objective weights have been accurately consolidated and reviewed.
+                    </label 
+                    <div id="submitButtonContainer">
+                        <button id="saveButton" type="submit">Save</button>
+                    </div>
+                </section>
+            
+                <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
+                    <section id="view-only-page" class="fade-out" style="display: none;">
+                        <h2>Submitted Annual Objective Setting Form</h2>
+                        <div class="header-grid">
+                            <!-- Row 1 -->
+                            <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
+                            <div><strong>Position:</strong> <%= user.jobTitle %></div>
+                            <div><strong>Performance Period Year:</strong> <%= viewState.performancePeriodYear %></div>
+                            
+                            <!-- Row 2 -->
+                            <div><strong>Company:</strong> Prime Infrastructure</div>
+                            <div><strong>Department:</strong> <%= user.departmentName %></div>
+                        </div>
+                        
+                        
+                        <div id="objectivesData" class="view-only-section">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>KRA/Objectives</th>
+                                        <th>KPI</th>
+                                        <th>Target</th>
+                                        <th>UOM</th>
+                                        <th>Assigned Weight</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="view-only-table-body">
+                                    <% if (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) { %>
+                                        <% viewState.submittedObjectives.forEach(obj => { %>
+                                            <tr>
+                                                <td><%= obj.objectiveDescrpt || 'N/A' %></td>
+                                                <td><%= obj.objectiveKPI || 'N/A' %></td>
+                                                <td><%= obj.objectiveTarget || 'N/A' %></td>
+                                                <td><%= obj.objectiveUOM || 'N/A' %></td>
+                                                <td><%= obj.objectiveAssignedWeight !== undefined ? (obj.objectiveAssignedWeight * 100).toFixed(2) + '%' : 'N/A' %></td>                                            </tr>
+                                        <% }); %>
                                     <% } else { %>
-                                        (Editable)
+                                        <tr>
+                                            <td colspan="5">No objectives submitted yet.</td>
+                                        </tr>
                                     <% } %>
-                                </div>
-                                <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0)) { %>
-                                    <div class="notice">You must submit objectives first.</div>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                <% } %>
+            
+                <div id="viewState" data-viewstate='<%= JSON.stringify(viewState) %>' style="display:none;"></div>
+            </form>
+
+            
+            
+            <form id="feedbackForm" method="POST" action="/linemanager/records-performance-tracker/questionnaire/<%= user.userId %>">                
+                <section id="feedback-section" class="fade-out" style="display: none;">
+                    <input type="hidden" id="userId" value="<%= user.userId %>">
+                    <div class="form-header">
+                        <h2>360 Degree Feedback Questionnaire</h2>
+                        <div class="date-inputs">
+                            <!-- Start Date -->
+                            <div class="date-input">
+                                <label for="startDate"><strong>Start Date:</strong></label>
+                                <% if (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0) { 
+                                    const feedback = viewState.feedbacksByQuarter['Q1'][0]; 
+                                %>
+                                    <!-- Display start date as text if already set -->
+                                    <span><%= feedback.setStartDate %></span>
+                                <% } else { %>
+                                    <!-- Provide an editable input field if no feedback data is available -->
+                                    <input type="date" id="startDate" name="startDate" class="input-field" 
+                                           value="<%= viewState.feedback ? viewState.feedback.setStartDate : '' %>" required>
                                 <% } %>
                             </div>
-                    
-                            <!-- [2/4] 360 Degree Feedback -->
-                            <div class="step <%= (new Date() > new Date(viewState.setStartDate) ? 
-                                (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q2'] && viewState.feedbacksByQuarter['Q2'].length > 0 ? 'view-only' : 'disabled') : 
-                                (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0 ? 'accessible' : 'disabled')) %>" 
-                                id="feedbackButtonQ2" data-quarter="Q2" onclick="showFeedbackForm('Q2', '<%= viewState.userId %>')">
-                                <div class="step-icon"><i class="fa fa-users"></i></div>
-                                <div class="step-label">
-                                    [2/4] 360 Degree Feedback
-                                    <% if (new Date() > new Date(viewState.setStartDate) && viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q2'] && viewState.feedbacksByQuarter['Q2'].length > 0) { %>
-                                        (View-Only)
-                                    <% } else { %>
-                                        (Editable)
-                                    <% } %>
-                                </div>
-                                <% if (!(viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0)) { %>
-                                    <div class="notice">Complete the previous step first.</div>
-                                <% } %>
-                            </div>
-                    
-                            <!-- Mid-Year IDP -->
-                            <div class="step <%= (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q2'] && viewState.feedbacksByQuarter['Q2'].length > 0) ? 'accessible' : 'disabled' %>" 
-                                id="midYearIDP" onclick="navigateToStep('midyear')">
-                                <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
-                                <div class="step-label">
-                                    Mid-Year IDP
-                                    <% if (viewState.viewOnlyStatus.midyearidp) { %>
-                                        (View-Only)
-                                    <% } else { %>
-                                        (Editable)
-                                    <% } %>
-                                </div>
-                                <% if (!(viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q2'] && viewState.feedbacksByQuarter['Q2'].length > 0)) { %>
-                                    <div class="notice">Complete the previous step first.</div>
-                                <% } %>
-                            </div>
-                    
-                            <!-- [3/4] 360 Degree Feedback -->
-                            <div class="step <%= (new Date() > new Date(viewState.setStartDate) ? 
-                                (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q3'] && viewState.feedbacksByQuarter['Q3'].length > 0 ? 'view-only' : 'disabled') : 
-                                (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q2'] && viewState.feedbacksByQuarter['Q2'].length > 0 ? 'accessible' : 'disabled')) %>" 
-                                id="feedbackButtonQ3" data-quarter="Q3" onclick="showFeedbackForm('Q3', '<%= viewState.userId %>')">
-                                <div class="step-icon"><i class="fa fa-users"></i></div>
-                                <div class="step-label">
-                                    [3/4] 360 Degree Feedback
-                                    <% if (new Date() > new Date(viewState.setStartDate) && viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q3'] && viewState.feedbacksByQuarter['Q3'].length > 0) { %>
-                                        (View-Only)
-                                    <% } else { %>
-                                        (Editable)
-                                    <% } %>
-                                </div>
-                                <% if (!(viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q2'] && viewState.feedbacksByQuarter['Q2'].length > 0)) { %>
-                                    <div class="notice">Complete the previous step first.</div>
-                                <% } %>
-                            </div>
-                    
-                            <!-- [4/4] 360 Degree Feedback -->
-                            <div class="step <%= (new Date() > new Date(viewState.setStartDate) ? 
-                                (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q4'] && viewState.feedbacksByQuarter['Q4'].length > 0 ? 'view-only' : 'disabled') : 
-                                (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q3'] && viewState.feedbacksByQuarter['Q3'].length > 0 ? 'accessible' : 'disabled')) %>" 
-                                id="feedbackButtonQ4" data-quarter="Q4" onclick="showFeedbackForm('Q4', '<%= viewState.userId %>')">
-                                <div class="step-icon"><i class="fa fa-users"></i></div>
-                                <div class="step-label">
-                                    [4/4] 360 Degree Feedback
-                                    <% if (new Date() > new Date(viewState.setStartDate) && viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q4'] && viewState.feedbacksByQuarter['Q4'].length > 0) { %>
-                                        (View-Only)
-                                    <% } else { %>
-                                        (Editable)
-                                    <% } %>
-                                </div>
-                                <% if (!(viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q3'] && viewState.feedbacksByQuarter['Q3'].length > 0)) { %>
-                                    <div class="notice">Complete the previous step first.</div>
-                                <% } %>
-                            </div>
-                    
-                            <!-- Final Review -->
-                            <div class="step <%= (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q4'] && viewState.feedbacksByQuarter['Q4'].length > 0) ? 'accessible' : 'disabled' %>" 
-                                id="finalReview" onclick="navigateToStep('finalreview')">
-                                <div class="step-icon"><i class="fa fa-check-circle"></i></div>
-                                <div class="step-label">
-                                    Final Review
-                                    <% if (viewState.viewOnlyStatus.finalreview) { %>
-                                        (View-Only)
-                                    <% } else { %>
-                                        (Editable)
-                                    <% } %>
-                                </div>
-                                <% if (!(viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q4'] && viewState.feedbacksByQuarter['Q4'].length > 0)) { %>
-                                    <div class="notice">Complete the previous step first.</div>
+                            
+                            <!-- End Date -->
+                            <div class="date-input">
+                                <label for="endDate"><strong>End Date:</strong></label>
+                                <% if (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0) { 
+                                    const feedback = viewState.feedbacksByQuarter['Q1'][0]; 
+                                %>
+                                    <!-- Display end date as text if already set -->
+                                    <span><%= feedback.setEndDate %></span>
+                                <% } else { %>
+                                    <!-- Provide an editable input field if no feedback data is available -->
+                                    <input type="date" id="endDate" name="endDate" class="input-field" 
+                                           value="<%= viewState.feedback ? viewState.feedback.setEndDate : '' %>" required>
                                 <% } %>
                             </div>
                         </div>
-                    </section>
-                    
-            
-            
-            
-                        
-                        <form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/<%= user.userId %>">
-                            <section id="objective-skill-progress-form" class="fade-out" style="display: none;">
-                                <h2>Annual Objective Setting Form</h2>
-                                
-                                <div class="header-grid">
-                                    <!-- Row 1 -->
-                                    <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
-                                    <div><strong>Position:</strong> <%= user.jobTitle %></div>
-                                    <p><strong>Performance Period Year:</strong> <span id="performanceDate"><%= new Date().getFullYear() %></span></p>
-                                    
-                                    <!-- Row 2 -->
-                                    <div><strong>Company:</strong> Prime Infrastructure</div>
-                                    <div><strong>Department:</strong> <%= user.departmentName %></div>
-                                </div>
-                                
-            
-            
-                                <input type="hidden" name="userId" value="<%= user.userId %>">
-                                <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
-                                <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>KRA/Objectives</th>
-                                            <th>KPI</th>
-                                            <th>Target</th>
-                                            <th>UOM</th>
-                                            <th>Assigned Weight</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                        <tr>
-                                            <th><small>Sample Input: Improve Customer Satisfaction</small></th>
-                                            <th><small>Sample Input: Satisfaction Rate</small></th>
-                                            <th><small>Sample Input: 90 (Numerical)</small></th>
-                                            <th><small>Sample Input: %</small></th>
-                                            <th><small>Sample Input: 20 (Input with no percentage)</small></th>
-                                            <th><small>Click to Remove a Row</small></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="progress-table-body">
-                                        <tr>
-                                            <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
-                                            <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
-                                            <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
-                                            <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
-                                            <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Enter Weight (%)" name="objectiveAssignedWeight" min="0" max="100" required></td>
-                                            <td><button type="button" onclick="removeRow(this)">Remove</button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <button id="addRowBtn" type="button" onclick="addRow()">Add Row</button>
-                                <p><strong>Total Assigned Weight:</strong> <input id="totalWeight" type="number" value="0" readonly>%</p>
-                        
-                                <label>
-                                    <input type="checkbox" id="confirmationCheckbox" required>
-                                    I confirm that the objective weights have been accurately consolidated and reviewed.
-                                </label 
-                                <div id="submitButtonContainer">
-                                    <button id="saveButton" type="submit">Save</button>
-                                </div>
-                            </section>
-                        
-                            <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
-                                <section id="view-only-page" class="fade-out" style="display: none;">
-                                    <h2>Submitted Annual Objective Setting Form</h2>
-                                    <div class="header-grid">
-                                        <!-- Row 1 -->
-                                        <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
-                                        <div><strong>Position:</strong> <%= user.jobTitle %></div>
-                                        <div><strong>Performance Period Year:</strong> <%= viewState.performancePeriodYear %></div>
-                                        
-                                        <!-- Row 2 -->
-                                        <div><strong>Company:</strong> Prime Infrastructure</div>
-                                        <div><strong>Department:</strong> <%= user.departmentName %></div>
-                                    </div>
-                                    
-                                    
-                                    <div id="objectivesData" class="view-only-section">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>KRA/Objectives</th>
-                                                    <th>KPI</th>
-                                                    <th>Target</th>
-                                                    <th>UOM</th>
-                                                    <th>Assigned Weight</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="view-only-table-body">
-                                                <% if (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) { %>
-                                                    <% viewState.submittedObjectives.forEach(obj => { %>
-                                                        <tr>
-                                                            <td><%= obj.objectiveDescrpt || 'N/A' %></td>
-                                                            <td><%= obj.objectiveKPI || 'N/A' %></td>
-                                                            <td><%= obj.objectiveTarget || 'N/A' %></td>
-                                                            <td><%= obj.objectiveUOM || 'N/A' %></td>
-                                                            <td><%= obj.objectiveAssignedWeight !== undefined ? (obj.objectiveAssignedWeight * 100).toFixed(2) + '%' : 'N/A' %></td>                                            </tr>
-                                                    <% }); %>
-                                                <% } else { %>
-                                                    <tr>
-                                                        <td colspan="5">No objectives submitted yet.</td>
-                                                    </tr>
-                                                <% } %>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </section>
-                            <% } %>
-                        
-                            <div id="viewState" data-viewstate='<%= JSON.stringify(viewState) %>' style="display:none;"></div>
-                        </form>
-            
-            
-                        <form id="feedbackForm" method="POST" action="/linemanager/records-performance-tracker/questionnaire/<%= user.userId %>">                
-                            <section id="feedback-section" class="fade-out" style="display: none;">
-                                <input type="hidden" id="userId" value="<%= user.userId %>">
-                                <div class="form-header">
-                                    <h2>360 Degree Feedback Questionnaire</h2>
-                                    <div class="date-inputs">
-                                        <div class="date-input">
-                                            <label for="startDate"><strong>Start Date:</strong></label>
-                                            <% if (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0) { 
-                                                const feedback = viewState.feedbacksByQuarter['Q1'][0]; 
-                                            %>
-                                                <span><%= feedback.setStartDate %></span>
-                                            <% } else { %>
-                                                <input type="date" id="startDate" name="startDate" class="input-field" 
-                                                       value="<%= viewState.feedback ? viewState.feedback.setStartDate : '' %>" required>
-                                            <% } %>
-                                        </div>
-                                        
-                                        <div class="date-input">
-                                            <label for="endDate"><strong>End Date:</strong></label>
-                                            <% if (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0) { 
-                                                const feedback = viewState.feedbacksByQuarter['Q1'][0]; 
-                                            %>
-                                                <!-- Display the date as text if already set -->
-                                                <span><%= feedback.setEndDate %></span>
-                                            <% } else { %>
-                                                <!-- If no feedback for Q1, provide an editable input field -->
-                                                <input type="date" id="endDate" name="endDate" class="input-field" 
-                                                       value="<%= viewState.feedback ? viewState.feedback.setEndDate : '' %>" required>
-                                            <% } %>
-                                        </div>
-                                                                             
-                                    </div>
-                                </div>
-                                
+                    </div>
+                
                                 <!-- Instructions Label -->
                                 <h3 style="font-weight: bold; font-size: 1.2em; margin-top: 20px;">Instructions</h3>
                                 <br>
@@ -548,61 +537,333 @@
                                 const softSkills = viewState.softSkills || []; // Default to empty array if not defined
                             
                             
-                            // Ensure your document ready event listener is set correctly
-                            document.addEventListener("DOMContentLoaded", function () {
-                                const objectivesButton = document.getElementById("objectivesButton");
-                                const feedbackSection = document.getElementById("feedback-section");
-                                const saveButton = document.getElementById("saveButton"); // Save button for objectives
-                                const saveQ1_360FeedbackPresetButton = document.getElementById("saveQ1_360FeedbackPresetButton"); // Save button for objectives
+document.addEventListener("DOMContentLoaded", function () {
+        const objectivesButton = document.getElementById("objectivesButton");
+        const feedbackSection = document.getElementById("feedback-section");
+        const saveButton = document.getElementById("saveButton"); // Save button for objectives
+        const saveQ1_360FeedbackPresetButton = document.getElementById("saveQ1_360FeedbackPresetButton"); // Save button for objectives
+
+        // Log the values for debugging
+        console.log("Submitted Objectives:", submittedObjectives);
+        console.log("User ID:", userId);
+        console.log("Job ID:", jobId);
+
+        if (objectivesButton) {
+            console.log('Objectives Button found:', objectivesButton);
+            objectivesButton.addEventListener("click", handleObjectiveClick);
+        } else {
+            console.error('Objectives Button not found in the DOM.');
+        }
+
+        // Add event listener for the save button
+        saveButton.addEventListener("click", saveObjectives); // Call saveObjectives on click
+        // Add event listener for the feedback save button
+        saveQ1_360FeedbackPresetButton.addEventListener("click", async (event) => {
+            event.preventDefault(); // Prevent default form submission
+            await saveQ1_360Feedback(); // Call the function to save feedback
+        });
+
+        // Get the current date
+        const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+        // Get the feedback status container and message
+        const feedbackStatus = document.getElementById('feedback-status');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const editButton = document.getElementById('edit-questionnaire-button');
+
+        // Check if the current date is before the scheduled end date
+        const endDate = document.getElementById('endDate').value; // Get end date value here
+        if (currentDate < endDate) {
+            // Display confirmation message with ability to edit
+            feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are allowed before the scheduled date.`;
+            feedbackStatus.style.display = 'block';
+            editButton.style.display = 'inline-block';  // Show the Edit button
+        } else {
+            // Display confirmation message without the Edit option
+            feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are not allowed after the scheduled date.`;
+            feedbackStatus.style.display = 'block';
+        }
+
+        // Initial display update when the document is loaded
+        console.log('Document loaded. Updating display...');
+    });
+
+function displayObjectives(objectives) {
+    const objectivesTableBody = document.getElementById('objectives-table-body'); // Ensure this matches your HTML structure
+    objectivesTableBody.innerHTML = ''; // Clear existing content
+
+    if (objectives.length === 0) {
+        // If no objectives are found, display a message
+        objectivesTableBody.innerHTML = `<tr><td colspan="5">No objectives found.</td></tr>`;
+        return;
+    }
+
+    objectives.forEach(obj => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${obj.objectiveDescrpt || 'N/A'}</td>
+            <td>${obj.objectiveKPI || 'N/A'}</td>
+            <td>${obj.objectiveTarget || 'N/A'}</td>
+            <td>${obj.objectiveUOM || 'N/A'}</td>
+            <td>${(obj.objectiveAssignedWeight * 100) || 'N/A'} %</td>
+        `;
+        objectivesTableBody.appendChild(row);
+    });
+}
+    // Function to update feedback status
+    function updateFeedbackStatus() {
+        const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+        const feedbackStatus = document.getElementById('feedback-status');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const editButton = document.getElementById('edit-questionnaire-button');
+        const endDate = document.getElementById('endDate').value; // Get end date value here
+
+        if (currentDate < endDate) {
+            // Display confirmation message with ability to edit
+            feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are allowed before the scheduled date.`;
+            feedbackStatus.style.display = 'block';
+            editButton.style.display = 'inline-block'; // Show the Edit button
+        } else {
+            // Display confirmation message without the Edit option
+            feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are not allowed after the scheduled date.`;
+            feedbackStatus.style.display = 'block';
+        }
+
+        // Initial display update when the document is loaded
+        console.log('Document loaded. Updating display...');
+    }
+
+
+
+          // Show Feedback Form
+function showFeedbackForm() {
+    const formSection = document.getElementById("objective-skill-progress-form");
+    const viewOnlySection = document.getElementById("view-only-page");
+
+    if (formSection) formSection.style.display = "none";
+    if (viewOnlySection) viewOnlySection.style.display = "none";
+
+    const feedbackSection = document.getElementById("feedback-section");
+    if (feedbackSection) {
+        feedbackSection.style.display = "block"; // Show feedback section
+    }
+
+    const feedbackTableBody = document.getElementById('feedback-table-body');
+    feedbackTableBody.innerHTML = '';
+
+    if (submittedObjectives && submittedObjectives.length > 0) {
+        submittedObjectives.forEach(objective => {
+            addFormFeedbackRow(objective); // Populate feedback rows with objectives
+        });
+    }
+
+     // Add hard skills to the feedback form
+     addFormFeedbackSkillsRows(hardSkills, 'hard');
                             
+                            // Add soft skills to the feedback form
+                            addFormFeedbackSkillsRows(softSkills, 'soft');
+                    
+}
+
+function addFormFeedbackRow(objective) {
+    const tbody = document.getElementById('feedback-table-body');
+    if (!tbody) {
+        console.error("Feedback table body not found.");
+        return;
+    }
+
+    const row = document.createElement('tr');
+
+    console.log("Objective:", objective);
+    console.log("Qualitative Question:", objective.objectiveQualiQuestion);
+
+    row.innerHTML = `
+        <td><strong>${objective.objectiveDescrpt || 'N/A'}</strong></td>
+        <td><strong>${objective.objectiveKPI || 'N/A'}</strong></td>
+        <td><strong>${objective.objectiveTarget || 'N/A'}</strong></td>
+        <td><strong>${objective.objectiveUOM || '%'}</strong></td>
+        <td><strong>${(objective.objectiveAssignedWeight * 100) || 'N/A'}%</strong></td>
+    `;
+    tbody.appendChild(row);
+
+    const inputRow = document.createElement('tr');
+    const inputId = `qualitativeInput_${objective.objectiveId}`;
+    const questionText = objective.objectiveQualiQuestion || 'Enter your feedback here';
+
+    // Fixing the placeholder and value logic
+    inputRow.innerHTML = `
+        <td colspan="5">
+            <div style="margin-bottom: 10px;">
+                <label for="${inputId}">▶ Guide Question here for qualitative and quantitative feedback:</label>
+                <input id="${inputId}" type="text"
+                    value="${questionText.trim() ? questionText : ''}"  <!-- Fill with questionText if available -->
+                    placeholder="${questionText.trim() ? '' : 'Enter your feedback here'}"  <!-- Show placeholder only if questionText is empty -->
+                    name="kraObjectivesInput"
+                    required
+                    style="width: 100%; box-sizing: border-box;"
+                    data-objective-id="${objective.objectiveId}">
+            </div>
+        </td>
+    `;
+    tbody.appendChild(inputRow);
+
+    // Add Rater's View (Quantitative Rating and Qualitative Feedback)
+    const raterRow = document.createElement('tr');
+    const starRatingId = `starRating${objective.objectiveId}`;
+    const ratingSectionId = `ratingSection${objective.objectiveId}`;
+
+    raterRow.innerHTML = `
+        <td colspan="5">
+            <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" style="background-color: gray; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
+                View Rater's View
+            </button>
+            <div id="${ratingSectionId}" style="display: none; margin-top: 10px;">
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Quantitative (Rating Scale):</strong></label>
+                    <div style="font-size: 14px; margin-top: 5px;">
+                        Rate from 1 to 5 based on the corresponding skill performed during the quarter.
+                    </div>
+                    <span style="font-size: 24px; cursor: pointer;" id="${starRatingId}" data-rating="0">
+                        <i class="fa-solid fa-star" data-value="1"></i>
+                        <i class="fa-solid fa-star" data-value="2"></i>
+                        <i class="fa-solid fa-star" data-value="3"></i>
+                        <i class="fa-solid fa-star" data-value="4"></i>
+                        <i class="fa-solid fa-star" data-value="5"></i>
+                    </span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label><strong>Qualitative (Open-ended):</strong></label>
+                    <div style="font-size: 14px; margin-top: 5px;">
+                        Provide qualitative feedback based on the corresponding skill performed during the quarter.
+                    </div>
+                    <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;">
+                </div>
+            </div>
+        </td>
+    `;
+    tbody.appendChild(raterRow);
+
+    // Add click event listeners to the stars for the Rater's View
+    const stars = document.querySelectorAll(`#${starRatingId} .fa-star`);
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-value');
+            const starContainer = document.getElementById(starRatingId);
+            starContainer.setAttribute('data-rating', rating);
+            updateStarDisplay(stars, rating);
+        });
+    });
+}
+
                             
+                             // Function to update 360 degree feedback hard and soft skill rows
+                             function addFormFeedbackSkillsRows(skills, skillType) {
+                                const skillTableBody = document.querySelector(`#${skillType}-skills-table-body`);
                             
-                                // Log the values for debugging
-                                console.log("Submitted Objectives:", submittedObjectives);
-                                console.log("User    ID:", userId);
-                                console.log("Job ID:", jobId);
-                                
-                                if (objectivesButton) {
-                                    console.log('Objectives Button found:', objectivesButton);
-                                    objectivesButton.addEventListener("click", handleObjectiveClick);
-                                } else {
-                                    console.error('Objectives Button not found in the DOM.');
+                                // Check if the table body exists
+                                if (!skillTableBody) {
+                                    console.log("Skill table body not found for:", skillType);
+                                    return;
                                 }
                             
-                                // Add event listener for the save button
-                                saveButton.addEventListener("click", saveObjectives); // Call saveObjectives on click
-                               // Add event listener for the feedback save button
-                               saveQ1_360FeedbackPresetButton.addEventListener("click", async (event) => {
-                                    event.preventDefault(); // Prevent default form submission
-                                    await saveQ1_360Feedback(); // Call the function to save feedback
+                                // Iterate over the array of skills and add each one
+                                skills.forEach(skill => {
+                                    // Create the skill row
+                                    const row = document.createElement('tr');
+                                    row.innerHTML = `
+                                        <td>
+                                            <span><strong>${skill.jobReqSkillName}</strong></span>
+                                        </td>
+                                    `;
+                                    skillTableBody.appendChild(row);
+                            
+                                    // Create a new row for input fields
+const inputRow = document.createElement('tr');
+const starRatingId = `${skillType}SkillRow${skill.jobReqSkillName}Rating`;
+
+// Create a unique ID for the collapsible section
+const ratingSectionId = `ratingSection${skill.jobReqSkillName.replace(/\s+/g, '_')}`; // Replace spaces for valid ID
+
+inputRow.innerHTML = `
+<td colspan="1">
+    <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" style="background-color: gray; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
+        View Rater's View
+    </button>
+    <div id="${ratingSectionId}" style="display: none; margin-top: 10px;">
+        <div style="margin-bottom: 10px;">
+            <label><strong>Quantitative (Rating Scale):</strong></label>
+            <div style="font-size: 14px; margin-top: 5px;">
+                Rate from 1 to 5 based on the corresponding skill performed during the quarter.
+            </div>
+            <span style="font-size: 24px; cursor: default;" id="${starRatingId}" data-rating="0">
+                <i class="fa-solid fa-star" data-value="1" style="pointer-events: none;"></i>
+                <i class="fa-solid fa-star" data-value="2" style="pointer-events: none;"></i>
+                <i class="fa-solid fa-star" data-value="3" style="pointer-events: none;"></i>
+                <i class="fa-solid fa-star" data-value="4" style="pointer-events: none;"></i>
+                <i class="fa-solid fa-star" data-value="5" style="pointer-events: none;"></i>
+            </span>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label><strong>Qualitative (Open-ended):</strong></label>
+            <div style="font-size: 14px; margin-top: 5px;">
+                Provide qualitative feedback based on the corresponding skill performed during the quarter.
+            </div>
+            <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;" readonly>
+        </div>
+    </div>
+</td>
+`;
+
+skillTableBody.appendChild(inputRow);
+
                                 });
+                            }
                             
-                                // Get the current date
-                                const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-                                
-                                // Get the feedback status container and message
-                                const feedbackStatus = document.getElementById('feedback-status');
-                                const feedbackMessage = document.getElementById('feedback-message');
-                                const editButton = document.getElementById('edit-questionnaire-button');
-                                
-                                // Check if the current date is before the scheduled end date
-                                const endDate = document.getElementById('endDate').value; // Get end date value here
-                                if (currentDate < endDate) {
-                                    // Display confirmation message with ability to edit
-                                    feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are allowed before the scheduled date.`;
-                                    feedbackStatus.style.display = 'block';
-                                    editButton.style.display = 'inline-block';  // Show the Edit button
+                            // Function to toggle the visibility of the rating section
+                            function toggleRatingSection(sectionId) {
+                                const section = document.getElementById(sectionId);
+                                if (section.style.display === 'none') {
+                                    section.style.display = 'block'; // Show the rating section
                                 } else {
-                                    // Display confirmation message without the Edit option
-                                    feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are not allowed after the scheduled date.`;
-                                    feedbackStatus.style.display = 'block';
+                                    section.style.display = 'none'; // Hide the rating section
+                                }
+                            }
+                            
+                            // Function to update star display based on the rating
+                            function updateStarDisplay(stars, rating) {
+                                stars.forEach(star => {
+                                    if (star.getAttribute('data-value') <= rating) {
+                                        star.classList.add('checked'); // Add checked class for selected stars
+                                    } else {
+                                        star.classList.remove('checked'); // Remove checked class for unselected stars
+                                    }
+                                });
+                            }
+                            
+                            function setRating(rowId, rating) {
+                                const starRating = document.getElementById(`${rowId}Rating`);
+                                
+                                // Get all star icons (they are <i> elements)
+                                const stars = starRating.getElementsByTagName('i');
+                                
+                                // Loop through the stars and apply the "checked" class based on the rating
+                                for (let i = 0; i < stars.length; i++) {
+                                    if (i < rating) {
+                                        stars[i].classList.add('checked');  // Add "checked" class for selected stars
+                                    } else {
+                                        stars[i].classList.remove('checked');  // Remove "checked" class for unselected stars
+                                    }
                                 }
                                 
-                                // Initial display update when the document is loaded
-                                console.log('Document loaded. Updating display...');
-                            });
-                            // Function to handle objective click
-                            function handleObjectiveClick() {
+                                // Update the data-rating attribute to reflect the selected rating
+                                starRating.setAttribute('data-rating', rating);
+                            }
+                            
+                            
+
+    // Function to handle objective click
+    // Function to handle objective click
+    function handleObjectiveClick() {
                                 console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
                             
                                 // Hide the feedback form when switching to objectives
@@ -670,26 +931,32 @@
                                 console.log("Showing objective form.");
                                 document.getElementById("objective-skill-progress-form").style.display = "block"; // Ensure form is visible
                             }
-                            
-                            // Function to display submitted objectives
-                            function displaySubmittedObjectives(objectives) {
-                                const tableBody = document.getElementById("view-only-table-body");
-                                tableBody.innerHTML = ""; // Clear previous content
-                            
-                                objectives.forEach(obj => {
-                                    const row = document.createElement("tr");
-                                    row.innerHTML = `
-                                        <td>${obj.objectiveDescrpt || 'N/A'}</td>
-                                        <td>${obj.objectiveKPI || 'N/A'}</td>
-                                        <td>${obj.objectiveTarget || 'N/A'}</td>
-                                        <td>${obj.objectiveUOM || 'N/A'}</td>
-                                        <td>${(obj.objectiveAssignedWeight * 100) || 'N/A'} %</td>
-                                    `;
-                                    tableBody.appendChild(row);
-                                });
-                            }
-                                            // Function to remove a row from the objective form
-                                            function removeRow(button) {
+
+    // Function to display submitted objectives
+    function displaySubmittedObjectives(objectives) {
+    const tableBody = document.getElementById("view-only-table-body");
+    tableBody.innerHTML = ""; // Clear previous content
+
+    if (objectives.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="5">No objectives found.</td></tr>`;
+        return;
+    }
+
+    objectives.forEach(obj => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${obj.objectiveDescrpt || 'N/A'}</td>
+            <td>${obj.objectiveKPI || 'N/A'}</td>
+            <td>${obj.objectiveTarget || 'N/A'}</td>
+            <td>${obj.objectiveUOM || 'N/A'}</td>
+            <td>${(obj.objectiveAssignedWeight * 100) || 'N/A'} %</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+ // Function to remove a row from the objective form
+ function removeRow(button) {
                                                 const row = button.parentNode.parentNode;
                                                 row.parentNode.removeChild(row);
                                                 updateTotalWeight(); // Update total weight after removal
@@ -724,9 +991,9 @@
                                         
                                                 document.getElementById("totalWeight").value = totalWeight;
                                             }
-                                        
-                                            // Function to save objectives
-                                            async function saveObjectives() {
+
+    // Function to save objectives
+    async function saveObjectives() {
                                                 const departmentId = '<%= user.departmentId %>'; // Pass departmentId from server-side
                                                 const performancePeriodYear = document.getElementById("performanceDate").textContent;
                                         
@@ -826,371 +1093,85 @@
                                                     alert("No objectives to save.");
                                                 }
                                             }
-                                            
-                                            function addFormFeedbackRow(objective) {
-                                const tbody = document.getElementById('feedback-table-body');
-                                const row = document.createElement('tr');
-                            
-                                // Populate the main row with text display only
-                                row.innerHTML = `
-                                <td><strong>${objective.objectiveDescrpt || 'N/A'}</strong></td>
-                                <td><strong>${objective.objectiveKPI || 'N/A'}</strong></td>
-                                <td><strong>${objective.objectiveTarget || 'N/A'}</strong></td>
-                                <td><strong>${objective.objectiveUOM || '%'}</strong></td>
-                                <td><strong>${(objective.objectiveAssignedWeight * 100) || 'N/A'} %</strong></td>
-                            `;
-                            
-                                tbody.appendChild(row);
-                            
-                                // Create a new row for the input fields
-                                const inputRow = document.createElement('tr');
-                            
-                                inputRow.innerHTML = `
-                                <td colspan="5">
-                                    <div style="margin-bottom: 10px;">
-                                        <label for="qualitativeInput"> ▶ Guide Question here for qualitative and quantitative feedback:</label>
-                                        <input id="qualitativeInput" type="text" placeholder="Input your guide question here." name="kraObjectivesInput" required style="width: 100%; box-sizing: border-box;">
-                                    </div>
-                                    <div style="margin-bottom: 10px;">
-                                        <button type="button" onclick="toggleRatingSection('ratingSection${tbody.children.length}')" style="background-color: gray; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
-                                            View Rater's View
-                                        </button>
-                                        <div id="ratingSection${tbody.children.length}" style="display: none; margin-top: 10px;">
-                                            <div style="margin-bottom: 10px;">
-                                                <label>Quantitative (Rating Scale):</label>
-                                                <div style="font-size: 14px; margin-top: 5px;">
-                                                    Rate from 1-5 based on how well the individual achieved the target or goal related to the guide question.
-                                                </div>
-                                                <span style="font-size: 24px; cursor: pointer;" id="starRating${tbody.children.length}" data-rating="0">
-                                                    <i class="fa-solid fa-star" data-value="1"></i>
-                                                    <i class="fa-solid fa-star" data-value="2"></i>
-                                                    <i class="fa-solid fa-star" data-value="3"></i>
-                                                    <i class="fa-solid fa-star" data-value="4"></i>
-                                                    <i class="fa-solid fa-star" data-value="5"></i>
-                                                </span>
-                                            </div>
-                                            <div style="margin-bottom: 10px;">
-                                                <label>Qualitative (Open-ended):</label>
-                                                <div style="font-size: 14px; margin-top: 5px;">
-                                                   Provide qualitative feedback on the guide question to assess if the target was achieved.
-                                                </div>
-                                                <input type="text" placeholder="Place your Qualitative feedback here." style="width: 100%; box-sizing: border-box;" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                `;
-                            
-                                tbody.appendChild(inputRow);
-                            
-                                // Add click event listeners to the stars
-                                const stars = document.querySelectorAll(`#starRating${tbody.children.length} .fa-star`);
-                                stars.forEach(star => {
-                                    star.addEventListener('click', function() {
-                                        const rating = this.getAttribute('data-value');
-                                        const starContainer = document.getElementById(`starRating${tbody.children.length}`);
-                                        starContainer.setAttribute('data-rating', rating);
-                                        updateStarDisplay(stars, rating);
-                                    });
-                                });
-                            }
-                            
-                             // Function to update 360 degree feedback hard and soft skill rows
-                             function addFormFeedbackSkillsRows(skills, skillType) {
-                                const skillTableBody = document.querySelector(`#${skillType}-skills-table-body`);
-                            
-                                // Check if the table body exists
-                                if (!skillTableBody) {
-                                    console.log("Skill table body not found for:", skillType);
-                                    return;
-                                }
-                            
-                                // Iterate over the array of skills and add each one
-                                skills.forEach(skill => {
-                                    // Create the skill row
-                                    const row = document.createElement('tr');
-                                    row.innerHTML = `
-                                        <td>
-                                            <span><strong>${skill.jobReqSkillName}</strong></span>
-                                        </td>
-                                    `;
-                                    skillTableBody.appendChild(row);
-                            
-                                    // Create a new row for input fields
-                                    const inputRow = document.createElement('tr');
-                                    const starRatingId = `${skillType}SkillRow${skill.jobReqSkillName}Rating`;
-                            
-                                    // Create a unique ID for the collapsible section
-                                    const ratingSectionId = `ratingSection${skill.jobReqSkillName.replace(/\s+/g, '_')}`; // Replace spaces for valid ID
-                            
-                                    inputRow.innerHTML = `
-                                    <td colspan="1">
-                                        <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" style="background-color: gray; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
-                                            View Rater's View
-                                        </button>
-                                        <div id="${ratingSectionId}" style="display: none; margin-top: 10px;">
-                                            <div style="margin-bottom: 10px;">
-                                                <label><strong>Quantitative (Rating Scale):</strong></label>
-                                                <div style="font-size: 14px; margin-top: 5px;">
-                                                    Rate from 1 to 5 based on the corresponding skill performed during the quarter.
-                                                </div>
-                                                <span style="font-size: 24px; cursor: pointer;" id="${starRatingId}" data-rating="0">
-                                                    <i class="fa-solid fa-star" data-value="1" onclick="setRating('${starRatingId}', 1)"></i>
-                                                    <i class="fa-solid fa-star" data-value="2" onclick="setRating('${starRatingId}', 2)"></i>
-                                                    <i class="fa-solid fa-star" data-value="3" onclick="setRating('${starRatingId}', 3)"></i>
-                                                    <i class="fa-solid fa-star" data-value="4" onclick="setRating('${starRatingId}', 4)"></i>
-                                                    <i class="fa-solid fa-star" data-value="5" onclick="setRating('${starRatingId}', 5)"></i>
-                                                </span>
-                                            </div>
-                                            <div style="margin-bottom: 10px;">
-                                                <label><strong>Qualitative (Open-ended):</strong></label>
-                                                <div style="font-size: 14px; margin-top: 5px;">
-                                                    Provide qualitative feedback based on the corresponding skill performed during the quarter.
-                                                </div>
-                                                <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;">
-                                            </div>
-                                        </div>
-                                    </td>
-                                    `;
-                            
-                                    skillTableBody.appendChild(inputRow);
-                                });
-                            }
-                            
-                            
-                            // Function to toggle the visibility of the rating section
-                            function toggleRatingSection(sectionId) {
-                                const section = document.getElementById(sectionId);
-                                if (section.style.display === 'none') {
-                                    section.style.display = 'block'; // Show the rating section
-                                } else {
-                                    section.style.display = 'none'; // Hide the rating section
-                                }
-                            }
-                            
-                            // Function to update star display based on the rating
-                            function updateStarDisplay(stars, rating) {
-                                stars.forEach(star => {
-                                    if (star.getAttribute('data-value') <= rating) {
-                                        star.classList.add('checked'); // Add checked class for selected stars
-                                    } else {
-                                        star.classList.remove('checked'); // Remove checked class for unselected stars
-                                    }
-                                });
-                            }
-                            
-                            function setRating(rowId, rating) {
-                                const starRating = document.getElementById(`${rowId}Rating`);
-                                
-                                // Get all star icons (they are <i> elements)
-                                const stars = starRating.getElementsByTagName('i');
-                                
-                                // Loop through the stars and apply the "checked" class based on the rating
-                                for (let i = 0; i < stars.length; i++) {
-                                    if (i < rating) {
-                                        stars[i].classList.add('checked');  // Add "checked" class for selected stars
-                                    } else {
-                                        stars[i].classList.remove('checked');  // Remove "checked" class for unselected stars
-                                    }
-                                }
-                                
-                                // Update the data-rating attribute to reflect the selected rating
-                                starRating.setAttribute('data-rating', rating);
-                            }
-                            
-                            // Show Feedback Form
-                            function showFeedbackForm() {
-                                    // Hide the objective form and view-only section if they are visible
-                                    const formSection = document.getElementById("objective-skill-progress-form");
-                                    const viewOnlySection = document.getElementById("view-only-page");
-                                    if (formSection) {
-                                        formSection.style.display = "none"; // Hide objective form
-                                    }
-                                    if (viewOnlySection) {
-                                        viewOnlySection.style.display = "none"; // Hide view-only section
-                                    }
-                            
-                                    // Show the feedback section
-                                    const feedbackSection = document.getElementById("feedback-section");
-                                    feedbackSection.style.display = "block"; // Show feedback section
-                            
-                                    // Clear existing feedback rows
-                                    const feedbackTableBody = document.getElementById('feedback-table-body');
-                                    feedbackTableBody.innerHTML = ''; // Clear previous content
-                            
-                                    // Add feedback rows based on submitted objectives
-                                    submittedObjectives.forEach(objective => {
-                                        addFormFeedbackRow(objective); // Populate feedback rows with existing objectives
-                                    });
-                            
-                                    // Add hard skills to the feedback form
-                                    addFormFeedbackSkillsRows(hardSkills, 'hard');
-                            
-                                    // Add soft skills to the feedback form
-                                    addFormFeedbackSkillsRows(softSkills, 'soft');
-                            
-                                    console.log("Feedback section is now visible with populated rows.");
-                                }
-                            
-                            
-                                async function saveQ1_360Feedback() {
-                                const startDate = document.getElementById('startDate').value; // Capture start date from input
-                                const endDate = document.getElementById('endDate').value; // Capture end date from input
-                            
-                                console.log("Questionnaire User ID:", userId);
-                                console.log("Questionnaire Job ID:", jobId);
-                                console.log("Questionnaire Start Date:", startDate);
-                                console.log("Questionnaire End Date:", endDate);
-                            
-                                // Validate required fields
-                                if (!userId || !jobId || !startDate || !endDate) {
-                                    console.error("One or more required fields are missing.");
-                                    alert("Please ensure all fields are filled out correctly before saving.");
-                                    return;
-                                }
-                            
-                                const feedbackData = {
-                                    questions: [],
-                                    skills: [] // Assuming you might want to collect skills later
-                                };
-                            
-                                // Collect qualitative questions from the input fields
-                                const feedbackRows = document.querySelectorAll('#feedback-table-body tr');
-                                feedbackRows.forEach(row => {
-                                    const qualitativeInput = row.querySelector('input[name="kraObjectivesInput"]'); // Get qualitative question input
-                            
-                                    if (qualitativeInput && qualitativeInput.value.trim()) { // Ensure input is not empty
-                                        feedbackData.questions.push({
-                                            qualitativeQuestion: qualitativeInput.value.trim() // Save qualitative question
-                                        });
-                                    }
-                                });
-                            
-                                // Check if any questions were added
-                                if (feedbackData.questions.length === 0) {
-                                    alert("Please provide at least one qualitative question.");
-                                    return;
-                                }
-                            
-                                console.log("Feedback data to save:", feedbackData);
-                            
-                                // Proceed to send the feedback data to the server
-                                try {
-                                    const response = await fetch(`/linemanager/records-performance-tracker/questionnaire/${userId}`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                            userId, // Include userId here
-                                            jobId,
-                                            startDate,
-                                            endDate,
-                                            feedbackData
-                                        })
-                                    });
-                            
-                                    console.log("Response from server:", response);
-                            
-                                    // Check if the response was successful
-                                    if (!response.ok) {
-                                        throw new Error(`Server responded with status ${response.status}`);
-                                    }
-                            
-                                    const result = await response.json();
-                                    console.log("Result from server:", result);
-                            
-                                    if (result.success) {
-                                        window.location.href = `/linemanager/records-performance-tracker/${userId}`;
-                                    } else {
-                                        alert("Failed to save feedback: " + result.message);
-                                    }
-                                } catch (error) {
-                                    console.error("Error saving feedback:", error);
-                                    alert("An error occurred while saving feedback.");
-                                }
-                            }
-                            // Function to add feedback row for 360 degree feedback
-                            function add360FeedbackRow(objective) {
-                                const tbody = document.getElementById('feedback-table-body');
-                                const row = document.createElement('tr');
-                            
-                                // Create a unique ID for the collapsible section
-                                const rowId = `feedbackRow${tbody.children.length}`;
-                            
-                                // Populate the main row with text display only
-                                row.innerHTML = `
-                                    <td>
-                                        <button type="button" class="collapsible-button" onclick="toggleCollapse('${rowId}')">+</button>
-                                        <span>${objective.kraObjectives || 'KRA/Objectives'}</span>
-                                    </td>
-                                    <td>${objective.objectiveKPI || 'Engagement Rate'}</td>
-                                    <td>${objective.objectiveTarget || 15}</td>
-                                    <td>${objective.objectiveUOM || '%'}</td>
-                                    <td>${(objective.objectiveAssignedWeight * 100) || '25 %'}</td>
-                                `;
-                            
-                                tbody.appendChild(row);
-                            
-                                // Create a new row for the input fields, initially hidden
-                                const inputRow = document.createElement('tr');
-                                inputRow.id = rowId;
-                                inputRow.style.display = 'none'; // Initially hidden
-                            
-                                // Create a unique ID for the star rating
-                                const starRatingId = `starRating${tbody.children.length}`;
-                            
-                                inputRow.innerHTML = `
-                                <td colspan="5">
-                                    <div style="margin-bottom: 10px;">
-                                        <label for="qualitativeInput">Question for Qualitative:</label>
-                                        <input id="qualitativeInput" type="text" placeholder="Input your qualitative question here." name="kraObjectivesInput" required style="width: 100%; box-sizing: border-box;">
-                                    </div>
-                                    <div style="margin-bottom: 10px;">
-                                        <label for="${starRatingId}">Rate from 1-5:</label>
-                                        <span id="${starRatingId}" data-rating="0">
-                                            <i class="fa-solid fa-star" data-value="1"></i>
-                                            <i class="fa-solid fa-star" data-value="2"></i>
-                                            <i class="fa-solid fa-star" data-value="3"></i>
-                                            <i class="fa-solid fa-star" data-value="4"></i>
-                                            <i class="fa-solid
-                            fa-star" data-value="5"></i>
-                                        </span>
-                                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                                            This rating will be visible to the employee.
-                                        </div>
-                                    </div>
-                                </td>
-                                `;
-                                tbody.appendChild(inputRow);
-                            
-                                // Add click event listeners to the stars in the current row
-                                const stars = inputRow.querySelectorAll(`#${starRatingId} .fa-star`);
-                                stars.forEach(star => {
-                                    star.addEventListener('click', function() {
-                                        const rating = this.getAttribute('data-value');
-                                        const starContainer = document.getElementById(starRatingId);
-                                        starContainer.setAttribute('data-rating', rating);
-                                        updateStarDisplay(stars, rating);
-                                    });
-                                });
-                            }
-                            
-                            // Function to allow editing of the questionnaire
-                            function editQuestionnaire() {
-                                // Allow the user to edit the questionnaire
-                                // You can either redirect the user to an edit page or re-enable the form elements
-                                alert('You can now edit the questionnaire.');
-                            
-                                // Make the feedback form visible again
-                                document.getElementById('feedback-section').style.display = 'block';
-                            
-                                // Hide the feedback status section and button
-                                document.getElementById('feedback-status').style.display = 'none';
-                            
-                                // Optionally, you could reset form inputs or perform other actions needed for editing:
-                                // For example, resetting form fields:
-                                document.getElementById('feedbackForm').reset();
-                            }
-                            
-                            </script>
+
+    // Function to save 360 feedback
+    async function saveQ1_360Feedback() {
+        const startDate = document.getElementById('startDate').value; // Capture start date from input
+        const endDate = document.getElementById('endDate').value; // Capture end date from input
+
+        console.log("Questionnaire User ID:", userId);
+        console.log("Questionnaire Job ID:", jobId);
+        console.log("Questionnaire Start Date:", startDate);
+        console.log("Questionnaire End Date:", endDate);
+
+        // Validate required fields
+        if (!userId || !jobId || !startDate || !endDate) {
+            console.error("One or more required fields are missing.");
+            alert("Please ensure all fields are filled out correctly before saving.");
+            return;
+        }
+
+        const feedbackData = {
+            questions: [],
+            skills: [] // Assuming you might want to collect skills later
+        };
+
+        // Collect qualitative questions from the input fields
+        const feedbackRows = document.querySelectorAll('#feedback-table-body tr');
+        feedbackRows.forEach(row => {
+            const qualitativeInput = row.querySelector('input[name="kraObjectivesInput"]'); // Get qualitative question input
+
+            if (qualitativeInput && qualitativeInput.value.trim()) { // Ensure input is not empty
+                feedbackData.questions.push({
+                    qualitativeQuestion: qualitativeInput.value.trim() // Save qualitative question
+                });
+            }
+        });
+
+        // Check if any questions were added
+        if (feedbackData.questions.length === 0) {
+            alert("Please provide at least one qualitative question.");
+            return;
+        }
+
+        console.log("Feedback data to save:", feedbackData);
+
+        // Proceed to send the feedback data to the server
+        try {
+            const response = await fetch(`/linemanager/records-performance-tracker/questionnaire/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId, // Include userId here
+                    jobId,
+                    startDate,
+                    endDate,
+                    feedbackData
+                })
+            });
+
+            console.log("Response from server:", response);
+
+            // Check if the response was successful
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("Result from server:", result);
+
+            if (result.success) {
+                window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+            } else {
+                alert("Failed to save feedback: " + result.message);
+            }
+        } catch (error) {
+            console.error("Error saving feedback:", error);
+            alert("An error occurred while saving feedback.");
+        }
+    }
+
+    // Additional functions for handling feedback rows, star ratings, etc. can be added here
+</script>
 </body>
 </html>

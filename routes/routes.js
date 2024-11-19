@@ -7,8 +7,6 @@ const employeeController = require('../controllers/employeeController');
 const lineManagerController = require('../controllers/lineManagerController');
 const chatbotController = require('../controllers/chatbotController');
 const fileUpload = require('express-fileupload');  // Make sure you've installed express-fileupload
-
-
 // Middleware to parse incoming request bodies
 router.use(express.urlencoded({ extended: true }));
 router.use(fileUpload());
@@ -134,19 +132,19 @@ router.get('/linemanager/request-mrf', lineManagerController.getRequestMRF);
 router.get('/linemanager/mrf-list', lineManagerController.getMRFList);
 router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
 router.get('/linemanager/records-performance-tracker', lineManagerController.getRecordsPerformanceTrackerByDepartmentId);
-// Route for viewing an employee's performance tracker without a quarter
-// Route for viewing an employee's performance tracker without a quarter
-router.get('/linemanager/records-performance-tracker/:userId', 
-    lineManagerController.getRecordsPerformanceTrackerByUserId,
-    lineManagerController.getUserProgressView);
+
+router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getRecordsPerformanceTrackerByUserId)
 
 // Route for viewing an employee's performance tracker with a quarter
-router.get('/linemanager/records-performance-tracker/:userId/:quarter', 
-    lineManagerController.fetchFeedbackData,
-    lineManagerController.getUserProgressView);
+// router.get('/linemanager/records-performance-tracker/:userId/:quarter',
+//     lineManagerController.fetchFeedbackData,
+//     lineManagerController.getUserProgressView);
+router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getUserProgressView);
+
 router.post('/linemanager/records-performance-tracker/:userId', lineManagerController.saveObjectiveSettings);
 router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.saveQ1_360DegreeFeedback);
-// router.get(s'/linemanager/records-performance-tracker/submitted-data/:userId', lineManagerController.getSavedQuestionnaire);
+
+// router.get('/linemanager/records-performance-tracker/stepper/:quarter', lineManagerController.getQuarterStepper);
 
 
 
