@@ -139,20 +139,21 @@ getEmployeeObjProg: async function(req, res) {
             return res.redirect('/staff/login');
         }
 
-        // Query to fetch data from both objectivesettings and objectivesettings_objectives tables
-        const [objectives] = await db.query(`
-            SELECT 
-                o.objectiveDescrpt, 
-                o.objectiveKPI, 
-                o.objectiveTarget, 
-                o.objectiveUOM, 
-                o.objectiveAssignedWeight
-            FROM objectivesettings_objectives o
-            JOIN objectivesettings os ON o.objectiveSettingsId = os.objectiveSettingsId
-            WHERE os.userId = ?`, [userId]);
+        // Query to fetch data from Supabase
+        const { data: objectives, error } = await supabase
+            .from('objectivesettings_objectives')
+            .select('objectiveDescrpt, objectiveKPI, objectiveTarget, objectiveUOM, objectiveAssignedWeight')
+            .eq('objectiveSettingsId', userId); // You might need to adjust this based on your schema
+
+        // Handle errors from Supabase query
+        if (error) {
+            console.error('Error fetching objectives:', error);
+            req.flash('errors', { dbError: 'An error occurred while loading the objective-based program page.' });
+            return res.redirect('/employee/dashboard');
+        }
 
         // Check if objectives data was retrieved
-        if (objectives.length === 0) {
+        if (!objectives || objectives.length === 0) {
             req.flash('errors', { noObjectives: 'No objectives found for this user.' });
         }
 
@@ -162,7 +163,7 @@ getEmployeeObjProg: async function(req, res) {
             objectives: objectives // Pass the data to the template
         });
     } catch (err) {
-        // Log and handle any errors that occur during the query
+        // Log and handle any errors that occur
         console.error('Error in getEmployeeObjProg controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the objective-based program page.' });
         res.redirect('/employee/dashboard');
