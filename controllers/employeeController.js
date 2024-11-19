@@ -139,11 +139,14 @@ getEmployeeObjProg: async function(req, res) {
             return res.redirect('/staff/login');
         }
 
-        // Query to fetch data from Supabase
-        const { data: objectives, error } = await supabase
-            .from('objectivesettings_objectives')
-            .select('objectiveDescrpt, objectiveKPI, objectiveTarget, objectiveUOM, objectiveAssignedWeight')
-            .eq('objectiveSettingsId', userId); // You might need to adjust this based on your schema
+        console.log('User ID:', userId); // Check the userId
+const { data: objectives, error } = await supabase
+    .from('objectivesettings_objectives')
+    .select('objectiveDescrpt, objectiveKPI, objectiveTarget, objectiveUOM, objectiveAssignedWeight')
+    .eq('objectiveSettingsId', userId);
+
+console.log('Objectives:', objectives); // Check what data is being returned
+console.error('Supabase Error:', error); // Check for any errors
 
         // Handle errors from Supabase query
         if (error) {
