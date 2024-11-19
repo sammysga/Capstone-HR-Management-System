@@ -143,7 +143,7 @@ getEmployeeObjProg: async function(req, res) {
 const { data: objectives, error } = await supabase
     .from('objectivesettings_objectives')
     .select('objectiveDescrpt, objectiveKPI, objectiveTarget, objectiveUOM, objectiveAssignedWeight')
-    .eq('objectiveId', userId);
+    
 
 console.log('Objectives:', objectives); // Check what data is being returned
 console.error('Supabase Error:', error); // Check for any errors
