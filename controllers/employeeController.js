@@ -130,22 +130,50 @@ updateUserInfo: async function(req, res) {
 
 getEmployeeObjProg: async function(req, res) {
     try {
+        // Get the userId from the session
         const userId = req.session.user ? req.session.user.userId : null;
+
+        // Check if the user is logged in
         if (!userId) {
             req.flash('errors', { authError: 'User not logged in.' });
             return res.redirect('/staff/login');
         }
-        
-        // Render the objective-based program page
+
+        console.log('User ID:', userId); // Check the userId
+const { data: objectives, error } = await supabase
+    .from('objectivesettings_objectives')
+    .select('objectiveDescrpt, objectiveKPI, objectiveTarget, objectiveUOM, objectiveAssignedWeight')
+    
+
+console.log('Objectives:', objectives); // Check what data is being returned
+console.error('Supabase Error:', error); // Check for any errors
+
+        // Handle errors from Supabase query
+        if (error) {
+            console.error('Error fetching objectives:', error);
+            req.flash('errors', { dbError: 'An error occurred while loading the objective-based program page.' });
+            return res.redirect('/employee/dashboard');
+        }
+
+        // Check if objectives data was retrieved
+        if (!objectives || objectives.length === 0) {
+            req.flash('errors', { noObjectives: 'No objectives found for this user.' });
+        }
+
+        // Render the objective-based program page and pass the fetched data
         res.render('staffpages/employee_pages/employeeobjectivebasedprog', {
-            errors: req.flash('errors')
+            errors: req.flash('errors'),
+            objectives: objectives // Pass the data to the template
         });
     } catch (err) {
+        // Log and handle any errors that occur
         console.error('Error in getEmployeeObjProg controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the objective-based program page.' });
         res.redirect('/employee/dashboard');
     }
 },
+
+
 
 getEmployeeSKillsProg: async function(req, res) {
     try {

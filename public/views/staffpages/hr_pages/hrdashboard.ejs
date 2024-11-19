@@ -58,6 +58,38 @@
         .action-required-btn:hover {
             background-color: #1a5f78;
         }
+        .chart-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin: 20px auto;
+            padding: 19px;
+            background-color: #f9f9f9; 
+            border: 1px solid #ddd; 
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1500px; 
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        .chart-box {
+            flex: 1; 
+            margin: 10px;
+            text-align: center; 
+            background-color: #fff; 
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); 
+        }
+        .chart-box canvas {
+            max-width: 100%;
+            height: 230px;
+        }
+        h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -66,6 +98,20 @@
     <div class="main-content">
         <h2>HR Dashboard</h2>
 
+        <div class="chart-container">
+            <div class="chart-box">
+                <h3>Attendance Logs</h3>
+                <canvas id="attendanceLogsChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Manpower Requisitions</h3>
+                <canvas id="manpowerRequisitionChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Leave Requests</h3>
+                <canvas id="leaveRequestsChart"></canvas>
+            </div>
+        </div>        
         
         <!-- Attendance Logs Section -->
         <section class="attendance-logs">
@@ -226,6 +272,95 @@
                 </tbody>
             </table>
         </div>
+
+        <!--Script for the Chart.js-->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+            // Line Graph: Attendance Logs
+            const attendanceLogsData = <%- JSON.stringify(attendanceLogs) %>;
+            const attendanceDates = attendanceLogsData.map(log => log.date);
+            const attendanceCounts = attendanceDates.reduce((acc, date) => {
+                acc[date] = (acc[date] || 0) + 1;
+                return acc;
+            }, {});
+            
+            new Chart(document.getElementById('attendanceLogsChart'), {
+                type: 'line',
+                data: {
+                    labels: Object.keys(attendanceCounts),
+                    datasets: [{
+                        label: 'Attendance Logs',
+                        data: Object.values(attendanceCounts),
+                        borderColor: '#2385B0',
+                        tension: 0.3,
+                        fill: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: true } },
+                    scales: { x: { title: { display: true, text: 'Dates' } }, y: { title: { display: true, text: 'Count' } } }
+                }
+            });
+        
+            // Pie Chart: Manpower Requisition Forms
+            const manpowerData = <%- JSON.stringify(manpowerRequisitions) %>;
+            const statusCounts = manpowerData.reduce((acc, req) => {
+                acc[req.status] = (acc[req.status] || 0) + 1;
+                return acc;
+            }, {});
+        
+            new Chart(document.getElementById('manpowerRequisitionChart'), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#2385B0', '#FF6384', '#FFCE56'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: true } }
+                }
+            });
+        
+            // Line Chart: All Leave Request
+            const leaveData = <%- JSON.stringify(allLeaves) %>;
+            const leaveWeeklyCounts = leaveData.reduce((acc, leave) => {
+                // Convert date to week number
+                const leaveDate = new Date(leave.filedDate);
+                const startOfYear = new Date(leaveDate.getFullYear(), 0, 1);
+                const weekNumber = Math.ceil(((leaveDate - startOfYear) / (24 * 60 * 60 * 1000) + startOfYear.getDay() + 1) / 7);
+
+                const weekKey = `Week ${weekNumber}, ${leaveDate.getFullYear()}`;
+                acc[weekKey] = (acc[weekKey] || 0) + 1;
+                return acc;
+            }, {});
+
+            new Chart(document.getElementById('leaveRequestsChart'), {
+                type: 'line',
+                data: {
+                    labels: Object.keys(leaveWeeklyCounts),
+                    datasets: [{
+                        label: 'Weekly Leave Requests',
+                        data: Object.values(leaveWeeklyCounts),
+                        borderColor: '#FF6384',
+                        tension: 0.3,
+                        fill: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: true } },
+                    scales: { 
+                        x: { title: { display: true, text: 'Weeks' } },
+                        y: { title: { display: true, text: 'Count' } }
+                    }
+                }
+            });
+        </script>        
 
         <!-- JavaScript for sidebar functionality -->
         <script>
