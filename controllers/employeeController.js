@@ -130,22 +130,46 @@ updateUserInfo: async function(req, res) {
 
 getEmployeeObjProg: async function(req, res) {
     try {
+        // Get the userId from the session
         const userId = req.session.user ? req.session.user.userId : null;
+
+        // Check if the user is logged in
         if (!userId) {
             req.flash('errors', { authError: 'User not logged in.' });
             return res.redirect('/staff/login');
         }
-        
-        // Render the objective-based program page
+
+        // Query to fetch data from both objectivesettings and objectivesettings_objectives tables
+        const [objectives] = await db.query(`
+            SELECT 
+                o.objectiveDescrpt, 
+                o.objectiveKPI, 
+                o.objectiveTarget, 
+                o.objectiveUOM, 
+                o.objectiveAssignedWeight
+            FROM objectivesettings_objectives o
+            JOIN objectivesettings os ON o.objectiveSettingsId = os.objectiveSettingsId
+            WHERE os.userId = ?`, [userId]);
+
+        // Check if objectives data was retrieved
+        if (objectives.length === 0) {
+            req.flash('errors', { noObjectives: 'No objectives found for this user.' });
+        }
+
+        // Render the objective-based program page and pass the fetched data
         res.render('staffpages/employee_pages/employeeobjectivebasedprog', {
-            errors: req.flash('errors')
+            errors: req.flash('errors'),
+            objectives: objectives // Pass the data to the template
         });
     } catch (err) {
+        // Log and handle any errors that occur during the query
         console.error('Error in getEmployeeObjProg controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the objective-based program page.' });
         res.redirect('/employee/dashboard');
     }
 },
+
+
 
 getEmployeeSKillsProg: async function(req, res) {
     try {
