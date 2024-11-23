@@ -132,9 +132,9 @@ button:hover {
                                     <span class="indent-job-title"><%= jobTitle %></span>
                                     <div class="job-title-actions">
                                         <% if (staffGroup[0].isJobRequirementsMissing) { %>
-                                            <button onclick="location.href='/hr/update-job-requirements/<%= staffGroup[0].jobId %>'">Update Job Requirements</button>
+                                            <!-- Button Removed for Missing Job Requirements -->
                                         <% } else if (staffGroup[0].hasJobRequirements) { %>
-                                            <button onclick="location.href='/hr/edit-job-requirements/<%= staffGroup[0].jobId %>'">Edit Job Requirements</button>
+                                            <!-- Button Removed for Existing Job Requirements -->
                                         <% } %>
                                     </div>
                                 </div>

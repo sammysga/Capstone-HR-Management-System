@@ -142,7 +142,7 @@ router.get('/linemanager/records-performance-tracker/:userId', lineManagerContro
 router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getUserProgressView);
 
 router.post('/linemanager/records-performance-tracker/:userId', lineManagerController.saveObjectiveSettings);
-router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.saveQ1_360DegreeFeedback);
+router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.save360DegreeFeedback);
 
 // router.get('/linemanager/records-performance-tracker/stepper/:quarter', lineManagerController.getQuarterStepper);
 

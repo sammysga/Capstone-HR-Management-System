@@ -34,6 +34,26 @@
     font-weight: bold;
 }
 
+/* YEAR FILTER RESIZED */
+.stepper-header {
+    display: flex;
+    align-items: center; /* Align items vertically centered */
+    justify-content: space-between; /* Space between elements */
+}
+
+.year-filter {
+    margin-left: 20px; /* Add some space between the header and the filter */
+}
+
+.year-filter label {
+    margin-right: 5px; /* Space between label and select */
+}
+
+#yearSelect {
+    font-size: 0.9em; /* Adjust font size to make it smaller */
+    padding: 5px; /* Adjust padding for a smaller appearance */
+}
+
 /* .step.disabled {
     pointer-events: none;
     opacity: 0.5;
@@ -78,30 +98,7 @@
                                     <p>Joined Company</p>
                                 </div>
                             </div>
-                            <div class="milestone">
-                                <div class="milestone-label">
-                                    <h4>Milestone 2</h4>
-                                    <p>Promoted to Junior Developer</p>
-                                </div>
-                            </div>
-                            <div class="milestone">
-                                <div class="milestone-label">
-                                    <h4>Milestone 3</h4>
-                                    <p>Completed Major Project</p>
-                                </div>
-                            </div>
-                            <div class="milestone">
-                                <div class="milestone-label">
-                                    <h4>Milestone 4</h4>
-                                    <p>Promoted to Developer</p>
-                                </div>
-                            </div>
-                            <div class="milestone">
-                                <div class="milestone-label">
-                                    <h4>Milestone 5</h4>
-                                    <p>Achieved Team Lead Role</p>
-                                </div>
-                            </div>
+                        
                         </div>
                     </div>
                 </div>
@@ -110,28 +107,23 @@
                 <div class="column" id="degree-experience-certifications">
                     <div class="section">
                         <h2>Degree</h2>
-                        <p>Bachelor of Science in Computer Science</p>
-                        <p>University of Technology - Graduated 2012</p>
+                     
                     </div>
         
                     <div class="section">
                         <h2>Experiences</h2>
-                        <p>Software Engineer at XYZ Corp (2015 - Present)</p>
-                        <p>Junior Developer at ABC Inc. (2012 - 2015)</p>
+                      
                     </div>
         
                     <div class="section">
                         <h2>Uploaded Certifications</h2>
-                        <p>Certified Scrum Master (CSM)</p>
-                        <p>Oracle Certified Java Programmer</p>
-                        <p>Microsoft Certified: Azure Developer Associate</p>
+                      
                     </div>
                 </div>
             </div>
         
-            <!-- Below the three columns -->
             <section id="attendance-logs">
-                <h2>Attendance Logs</h2>
+                <h2>Weekly Attendance Logs</h2>
                 <table>
                     <thead>
                         <tr>
@@ -146,21 +138,30 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Doe</td>
-                            <td>John</td>
-                            <td>2024-10-30</td>
-                            <td>Finance</td>
-                            <td>Financial Analyst</td>
-                            <td>08:00 AM</td>
-                            <td>05:00 PM</td>
-                            <td>8 Hours</td>
-                        </tr>
+                        <% if (user.attendance && user.attendance.length > 0) { %>
+                            <% user.attendance.forEach(log => { %>
+                                <tr>
+                                    <td><%= log.lastName %></td>
+                                    <td><%= log.firstName %></td>
+                                    <td><%= log.date %></td>
+                                    <td><%= log.department %></td>
+                                    <td><%= log.jobTitle %></td>
+                                    <td><%= log.timeIn %></td>
+                                    <td><%= log.timeOut %></td>
+                                    <td><%= log.activeWorkingHours %></td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="8">No attendance logs available.</td>
+                            </tr>
+                        <% } %>
                     </tbody>
                 </table>
             </section>
-        
-            <section id="objective-skill-progress">
+            
+
+            <!-- <section id="objective-skill-progress">
                 <h2>Objective-based Skill Quarterly Progress Overview</h2>
                 <table>
                     <thead>
@@ -184,10 +185,21 @@
                         </tr>
                     </tbody>
                 </table>
-            </section>
+            </section> -->
 
             <section class="stepper">
-                <h2>Objective and Performance Review Tracker</h2>
+                <div class="stepper-header">
+                    <h2>Objective and Performance Review Tracker</h2>
+                    <section class="year-filter">
+                        <label for="yearSelect">Select Year:</label>
+                        <select id="yearSelect" onchange="fetchYearData()">
+                            <option value="">-- Select Year --</option>
+                            <% for (let year of viewState.years) { %>
+                                <option value="<%= year %>" <%= year === viewState.selectedYear ? 'selected' : '' %>><%= year %></option>
+                            <% } %>
+                        </select>
+                    </section>
+                </div>
                 <div class="stepper-container">
                     <!-- Objective Setting -->
                     <div class="step <%= viewState.viewOnlyStatus['objectivesettings'] ? 'view-only' : 'accessible' %>" id="objectivesButton">
@@ -414,8 +426,6 @@
                 <div id="viewState" data-viewstate='<%= JSON.stringify(viewState) %>' style="display:none;"></div>
             </form>
 
-            
-            
             <form id="feedbackForm" method="POST" action="/linemanager/records-performance-tracker/questionnaire/<%= user.userId %>">                
                 <section id="feedback-section" class="fade-out" style="display: none;">
                     <input type="hidden" id="userId" value="<%= user.userId %>">
@@ -425,191 +435,240 @@
                             <!-- Start Date -->
                             <div class="date-input">
                                 <label for="startDate"><strong>Start Date:</strong></label>
-                                <% if (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0) { 
-                                    const feedback = viewState.feedbacksByQuarter['Q1'][0]; 
+                                <% 
+                                const feedbackQ1 = viewState.feedbacks.feedbacks_Q1; // Access feedbacks for Q1
+                                const currentDate = new Date();
+                                let startDate = '';
+                                let endDate = '';
+                                let isViewOnly = false;
+            
+                                if (feedbackQ1 && feedbackQ1.length > 0) { 
+                                    const feedback = feedbackQ1[0]; 
+                                    startDate = feedback.setStartDate;
+                                    endDate = feedback.setEndDate;
+                                    isViewOnly = true; // Set to view only after submission
+                                } 
                                 %>
-                                    <!-- Display start date as text if already set -->
-                                    <span><%= feedback.setStartDate %></span>
+                                <% if (isViewOnly) { %>
+                                    <span><%= startDate %></span> <!-- Display as text if view-only -->
                                 <% } else { %>
-                                    <!-- Provide an editable input field if no feedback data is available -->
                                     <input type="date" id="startDate" name="startDate" class="input-field" 
-                                           value="<%= viewState.feedback ? viewState.feedback.setStartDate : '' %>" required>
+                                           value="<%= startDate %>" required>
                                 <% } %>
                             </div>
-                            
+            
                             <!-- End Date -->
                             <div class="date-input">
                                 <label for="endDate"><strong>End Date:</strong></label>
-                                <% if (viewState.feedbacksByQuarter && viewState.feedbacksByQuarter['Q1'] && viewState.feedbacksByQuarter['Q1'].length > 0) { 
-                                    const feedback = viewState.feedbacksByQuarter['Q1'][0]; 
-                                %>
-                                    <!-- Display end date as text if already set -->
-                                    <span><%= feedback.setEndDate %></span>
+                                <% if (isViewOnly) { %>
+                                    <span><%= endDate %></span> <!-- Display as text if view-only -->
                                 <% } else { %>
-                                    <!-- Provide an editable input field if no feedback data is available -->
                                     <input type="date" id="endDate" name="endDate" class="input-field" 
-                                           value="<%= viewState.feedback ? viewState.feedback.setEndDate : '' %>" required>
+                                           value="<%= endDate %>" required>
                                 <% } %>
                             </div>
                         </div>
                     </div>
-                
-                                <!-- Instructions Label -->
-                                <h3 style="font-weight: bold; font-size: 1.2em; margin-top: 20px;">Instructions</h3>
-                                <br>
-                                <!-- Instructions Content -->
-                                <p><strong>Setting Start and End Date:</strong> When creating a 360-degree feedback questionnaire, it is essential to set a start and end date. This schedule will automatically notify employees through the system, ensuring that they are aware of the timeframe for providing feedback.</p>
-                                
-                                <p><strong>Setting of Guide Questions:</strong> The Line Manager should prepare guide questions that support co-employees in providing both qualitative and quantitative feedback for each role-specific objective. Additionally, employees will rate the hard and soft skills required for the job, offering qualitative comments and quantitative scores. These structured questions enable clear, measurable evaluations and ensure alignment with the objectives being tracked.</p>                    
-                                
-                                <div class="feedback-header-grid">
-                                    <!-- Row 1 -->
-                                    <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
-                                    <div><strong>Position:</strong> <%= user.jobTitle %></div>
-                                    
-                                    <!-- Row 2 -->
-                                    <div><strong>Company:</strong> Prime Infrastructure</div>
-                                    <div><strong>Department:</strong> <%= user.departmentName %></div>
-                                </div>
-                                
-                                <!-- Small Divider -->
-                                <hr class="divider" />
-                                
-                                <p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Objective Setting Questions</p>
-                                
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>KRA/Objectives</th>
-                                            <th>KPI</th>
-                                            <th>Target</th>
-                                            <th>UOM</th>
-                                            <th>Assigned Weight</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="feedback-table-body">
-                                        <!-- Dynamic feedback rows will be added here -->
-                                    </tbody>
-                                </table>
-                                
-                                <!-- Hard Skills Table -->
-                                <p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Hard Skills</p>
-                                <table id="hardSkillsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Skill Name</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="hard-skills-table-body">
-                                        <!-- Hard skill rows will be dynamically inserted here -->
-                                    </tbody>
-                                </table>
-                                
-                                <!-- Soft Skills Table -->
-                                <p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Soft Skills</p>
-                                <table id="softSkillsTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Skill Name</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="soft-skills-table-body">
-                                        <!-- Soft skill rows will be dynamically inserted here -->
-                                    </tbody>
-                                </table>
-                                
-                                <!-- Move the button here -->
-                                <button id="saveQ1_360FeedbackPresetButton" type="submit">Save Questionnaire</button>
-                            </section>
-                        </form>
+            
+                    <!-- Instructions Label -->
+                    <h3 style="font-weight: bold; font-size: 1.2em; margin-top: 20px;">Instructions</h3>
+                    <br>
+                    <p><strong>Setting Start and End Date:</strong> When creating a 360-degree feedback questionnaire, it is essential to set a start and end date. This schedule will automatically notify employees through the system, ensuring that they are aware of the timeframe for providing feedback.</p>
+                    
+                    <p><strong>Setting of Guide Questions:</strong> The Line Manager should prepare guide questions that support co-employees in providing both qualitative and quantitative feedback for each role-specific objective. Additionally, employees will rate the hard and soft skills required for the job, offering qualitative comments and quantitative scores. These structured questions enable clear, measurable evaluations and ensure alignment with the objectives being tracked.</p>                    
+            
+                    <div class="feedback-header-grid">
+                        <!-- Row 1 -->
+                        <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
+                        <div><strong>Position:</strong> <%= user.jobTitle %></div>
+                        
+                        <!-- Row 2 -->
+                        <div><strong>Company:</strong> Prime Infrastructure</div>
+                        <div><strong>Department:</strong> <%= user.departmentName %></div>
+                    </div>
+                    
+                    <hr class="divider" />
+                    
+                    <p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Objective Setting Questions</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>KRA/Objectives</th>
+                                <th>KPI</th>
+                                <th>Target</th>
+                                <th> UOM</th>
+                                <th>Assigned Weight</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedback-table-body">
+                            <!-- Dynamic feedback rows will be added here -->
+                        </tbody>
+                    </table>
+            
+                    <!-- Hard Skills Table -->
+                    <p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Hard Skills</p>
+                    <table id="hardSkillsTable">
+                        <thead>
+                            <tr>
+                                <th>Skill Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hard-skills-table-body">
+                            <!-- Hard skill rows will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- Soft Skills Table -->
+                    <p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Soft Skills</p>
+                    <table id="softSkillsTable">
+                        <thead>
+                            <tr>
+                                <th>Skill Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="soft-skills-table-body">
+                            <!-- Soft skill rows will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                    
+                    <button id="save360DegreeFeedback" type="submit" <%= isViewOnly ? 'disabled' : '' %>>Save Questionnaire</button>
+                </section>
+            </form>
+            
                         
                         <script>
-                            let currentStep = 0; // Track the current step
-                            
-                            // Parse viewState back into an object
-                            const viewStateElement = document.getElementById('viewState');
-                            const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
-                            let userId = '<%= user.userId %>'; // Pass userId from server-side
-                            let jobId = viewState.jobId; // Use jobId from viewState
-                            let submittedObjectives = viewState.submittedObjectives || []; // Initialize with submitted objectives
-                            // Make sure to define hardSkills and softSkills as global variables
-                            const hardSkills = viewState.hardSkills || []; // Default to empty array if not defined
-                                const softSkills = viewState.softSkills || []; // Default to empty array if not defined
-                            
-                            
+    let currentStep = 0; // Track the current step
+    
+    // Parse viewState back into an object
+    const viewStateElement = document.getElementById('viewState');
+    const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
+    let userId = '<%= user.userId %>'; // Pass userId from server-side
+    let jobId = viewState.jobId; // Use jobId from viewState
+    let submittedObjectives = viewState.submittedObjectives || []; // Initialize with submitted objectives
+    const hardSkills = viewState.hardSkills || []; // Default to empty array if not defined
+    const softSkills = viewState.softSkills || []; // Default to empty array if not defined
+
 document.addEventListener("DOMContentLoaded", function () {
-        const objectivesButton = document.getElementById("objectivesButton");
-        const feedbackSection = document.getElementById("feedback-section");
-        const saveButton = document.getElementById("saveButton"); // Save button for objectives
-        const saveQ1_360FeedbackPresetButton = document.getElementById("saveQ1_360FeedbackPresetButton"); // Save button for objectives
+    const objectivesButton = document.getElementById("objectivesButton");
+    const feedbackSection = document.getElementById("feedback-section");
+    const saveButton = document.getElementById("saveButton"); // Save button for objectives
+    const saveFeedbackButton = document.getElementById("save360DegreeFeedback"); // Save button for feedback
+    const feedbackStatus = document.getElementById('feedback-status');
+    const feedbackMessage = document.getElementById('feedback-message');
+    const editButton = document.getElementById('edit-questionnaire-button');
 
-        // Log the values for debugging
-        console.log("Submitted Objectives:", submittedObjectives);
-        console.log("User ID:", userId);
-        console.log("Job ID:", jobId);
+    // Log the values for debugging
+    console.log("Submitted Objectives:", submittedObjectives);
+    console.log("User   ID:", userId);
+    console.log("Job ID:", jobId);
 
-        if (objectivesButton) {
-            console.log('Objectives Button found:', objectivesButton);
-            objectivesButton.addEventListener("click", handleObjectiveClick);
-        } else {
-            console.error('Objectives Button not found in the DOM.');
-        }
-
-        // Add event listener for the save button
-        saveButton.addEventListener("click", saveObjectives); // Call saveObjectives on click
-        // Add event listener for the feedback save button
-        saveQ1_360FeedbackPresetButton.addEventListener("click", async (event) => {
-            event.preventDefault(); // Prevent default form submission
-            await saveQ1_360Feedback(); // Call the function to save feedback
-        });
-
-        // Get the current date
-        const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-
-        // Get the feedback status container and message
-        const feedbackStatus = document.getElementById('feedback-status');
-        const feedbackMessage = document.getElementById('feedback-message');
-        const editButton = document.getElementById('edit-questionnaire-button');
-
-        // Check if the current date is before the scheduled end date
-        const endDate = document.getElementById('endDate').value; // Get end date value here
-        if (currentDate < endDate) {
-            // Display confirmation message with ability to edit
-            feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are allowed before the scheduled date.`;
-            feedbackStatus.style.display = 'block';
-            editButton.style.display = 'inline-block';  // Show the Edit button
-        } else {
-            // Display confirmation message without the Edit option
-            feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are not allowed after the scheduled date.`;
-            feedbackStatus.style.display = 'block';
-        }
-
-        // Initial display update when the document is loaded
-        console.log('Document loaded. Updating display...');
-    });
-
-function displayObjectives(objectives) {
-    const objectivesTableBody = document.getElementById('objectives-table-body'); // Ensure this matches your HTML structure
-    objectivesTableBody.innerHTML = ''; // Clear existing content
-
-    if (objectives.length === 0) {
-        // If no objectives are found, display a message
-        objectivesTableBody.innerHTML = `<tr><td colspan="5">No objectives found.</td></tr>`;
-        return;
+    if (objectivesButton) {
+        console.log('Objectives Button found:', objectivesButton);
+        objectivesButton.addEventListener("click", handleObjectiveClick);
+    } else {
+        console.error('Objectives Button not found in the DOM.');
     }
 
-    objectives.forEach(obj => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${obj.objectiveDescrpt || 'N/A'}</td>
-            <td>${obj.objectiveKPI || 'N/A'}</td>
-            <td>${obj.objectiveTarget || 'N/A'}</td>
-            <td>${obj.objectiveUOM || 'N/A'}</td>
-            <td>${(obj.objectiveAssignedWeight * 100) || 'N/A'} %</td>
-        `;
-        objectivesTableBody.appendChild(row);
+    // Add event listener for the save button
+    saveButton.addEventListener("click", saveObjectives); // Call saveObjectives on click
+    
+    // Add event listener for the feedback save button
+    saveFeedbackButton.addEventListener("click", async (event) => {
+        event.preventDefault(); // Prevent default form submission
+        await save360DegreeFeedback(); // Call the function to save feedback
+        // After saving, switch to view-only mode
+        switchToViewOnlyMode();
     });
-}
+
+    // Get the current date
+    const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    // Get the end date from the input
+    const endDate = document.getElementById('endDate').value; // Get end date value here
+
+    // Check if the current date is before the scheduled end date
+    if (currentDate < endDate) {
+        // Display confirmation message with ability to edit
+        feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are allowed before the scheduled date.`;
+        feedbackStatus.style.display = 'block';
+        editButton.style.display = 'inline-block';  // Show the Edit button
+    } else {
+        // Display confirmation message without the Edit option
+        feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are not allowed after the scheduled date.`;
+        feedbackStatus.style.display = 'block';
+        editButton.style.display = 'none'; // Hide the Edit button
+    }
+
+    // Initial display update when the document is loaded
+    console.log('Document loaded. Updating display...');
+    updateFeedbackStatus(); // Call to update feedback status on load
+
+    // Function to switch to view-only mode
+    function switchToViewOnlyMode() {
+        const startDateInput = document.getElementById("startDate");
+        const endDateInput = document.getElementById("endDate");
+        const feedbackTableBody = document.getElementById('feedback-table-body');
+
+        // Replace input fields with text
+        if (startDateInput) {
+            const startDateText = document.createElement("span");
+            startDateText.textContent = startDateInput.value;
+            startDateInput.parentNode.replaceChild(startDateText, startDateInput);
+        }
+
+        if (endDateInput) {
+            const endDateText = document.createElement("span");
+            endDateText.textContent = endDateInput.value;
+            endDateInput.parentNode.replaceChild(endDateText, endDateInput);
+        }
+
+        // Make qualitative questions view-only
+        if (feedbackTableBody) {
+            const rows = feedbackTableBody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const input = row.querySelector('input[type="text"]');
+                if (input) {
+                    const textSpan = document.createElement("span");
+                    textSpan.textContent = input.value;
+                    input.parentNode.replaceChild(textSpan, input);
+                }
+            });
+        }
+
+        // Hide or remove the save button
+        if (saveFeedbackButton) {
+            saveFeedbackButton.style.display = 'none'; // Hide the button
+            // Alternatively, you could remove it completely:
+            // saveFeedbackButton.parentNode.removeChild(saveFeedbackButton);
+        }
+    }
+});
+
+
+    function displayObjectives(objectives) {
+        const objectivesTableBody = document.getElementById('objectives-table-body'); // Ensure this matches your HTML structure
+        objectivesTableBody.innerHTML = ''; // Clear existing content
+
+        if (objectives.length === 0) {
+            // If no objectives are found, display a message
+            objectivesTableBody.innerHTML = `<tr><td colspan="5">No objectives found.</td></tr>`;
+            return;
+        }
+
+        objectives.forEach(obj => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${obj.objectiveDescrpt || 'N/A'}</td>
+                <td>${obj.objectiveKPI || 'N/A'}</td>
+                <td>${obj.objectiveTarget || 'N/A'}</td>
+                <td>${obj.objectiveUOM || 'N/A'}</td>
+                <td>${(obj.objectiveAssignedWeight * 100) || 'N/A'} %</td>
+            `;
+            objectivesTableBody.appendChild(row);
+        });
+    }
+
     // Function to update feedback status
     function updateFeedbackStatus() {
         const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
@@ -627,45 +686,42 @@ function displayObjectives(objectives) {
             // Display confirmation message without the Edit option
             feedbackMessage.innerHTML = `Questionnaire Saved on ${currentDate}. Edits are not allowed after the scheduled date.`;
             feedbackStatus.style.display = 'block';
+            editButton.style.display = 'none'; // Hide the Edit button
         }
 
         // Initial display update when the document is loaded
         console.log('Document loaded. Updating display...');
     }
 
+    // Show Feedback Form
+    function showFeedbackForm() {
+        const formSection = document.getElementById("objective-skill-progress-form");
+        const viewOnlySection = document.getElementById("view-only-page");
 
+        if (formSection) formSection.style.display = "none";
+        if (viewOnlySection) viewOnlySection.style.display = "none";
 
-          // Show Feedback Form
-function showFeedbackForm() {
-    const formSection = document.getElementById("objective-skill-progress-form");
-    const viewOnlySection = document.getElementById("view-only-page");
+        const feedbackSection = document.getElementById("feedback-section");
+        if (feedbackSection) {
+            feedbackSection.style.display = "block"; // Show feedback section
+        }
 
-    if (formSection) formSection.style.display = "none";
-    if (viewOnlySection) viewOnlySection.style.display = "none";
+        const feedbackTableBody = document.getElementById('feedback-table-body');
+        feedbackTableBody.innerHTML = '';
 
-    const feedbackSection = document.getElementById("feedback-section");
-    if (feedbackSection) {
-        feedbackSection.style.display = "block"; // Show feedback section
+        if (submittedObjectives && submittedObjectives.length > 0) {
+            submittedObjectives.forEach(objective => {
+                addFormFeedbackRow(objective); // Populate feedback rows with objectives
+            });
+        }
+
+        // Add hard skills to the feedback form
+        addFormFeedbackSkillsRows(hardSkills, 'hard');
+
+        // Add soft skills to the feedback form
+        addFormFeedbackSkillsRows(softSkills, 'soft');
     }
-
-    const feedbackTableBody = document.getElementById('feedback-table-body');
-    feedbackTableBody.innerHTML = '';
-
-    if (submittedObjectives && submittedObjectives.length > 0) {
-        submittedObjectives.forEach(objective => {
-            addFormFeedbackRow(objective); // Populate feedback rows with objectives
-        });
-    }
-
-     // Add hard skills to the feedback form
-     addFormFeedbackSkillsRows(hardSkills, 'hard');
-                            
-                            // Add soft skills to the feedback form
-                            addFormFeedbackSkillsRows(softSkills, 'soft');
-                    
-}
-
-function addFormFeedbackRow(objective) {
+    function addFormFeedbackRow(objective) {
     const tbody = document.getElementById('feedback-table-body');
     if (!tbody) {
         console.error("Feedback table body not found.");
@@ -690,18 +746,15 @@ function addFormFeedbackRow(objective) {
     const inputId = `qualitativeInput_${objective.objectiveId}`;
     const questionText = objective.objectiveQualiQuestion || 'Enter your feedback here';
 
-    // Fixing the placeholder and value logic
     inputRow.innerHTML = `
         <td colspan="5">
             <div style="margin-bottom: 10px;">
                 <label for="${inputId}">▶ Guide Question here for qualitative and quantitative feedback:</label>
                 <input id="${inputId}" type="text"
-                    value="${questionText.trim() ? questionText : ''}"  <!-- Fill with questionText if available -->
-                    placeholder="${questionText.trim() ? '' : 'Enter your feedback here'}"  <!-- Show placeholder only if questionText is empty -->
-                    name="kraObjectivesInput"
-                    required
-                    style="width: 100%; box-sizing: border-box;"
-                    data-objective-id="${objective.objectiveId}">
+                    value="${questionText.trim() ? questionText : ''}"  
+                    ${questionText.trim() ? '' : 'placeholder="Enter your feedback here"'} 
+                    data-objective-id="${objective.objectiveId}" 
+                >
             </div>
         </td>
     `;
@@ -721,7 +774,7 @@ function addFormFeedbackRow(objective) {
                 <div style="margin-bottom: 10px;">
                     <label><strong>Quantitative (Rating Scale):</strong></label>
                     <div style="font-size: 14px; margin-top: 5px;">
-                        Rate from 1 to 5 based on the corresponding skill performed during the quarter.
+                        Please rate the accomplishment of the corresponding objective for the quarter on a scale of 1 to 5.
                     </div>
                     <span style="font-size: 24px; cursor: pointer;" id="${starRatingId}" data-rating="0">
                         <i class="fa-solid fa-star" data-value="1"></i>
@@ -734,9 +787,8 @@ function addFormFeedbackRow(objective) {
                 <div style="margin-bottom: 10px;">
                     <label><strong>Qualitative (Open-ended):</strong></label>
                     <div style="font-size: 14px; margin-top: 5px;">
-                        Provide qualitative feedback based on the corresponding skill performed during the quarter.
-                    </div>
-                    <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;">
+                        Please provide qualitative feedback regarding the corresponding objective achieved during the quarter.
+                    </div <input type="text" id="qualitativeFeedback_${objective.objectiveId}" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;">
                 </div>
             </div>
         </td>
@@ -992,6 +1044,15 @@ skillTableBody.appendChild(inputRow);
                                                 document.getElementById("totalWeight").value = totalWeight;
                                             }
 
+
+                                            function fetchYearData() {
+    const selectedYear = document.getElementById('yearSelect').value;
+    if (selectedYear) {
+        // Redirect to the same page with the selected year as a query parameter
+        window.location.href = `?year=${selectedYear}`;
+    }
+}
+
     // Function to save objectives
     async function saveObjectives() {
                                                 const departmentId = '<%= user.departmentId %>'; // Pass departmentId from server-side
@@ -1094,84 +1155,94 @@ skillTableBody.appendChild(inputRow);
                                                 }
                                             }
 
-    // Function to save 360 feedback
-    async function saveQ1_360Feedback() {
-        const startDate = document.getElementById('startDate').value; // Capture start date from input
-        const endDate = document.getElementById('endDate').value; // Capture end date from input
+// Function to save 360 feedback
+async function save360DegreeFeedback() {
+    const startDateElement = document.getElementById('startDate');
+    const endDateElement = document.getElementById('endDate');
 
-        console.log("Questionnaire User ID:", userId);
-        console.log("Questionnaire Job ID:", jobId);
-        console.log("Questionnaire Start Date:", startDate);
-        console.log("Questionnaire End Date:", endDate);
+    const startDate = startDateElement.value; // Capture start date from input
+    const endDate = endDateElement.value; // Capture end date from inputs
 
-        // Validate required fields
-        if (!userId || !jobId || !startDate || !endDate) {
-            console.error("One or more required fields are missing.");
-            alert("Please ensure all fields are filled out correctly before saving.");
-            return;
-        }
+    // Get the quarter from the active step and format it correctly
+    const activeStep = document.querySelector('.step.accessible[data-quarter]');
+    const quarter = activeStep ? `Q${activeStep.getAttribute('data-quarter')}` : undefined; // Ensure it is in "Q1", "Q2", etc. format
 
-        const feedbackData = {
-            questions: [],
-            skills: [] // Assuming you might want to collect skills later
-        };
+    console.log("Questionnaire User ID:", userId);
+    console.log("Questionnaire Job ID:", jobId);
+    console.log("Questionnaire Start Date:", startDate);
+    console.log("Questionnaire End Date:", endDate);
+    console.log("Quarter:", quarter); // Log the quarter for debugging
 
-        // Collect qualitative questions from the input fields
-        const feedbackRows = document.querySelectorAll('#feedback-table-body tr');
-        feedbackRows.forEach(row => {
-            const qualitativeInput = row.querySelector('input[name="kraObjectivesInput"]'); // Get qualitative question input
-
-            if (qualitativeInput && qualitativeInput.value.trim()) { // Ensure input is not empty
-                feedbackData.questions.push({
-                    qualitativeQuestion: qualitativeInput.value.trim() // Save qualitative question
-                });
-            }
-        });
-
-        // Check if any questions were added
-        if (feedbackData.questions.length === 0) {
-            alert("Please provide at least one qualitative question.");
-            return;
-        }
-
-        console.log("Feedback data to save:", feedbackData);
-
-        // Proceed to send the feedback data to the server
-        try {
-            const response = await fetch(`/linemanager/records-performance-tracker/questionnaire/${userId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId, // Include userId here
-                    jobId,
-                    startDate,
-                    endDate,
-                    feedbackData
-                })
-            });
-
-            console.log("Response from server:", response);
-
-            // Check if the response was successful
-            if (!response.ok) {
-                throw new Error(`Server responded with status ${response.status}`);
-            }
-
-            const result = await response.json();
-            console.log("Result from server:", result);
-
-            if (result.success) {
-                window.location.href = `/linemanager/records-performance-tracker/${userId}`;
-            } else {
-                alert("Failed to save feedback: " + result.message);
-            }
-        } catch (error) {
-            console.error("Error saving feedback:", error);
-            alert("An error occurred while saving feedback.");
-        }
+    // Validate required fields
+    if (!userId || !jobId || !startDate || !endDate || !quarter) {
+        console.error("One or more required fields are missing.");
+        alert("Please ensure all fields are filled out correctly before saving.");
+        return;
     }
 
-    // Additional functions for handling feedback rows, star ratings, etc. can be added here
+    const feedbackData = {
+        questions: [],
+        skills: [] // Assuming you might want to collect skills later
+    };
+
+    // Collect qualitative questions from the input fields
+    const feedbackRows = document.querySelectorAll('#feedback-table-body tr');
+    feedbackRows.forEach(row => {
+        const qualitativeInput = row.querySelector('input[type="text"]'); // Get qualitative question input
+
+        if (qualitativeInput && qualitativeInput.value.trim()) { // Ensure input is not empty
+            const objectiveId = qualitativeInput.getAttribute('data-objective-id'); // Get the corresponding objectiveId
+            feedbackData.questions.push({
+                objectiveId: objectiveId, // Include the objectiveId
+                questionText: qualitativeInput.value.trim() // Save qualitative question
+            });
+        }
+    });
+
+    // Check if any questions were added
+    if (feedbackData.questions.length === 0) {
+        alert("Please provide at least one qualitative question.");
+        return;
+    }
+
+    console.log("Feedback data to save:", feedbackData);
+
+    // Proceed to send the feedback data to the server
+    try {
+        const response = await fetch(`/linemanager/records-performance-tracker/questionnaire/${userId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId, // Include userId here
+                jobId,
+                startDate,
+                endDate,
+                feedbackData,
+                quarter // Include the quarter here
+            })
+        });
+
+        console.log("Response from server:", response);
+
+        // Check if the response was successful
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Result from server:", result);
+
+        if (result.success) {
+            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+        } else {
+            alert("Failed to save feedback: " + result.message);
+        }
+    } catch (error) {
+        console.error("Error saving feedback:", error);
+        alert("An error occurred while saving feedback.");
+    }
+}
+
 </script>
 </body>
 </html>
