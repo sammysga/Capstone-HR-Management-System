@@ -365,7 +365,7 @@
                         </tbody>
                     </table>
                     <button id="addRowBtn" type="button" onclick="addRow()">Add Row</button>
-                    <p><strong>Total Assigned Weight:</strong> <input id="totalWeight" type="number" value="0" readonly>%</p>
+                    <p><strong>Total Assigned Weight (must equal 100%):</strong> <input id="totalWeight" type="number" value="0" readonly>%</p>
             
                     <label>
                         <input type="checkbox" id="confirmationCheckbox" required>
@@ -1054,106 +1054,108 @@ skillTableBody.appendChild(inputRow);
 }
 
     // Function to save objectives
-    async function saveObjectives() {
-                                                const departmentId = '<%= user.departmentId %>'; // Pass departmentId from server-side
-                                                const performancePeriodYear = document.getElementById("performanceDate").textContent;
-                                        
-                                                console.log("User  ID:", userId);
-                                                console.log("Job ID:", jobId);
-                                                console.log("Performance Period Year:", performancePeriodYear);
-                                        
-                                                // Validate required IDs
-                                                if (!userId || !jobId ) {
-                                                    console.error("One or more required IDs are missing.");
-                                                    alert("Please ensure all fields are filled out correctly before saving.");
-                                                    return;
-                                                }
-                                        
-                                                const objectives = [];
-                                                const rows = document.querySelectorAll("#progress-table-body tr");
-                                        
-                                                // Ensure confirmation checkbox is checked
-                                                const confirmationChecked = document.getElementById("confirmationCheckbox").checked;
-                                                if (!confirmationChecked) {
-                                                    alert("Please confirm that you have reviewed the objectives before saving.");
-                                                    return;
-                                                }
-                                        
-                                                let totalWeight = 0;
-                                        
-                                                rows.forEach(row => {
-                                                    const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
-                                                    const kpiInput = row.querySelector('input[name="objectiveKPI"]');
-                                                    const targetInput = row.querySelector('input[name="objectiveTarget"]');
-                                                    const uomInput = row.querySelector('input[name="objectiveUOM"]');
-                                                    const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
-                                        
-                                                    if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
-                                                        const weight = parseFloat(weightInput.value);
-                                                        totalWeight += weight;
-                                        
-                                                        const objective = {
-                                                            objectiveDescrpt: descriptionInput.value,
-                                                            objectiveKPI: kpiInput.value,
-                                                            objectiveTarget: targetInput.value,
-                                                            objectiveUOM: uomInput.value,
-                                                            objectiveAssignedWeight: weight,
-                                                        };
-                                                        objectives.push(objective);
-                                                    }
-                                                });
-                                        
-                                                console.log("Objectives to save:", objectives);
-                                        
-                                                // Validate total weight
-                                                if (totalWeight !== 100) {
-                                                    alert("Total assigned weight must be 100% to save.");
-                                                    return;
-                                                }
-                                        
-                                                // Proceed if objectives are present
-                                                if (objectives.length > 0) {
-                                                    try {
-                                                        const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({
-                                                                jobId,
-                                                                departmentId,
-                                                                performancePeriodYear,
-                                                                objectives,
-                                                                totalWeight
-                                                            })
-                                                        });
-                                        
-                                                        console.log("Response from server:", response);
-                                        
-                                                        // Check if the response was successful
-                                                        if (!response.ok) {
-                                                            throw new Error(`Server responded with status ${response.status}`);
-                                                        }
-                                        
-                                                        const result = await response.json();
-                                                        console.log("Result from server:", result);
-                                        
-                                                        if (result.success) {
-                                                            alert(result.message); // Handle success
-                                                            displaySubmittedObjectives(objectives); // Display the submitted objectives
-                                        
-                                                            // Redirect to the view-only page after successful save
-                                                            const viewUrl = `/linemanager/records-performance-tracker/${userId}`;
-                                                            window.location.href = viewUrl;
-                                                        } else {
-                                                            alert("Failed to save objectives: " + result.message);
-                                                        }
-                                                    } catch (error) {
-                                                        console.error("Error saving objectives:", error);
-                                                       //  alert("An error occurred while saving objectives.");
-                                                    }
-                                                } else {
-                                                    alert("No objectives to save.");
-                                                }
-                                            }
+    // Function to save objectives
+async function saveObjectives() {
+    const departmentId = '<%= user.departmentId %>'; // Pass departmentId from server-side
+    const performancePeriodYear = document.getElementById("performanceDate").textContent;
+
+    console.log("User ID:", userId);
+    console.log("Job ID:", jobId);
+    console.log("Performance Period Year:", performancePeriodYear);
+
+    // Validate required IDs
+    if (!userId || !jobId) {
+        console.error("One or more required IDs are missing.");
+        alert("Please ensure all fields are filled out correctly before saving.");
+        return;
+    }
+
+    const objectives = [];
+    const rows = document.querySelectorAll("#progress-table-body tr");
+
+    // Ensure confirmation checkbox is checked
+    const confirmationChecked = document.getElementById("confirmationCheckbox").checked;
+    if (!confirmationChecked) {
+        alert("Please confirm that you have reviewed the objectives before saving.");
+        return;
+    }
+
+    let totalWeight = 0;
+
+    rows.forEach(row => {
+        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
+        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
+        const targetInput = row.querySelector('input[name="objectiveTarget"]');
+        const uomInput = row.querySelector('input[name="objectiveUOM"]');
+        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
+
+        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
+            const weight = parseFloat(weightInput.value);
+            totalWeight += weight;
+
+            const objective = {
+                objectiveDescrpt: descriptionInput.value,
+                objectiveKPI: kpiInput.value,
+                objectiveTarget: targetInput.value,
+                objectiveUOM: uomInput.value,
+                objectiveAssignedWeight: weight,
+            };
+            objectives.push(objective);
+        }
+    });
+
+    console.log("Objectives to save:", objectives);
+
+    // Validate total weight
+    if (totalWeight !== 100) {
+        alert("Total assigned weight must be 100% to save.");
+        return;
+    }
+
+    // Proceed if objectives are present
+    if (objectives.length > 0) {
+        try {
+            const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jobId,
+                    departmentId,
+                    performancePeriodYear,
+                    objectives,
+                    totalWeight
+                })
+            });
+
+            console.log("Response from server:", response);
+
+            // Check if the response was successful
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("Result from server:", result);
+
+            if (result.success) {
+                // Display a success alert (optional)
+                alert("Objectives saved successfully. Redirecting to view page...");
+
+                // Redirect to the view-only page after successful save
+                const viewUrl = `/linemanager/records-performance-tracker/view/${userId}`;
+                window.location.href = viewUrl;
+            } else {
+                alert("Failed to save objectives: " + result.message);
+            }
+        } catch (error) {
+            console.error("Error saving objectives:", error);
+            alert("An error occurred while saving objectives. Please try again later.");
+        }
+    } else {
+        alert("No objectives to save.");
+    }
+}
+
 
 // Function to save 360 feedback
 async function save360DegreeFeedback() {
