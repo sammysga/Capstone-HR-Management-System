@@ -69,8 +69,8 @@ router.delete('/hr/deleteannouncement/:announcementID', hrController.deleteAnnou
 router.get('/hr/joboffers', hrController.getJobOffers);
 router.get('/hr/addjoboffer', hrController.getAddJobOffer);
 router.post('/hr/addjoboffer', hrController.postAddJobOffer);
-router.get('/hr/editjoboffers/:jobId', hrController.getEditJobOffers);
-router.post('/hr/editjoboffers/:id', hrController.updateJobOffer);
+router.get('/hr/editjoboffers/:id', hrController.getEditJobOffers);
+router.post('/hr/editjoboffers/:jobId', hrController.updateJobOffer);
 router.get('/hr/records-performance-tracker', hrController.getRecordsPerformanceTracker);
 router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPerformanceTrackerByUserId);
 router.get('/hr/view-mrf/:id', hrController.getViewMRF);
