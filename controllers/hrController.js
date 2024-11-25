@@ -856,7 +856,7 @@ updateJobOffer: async function(req, res) {
                     jobType,
                     isActiveHiring
                 })
-                .eq('id', jobId);
+                .eq('jobId', jobId);
 
             if (error) throw error;
 
