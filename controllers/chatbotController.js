@@ -28,14 +28,11 @@ const chatbotController = {
     // Function to handle incoming chatbot messages
     handleChatbotMessage: async function (req, res) {
         try {
-            const userId = req.session.user?.userId || '18'; 
-
+            const userId = req.session.user?.userId || '06'; 
             const userMessage = req.body.message.toLowerCase();
             const timestamp = new Date().toISOString(); // Current timestamp
-            console.log('User message received:', userMessage);
-    
             let botResponse;
-            let applicantStage = req.session.applicantStage || 'initial'; // Default stage: 'initial'
+            let applicantStage = req.session.applicantStage || 'initial'; 
             const positions = await chatbotController.getJobPositionsList();
             const selectedPosition = positions.find(position => userMessage.includes(position.toLowerCase()));
     
@@ -58,6 +55,7 @@ const chatbotController = {
     
                 req.session.screeningQuestions = questions;
                 req.session.currentQuestionIndex = 0;
+                req.session.answers = []; // Initialize answers array
     
                 if (questions.length) {
                     botResponse = `Great! Now it’s time to check if you are the right applicant for this position! Please rate the following questions based on how they apply to you: 5 - applies 100% to you, 1 - not at all:\n` +
@@ -74,70 +72,74 @@ const chatbotController = {
                 const currentIndex = req.session.currentQuestionIndex;
     
                 if (currentIndex < questions.length) {
-                    const currentQuestion = questions[currentIndex];
-    
                     // Log the user's answer to the current question
-                    const { data: answerData, error: answerError } = await supabase 
-                        .from('chatbot_interaction')
-                        .insert([
-                            {
-                                userId: userId,
-                                message: userMessage,
-                                response: `Answer to question: "${currentQuestion}" logged.`,
-                                timestamp: timestamp,
-                                applicantStage: 'screening_questions',
-                            },
-                        ])
-                        .select('chatId')
-                        .single();
-    
-                    if (answerError) {
-                        console.error('Error saving user answer:', answerError);
-                    } else {
-                        console.log('User answer saved successfully:', answerData);
-                    }
+                    req.session.answers.push(parseInt(userMessage)); // Store the answer as an integer (1-5)
     
                     // Move to the next question
                     if (currentIndex + 1 < questions.length) {
                         botResponse = `Thank you for your answer! Here’s the next question:\n${currentIndex + 2}. ${questions[currentIndex + 1]}`;
                         req.session.currentQuestionIndex++;
                     } else {
-                        botResponse = "You have completed the screening questions. Please upload your certifications and resume. Type 'done' when finished.";
-                        delete req.session.screeningQuestions;
-                        delete req.session.currentQuestionIndex;
-                        applicantStage = 'upload_documents';
+                        // When the last screening question is answered, directly calculate the results
+                        const { weightedScores, result } = await chatbotController.calculateWeightedScores(
+                            req.session.answers, 
+                            req.session.selectedPosition, 
+                            req.session.screeningQuestions
+                        );
+    
+                        console.log("Weighted Scores:", weightedScores); // Log to check the scores
+                        console.log("Result:", result); // Log the result to check if it's pass or fail
+    
+                        if (result === 'pass') {
+                            botResponse = "Congratulations! You’ve passed the initial screening.";
+                        } else {
+                            botResponse = "Unfortunately, you did not meet the required score for this position.";
+                        }
+                        applicantStage = 'application_complete';
                     }
                 }
-            } else if (userMessage === 'done') {
-                botResponse = "Thank you! Your application is complete.";
-                applicantStage = 'application_complete';
-                // TODO: Save uploaded files or process completion
+            } else if (applicantStage === 'screening_completed') {
+                if (req.session.answers.length !== req.session.screeningQuestions.length) {
+                    botResponse = "Please answer all the screening questions before submitting.";
+                    applicantStage = 'screening_questions';
+                } else {
+                    // If we somehow hit this stage with incomplete answers, handle it.
+                    const { weightedScores, result } = await chatbotController.calculateWeightedScores(
+                        req.session.answers, 
+                        req.session.selectedPosition, 
+                        req.session.screeningQuestions
+                    );
+    
+                    console.log("Weighted Scores:", weightedScores); // Log to check the scores
+                    console.log("Result:", result); // Log the result to check if it's pass or fail
+    
+                    if (result === 'pass') {
+                        botResponse = "Congratulations! You’ve passed the initial screening.";
+                    } else {
+                        botResponse = "Unfortunately, you did not meet the required score for this position.";
+                    }
+                    applicantStage = 'application_complete';
+                }
             } else {
                 botResponse = 'Here are our current job openings:\n' + positions.map(pos => `- ${pos}`).join('\n') + '\nPlease select a position.';
                 applicantStage = 'job_selection';
             }
     
-            console.log('Bot response:', botResponse);
-    
             // Log every interaction (both user message and bot response)
             const { data: interactionData, error: interactionError } = await supabase
                 .from('chatbot_interaction')
-                .insert([
-                    {
-                        userId: userId,
-                        message: userMessage,
-                        response: botResponse,
-                        timestamp: timestamp,
-                        applicantStage: applicantStage,
-                    },
-                ])
+                .insert([{
+                    userId: userId,
+                    message: userMessage,
+                    response: botResponse,
+                    timestamp: timestamp,
+                    applicantStage: applicantStage,
+                }])
                 .select('chatId')
                 .single();
     
             if (interactionError) {
                 console.error('Error saving interaction to Supabase:', interactionError);
-            } else {
-                console.log('Interaction saved successfully:', interactionData);
             }
     
             res.json({ response: botResponse });
@@ -145,33 +147,56 @@ const chatbotController = {
             console.error('Error processing chatbot message:', error);
             res.status(500).json({ response: 'Sorry, I am having trouble understanding that.' });
         }
-    },
+    },    
     
     // Function to get screening questions
     getScreeningQuestions: async function(jobId) {
-        const degreesQuery = await supabase
-            .from('jobreqdegrees')
-            .select('jobReqDegreeDescrpt')
-            .eq('jobId', jobId);
-    
-        const experiencesQuery = await supabase
-            .from('jobreqexperiences')
-            .select('jobReqExperienceDescrpt')
-            .eq('jobId', jobId);
-    
-        const skillsQuery = await supabase
-            .from('jobreqskills')
-            .select('jobReqSkillName')
-            .eq('jobId', jobId);
-    
-        const questions = [
-            ...degreesQuery.data.map(d => `Degree required: ${d.jobReqDegreeDescrpt}`),
-            ...experiencesQuery.data.map(e => `Experience required: ${e.jobReqExperienceDescrpt}`),
-            ...skillsQuery.data.map(s => `Skill required: ${s.jobReqSkillName}`)
-        ];
-    
-        return questions;
+        try {
+            // Fetch degrees data
+            const degreesQuery = await supabase
+                .from('jobreqdegrees')
+                .select('jobReqDegreeDescrpt')
+                .eq('jobId', jobId);
+            
+            // Fetch experiences data
+            const experiencesQuery = await supabase
+                .from('jobreqexperiences')
+                .select('jobReqExperienceDescrpt')
+                .eq('jobId', jobId);
+            
+            // Fetch skills data
+            const skillsQuery = await supabase
+                .from('jobreqskills')
+                .select('jobReqSkillName')
+                .eq('jobId', jobId);
+            
+            // Check for errors in queries
+            if (degreesQuery.error || experiencesQuery.error || skillsQuery.error) {
+                console.error("Error fetching data:", degreesQuery.error, experiencesQuery.error, skillsQuery.error);
+                return []; // Return an empty array if there's an error in any query
+            }
+
+            // Combine the results
+            const questions = [
+                ...degreesQuery.data.map(d => `Degree required: ${d.jobReqDegreeDescrpt}`),
+                ...experiencesQuery.data.map(e => `Experience required: ${e.jobReqExperienceDescrpt}`),
+                ...skillsQuery.data.map(s => `Skill required: ${s.jobReqSkillName}`)
+            ];
+
+            console.log("Screening Questions:", questions);  
+
+            // If no questions are found, log a message
+            if (questions.length === 0) {
+                console.log("No screening questions found for job ID:", jobId);
+            }
+
+            return questions;
+        } catch (error) {
+            console.error("An error occurred while fetching screening questions:", error);
+            return []; // Return an empty array in case of an unexpected error
+        }
     },
+
     
     // Function to fetch job positions and format them for chatbot response
     getJobPositionsList: async function() {
@@ -210,6 +235,44 @@ const chatbotController = {
         }
     },
 
+    // Function to calculate weighted scores for screening answers
+    calculateWeightedScores: async function(answers, selectedPosition, screeningQuestions) {
+        if (!screeningQuestions || screeningQuestions.length === 0) {
+            return { weightedScores: [], result: 'fail' };
+        }
+    
+        const jobDetails = await chatbotController.getJobDetails(selectedPosition);
+    
+        const weightings = {
+            degreeRelevance: 1.5,  // Degree-related questions are weighted higher
+            softSkills: 1,         // Soft skills-related questions have a standard weight
+        };
+    
+        let totalScore = 0;
+        const weightedScores = answers.map((answer, index) => {
+            const question = screeningQuestions[index];
+            let weight = 1; // Default weight
+    
+            if (question.toLowerCase().includes('degree required')) {
+                weight = weightings.degreeRelevance;  
+            } else if (question.toLowerCase().includes('experience') || question.toLowerCase().includes('skill')) {
+                weight = weightings.softSkills;  
+            }
+    
+            const weightedScore = answer * weight;
+            totalScore += weightedScore;
+    
+            return weightedScore;
+        });
+    
+        // Calculate average score and determine pass/fail
+        const averageScore = totalScore / screeningQuestions.length;
+        const result = averageScore >= 3 ? 'pass' : 'fail';  // Assume a threshold of 3 to pass
+    
+        return { weightedScores, result };
+    },    
+
+    
 // File upload handler in your controller
 handleFileUpload: async function(req, res) {
     try {
