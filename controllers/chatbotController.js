@@ -26,64 +26,120 @@ const chatbotController = {
     },
     
     // Function to handle incoming chatbot messages
-    handleChatbotMessage: async function(req, res) {
+    handleChatbotMessage: async function (req, res) {
         try {
+            const userId = req.session.user?.userId || '18'; 
+
             const userMessage = req.body.message.toLowerCase();
+            const timestamp = new Date().toISOString(); // Current timestamp
             console.log('User message received:', userMessage);
+    
             let botResponse;
+            let applicantStage = req.session.applicantStage || 'initial'; // Default stage: 'initial'
             const positions = await chatbotController.getJobPositionsList();
             const selectedPosition = positions.find(position => userMessage.includes(position.toLowerCase()));
     
             if (selectedPosition) {
                 req.session.selectedPosition = selectedPosition;
                 const jobDetails = await chatbotController.getJobDetails(selectedPosition);
-                
+    
                 if (jobDetails) {
-                    const jobInfo = `You have chosen *${selectedPosition}*. Here are the details of the chosen job:\n` +
-                    `Job Title: ${jobDetails.jobTitle}\n` +
-                    `Job Description: ${jobDetails.jobDescrpt}\n` + 
-                    `Would you like to proceed with your application?\n- Yes\n- No`;
-                    
-                    botResponse = jobInfo;
+                    botResponse = `You have chosen *${selectedPosition}*. Here are the details of the chosen job:\n` +
+                        `Job Title: ${jobDetails.jobTitle}\n` +
+                        `Job Description: ${jobDetails.jobDescrpt}\n` +
+                        `Would you like to proceed with your application?\n- Yes\n- No`;
+                    applicantStage = 'job_selection';
                 } else {
                     botResponse = "Sorry, I couldn't find the job details.";
                 }
             } else if (userMessage.includes('yes')) {
                 const jobId = (await chatbotController.getJobDetails(req.session.selectedPosition)).jobId;
                 const questions = await chatbotController.getScreeningQuestions(jobId);
-                
-                req.session.screeningQuestions = questions; 
-                req.session.currentQuestionIndex = 0; 
+    
+                req.session.screeningQuestions = questions;
+                req.session.currentQuestionIndex = 0;
     
                 if (questions.length) {
                     botResponse = `Great! Now it’s time to check if you are the right applicant for this position! Please rate the following questions based on how they apply to you: 5 - applies 100% to you, 1 - not at all:\n` +
-                    `1. ${questions[0]}`;
+                        `1. ${questions[0]}`;
+                    applicantStage = 'screening_questions';
                 } else {
                     botResponse = "No screening questions available for this position.";
                 }
             } else if (userMessage.includes('no')) {
                 botResponse = 'No problem! Here are our current job openings:\n' + positions.map(pos => `- ${pos}`).join('\n') + '\nPlease select a position.';
+                applicantStage = 'job_selection';
             } else if (req.session.screeningQuestions) {
                 const questions = req.session.screeningQuestions;
                 const currentIndex = req.session.currentQuestionIndex;
     
                 if (currentIndex < questions.length) {
-                    // TODO: store the user's answer
-                    botResponse = `Thank you for your answer! Here’s the next question:\n${currentIndex + 2}. ${questions[currentIndex + 1]}`;
-                    req.session.currentQuestionIndex++; 
-                } else {
-                    botResponse = "You have completed the screening questions. Please upload your certifications and resume. Type 'done' when finished.";
-                    delete req.session.screeningQuestions; 
-                    delete req.session.currentQuestionIndex; 
+                    const currentQuestion = questions[currentIndex];
+    
+                    // Log the user's answer to the current question
+                    const { data: answerData, error: answerError } = await supabase 
+                        .from('chatbot_interaction')
+                        .insert([
+                            {
+                                userId: userId,
+                                message: userMessage,
+                                response: `Answer to question: "${currentQuestion}" logged.`,
+                                timestamp: timestamp,
+                                applicantStage: 'screening_questions',
+                            },
+                        ])
+                        .select('chatId')
+                        .single();
+    
+                    if (answerError) {
+                        console.error('Error saving user answer:', answerError);
+                    } else {
+                        console.log('User answer saved successfully:', answerData);
+                    }
+    
+                    // Move to the next question
+                    if (currentIndex + 1 < questions.length) {
+                        botResponse = `Thank you for your answer! Here’s the next question:\n${currentIndex + 2}. ${questions[currentIndex + 1]}`;
+                        req.session.currentQuestionIndex++;
+                    } else {
+                        botResponse = "You have completed the screening questions. Please upload your certifications and resume. Type 'done' when finished.";
+                        delete req.session.screeningQuestions;
+                        delete req.session.currentQuestionIndex;
+                        applicantStage = 'upload_documents';
+                    }
                 }
             } else if (userMessage === 'done') {
                 botResponse = "Thank you! Your application is complete.";
-                // TODO: saving the uploaded files or any final processing
+                applicantStage = 'application_complete';
+                // TODO: Save uploaded files or process completion
             } else {
                 botResponse = 'Here are our current job openings:\n' + positions.map(pos => `- ${pos}`).join('\n') + '\nPlease select a position.';
+                applicantStage = 'job_selection';
             }
     
             console.log('Bot response:', botResponse);
+    
+            // Log every interaction (both user message and bot response)
+            const { data: interactionData, error: interactionError } = await supabase
+                .from('chatbot_interaction')
+                .insert([
+                    {
+                        userId: userId,
+                        message: userMessage,
+                        response: botResponse,
+                        timestamp: timestamp,
+                        applicantStage: applicantStage,
+                    },
+                ])
+                .select('chatId')
+                .single();
+    
+            if (interactionError) {
+                console.error('Error saving interaction to Supabase:', interactionError);
+            } else {
+                console.log('Interaction saved successfully:', interactionData);
+            }
+    
             res.json({ response: botResponse });
         } catch (error) {
             console.error('Error processing chatbot message:', error);
