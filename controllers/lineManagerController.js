@@ -1217,7 +1217,7 @@ const lineManagerController = {
             const feedbackTable = `feedbacks_${quarter}`;
             const feedbackKey = `feedback${quarter.toLowerCase()}_Id`;
     
-            // Step 3: Check if feedback already exists for the user, job, quarter, and year
+            // Step 3: Check if feedback already exists
             const existingFeedback = await supabase
                 .from(feedbackTable)
                 .select('*')
@@ -1231,7 +1231,6 @@ const lineManagerController = {
             const dateCreated = new Date();
     
             if (existingFeedback.data) {
-                // Update existing feedback
                 console.log(`Updating existing feedback in ${feedbackTable}...`);
                 const { error: updateError } = await supabase
                     .from(feedbackTable)
@@ -1251,9 +1250,7 @@ const lineManagerController = {
                 }
     
                 feedbackId = existingFeedback.data[feedbackKey];
-                console.log("Feedback updated successfully.");
             } else {
-                // Insert new feedback
                 console.log(`Inserting new feedback into ${feedbackTable}...`);
                 const { data: feedbackInsertData, error: feedbackInsertError } = await supabase
                     .from(feedbackTable)
@@ -1274,10 +1271,9 @@ const lineManagerController = {
                 }
     
                 feedbackId = feedbackInsertData[0][feedbackKey];
-                console.log('Feedback ID generated:', feedbackId);
             }
     
-            // Step 4: Insert feedback mappings for qualitative questions
+            // Step 4: Insert feedback mappings for questions
             for (const question of feedbackData.questions) {
                 const { objectiveId, questionText } = question;
     
@@ -1289,7 +1285,7 @@ const lineManagerController = {
                     .single();
     
                 if (!existingMapping.data) {
-                    console.log(`Attempting to insert mapping: feedbackId=${feedbackId}, objectiveId=${objectiveId}, objectiveQualiQuestion="${questionText}"`);
+                    console.log(`Inserting mapping for objectiveId=${objectiveId}`);
                     const { error: mappingInsertError } = await supabase
                         .from('feedbacks_questions-objectives')
                         .insert({
@@ -1300,59 +1296,48 @@ const lineManagerController = {
     
                     if (mappingInsertError) {
                         console.error(`Error inserting feedback mapping:`, mappingInsertError);
-                        return res.status(500).json({ success: false, message: 'Error inserting feedback mapping. Please try again.', error: mappingInsertError });
+                        return res.status(500).json({ success: false, message: 'Error inserting feedback mapping.', error: mappingInsertError });
                     }
-    
-                    console.log(`Successfully inserted mapping for feedbackId=${feedbackId} and objectiveId=${objectiveId}`);
-                } else {
-                    console.log(`Mapping already exists for feedbackId=${feedbackId} and objectiveId=${objectiveId}, skipping insertion.`);
                 }
             }
     
-            // Step 5: Fetch jobReqSkills for the current jobId
+            // Step 5: Fetch and map jobReqSkills
             const { data: jobReqSkills, error: skillFetchError } = await supabase
                 .from('jobreqskills')
-                .select('jobReqSkillId, jobReqSkillName')
+                .select('jobReqSkillId')
                 .eq('jobId', completeJobId);
     
             if (skillFetchError) {
                 console.error("Error fetching jobReqSkills:", skillFetchError.message);
-                return res.status(500).json({ success: false, message: "Error fetching job skills. Please try again.", error: skillFetchError });
+                return res.status(500).json({ success: false, message: "Error fetching job skills." });
             }
     
             if (jobReqSkills && jobReqSkills.length > 0) {
-                console.log("Fetched jobReqSkills:", jobReqSkills);
+                console.log("Mapping skills to feedback...");
+                for (const jobReqSkill of jobReqSkills) {
+                    const { jobReqSkillId } = jobReqSkill;
     
-                // Step 6: Check if skills exist in feedbackData and insert skill mappings if they do
-                if (feedbackData.skills && feedbackData.skills.length > 0) {
-                    console.log("Feedback skills:", feedbackData.skills);
+                    const existingSkillMapping = await supabase
+                        .from('feedbacks_questions-skills')
+                        .select('*')
+                        .eq(feedbackKey, feedbackId)
+                        .eq('jobReqSkillId', jobReqSkillId)
+                        .single();
     
-                    for (const skill of feedbackData.skills) {
-                        const { jobReqSkillId } = skill;
+                    if (!existingSkillMapping.data) {
+                        console.log(`Inserting skill mapping for jobReqSkillId=${jobReqSkillId}`);
+                        const { error: skillMappingInsertError } = await supabase
+                            .from('feedbacks_questions-skills')
+                            .insert({
+                                [feedbackKey]: feedbackId,
+                                jobReqSkillId
+                            });
     
-                        // Check if jobReqSkillId exists in the fetched jobReqSkills
-                        const skillMatch = jobReqSkills.find(s => s.jobReqSkillId === jobReqSkillId);
-                        if (skillMatch) {
-                            console.log(`Attempting to insert skill mapping: feedbackId=${feedbackId}, jobReqSkillId=${jobReqSkillId}`);
-                            const { error: skillMappingInsertError } = await supabase
-                                .from('feedbacks_questions-skills')
-                                .insert({
-                                    [feedbackKey]: feedbackId,  // Insert correct feedbackId based on quarter
-                                    jobReqSkillId
-                                });
-    
-                            if (skillMappingInsertError) {
-                                console.error(`Error inserting feedback skill mapping:`, skillMappingInsertError);
-                                return res.status(500).json({ success: false, message: 'Error inserting feedback skill mapping. Please try again.', error: skillMappingInsertError });
-                            }
-    
-                            console.log(`Successfully inserted skill mapping for feedbackId=${feedbackId} and jobReqSkillId=${jobReqSkillId}`);
-                        } else {
-                            console.log(`Skill mapping does not match any jobReqSkillId for feedbackId=${feedbackId}, jobReqSkillId=${jobReqSkillId}, skipping insertion.`);
+                        if (skillMappingInsertError) {
+                            console.error("Error inserting skill mapping:", skillMappingInsertError);
+                            return res.status(500).json({ success: false, message: "Error inserting skill mapping." });
                         }
                     }
-                } else {
-                    console.log('No skills data found in feedbackData.');
                 }
             } else {
                 console.error('No jobReqSkills found for the job.');
@@ -1361,9 +1346,10 @@ const lineManagerController = {
             return res.status(200).json({ success: true, message: 'Feedback saved successfully.' });
         } catch (error) {
             console.error('Error in save360DegreeFeedback:', error);
-            return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.', error: error.message });
+            return res.status(500).json({ success: false, message: 'An error occurred.', error: error.message });
         }
-    },    
+    },
+     
     
     
     getLogoutButton: function(req, res) {
