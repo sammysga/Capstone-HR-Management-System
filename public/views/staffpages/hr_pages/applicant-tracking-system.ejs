@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant Tracking</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/linemanager.css">
+</head>
+<body>
+    <%- include('../../partials/hr_partials') %>
+
+    <div class="main-content">
+        <div class="content">
+            <h1>Applicant Tracking</h1>
+
+            <table class="form-table">
+                <thead>
+                    <tr>
+                        <th>Applicant Name</th>
+                        <th>Position Applied</th>
+                        <th>Application Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% applicants.forEach(applicant => { %>
+                        <tr>
+                            <td><%= applicant.firstName %> <%= applicant.lastName %></td>
+                            <td><%= applicant.positionApplied ? applicant.positionApplied.response : 'N/A' %></td>
+                            <td><%= applicant.applicationStatus ? applicant.applicationStatus.response : 'Pending' %></td>
+                            <td>
+                                <a href="/hr/view-final-results/<%= applicant.userId %>" class="view-results-button">Click to View Final Results</a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- JavaScript for sidebar functionality -->
+    <script>
+
+        document.querySelectorAll('.action-required-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const mrfId = this.getAttribute('data-mrfid');
+                window.location.href = `/hr/view-mrf/${mrfId}`;  // Redirect to the MRF page
+            });
+        });
+
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
