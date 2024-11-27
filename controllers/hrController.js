@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt');
 const { parse } = require('dotenv');
 const flash = require('connect-flash/lib/flash');
 const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
+const chatbotController = require('../controllers/chatbotController');
+
 
 const hrController = {
     getHRDashboard: async function(req, res) {
@@ -1616,8 +1618,113 @@ updateJobOffer: async function(req, res) {
             res.redirect('staffpages/hr_pages/hrrecordsperftracker');
         }
     },
+
+    getApplicantTracking: async function (req, res) {
+        if (!req.session.user) {
+            req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
+            return res.redirect('/staff/login');
+        }
     
+        try {
+            const { data: applicants, error } = await supabase
+                .from('applicantaccounts')
+                .select('applicantId, firstName, lastName, userId, created_at') 
+                .order('created_at', { ascending: false }); 
     
+            if (error) {
+                console.error('Error fetching applicants:', error);
+                return res.status(500).send('Error fetching applicants');
+            }
+    
+            for (let applicant of applicants) {
+                const { data: chatbotResponses, error: chatbotError } = await supabase
+                    .from('chatbot_interaction')
+                    .select('message, response, applicantStage')
+                    .eq('userId', applicant.userId)
+                    .order('timestamp', { ascending: true });
+    
+                if (chatbotError) {
+                    console.error('Error fetching chatbot responses:', chatbotError);
+                    return res.status(500).send('Error fetching chatbot responses');
+                }
+    
+                // Find the position applied from the chatbot messages
+                const positionAppliedMessage = chatbotResponses.find(response => response.message.toLowerCase().includes("position applied"));
+                applicant.positionApplied = positionAppliedMessage ? positionAppliedMessage.message.split(":")[1].trim() : "N/A";  // Extract position after the colon
+    
+                // Find the application status based on the applicantStage
+                const applicationStatusMessage = chatbotResponses.find(response => response.applicantStage === "application_complete" || response.applicantStage === "final_status");
+                applicant.applicationStatus = applicationStatusMessage ? "Completed" : "Pending";  // Assuming 'Completed' if found, otherwise 'Pending'
+            }
+    
+            res.render('staffpages/hr_pages/applicant-tracking-system', { applicants });
+    
+        } catch (error) {
+            console.error('Error:', error);
+            return res.status(500).send('Error fetching applicants');
+        }
+    },        
+
+    // Controller method for viewing final results for an individual applicant
+    getFinalResults: async function (req, res) {
+        try {
+            const userId = req.session.user?.userId; // Get the current user's ID (from session)
+
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
+                return res.redirect('/staff/login');
+            }
+
+            // Fetch the chatbot interaction history for the current applicant
+            const { data: chatbotInteractions, error: chatbotError } = await supabase
+                .from('chatbot_interaction')
+                .select('message, response, timestamp, applicantStage')
+                .eq('userId', userId)
+                .order('timestamp', { ascending: true }); // Sort by timestamp in ascending order
+
+            if (chatbotError) {
+                console.error('Error fetching chatbot interactions:', chatbotError);
+                return res.status(500).send('Error fetching chatbot interactions');
+            }
+
+            // If no interactions are found, send a relevant message to the view
+            if (chatbotInteractions.length === 0) {
+                return res.render('staffpages/hr_pages/ats-final-results', {
+                    error: "No interactions found for your application process.",
+                    chatbotInteractions: [],
+                    message: "There were no interactions to display.",
+                    screeningQuestions: [],
+                    answers: [],
+                    weightedScores: [],
+                    result: 'fail'
+                });
+            }
+
+            // Fetch screening questions and calculate weighted scores
+            const screeningQuestions = req.session.screeningQuestions || [];
+            const answers = req.session.answers || [];
+            const { weightedScores, result } = await chatbotController.calculateWeightedScores(
+                answers, 
+                req.session.selectedPosition, 
+                screeningQuestions
+            );
+
+            // Render the page with the chatbot interactions and additional data
+            res.render('staffpages/hr_pages/ats-final-results', {
+                chatbotInteractions: chatbotInteractions, // Send the entire interaction history to the view
+                message: "Here is the entire interaction with the chatbot for your application process.",
+                error: null, // Send null for the error if no error occurs
+                screeningQuestions: screeningQuestions,
+                answers: answers,
+                weightedScores: weightedScores,
+                result: result
+            });
+
+        } catch (error) {
+            console.error('Error fetching chatbot interaction history:', error);
+            return res.status(500).send('Error fetching chatbot interaction history');
+        }
+    },
     
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
