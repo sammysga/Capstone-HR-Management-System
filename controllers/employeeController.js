@@ -1207,6 +1207,64 @@ getViewPerformanceTimeline: function(req, res){
     }
 },
 
+get360Feedback: async function(req, res) {
+    const { userId, startDate, endDate, quarter } = req.query; // Assuming the dates and quarter come from the query parameters
+
+    try {
+        console.log("Entering get360Feedback function");
+        console.log("User ID:", userId, "Request query:", req.query);
+
+        // Step 1: Validate the required fields
+        if (!userId || !startDate || !endDate || !quarter) {
+            console.error('Validation error: Missing fields', { userId, startDate, endDate, quarter });
+            return res.status(400).json({ success: false, message: 'User ID, start date, end date, and quarter are required.' });
+        }
+
+        const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4']; // List of feedback tables for the quarters
+        const feedbackRecords = [];
+
+        // Step 2: Loop through each feedback table (Q1 to Q4) and fetch data within the date range
+        for (const feedbackTable of feedbackTables) {
+            console.log(`Fetching data from table: ${feedbackTable}...`);
+
+            const { data, error } = await supabase
+                .from(feedbackTable)
+                .select('*')
+                .eq('userId', userId) // Filter by userId
+                .gte('setStartDate', new Date(startDate)) // Filter by startDate
+                .lte('setEndDate', new Date(endDate)) // Filter by endDate
+                .eq('quarter', quarter); // Filter by quarter
+
+            if (error) {
+                console.error(`Error fetching data from ${feedbackTable}:`, error);
+                continue; // Skip to the next table if there's an error with the current table
+            }
+
+            // Add the fetched data to feedbackRecords array
+            if (data && data.length > 0) {
+                console.log(`Data fetched from ${feedbackTable}:`, data);
+                feedbackRecords.push(...data);
+            } else {
+                console.log(`No data found in ${feedbackTable}.`);
+            }
+        }
+
+        // Step 3: Check if feedback records were found
+        if (feedbackRecords.length === 0) {
+            console.log('No feedback records found for the given date range.');
+            return res.status(404).json({ success: false, message: 'No feedback records found for the given date range.' });
+        }
+
+        // Step 4: Return the feedback records
+        console.log('Feedback records successfully retrieved:', feedbackRecords);
+        return res.status(200).json({ success: true, feedback: feedbackRecords });
+
+    } catch (error) {
+        console.error('Error in get360Feedback:', error);
+        return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
+    }
+}
+
 
 // getAttendance: async function (req, res) {
 //     // Check if the user is authenticated
