@@ -263,7 +263,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("Received response:", data);
 
         if (data.success && data.feedback) {
-            const feedbackRecords = data.feedback;
+            // Ensure feedbackRecords is an array
+            const feedbackRecords = Array.isArray(data.feedback) ? data.feedback : [data.feedback];
             const today = new Date();
             today.setHours(0, 0, 0, 0);  // Reset time to 00:00:00
 
