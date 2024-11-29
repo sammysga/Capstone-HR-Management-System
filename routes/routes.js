@@ -114,7 +114,8 @@ router.get('/employee/viewtimeline', employeeController.getViewPerformanceTimeli
 
 router.get('/employee/attendance', employeeController.getAttendance);
 router.post('/employee/attendance', employeeController.postAttendance);
-router.get('/employee/api/get360Feedback', employeeController.get360Feedback);
+router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
+router.get('/employee/api/get360FeedbackList', employeeController.get360FeedbackList);
 
 
 

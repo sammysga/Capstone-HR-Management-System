@@ -115,8 +115,8 @@
             color: #059ca4; 
         }
 
-                /* Toast notification styling */
-                .toast {
+        /* Toast notification styling */
+        .toast {
             position: fixed;
             top: 20px;
             right: 20px;
@@ -128,7 +128,7 @@
             display: none;
             z-index: 9999;
             animation: slide-in 0.5s ease-out;
-            font-family: Arial, sans-serif;
+            font-family: Inter;
             color: #333; /* Default text color */
         }
 
@@ -178,7 +178,6 @@
                 right: 20px;
             }
         }
-
     </style>
 </head>
 <body>
@@ -225,17 +224,6 @@
         <div class="sub-header">User Role:</div>
         <span class="form-text"><%= user.userRole %></span>
     </div>
-    
-<!-- Hidden Elements for Fetching Feedback Data -->
-<% if (typeof feedbackData !== 'undefined' && feedbackData && feedbackData.length > 0) { %>
-    <% feedbackData.forEach(feedbackItem => { %>
-        <input type="hidden" id="userId_<%= feedbackItem.userId %>" value="<%= feedbackItem.userId %>">
-        <input type="hidden" id="startDate_<%= feedbackItem.userId %>" value="<%= feedbackItem.feedbackStartDate || 'No start date' %>">
-        <input type="hidden" id="endDate_<%= feedbackItem.userId %>" value="<%= feedbackItem.feedbackEndDate || 'No end date' %>">
-    <% }); %>
-<% } else { %>
-    <p>No feedback data available.</p>
-<% } %>
 
 
     <!-- Offboarding button -->
@@ -256,107 +244,43 @@
         </form>
     </div>
 
-    <!-- Toast Notification -->
-    <div class="toast" id="toast">
-        <span id="toast-message">Password updated successfully!</span>
-        <button class="close-btn" id="close-toast-btn">&times;</button>
-        <button class="btn" id="undo-toast-btn">Undo</button>
-    </div>
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+    <strong id="toast-title">360 Feedback Answers Required</strong>
+    <p id="toast-message">The 360-Degree Quarterly Feedback must be accomplished from <span id="toast-start-date"></span> up until <span id="toast-end-date"></span>. Your participation is required. Thank you!</p>
+    <button class="toast-btn" id="toast-action-btn">Go to Staff Feedback List</button>
+    <button class="close-btn" id="close-toast-btn">&times;</button>
 </div>
 
 <script>
-    // Toast Functions
-    function showToast(message, type) {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-
-        if (!toast || !toastMessage) {
-            console.error("Toast elements are missing from the DOM.");
-            return;
-        }
-
-        console.log(`Showing toast: [Message: ${message}, Type: ${type}]`);
-        toast.classList.add(type);
-        toastMessage.innerText = message;
-        toast.style.display = 'block';
-
-        setTimeout(() => {
-            console.log("Hiding toast after 5 seconds.");
-            toast.style.display = 'none';
-        }, 5000);
-    }
-
-    function hideToast() {
-        const toast = document.getElementById('toast');
-        if (toast) {
-            console.log("Hiding toast.");
-            toast.style.display = 'none';
-        } else {
-            console.error("Toast element is missing from the DOM.");
-        }
-    }
-
-    const feedbackDataElement = document.getElementById('feedbackData');
-    const feedbackData = JSON.parse(feedbackDataElement.getAttribute('data-feedback'));
-    console.log("Feedback Data:", feedbackData);
-
-document.addEventListener("DOMContentLoaded", async () => { // Added async
+document.addEventListener("DOMContentLoaded", async () => {
     console.log("Fetching 360 feedback data...");
 
     try {
-        const userIdElement = document.getElementById('userId');
-        const startDateElement = document.getElementById('startDate');
-        const endDateElement = document.getElementById('endDate');
-        const quarterElement = document.getElementById('quarter');
-
-        const missingElements = [];
-        if (!userIdElement) missingElements.push("userId");
-        if (!startDateElement) missingElements.push("startDate");
-        if (!endDateElement) missingElements.push("endDate");
-        if (!quarterElement) missingElements.push("quarter");
-
-        if (missingElements.length > 0) {
-            console.error(`Required elements are missing from the DOM: ${missingElements.join(", ")}`);
-            return;
-        }
-
-        const userId = userIdElement.value;
-        const startDate = startDateElement.value;
-        const endDate = endDateElement.value;
-        const quarter = quarterElement.value;
-
-        console.log(`Fetching data with params: userId=${userId}, startDate=${startDate}, endDate=${endDate}, quarter=${quarter}`);
-
-        // Fetch data
-        const response = await fetch(`/employee/api/get360Feedback?userId=${userId}&startDate=${startDate}&endDate=${endDate}&quarter=${quarter}`);
+        // Make the fetch request to get the 360 feedback data
+        const response = await fetch(`/employee/api/get360Feedback`);
         const data = await response.json();
-
         console.log("Received response:", data);
 
         if (data.success && data.feedback) {
-            const { startDate: feedbackStart, endDate: feedbackEnd } = data.feedback;
+            const feedbackRecords = data.feedback;
             const today = new Date();
-            const feedbackStartDate = new Date(feedbackStart);
-            const feedbackEndDate = new Date(feedbackEnd);
+            today.setHours(0, 0, 0, 0);  // Reset time to 00:00:00
 
-            console.log(`Feedback period: Start=${feedbackStartDate}, End=${feedbackEndDate}`);
+            // Check if there are any active feedback records based on the start and end dates
+            const activeFeedback = feedbackRecords.some(record => {
+                const feedbackStartDate = new Date(record.setStartDate);
+                const feedbackEndDate = new Date(record.setEndDate);
 
-            if (today >= feedbackStartDate && today <= feedbackEndDate) {
-                console.log("Feedback is available for the user.");
-                showToast("You have feedback available. Please check your 360 feedback.", "info");
+                feedbackStartDate.setHours(0, 0, 0, 0);  // Reset time for comparison
+                feedbackEndDate.setHours(0, 0, 0, 0);  // Reset time for comparison
 
-                document.getElementById("startDate").textContent = feedbackStartDate.toLocaleDateString();
-                document.getElementById("endDate").textContent = feedbackEndDate.toLocaleDateString();
+                return today >= feedbackStartDate && today <= feedbackEndDate;
+            });
 
-                const feedbackButton = document.getElementById("feedback-button");
-                if (feedbackButton) {
-                    feedbackButton.addEventListener("click", () => {
-                        console.log("Navigating to feedback questionnaires.");
-                        window.location.href = "/feedback/questionnaires";
-                    });
-                } else {
-                    console.error("Feedback button is missing from the DOM.");
-                }
+            if (activeFeedback) {
+                console.log("Active feedback found. Displaying toast.");
+                showToast(feedbackRecords);  // Pass the feedback records to showToast
             } else {
                 console.log("No active feedback period for the user.");
             }
@@ -367,99 +291,153 @@ document.addEventListener("DOMContentLoaded", async () => { // Added async
         console.error("Error while fetching 360 feedback data:", error);
     }
 
-        // Toggle editing for user info
-        const editBtn = document.getElementById('edit-info-btn');
-        const saveBtn = document.getElementById('save-info-btn');
-        const displayFirstName = document.getElementById('display-firstname');
-        const displayLastName = document.getElementById('display-lastname');
-        const displayEmail = document.getElementById('display-email');
-        const displayRole = document.getElementById('display-role-info');
-        const firstNameInput = document.getElementById('firstName');
-        const lastNameInput = document.getElementById('lastName');
-        const roleInput = document.getElementById('userRole');
-        const emailInput = document.getElementById('userEmail');
+    function showToast(feedbackRecords) {
+        const toast = document.getElementById('toast');
+        const toastTitle = document.getElementById('toast-title');
+        const toastMessage = document.getElementById('toast-message');
+        const toastActionBtn = document.getElementById('toast-action-btn');
+        const closeToastBtn = document.getElementById('close-toast-btn');
+        const toastStartDate = document.getElementById('toast-start-date');
+        const toastEndDate = document.getElementById('toast-end-date');
 
-        if (editBtn && saveBtn) {
-            editBtn.addEventListener('click', function () {
-                console.log("Edit button clicked. Switching to edit mode.");
-                displayFirstName.style.display = 'none';
-                displayLastName.style.display = 'none';
-                displayRole.style.display = 'none';
-                displayEmail.style.display = 'none';
-                firstNameInput.style.display = 'block';
-                lastNameInput.style.display = 'block';
-                roleInput.style.display = 'block';
-                emailInput.style.display = 'block';
+        if (!toast || !toastTitle || !toastMessage || !toastActionBtn || !closeToastBtn || !toastStartDate || !toastEndDate) {
+            console.error("One or more toast elements are missing from the DOM.");
+            return;
+        }
 
-                editBtn.style.display = 'none';
-                saveBtn.style.display = 'inline-block';
-            });
+        // Assuming the feedback data has startDate and endDate fields in the first record (modify if needed)
+        const feedbackRecord = feedbackRecords[0]; // Just an example, you might want to choose which record to display
+        const startDate = new Date(feedbackRecord.setStartDate);
+        const endDate = new Date(feedbackRecord.setEndDate);
+        
+        // Format the dates to a readable format
+        const formattedStartDate = startDate.toLocaleDateString();
+        const formattedEndDate = endDate.toLocaleDateString();
 
-            saveBtn.addEventListener('click', function () {
-                console.log("Save button clicked. Submitting the form.");
-                document.getElementById('edit-user-info').submit();
-            });
+        toastTitle.innerText = "360 Feedback Answers Required";
+        toastMessage.innerText = "The 360-Degree Quarterly Feedback must be accomplished from ";
+        
+        toastStartDate.innerText = formattedStartDate;
+        toastEndDate.innerText = formattedEndDate;
+        
+        toast.style.display = 'block';
+
+        // Redirect to feedback page on action button click
+        toastActionBtn.onclick = () => {
+            window.location.href = '/path/to/feedback-form';
+        };
+
+        // Close the toast manually
+        closeToastBtn.onclick = hideToast;
+
+        // Automatically hide the toast after 5 seconds
+        setTimeout(hideToast, 5000);
+    }
+
+    // Function to hide the toast notification
+    function hideToast() {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.style.display = 'none';
         } else {
-            console.error("Edit or Save button is missing from the DOM.");
+            console.error("Toast element is missing from the DOM.");
         }
+    }
 
-        // Handle password reset validation
-        const resetPasswordForm = document.getElementById('reset-password-form');
-        if (resetPasswordForm) {
-            resetPasswordForm.addEventListener('submit', function (event) {
-                const newPassword = document.getElementById('new-password').value;
-                const confirmPassword = document.getElementById('confirm-password').value;
+    // Toggle editing for user info
+    const editBtn = document.getElementById('edit-info-btn');
+    const saveBtn = document.getElementById('save-info-btn');
+    const displayFirstName = document.getElementById('display-firstname');
+    const displayLastName = document.getElementById('display-lastname');
+    const displayEmail = document.getElementById('display-email');
+    const displayRole = document.getElementById('display-role-info');
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
+    const roleInput = document.getElementById('userRole');
+    const emailInput = document.getElementById('userEmail');
 
-                if (newPassword !== confirmPassword) {
-                    console.error("Passwords do not match!");
-                    alert('Passwords do not match!');
-                    event.preventDefault();
-                } else {
-                    console.log("Passwords match. Form will be submitted.");
-                    alert('Password has been successfully updated!');
-                }
-            });
-        }
+    if (editBtn && saveBtn) {
+        editBtn.addEventListener('click', function () {
+            console.log("Edit button clicked. Switching to edit mode.");
+            displayFirstName.style.display = 'none';
+            displayLastName.style.display = 'none';
+            displayRole.style.display = 'none';
+            displayEmail.style.display = 'none';
+            firstNameInput.style.display = 'block';
+            lastNameInput.style.display = 'block';
+            roleInput.style.display = 'block';
+            emailInput.style.display = 'block';
 
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function () {
-                console.log(`Sidebar link clicked: ${this.textContent}`);
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
         });
 
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function () {
-                console.log("Collapsible header clicked.");
-                const content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    console.log("Hiding collapsible content.");
-                    content.style.display = 'none';
-                } else {
-                    console.log("Displaying collapsible content.");
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
+        saveBtn.addEventListener('click', function () {
+            console.log("Save button clicked. Submitting the form.");
+            document.getElementById('edit-user-info').submit();
         });
+    } else {
+        console.error("Edit or Save button is missing from the DOM.");
+    }
 
-        // Handle navigation for Performance Management links
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function (event) {
+    // Handle password reset validation
+    const resetPasswordForm = document.getElementById('reset-password-form');
+    if (resetPasswordForm) {
+        resetPasswordForm.addEventListener('submit', function (event) {
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (newPassword !== confirmPassword) {
+                console.error("Passwords do not match!");
+                alert('Passwords do not match!');
                 event.preventDefault();
-                const targetUrl = this.getAttribute('href');
-                console.log(`Navigating to: ${targetUrl}`);
-                window.location.href = targetUrl;
-            });
+            } else {
+                console.log("Passwords match. Form will be submitted.");
+                alert('Password has been successfully updated!');
+            }
+        });
+    }
+
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function () {
+            console.log(`Sidebar link clicked: ${this.textContent}`);
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
         });
     });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function () {
+            console.log("Collapsible header clicked.");
+            const content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                console.log("Hiding collapsible content.");
+                content.style.display = 'none';
+            } else {
+                console.log("Displaying collapsible content.");
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+
+    // Handle navigation for Performance Management links
+    document.querySelectorAll('.collapsible-content a').forEach(link => {
+        link.addEventListener('click', function (event) {
+            event.preventDefault();
+            const targetUrl = this.getAttribute('href');
+            console.log(`Navigating to: ${targetUrl}`);
+            window.location.href = targetUrl;
+        });
+    });
+});
+
 </script>
 
 
