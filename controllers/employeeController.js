@@ -1206,64 +1206,74 @@ getViewPerformanceTimeline: function(req, res){
         res.redirect('/staff/login');
     }
 },
-
-get360Feedback: async function(req, res) {
-    const { userId, startDate, endDate, quarter } = req.query; // Assuming the dates and quarter come from the query parameters
-
+get360FeedbackToast: async function(req, res) {
     try {
         console.log("Entering get360Feedback function");
-        console.log("User ID:", userId, "Request query:", req.query);
 
-        // Step 1: Validate the required fields
-        if (!userId || !startDate || !endDate || !quarter) {
-            console.error('Validation error: Missing fields', { userId, startDate, endDate, quarter });
-            return res.status(400).json({ success: false, message: 'User ID, start date, end date, and quarter are required.' });
-        }
+        // Step 1: Get today's date in the Philippines Time Zone (PHT) and format it to 'YYYY-MM-DD'
+        const today = new Date();
+        const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const parts = formatter.formatToParts(today);
 
-        const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4']; // List of feedback tables for the quarters
-        const feedbackRecords = [];
+        const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
 
-        // Step 2: Loop through each feedback table (Q1 to Q4) and fetch data within the date range
+        const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4']; // List of feedback tables
+        let activeFeedback = null;
+
+        // Step 2: Loop through each feedback table (Q1 to Q4) and fetch the active feedback record
         for (const feedbackTable of feedbackTables) {
             console.log(`Fetching data from table: ${feedbackTable}...`);
 
             const { data, error } = await supabase
                 .from(feedbackTable)
                 .select('*')
-                .eq('userId', userId) // Filter by userId
-                .gte('setStartDate', new Date(startDate)) // Filter by startDate
-                .lte('setEndDate', new Date(endDate)) // Filter by endDate
-                .eq('quarter', quarter); // Filter by quarter
+                .gte('setStartDate', todayString) // Ensure setStartDate is today or in the future
+                .gt('setEndDate', todayString); // Ensure setEndDate is in the future
 
             if (error) {
                 console.error(`Error fetching data from ${feedbackTable}:`, error);
                 continue; // Skip to the next table if there's an error with the current table
             }
 
-            // Add the fetched data to feedbackRecords array
+            // Check if data is found and set activeFeedback
             if (data && data.length > 0) {
                 console.log(`Data fetched from ${feedbackTable}:`, data);
-                feedbackRecords.push(...data);
+                activeFeedback = data[0]; // Assuming only one active feedback per table
+                break; // Stop searching once an active feedback is found
             } else {
                 console.log(`No data found in ${feedbackTable}.`);
             }
         }
 
-        // Step 3: Check if feedback records were found
-        if (feedbackRecords.length === 0) {
-            console.log('No feedback records found for the given date range.');
-            return res.status(404).json({ success: false, message: 'No feedback records found for the given date range.' });
+        // Ensure the logic is correct for date matching
+        console.log(`Today's Date: ${todayString}`);
+        console.log('Active Feedback Record:', activeFeedback);
+
+        // Step 3: Check if any active feedback record was found
+        if (!activeFeedback) {
+            console.log('No active feedback records found for the given date range.');
+            return res.status(404).json({ success: false, message: 'No active feedback records found for the given date range.' });
         }
 
-        // Step 4: Return the feedback records
-        console.log('Feedback records successfully retrieved:', feedbackRecords);
-        return res.status(200).json({ success: true, feedback: feedbackRecords });
+        // Step 4: Return the active feedback record
+        console.log('Active feedback found:', activeFeedback);
+
+        // Assuming the quarter is fetched from the record
+        const quarter = activeFeedback.quarter; // Adjust to get the actual quarter from the data
+
+        return res.status(200).json({ success: true, feedback: activeFeedback, quarter });
 
     } catch (error) {
         console.error('Error in get360Feedback:', error);
         return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
     }
-}
+},
+
+
+get360FeedbackList: async function(req, res) {
+
+},
 
 
 // getAttendance: async function (req, res) {
