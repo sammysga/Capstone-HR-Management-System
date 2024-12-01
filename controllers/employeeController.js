@@ -1270,10 +1270,383 @@ get360FeedbackToast: async function(req, res) {
     }
 },
 
+get360FeedbackList: async function (req, res) {
+    const currentUserId = req.session?.user?.userId;
+    const quarter = req.query.quarter || null;
 
-get360FeedbackList: async function(req, res) {
+    if (!currentUserId) {
+        console.error("Error: No user ID available in session.");
+        return res.status(400).json({ message: 'User  ID is required.' });
+    }
 
+    try {
+        // Fetch current user data
+        const { data: currentUserData, error: userError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                userId, 
+                firstName, 
+                lastName, 
+                departmentId, 
+                jobId,
+                departments (deptName),
+                jobpositions (jobTitle)
+            `)
+            .eq('userId', currentUserId)
+            .single();
+
+        if (userError || !currentUserData) {
+            console.error("Error fetching user details:", userError);
+            return res.status(404).json({ message: 'User  details not found.' });
+        }
+
+        const { departmentId, jobpositions: { jobTitle } = {}, departments: { deptName } = {} } = currentUserData;
+
+        if (!departmentId) {
+            console.error("Error: No department ID found.");
+            return res.status(404).json({ message: 'Department ID not found for the user.' });
+        }
+
+        // Fetch all users in the same department
+        const { data: departmentUsers, error: departmentError } = await supabase
+            .from('staffaccounts')
+            .select('userId')
+            .eq('departmentId', departmentId);
+
+        if (departmentError || !departmentUsers) {
+            console.error("Error fetching department users:", departmentError);
+            return res.status(404).json({ message: 'Department users not found.' });
+        }
+
+        const usersInDepartment = departmentUsers.map(user => user.userId);
+        console.log("Users in department:", usersInDepartment);
+
+        // Get today's date in the Philippines Time Zone (PHT)
+        const today = new Date();
+        const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const parts = formatter.formatToParts(today);
+        const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
+
+        console.log("Today's date (PHT):", todayString);
+
+        // Define feedback tables and filter by today's date
+        const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4'];
+        let feedbackList = [];
+
+        for (const table of feedbackTables) {
+            console.log(`Fetching data from table: ${table}...`);
+
+            const { data, error } = await supabase
+                .from(table)
+                .select('*')
+                .in('userId', usersInDepartment) // Only fetch users in the same department
+                .gte('setStartDate', todayString) // Include records where setStartDate is today or in the future
+                .gt('setEndDate', todayString); // Exclude records where setEndDate is today or in the past
+
+            if (error) {
+                console.error(`Error fetching data from ${table}:`, error);
+                continue; // Skip if there's an error
+            }
+
+            console.log(`Fetched ${data.length} records from ${table}`);
+            if (data && data.length > 0) {
+                feedbackList = feedbackList.concat(data); // Append valid data
+            }
+        }
+
+        if (feedbackList.length === 0) {
+            console.warn("No feedback data found.");
+            return res.status(404).json({ message: 'No feedback data found.' });
+        }
+
+        // Initialize feedbackDetails array
+        let feedbackDetails = [];
+
+        for (const feedback of feedbackList) {
+            const feedbackId = feedback[`feedback${quarter.toLowerCase()}_Id`]; // Get the feedback ID based on the quarter
+
+            console.log(`Fetching objectives and skills for feedback ID: ${feedbackId}`);
+
+            // Determine the correct feedback column based on the quarter
+            const feedbackColumn = quarter === 'Q1' ? 'feedbackq1_Id' :
+                                   quarter === 'Q2' ? 'feedbackq2_Id' :
+                                   quarter === 'Q3' ? 'feedbackq3_Id' :
+                                   quarter === 'Q 4' ? 'feedbackq4_Id' : null;
+
+            if (!feedbackColumn) {
+                console.error("Invalid quarter specified:", quarter);
+                return res.status(400).json({ success: false, message: 'Invalid quarter specified.' });
+            }
+
+            // Fetch linked objectives for the feedback
+            const { data: objectives, error: objectivesError } = await supabase
+                .from('feedbacks_questions-objectives')
+                .select('*')
+                .eq(feedbackColumn, feedbackId); // Use the correct feedback column
+
+            if (objectivesError) {
+                console.error(`Error fetching objectives for feedback ID ${feedbackId}:`, objectivesError);
+                continue; // Skip if there's an error
+            }
+
+            // Fetch linked skills for the feedback
+            const { data: skills, error: skillsError } = await supabase
+                .from('feedbacks_questions-skills')
+                .select('*')
+                .eq(feedbackColumn, feedbackId); // Use the correct feedback column
+
+            if (skillsError) {
+                console.error(`Error fetching skills for feedback ID ${feedbackId}:`, skillsError);
+                continue; // Skip if there's an error
+            }
+
+            feedbackDetails.push({
+                feedback,
+                objectives,
+                skills
+            });
+        }
+
+        // Render the EJS template with the user and feedback details
+        return res.render('staffpages/employee_pages/employeefeedbackquestionnaire', {
+            user: {
+                userId: currentUserId,
+                firstName: currentUserData.firstName,
+                lastName: currentUserData.lastName,
+                jobTitle: jobTitle,
+                deptName: deptName,
+                departmentId: departmentId
+            },
+            feedbackDetails
+        });
+    } catch (error) {
+        console.error('Error in get360FeedbackList:', error);
+        return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
+    }
 },
+    
+getLogoutButton: function(req, res) {
+    req.session.destroy(err => {
+        if(err) {
+            console.error('Error destroying session', err);
+            return res.status(500).json({ error: 'Failed to log out. Please try again.' });
+        }
+        res.redirect('/staff/login');
+    });
+},
+
+};
+
+module.exports = employeeController;
+           
+// get360FeedbackList: async function(currentUserId, todayString) {
+//     try {
+//         // Fetch the department of the current user
+//         const { data: currentUserData, error: userError } = await supabase
+//             .from('staffaccounts')
+//             .select('departmentId')
+//             .eq('userId', currentUserId)
+//             .single();
+
+//         if (userError) throw userError;
+
+//         const departmentId = currentUserData.departmentId;
+
+//         // Fetch all users in the same department
+//         const { data: departmentUsers, error: departmentError } = await supabase
+//             .from('staffaccounts')
+//             .select('userId')
+//             .eq('departmentId', departmentId);
+
+//         if (departmentError) throw departmentError;
+
+//         const usersInDepartment = departmentUsers.map(user => user.userId);
+
+//         // Fetch feedback for each quarter (Q1, Q2, Q3, Q4) for users in the department
+//         const feedbackQueries = ['Q1', 'Q2', 'Q3', 'Q4'].map(quarter =>
+//             supabase
+//                 .from(`feedbacks_${quarter}`)
+//                 .select('*')
+//                 .in('userId', usersInDepartment)
+//                 .gte('setStartDate', todayString)
+//                 .lte('setEndDate', todayString)
+//         );
+
+//         // Execute all queries simultaneously
+//         const feedbackResults = await Promise.all(feedbackQueries);
+
+//         // Fetch objectives and skills for the corresponding feedbacks
+//         const { data: objectivesData, error: objectivesError } = await supabase
+//             .from('feedbacks_questions-objectives')
+//             .select('*');
+//         if (objectivesError) throw objectivesError;
+
+//         const { data: skillsData, error: skillsError } = await supabase
+//             .from('feedbacks_questions-skills')
+//             .select('*');
+//         if (skillsError) throw skillsError;
+
+//         // Combine feedback results with their corresponding objectives and skills
+//         const feedbackList = feedbackResults.map((feedbackResult, index) => {
+//             const quarter = index + 1;
+//             const feedbacks = feedbackResult.data || [];
+//             return feedbacks.map(feedback => ({
+//                 ...feedback,
+//                 objectives: objectivesData.filter(obj => obj[`feedbackq${quarter}_Id`] === feedback[`feedbackq${quarter}_Id`]),
+//                 skills: skillsData.filter(skill => skill[`feedbackq${quarter}_Id`] === feedback[`feedbackq${quarter}_Id`]),
+//             }));
+//         }).flat(); // Flatten the result array into a single array
+
+//         return feedbackList;
+//     } catch (error) {
+//         console.error("Error fetching 360 feedback:", error);
+//         return [];
+//     }
+// },
+
+// get360FeedbackList: async function (req, res) {
+//     const { userId, quarter } = req.query; // Expecting data passed via query parameters.
+
+//     try {
+//         console.log("Entering get360FeedbackList function");
+    
+//         if (!userId || !quarter) {
+//             console.error("Missing required parameters: userId or quarter");
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "User ID and quarter are required.",
+//             });
+//         }
+    
+//         // Define the quarterly feedback tables dynamically based on the quarter
+//         const feedbackTable = `feedbacks_${quarter}`;
+//         const feedbackKey = `feedback${quarter.toLowerCase()}_Id`;
+    
+//         console.log(`Fetching data from table: ${feedbackTable}...`);
+//         const { data: feedbacks, error: feedbackFetchError } = await supabase
+//             .from(feedbackTable)
+//             .select('*')
+//             .eq('userId', userId);
+    
+//         if (feedbackFetchError) {
+//             console.error("Error fetching feedbacks:", feedbackFetchError.message);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: "Error fetching feedbacks.",
+//                 error: feedbackFetchError.message,
+//             });
+//         }
+    
+//         if (!feedbacks || feedbacks.length === 0) {
+//             console.log("No feedback records found for the given parameters.");
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "No feedback records found.",
+//             });
+//         }
+    
+//         const feedbackIds = feedbacks.map(fb => fb[feedbackKey]);
+    
+//         console.log("Fetching objectives and skills...");
+//         const { data: objectives, error: objectivesFetchError } = await supabase
+//             .from('feedbacks_questions-objectives')
+//             .select('*')
+//             .in(feedbackKey, feedbackIds);
+    
+//         const { data: skills, error: skillsFetchError } = await supabase
+//             .from('feedbacks_questions-skills')
+//             .select('*')
+//             .in(feedbackKey, feedbackIds);
+    
+//         if (objectivesFetchError || skillsFetchError) {
+//             console.error("Error fetching objectives or skills.");
+//             return res.status(500).json({
+//                 success: false,
+//                 message: "Error fetching objectives or skills.",
+//             });
+//         }
+    
+//         // Fetch the department of the given user
+//         const { data: userDepartment, error: departmentFetchError } = await supabase
+//             .from('staffaccounts')
+//             .select('departmentId')
+//             .eq('userId', userId)
+//             .single(); // Assuming userId is unique
+    
+//         if (departmentFetchError || !userDepartment) {
+//             console.error("Error fetching department:", departmentFetchError?.message || "User not found.");
+//             return res.status(500).json({
+//                 success: false,
+//                 message: "Error fetching department.",
+//             });
+//         }
+    
+//         const departmentId = userDepartment.departmentId;
+    
+//         // Fetch all employees in the same department
+//         const { data: departmentEmployees, error: employeesFetchError } = await supabase
+//             .from('staffaccounts')
+//             .select('*')
+//             .eq('departmentId', departmentId);
+    
+//         if (employeesFetchError) {
+//             console.error("Error fetching employees:", employeesFetchError.message);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: "Error fetching employees from the same department.",
+//             });
+//         }
+    
+//         // Fetch feedback for all employees in the department for all quarters
+//         const departmentFeedbacks = await Promise.all(
+//             ['Q1', 'Q2', 'Q3', 'Q4'].map(async (quarter) => {
+//                 const table = `feedbacks_${quarter}`;
+//                 return supabase.from(table).select('*').eq('departmentId', departmentId);
+//             })
+//         );
+    
+//         // Flatten the results for the department's feedback from all quarters
+//         const allDepartmentFeedbacks = departmentFeedbacks.reduce((acc, result) => {
+//             if (result.data) acc.push(...result.data);
+//             return acc;
+//         }, []);
+    
+//         // Structure the feedback data by matching objectives and skills
+//         const feedbackList = allDepartmentFeedbacks.map(feedback => ({
+//             ...feedback,
+//             objectives: objectives.filter(obj => obj[feedbackKey] === feedback[feedbackKey]),
+//             skills: skills.filter(skill => skill[feedbackKey] === feedback[feedbackKey]),
+//         }));
+    
+//         console.log("Feedback data fetched successfully.");
+        
+//         // Render the 'employeefeedbackquestionnaire' template and pass the data
+//         // Pass the variables from the backend to the EJS view
+//         return res.render('staffpages/employee_pages/employeefeedbackquestionnaire', {
+//             feedbackList,                // List of feedback objects for the department
+//             departmentEmployees,         // All employees in the department
+//             user: {                      // Pass the user data (current logged-in user)
+//                 userId: userId,          
+//                 firstName: req.user.firstName, // Assuming the logged-in user is in req.user
+//                 lastName: req.user.lastName,
+//                 jobTitle: req.user.jobTitle,
+//                 departmentName: req.user.departmentName,
+//                 departmentId: userDepartment.departmentId,  // Add departmentId here
+//             },
+//         });
+        
+    
+//     } catch (error) {
+//         console.error("Error in get360FeedbackList:", error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "An error occurred while fetching feedback data.",
+//             error: error.message,
+//         });
+//     }
+    
+// },
 
 
 // getAttendance: async function (req, res) {
@@ -1399,6 +1772,3 @@ get360FeedbackList: async function(req, res) {
 //     }
 // },
 
-};
-
-module.exports = employeeController;
