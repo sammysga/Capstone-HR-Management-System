@@ -1345,6 +1345,8 @@ get360FeedbackList: async function (req, res) {
             return res.status(404).json({ message: 'User  details not found.' });
         }
 
+        console.log("Fetched current user data:", currentUserData);
+
         const { departmentId, jobpositions: { jobTitle } = {}, departments: { deptName } = {} } = currentUserData;
 
         if (!departmentId) {
@@ -1377,20 +1379,20 @@ get360FeedbackList: async function (req, res) {
 
             const { data, error } = await supabase
                 .from(name)
-                .select(`userId, setStartDate, setEndDate, ${idField}`) // Include the feedback ID field in the select
-                .gte('setStartDate', todayString) // Include records where setStartDate is today or in the future
-                .gt('setEndDate', todayString); // Exclude records where setEndDate is today or in the past
+                .select(`userId, setStartDate, setEndDate, ${idField}`)
+                .gte('setStartDate', todayString)
+                .gt('setEndDate', todayString);
 
             if (error) {
                 console.error(`Error fetching data from ${name}:`, error);
                 continue; // Skip if there's an error
             }
 
-            console.log(`Fetched ${data.length} records from ${name}`);
+            console.log(`Fetched ${data.length} records from ${name}:`, data);
             if (data && data.length > 0) {
                 data.forEach(record => {
-                    usersInDepartment.add(record.userId); // Add user IDs to the set
-                    feedbackList.push({ ...record, sourceTable: name, feedbackIdField: idField }); // Store feedback records with the source table and ID field
+                    usersInDepartment.add(record.userId);
+                    feedbackList.push({ ...record, sourceTable: name, feedbackIdField: idField });
                 });
             }
         }
@@ -1404,47 +1406,60 @@ get360FeedbackList: async function (req, res) {
         const usersArray = Array.from(usersInDepartment);
         console.log("Users in department:", usersArray);
 
+        // Fetch user details for all users in the department
+        const { data: usersDetails, error: usersError } = await supabase
+            .from('staffaccounts')
+            .select('userId, firstName, lastName')
+            .in('userId', usersArray);
+
+        if (usersError) {
+            console.error("Error fetching user details:", usersError);
+            return res.status(500).json({ message: 'Error fetching user details.' });
+        }
+
+        console.log("Fetched user details for department:", usersDetails);
+
         // Initialize feedbackDetails array
         let feedbackDetails = [];
 
         for (const feedback of feedbackList) {
-            const feedbackIdValue = feedback[feedback.feedbackIdField]; // Get the feedback ID value based on the field
+            const feedbackIdValue = feedback[feedback.feedbackIdField];
 
-            console.log(`Feedback Record:`, feedback); // Log the entire feedback record
-            console.log(` Source Table: ${feedback.sourceTable}`); // Log the source table
-            console.log(`Feedback ID Field: ${feedback.feedbackIdField}`); // Log the feedback ID field being accessed
-            console.log(`Feedback ID Value: ${feedbackIdValue}`); // Log the value of the feedback ID
+            console.log(`Feedback Record:`, feedback);
+            console.log(` Source Table: ${feedback.sourceTable}`);
+            console.log(`Feedback ID Field: ${feedback.feedbackIdField}`);
+            console.log(`Feedback ID Value: ${feedbackIdValue}`);
 
             if (!feedbackIdValue) {
                 console.error(`Error: Feedback ID is undefined for record:`, feedback);
-                continue; // Skip if the feedback ID is undefined
+                continue;
             }
 
             // Fetch linked objectives for the feedback
             const { data: objectives, error: objectivesError } = await supabase
                 .from('feedbacks_questions-objectives')
                 .select('objectiveId, objectiveQualiQuestion')
-                .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`); // Use the correct feedback column
+                .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
 
             if (objectivesError) {
                 console.error(`Error fetching objectives for feedback ID ${feedbackIdValue}:`, objectivesError);
-                continue; // Skip if there's an error
+                continue;
             }
 
-            console.log(`Fetched ${objectives.length} objectives for feedback ID ${feedbackIdValue}:`, objectives); // Log the fetched objectives
+            console.log(`Fetched ${objectives.length} objectives for feedback ID ${feedbackIdValue}:`, objectives);
 
             // Fetch linked skills for the feedback
             const { data: skills, error: skillsError } = await supabase
                 .from('feedbacks_questions-skills')
-                .select('jobReqSkillId') // Ensure the correct column name is used
-                .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`); // Use the correct feedback column
+                .select('jobReqSkillId')
+                .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
 
             if (skillsError) {
                 console.error(`Error fetching skills for feedback ID ${feedbackIdValue}:`, skillsError);
-                continue; // Skip if there's an error
+                continue;
             }
 
-            console.log(`Fetched ${skills.length} skills for feedback ID ${feedbackIdValue}:`, skills); // Log the fetched skills
+            console.log(`Fetched ${skills.length} skills for feedback ID ${feedbackIdValue}:`, skills);
 
             // Fetch additional details for objectives
             const objectiveIds = objectives.map(obj => obj.objectiveId);
@@ -1459,6 +1474,7 @@ get360FeedbackList: async function (req, res) {
                     console.error('Error fetching objective settings:', objectiveError);
                 } else {
                     objectiveDetails = objectiveSettings;
+                    console.log(`Fetched objective details for IDs ${objectiveIds}:`, objectiveDetails);
                 }
             }
 
@@ -1469,12 +1485,13 @@ get360FeedbackList: async function (req, res) {
                 const { data: jobSkills, error: skillError } = await supabase
                     .from('jobreqskills')
                     .select('*')
-                    .in('jobReqSkillId', skillIds); // Ensure the correct column name is used
+                    .in('jobReqSkillId', skillIds);
 
                 if (skillError) {
                     console.error('Error fetching job skills:', skillError);
                 } else {
                     skillDetails = jobSkills;
+                    console.log(`Fetched skill details for IDs ${skillIds}:`, skillDetails);
                 }
             }
 
@@ -1497,7 +1514,7 @@ get360FeedbackList: async function (req, res) {
                 deptName: deptName,
                 departmentId: departmentId
             },
-            usersArray, // Pass the array of user IDs to the template
+            usersArray: usersDetails,
             feedbackDetails
         });
     } catch (error) {
