@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Questionnaires</title>
     <link rel="stylesheet" href="/path/to/your/css/styles.css"> <!-- Update with actual CSS path -->
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 
 <style>
-    .container {
-        max-width: 800px;
-        margin: auto;
-        padding: 20px;
-        font-family: Arial, sans-serif;
-    }
-
+.container {
+    max-width: 1000px; /* Maximum width of the container */
+    margin: 0 auto; /* Center the container horizontally */
+    margin-left: 450px; /* Adjust this value based on your sidebar width */
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+}
     .employee-info {
         margin-bottom: 20px;
         padding: 15px;
@@ -67,111 +68,155 @@
         margin-bottom: 5px;
     }
 </style>
-
 <body>
+    <%- include('../../partials/employee_partials') %>
     <div class="container">
         <header>
-            <h1>Questionnaires for <%= userName %></h1>
+            <h1>Questionnaires for <span id="userName"><%= user.firstName || "First Name" %> <%= user.lastName || "Last Name" %></span></h1>
             <p>Below are all the questionnaires assigned to you. Please provide your feedback as required.</p>
         </header>
 
         <!-- Employee Details -->
         <div class="employee-info">
-            <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
-            <div><strong>Position:</strong> <%= user.jobTitle %></div>
+            <div>
+                <strong>Employee Name:</strong>
+                <span id="lastName"><%= user.lastName || "Last Name" %></span>,
+                <span id="firstName"><%= user.firstName || "First Name" %></span>
+            </div>
+            <div><strong>Position:</strong> <span id="jobTitle"><%= user.jobTitle || "Unknown Position" %></span></div>
             <div><strong>Company:</strong> Prime Infrastructure</div>
-            <div><strong>Department:</strong> <%= user.departmentName %></div>
+            <div><strong>Department:</strong> <span id="deptName"><%= user.deptName || "Unknown Department" %></span></div>
         </div>
 
-        <!-- Scrollable Questionnaires -->
-        <div class="questionnaires-list">
-            <% if (questionnaires && questionnaires.length > 0) { %>
-                <% questionnaires.forEach(questionnaire => { %>
-                    <div class="questionnaire-item">
-                        <h2>Objective: <%= questionnaire.objectiveDescrpt %></h2>
-                        <p><strong>KPI:</strong> <%= questionnaire.objectiveKPI %></p>
-                        <p><strong>Target:</strong> <%= questionnaire.objectiveTarget %></p>
-                        <p><strong>Weight:</strong> <%= (questionnaire.objectiveAssignedWeight * 100).toFixed(1) %>%</p>
-                        
-                        <!-- Hard Skills -->
+        <!-- Hidden Inputs -->
+        <input type="hidden" id="departmentId" value="<%= user.departmentId || '' %>">
+        <input type="hidden" id="userId" value="<%= user.userId || '' %>">
+
+        <!-- Questionnaires Section -->
+        <div class="questionnaires-list" id="questionnaires-list" style="max-height: 400px; overflow-y: auto;">
+            <% if (feedbackDetails && feedbackDetails.length) { %>
+                <% feedbackDetails.forEach(detail => { %>
+                    <div class="feedback-item">
+                        <!-- Objectives -->
+                        <h2>Objective: <%= detail.feedback.objectiveDescrpt || "No Description" %></h2>
+                        <p><strong>KPI:</strong> <%= detail.feedback.objectiveKPI || "Not Specified" %></p>
+                        <p><strong>Target:</strong> <%= detail.feedback.objectiveTarget || "Not Defined" %></p>
+                        <p><strong>Weight:</strong> <%= (detail.feedback.objectiveAssignedWeight ? detail.feedback.objectiveAssignedWeight * 100 : 0).toFixed(1) %>%</p>
+
+                        <!-- Hard Skills Feedback -->
                         <div>
                             <label><strong>Hard Skills:</strong></label>
                             <ul>
-                                <% questionnaire.hardSkills.forEach(skill => { %>
-                                    <li><%= skill %></li>
-                                <% }); %>
+                                <% detail.skills?.filter(skill => skill.type === 'hard').forEach(skill => { %>
+                                    <li><%= skill.name || "Unnamed Skill" %></li>
+                                <% }) %>
                             </ul>
-                            <label for="hardSkillFeedback_<%= questionnaire.objectiveId %>">
-                                Feedback on Hard Skills:
-                            </label>
-                            <textarea id="hardSkillFeedback_<%= questionnaire.objectiveId %>" 
-                                      placeholder="Provide feedback on hard skills"></textarea>
+                            <label for="hardSkillFeedback_<%= detail.feedback.feedbackId %>">Feedback on Hard Skills:</label>
+                            <textarea id="hardSkillFeedback_<%= detail.feedback.feedbackId %>" placeholder="Provide feedback on hard skills"></textarea>
                         </div>
 
-                        <!-- Soft Skills -->
+                        <!-- Soft Skills Feedback -->
                         <div>
                             <label><strong>Soft Skills:</strong></label>
                             <ul>
-                                <% questionnaire.softSkills.forEach(skill => { %>
-                                    <li><%= skill %></li>
-                                <% }); %>
+                                <% detail.skills?.filter(skill => skill.type === 'soft').forEach(skill => { %>
+                                    <li><%= skill.name || "Unnamed Skill" %></li>
+                                <% }) %>
                             </ul>
-                            <label for="softSkillFeedback_<%= questionnaire.objectiveId %>">
-                                Feedback on Soft Skills:
-                            </label>
-                            <textarea id="softSkillFeedback_<%= questionnaire.objectiveId %>" 
-                                      placeholder="Provide feedback on soft skills"></textarea>
-                        </div>
-
-                        <!-- Qualitative Feedback -->
-                        <div>
-                            <label for="qualitativeInput_<%= questionnaire.objectiveId %>">
-                                <strong>Qualitative Feedback:</strong>
-                            </label>
-                            <textarea id="qualitativeInput_<%= questionnaire.objectiveId %>" 
-                                      placeholder="Enter your feedback here"></textarea>
-                        </div>
-
-                        <!-- Quantitative Feedback -->
-                        <div>
-                            <label><strong>Quantitative Rating:</strong></label>
-                            <div id="starRating_<%= questionnaire.objectiveId %>" class="star-rating" data-rating="0">
-                                <% for (let i = 1; i <= 5; i++) { %>
-                                    <i class="fa-solid fa-star" data-value="<%= i %>"></i>
-                                <% } %>
-                            </div>
+                            <label for="softSkillFeedback_<%= detail.feedback.feedbackId %>">Feedback on Soft Skills:</label>
+                            <textarea id="softSkillFeedback_<%= detail.feedback.feedbackId %>" placeholder="Provide feedback on soft skills"></textarea>
                         </div>
                     </div>
-                <% }); %>
+                <% }) %>
             <% } else { %>
-                <p>No questionnaires available at this time.</p>
+                <p>No feedback data available.</p>
             <% } %>
         </div>
+
+        <!-- Feedback Form -->
+        <form id="feedbackForm" method="POST" action="/linemanager/records-performance-tracker/questionnaire/<%= user.userId || '#' %>">
+            <section id="feedback-section">
+                <div class="form-header">
+                    <h2>360 Degree Feedback Questionnaire</h2>
+                    <div class="date-inputs">
+                        <div class="date-input">
+                            <label for="startDate"><strong>Start Date:</strong></label>
+                            <input type="date" id="startDate" name="startDate" class="input-field" required>
+                        </div>
+                        <div class="date-input">
+                            <label for="endDate"><strong>End Date:</strong></label>
+                            <input type="date" id="endDate" name="endDate" class="input-field" required>
+ </div>
+                    </div>
+                </div>
+                <h3>Instructions</h3>
+                <p>Provide feedback as required for both hard and soft skills, and set objectives accordingly.</p>
+                <button id="save360DegreeFeedback" type="submit">Save Questionnaire</button>
+            </section>
+        </form>
     </div>
-
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // Add event listeners to star ratings
-            document.querySelectorAll('.star-rating').forEach(starRatingContainer => {
-                const stars = starRatingContainer.querySelectorAll('.fa-star');
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                // Retrieve the userId from hidden inputs
+                const userId = document.getElementById('userId').value;
 
-                stars.forEach(star => {
-                    star.addEventListener('click', function () {
-                        const rating = this.getAttribute('data-value');
-                        const container = starRatingContainer;
-                        container.setAttribute('data-rating', rating);
+                console.log("User  ID:", userId); // Log the userId to check
 
-                        // Update star display
-                        stars.forEach(s => {
-                            if (parseInt(s.getAttribute('data-value')) <= rating) {
-                                s.classList.add('selected');
-                            } else {
-                                s.classList.remove('selected');
-                            }
-                        });
-                    });
+                // Check if userId is empty
+                if (!userId) {
+                    throw new Error('User  ID is not available.');
+                }
+
+                // Fetch feedback for the current user
+                const feedbackResponse = await fetch(`/employee/employeefeedbackquestionnaire?userId=${userId}`, {
+                    headers: { 'Accept': 'application/json' },
                 });
-            });
+
+                if (!feedbackResponse.ok) {
+                    throw new Error(`HTTP error! status: ${feedbackResponse.status}`);
+                }
+
+                const feedbackData = await feedbackResponse.json();
+
+                if (feedbackData.success) {
+                    // Process feedback data here
+                    console.log(`Feedback for user ${userId}:`, feedbackData.feedbackList);
+                    // You can update the UI with the feedback data as needed
+                    const questionnairesList = document.getElementById('questionnaires-list');
+                    feedbackData.feedbackList.forEach(feedback => {
+                        const feedbackItem = document.createElement('div');
+                        feedbackItem.classList.add('feedback-item');
+                        feedbackItem.innerHTML = `
+                            <h2>Objective: ${feedback.objectiveDescrpt || "No Description"}</h2>
+                            <p><strong>KPI:</strong> ${feedback.objectiveKPI || "Not Specified"}</p>
+                            <p><strong>Target:</strong> ${feedback.objectiveTarget || "Not Defined"}</p>
+                            <p><strong>Weight:</strong> ${(feedback.objectiveAssignedWeight ? feedback.objectiveAssignedWeight * 100 : 0).toFixed(1)}%</p>
+                            <div>
+                                <label><strong>Hard Skills:</strong></label>
+                                <ul>
+                                    ${feedback.skills.filter(skill => skill.type === 'hard').map(skill => `<li>${skill.name || "Unnamed Skill"}</li>`).join('')}
+                                </ul>
+                                <label for="hardSkillFeedback_${feedback.feedbackId}">Feedback on Hard Skills:</label>
+                                <textarea id="hardSkillFeedback_${feedback.feedbackId}" placeholder="Provide feedback on hard skills"></textarea>
+                            </div>
+                            <div>
+                                <label><strong>Soft Skills:</strong></label>
+                                <ul>
+                                    ${feedback.skills.filter(skill => skill.type === 'soft').map(skill => `<li>${skill.name || "Unnamed Skill"}</li>`).join('')}
+                                </ul>
+                                <label for="softSkillFeedback_${feedback.feedbackId}">Feedback on Soft Skills:</label>
+                                <textarea id="softSkillFeedback_${feedback.feedbackId}" placeholder="Provide feedback on soft skills"></textarea>
+                            </div>
+                        `;
+                        questionnairesList.appendChild(feedbackItem);
+                    });
+                } else {
+                    console.warn("No feedback data available for this user.");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
         });
     </script>
 </body>
