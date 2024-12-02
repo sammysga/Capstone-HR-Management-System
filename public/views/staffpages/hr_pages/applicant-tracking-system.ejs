@@ -14,6 +14,9 @@
         <div class="content">
             <h1>Applicant Tracking</h1>
 
+            <!-- Button to open Applicant Evaluation Form -->
+            <button id="evaluation-form-btn" class="evaluation-form-btn">Applicant Evaluation Form</button>
+
             <table class="form-table">
                 <thead>
                     <tr>
@@ -31,6 +34,8 @@
                             <td><%= applicant.applicationStatus ? applicant.applicationStatus.response : 'Pending' %></td>
                             <td>
                                 <a href="/hr/view-final-results/<%= applicant.userId %>" class="view-results-button">Click to View Final Results</a>
+                                <!-- Add a button for Applicant Evaluation Form -->
+                                <a href="/hr/applicant-tracker" class="evaluation-form-button">Evaluate Applicant</a>
                             </td>
                         </tr>
                     <% }) %>
@@ -41,7 +46,6 @@
 
     <!-- JavaScript for sidebar functionality -->
     <script>
-
         document.querySelectorAll('.action-required-btn').forEach(button => {
             button.addEventListener('click', function() {
                 const mrfId = this.getAttribute('data-mrfid');
