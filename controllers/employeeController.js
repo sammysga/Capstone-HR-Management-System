@@ -1522,6 +1522,325 @@ get360FeedbackList: async function (req, res) {
         return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
     }
 },
+// get360FeedbackList: async function (req, res) {
+//     const currentUserId = req.session?.user?.userId;
+//     const selectedUserId = req.query.userId; // Get the userId from the query parameters
+
+//     if (!currentUserId) {
+//         console.error("Error: No user ID available in session.");
+//         return res.status(400).json({ message: 'User  ID is required.' });
+//     }
+
+//     try {
+//         // Fetch current user data
+//         const { data: currentUserData, error: userError } = await supabase
+//             .from('staffaccounts')
+//             .select(`
+//                 userId, 
+//                 firstName, 
+//                 lastName, 
+//                 departmentId, 
+//                 jobId,
+//                 departments (deptName),
+//                 jobpositions (jobTitle)
+//             `)
+//             .eq('userId', currentUserId)
+//             .single();
+
+//         if (userError || !currentUserData) {
+//             console.error("Error fetching user details:", userError);
+//             return res.status(404).json({ message: 'User  details not found.' });
+//         }
+
+//         const { departmentId, jobpositions: { jobTitle } = {}, departments: { deptName } = {} } = currentUserData;
+
+//         // Get today's date in the Philippines Time Zone (PHT)
+//         const today = new Date();
+//         const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
+//         const formatter = new Intl.DateTimeFormat('en-US', options);
+//         const parts = formatter.formatToParts(today);
+//         const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
+
+//         // Define feedback tables and their corresponding ID fields
+//         const feedbackTables = [
+//             { name: 'feedbacks_Q1', idField: 'feedbackq1_Id' },
+//             { name: 'feedbacks_Q2', idField: 'feedbackq2_Id' },
+//             { name: 'feedbacks_Q3', idField: 'feedbackq3_Id' },
+//             { name: 'feedbacks_Q4', idField: 'feedbackq4_Id' }
+//         ];
+
+//         let feedbackList = [];
+//         let activeUserIds = new Set(); // To store unique user IDs from feedback records
+
+//         // Fetch active feedback data for users in the same department
+//         for (const { name, idField } of feedbackTables) {
+//             const { data, error } = await supabase
+//                 .from(name)
+//                 .select(`userId, setStartDate, setEndDate, ${idField}`)
+//                 .gte('setStartDate', todayString) // Ensure setStartDate is today or in the future
+//                 .gt('setEndDate', todayString); // Ensure setEndDate is in the future
+
+//             if (error) {
+//                 console.error(`Error fetching data from ${name}:`, error);
+//                 continue; // Skip if there's an error
+//             }
+
+//             // Filter records to include only those in the current user's department
+//             const filteredData = data.filter(record => record.userId === currentUserId || record.departmentId === departmentId);
+//             feedbackList.push(...filteredData.map(record => ({ ...record, sourceTable: name, feedbackIdField: idField })));
+
+//             // Add user IDs to the Set
+//             filteredData.forEach(record => activeUserIds.add(record.userId));
+//         }
+
+//         // Convert Set back to Array
+//         const usersArray = Array.from(activeUserIds);
+
+//         // If a user is selected, filter feedback for that user
+//         if (selectedUserId) {
+//             feedbackList = feedbackList.filter(feedback => feedback.userId === selectedUserId);
+//         }
+
+//         // Initialize feedbackDetails array
+//         let feedbackDetails = [];
+
+//         for (const feedback of feedbackList) {
+//             const feedbackIdValue = feedback[feedback.feedbackIdField];
+
+//             if (!feedbackIdValue) {
+//                 console.error(`Error : Feedback ID is undefined for record:`, feedback);
+//                 continue;
+//             }
+
+//             // Fetch linked objectives for the feedback
+//             const { data: objectives, error: objectivesError } = await supabase
+//                 .from('feedbacks_questions-objectives')
+//                 .select('objectiveId, objectiveQualiQuestion')
+//                 .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
+
+//             if (objectivesError) {
+//                 console.error(`Error fetching objectives for feedback ID ${feedbackIdValue}:`, objectivesError);
+//                 continue;
+//             }
+
+//             // Fetch linked skills for the feedback
+//             const { data: skills, error: skillsError } = await supabase
+//                 .from('feedbacks_questions-skills')
+//                 .select('jobReqSkillId')
+//                 .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
+
+//             if (skillsError) {
+//                 console.error(`Error fetching skills for feedback ID ${feedbackIdValue}:`, skillsError);
+//                 continue;
+//             }
+
+//             // Fetch additional details for objectives
+//             const objectiveIds = objectives.map(obj => obj.objectiveId);
+//             let objectiveDetails = [];
+//             if (objectiveIds.length > 0) {
+//                 const { data: objectiveSettings, error: objectiveError } = await supabase
+//                     .from('objectivesettings_objectives')
+//                     .select('*')
+//                     .in('objectiveId', objectiveIds);
+
+//                 if (objectiveError) {
+//                     console.error('Error fetching objective settings:', objectiveError);
+//                 } else {
+//                     objectiveDetails = objectiveSettings;
+//                 }
+//             }
+
+//             // Fetch additional details for skills
+//             const skillIds = skills.map(skill => skill.jobReqSkillId);
+//             let skillDetails = [];
+//             if (skillIds.length > 0) {
+//                 const { data: jobSkills, error: skillError } = await supabase
+//                     .from('jobreqskills')
+//                     .select('*')
+//                     .in('jobReqSkillId', skillIds);
+
+//                 if (skillError) {
+//                     console.error('Error fetching job skills:', skillError);
+//                 } else {
+//                     skillDetails = jobSkills;
+//                 }
+//             }
+
+//             feedbackDetails.push({
+//                 feedback,
+//                 objectives,
+//                 skills,
+//                 objectiveDetails,
+//                 skillDetails
+//             });
+//         }
+
+//         // Fetch all users in the same department
+//         const { data: allUsersArray, error: usersError } = await supabase
+//             .from('staffaccounts')
+//             .select('userId, firstName, lastName')
+//             .eq('departmentId', departmentId);
+
+//         if (usersError) {
+//             console.error("Error fetching users in the same department:", usersError);
+//             return res.status(500).json({ message: 'Error fetching users.' });
+//         }
+
+//         // Render the EJS template with the user and feedback details
+//         return res.render('staffpages/employee_pages/employeefeedbackquestionnaire', {
+//             user: {
+//                 userId: currentUserId,
+//                 firstName: currentUserData.firstName,
+//                 lastName: currentUserData.lastName,
+//                 jobTitle: jobTitle,
+//                 deptName: deptName,
+//                 departmentId: departmentId
+//             },
+//             usersArray: allUsersArray, // Pass all users in the same department
+//             feedbackDetails // Pass feedback details for the selected user (if any)
+//         });
+//     } catch (error) {
+//         console.error('Error in get360FeedbackList:', error);
+//         return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
+//     }
+// },
+// get360FeedbackList: async function (req, res) {
+//     const currentUserId = req.session?.user?.userId;
+//     const selectedUserId = req.query.userId; // Get selected user ID from query
+
+//     if (!currentUserId) {
+//         console.error("Error: No user ID available in session.");
+//         return res.status(400).json({ message: 'User  ID is required.' });
+//     }
+
+//     try {
+//         // Fetch current user data
+//         const { data: currentUserData, error: userError } = await supabase
+//             .from('staffaccounts')
+//             .select(`
+//                 userId, 
+//                 firstName, 
+//                 lastName, 
+//                 departmentId, 
+//                 jobId,
+//                 departments (deptName),
+//                 jobpositions (jobTitle)
+//             `)
+//             .eq('userId', currentUserId)
+//             .single();
+
+//         if (userError || !currentUserData) {
+//             console.error("Error fetching user details:", userError);
+//             return res.status(404).json({ message: 'User  details not found.' });
+//         }
+
+//         const { departmentId, jobpositions: { jobTitle } = {}, departments: { deptName } = {} } = currentUserData;
+
+//         if (!departmentId) {
+//             console.error("Error: No department ID found.");
+//             return res.status(404).json({ message: 'Department ID not found for the user.' });
+//         }
+
+//         // Get today's date in the Philippines Time Zone (PHT)
+//         const today = new Date();
+//         const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
+//         const formatter = new Intl.DateTimeFormat('en-US', options);
+//         const parts = formatter.formatToParts(today);
+//         const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
+
+//         // Define feedback tables and their corresponding ID fields
+//         const feedbackTables = [
+//             { name: 'feedbacks_Q1', idField: 'feedbackq1_Id' },
+//             { name: 'feedbacks_Q2', idField: 'feedbackq2_Id' },
+//             { name: 'feedbacks_Q3', idField: 'feedbackq3_Id' },
+//             { name: 'feedbacks_Q4', idField: 'feedbackq4_Id' }
+//         ];
+//         let feedbackList = [];
+
+//         // Fetch feedback data for the selected user
+//         for (const { name, idField } of feedbackTables) {
+//             const { data, error } = await supabase
+//                 .from(name)
+//                 .select(`userId, setStartDate, setEndDate, ${idField}`)
+//                 .eq('userId', selectedUserId) // Filter by selected user ID
+//                 .gte('setStartDate', todayString)
+//                 .gt('setEndDate', todayString);
+
+//             if (error) {
+//                 console.error(`Error fetching data from ${name}:`, error);
+//                 continue; // Skip if there's an error
+//             }
+
+//             if (data && data.length > 0) {
+//                 data.forEach(record => {
+//                     feedbackList.push({ ...record, sourceTable: name, feedbackIdField: idField });
+//                 });
+//             }
+//         }
+
+//         if (feedbackList.length === 0) {
+//             console.warn("No feedback data found for the selected user.");
+//             return res.status(404).json({ message: 'No feedback data found for the selected user.' });
+//         }
+
+//         // Initialize feedbackDetails array ```javascript
+//         let feedbackDetails = [];
+
+//         for (const feedback of feedbackList) {
+//             const feedbackIdValue = feedback[feedback.feedbackIdField];
+
+//             if (!feedbackIdValue) {
+//                 console.error(`Error: Feedback ID is undefined for record:`, feedback);
+//                 continue;
+//             }
+
+//             // Fetch linked objectives for the feedback
+//             const { data: objectives, error: objectivesError } = await supabase
+//                 .from('feedbacks_questions-objectives')
+//                 .select('objectiveId, objectiveQualiQuestion')
+//                 .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
+
+//             if (objectivesError) {
+//                 console.error(`Error fetching objectives for feedback ID ${feedbackIdValue}:`, objectivesError);
+//                 continue;
+//             }
+
+//             // Fetch linked skills for the feedback
+//             const { data: skills, error: skillsError } = await supabase
+//                 .from('feedbacks_questions-skills')
+//                 .select('jobReqSkillId')
+//                 .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
+
+//             if (skillsError) {
+//                 console.error(`Error fetching skills for feedback ID ${feedbackIdValue}:`, skillsError);
+//                 continue;
+//             }
+
+//             feedbackDetails.push({
+//                 feedback,
+//                 objectives,
+//                 skills
+//             });
+//         }
+
+//         // Render the EJS template with the user and feedback details
+//         return res.render('staffpages/employee_pages/employeefeedbackquestionnaire', {
+//             user: {
+//                 userId: selectedUserId,
+//                 firstName: currentUserData.firstName,
+//                 lastName: currentUserData.lastName,
+//                 jobTitle: jobTitle,
+//                 deptName: deptName,
+//                 departmentId: departmentId
+//             },
+//             usersArray: usersDetails,
+//             feedbackDetails
+//         });
+//     } catch (error) {
+//         console.error('Error in get360FeedbackList:', error);
+//         return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
+//     }
+// },
 getLogoutButton: function(req, res) {
     req.session.destroy(err => {
         if(err) {

@@ -69,13 +69,13 @@
     }
 </style>
 <body>
-    <%- include('../../partials/employee_partials') %>
+    <<%- include('../../partials/employee_partials') %>
     <div class="container">
         <header>
-            <h1>Questionnaires for <span id="userName"><%= user.firstName || "First Name" %> <%= user.lastName || "Last Name" %></span></h1>
+            <h1>360-Degree Feedback Evaluation Set Within the Department</h1>
             <p>Below are all the questionnaires assigned to you. Please provide your feedback as required.</p>
         </header>
-    
+
         <!-- Select Dropdown for Users in the Same Department -->
         <div>
             <label for="userSelect"><strong>Select User:</strong></label>
@@ -90,7 +90,7 @@
         <!-- Hidden Inputs -->
         <input type="hidden" id="departmentId" value="<%= user.departmentId || '' %>">
         <input type="hidden" id="userId" value="<%= user.userId || '' %>">
-    
+        
         <!-- Feedback Form -->
         <form id="feedbackForm" method="POST" action="/linemanager/records-performance-tracker/questionnaire/<%= user.userId || '#' %>">
             <section id="feedback-section" class="fade-out" style="display: none;">
@@ -98,13 +98,10 @@
                 <div class="form-header">
                     <h2>360 Degree Feedback Questionnaire</h2>
                     <div class="date-inputs">
-                        <!-- Start Date -->
                         <div class="date-input">
                             <label for="startDate"><strong>Start Date:</strong></label>
                             <input type="date" id="startDate" name="startDate" class="input-field" required>
                         </div>
-                        
-                        <!-- End Date -->
                         <div class="date-input">
                             <label for="endDate"><strong>End Date:</strong></label>
                             <input type="date" id="endDate" name="endDate" class="input-field" required>
@@ -112,18 +109,14 @@
                     </div>
                 </div>
                 
-                <!-- Instructions Label -->
                 <h3 style="font-weight: bold; font-size: 1.2em; margin-top: 20px;">Instructions</h3>
-                <br>
-                <p><strong>Setting Start and End Date:</strong> When creating a 360-degree feedback questionnaire, it is essential to set a start and end date. This schedule will automatically notify employees through the system, ensuring that they are aware of the timeframe for providing feedback.</p>
-                
-                <p><strong>Setting of Guide Questions:</strong> The Line Manager should prepare guide questions that support co-employees in providing both qualitative and quantitative feedback for each role-specific objective. Additionally, employees will rate the hard and soft skills required for the job, offering qualitative comments and quantitative scores. These structured questions enable clear, measurable evaluations and ensure alignment with the objectives being tracked.</p>                    
+                <p><strong>Setting Start and End Date:</strong> When creating a 360-degree feedback questionnaire, it is essential to set a start and end date...</p>
                 
                 <div class="feedback-header-grid">
-                    <div><strong>Employee Name:</strong> <%= user.lastName %>, <%= user.firstName %></div>
-                    <div><strong>Position:</strong> <%= user.jobTitle %></div>
+                    <div><strong>Employee Name:</strong> <span id="employeeName"></span></div>
+                    <div><strong>Position:</strong> <span id="employeePosition"></span></div>
                     <div><strong>Company:</strong> Prime Infrastructure</div>
-                    <div><strong>Department:</strong> <%= user.deptName %></div>
+                    <div><strong>Department:</strong> <span id="employeeDepartment"></span></div>
                 </div>
                 
                 <hr class="divider" />
@@ -135,24 +128,13 @@
                         <tr>
                             <th>KRA/Objectives</th>
                             <th>KPI</th>
-                            <th> Target</th>
+                            <th>Target</th>
                             <th>UOM</th>
                             <th>Assigned Weight</th>
                         </tr>
                     </thead>
                     <tbody id="feedback-table-body">
                         <!-- Populate objectives dynamically -->
-                        <% feedbackDetails.forEach(feedback => { %>
-                            <% feedback.objectives.forEach(objective => { %>
-                                <tr>
-                                    <td><strong><%= objective.objectiveQualiQuestion %></strong></td>
-                                    <td><strong>N/A</strong></td> <!-- Replace with actual KPI if available -->
-                                    <td><strong>N/A</strong></td> <!-- Replace with actual Target if available -->
-                                    <td><strong>N/A</strong></td> <!-- Replace with actual UOM if available -->
-                                    <td><strong>N/A</strong></td> <!-- Replace with actual Assigned Weight if available -->
-                                </tr>
-                            <% }) %>
-                        <% }) %>
                     </tbody>
                 </table>
 
@@ -165,17 +147,10 @@
                     </thead>
                     <tbody id="hard-skills-table-body">
                         <!-- Populate hard skills dynamically -->
-                        <% feedbackDetails.forEach(feedback => { %>
-                            <% feedback.skills.forEach(skill => { %>
-                                <tr>
-                                    <td><strong>Skill ID: <%= skill.jobReqSkillId %></strong></td> <!-- Replace with actual skill name if available -->
-                                </tr>
-                            <% }) %>
-                        <% }) %>
                     </tbody>
                 </table>
                 
-                <p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Soft Skills</p>
+                <p style="font-weight: bold; font-size: 1.1em; margin-top:  20px;">Soft Skills</p>
                 <table id="softSkillsTable">
                     <thead>
                         <tr>
@@ -184,109 +159,111 @@
                     </thead>
                     <tbody id="soft-skills-table-body">
                         <!-- Populate soft skills dynamically -->
-                        <% feedbackDetails.forEach(feedback => { %>
-                            <% feedback.skillDetails.forEach(skill => { %>
-                                <tr>
-                                    <td><strong>Skill ID: <%= skill.jobReqSkillId %></strong></td> <!-- Replace with actual skill name if available -->
-                                </tr>
-                            <% }) %>
-                        <% }) %>
                     </tbody>
                 </table>
                 
-                <button id="saveQ1_360FeedbackPresetButton" type="submit">Save Questionnaire</button>
+                <button id="saveQ1_360FeedbackPreset Button" type="submit">Save Questionnaire</button>
             </section>
         </form>
     </div>
     <script>
-        let submittedObjectives = []; // Declare these variables at the top
+        let submittedObjectives = [];
         let hardSkills = [];
         let softSkills = [];
-    
+
         document.getElementById('userSelect').addEventListener('change', async function() {
-            const selectedUserId = this.value;
-    
-            if (selectedUserId) {
-                try {
-                    // Fetch feedback for the selected user
-                    const feedbackResponse = await fetch(`/employee/employeefeedbackquestionnaire?userId=${selectedUserId}`, {
-                        headers: { 'Accept': 'application/json' },
-                    });
-    
-                    if (!feedbackResponse.ok) {
-                        throw new Error(`HTTP error! status: ${feedbackResponse.status}`);
-                    }
-    
-                    const feedbackData = await feedbackResponse.json();
-    
-                    if (feedbackData.success) {
-                        // Process feedback data here
-                        console.log(`Feedback for user ${selectedUserId}:`, feedbackData.feedbackList);
-                        submittedObjectives = feedbackData.feedbackList; // Objectives for the feedback form
-                        hardSkills = feedbackData.hardSkills; // Hard skills from the response
-                        softSkills = feedbackData.softSkills; // Soft skills from the response
-    
-                        // Call the function to show the feedback form
-                        showFeedbackForm();
-                    } else {
-                        console.warn("No feedback data available for this user.");
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                }
-            } else {
-                // Optionally, you can hide the feedback form if no user is selected
-                const feedbackSection = document.getElementById("feedback-section");
-                if (feedbackSection) {
-                    feedbackSection.style.display = "none"; // Hide feedback section
-                }
+    const selectedUserId = this.value;
+
+    console.log("Selected User ID:", selectedUserId);
+
+    // Check if selectedUser Id is valid
+    if (selectedUserId && selectedUserId !== "undefined") {
+        try {
+            const feedbackResponse = await fetch(`/employee/employeefeedbackquestionnaire?userId=${selectedUserId}`, {
+                method: 'GET', // Explicitly set the method to GET
+                headers: { 'Accept': 'application/json' },
+            });
+
+            // Get the raw response text
+            const responseText = await feedbackResponse.text(); 
+            console.log("Raw Response:", responseText); // Log the raw response
+
+            // Check if the response is OK
+            if (!feedbackResponse.ok) {
+                console.warn(`Failed to fetch feedback data for user ID ${selectedUserId}. Response status: ${feedbackResponse.status}`);
+                return;
             }
-        });
-    
-        function showFeedbackForm() {
+
+            // Parse the response as JSON
+            const feedbackData = JSON.parse(responseText);
+            console.log("Feedback Data Received:", feedbackData);
+
+            if (feedbackData.success) {
+                submittedObjectives = feedbackData.feedbackDetails.flatMap(detail => detail.objectives) || [];
+                hardSkills = feedbackData.feedbackDetails.flatMap(detail => detail.skills.filter(skill => skill.type === 'hard')) || [];
+                softSkills = feedbackData.feedbackDetails.flatMap(detail => detail.skills.filter(skill => skill.type === 'soft')) || [];
+                updateFeedbackForm(selectedUserId, feedbackData);
+            } else {
+                console.warn("No feedback data available for this user.");
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    } else {
+        console.warn("No valid User ID selected.");
+        const feedbackSection = document.getElementById("feedback-section");
+        if (feedbackSection) {
+            feedbackSection.style.display = "none";
+        }
+    }
+});
+
+        function updateFeedbackForm(selectedUserId, feedbackData) {
             const feedbackSection = document.getElementById("feedback-section");
             if (feedbackSection) {
-                feedbackSection.style.display = "block"; // Show feedback section
+                feedbackSection.style.display = "block";
             }
-    
+
+            const employeeName = document.getElementById("employeeName");
+            const employeePosition = document.getElementById("employeePosition");
+            const employeeDepartment = document.getElementById("employeeDepartment");
+
+            const selectedUser  = feedbackData.usersArray.find(user => user.userId === selectedUserId);
+            if (selectedUser ) {
+                employeeName.textContent = `${selectedUser .firstName} ${selectedUser .lastName}`;
+                employeePosition.textContent = feedbackData.jobTitle || 'N/A';
+                employeeDepartment.textContent = feedbackData.deptName || 'N/A';
+            }
+
             const feedbackTableBody = document.getElementById('feedback-table-body');
-            feedbackTableBody.innerHTML = ''; // Clear existing rows
-    
-            // Populate feedback rows with objectives
-            if (submittedObjectives && submittedObjectives.length > 0) {
+            feedbackTableBody.innerHTML = '';
+
+            if (submittedObjectives.length > 0) {
                 submittedObjectives.forEach(objective => {
                     addFormFeedbackRow(objective);
                 });
             }
-    
-            // Add hard skills to the feedback form
+
             addFormFeedbackSkillsRows(hardSkills, 'hard');
-    
-            // Add soft skills to the feedback form
             addFormFeedbackSkillsRows(softSkills, 'soft');
         }
-    
+
         function addFormFeedbackRow(objective) {
             const tbody = document.getElementById('feedback-table-body');
-            if (!tbody) {
-                console.error("Feedback table body not found.");
-                return;
-            }
-    
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td><strong>${objective.objectiveQualiQuestion || 'N/A'}</strong></td>
-                <td><strong>N/A</strong></td> <!-- Replace with actual KPI if available -->
-                <td><strong>N/A</strong></td> <!-- Replace with actual Target if available -->
-                <td><strong>N/A</strong></td> <!-- Replace with actual UOM if available -->
-                <td><strong>N/A</strong></td> <!-- Replace with actual Assigned Weight if available -->
+                <td><strong>N/A</strong></td>
+                <td><strong>N/A</strong></td>
+                <td><strong>N/A</strong></td>
+                <td><strong>N/A</strong></td>
             `;
             tbody.appendChild(row);
-    
+
             const inputRow = document.createElement('tr');
             const inputId = `qualitativeInput_${objective.objectiveId}`;
             const questionText = objective.objectiveQualiQuestion || 'Enter your feedback here';
-    
+
             inputRow.innerHTML = `
                 <td colspan="5">
                     <div style="margin-bottom: 10px;">
@@ -299,16 +276,225 @@
                             style="width: 100%; box-sizing: border-box;"
                             data-objective-id="${objective.objectiveId}">
                     </div>
-                </ 
+                </td>
+            `;
+            tbody.appendChild(inputRow);
+
+            const raterRow = document.createElement('tr');
+            const starRatingId = `starRating${objective.objectiveId}`;
+            const ratingSectionId = `ratingSection${objective.objectiveId}`;
+
+            raterRow.innerHTML = `
+                <td colspan="5">
+                    <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" style="background-color: gray; color: white; border: none; padding: 8px 12px ; cursor: pointer; border-radius: 4px;">
+                        View Rater's View
+                    </button>
+                    <div id="${ratingSectionId}" style="display: none; margin-top: 10px;">
+                        <div style="margin-bottom: 10px;">
+                            <label><strong>Quantitative (Rating Scale):</strong></label>
+                            <div style="font-size: 14px; margin-top: 5px;">
+                                Rate from 1 to 5 based on the corresponding skill performed during the quarter.
+                            </div>
+                            <span style="font-size: 24px;" id="${starRatingId}" data-rating="0">
+                                <i class="fa-solid fa-star" data-value="1"></i>
+                                <i class="fa-solid fa-star" data-value="2"></i>
+                                <i class="fa-solid fa-star" data-value="3"></i>
+                                <i class="fa-solid fa-star" data-value="4"></i>
+                                <i class="fa-solid fa-star" data-value="5"></i>
+                            </span>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label><strong>Qualitative (Open-ended):</strong></label>
+                            <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;">
+                        </div>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(raterRow);
+
+            const stars = document.querySelectorAll(`#${starRatingId} .fa-star`);
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = this.getAttribute('data-value');
+                    const starContainer = document.getElementById(starRatingId);
+                    starContainer.setAttribute('data-rating', rating);
+                    updateStarDisplay(stars, rating);
+                });
+            });
+        }
+
+        function addFormFeedbackSkillsRows(skills, skillType) {
+            const skillTableBody = document.querySelector(`#${skillType}-skills-table-body`);
+
+            if (!skillTableBody) {
+                console.log("Skill table body not found for:", skillType);
+                return;
+            }
+
+            skills.forEach(skill => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <span><strong>${skill.jobReqSkillName || 'N/A'}</strong></span>
+                    </td>
+                `;
+                skillTableBody.appendChild(row);
+
+                const inputRow = document.createElement('tr');
+                const starRatingId = `${skillType}SkillRow${skill.jobReqSkillName.replace(/\s+/g, '_')}Rating`;
+                const ratingSectionId = `ratingSection${skill.jobReqSkillName.replace(/\s+/g, '_')}`;
+
+                inputRow.innerHTML = `
+                    <td colspan="1">
+                        <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" style="background-color: gray; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
+                            View Rater's View
+                        </button>
+                        <div id="${ratingSectionId}" style="display: none; margin-top: 10px;">
+                            <div style="margin-bottom: 10px;">
+                                <label><strong>Quantitative (Rating Scale):</strong></label>
+                                <div style="font-size: 14px; margin-top: 5px;">
+                                    Rate from 1 to 5 based on the corresponding skill performed during the quarter.
+                                </div>
+                                <span style="font-size: 24px;" id="${starRatingId}" data-rating="0">
+                                    <i class="fa-solid fa-star" data-value="1"></i>
+                                    <i class="fa-solid fa-star" data-value="2"></i>
+                                    <i class="fa-solid fa-star" data-value="3"></i>
+                                    <i class="fa-solid fa-star" data-value="4"></i>
+                                    <i class="fa-solid fa-star" data-value="5"></i>
+                                </span>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <label><strong>Qualitative (Open-ended):</strong></label>
+                                <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;">
+                            </div>
+                        </div>
+                    </td>
+                `;
+                skillTableBody.appendChild(inputRow);
+            });
+        }
+
+        function toggleRatingSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.style.display = section.style.display === 'none' ? 'block' : 'none';
+ }
+        }
+
+        function updateStarDisplay(stars, rating) {
+            stars.forEach(star => {
+                star.style.color = star.getAttribute('data-value') <= rating ? 'gold' : 'gray';
+            });
+        }
+    </script>
+</html>
+
+<!-- 
+<script>
+    let submittedObjectives = [];
+    let hardSkills = [];
+    let softSkills = [];
+
+    document.getElementById('userSelect').addEventListener('change', async function () {
+        const selectedUserId = this.value;
+
+        if (selectedUserId) {
+            try {
+                const feedbackResponse = await fetch(`/employee/employeefeedbackquestionnaire?userId=${selectedUserId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!feedbackResponse.ok) {
+                    throw new Error(`HTTP error! status: ${feedbackResponse.status}`);
+                }
+
+                const feedbackData = await feedbackResponse.json();
+
+                if (feedbackData.success) {
+                    // Update UI with feedbackData
+                    const selectedUser  = feedbackData.user; // Assuming user details are returned
+                    document.getElementById('selectedUserName').innerText = `${selectedUser.firstName} ${selectedUser.lastName}`;
+                    document.getElementById('selectedUserPosition').innerText = selectedUser.jobTitle; 
+                    document.getElementById('selectedUserDepartment').innerText = selectedUser.deptName; 
+
+                    // Populate feedback details
+                    submittedObjectives = feedbackData.feedbackDetails.objectives || [];
+                    hardSkills = feedbackData.feedbackDetails.skills || [];
+                    softSkills = feedbackData.feedbackDetails.softSkills || [];
+
+                    showFeedbackForm();
+                } else {
+                    console.warn("No feedback data available for this user.");
+                    clearFeedbackForm();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                clearFeedbackForm();
+            }
+        } else {
+            clearFeedbackForm();
+        }
+    });
+
+    function showFeedbackForm() {
+        const feedbackSection = document.getElementById("feedback-section");
+        if (feedbackSection) {
+            feedbackSection.style.display = "block";
+        }
+
+        const feedbackTableBody = document.getElementById('feedback-table-body');
+        feedbackTableBody.innerHTML = '';
+
+        submittedObjectives.forEach(objective => {
+            addFormFeedbackRow(objective);
+        });
+
+        addFormFeedbackSkillsRows(hardSkills, 'hard');
+        addFormFeedbackSkillsRows(softSkills, 'soft');
+    }
+
+    function addFormFeedbackRow(objective) {
+        const tbody = document.getElementById('feedback-table-body');
+        if (!tbody) {
+            console.error("Feedback table body not found.");
+            return;
+        }
+
+        // Create objective information row
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${objective.objectiveQualiQuestion || 'N/A'}</strong></td>
+            <td><strong>${objective.kpi || 'N/A'}</strong></td>
+            <td><strong>${objective.target || 'N/A'}</strong></td>
+            <td><strong>${objective.uom || 'N/A'}</strong></td>
+            <td><strong>${objective.assignedWeight || 'N/A'}</strong></td>
+        `;
+        tbody.appendChild(row);
+
+        // Create input row for qualitative feedback
+        const inputRow = document.createElement('tr');
+        const inputId = `qualitativeInput_${objective.objectiveId}`;
+        inputRow.innerHTML = `
+            <td colspan="5">
+                <div style="margin-bottom: 10px;">
+                    <label for="${inputId}">▶ Guide Question:</label>
+                    <input id="${inputId}" type="text" 
+                        placeholder="Provide your qualitative feedback here"
+                        value="${objective.objectiveQualiQuestion || ''}" 
+                        name="kraObjectivesInput"
+                        required 
+                        style="width: 100%; box-sizing: border-box;"
+                        data-objective-id="${objective.objectiveId}">
+                </div>
             </td>
         `;
         tbody.appendChild(inputRow);
-    
-        // Rater's View Section
+
+        // Add Rater's View Section
         const raterRow = document.createElement('tr');
-        const starRatingId = `starRating${objective.objectiveId}`;
-        const ratingSectionId = `ratingSection${objective.objectiveId}`;
-    
+        const starRatingId = `starRating_${objective.objectiveId}`;
+        const ratingSectionId = `ratingSection_${objective.objectiveId}`;
         raterRow.innerHTML = `
             <td colspan="5">
                 <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" style="background-color: gray; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
@@ -317,9 +503,7 @@
                 <div id="${ratingSectionId}" style="display: none; margin-top: 10px;">
                     <div style="margin-bottom: 10px;">
                         <label><strong>Quantitative (Rating Scale):</strong></label>
-                        <div style="font-size: 14px; margin-top: 5px;">
-                            Rate from 1 to 5 based on the corresponding skill performed during the quarter.
-                        </div>
+                        <div>Rate from 1 to 5 based on performance during the quarter.</div>
                         <span style="font-size: 24px; cursor: pointer;" id="${starRatingId}" data-rating="0">
                             <i class="fa-solid fa-star" data-value="1"></i>
                             <i class="fa-solid fa-star" data-value="2"></i>
@@ -330,20 +514,17 @@
                     </div>
                     <div style="margin-bottom: 10px;">
                         <label><strong>Qualitative (Open-ended):</strong></label>
-                        <div style="font-size: 14px; margin-top: 5px;">
-                            Provide qualitative feedback based on the corresponding skill performed during the quarter.
-                        </div>
-                        <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;">
+                        <input type="text" placeholder="Provide qualitative feedback" style="width: 100%; box-sizing: border-box;">
                     </div>
                 </div>
             </td>
         `;
         tbody.appendChild(raterRow);
-    
-        // Add click event listeners to the stars for the Rater's View
+
+        // Add star click event listeners
         const stars = document.querySelectorAll(`#${starRatingId} .fa-star`);
         stars.forEach(star => {
-            star.addEventListener('click', function() {
+            star.addEventListener('click', function () {
                 const rating = this.getAttribute('data-value');
                 const starContainer = document.getElementById(starRatingId);
                 starContainer.setAttribute('data-rating', rating);
@@ -351,79 +532,107 @@
             });
         });
     }
-    
+
     function addFormFeedbackSkillsRows(skills, skillType) {
         const skillTableBody = document.querySelector(`#${skillType}-skills-table-body`);
-    
-        // Check if the table body exists
         if (!skillTableBody) {
-            console.log("Skill table body not found for:", skillType);
+            console.error("Skill table body not found for:", skillType);
             return;
         }
-    
-        // Iterate over the array of skills and add each one
+
         skills.forEach(skill => {
-            // Create the skill row
+            // Create skill row
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>
-                    <span><strong>${skill.jobReqSkillName || 'N/A'}</strong></span>
-                </td>
-            `;
+            row.innerHTML = `<td><strong>${skill.jobReqSkillName || 'N/A'}</strong></td>`;
             skillTableBody.appendChild(row);
-    
-            // Create a new row for input fields
+
+            // Create Rater's View section
             const inputRow = document.createElement('tr');
-            const starRatingId = `${skillType}SkillRow${skill.jobReqSkillName.replace(/\s+/g, '_')}Rating`; // Unique ID for rating
-            const ratingSectionId = `ratingSection${skill.jobReqSkillName.replace(/\s+/g, '_')}`; // Replace spaces for valid ID
-    
+            const starRatingId = `${skillType}_SkillRating_${skill.jobReqSkillName.replace(/\s+/g, '_')}`;
+            const ratingSectionId = `ratingSection_${skill.jobReqSkillName.replace(/\s+/g, '_')}`;
+
             inputRow.innerHTML = `
-                <td colspan="1">
+                <td>
                     <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" style="background-color: gray; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
                         View Rater's View
                     </button>
                     <div id="${ratingSectionId}" style="display: none; margin-top: 10px;">
                         <div style="margin-bottom: 10px;">
                             <label><strong>Quantitative (Rating Scale):</strong></label>
-                            <div style="font-size: 14px; margin-top: 5px;">
-                                Rate from 1 to 5 based on the corresponding skill performed during the quarter.
-                            </div>
-                            <span style="font-size: 24px; cursor: default;" id
-                            <span style="font-size: 24px; cursor: default;" id="${starRatingId}" data-rating="0">
-                                <i class="fa-solid fa-star" data-value="1" style="pointer-events: none;"></i>
-                                <i class="fa-solid fa-star" data-value="2" style="pointer-events: none;"></i>
-                                <i class="fa-solid fa-star" data-value="3" style="pointer-events: none;"></i>
-                                <i class="fa-solid fa-star" data-value="4" style="pointer-events: none;"></i>
-                                <i class="fa-solid fa-star" data-value="5" style="pointer-events: none;"></i>
+                            <div>Rate from 1 to 5 based on performance.</div>
+                            <span style="font-size: 24px;" id="${starRatingId}" data-rating="0">
+                                <i class="fa-solid fa-star" data-value="1"></i>
+                                <i class="fa-solid fa-star" data-value="2"></i>
+                                <i class="fa-solid fa-star" data-value="3"></i>
+                                <i class="fa-solid fa-star" data-value="4"></i>
+                                <i class="fa-solid fa-star" data-value="5"></i>
                             </span>
                         </div>
                         <div style="margin-bottom: 10px;">
-                            <label><strong>Qualitative (Open-ended):</strong></label>
-                            <div style="font-size: 14px; margin-top: 5px;">
-                                Provide qualitative feedback based on the corresponding skill performed during the quarter.
-                            </div>
-                            <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;" readonly>
+                            <label><strong>Qualitative Feedback:</strong></label>
+                            <input type="text" placeholder="Provide feedback here" style="width: 100%; box-sizing: border-box;">
                         </div>
                     </div>
                 </td>
             `;
-    
             skillTableBody.appendChild(inputRow);
         });
     }
-    
+
+    function clearFeedbackForm() {
+        const feedbackSection = document.getElementById("feedback-section");
+        if (feedbackSection) {
+            feedbackSection.style.display = "none";
+        }
+
+        document.getElementById('feedback-table-body').innerHTML = '';
+        document.getElementById('hard-skills-table-body').innerHTML = '';
+        document.getElementById('soft-skills-table-body').innerHTML = '';
+
+        // Clear user info display
+        document.getElementById('selectedUser  Name').innerText = '';
+        document.getElementById('selectedUser  Position').innerText = '';
+        document.getElementById('selectedUser  Department').innerText = '';
+    }
+
+    // Function to toggle the visibility of the rating section
     function toggleRatingSection(sectionId) {
         const section = document.getElementById(sectionId);
-        if (section) {
-            section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        if (section.style.display === 'none') {
+            section.style.display = 'block'; // Show the rating section
+        } else {
+            section.style.display = 'none'; // Hide the rating section
         }
     }
-    
+
+    // Function to update star display based on the rating
     function updateStarDisplay(stars, rating) {
         stars.forEach(star => {
-            star.style.color = star.getAttribute('data-value') <= rating ? 'gold' : 'gray';
+            if (star.getAttribute('data-value') <= rating) {
+                star.class 
+                star.classList.add('checked'); // Add checked class for selected stars
+            } else {
+                star.classList.remove('checked'); // Remove checked class for unselected stars
+            }
         });
     }
-    </script>
-</body>
-</html>
+
+    function setRating(rowId, rating) {
+        const starRating = document.getElementById(`${rowId}Rating`);
+
+        // Get all star icons (they are <i> elements)
+        const stars = starRating.getElementsByTagName('i');
+
+        // Loop through the stars and apply the "checked" class based on the rating
+        for (let i = 0; i < stars.length; i++) {
+            if (i < rating) {
+                stars[i].classList.add('checked');  // Add "checked" class for selected stars
+            } else {
+                stars[i].classList.remove('checked');  // Remove "checked" class for unselected stars
+            }
+        }
+
+        // Update the data-rating attribute to reflect the selected rating
+        starRating.setAttribute('data-rating', rating);
+    }
+</script> -->
