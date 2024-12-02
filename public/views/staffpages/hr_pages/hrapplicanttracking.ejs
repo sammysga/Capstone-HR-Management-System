@@ -105,6 +105,15 @@
         .reject-btn:hover {
             background-color: #da190b;
         }
+
+        .save-btn {
+        background-color: #2196F3;
+        color: white;
+        }
+
+        .save-btn:hover {
+        background-color: #0b7dda;
+        }
     </style>
 </head>
 <body>
@@ -116,7 +125,7 @@
         
         <!-- Interview Details Section -->
         <div class="interview-details">
-            <p><strong>Candidate Name:</strong> John Doe </p>
+            <p><strong>Candidate Name:</strong> Kathyrn Bernardo </p>
             <p><strong>Position Title:</strong> Marketing </p>
             <p><strong>Conducted By:</strong> Hannah Fontes</p>
             <p><strong>Position Department:</strong> HR </p>
@@ -210,11 +219,14 @@
             <p><strong>Average Score:</strong> <span id="average-score">2.00</span></p>
             
             <div class="button-container">
+                <!-- Save Button -->
+                <button class="save-btn" onclick="saveForm()">Save</button>
+
                 <!-- Approve Button -->
-                <button class="approve-btn" onclick="approveCandidate()">Approve and Passed</button>
+                <button class="approve-btn" onclick="approveCandidate()">Approve and Inform Passed</button>
                 
                 <!-- Reject Button -->
-                <button class="reject-btn" onclick="rejectCandidate()">Reject and Upload Rejection Letter</button>
+                <button class="reject-btn" onclick="rejectCandidate()">Reject and Upload Rejection Letter via Chatbot</button>
             </div>
         </div>
     </div>
