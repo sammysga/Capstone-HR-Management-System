@@ -54,6 +54,7 @@
 
          /* HR Evaluation Section Styles */
          .box-container {
+            display: none; /* Initially hidden */
     max-width: 800px;
     margin: 20px auto;
     padding: 20px;
@@ -195,7 +196,7 @@
     <!-- Button to toggle form visibility -->
     <button class="show-form-btn" onclick="toggleHRForm()">Show HR Interview Form</button>
     
-    <div class="box-container">
+    <div class="box-container" id="hrForm">
         <!-- HR Evaluation Section -->
         <div class="content-container">
             <h1>HR Manager Interview Form</h1>
@@ -302,7 +303,7 @@
     
 <script>
 
-    // Toggle HR Interview Form visibility
+// Toggle HR Interview Form visibility
 function toggleHRForm() {
     const form = document.getElementById('hrForm');
     form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
