@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offboarding Requests</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+</head>
+<body>
+    <%- include('../../partials/linemanager_partials') %>
+
+    <div class="main-content">
+        <div class="content">
+            <h1>Manpower Requisition Form</h1>
+
+            <table class="form-table">
+                <thead>
+                    <tr>
+                        <th>Employee Name</th>
+                        <th>Date Requested</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td>John Doe</td>
+                            <td>October 12, 2024</td>
+                            <td>Pending for Approval</td>
+                            <td><a href="/linemanager/view-offboarding-request">View Request</a></td>
+                        </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- JavaScript for sidebar functionality -->
+    <script>
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
