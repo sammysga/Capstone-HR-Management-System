@@ -108,7 +108,7 @@
     </style>
 </head>
 <body>
-    <%- include('../../partials/linemanager_partials') %>
+    <%- include('../../partials/hr_partials') %>
 
     <!-- Line Manager Interview Form Header -->
     <div class="content-container">
@@ -116,10 +116,10 @@
         
         <!-- Interview Details Section -->
         <div class="interview-details">
-            <p><strong>Candidate Name:</strong> [Enter Candidate Name]</p>
-            <p><strong>Position Title:</strong> [Enter Position Title]</p>
-            <p><strong>Conducted By:</strong> [Enter Interviewer Name]</p>
-            <p><strong>Position Department:</strong> [Enter Department Name]</p>
+            <p><strong>Candidate Name:</strong> John Doe </p>
+            <p><strong>Position Title:</strong> Marketing </p>
+            <p><strong>Conducted By:</strong> Hannah Fontes</p>
+            <p><strong>Position Department:</strong> HR </p>
         </div>
 
         <!-- Evaluation Table Section -->
@@ -139,7 +139,7 @@
                         <td>
                             <select class="core-value-score">
                                 <option value="3">3 - Critical</option>
-                                <option value="2">2 - Important</option>
+                                <option value="2" selected>2 - Important</option>
                                 <option value="1">1 - Desired</option>
                                 <option value="0">0 - Not Demonstrated</option>
                             </select>
@@ -150,7 +150,7 @@
                         <td>
                             <select class="core-value-score">
                                 <option value="3">3 - Critical</option>
-                                <option value="2">2 - Important</option>
+                                <option value="2" selected>2 - Important</option>
                                 <option value="1">1 - Desired</option>
                                 <option value="0">0 - Not Demonstrated</option>
                             </select>
@@ -161,7 +161,7 @@
                         <td>
                             <select class="core-value-score">
                                 <option value="3">3 - Critical</option>
-                                <option value="2">2 - Important</option>
+                                <option value="2" selected>2 - Important</option>
                                 <option value="1">1 - Desired</option>
                                 <option value="0">0 - Not Demonstrated</option>
                             </select>
@@ -172,7 +172,7 @@
                         <td>
                             <select class="core-value-score">
                                 <option value="3">3 - Critical</option>
-                                <option value="2">2 - Important</option>
+                                <option value="2" selected>2 - Important</option>
                                 <option value="1">1 - Desired</option>
                                 <option value="0">0 - Not Demonstrated</option>
                             </select>
@@ -183,7 +183,7 @@
                         <td>
                             <select class="core-value-score">
                                 <option value="3">3 - Critical</option>
-                                <option value="2">2 - Important</option>
+                                <option value="2" selected>2 - Important</option>
                                 <option value="1">1 - Desired</option>
                                 <option value="0">0 - Not Demonstrated</option>
                             </select>
@@ -194,7 +194,7 @@
                         <td>
                             <select class="core-value-score">
                                 <option value="3">3 - Critical</option>
-                                <option value="2">2 - Important</option>
+                                <option value="2" selected>2 - Important</option>
                                 <option value="1">1 - Desired</option>
                                 <option value="0">0 - Not Demonstrated</option>
                             </select>
@@ -207,7 +207,7 @@
         <!-- Declaration Section -->
         <div class="declaration-section">
             <p><strong>Declaration:</strong> Based on the evaluation, the candidate's average score is:</p>
-            <p><strong>Average Score:</strong> <span id="average-score">0</span></p>
+            <p><strong>Average Score:</strong> <span id="average-score">2.00</span></p>
             
             <div class="button-container">
                 <!-- Approve Button -->
@@ -224,6 +224,11 @@
         const scoreSelects = document.querySelectorAll('.core-value-score');
         scoreSelects.forEach(select => {
             select.addEventListener('change', calculateAverageScore);
+        });
+
+        // Predefined dummy scoring initialization
+        window.addEventListener('load', () => {
+            calculateAverageScore(); // Call once to ensure initial calculation
         });
 
         function calculateAverageScore() {
@@ -243,9 +248,9 @@
             document.getElementById('average-score').innerText = averageScore;
         }
 
-        // Approve Button Action
+        // Approve Button Action with notification
         function approveCandidate() {
-            alert("Candidate Approved and Passed!");
+            alert("The evaluation form has been forwarded to HR and is awaiting approval.");
             // Add any additional logic here, e.g., updating the status in the database.
         }
 
@@ -255,8 +260,8 @@
             // Here, you can trigger the chatbot interaction or initiate the rejection letter upload process.
         }
 
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+         // Toggle active class for sidebar links
+         document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
                 this.classList.add('active');
