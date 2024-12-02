@@ -75,6 +75,7 @@ router.get('/hr/records-performance-tracker', hrController.getRecordsPerformance
 router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPerformanceTrackerByUserId);
 router.get('/hr/view-mrf/:id', hrController.getViewMRF);
 router.post('/hr/view-mrf/:id', hrController.submitMRF);
+router.get('/hr/applicant-tracker', hrController.getApplicantTracker);
 
 
 router.get('/logout', hrController.getLogoutButton);
