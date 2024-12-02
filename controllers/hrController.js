@@ -1732,6 +1732,15 @@ updateJobOffer: async function(req, res) {
             return res.status(500).send('Error fetching chatbot interaction history');
         }
     },
+
+    getOffboardingRequest: function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/offboardingrequest');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            res.redirect('staff/login');
+        }
+    },
     
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
