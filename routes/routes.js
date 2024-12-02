@@ -80,6 +80,8 @@ router.get('/hr/applicant-tracker', hrController.getApplicantTracker);
 router.get('/hr/applicant-tracking', hrController.getApplicantTracking);
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
 
+router.get('/hr/offboarding-request', hrController.getOffboardingRequest);
+
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
 
