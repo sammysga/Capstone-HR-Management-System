@@ -133,7 +133,9 @@ router.get('/linemanager/mrf-list', lineManagerController.getMRFList);
 router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
 router.get('/linemanager/records-performance-tracker', lineManagerController.getRecordsPerformanceTrackerByDepartmentId);
 
-router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getRecordsPerformanceTrackerByUserId)
+router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getRecordsPerformanceTrackerByUserId);
+router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
+
 
 // Route for viewing an employee's performance tracker with a quarter
 // router.get('/linemanager/records-performance-tracker/:userId/:quarter',
