@@ -1362,9 +1362,25 @@ const lineManagerController = {
             return res.status(500).json({ success: false, message: 'An error occurred.', error: error.message });
         }
     },
+
+    getOffboardingRequestsDash: function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
+            res.render('staffpages/linemanager_pages/linemanageroffboarding');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access.' });
+            res.redirect('staff/login');
+        }
+    },
+
+    getViewOffboardingRequest: function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
+            res.render('staffpages/linemanager_pages/viewoffboardingrequest');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access.' });
+            res.redirect('staff/login');
+        }
+    },
      
-    
-    
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
             if(err) {
