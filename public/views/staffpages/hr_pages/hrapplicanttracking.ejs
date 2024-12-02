@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Manager Interview Form</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <style>
+        /* Adjust content container to avoid overlap with sidebar */
+        .content-container {
+            margin-left: 300px; /* Adjust based on the width of your sidebar */
+            padding: 20px;
+            background-color: #f9f9f9; /* Light background for readability */
+            min-height: 100vh; /* Ensure it spans the full viewport height */
+        }
+
+        /* Styling for the interview details section */
+        .interview-details {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .interview-details p {
+            margin: 10px 0;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .interview-details strong {
+            font-weight: 600;
+        }
+
+        /* Styling for the Evaluation Table */
+        .evaluation-table {
+            margin-top: 30px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .evaluation-table th, .evaluation-table td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        .evaluation-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .evaluation-table td select {
+            width: 80%;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        /* Styling for the Declaration and Buttons */
+        .declaration-section {
+            margin-top: 40px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .declaration-section p {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .declaration-section .button-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .declaration-section button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .approve-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .approve-btn:hover {
+            background-color: #45a049;
+        }
+
+        .reject-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .reject-btn:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/hr_partials') %>
+
+    <!-- Line Manager Interview Form Header -->
+    <div class="content-container">
+        <h1>HR Manager Interview Form</h1>
+        
+        <!-- Interview Details Section -->
+        <div class="interview-details">
+            <p><strong>Candidate Name:</strong> John Doe </p>
+            <p><strong>Position Title:</strong> Marketing </p>
+            <p><strong>Conducted By:</strong> Hannah Fontes</p>
+            <p><strong>Position Department:</strong> HR </p>
+        </div>
+
+        <!-- Evaluation Table Section -->
+        <div class="evaluation-section">
+            <h2>Evaluation</h2>
+            <table class="evaluation-table">
+                <thead>
+                    <tr>
+                        <th>Core Values</th>
+                        <th>Scoring</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Core Values and Scoring Options -->
+                    <tr>
+                        <td>Function/Job Specifics</td>
+                        <td>
+                            <select class="core-value-score">
+                                <option value="3">3 - Critical</option>
+                                <option value="2" selected>2 - Important</option>
+                                <option value="1">1 - Desired</option>
+                                <option value="0">0 - Not Demonstrated</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Analyzing</td>
+                        <td>
+                            <select class="core-value-score">
+                                <option value="3">3 - Critical</option>
+                                <option value="2" selected>2 - Important</option>
+                                <option value="1">1 - Desired</option>
+                                <option value="0">0 - Not Demonstrated</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Learning and Researching</td>
+                        <td>
+                            <select class="core-value-score">
+                                <option value="3">3 - Critical</option>
+                                <option value="2" selected>2 - Important</option>
+                                <option value="1">1 - Desired</option>
+                                <option value="0">0 - Not Demonstrated</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Following instructions and Procedures</td>
+                        <td>
+                            <select class="core-value-score">
+                                <option value="3">3 - Critical</option>
+                                <option value="2" selected>2 - Important</option>
+                                <option value="1">1 - Desired</option>
+                                <option value="0">0 - Not Demonstrated</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Working with People</td>
+                        <td>
+                            <select class="core-value-score">
+                                <option value="3">3 - Critical</option>
+                                <option value="2" selected>2 - Important</option>
+                                <option value="1">1 - Desired</option>
+                                <option value="0">0 - Not Demonstrated</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Writing and Reporting</td>
+                        <td>
+                            <select class="core-value-score">
+                                <option value="3">3 - Critical</option>
+                                <option value="2" selected>2 - Important</option>
+                                <option value="1">1 - Desired</option>
+                                <option value="0">0 - Not Demonstrated</option>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Declaration Section -->
+        <div class="declaration-section">
+            <p><strong>Declaration:</strong> Based on the evaluation, the candidate's average score is:</p>
+            <p><strong>Average Score:</strong> <span id="average-score">2.00</span></p>
+            
+            <div class="button-container">
+                <!-- Approve Button -->
+                <button class="approve-btn" onclick="approveCandidate()">Approve and Passed</button>
+                
+                <!-- Reject Button -->
+                <button class="reject-btn" onclick="rejectCandidate()">Reject and Upload Rejection Letter</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Calculate average score based on selections
+        const scoreSelects = document.querySelectorAll('.core-value-score');
+        scoreSelects.forEach(select => {
+            select.addEventListener('change', calculateAverageScore);
+        });
+
+        // Predefined dummy scoring initialization
+        window.addEventListener('load', () => {
+            calculateAverageScore(); // Call once to ensure initial calculation
+        });
+
+        function calculateAverageScore() {
+            let totalScore = 0;
+            let totalValues = 0;
+
+            scoreSelects.forEach(select => {
+                let score = parseInt(select.value);
+                if (!isNaN(score)) {
+                    totalScore += score;
+                    totalValues++;
+                }
+            });
+
+            // Calculate and display the average score
+            const averageScore = totalValues ? (totalScore / totalValues).toFixed(2) : 0;
+            document.getElementById('average-score').innerText = averageScore;
+        }
+
+        // Approve Button Action
+        function approveCandidate() {
+            alert("Candidate Approved and Passed!");
+            // Add any additional logic here, e.g., updating the status in the database.
+        }
+
+        // Reject Button Action with upload functionality
+        function rejectCandidate() {
+            alert("Rejection Process Initiated. Uploading Rejection Letter...");
+            // Here, you can trigger the chatbot interaction or initiate the rejection letter upload process.
+        }
+
+         // Toggle active class for sidebar links
+         document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+
+        // Handle navigation for Performance Management links
+        document.querySelectorAll('.collapsible-content a').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default link behavior
+                
+                // Perform the desired action or navigation
+                const targetUrl = this.getAttribute('href');
+                window.location.href = targetUrl; // Navigate to the target URL
+            });
+        });
+    </script>
+</body>
+</html>
