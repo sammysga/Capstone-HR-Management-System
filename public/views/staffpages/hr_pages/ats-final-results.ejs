@@ -120,6 +120,23 @@
     color: white;
 }
 
+ /* New Button to Show/Hide HR Interview Form */
+ .show-form-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .hr-form-container {
+            display: none; /* Initially hidden */
+            margin-top: 20px;
+        }
+
+        
     </style>
 </head>
 <body>
@@ -175,10 +192,15 @@
         <p>No screening questions available for this applicant.</p>
     <% } %>
 
+    <!-- Button to toggle form visibility -->
+    <button class="show-form-btn" onclick="toggleHRForm()">Show HR Interview Form</button>
+    
     <div class="box-container">
         <!-- HR Evaluation Section -->
         <div class="content-container">
             <h1>HR Manager Interview Form</h1>
+
+              
             
             <div class="interview-details">
                 <p><strong>Candidate Name:</strong> Kathryn Bernardo </p>
@@ -279,6 +301,12 @@
     </div>
     
 <script>
+
+    // Toggle HR Interview Form visibility
+function toggleHRForm() {
+    const form = document.getElementById('hrForm');
+    form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+}
 // Calculate average score based on selections
 const scoreSelects = document.querySelectorAll('.core-value-score');
         scoreSelects.forEach(select => {
