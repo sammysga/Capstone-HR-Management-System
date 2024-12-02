@@ -6,13 +6,95 @@
     <title>Request for Offboarding</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <style>
+        /* Styles for Resignation Title */
+        .account-info-header {
+            margin-top: 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #059ca4;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            resize: none;
+            height: 150px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #059ca4;
+            outline: none;
+        }
+
+        /* Button Styling */
+        .update-password-btn, .offboarding-btn {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .update-password-btn:hover, .offboarding-btn:hover {
+            background-color: #059ca4;
+        }
+    </style>
 </head>
 <body>
-    <%- include('../../partials/employee_partials') %>
+    <%- include('../../partials/employee_partials') %> <!-- Sidebar inclusion -->
 
-    <!-- JavaScript for sidebar and navigation -->
+    <div class="main-content">
+        <h1 class="account-info-header">Resignation</h1>
+        <form id="resignationForm">
+            <div class="form-group">
+                <label for="sendTo">Send To:</label>
+                <input type="text" id="sendTo" name="sendTo" placeholder="Enter recipient email or name" required>
+            </div>
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" placeholder="Input your resignation message here" required></textarea>
+            </div>
+            <button type="submit" class="offboarding-btn">Send</button>
+        </form>
+    </div>
+
     <script>
-        // Toggle active class for sidebar links
+        // JavaScript for form validation
+        document.getElementById('resignationForm').addEventListener('submit', function(event) {
+            const sendTo = document.getElementById('sendTo').value.trim();
+            const message = document.getElementById('message').value.trim();
+
+            if (!sendTo || !message) {
+                alert('Please fill out all fields before submitting.');
+                event.preventDefault(); // Prevent form submission
+            } else {
+                alert('Your resignation request has been sent successfully.');
+            }
+        });
+
+        // Existing sidebar JavaScript functionality
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
@@ -20,14 +102,12 @@
             });
         });
 
-        // Toggle collapsible content
         document.querySelectorAll('.collapsible-header').forEach(header => {
             header.addEventListener('click', function() {
                 var content = this.nextElementSibling;
                 if (content.style.display === 'block') {
                     content.style.display = 'none';
                 } else {
-                    // Hide all other collapsible contents
                     document.querySelectorAll('.collapsible-content').forEach(item => {
                         if (item !== content) {
                             item.style.display = 'none';
@@ -38,14 +118,11 @@
             });
         });
 
-        // Handle navigation for Performance Management links
         document.querySelectorAll('.collapsible-content a').forEach(link => {
             link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default link behavior
-                
-                // Perform the desired action or navigation
+                event.preventDefault();
                 const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl; // Navigate to the target URL
+                window.location.href = targetUrl;
             });
         });
     </script>
