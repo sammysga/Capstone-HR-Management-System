@@ -37,13 +37,32 @@
         .results-header {
             font-weight: bold;
         }
+
+        .progress-bar {
+    width: 100%;
+    background-color: #f2f2f2;
+    border-radius: 5px;
+    height: 20px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-inner {
+    height: 100%;
+    text-align: center;
+    color: #fff;
+    line-height: 20px;
+    background-color: #07ACB9;
+    transition: width 0.3s ease-in-out;
+}
+
     </style>
 </head>
 <body>
     <%- include('../../partials/employee_partials') %> <!-- Sidebar inclusion -->
 
     <div class="main-content">
-        <h2>Objective-Based Skill Quarterly Progress Overview</h2>
+        <h2>Objective-Based Quarterly Progress Overview</h2>
         <p>This page is derived from the most recent 360-degree feedback scores, averaging input from HR and Line Managers. It presents an objective-based analysis, highlighting key strengths and areas for development in alignment with company objectives.</p>
 
         <!-- Objectives Table -->
@@ -66,8 +85,12 @@
                             <td><%= objective.objectiveKPI %></td>
                             <td><%= objective.objectiveTarget %></td>
                             <td><%= objective.objectiveUOM %></td>
-                            <td><%= objective.objectiveAssignedWeight %>%</td>
-                            <td><%= objective.objectiveAssignedWeight %>%</td> <!-- Display number instead of progress bar -->
+                            <td><%= objective.objectiveAssignedWeight %></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-bar-inner" style="width: 5;">5</div>
+                                </div>
+                            </td>
                         </tr>
                     <% }); %>
                 <% } else { %>
@@ -78,17 +101,7 @@
             </tbody>
         </table>
 
-        <!-- Results Section -->
-        <div class="results-section">
-            <div>
-                <div class="results-header">Results as of the Latest 360 Feedback Recorded:</div>
-                <div><%= new Date().toLocaleDateString() %></div> <!-- Dynamically show current date -->
-            </div>
-            <div>
-                <div class="results-header">Total Current Weight Standing:</div>
-                <div><%= objectives.reduce((acc, obj) => acc + parseFloat(obj.objectiveAssignedWeight), 0) / objectives.length %> %</div> <!-- Dynamically calculate average weight -->
-            </div>
-        </div>
+        
     </div>
 
     <!-- JavaScript for sidebar and navigation -->
