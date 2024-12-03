@@ -186,7 +186,6 @@
                     </tbody>
                 </table>
             </section> -->
-
             <section class="stepper">
                 <div class="stepper-header">
                     <h2>Objective and Performance Review Tracker</h2>
@@ -247,9 +246,9 @@
                     </div>
             
                     <!-- Mid-Year IDP -->
-                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2']) ? 'accessible' : 'disabled' %>" id="midYearIDP" onclick="navigateToStep('midyear')">
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2']) ? 'accessible' : 'disabled' %>" id="midYearIDP">
                         <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
-                        <div class="step-label">
+                        <div class="step-label" onclick="navigateToMidYearIDP()">
                             Mid-Year IDP
                             <% if (viewState.viewOnlyStatus.midyearidp) { %>
                                 (View-Only)
@@ -263,7 +262,7 @@
                     </div>
             
                     <!-- Feedback Q3 -->
-                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ3" data-quarter="3" onclick="showFeedbackForm()">
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2'] && viewState.viewOnlyStatus['feedbacks_Q1']) ? 'accessible' : 'disabled' %>" id="feedback ButtonQ3" data-quarter="3" onclick="showFeedbackForm()">
                         <div class="step-icon"><i class="fa fa-users"></i></div>
                         <div class="step-label">
                             [3/4] 360 Degree Feedback
@@ -273,13 +272,13 @@
                                 (Editable)
                             <% } %>
                         </div>
-                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2'])) { %>
-                            <div class="notice">Complete the previous step first.</div>
+                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2'] && viewState.viewOnlyStatus['feedbacks_Q1'])) { %>
+                            <div class="notice">Complete the previous steps first.</div>
                         <% } %>
                     </div>
             
                     <!-- Feedback Q4 -->
-                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ4" data-quarter="4" onclick="showFeedbackForm()">
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3'] && viewState.viewOnlyStatus['feedbacks_Q2'] && viewState.viewOnlyStatus['feedbacks_Q1']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ4" data-quarter="4" onclick="showFeedbackForm()">
                         <div class="step-icon"><i class="fa fa-users"></i></div>
                         <div class="step-label">
                             [4/4] 360 Degree Feedback
@@ -289,8 +288,8 @@
                                 (Editable)
                             <% } %>
                         </div>
-                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3'])) { %>
-                            <div class="notice">Complete the previous step first.</div>
+                        <% if (!(viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3'] && viewState.viewOnlyStatus['feedbacks_Q2'] && viewState.viewOnlyStatus['feedbacks_Q1'])) { %>
+                            <div class="notice">Complete the previous steps first.</div>
                         <% } %>
                     </div>
             
@@ -311,7 +310,6 @@
                     </div>
                 </div>
             </section>
-            
 
                         
             <form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/<%= user.userId %>">
@@ -535,6 +533,64 @@
                     <button id="save360DegreeFeedback" type="submit" <%= isViewOnly ? 'disabled' : '' %>>Save Questionnaire</button>
                 </section>
             </form>
+
+
+            <!-- Mid-Year IDP Form -->
+<section id="midYearIDPForm" class="fade-out" style="display: none;">
+    <h2>Mid-Year Individual Development Plan (IDP)</h2>
+
+    <form id="midYearIDPFormDetails" method="POST" action="/linemanager/midyear-idp/<%= user.userId %>">
+        <!-- Professional Competences -->
+        <fieldset>
+            <legend>PROFESSIONAL COMPETENCES</legend>
+
+            <label for="profStrengths"><strong>STRENGTHS:</strong></label>
+            <textarea id="profStrengths" name="profStrengths" rows="4" placeholder="Describe technical competences" required></textarea>
+
+            <label for="profAreasForDevelopment"><strong>AREAS FOR DEVELOPMENT:</strong></label>
+            <textarea id="profAreasForDevelopment" name="profAreasForDevelopment" rows="4" placeholder="Describe gaps" required></textarea>
+
+            <label for="profActionsToTake"><strong>ACTIONS TO TAKE:</strong></label>
+            <textarea id="profActionsToTake" name="profActionsToTake" rows="4" placeholder="Agreements on actions to take to close gap aligned with the 70-20-10 model" required></textarea>
+        </fieldset>
+
+        <hr>
+
+        <!-- Leadership Competences -->
+        <fieldset>
+            <legend>LEADERSHIP COMPETENCES</legend>
+
+            <label for="leaderStrengths"><strong>STRENGTHS:</strong></label>
+            <textarea id="leaderStrengths" name="leaderStrengths" rows="4" placeholder="Describe leadership competences (e.g., Authenticity, Fostering Growth, Building Collaboration, Nurturing Performance)" required></textarea>
+
+            <label for="leaderAreasForDevelopment"><strong>AREAS FOR DEVELOPMENT:</strong></label>
+            <textarea id="leaderAreasForDevelopment" name="leaderAreasForDevelopment" rows="4" placeholder="Describe gaps" required></textarea>
+
+            <label for="leaderActionsToTake"><strong>ACTIONS TO TAKE:</strong></label>
+            <textarea id="leaderActionsToTake" name="leaderActionsToTake" rows="4" placeholder="Agreements on actions to take to close leadership gaps" required></textarea>
+        </fieldset>
+
+        <hr>
+
+        <!-- Next Role Options -->
+        <fieldset>
+            <legend>NEXT ROLE OPTIONS</legend>
+
+            <label for="nextRoleShortTerm"><strong>SHORT-TERM:</strong></label>
+            <textarea id="nextRoleShortTerm" name="nextRoleShortTerm" rows="4" placeholder="1-3 roles in the next 3-5 years" required></textarea>
+
+            <label for="nextRoleLongTerm"><strong>LONG-TERM:</strong></label>
+            <textarea id="nextRoleLongTerm" name="nextRoleLongTerm" rows="4" placeholder="1-3 roles in the next 5-10 years and upon retirement" required></textarea>
+
+            <label for="nextRoleMobility"><strong>MOBILITY:</strong></label>
+            <textarea id="nextRoleMobility" name="nextRoleMobility" rows="4" placeholder="Availability to work in a different location and work schedule" required></textarea>
+        </fieldset>
+
+        <div id="submitButtonContainer">
+            <button id="submitMidYearIDP" type="submit">Submit Mid-Year IDP</button>
+        </div>
+    </form>
+</section>
             
                         
                         <script>
@@ -644,6 +700,26 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 });
+
+// Function to navigate to the Mid-Year IDP form
+function navigateToMidYearIDP() {
+    if (midYearIDPButton.classList.contains('accessible')) {
+        // Hide other sections if necessary
+        const otherSections = document.querySelectorAll('.fade-out'); // Assuming other sections have the fade-out class
+        otherSections.forEach(section => {
+            section.style.display = 'none'; // Hide other sections
+        });
+
+        // Show the Mid-Year IDP form
+        midYearIDPForm.style.display = 'block';
+        midYearIDPForm.classList.remove('fade-out'); // Remove fade-out class if you want it to appear without fading
+
+        // Optionally, scroll to the form
+        midYearIDPForm.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        alert("You must complete the previous steps first.");
+    }
+}
 
 
     function displayObjectives(objectives) {
