@@ -118,9 +118,18 @@ router.get('/employee/viewtimeline', employeeController.getViewPerformanceTimeli
 router.get('/employee/attendance', employeeController.getAttendance);
 router.post('/employee/attendance', employeeController.postAttendance);
 router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
-router.get('/employee/employeefeedbackquestionnaire', employeeController.get360FeedbackList);
+// router.get('/employee/employeefeedbackquestionnaire', employeeController.get360FeedbackList);
+// router.get('/employee/employeefeedbackquestionnaire/:selectedUser Id', employeeController.get360FeedbackList);
 router.get('/logout', employeeController.getLogoutButton);
 
+// Route to fetch the list of users for feedback
+router.get('/employee/employeefeedbackquestionnaire', employeeController.getFeedbackUsers);
+
+// Route to fetch the feedback form for a specific user and quarter
+router.get('/employee/employeefeedbackquestionnaire/:selectedUserId', employeeController.get360FeedbackList);
+
+// Route to submit the feedback
+// router.post('/employee/employeefeedbackquestionnaire/:selectedUser Id/submit', employeeController.submitFeedback);
 
 // Line Manager Routes
 
