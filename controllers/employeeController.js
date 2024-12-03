@@ -1525,121 +1525,193 @@ getFeedbackUsers: async function(req, res) {
     }
 },
 get360FeedbackList: async function (req, res) {
-    const selectedUserId = req.params.selectedUserId; // Get selected user ID from the request parameters
-    const quarter = req.query.quarter || null; // Get the quarter from the query parameters
+    const currentUserId = req.session?.user?.userId;
+    const quarter = req.query.quarter || null;
 
-    if (!selectedUserId) {
-        return res.status(400).json({ success: false, message: 'User  ID is required.' });
+    if (!currentUserId) {
+        console.error("Error: No user ID available in session.");
+        return res.status(400).json({ message: 'User ID is required.' });
     }
 
     try {
-        // Fetch user details
-        const { data: userData, error: userError } = await supabase
+        // Fetch current user data
+        const { data: currentUserData, error: userError } = await supabase
             .from('staffaccounts')
             .select(`
-                userId,
-                firstName,
-                lastName,
-                jobpositions (jobTitle),
+                userId, 
+                firstName, 
+                lastName, 
+                departmentId, 
+                jobId,
                 departments (deptName),
-                departmentId
+                jobpositions (jobTitle)
             `)
-            .eq('userId', selectedUserId)
+            .eq('userId', currentUserId)
             .single();
 
-        if (userError || !userData) {
+        if (userError || !currentUserData) {
             console.error("Error fetching user details:", userError);
-            return res.status(404).json({ success: false, message: 'User  details not found.' });
+            return res.status(404).json({ message: 'User details not found.' });
         }
 
-        // Initialize feedbackDetails object to hold objectives and skills
-        let feedbackDetails = {
-            objectives: [],
-            hardSkills: [],
-            softSkills: [],
-            startDate: null,
-            endDate: null
-        };
+        console.log("Fetched current user data:", currentUserData);
 
-        // Define the feedback table and ID field based on the quarter
-        const feedbackTable = `feedbacks_${quarter}`; // e.g., feedbacks_Q1
-        const feedbackIdField = `feedbackq${quarter.charAt(1)}_Id`; // e.g., feedbackq1_Id
+        const { departmentId, jobpositions: { jobTitle } = {}, departments: { deptName } = {} } = currentUserData;
 
-        // Fetch feedback records for the selected user
-        const { data: feedbackData, error: feedbackError } = await supabase
-            .from(feedbackTable)
-            .select('*')
-            .eq('userId', selectedUserId);
-
-        if (feedbackError) {
-            console.error(`Error fetching feedback data for user ID ${selectedUserId}:`, feedbackError);
-            return res.status(500).json({ success: false, message: 'Error fetching feedback data.' });
+        if (!departmentId) {
+            console.error("Error: No department ID found.");
+            return res.status(404).json({ message: 'Department ID not found for the user.' });
         }
 
-        // Process feedback data to fetch objectives and skills
-        for (const feedback of feedbackData) {
-            const feedbackId = feedback[feedbackIdField]; // Get the ID based on the field name
-            feedbackDetails.startDate = feedback.setStartDate; // Assuming these fields exist in the feedback table
-            feedbackDetails.endDate = feedback.setEndDate;
+        // Get today's date in the Philippines Time Zone (PHT)
+        const today = new Date();
+        const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const parts = formatter.formatToParts(today);
+        const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
 
-            // Fetch linked objectives
+        console.log("Today's date (PHT):", todayString);
+
+        // Define feedback tables and their corresponding ID fields
+        const feedbackTables = [
+            { name: 'feedbacks_Q1', idField: 'feedbackq1_Id' },
+            { name: 'feedbacks_Q2', idField: 'feedbackq2_Id' },
+            { name: 'feedbacks_Q3', idField: 'feedbackq3_Id' },
+            { name: 'feedbacks_Q4', idField: 'feedbackq4_Id' }
+        ];
+        let feedbackList = [];
+
+        // Fetch all feedback data from the feedback tables
+        for (const { name, idField } of feedbackTables) {
+            console.log(`Fetching data from table: ${name}...`);
+
+            const { data, error } = await supabase
+                .from(name)
+                .select(`userId, setStartDate, setEndDate, ${idField}`)
+                .gte('setStartDate', todayString)
+                .gt('setEndDate', todayString);
+
+            if (error) {
+                console.error(`Error fetching data from ${name}:`, error);
+                continue; // Skip if there's an error
+            }
+
+            console.log(`Fetched ${data.length} records from ${name}:`, data);
+            if (data && data.length > 0) {
+                data.forEach(record => {
+                    feedbackList.push({ ...record, sourceTable: name, feedbackIdField: idField });
+                });
+            }
+        }
+
+        if (feedbackList.length === 0) {
+            console.warn("No feedback data found.");
+            return res.status(404).json({ message: 'No feedback data found.' });
+        }
+
+        // Initialize feedbackDetails array
+        let feedbackDetails = [];
+
+        for (const feedback of feedbackList) {
+            const feedbackIdValue = feedback[feedback.feedbackIdField];
+
+            console.log(`Feedback Record:`, feedback);
+            console.log(`Source Table: ${feedback.sourceTable}`);
+            console.log(`Feedback ID Field: ${feedback.feedbackIdField}`);
+            console.log(`Feedback ID Value: ${feedbackIdValue}`);
+
+            if (!feedbackIdValue) {
+                console.error(`Error: Feedback ID is undefined for record:`, feedback);
+                continue;
+            }
+
+            // Fetch linked objectives for the feedback
             const { data: objectives, error: objectivesError } = await supabase
                 .from('feedbacks_questions-objectives')
-                .select('*')
-                .eq('feedbackId', feedbackId);
+                .select('objectiveId, objectiveQualiQuestion')
+                .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
 
             if (objectivesError) {
-                console.error(`Error fetching objectives for feedback ID ${feedbackId}:`, objectivesError);
+                console.error(`Error fetching objectives for feedback ID ${feedbackIdValue}:`, objectivesError);
                 continue;
             }
 
-            feedbackDetails.objectives.push(...objectives);
+            console.log(`Fetched ${objectives.length} objectives for feedback ID ${feedbackIdValue}:`, objectives);
 
-            // Fetch linked hard skills
-            const { data: hardSkills, error: hardSkillsError } = await supabase
+            // Fetch linked skills for the feedback
+            const { data: skills, error: skillsError } = await supabase
                 .from('feedbacks_questions-skills')
-                .select('*')
-                .eq('feedbackId', feedbackId)
-                .eq('skillType', 'hard');
+                .select('jobReqSkillId')
+                .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
 
-            if (hardSkillsError) {
-                console.error(`Error fetching hard skills for feedback ID ${feedbackId}:`, hardSkillsError);
+            if (skillsError) {
+                console.error(`Error fetching skills for feedback ID ${feedbackIdValue}:`, skillsError);
                 continue;
             }
 
-            feedbackDetails.hardSkills.push(...hardSkills);
+            console.log(`Fetched ${skills.length} skills for feedback ID ${feedbackIdValue}:`, skills);
 
-            // Fetch linked soft skills
-            const { data: softSkills, error: softSkillsError } = await supabase
-                .from('feedbacks_questions-skills')
-                .select('*')
-                .eq('feedbackId', feedbackId)
-                .eq('skillType', 'soft');
+            // Fetch additional details for objectives
+            const objectiveIds = objectives.map(obj => obj.objectiveId);
+            let objectiveDetails = [];
+            if (objectiveIds.length > 0) {
+                const { data: objectiveSettings, error: objectiveError } = await supabase
+                    .from('objectivesettings_objectives')
+                    .select('*')
+                    .in('objectiveId', objectiveIds);
 
-            if (softSkillsError) {
-                console.error(`Error fetching soft skills for feedback ID ${feedbackId}:`, softSkillsError);
-                continue;
+                if (objectiveError) {
+                    console.error('Error fetching objective settings:', objectiveError);
+                } else {
+                    objectiveDetails = objectiveSettings;
+                    console.log(`Fetched objective details for IDs ${objectiveIds}:`, objectiveDetails);
+                }
             }
 
-            feedbackDetails.softSkills.push(...softSkills);
+            // Fetch additional details for skills
+            const skillIds = skills.map(skill => skill.jobReqSkillId);
+            let skillDetails = [];
+            if (skillIds.length > 0) {
+                const { data: jobSkills, error: skillError } = await supabase
+                    .from('jobreqskills')
+                    .select('*')
+                    .in('jobReqSkillId', skillIds);
+
+                if (skillError) {
+                    console.error('Error fetching job skills:', skillError);
+                } else {
+                    skillDetails = jobSkills;
+                    console.log(`Fetched skill details for IDs ${skillIds}:`, skillDetails);
+                }
+            }
+
+            feedbackDetails.push({
+                feedback,
+                objectives,
+                skills,
+                objectiveDetails,
+                skillDetails
+            });
         }
 
-        // Return the user and feedback details
-        return res.render('staffpages/employee_pages/employeefeedbackquestionnaire', {
+        if (feedbackDetails.length === 0) {
+            return res.status(404).json({ message: 'No feedback details found for the specified criteria.' });
+        }
+
+        // Return feedbackDetails, user data, and quarter (from the first feedback record)
+        return res.status(200).json({
             success: true,
-            user: userData,
-            feedbackDetails: {
-                ...feedbackDetails,
-                employeeName: `${userData.lastName}, ${userData.firstName}`,
-                position: userData.jobpositions.jobTitle,
-                department: userData.departments.deptName
-            }
+            user: currentUserData, // Return user data
+            feedbackDetails, // Return feedback details
+            quarter: feedbackDetails[0].feedback.quarter || 'No quarter available' // Return quarter
         });
+
     } catch (error) {
-        console.error("Unexpected error:", error);
-        return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.' });
+        console.error('Error in get360FeedbackList:', error);
+        return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
     }
 },
+
 // get360FeedbackList: async function (req, res) {
 //     const currentUserId = req.session?.user?.userId;
 //     const selectedUserId = req.query.userId; // Get the userId from the query parameters

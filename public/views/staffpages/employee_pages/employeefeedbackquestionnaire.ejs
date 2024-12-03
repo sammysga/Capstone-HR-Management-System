@@ -245,46 +245,41 @@ button:hover {
             <h1>360-Degree Feedback Evaluation Set Within the Department</h1>
             <p>Below are all the questionnaires assigned to you. Please provide your feedback as required.</p>
         </header>
-        
+
         <select id="userSelect" onchange="loadFeedbackForm()">
             <option value="">-- Select User --</option>
             <% usersArray.forEach(user => { %>
-                <option value ="<%= user.userId %>">
+                <option value="<%= user.userId %>">
                     <%= user.firstName %> <%= user.lastName %>
                 </option>
             <% }) %>
         </select>
-
+        
         <!-- Hidden Inputs -->
         <input type="hidden" id="departmentId" value="<%= user.departmentId || '' %>">
-        <input type="hidden" id="selectedUserId" name="userId">    
-
+        <input type="hidden" id="selectedUserId" name="userId">
+        
         <!-- Feedback Form -->
-        <form id="feedbackForm" method="POST" action="/linemanager/records-performance-tracker/questionnaire">
+        <form id="feedbackForm" method="POST" action="/employee/employeefeedbackquestionnaire">
             <section id="feedback-section" class="fade-out" style="display: none;">
                 <div class="form-header">
                     <h2>360 Degree Feedback Questionnaire</h2>
                     <div class="date-inputs">
                         <div class="date-input">
                             <label for="quarter"><strong>Quarter:</strong></label>
-                            <select id="quarter" name="quarter">
-                                <option value="Q1">Q1</option>
-                                <option value="Q2">Q2</option>
-                                <option value="Q3">Q3</option>
-                                <option value="Q4">Q4</option>
-                            </select>
+                            <span id="quarterDisplay">N/A</span>
                         </div>
                         <div class="date-input">
                             <label for="startDate"><strong>Start Date:</strong></label>
-                            <input type="date" id="startDate" name="startDate" class="input-field" required>
+                            <span id="startDateDisplay">N/A</span>
                         </div>
                         <div class="date-input">
                             <label for="endDate"><strong>End Date:</strong></label>
-                            <input type="date" id="endDate" name="endDate" class="input-field" required>
+                            <span id="endDateDisplay">N/A</span>
                         </div>
                     </div>
                 </div>
-
+        
                 <div class="feedback-header-grid">
                     <div><strong>Employee Name:</strong> <span id="employeeName"></span></div>
                     <div><strong>Position:</strong> <span id="employeePosition"></span></div>
@@ -335,126 +330,86 @@ button:hover {
                     </tbody>
                 </table>
                 
-                <button id="saveQ1_360FeedbackPresetButton" type="submit">Save Questionnaire</ button>
+                <button id="saveQ1_360FeedbackPresetButton" type="submit">Save Questionnaire</button>
             </section>
-        </form>        
+        </form>
     </div>
 
     <script>
-        // Function to fetch users from the server
-        async function fetchUsers() {
-            const response = await fetch('/employee/employeefeedbackquestionnaire');
-            const data = await response.json();
-    
-            if (data.success) {
-                const userSelect = document.getElementById('userSelect');
-                data.users.forEach(user => {
-                    const option = document.createElement('option');
-                    option.value = user.userId;
-                    option.textContent = `${user.firstName} ${user.lastName}`;
-                    userSelect.appendChild(option);
-                });
-            } else {
-                console.error('Error fetching users:', data.message);
-            }
-        }
-    
-        async function loadFeedbackForm() {
-    const userSelect = document.getElementById('userSelect');
-    const selectedUserId = userSelect.value; // Get the selected user ID
-    const feedbackSection = document.getElementById('feedback-section');
+           document.addEventListener("DOMContentLoaded", function() {
+        console.log("DOMContentLoaded event triggered.");
+        const userSelect = document.getElementById('userSelect');
+        userSelect.addEventListener('change', function() {
+            console.log("User selected: " + userSelect.value); // Log when a user is selected
+            loadFeedbackForm();
+        });
+        fetchUsers();
+    });
 
-    console.log("Selected User ID:", selectedUserId); // Log selected user ID
-
-    if (selectedUserId) {
-        // Show feedback section
-        feedbackSection.style.display = 'block';
-        
-        // Set the hidden input value
-        document.getElementById('selectedUser  Id').value = selectedUserId; // Set the hidden input value
-
-        const quarterElement = document.getElementById('quarter'); // Get the selected quarter element
-        if (!quarterElement) {
-            console.error("Quarter element not found.");
-            return;
-        }
-        
-        const quarter = quarterElement.value; // Get the selected quarter
-        console.log("Selected Quarter:", quarter); // Log selected quarter
-
-        // Fetch user details and feedback data
-        const response = await fetch(`/employee/employeefeedbackquestionnaire/${selectedUserId}?quarter=${quarter}`);
-        if (!response.ok) {
-            const errorText = await response.text(); // Get the response text to check for HTML errors
-            console.error('Error fetching feedback data:', errorText);
-            return; // Exit the function if there's an error
-        }
-        
+    async function fetchUsers() {
+        console.log("Fetching users...");
+        const response = await fetch('/employee/employeefeedbackquestionnaire');
         const data = await response.json();
 
         if (data.success) {
-            // Populate user details
-            const user = data.user; // Assuming user data is returned
-            document.getElementById('employeeName').innerText = `${user.lastName}, ${user.firstName}`;
-            document.getElementById('employeePosition').innerText = user.jobpositions.jobTitle; // Adjust based on your data structure
-            document.getElementById('employeeDepartment').innerText = user.departments.deptName; // Adjust based on your data structure
-
-            // Clear previous feedback rows
-            document.getElementById('feedback-table-body').innerHTML = '';
-            document.getElementById('hard-skills-table-body').innerHTML = '';
-            document.getElementById('soft-skills-table-body').innerHTML = '';
-
-            // Populate objectives
-            data.feedbackDetails.objectives.forEach(objective => {
-                addFormFeedbackRow(objective);
+            const userSelect = document.getElementById('userSelect');
+            console.log(`Received ${data.users.length} users.`);
+            data.users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.userId;
+                option.textContent = `${user.firstName} ${user.lastName}`;
+                userSelect.appendChild(option);
             });
-
-            // Populate hard skills
-            addFormFeedbackSkillsRows(data.feedbackDetails.hardSkills, 'hard');
-
-            // Populate soft skills
-            addFormFeedbackSkillsRows(data.feedbackDetails.softSkills, 'soft');
-
-            // Handle dates
-            const feedbacks = data.feedbackDetails; // Assuming this contains feedbacks for different quarters
-            let startDate = '';
-            let endDate = '';
-            let isViewOnly = false;
-
-            if (feedbacks.length > 0) { 
-                const feedback = feedbacks[0]; // Assuming you want the first feedback for demonstration
-                startDate = feedback.setStartDate;
-                endDate = feedback.setEndDate;
-                isViewOnly = true; // Set to view only after submission
-            }
-
-            if (isViewOnly) {
-                // Create temporary elements to display start and end dates as text
-                const startDateDisplay = document.createElement('span');
-                startDateDisplay.innerText = startDate; // Display start date as text
-
-                const endDateDisplay = document.createElement('span');
-                endDateDisplay.innerText = endDate; // Display end date as text
-
-                // Replace the input fields with text
-                const startDateInput = document.getElementById('startDate');
-                const endDateInput = document.getElementById('endDate');
-
-                // Clear the input fields
-                startDateInput.parentNode.replaceChild(startDateDisplay, startDateInput);
-                endDateInput.parentNode.replaceChild(endDateDisplay, endDateInput);
-            } else {
-                // Set input value if editable
-                document.getElementById('startDate').value = startDate;
-                document.getElementById('endDate').value = endDate;
-            }
         } else {
-            console.error('Error fetching feedback data:', data.message);
+            console.error('Error fetching users:', data.message);
         }
-    } else {
-        feedbackSection.style.display = 'none'; // Hide feedback section if no user is selected
     }
+
+    async function loadFeedbackForm() {
+        console.log("loadFeedbackForm triggered.");
+
+        const userSelect = document.getElementById('userSelect');
+        const selectedUserId = userSelect.value;
+
+        if (!selectedUserId) {
+            console.error("No user selected");
+            return;
+        }
+
+        console.log(`Selected User ID: ${selectedUserId}`);
+
+        document.getElementById('feedback-section').style.display = 'block';
+        document.getElementById('selectedUserId').value = selectedUserId;
+
+        console.log(`Fetching feedback data for user ID: ${selectedUserId}`);
+       const response = await fetch(`/employee/employeefeedbackquestionnaire/${selectedUserId}`);
+const data = await response.json();
+
+if (data.success) {
+    console.log("Feedback data fetched successfully:", data);
+    const user = data.user;
+    // Populate feedback form with the data
+    document.getElementById('employeeName').innerText = `${user.lastName}, ${user.firstName}`;
+    document.getElementById('employeePosition').innerText = user.jobTitle;
+    document.getElementById('employeeDepartment').innerText = user.department;
+    document.getElementById('quarterDisplay').innerText = data.feedbackDetails[0]?.quarter || 'N/A';
+
+    data.feedbackDetails.forEach(feedback => {
+        feedback.objectives.forEach(objective => {
+            addFormFeedbackRow(objective);
+        });
+        feedback.hardSkills.forEach(skill => {
+            addFormFeedbackSkillsRows(skill, 'hard');
+        });
+        feedback.softSkills.forEach(skill => {
+            addFormFeedbackSkillsRows(skill, 'soft');
+        });
+    });
+} else {
+    console.error('Error fetching feedback data:', data.message);
+    alert('No feedback data available for this user.');
 }
+    }
 function addFormFeedbackRow(objective) {
     const tbody = document.getElementById('feedback-table-body');
     if (!tbody) {
@@ -476,6 +431,7 @@ function addFormFeedbackRow(objective) {
     `;
     tbody.appendChild(row);
 
+    // Add qualitative input row for feedback
     const inputRow = document.createElement('tr');
     const inputId = `qualitativeInput_${objective.objectiveId}`;
     const questionText = objective.objectiveQualiQuestion || 'Enter your feedback here';
