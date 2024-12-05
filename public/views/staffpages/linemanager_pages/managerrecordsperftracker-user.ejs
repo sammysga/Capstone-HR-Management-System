@@ -54,6 +54,32 @@
     padding: 5px; /* Adjust padding for a smaller appearance */
 }
 
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+.fade-out {
+    animation: fadeOut 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
 /* .step.disabled {
     pointer-events: none;
     opacity: 0.5;
@@ -161,31 +187,6 @@
             </section>
             
 
-            <!-- <section id="objective-skill-progress">
-                <h2>Objective-based Skill Quarterly Progress Overview</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>KRA/Objectives</th>
-                            <th>KPI</th>
-                            <th>Target</th>
-                            <th>UOM</th>
-                            <th>Assigned Weight</th>
-                            <th>Current Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Improve Financial Reporting</td>
-                            <td>Accuracy Rate</td>
-                            <td>95%</td>
-                            <td>%</td>
-                            <td>20%</td>
-                            <td>90%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section> -->
             <section class="stepper">
                 <div class="stepper-header">
                     <h2>Objective and Performance Review Tracker</h2>
@@ -310,7 +311,11 @@
                     </div>
                 </div>
             </section>
-
+            
+            
+            
+            
+            
                         
             <form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/<%= user.userId %>">
                 <section id="objective-skill-progress-form" class="fade-out" style="display: none;">
@@ -536,11 +541,11 @@
 
 
             <!-- Mid-Year IDP Form -->
-<section id="midYearIDPForm" class="fade-out" style="display: none;">
-    <h2>Mid-Year Individual Development Plan (IDP)</h2>
+            <section id="midYearIDPForm" class="fade-out" style="display: none;">
+                <h2>Mid-Year Individual Development Plan (IDP)</h2>
 
-    <form id="midYearIDPFormDetails" method="POST" action="/linemanager/midyear-idp/<%= user.userId %>">
-        <!-- Professional Competences -->
+                <form id="midYearIDPFormDetails" method="POST" action="/linemanager/midyear-idp/<%= user.userId %>">
+                    <!-- Professional Competences -->
         <fieldset>
             <legend>PROFESSIONAL COMPETENCES</legend>
 
@@ -613,19 +618,66 @@ document.addEventListener("DOMContentLoaded", function () {
     const feedbackStatus = document.getElementById('feedback-status');
     const feedbackMessage = document.getElementById('feedback-message');
     const editButton = document.getElementById('edit-questionnaire-button');
-
+    const midYearIDPButton = document.getElementById("midYearIDP"); // Button for Mid-Year IDP
+    const midYearIDPForm = document.getElementById("midYearIDPForm"); // Mid-Year IDP form
     // Log the values for debugging
-    console.log("Submitted Objectives:", submittedObjectives);
-    console.log("User   ID:", userId);
-    console.log("Job ID:", jobId);
 
-    if (objectivesButton) {
+    // Debugging logs
+    console.log("Initialized Mid-Year IDP Script.");
+        console.log("ViewState Parsed:", viewState);
+        console.log("User ID:", userId);
+        console.log("Job ID:", jobId);
+        console.log("Submitted Objectives:", submittedObjectives);
+        console.log("Hard Skills:", hardSkills);
+        console.log("Soft Skills:", softSkills);
+
+        if (objectivesButton) {
         console.log('Objectives Button found:', objectivesButton);
         objectivesButton.addEventListener("click", handleObjectiveClick);
     } else {
         console.error('Objectives Button not found in the DOM.');
     }
 
+  // Simulate conditions for making the button accessible
+  const isEligibleForIDP = true; // Replace with actual condition logic
+
+// Add the 'accessible' class to the button if the user is eligible
+if (isEligibleForIDP && midYearIDPButton) {
+    midYearIDPButton.classList.add("accessible");
+}
+
+// Add event listener to the button
+if (midYearIDPButton) {
+    midYearIDPButton.addEventListener("click", navigateToMidYearIDP);
+} else {
+    console.error("Mid-Year IDP Button not found in the DOM.");
+}
+
+function navigateToMidYearIDP() {
+    if (midYearIDPButton.classList.contains("accessible")) {
+        // Hide other sections if necessary
+        const otherSections = document.querySelectorAll(".fade-out"); // Assuming other sections have the fade-out class
+        otherSections.forEach((section) => {
+            section.style.display = "none"; // Hide other sections
+        });
+
+        // Show the Mid-Year IDP form
+        if (midYearIDPForm) {
+            midYearIDPForm.style.display = "block";
+            midYearIDPForm.classList.remove("fade-out"); // Remove fade-out class if you want it to appear without fading
+            midYearIDPForm.classList.add("fade-in"); // Optional: Add fade-in effect
+
+            // Scroll into view
+            midYearIDPForm.scrollIntoView({ behavior: "smooth" });
+
+            console.log("Navigated to the Mid-Year IDP form.");
+        } else {
+            console.error("Mid-Year IDP Form not found in the DOM.");
+        }
+    } else {
+        alert("You must complete the previous steps first.");
+    }
+}
     // Add event listener for the save button
     saveButton.addEventListener("click", saveObjectives); // Call saveObjectives on click
     
@@ -699,27 +751,9 @@ document.addEventListener("DOMContentLoaded", function () {
             // saveFeedbackButton.parentNode.removeChild(saveFeedbackButton);
         }
     }
+
+
 });
-
-// Function to navigate to the Mid-Year IDP form
-function navigateToMidYearIDP() {
-    if (midYearIDPButton.classList.contains('accessible')) {
-        // Hide other sections if necessary
-        const otherSections = document.querySelectorAll('.fade-out'); // Assuming other sections have the fade-out class
-        otherSections.forEach(section => {
-            section.style.display = 'none'; // Hide other sections
-        });
-
-        // Show the Mid-Year IDP form
-        midYearIDPForm.style.display = 'block';
-        midYearIDPForm.classList.remove('fade-out'); // Remove fade-out class if you want it to appear without fading
-
-        // Optionally, scroll to the form
-        midYearIDPForm.scrollIntoView({ behavior: 'smooth' });
-    } else {
-        alert("You must complete the previous steps first.");
-    }
-}
 
 
     function displayObjectives(objectives) {
