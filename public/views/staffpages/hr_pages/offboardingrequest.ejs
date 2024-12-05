@@ -121,11 +121,11 @@
                 <h2>Employee Details</h2>
                 <div class="form-group">
                     <label for="employee">Employee</label>
-                    <input type="text" id="employee" name="employee" placeholder="Enter employee name" required>
+                    <input type="text" id="employee" name="employee" placeholder="nadine lustre" disabled required>
                 </div>
                 <div class="form-group">
                     <label for="department">Department</label>
-                    <input type="text" id="department" name="department" placeholder="Enter department" required>
+                    <input type="text" id="department" name="department" placeholder="Marketing" disabled required>
                 </div>
             </div>
 
@@ -133,12 +133,8 @@
             <div class="form-section">
                 <h2>Resignation Details</h2>
                 <div class="form-group">
-                    <label for="type">Type</label>
-                    <input type="text" id="type" name="type" placeholder="Enter resignation type" required>
-                </div>
-                <div class="form-group">
                     <label for="reason">Reason</label>
-                    <textarea id="reason" name="reason" placeholder="Enter reason for resignation"></textarea>
+                    <textarea id="reason" name="reason" placeholder="I am writing to formally resign from my position in the Marketing Department. Thank you for the support and opportunities during my time here. I truly appreciate it and wish the team continued success." disabled required></textarea>
                 </div>
             </div>
 
@@ -169,17 +165,9 @@
     </div>
 
     <script>
-        // JavaScript for form validation
         document.getElementById('resignationForm').addEventListener('submit', function(event) {
-            const sendTo = document.getElementById('sendTo').value.trim();
-            const message = document.getElementById('message').value.trim();
-
-            if (!sendTo || !message) {
-                alert('Please fill out all fields before submitting.');
-                event.preventDefault(); // Prevent form submission
-            } else {
-                alert('Approval/Disapproval successful!');
-            }
+            event.preventDefault();
+            alert('Submitted successfully!')
         });
 
         // Existing sidebar JavaScript functionality
