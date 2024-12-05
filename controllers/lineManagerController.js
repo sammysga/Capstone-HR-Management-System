@@ -1415,14 +1415,48 @@ const lineManagerController = {
         }
     },    
 
-    getViewOffboardingRequest: function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/viewoffboardingrequest');
-        } else {
-            req.flash('errors', { authError: 'Unauthorized access.' });
-            res.redirect('staff/login');
+    getViewOffboardingRequest: async function (req, res) {
+        const userId = req.params.userId; 
+    
+        if (!userId) {
+            return res.redirect('/staff/login'); 
         }
-    },
+    
+        try {
+            const { data: requests, error } = await supabase
+                .from('offboarding_requests')
+                .select('requestId, message, last_day')  
+                .eq('userId', userId)  
+                .order('requestId', { ascending: false }) 
+                .limit(1);  
+    
+            if (error) {
+                console.error('Error fetching offboarding request:', error);
+                return res.redirect('/linemanager/dashboard');
+            }
+    
+            if (!requests || requests.length === 0) {
+                console.log('No offboarding request found for userId:', userId);
+                return res.redirect('/linemanager/dashboard');
+            }
+    
+            // Fetch staff details
+            const { data: staff } = await supabase
+                .from('staffaccounts')
+                .select('firstName, lastName')
+                .eq('userId', userId)
+                .single();
+    
+            res.render('staffpages/linemanager_pages/viewoffboardingrequest', {
+                request: requests[0],  
+                staffName: `${staff.firstName} ${staff.lastName}`
+            });
+        } catch (err) {
+            console.error('Error in getViewOffboardingRequest controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading the offboarding request.' });
+            return res.redirect('/linemanager/dashboard');
+        }
+    },    
      
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {
