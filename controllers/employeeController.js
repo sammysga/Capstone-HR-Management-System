@@ -741,7 +741,7 @@ getEmployeeOffboarding: async function(req, res) {
         if (error) {
             console.error('Error fetching user details:', error);
             req.flash('errors', { dbError: 'Error fetching user data.' });
-            return res.redirect('/staff/employee/dashboard');
+            return res.redirect('/employee/employeepersinfocareerprog');
         }
 
         // Render the offboarding page
@@ -749,9 +749,56 @@ getEmployeeOffboarding: async function(req, res) {
     } catch (err) {
         console.error('Error in getEmployeeOffboarding controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the offboarding page.' });
-        res.redirect('/staff/employee/dashboard');
+        res.redirect('/employee/employeepersinfocareerprog');
     }
 },
+
+postEmployeeOffboarding: async function(req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null;
+
+        if (!userId) {
+            req.flash('errors', { authError: 'Unauthorized access.' });
+            return res.redirect('/staff/login');
+        }
+
+        const { message, lastDay } = req.body;
+
+        if (!message || !lastDay) {
+            req.flash('errors', { formError: 'Please fill in all required fields.' });
+            return res.redirect('employee/employeeoffboarding');
+        }
+
+        // Insert details to db
+        const { data: offboarding, error: insertError } = await supabase
+            .from('offboarding_requests')
+            .insert([
+                {
+                    userId,
+                    message,
+                    last_day: lastDay,
+                    status: 'Pending', // Default status
+                },
+            ])
+            .single();
+
+            console.log(req.body);
+        
+        if (insertError) {
+            console.error('Error inserting offboarding request:', insertError);
+            req.flash('errors', { dbError: 'Failed to save resignation details.' });
+            return res.redirect('employee/employeeoffboarding');
+        }
+
+        req.flash('success', 'Your resignation request has been submitted successfully.');
+        res.redirect('/employee/employeepersinfocareerprog');
+    } catch (err) {
+        console.error('Error in postEmployeeOffboarding controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while processing the request.' });
+        res.redirect('employee/employeeoffboarding');
+    }
+},
+
 getLeaveRequestForm: async function(req, res) {
     console.log('Session User:', req.session.user);
     
