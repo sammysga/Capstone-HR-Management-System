@@ -103,6 +103,7 @@ router.post('/employee/employeepersinfocareerprog/editcertifations', employeeCon
 router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
+router.post('/employee/employeeoffboarding', employeeController.postEmployeeOffboarding);
 
 
 
