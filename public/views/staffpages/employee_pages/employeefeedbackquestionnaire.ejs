@@ -344,97 +344,112 @@ button:hover {
 
 
 <script>
-   document.addEventListener("DOMContentLoaded", function() {
-console.log("DOMContentLoaded event triggered.");
-const userSelect = document.getElementById('userSelect');
-userSelect.addEventListener('change', function() {
-    console.log("User selected: " + userSelect.value); // Log when a user is selected
-    loadFeedbackForm();
-});
-fetchUsers();
-});
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOMContentLoaded event triggered.");
 
-async function fetchUsers() {
-console.log("Fetching users...");
-const response = await fetch('/employee/employeefeedbackquestionnaire');
-const data = await response.json();
-
-if (data.success) {
     const userSelect = document.getElementById('userSelect');
-    console.log(`Received ${data.users.length} users.`);
-    data.users.forEach(user => {
+    userSelect.addEventListener('change', function () {
+      console.log("User selected: " + userSelect.value); // Log when a user is selected
+      loadFeedbackForm(); // Call the function
+    });
+
+    fetchUsers(); // Fetch the users when the page loads
+  });
+
+  async function fetchUsers() {
+    console.log("Fetching users...");
+    const response = await fetch('/employee/employeefeedbackquestionnaire');
+    const data = await response.json();
+
+    if (data.success) {
+      const userSelect = document.getElementById('userSelect');
+      console.log(`Received ${data.users.length} users.`);
+      data.users.forEach(user => {
         const option = document.createElement('option');
         option.value = user.userId;
         option.textContent = `${user.firstName} ${user.lastName}`;
         userSelect.appendChild(option);
-    });
-} else {
-    console.error('Error fetching users:', data.message);
-}
-}
+      });
+    } else {
+      console.error('Error fetching users:', data.message);
+    }
+  }
 
-async function loadFeedbackForm() {
-console.log("loadFeedbackForm triggered.");
+  async function loadFeedbackForm() {
+    console.log("loadFeedbackForm triggered.");
 
-const userSelect = document.getElementById('userSelect');
-const selectedUserId = userSelect.value;
+    const userSelect = document.getElementById('userSelect');
+    const selectedUserId = userSelect.value;
 
-if (!selectedUserId) {
-console.error("No user selected");
-return;
-}
+    if (!selectedUserId) {
+        console.error("No user selected");
+        return;
+    }
 
-console.log(`Selected User ID: ${selectedUserId}`);
+    console.log(`Selected User ID: ${selectedUserId}`);
 
-document.getElementById('feedback-section').style.display = 'block';
-document.getElementById('selectedUserId').value = selectedUserId;
+    document.getElementById('feedback-section').style.display = 'block';
+    document.getElementById('selectedUserId').value = selectedUserId;
 
-console.log(`Fetching feedback data for user ID: ${selectedUserId}`);
-const response = await fetch(`/employee/employeefeedbackquestionnaire/${selectedUserId}`);
-const data = await response.json();
+    try {
+        console.log(`Fetching feedback data for user ID: ${selectedUserId}`);
+        const response = await fetch(`/employee/employeefeedbackquestionnaire/${selectedUserId}`);
+        const data = await response.json();
 
-if (data.success) {
-console.log("Feedback data fetched successfully:", data);
-const user = data.user;
+        if (data.success) {
+            console.log("Feedback data fetched successfully:", data);
 
-// Populate feedback form with the data
-document.getElementById('employeeName').innerText = `${user.lastName}, ${user.firstName}`;
-document.getElementById('employeePosition').innerText = user.jobTitle;
-document.getElementById('employeeDepartment').innerText = user.deptName;
+            const { user, feedbackDetails, hardSkills, softSkills } = data;
 
-// Check if feedback details are available and display the quarter, start date, and end date
-if (data.feedbackDetails && data.feedbackDetails.length > 0) {
-    const feedback = data.feedbackDetails[0]; // Get the first feedback record for this user
+            // Populate employee details
+            document.getElementById('employeeName').innerText = `${user.lastName}, ${user.firstName}`;
+            document.getElementById('employeePosition').innerText = user.jobTitle;
+            document.getElementById('employeeDepartment').innerText = user.deptName;
 
-    // Display quarter, start date, and end date from the fetched data
-    document.getElementById('quarterDisplay').innerText = feedback.feedback?.quarter || 'N/A';
-    document.getElementById('startDateDisplay').innerText = feedback.feedback?.setStartDate || 'N/A';
-    document.getElementById('endDateDisplay').innerText = feedback.feedback?.setEndDate || 'N/A';
-} else {
-    console.warn('No feedback details found for the selected user.');
-    // Display N/A if no feedback details are found
-    document.getElementById('quarterDisplay').innerText = 'N/A';
-    document.getElementById('startDateDisplay').innerText = 'N/A';
-    document.getElementById('endDateDisplay').innerText = 'N/A';
-}
+            // Display quarter, start date, and end date if available
+            const feedback = feedbackDetails && feedbackDetails.length > 0 ? feedbackDetails[0] : {};
+            document.getElementById('quarterDisplay').innerText = feedback.feedback?.quarter || 'N/A';
+            document.getElementById('startDateDisplay').innerText = feedback.feedback?.setStartDate || 'N/A';
+            document.getElementById('endDateDisplay').innerText = feedback.feedback?.setEndDate || 'N/A';
 
-// Process objectives, skills, etc.
-data.feedbackDetails.forEach(feedback => {
-    feedback.objectives.forEach(objective => {
-        addFormFeedbackRow(objective);
-    });
-    feedback.hardSkills.forEach(skill => {
-        addFormFeedbackSkillsRows(skill, 'hard');
-    });
-    feedback.softSkills.forEach(skill => {
-        addFormFeedbackSkillsRows(skill, 'soft');
-    });
+            // Display Hard Skills dynamically
+            hardSkills.forEach(skill => {
+                if (skill.jobReqSkillName && skill.jobReqSkillType === 'Hard') {
+                    addFormFeedbackSkillsRows(skill, 'hard');
+                }
+            });
+
+            // Display Soft Skills dynamically
+            softSkills.forEach(skill => {
+                if (skill.jobReqSkillName && skill.jobReqSkillType === 'Soft') {
+                    addFormFeedbackSkillsRows(skill, 'soft');
+                }
+            });
+
+            // Populate objectives from feedbackDetails
+            // Populate objectives from feedbackDetails
+feedbackDetails.forEach(detail => {
+    if (detail.objectiveDetails && detail.objectiveDetails.length > 0) {
+        detail.objectiveDetails.forEach(objective => {
+            addFormFeedbackRow(objective);
+        });
+    } else {
+        console.warn("No objectiveDetails found for feedbackDetail:", detail);
+    }
 });
-} else {
-console.error('Error fetching feedback data:', data.message);
-alert('No feedback data available for this user.');
+
+
+        } else {
+            console.error('Error fetching feedback data:', data.message);
+            alert('No feedback data available for this user.');
+        }
+    } catch (error) {
+        console.error('Error during fetch operation:', error);
+        alert('An error occurred while loading the feedback data.');
+    }
 }
-}
+
+
 
 // Function to simulate feedback submission and show success message
 function submitFeedback() {
@@ -444,7 +459,7 @@ function submitFeedback() {
         document.getElementById('feedback-section').style.display = 'none'; // Hide the form
         document.getElementById('successMessage').style.display = 'block'; // Show success message
     }
-function addFormFeedbackRow(objective) {
+    function addFormFeedbackRow(objective) {
     const tbody = document.getElementById('feedback-table-body');
     if (!tbody) {
         console.error("Feedback table body not found.");
@@ -452,34 +467,33 @@ function addFormFeedbackRow(objective) {
     }
 
     const row = document.createElement('tr');
-
     console.log("Objective:", objective);
-    console.log("Qualitative Question:", objective.objectiveQualiQuestion);
 
+    // Ensure data exists before inserting, use a fallback if it's missing
     row.innerHTML = `
         <td><strong>${objective.objectiveDescrpt || 'N/A'}</strong></td>
         <td><strong>${objective.objectiveKPI || 'N/A'}</strong></td>
         <td><strong>${objective.objectiveTarget || 'N/A'}</strong></td>
         <td><strong>${objective.objectiveUOM || '%'}</strong></td>
-        <td><strong>${(objective.objectiveAssignedWeight * 100) || 'N/A'}%</strong></td>
+        <td><strong>${(objective.objectiveAssignedWeight && objective.objectiveAssignedWeight * 100) || 'N/A'}%</strong></td>
     `;
     tbody.appendChild(row);
 
+    // Handle the qualitative question if it exists
+    const questionText = objective.objectiveQualiQuestion || 'Enter your feedback here';
+
     const inputRow = document.createElement('tr');
-const questionText = objective.objectiveQualiQuestion || 'Enter your feedback here';
-
-inputRow.innerHTML = `
-    <td colspan="5">
-        <div style="margin-bottom: 10px;">
-            <strong>Feedback Question:</strong>
-            <span>${questionText.trim() ? questionText : 'Enter your feedback here'}</span>
-        </div>
-    </td>
-`;
-
+    inputRow.innerHTML = `
+        <td colspan="5">
+            <div style="margin-bottom: 10px;">
+                <strong>Feedback Question:</strong>
+                <span>${questionText.trim() ? questionText : 'Enter your feedback here'}</span>
+            </div>
+        </td>
+    `;
     tbody.appendChild(inputRow);
 
-    // Rater's View (Quantitative Rating and Qualitative Feedback) - Displaying directly
+    // Handle the rater's view (quantitative rating and qualitative feedback)
     const raterRow = document.createElement('tr');
     const starRatingId = `starRating${objective.objectiveId}`;
     const ratingSectionId = `ratingSection${objective.objectiveId}`;
@@ -512,7 +526,7 @@ inputRow.innerHTML = `
     `;
     tbody.appendChild(raterRow);
 
-    // Add click event listeners to the stars for the Rater's View
+    // Add event listeners for star ratings
     const stars = document.querySelectorAll(`#${starRatingId} .fa-star`);
     stars.forEach(star => {
         star.addEventListener('click', function() {
@@ -524,64 +538,64 @@ inputRow.innerHTML = `
     });
 }
 
-                            
-                             // Function to update 360 degree feedback hard and soft skill rows
-                             function addFormFeedbackSkillsRows(skills, skillType) {
-    const skillTableBody = document.querySelector(`#${skillType}-skills-table-body`);
+function addFormFeedbackSkillsRows(skill, skillType) {
+    console.log(`${skillType} Skill:`, skill); // Log skill details for debugging
 
-    // Check if the table body exists
+    const skillTableBody = document.querySelector(`#${skillType}-skills-table-body`);
     if (!skillTableBody) {
-        console.log("Skill table body not found for:", skillType);
+        console.error(`Skill table body not found for ${skillType} skills.`);
         return;
     }
 
-    // Iterate over the array of skills and add each one
-    skills.forEach(skill => {
-        // Create the skill row
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <span><strong>${skill.jobReqSkillName}</strong></span>
-            </td>
-        `;
-        skillTableBody.appendChild(row);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td><strong>${skill.jobReqSkillName}</strong></td>
+    `;
+    skillTableBody.appendChild(row);
 
-        // Create a new row for input fields
-        const inputRow = document.createElement('tr');
-        const starRatingId = `${skillType}SkillRow${skill.jobReqSkillName}Rating`;
+    const inputRow = document.createElement('tr');
+    const starRatingId = `${skillType}SkillRow${skill.jobReqSkillName.replace(/\s+/g, '_')}Rating`;
+    const ratingSectionId = `ratingSection${skill.jobReqSkillName.replace(/\s+/g, '_')}`;
 
-        // Create a unique ID for the rating section
-        const ratingSectionId = `ratingSection${skill.jobReqSkillName.replace(/\s+/g, '_')}`; // Replace spaces for valid ID
-
-        inputRow.innerHTML = `
-        <td colspan="1">
+    inputRow.innerHTML = `
+        <td colspan="2">
             <div id="${ratingSectionId}" style="margin-top: 10px;">
-                <div style="margin-bottom: 10px;">
-                    <label><strong>Quantitative (Rating Scale):</strong></label>
-                    <div style="font-size: 14px; margin-top: 5px;">
-                        Rate from 1 to 5 based on the corresponding skill performed during the quarter.
-                    </div>
-                    <span style="font-size: 24px; cursor: default;" id="${starRatingId}" data-rating="0">
-                        <i class="fa-solid fa-star" data-value="1" style="pointer-events: none;"></i>
-                        <i class="fa-solid fa-star" data-value="2" style="pointer-events: none;"></i>
-                        <i class="fa-solid fa-star" data-value="3" style="pointer-events: none;"></i>
-                        <i class="fa-solid fa-star" data-value="4" style="pointer-events: none;"></i>
-                        <i class="fa-solid fa-star" data-value="5" style="pointer-events: none;"></i>
-                    </span>
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label><strong>Qualitative (Open-ended):</strong></label>
-                    <div style="font-size: 14px; margin-top: 5px;">
-                        Provide qualitative feedback based on the corresponding skill performed during the quarter.
-                    </div>
-                    <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;" readonly>
-                </div>
+                <label><strong>Quantitative (Rating Scale):</strong></label>
+                  <div style="font-size: 14px; margin-top: 5px;">
+                Rate from 1 to 5 based on the corresponding skill performed during the quarter.
             </div>
+                <span style="font-size: 24px; cursor: pointer;" id="${starRatingId}" data-rating="0">
+                    <i class="fa-solid fa-star" data-value="1"></i>
+                    <i class="fa-solid fa-star" data-value="2"></i>
+                    <i class="fa-solid fa-star" data-value="3"></i>
+                    <i class="fa-solid fa-star" data-value="4"></i>
+                    <i class="fa-solid fa-star" data-value="5"></i>
+                </span>
+                </div>
+        <div style="margin-bottom: 10px;">
+            <label><strong>Qualitative (Open-ended):</strong></label>
+            <div style="font-size: 14px; margin-top: 5px;">
+                Provide qualitative feedback based on the corresponding skill performed during the quarter.
+            </div>
+            <input type="text" placeholder="Place your qualitative feedback here." style="width: 100%; box-sizing: border-box;">
+        </div>
+    </div>
         </td>
-        `;
-        skillTableBody.appendChild(inputRow);
+    `;
+    skillTableBody.appendChild(inputRow);
+
+    // Event Listener for Star Ratings
+    const stars = document.querySelectorAll(`#${starRatingId} .fa-star`);
+    stars.forEach(star => {
+        star.addEventListener('click', function () {
+            const rating = this.getAttribute('data-value');
+            const starContainer = document.getElementById(starRatingId);
+            starContainer.setAttribute('data-rating', rating);
+            updateStarDisplay(stars, rating);
+        });
     });
 }
+
 
 
    // Function to toggle the visibility of the rating section
