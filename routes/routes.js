@@ -154,7 +154,7 @@ router.get('/linemanager/records-performance-tracker/:userId', lineManagerContro
 router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
 
 router.get('/linemanager/offboarding-requests', lineManagerController.getOffboardingRequestsDash);
-router.get('/linemanager/view-offboarding-request', lineManagerController.getViewOffboardingRequest);
+router.get('/linemanager/view-offboarding-request/:userId', lineManagerController.getViewOffboardingRequest);
 
 
 // Route for viewing an employee's performance tracker with a quarter

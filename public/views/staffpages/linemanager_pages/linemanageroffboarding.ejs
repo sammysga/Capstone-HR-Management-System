@@ -12,7 +12,7 @@
 
     <div class="main-content">
         <div class="content">
-            <h1>Manpower Requisition Form</h1>
+            <h1>Offboarding Requests</h1>
 
             <table class="form-table">
                 <thead>
@@ -24,17 +24,25 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <% if (requests && requests.length > 0) { %>
+                        <% requests.forEach(function(request) { %>
+                            <tr>
+                                <td><%= request.staffName %></td>
+                                <td><%= new Date(request.created_at).toLocaleDateString() %></td>
+                                <td><%= request.status %></td>
+                                <td><a href="/linemanager/view-offboarding-request/<%= request.userId %>">View Request</a></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
                         <tr>
-                            <td>John Doe</td>
-                            <td>October 12, 2024</td>
-                            <td>Pending for Approval</td>
-                            <td><a href="/linemanager/view-offboarding-request">View Request</a></td>
+                            <td colspan="4">No pending requests found.</td>
                         </tr>
+                    <% } %>
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <!-- JavaScript for sidebar functionality -->
     <script>
         // Toggle active class for sidebar links

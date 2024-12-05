@@ -1363,14 +1363,57 @@ const lineManagerController = {
         }
     },
 
-    getOffboardingRequestsDash: function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/linemanageroffboarding');
-        } else {
-            req.flash('errors', { authError: 'Unauthorized access.' });
-            res.redirect('staff/login');
+    getOffboardingRequestsDash: async function (req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+    
+            if (!userId || req.session.user.userRole !== 'Line Manager') {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            // Fetch offboarding requests with userId and status
+            const { data: requests, error: requestsError } = await supabase
+                .from('offboarding_requests')
+                .select('userId, message, last_day, status, created_at')
+                .eq('status', 'Pending')  // Fetch only pending requests
+                .order('created_at', { ascending: false });
+    
+            if (requestsError) {
+                console.error('Error fetching offboarding requests:', requestsError);
+                req.flash('errors', { dbError: 'Failed to load offboarding requests.' });
+                return res.redirect('/employee/dashboard');
+            }
+    
+            // Fetch employee names based on userId
+            const userIds = requests.map(request => request.userId);
+            const { data: staffAccounts, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('userId, firstName, lastName')
+                .in('userId', userIds);  // Fetch staff details for each userId
+    
+            if (staffError) {
+                console.error('Error fetching staff accounts:', staffError);
+                req.flash('errors', { dbError: 'Failed to load employee names.' });
+                return res.redirect('/employee/dashboard');
+            }
+    
+            // Combine offboarding requests with staff details
+            const requestsWithNames = requests.map(request => {
+                const staff = staffAccounts.find(staff => staff.userId === request.userId);
+                return {
+                    ...request,
+                    staffName: staff ? `${staff.firstName} ${staff.lastName}` : 'Unknown'
+                };
+            });
+    
+            res.render('staffpages/linemanager_pages/linemanageroffboarding', { requests: requestsWithNames });
+        } catch (err) {
+            console.error('Error in getOffboardingRequestsDash controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading offboarding requests.' });
+            res.redirect('/employee/dashboard');
         }
-    },
+    },    
 
     getViewOffboardingRequest: function (req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
