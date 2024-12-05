@@ -917,7 +917,8 @@ const lineManagerController = {
             res.redirect('/staffpages/linemanager_pages/managerrecordsperftracker');
         }
     },
-    
+
+    // code with midyearidp logic
     getUserProgressView: async function(req, res) {
         const user = req.user;
         console.log('Fetching records for userId:', user?.userId);
@@ -1045,7 +1046,20 @@ const lineManagerController = {
             const hardSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Hard') || [];
             const softSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Soft') || [];
     
-            // Initialize viewState
+            // Check if Mid-Year IDP data exists to control access to 360 Degree Feedback steps
+            const { data: midYearData, error: midYearError } = await supabase
+                .from('midyearidp')
+                .select('*')
+                .eq('userId', user.userId)
+                .eq('jobId', jobId)
+                .eq('year', selectedYear)
+                .single();
+    
+            if (midYearError) {
+                console.error('Error fetching mid-year IDP data:', midYearError);
+            }
+    
+            // Define viewState based on Mid-Year IDP data availability
             const viewState = {
                 success: true,
                 userId: user.userId,
@@ -1059,18 +1073,207 @@ const lineManagerController = {
                 selectedYear,
                 viewOnlyStatus: {
                     objectivesettings: objectiveSettings.length > 0,
+                    midyearidp: midYearData ? true : false,  // Set view-only if mid-year data exists
+                    feedbacks_Q1: feedbackData['feedbacks_Q1']?.length > 0,
+                    feedbacks_Q2: feedbackData['feedbacks_Q2']?.length > 0,
+                    feedbacks_Q3: feedbackData['feedbacks_Q3']?.length > 0,
+                    feedbacks_Q4: feedbackData['feedbacks_Q4']?.length > 0,
                 },
             };
     
+            // Function to calculate nextStep
+// Function to calculate nextStep
+function calculateNextStep(viewState) {
+    let nextStep = null;
+
+    if (!viewState.viewOnlyStatus.midyearidp) {
+        nextStep = 1;  // Complete Mid-Year IDP
+    } else if (!viewState.viewOnlyStatus.feedbacks_Q1) {
+        nextStep = 2;  // Complete Q1 Feedback
+    } else if (!viewState.viewOnlyStatus.feedbacks_Q2) {
+        nextStep = 3;  // Complete Q2 Feedback
+    } else if (!viewState.viewOnlyStatus.feedbacks_Q3) {
+        nextStep = 4;  // Complete Q3 Feedback
+    } else if (!viewState.viewOnlyStatus.feedbacks_Q4) {
+        nextStep = 5;  // Complete Q4 Feedback
+    }
+
+    return nextStep;
+}
+
+// Add the nextStep to the viewState
+viewState.nextAccessibleStep = calculateNextStep(viewState);
+
+    
             console.log("View State:", viewState);
     
-            res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', { viewState, user });
+            res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', { 
+                viewState: viewState, 
+                user, 
+                nextAccessibleStep: viewState.nextAccessibleStep  // Include nextAccessibleStep here
+
+            });
+    
         } catch (error) {
             console.error('Error fetching user progress:', error);
             req.flash('errors', { fetchError: 'Error fetching user progress. Please try again.' });
             res.redirect('/linemanager/records-performance-tracker');
         }
-    },
+    },    
+    
+    // getUserProgressView: async function(req, res) {
+    //     const user = req.user;
+    //     console.log('Fetching records for userId:', user?.userId);
+    
+    //     if (!user) {
+    //         req.flash('errors', { authError: 'Unauthorized. Please log in to access this view.' });
+    //         return res.redirect('/staff/login');
+    //     }
+    
+    //     try {
+    //         const { data: jobData, error: jobError } = await supabase
+    //             .from('staffaccounts')
+    //             .select('jobId')
+    //             .eq('userId', user.userId)
+    //             .single();
+    
+    //         if (jobError || !jobData) {
+    //             console.error('Error fetching jobId:', jobError);
+    //             req.flash('errors', { fetchError: 'Error fetching job information. Please try again.' });
+    //             return res.redirect('/linemanager/records-performance-tracker');
+    //         }
+    
+    //         const jobId = jobData.jobId;
+    //         console.log('Fetched jobId:', jobId);
+    
+    //         const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4'];
+    //         const yearPromises = feedbackTables.map(table => 
+    //             supabase.from(table).select('year')
+    //         );
+    
+    //         const yearResults = await Promise.all(yearPromises);
+    //         const allYears = yearResults.flatMap(result => result.data || []);
+    //         const availableYears = [...new Set(allYears.map(year => year.year))].sort((a, b) => b - a);
+    //         const selectedYear = req.query.year || new Date().getFullYear();
+    
+    //         const feedbackData = {};
+    //         for (const table of feedbackTables) {
+    //             const { data, error } = await supabase
+    //                 .from(table)
+    //                 .select('*')
+    //                 .eq('userId', user.userId)
+    //                 .eq('jobId', jobId)
+    //                 .eq('year', selectedYear);
+    
+    //             if (error) {
+    //                 console.error(`Error fetching feedback data from ${table}:`, error);
+    //                 req.flash('errors', { fetchError: `Error fetching data for ${table}. Please try again.` });
+    //                 return res.redirect('/linemanager/records-performance-tracker');
+    //             }
+    
+    //             feedbackData[table] = data;
+    //         }
+    
+    //         console.log("Feedback Data:", feedbackData);
+    
+    //         // Fetch objectives settings
+    //         const { data: objectiveSettings, error: objectivesError } = await supabase
+    //             .from('objectivesettings')
+    //             .select('*')
+    //             .eq('userId', user.userId);
+    
+    //         if (objectivesError) {
+    //             console.error('Error fetching objectives settings:', objectivesError);
+    //             req.flash('errors', { fetchError: 'Error fetching objectives settings. Please try again.' });
+    //             return res.redirect('/linemanager/records-performance-tracker');
+    //         }
+    
+    //         let submittedObjectives = [];
+    //         let objectiveQuestions = [];
+    
+    //         if (objectiveSettings.length > 0) {
+    //             const objectiveSettingsIds = objectiveSettings.map(setting => setting.objectiveSettingsId);
+    
+    //             // Fetch the actual objectives related to the settings
+    //             const { data: objectivesData, error: objectivesFetchError } = await supabase
+    //                 .from('objectivesettings_objectives')
+    //                 .select('*')
+    //                 .in('objectiveSettingsId', objectiveSettingsIds);
+    
+    //             if (objectivesFetchError) {
+    //                 console.error('Error fetching objectives:', objectivesFetchError);
+    //                 req.flash('errors', { fetchError: 'Error fetching objectives. Please try again.' });
+    //                 return res.redirect('/linemanager/records-performance-tracker');
+    //             }
+    
+    //             submittedObjectives = objectivesData;
+    
+    //             // Fetch questions related to the objectives
+    //             const { data: objectiveQuestionData, error: questionError } = await supabase
+    //                 .from('feedbacks_questions-objectives')
+    //                 .select('objectiveId, objectiveQualiQuestion')
+    //                 .in('objectiveId', submittedObjectives.map(obj => obj.objectiveId));
+    
+    //             if (questionError) {
+    //                 console.error('Error fetching objective questions:', questionError);
+    //                 req.flash('errors', { fetchError: 'Error fetching objective questions. Please try again.' });
+    //                 return res.redirect('/linemanager/records-performance-tracker');
+    //             }
+    
+    //             objectiveQuestions = objectiveQuestionData;
+    //         }
+    
+    //         // Map the `objectiveQuestions` to `submittedObjectives`
+    //         submittedObjectives = submittedObjectives.map(obj => {
+    //             const questions = objectiveQuestions.filter(q => q.objectiveId === obj.objectiveId);
+    //             return {
+    //                 ...obj,
+    //                 objectiveQualiQuestion: questions.length > 0 ? questions.map(q => q.objectiveQualiQuestion).join(', ') : 'No questions available'
+    //             };
+    //         });
+    
+    //         // Fetch job requirements skills based on jobId
+    //         const { data: skillsData, error: skillsError } = await supabase
+    //             .from('jobreqskills')
+    //             .select('jobReqSkillType, jobReqSkillName')
+    //             .eq('jobId', jobId);
+    
+    //         if (skillsError) {
+    //             console.error('Error fetching job requirements skills:', skillsError);
+    //             req.flash('errors', { fetchError: 'Error fetching skills data. Please try again.' });
+    //             return res.redirect('/linemanager/records-performance-tracker');
+    //         }
+    
+    //         // Classify skills into Hard and Soft
+    //         const hardSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Hard') || [];
+    //         const softSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Soft') || [];
+    
+    //         // Initialize viewState
+    //         const viewState = {
+    //             success: true,
+    //             userId: user.userId,
+    //             jobId,
+    //             feedbacks: feedbackData,
+    //             hardSkills,
+    //             softSkills,
+    //             objectiveQuestions,
+    //             submittedObjectives,
+    //             years: availableYears,
+    //             selectedYear,
+    //             viewOnlyStatus: {
+    //                 objectivesettings: objectiveSettings.length > 0,
+    //             },
+    //         };
+    
+    //         console.log("View State:", viewState);
+    
+    //         res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', { viewState, user });
+    //     } catch (error) {
+    //         console.error('Error fetching user progress:', error);
+    //         req.flash('errors', { fetchError: 'Error fetching user progress. Please try again.' });
+    //         res.redirect('/linemanager/records-performance-tracker');
+    //     }
+    // },
     
     saveObjectiveSettings: async function(req, res) {
         try {
