@@ -189,8 +189,10 @@
                     <strong>Your Answer:</strong> <%= answers[index] %>
                 </div>
                 <div class="weighted-score">
-                    <strong>Weighted Score:</strong> <%= weightedScores[index].toFixed(2) %>
+                    <strong>Weighted Score:</strong> 
+                    <%= weightedScores[index] ? weightedScores[index].toFixed(2) : 'N/A' %>
                 </div>
+                
             <% }); %>
 
             <div class="final-result">
