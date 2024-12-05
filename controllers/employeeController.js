@@ -1601,7 +1601,7 @@ get360FeedbackList: async function (req, res) {
             return res.status(404).json({ message: 'User details not found.' });
         }
 
-        const { departmentId, jobId, jobpositions: { jobTitle } = {}, departments: { deptName } = {} } = currentUserData;
+        const { departmentId, jobId,  departments: { deptName } = {}, jobpositions: { jobTitle } = {} = {} } = currentUserData;
 
         if (!departmentId || !jobId) {
             console.error("Error: Department ID or Job ID not found.");
@@ -1628,7 +1628,7 @@ get360FeedbackList: async function (req, res) {
         for (const { name, idField } of feedbackTables) {
             const { data, error } = await supabase
                 .from(name)
-                .select(`userId, setStartDate, setEndDate, ${idField}`)
+                .select(`userId, setStartDate, setEndDate, ${idField}, quarter`)  // Add the 'quarter' field
                 .gte('setStartDate', todayString)
                 .gt('setEndDate', todayString);
 
@@ -1711,7 +1711,10 @@ get360FeedbackList: async function (req, res) {
             }));
 
             feedbackDetails.push({
-                feedback,
+                feedback: {
+                    ...feedback,
+                    quarter: feedback.quarter // Add the quarter information
+                },
                 objectives,
                 skills,
                 objectiveDetails,
@@ -1734,14 +1737,17 @@ get360FeedbackList: async function (req, res) {
         const hardSkills = allSkillsData?.filter(skill => skill.jobReqSkillType === 'Hard') || [];
         const softSkills = allSkillsData?.filter(skill => skill.jobReqSkillType === 'Soft') || [];
 
-        // Return response
+        // Return response with deptName and jobTitle
         return res.status(200).json({
             success: true,
-            user: currentUserData,
+            user: {
+                ...currentUserData,
+                deptName, // Department Name
+                jobTitle, // Job Title
+            },
             feedbackDetails,
             hardSkills,
             softSkills,
-            quarter: feedbackDetails[0]?.feedback?.quarter || 'No quarter available'
         });
 
     } catch (error) {

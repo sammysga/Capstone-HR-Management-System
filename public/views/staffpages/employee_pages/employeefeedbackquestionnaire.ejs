@@ -291,6 +291,7 @@ button:hover {
             <div><strong>Department:</strong> <span id="employeeDepartment"></span></div>
         </div>
         
+        
         <hr class="divider" />
         
         <p style="font-weight: bold; font-size: 1.1em; margin-top: 20px;">Objective Setting Questions</p>
@@ -406,6 +407,7 @@ button:hover {
             document.getElementById('employeePosition').innerText = user.jobTitle;
             document.getElementById('employeeDepartment').innerText = user.deptName;
 
+
             // Display quarter, start date, and end date if available
             const feedback = feedbackDetails && feedbackDetails.length > 0 ? feedbackDetails[0] : {};
             document.getElementById('quarterDisplay').innerText = feedback.feedback?.quarter || 'N/A';
@@ -427,16 +429,26 @@ button:hover {
             });
 
             // Populate objectives from feedbackDetails
-            // Populate objectives from feedbackDetails
 feedbackDetails.forEach(detail => {
+    // Ensure that both objectiveDetails and objectives exist
     if (detail.objectiveDetails && detail.objectiveDetails.length > 0) {
         detail.objectiveDetails.forEach(objective => {
+            // Check if objectives also exist in feedbackDetail and merge the data
+            const associatedObjective = detail.objectives.find(obj => obj.objectiveId === objective.objectiveId);
+
+            // If found, add the objectiveQualiQuestion to the objective
+            if (associatedObjective) {
+                objective.objectiveQualiQuestion = associatedObjective.objectiveQualiQuestion;
+            }
+
+            // Call the function to add the objective details to the form
             addFormFeedbackRow(objective);
         });
     } else {
         console.warn("No objectiveDetails found for feedbackDetail:", detail);
     }
 });
+
 
 
         } else {
@@ -475,7 +487,7 @@ function submitFeedback() {
         <td><strong>${objective.objectiveKPI || 'N/A'}</strong></td>
         <td><strong>${objective.objectiveTarget || 'N/A'}</strong></td>
         <td><strong>${objective.objectiveUOM || '%'}</strong></td>
-        <td><strong>${(objective.objectiveAssignedWeight && objective.objectiveAssignedWeight * 100) || 'N/A'}%</strong></td>
+<td><strong>${(objective.objectiveAssignedWeight && (objective.objectiveAssignedWeight * 100).toFixed(0)) || 'N/A'}%</strong></td>
     `;
     tbody.appendChild(row);
 
