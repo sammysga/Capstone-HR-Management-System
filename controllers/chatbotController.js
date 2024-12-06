@@ -16,8 +16,8 @@ const chatbotController = {
             console.log('Positions fetched:', positions);
     
             const jobList = positions.map(pos => `- ${pos}`).join('\n');
-            const initialResponse = JSON.stringify(`${initialMessage}\nHere are our current job openings:\n${jobList}\nPlease select a position.`);
-            console.log('Initial response (JSON):', initialResponse);
+            const initialResponse = `${initialMessage}\nHere are our current job openings:\n${jobList}\nPlease select a position.`;  // Removed JSON.stringify
+            console.log('Initial response:', initialResponse);
     
             res.render('applicant_pages/chatbot', { initialResponse, errors: {} });
         } catch (error) {
