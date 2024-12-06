@@ -9,23 +9,21 @@ const path = require('path');
 const chatbotController = {
 
     // Function to render chatbot page with the initial greeting
-    getChatbotPage: async function (req, res) {
+    getChatbotPage: async function(req, res) {
         try {
             const initialMessage = "Hi! Welcome to Prime Infrastructure's recruitment portal. What position are you going to apply for?";
             const positions = await chatbotController.getJobPositionsList();
-            console.log('Positions fetched:', positions);
-    
-            const jobList = positions.map(pos => `- ${pos}`).join('\n');
-            const initialResponse = `${initialMessage}\nHere are our current job openings:\n${jobList}\nPlease select a position.`;
+            console.log('Positions fetched:', positions); // log to see what positions are returned
+
+            const initialResponse = JSON.stringify(`${initialMessage}\nHere are our current job openings:\n${positions.map(pos => `- ${pos}`).join('\n')}\nPlease select a position.`);
             console.log('Initial response:', initialResponse);
-    
+
             res.render('applicant_pages/chatbot', { initialResponse, errors: {} });
         } catch (error) {
             console.error('Error rendering chatbot page:', error);
             res.status(500).send('Error loading chatbot page');
         }
     },
-    
     
     // Function to handle incoming chatbot messages
     handleChatbotMessage: async function (req, res) {
