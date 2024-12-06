@@ -6,23 +6,33 @@
     <title>Chatbot</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             height: 100vh;
             display: flex;
             flex-direction: column;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
         }
         .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
+    width: 100%; /* Full window width */
+    max-width: 100%; /* Remove any width restriction */
+    margin: 0; /* No margin to utilize the full screen */
+    display: flex;
+    flex-direction: column;
+    height: 90vh; /* Occupy most of the viewport height */
+    background: linear-gradient(to bottom, #ffffff, #f2f2f2); /* Subtle gradient */
+    box-shadow: none; /* Optional: remove shadow for fullscreen */
+    border-radius: 0; /* No rounded corners */
+    overflow: hidden; /* Prevent content overflow */
+    border: none; /* Remove border */
+}
         .chat-header {
-            background-color: #007BFF;
+            background: linear-gradient(90deg, #007BFF, #0056b3);
             color: white;
-            padding: 15px;
+            padding: 20px;
             text-align: center;
-            font-size: 1.5em;
+            font-size: 1.8em;
+            font-weight: bold;
         }
         .chat-messages {
             flex: 1;
@@ -33,49 +43,78 @@
             flex-direction: column;
         }
         .message {
-            max-width: 70%;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 10px;
+            max-width: 75%;
+            padding: 15px;
+            margin: 8px 0;
+            border-radius: 15px;
             position: relative;
+            font-size: 1rem;
+            line-height: 1.5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         .user-message {
-            background-color: white;
+            background-color: #f1f1f1;
             align-self: flex-end;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-top-right-radius: 0;
         }
         .bot-message {
             background-color: #007BFF;
             color: white;
             align-self: flex-start;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-top-left-radius: 0;
         }
         .chat-input {
             display: flex;
-            border-top: 1px solid #ccc;
+            border-top: 1px solid #ddd;
             padding: 10px;
+            background-color: #ffffff;
         }
         .chat-input input {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ccc;
-            border-radius: 5px 0 0 5px;
+            border-radius: 10px 0 0 10px;
+            font-size: 1rem;
+        }
+        .chat-input input:focus {
+            outline: none;
+            border-color: #007BFF;
         }
         .chat-input button {
-            padding: 10px;
+            padding: 12px 20px;
             border: none;
             background-color: #007BFF;
             color: white;
             cursor: pointer;
-            border-radius: 0 5px 5px 0;
+            border-radius: 0 10px 10px 0;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        .chat-input button:hover {
+            background-color: #0056b3;
         }
         .job-button {
             margin: 5px 0;
             background-color: #e0e0e0;
             border: none;
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 20px;
             cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        .job-button:hover {
+            background-color: #d6d6d6;
+        }
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #999;
         }
     </style>
 </head>
@@ -93,13 +132,10 @@
         document.getElementById('send-button').addEventListener('click', () => {
             const inputField = document.getElementById('user-input');
             const userInput = inputField.value.trim();
-            console.log('User input:', userInput);
             if (userInput) {
                 addMessage('You', userInput);
                 inputField.value = '';
                 sendMessage(userInput);
-            } else {
-                console.log('Input is empty.');
             }
         });
 
