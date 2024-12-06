@@ -238,10 +238,13 @@
         }
 
         document.addEventListener("DOMContentLoaded", function() {
-            const initialResponse = "<%= initialResponse %>";
-            displayInitialMessage(initialResponse);
-            console.log('Initial response being displayed:', initialResponse);
-        });
+        // Use <%- %> to render raw string correctly
+        const initialResponse = "<%- initialResponse %>";  // This will inject the string without encoding
+
+        // Ensure that initialResponse is processed correctly in JavaScript
+        displayInitialMessage(initialResponse);
+        console.log('Initial response being displayed:', initialResponse);
+    });
     </script>
 </body>
 </html>
