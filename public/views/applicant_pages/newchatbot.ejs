@@ -133,7 +133,7 @@
          // Wait for the DOM to load before running any code
          document.addEventListener("DOMContentLoaded", function() {
         // Safely inject initialResponse as a string, using JSON.stringify to avoid HTML encoding
-        const initialResponse = "<%- JSON.stringify(initialResponse) %>";
+        const initialResponse = <%- JSON.stringify(initialResponse) %>;
         displayInitialMessage(initialResponse);
     });
 
