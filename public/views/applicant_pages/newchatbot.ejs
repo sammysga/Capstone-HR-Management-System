@@ -132,7 +132,7 @@
     <script>
          // Wait for the DOM to load before running any code
          document.addEventListener("DOMContentLoaded", function() {
-            const initialResponse = "<%= JSON.stringify(initialResponse) %>" ; // Safely injected from the server
+            const initialResponse = "<%- JSON.stringify(initialResponse) %>" ; // Safely injected from the server
             displayInitialMessage(initialResponse);
         });
 
@@ -213,7 +213,7 @@
 
         document.addEventListener("DOMContentLoaded", function() {
     // Safely inject initialResponse using JSON.stringify
-    const initialResponse = "<%= JSON.stringify(initialResponse) %>";
+    const initialResponse = "<%- JSON.stringify(initialResponse) %>";
     displayInitialMessage(initialResponse);
 });
     </script>
