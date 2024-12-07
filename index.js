@@ -6,6 +6,7 @@ const flash = require('connect-flash');
 const multer = require('multer'); // Add multer for file uploads
 const routes = require('./routes/routes.js');
 const fs = require('fs');
+const { createClient } = require('@supabase/supabase-js'); // Import Supabase client
 
 const app = express();
 const port = 4000;
