@@ -113,6 +113,9 @@ app.post('/upload', upload.single('file'), async (req, res) => {
                 contentType: req.file.mimetype
             });
 
+            console.log(data);  // Log the response from Supabase
+console.log(error); // Log any error from Supabase
+
         // Delete the local file after uploading
         fs.unlinkSync(req.file.path);  // Clean up the temporary file from the server
 
