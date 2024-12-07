@@ -130,9 +130,9 @@
     </div>
 
     <script>
-        // Wait for the DOM to load before running any code
-        document.addEventListener("DOMContentLoaded", function() {
-            const initialResponse = "<%= initialResponse %>"; // Dynamically injected from the server
+         // Wait for the DOM to load before running any code
+         document.addEventListener("DOMContentLoaded", function() {
+            const initialResponse = "<%= JSON.stringify(initialResponse) %>" ; // Safely injected from the server
             displayInitialMessage(initialResponse);
         });
 
