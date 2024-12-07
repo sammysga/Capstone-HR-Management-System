@@ -127,6 +127,10 @@
             <input type="text" id="user-input" placeholder="Type your message..." />
             <button id="send-button">Send</button>
         </div>
+        <div class="chat-input">
+            <input type="file" id="file-input" />
+            <button id="upload-button">Upload File</button>
+        </div>
     </div>
 
     <script>
@@ -173,6 +177,16 @@
             }
         });
 
+        document.getElementById('upload-button').addEventListener('click', () => {
+    const fileInput = document.getElementById('file-input');
+    const file = fileInput.files[0];  // Get the first selected file
+    if (file) {
+        uploadFile(file);
+    }
+});
+
+
+
         // Function to send message to the server and get the response
         async function sendMessage(message) {
             try {
@@ -190,6 +204,25 @@
                 addMessage("Bot", "There was an error sending your message. Please try again later.");
             }
         }
+
+        async function uploadFile(file) {
+    const formData = new FormData();
+    formData.append("file", file);  // Append file to the form data
+
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) throw new Error("Failed to upload file");
+
+        const data = await response.json();
+        addMessage('Bot', `File uploaded successfully: ${data.filename}`);
+    } catch (error) {
+        addMessage("Bot", "There was an error uploading your file. Please try again later.");
+    }
+}
 
         // Add message to the chat
         function addMessage(sender, message) {
