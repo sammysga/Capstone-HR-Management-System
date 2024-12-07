@@ -130,12 +130,43 @@
     </div>
 
     <script>
+        // Wait for the DOM to load before running any code
+        document.addEventListener("DOMContentLoaded", function() {
+            const initialResponse = "<%= initialResponse %>"; // Dynamically injected from the server
+            displayInitialMessage(initialResponse);
+        });
+
+        function displayInitialMessage(initialResponse) {
+            const chatMessages = document.getElementById('chat-messages');
+            const responseLines = initialResponse.split('\n');
+
+            responseLines.forEach(line => {
+                if (line.startsWith('-')) {
+                    const button = document.createElement('button');
+                    button.innerText = line.slice(2); // Skip the '-' symbol
+                    button.onclick = () => {
+                        addMessage('You', button.innerText);
+                        sendMessage(button.innerText);
+                    };
+                    button.classList.add('job-button');
+                    chatMessages.appendChild(button);
+                } else {
+                    const textNode = document.createElement('div');
+                    textNode.classList.add('message', 'bot-message');
+                    textNode.innerText = line;
+                    chatMessages.appendChild(textNode);
+                }
+            });
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Handling user input and sending messages
         document.getElementById('send-button').addEventListener('click', () => {
             const inputField = document.getElementById('user-input');
             const userInput = inputField.value.trim();
             if (userInput) {
                 addMessage('You', userInput);
-                inputField.value = '';
+                inputField.value = '';  // Clear input field
                 sendMessage(userInput);
             }
         });
@@ -166,26 +197,15 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function displayInitialMessage(initialResponse) {
+        function displayBotResponse(response) {
             const chatMessages = document.getElementById('chat-messages');
-            const responseLines = initialResponse.split('\n');
+            const responseLines = response.split('\n');
 
             responseLines.forEach(line => {
-                if (line.startsWith('-')) {
-                    const button = document.createElement('button');
-                    button.innerText = line.slice(2);
-                    button.onclick = () => {
-                        addMessage('You', button.innerText);
-                        sendMessage(button.innerText);
-                    }; 
-                    button.classList.add('job-button');
-                    chatMessages.appendChild(button);
-                } else {
-                    const textNode = document.createElement('div');
-                    textNode.classList.add('message', 'bot-message');
-                    textNode.innerText = line;
-                    chatMessages.appendChild(textNode);
-                }
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', 'bot-message');
+                messageDiv.innerHTML = line;
+                chatMessages.appendChild(messageDiv);
             });
 
             chatMessages.scrollTop = chatMessages.scrollHeight;

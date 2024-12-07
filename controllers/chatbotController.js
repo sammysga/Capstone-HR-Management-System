@@ -10,22 +10,19 @@ const chatbotController = {
 
     getNewChatbotPage: async function (req, res) {
         try {
-            // You can modify the initial message here
             const initialMessage = "Welcome to the new chatbot! What would you like to do today?";
-            
-            // Fetch job positions or any dynamic data if necessary (e.g., from a database)
+    
+            // Fetch positions (or modify this if you're fetching other data)
             const positions = await chatbotController.getJobPositionsList();
             
             // Convert positions to a string for display
             const jobList = positions.map(pos => `- ${pos}`).join('\n');
             
-            // Combine the initial message and job list
+            // Combine initial message and job list
             const initialResponse = `${initialMessage}\nHere are the current job openings:\n${jobList}\nPlease select a position.`;
-            
-            // Log for debugging
-            console.log('Initial response:', initialResponse);
-            
-            // Render the EJS view with the initial response
+    
+            console.log('Initial response:', initialResponse);  // Ensure this is printed
+    
             res.render('applicant_pages/newchatbot', { initialResponse, errors: {} });
         } catch (error) {
             console.error('Error rendering new chatbot page:', error);
