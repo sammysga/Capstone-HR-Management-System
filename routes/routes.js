@@ -36,6 +36,10 @@ router.get('/chatbothome', chatbotController.getChatbotPage);
 router.post('/chatbot', chatbotController.handleChatbotMessage);
 router.post('/upload', chatbotController.handleFileUpload); // Directly use the controller method for file handling
 
+// New chatbot
+router.get('/newchatbot', chatbotController.getNewChatbotPage);  // New route for the new chatbot
+
+
 // Staff Log in
 router.get('/staff/login', staffLoginController.getStaffLogin);
 router.post('/staff/login', staffLoginController.postStaffLogin);
