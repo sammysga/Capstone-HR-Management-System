@@ -212,9 +212,10 @@
         }
 
         document.addEventListener("DOMContentLoaded", function() {
-            const initialResponse = "<%= initialResponse %>";
-            displayInitialMessage(initialResponse);
-        });
+    // Safely inject initialResponse using JSON.stringify
+    const initialResponse = "<%= JSON.stringify(initialResponse) %>";
+    displayInitialMessage(initialResponse);
+});
     </script>
 </body>
 </html>
