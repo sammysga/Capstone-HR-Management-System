@@ -136,7 +136,6 @@
     <script>
         // Wait for the DOM to load before running any code
         document.addEventListener("DOMContentLoaded", function() {
-            // Safely inject initialResponse using JSON.stringify
             const initialResponse = <%- JSON.stringify(initialResponse) %>;
             displayInitialMessage(initialResponse);
         });
@@ -159,7 +158,7 @@
                 } else {
                     const textNode = document.createElement('div');
                     textNode.classList.add('message', 'bot-message');
-                    textNode.innerText = line; // Display the line without encoding
+                    textNode.innerText = line;
                     chatMessages.appendChild(textNode);
                 }
             });
@@ -177,15 +176,20 @@
             }
         });
 
+        // Handle PDF file upload
         document.getElementById('upload-button').addEventListener('click', () => {
-    const fileInput = document.getElementById('file-input');
-    const file = fileInput.files[0];  // Get the first selected file
-    if (file) {
-        uploadFile(file);
-    }
-});
-
-
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];  // Get the first selected file
+            if (file) {
+                if (file.type === 'application/pdf') {
+                    uploadFile(file);
+                } else {
+                    addMessage('Bot', 'Please upload a valid PDF file.');
+                }
+            } else {
+                addMessage('Bot', 'No file selected. Please choose a PDF to upload.');
+            }
+        });
 
         // Function to send message to the server and get the response
         async function sendMessage(message) {
@@ -205,24 +209,25 @@
             }
         }
 
+        // Function to upload the file
         async function uploadFile(file) {
-    const formData = new FormData();
-    formData.append("file", file);  // Append file to the form data
+            const formData = new FormData();
+            formData.append("file", file);  // Append file to the form data
 
-    try {
-        const response = await fetch('/upload', {
-            method: 'POST',
-            body: formData
-        });
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
 
-        if (!response.ok) throw new Error("Failed to upload file");
+                if (!response.ok) throw new Error("Failed to upload file");
 
-        const data = await response.json();
-        addMessage('Bot', `File uploaded successfully: ${data.filename}`);
-    } catch (error) {
-        addMessage("Bot", "There was an error uploading your file. Please try again later.");
-    }
-}
+                const data = await response.json();
+                addMessage('Bot', `File uploaded successfully: ${data.filename}`);
+            } catch (error) {
+                addMessage("Bot", "There was an error uploading your file. Please try again later.");
+            }
+        }
 
         // Add message to the chat
         function addMessage(sender, message) {
