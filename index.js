@@ -97,6 +97,7 @@ app.use((req, res, next) => {
 // Define the route to handle file upload
 // Define the route to handle file upload to Supabase
 app.post('/upload', upload.single('file'), async (req, res) => {
+    console.log("Received a file upload request");
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded.' });
