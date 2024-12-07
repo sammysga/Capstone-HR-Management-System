@@ -10,6 +10,11 @@ const fs = require('fs');
 const app = express();
 const port = 4000;
 
+// Initialize Supabase client with your Supabase URL and API Key
+const supabaseUrl = 'https://amzzxgaqoygdgkienkwf.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtenp4Z2Fxb3lnZGdraWVua3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjQzMjk0MzUsImV4cCI6MjAzOTkwNTQzNX0.1GdKI-d9CnJoLn0-T_VdM2Pd75PVHzAYOPIg_f7sgDQ';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 
 // Configure multer storage
 const storage = multer.diskStorage({
@@ -89,15 +94,29 @@ app.use((req, res, next) => {
 // Use the routes defined in the 'routes' directory
 // Add route for file upload handling
 // Define the route to handle file upload
-app.post('/upload', upload.single('file'), (req, res) => {
+// Define the route to handle file upload to Supabase
+app.post('/upload', upload.single('file'), async (req, res) => {
     try {
-        // Check if the file is uploaded
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded.' });
         }
 
-        // Send a response back to the frontend with the filename
-        res.json({ filename: req.file.filename });
+        // Upload the file to Supabase bucket
+        const { data, error } = await supabase.storage
+            .from('uploads') // Your bucket name is 'uploads'
+            .upload(`pdfs/${Date.now()}-${req.file.originalname}`, req.file.buffer, {
+                contentType: req.file.mimetype
+            });
+
+        if (error) {
+            return res.status(500).json({ message: `Error uploading file: ${error.message}` });
+        }
+
+        // Get the file's public URL (optional if you want to make it publicly accessible)
+        const fileUrl = supabase.storage.from('uploads').getPublicUrl(data.path).publicURL;
+
+        // Send the response with the file URL
+        res.json({ filename: data.path, url: fileUrl });
     } catch (error) {
         console.error('Error uploading file:', error);
         res.status(500).json({ message: 'There was an error uploading your file.' });
