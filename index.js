@@ -9,8 +9,34 @@ const routes = require('./routes/routes.js');
 const app = express();
 const port = 4000;
 
-// Middleware for file uploads
-const upload = multer({ dest: 'uploads/' }); // Specify the directory to store uploaded files
+
+// Configure multer storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // Save the file to the 'uploads' folder
+        const uploadDir = path.join(__dirname, 'uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir);  // Create uploads folder if it doesn't exist
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        // Ensure the filename is unique (by using the original filename + timestamp)
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+// Create multer upload instance for handling single PDF file
+const upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+        // Only allow PDF files
+        if (file.mimetype !== 'application/pdf') {
+            return cb(new Error('Only PDF files are allowed'), false);
+        }
+        cb(null, true);
+    }
+});
 
 app.use(bodyParser.json()); 
 
@@ -61,12 +87,19 @@ app.use((req, res, next) => {
 
 // Use the routes defined in the 'routes' directory
 // Add route for file upload handling
+// Define the route to handle file upload
 app.post('/upload', upload.single('file'), (req, res) => {
-    if (req.file) {
-        console.log('File uploaded:', req.file);
-        res.json({ message: 'File uploaded successfully', file: req.file });
-    } else {
-        res.status(400).json({ message: 'No file uploaded' });
+    try {
+        // Check if the file is uploaded
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded.' });
+        }
+
+        // Send a response back to the frontend with the filename
+        res.json({ filename: req.file.filename });
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        res.status(500).json({ message: 'There was an error uploading your file.' });
     }
 });
 
