@@ -215,7 +215,7 @@
             formData.append("file", file);  // Append file to the form data
 
             try {
-                const response = await fetch('/upload', {
+                const response = await fetch('/uploads', {
                     method: 'POST',
                     body: formData
                 });
