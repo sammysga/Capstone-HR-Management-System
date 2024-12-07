@@ -238,11 +238,11 @@
         }
 
         document.addEventListener("DOMContentLoaded", function() {
-        // Use <%= %> to properly render the initialResponse as a string in the template
-        const initialResponse = "<%= initialResponse %>";
-        displayInitialMessage(initialResponse);
-        console.log('Initial response being displayed:', initialResponse);
-    });
+    // Use <%- %> to properly render the initialResponse as a string in the template
+    const initialResponse = `<%- JSON.stringify(initialResponse) %>`;
+    displayInitialMessage(JSON.parse(initialResponse));
+    console.log('Initial response being displayed:', initialResponse);
+});
     </script>
 </body>
 </html>

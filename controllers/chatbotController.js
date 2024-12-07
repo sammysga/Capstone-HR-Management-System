@@ -19,7 +19,7 @@ const chatbotController = {
             const initialResponse = `${initialMessage}\nHere are our current job openings:\n${jobList}\nPlease select a position.`;  // Removed JSON.stringify
             console.log('Initial response:', initialResponse);
     
-            res.render('applicant_pages/chatbot', { initialResponse, errors: {} });
+            res.render('applicant_pages/chatbothome', { initialResponse, errors: {} });
         } catch (error) {
             console.error('Error rendering chatbot page:', error);
             res.status(500).send('Error loading chatbot page');
