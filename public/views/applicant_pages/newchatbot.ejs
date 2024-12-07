@@ -223,7 +223,11 @@
                 if (!response.ok) throw new Error("Failed to upload file");
 
                 const data = await response.json();
-                addMessage('Bot', `File uploaded successfully: ${data.filename}`);
+                if (data.url) {
+                    addMessage('Bot', `File uploaded successfully: <a href="${data.url}" target="_blank">Download PDF</a>`);
+                } else {
+                    addMessage('Bot', `File uploaded successfully: ${data.filename}`);
+                }
             } catch (error) {
                 addMessage("Bot", "There was an error uploading your file. Please try again later.");
             }
