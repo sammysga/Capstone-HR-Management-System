@@ -102,12 +102,18 @@ app.post('/upload', upload.single('file'), async (req, res) => {
             return res.status(400).json({ message: 'No file uploaded.' });
         }
 
+        // Read the file from the multer storage as a buffer
+        const fileBuffer = fs.readFileSync(req.file.path); // Read file as buffer
+
         // Upload the file to Supabase bucket
         const { data, error } = await supabase.storage
             .from('uploads') // Your bucket name is 'uploads'
-            .upload(`pdfs/${Date.now()}-${req.file.originalname}`, req.file.buffer, {
+            .upload(`pdfs/${Date.now()}-${req.file.originalname}`, fileBuffer, {
                 contentType: req.file.mimetype
             });
+
+        // Delete the local file after uploading
+        fs.unlinkSync(req.file.path);  // Clean up the temporary file from the server
 
         if (error) {
             return res.status(500).json({ message: `Error uploading file: ${error.message}` });
