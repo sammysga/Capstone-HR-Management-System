@@ -3,10 +3,14 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const session = require('express-session');
 const flash = require('connect-flash');
+const multer = require('multer'); // Add multer for file uploads
 const routes = require('./routes/routes.js');
 
 const app = express();
 const port = 4000;
+
+// Middleware for file uploads
+const upload = multer({ dest: 'uploads/' }); // Specify the directory to store uploaded files
 
 app.use(bodyParser.json()); 
 
@@ -53,6 +57,17 @@ app.use(flash());
 app.use((req, res, next) => {
     res.locals.messages = req.flash();
     next();
+});
+
+// Use the routes defined in the 'routes' directory
+// Add route for file upload handling
+app.post('/upload', upload.single('file'), (req, res) => {
+    if (req.file) {
+        console.log('File uploaded:', req.file);
+        res.json({ message: 'File uploaded successfully', file: req.file });
+    } else {
+        res.status(400).json({ message: 'No file uploaded' });
+    }
 });
 
 // Use the routes defined in the 'routes' directory
