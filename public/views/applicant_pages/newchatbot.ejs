@@ -132,9 +132,10 @@
     <script>
          // Wait for the DOM to load before running any code
          document.addEventListener("DOMContentLoaded", function() {
-            const initialResponse = "<%- JSON.stringify(initialResponse) %>" ; // Safely injected from the server
-            displayInitialMessage(initialResponse);
-        });
+        // Safely inject initialResponse as a string, using JSON.stringify to avoid HTML encoding
+        const initialResponse = "<%- JSON.stringify(initialResponse) %>";
+        displayInitialMessage(initialResponse);
+    });
 
         function displayInitialMessage(initialResponse) {
         const chatMessages = document.getElementById('chat-messages');
