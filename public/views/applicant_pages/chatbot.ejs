@@ -15,25 +15,52 @@
             <aside class="chat-sidebar">
                 <div class="logo-container">
                     <img src="/images/prime_assets/primeinfra-logo-text.png" alt="Logo" class="logo">
+                    <div class="status-tracker-label">
+                        <p>Applicant Status Tracker</p>
+                        <hr>
+
+                    </div>
                 </div>
+                
                 <ul class="chat-sidebar-menu">
-                    <li class="active">
-                        <a href="#" data-title="Prime RecruitBot" id="recruitBotButton" aria-expanded="false">
-                            <i class="ri-chat-3-line"></i>
-                        </a>
+                    <!-- Steps Navigation -->
+                    <li class="step-nav">
+                        <div class="ez-step active">
+                            <div class="ez-step-title">P1</div>
+                            <div class="ez-step-description">P1: Initial Screening</div>
+                        </div>
                     </li>
-                    <li>
-                        <a href="#" data-title="Application Status Steps" id="statusStepsButton" aria-expanded="false">
-                            <i class="ri-question-line"></i> 
-                        </a>
+                    <li class="step-nav">
+                        <div class="ez-step">
+                            <div class="ez-step-title">P1 </div>
+                            <div class="ez-step-description">Results</div>
+                        </div>
                     </li>
-                    <li class="chat-sidebar-profile">
-                        <button type="button" class="chat-sidebar-profile-toggle" aria-haspopup="true" aria-expanded="false"></button>
-                        <ul class="chat-sidebar-profile-dropdown">
-                            <li><a href="#"><i class="ri-user-line"></i> Profile</a></li>
-                            <li><a href="#"><i class="ri-logout-box-line"></i> Logout</a></li>
-                        </ul>
+                    <li class="step-nav">
+                        <div class="ez-step">
+                            <div class="ez-step-title">P2</div>
+                            <div class="ez-step-description">P2: HR Screening</div>
+                        </div>
                     </li>
+                    <li class="step-nav">
+                        <div class="ez-step">
+                            <div class="ez-step-title">P2</div>
+                            <div class="ez-step-description">Results</div>
+                        </div>
+                    </li>
+                    <li class="step-nav">
+                        <div class="ez-step">
+                            <div class="ez-step-title">P3</div>
+                            <div class="ez-step-description">P3: Panel Screening</div>
+                        </div>
+                    </li>
+                    <li class="step-nav">
+                        <div class="ez-step">
+                            <div class="ez-step-title">P3</div>
+                            <div class="ez-step-description">Results</div>
+                        </div>
+                    </li>
+
                 </ul>
             </aside>
 
@@ -47,77 +74,10 @@
                             <i class="ri-search-line"></i>
                         </button>
                     </form>
-                    
-                    <!-- EZ Stepper Navigation -->
-                    <div class="ez-stepper">
-                        <div class="ez-step active" onclick="completeStep(this)"> 
-                            <div class="ez-step-title">Step 1</div>
-                            <div class="ez-step-description">Job Application Identification</div>
-                        </div>
-                        <div class="ez-step" onclick="completeStep(this)">
-                            <div class="ez-step-title">Step 2</div>
-                            <div class="ez-step-description">Initial Screening</div>
-                        </div>
-                        <div class="ez-step" onclick="completeStep(this)">
-                            <div class="ez-step-title">Step 3</div>
-                            <div class="ez-step-description">Resume and Certifications</div>
-                        </div>
-                        <div class="ez-step" onclick="completeStep(this)">
-                            <div class="ez-step-title">Step 4</div>
-                            <div class="ez-step-description">HR Assessment Pending for Interview Scheduling</div>
-                        </div>
-                        <div class="ez-step" onclick="completeStep(this)">
-                            <div class="ez-step-title">Step 5</div>
-                            <div class="ez-step-description">Schedule a Behavioral Assessment Interview with HR</div>
-                        </div>
-                        <div class="ez-step" onclick="completeStep(this)">
-                            <div class="ez-step-title">Step 6</div>
-                            <div class="ez-step-description">HR Results</div>
-                        </div>
-                        <div class="ez-step" onclick="completeStep(this)">
-                            <div class="ez-step-title">Step 7</div>
-                            <div class="ez-step-description">Schedule a Competency-based Interview with Line Manager</div>
-                        </div>
-                        <div class="ez-step" onclick="completeStep(this)">
-                            <div class="ez-step-title">Step 8</div>
-                            <div class="ez-step-description">Final Results</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Application Status Steps Panel -->
-                <div class="conversation" id="application-status-steps" style="display: none;">
-                    <div class="application-status">
-                        <h2>Application Status Steps</h2>
-                        <ul class="application-steps-list">
-                            <li>Submission of Application</li>
-                            <li>Initial Screening</li>
-                            <li>HR Interview</li>
-                            <li>Technical Assessment</li>
-                            <li>Final Interview</li>
-                            <li>Offer Letter</li>
-                        </ul>
-                    </div>
                 </div>
 
                 <!-- Default and Conversation Panels -->
-                <div class="conversation conversation-default active" onclick="startChat()">
-                    <i class="ri-chat-3-line"></i>
-                    <p id="startJobApplication">Select this line to start Prime Infrastructure Applicant Screening.</p>
-
-                </div>
-                <div class="conversation" id="conversation-1" style="display: none;">
-                    <div class="conversation-top">
-                        <button type="button" class="conversation-back" aria-label="Back to previous conversation">
-                            <i class="ri-arrow-left-line"></i>
-                        </button>
-                        <div class="conversation-user">
-                            <div>
-                                <div class="conversation-user-name">Prime RecruitBot</div>
-                            </div>
-                        </div>
-                        <div class="conversation-buttons"></div>
-                    </div>
+                <div class="conversation conversation-default active">
                     <div class="conversation-main">
                         <ul class="conversation-wrapper">
                             <div class="coversation-divider"><span>Today</span></div>
@@ -145,15 +105,20 @@
                             </li>
                         </ul>
                     </div>
+                     <!-- Response Text Box Section -->
                     <div class="conversation-bottom">
                         <button type="button" id="submit-button" class="conversation-button">Submit</button>
+                    </div>
+                </div>
+              
+                    <!-- Log Out  -->
+                    <div class="conversation-bottom">
+                        <button type="button" id="submit-button" class="conversation-button">Log Out</button>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <script src="/scripts/applicant_chatbot-script.js"></script>
 
 </body>
 </html>
-
