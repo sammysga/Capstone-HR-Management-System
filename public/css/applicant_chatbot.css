@@ -17,6 +17,55 @@ body {
 }
 /* end: Globals */
 
+.conversation-bottom {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    background-color: #fff;
+    
+}
+
+.conversation-input {
+    flex-grow: 1; /* Keeps it flexible */
+    width: 100%; /* Ensures it takes available space */
+    min-width: 1000px; /* Adds a minimum width */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+    box-sizing: border-box; /* Ensures padding doesn't affect total width */
+}
+
+.conversation-button {
+    background-color: #07ACB9;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+/* Log Out button container fixed at the bottom */
+.logout-container {
+    margin-top: auto; /* Pushes it to the bottom */
+    text-align: center;
+    padding: 10px 0;
+}
+
+.conversation-button.logout {
+    background-color:#07ACB9; /* Red color */
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%; /* Full width */
+    text-align: center;
+    transition: background-color 0.3s;
+}
+
+.conversation-button.logout:hover {
+    background-color: #07ACB9; /* Darker red on hover */
+}
 
 
 /* start: Chat */

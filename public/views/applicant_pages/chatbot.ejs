@@ -12,57 +12,63 @@
     <section class="chat-section">
         <div class="chat-container">
             <!-- Sidebar -->
-            <aside class="chat-sidebar">
-                <div class="logo-container">
-                    <img src="/images/prime_assets/primeinfra-logo-text.png" alt="Logo" class="logo">
-                    <div class="status-tracker-label">
-                        <p>Applicant Status Tracker</p>
-                        <hr>
-
-                    </div>
+<!-- Sidebar -->
+<aside class="chat-sidebar">
+    <div class="sidebar-content">
+        <div class="logo-container">
+            <img src="/images/prime_assets/primeinfra-logo-text.png" alt="Logo" class="logo">
+            <div class="status-tracker-label">
+                <p>Applicant Status Tracker</p>
+                <hr>
+            </div>
+        </div>
+        
+        <ul class="chat-sidebar-menu">
+            <!-- Steps Navigation -->
+            <li class="step-nav">
+                <div class="ez-step active">
+                    <div class="ez-step-title">P1</div>
+                    <div class="ez-step-description">P1: Initial Screening</div>
                 </div>
-                
-                <ul class="chat-sidebar-menu">
-                    <!-- Steps Navigation -->
-                    <li class="step-nav">
-                        <div class="ez-step active">
-                            <div class="ez-step-title">P1</div>
-                            <div class="ez-step-description">P1: Initial Screening</div>
-                        </div>
-                    </li>
-                    <li class="step-nav">
-                        <div class="ez-step">
-                            <div class="ez-step-title">P1 </div>
-                            <div class="ez-step-description">Results</div>
-                        </div>
-                    </li>
-                    <li class="step-nav">
-                        <div class="ez-step">
-                            <div class="ez-step-title">P2</div>
-                            <div class="ez-step-description">P2: HR Screening</div>
-                        </div>
-                    </li>
-                    <li class="step-nav">
-                        <div class="ez-step">
-                            <div class="ez-step-title">P2</div>
-                            <div class="ez-step-description">Results</div>
-                        </div>
-                    </li>
-                    <li class="step-nav">
-                        <div class="ez-step">
-                            <div class="ez-step-title">P3</div>
-                            <div class="ez-step-description">P3: Panel Screening</div>
-                        </div>
-                    </li>
-                    <li class="step-nav">
-                        <div class="ez-step">
-                            <div class="ez-step-title">P3</div>
-                            <div class="ez-step-description">Results</div>
-                        </div>
-                    </li>
+            </li>
+            <li class="step-nav">
+                <div class="ez-step">
+                    <div class="ez-step-title">P1</div>
+                    <div class="ez-step-description">Results</div>
+                </div>
+            </li>
+            <li class="step-nav">
+                <div class="ez-step">
+                    <div class="ez-step-title">P2</div>
+                    <div class="ez-step-description">P2: HR Screening</div>
+                </div>
+            </li>
+            <li class="step-nav">
+                <div class="ez-step">
+                    <div class="ez-step-title">P2</div>
+                    <div class="ez-step-description">Results</div>
+                </div>
+            </li>
+            <li class="step-nav">
+                <div class="ez-step">
+                    <div class="ez-step-title">P3</div>
+                    <div class="ez-step-description">P3: Panel Screening</div>
+                </div>
+            </li>
+            <li class="step-nav">
+                <div class="ez-step">
+                    <div class="ez-step-title">P3</div>
+                    <div class="ez-step-description">Results</div>
+                </div>
+            </li>
+        </ul>
 
-                </ul>
-            </aside>
+        <!-- Log Out Button -->
+        <div class="logout-container">
+            <button id="logout-button" class="conversation-button logout">Log Out</button>
+        </div>
+    </div>
+</aside>
 
             <!-- Content -->
             <div class="chat-content">
@@ -106,16 +112,10 @@
                         </ul>
                     </div>
                      <!-- Response Text Box Section -->
-                    <div class="conversation-bottom">
-                        <button type="button" id="submit-button" class="conversation-button">Submit</button>
-                    </div>
-                </div>
-              
-                    <!-- Log Out  -->
-                    <div class="conversation-bottom">
-                        <button type="button" id="submit-button" class="conversation-button">Log Out</button>
-                    </div>
-                </div>
+            <div class="conversation-bottom">
+                <input type="text" id="chat-input" class="conversation-input" placeholder="Type your message here...">
+                <button id="send-button" class="conversation-button">Send</button>
+            </div>
             </div>
         </div>
     </section>
