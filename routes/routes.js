@@ -134,7 +134,7 @@ router.get('/employee/employeefeedbackquestionnaire/:selectedUserId', employeeCo
 
 // Line Manager Routes
 router.get('/linemanager/interview-bookings', lineManagerController.getInterviewBookings);
-
+router.get('/linemanager/interview-bookingss', lineManagerController.getInterviewBookingss);
 
 // Staff information
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);

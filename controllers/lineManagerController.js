@@ -422,6 +422,24 @@ const lineManagerController = {
             res.redirect('/linemanager/dashboard');
         }
     },
+
+    getInterviewBookingss: function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            res.render('staffpages/linemanager_pages/linemanagerinterviewbookingss', {
+                user: req.session.user // Passes user data from session to the page
+            });
+        } catch (err) {
+            console.error('Error in getInterviewBookings controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading the page.' });
+            res.redirect('/linemanager/dashboard');
+        }
+    },
     
 
     getPersInfoCareerProg: async function(req, res) {
