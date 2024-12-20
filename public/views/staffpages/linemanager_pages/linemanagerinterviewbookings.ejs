@@ -6,8 +6,181 @@
     <title>Manpower Requisition Form</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <style>
+        /* Adjust layout to avoid sidebar overlap */
+        .main-content {
+            margin-left: 350px; /* Add margin to avoid sidebar overlap */
+            padding: 20px;
+            width: calc(100% - 350px); /* Ensures content takes up the remaining space */
+        }
+
+        .tracking-section {
+            margin-top: 20px;
+        }
+        .search-bar {
+            margin-bottom: 15px;
+            padding: 8px;
+            width: 100%;
+            font-size: 16px;
+            border: 1px solid #ddd;
+        }
+        .tracking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .tracking-table th, .tracking-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .tracking-table th {
+            background-color: #f4f4f4;
+            text-align: left;
+        }
+        .tracking-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .tracking-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        .review-button {
+            padding: 5px 10px;
+            background-color: #B4E3E3;
+            color: rgb(0, 0, 0);
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .review-button:hover {
+            background-color: #0056b3;
+        }
+        .set-interview-button {
+            padding: 10px 20px;
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            width: 30%;
+        }
+        .set-interview-button:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
     <%- include('../../partials/linemanager_partials') %>
+
+    <!-- Main Content Section -->
+    <div class="main-content">
+        <!-- Finance Department Applicant Tracking Section -->
+        <div class="tracking-section">
+            <h2>Finance Department Applicant Tracking</h2>
+            <!-- Search Bar -->
+            <input type="text" class="search-bar" id="searchBar" placeholder="Search for applicants..." onkeyup="filterTable()">
+
+            <!-- Table -->
+            <table class="tracking-table" id="applicantTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Position Applied</th>
+                        <th>Internal/External</th>
+                        <th>Application Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>Accountant</td>
+                        <td>Internal</td>
+                        <td>
+                            Pending
+                            <button class="review-button" onclick="reviewScreeningHistory('John Doe')">Click to Review Screening History</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Jane Smith</td>
+                        <td>Financial Analyst</td>
+                        <td>External</td>
+                        <td>
+                            Approved
+                            <button class="review-button" onclick="reviewScreeningHistory('Jane Smith')">Click to Review Screening History</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Mike Brown</td>
+                        <td>Budget Officer</td>
+                        <td>Internal</td>
+                        <td>
+                            Rejected
+                            <button class="review-button" onclick="reviewScreeningHistory('Mike Brown')">Click to Review Screening History</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Set Interview Availabilities Button -->
+            <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
+        </div>
+    </div>
 </body>
+<script>
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+
+    // Filter Table Functionality
+    function filterTable() {
+        const searchInput = document.getElementById("searchBar").value.toLowerCase();
+        const table = document.getElementById("applicantTable");
+        const rows = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName("td");
+            let match = false;
+
+            for (let j = 0; j < cells.length; j++) {
+                if (cells[j].innerText.toLowerCase().includes(searchInput)) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+
+    // Function for the "Click to Review Screening History" button
+    function reviewScreeningHistory(applicantName) {
+        alert('Reviewing Screening History for ' + applicantName);
+        // Here you can add your logic to redirect or show screening history details
+    }
+
+    // Function for the "Set Interview Availabilities" button
+    function setInterviewAvailabilities() {
+        window.location.href = 'https://calendly.com/';  // Replace with your actual Calendly link
+    }
+</script>
 </html>
