@@ -35,7 +35,7 @@
 
         .button {
             padding: 10px 20px;
-            background-color: #124A5C;
+            background-color: #007BFF;
             color: white;
             border: none;
             cursor: pointer;
@@ -60,7 +60,7 @@
             <!-- Buttons below the image -->
             <div class="buttons-container">
                 <button class="button" onclick="saveSchedule()">Save</button>
-                <button class="/linemanager/applicant-tracker" onclick="conductEvaluation()">Conduct Applicant’s Competency-based Evaluation</button>
+                <button class="button" onclick="conductEvaluation()">Conduct Applicant’s Competency-based Evaluation</button>
             </div>
         </div>
     </div>
@@ -98,10 +98,9 @@
             // Add your logic to save the schedule here
         }
 
-        // Function to conduct the competency-based evaluation (you can implement your logic)
+        // Redirect to the Interview Booking page for Conduct Applicant’s Competency-based Evaluation
         function conductEvaluation() {
-            alert("Conducting Applicant’s Competency-based Evaluation.");
-            // Add your logic for conducting the evaluation here
+            window.location.href = '/linemanager/applicant-tracker';
         }
     </script>
 </body>
