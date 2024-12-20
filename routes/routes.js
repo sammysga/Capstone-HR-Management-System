@@ -133,6 +133,8 @@ router.get('/employee/employeefeedbackquestionnaire/:selectedUserId', employeeCo
 // router.post('/employee/employeefeedbackquestionnaire/:selectedUser Id/submit', employeeController.submitFeedback);
 
 // Line Manager Routes
+router.get('/linemanager/interview-bookings', lineManagerController.getInterviewBookings);
+
 
 // Staff information
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
