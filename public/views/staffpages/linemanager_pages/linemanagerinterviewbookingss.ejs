@@ -6,8 +6,103 @@
     <title>Interview Booking</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <style>
+        /* Adjust layout to avoid sidebar overlap */
+        .main-content {
+            margin-left: 350px; /* Add margin to avoid sidebar overlap */
+            padding: 20px;
+            width: calc(100% - 350px); /* Ensures content takes up the remaining space */
+        }
+
+        .interview-schedule {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .calendar-image {
+            width: 80%; /* Adjust width as needed */
+            max-width: 800px; /* Maximum width */
+            margin-bottom: 20px;
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
+    <!-- Include Sidebar -->
     <%- include('../../partials/linemanager_partials') %>
+
+    <!-- Main Content Section -->
+    <div class="main-content">
+        <div class="interview-schedule">
+            <!-- Image representing scheduled interview calendar -->
+            <img src="path_to_your_calendar_image.jpg" alt="Scheduled Interview Calendar" class="calendar-image">
+
+            <!-- Buttons below the image -->
+            <div class="buttons-container">
+                <button class="button" onclick="saveSchedule()">Save</button>
+                <button class="button" onclick="conductEvaluation()">Conduct Applicant’s Competency-based Evaluation</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar functionality
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+
+        // Function to save the schedule (you can implement your logic)
+        function saveSchedule() {
+            alert("Schedule has been saved.");
+            // Add your logic to save the schedule here
+        }
+
+        // Function to conduct the competency-based evaluation (you can implement your logic)
+        function conductEvaluation() {
+            alert("Conducting Applicant’s Competency-based Evaluation.");
+            // Add your logic for conducting the evaluation here
+        }
+    </script>
 </body>
 </html>
