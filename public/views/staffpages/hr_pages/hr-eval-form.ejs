@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Interview Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-right: 1px solid #ccc;
+            position: fixed;
+            height: 100%;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            margin: 10px 0;
+        }
+
+        .sidebar ul li a {
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .container {
+            margin-left: 300px; 
+            margin-right: 80px;
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        header h1 {
+            margin-bottom: 20px;
+        }
+
+        .form-section input[readonly] {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
+
+        .form-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .rating-guide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .rating-guide table, .rating-guide table th, .rating-guide table td {
+            border: 1px solid #ccc;
+        }
+
+        .rating-guide table th, .rating-guide table td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        .professional-background {
+            margin-bottom: 20px;
+        }
+
+        .professional-background div {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .professional-background div label {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .professional-background div input {
+            width: 60px;
+        }
+
+        .communication-skills,
+        .interpersonal-skills,
+        .leadership-qualities {
+            margin-bottom: 20px;
+        }
+
+        .total-section h3 {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .total-section input {
+            width: 100px;
+            padding: 5px;
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
+
+        .submit-section {
+            margin-top: 20px;
+        }
+
+        .submit-section button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .submit-section button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Menu</h2>
+        <ul>
+            <li><a href="#form">Interview Form</a></li>
+            <li><a href="#guide">Rating Guide</a></li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>HR Interview Form</h1>
+        </header>
+        <form id="interview-form">
+            <div class="form-section">
+                <label for="candidate-name">Candidate Name:</label>
+                <input type="text" id="candidate-name" placeholder="Henry, Arthur" readonly>
+
+                <label for="position-title">Position Title:</label>
+                <input type="text" id="position-title" placeholder="Financial Analyst" readonly>
+
+                <label for="position-department">Position Department:</label>
+                <input type="text" id="position-department" placeholder="Finance" readonly>
+
+                <label for="conducted-by">Conducted by:</label>
+                <input type="text" id="conducted-by" placeholder="Henry, Arthur" readonly>
+
+                <label for="date-of-interview">Date of Interview:</label>
+                <input type="text" id="date-of-interview" placeholder="March 15, 2024" readonly>
+            </div>
+
+            <div class="rating-guide" id="guide">
+                <h2>Rating Definition Guide</h2>
+                <table>
+                    <tr>
+                        <th>Rating</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Clearly Evident: Thoroughly explains actions, thought processes, and outcomes.</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Moderately Evident: Adequately explains, with some underdeveloped areas.</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Not Evident: Struggles to explain actions or lacks understanding.</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="professional-background">
+                <h2>Professional Background and Experience</h2>
+                <div>
+                    <label>Demonstrated understanding of role requirements?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Relevance of experience to job description?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Highlighted achievements and contributions in previous roles?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+            <div class="communication-skills">
+                <h2>Communication Skills</h2>
+                <div>
+                    <label>Articulates thoughts clearly and concisely?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Demonstrates active listening?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Responds appropriately to questions?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+            <div class="interpersonal-skills">
+                <h2>Interpersonal Skills</h2>
+                <div>
+                    <label>Works effectively with diverse teams?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Builds rapport and demonstrates empathy?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Handles conflict or disagreement professionally?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+            <div class="leadership-qualities">
+                <h2>Leadership Qualities</h2>
+                <div>
+                    <label>Inspires and motivates others?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Demonstrates decision-making capabilities?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Takes initiative and responsibility?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+            <div class="total-section">
+                <h3>Total:</h3>
+                <input type="number" id="total-score" readonly>
+            </div>
+
+            <div class="submit-section">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const ratingInputs = document.querySelectorAll('.rating-input');
+        const totalScoreInput = document.getElementById('total-score');
+
+        function updateTotal() {
+            let total = 0;
+            ratingInputs.forEach(input => {
+                const value = parseInt(input.value, 10);
+                if (!isNaN(value)) {
+                    total += value;
+                }
+            });
+            totalScoreInput.value = total;
+        }
+
+        ratingInputs.forEach(input => {
+            input.addEventListener('input', updateTotal);
+        });
+
+        document.getElementById('interview-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            alert(`Form submitted with total score: ${totalScoreInput.value}`);
+        });
+    </script>
+</body>
+</html>

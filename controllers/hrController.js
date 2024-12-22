@@ -1786,6 +1786,15 @@ updateJobOffer: async function(req, res) {
         }
     },
 
+    getEvaluationForm: function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/hr-eval-form');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            res.redirect('staff/login');
+        }
+    },
+
     getOffboardingRequest: function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             res.render('staffpages/hr_pages/offboardingrequest');
