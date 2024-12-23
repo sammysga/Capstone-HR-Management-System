@@ -4,147 +4,291 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR Interview Form</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
             margin: 0;
-            padding: 0;
-            display: flex;
         }
 
-        .sidebar {
-            width: 250px;
-            background-color: #f4f4f4;
-            padding: 20px;
-            border-right: 1px solid #ccc;
-            position: fixed;
-            height: 100%;
-        }
-
-        .sidebar h2 {
-            text-align: center;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .sidebar ul li {
-            margin: 10px 0;
-        }
-
-        .sidebar ul li a {
-            text-decoration: none;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .container {
-            margin-left: 300px; 
-            margin-right: 80px;
-            padding: 20px;
-            flex-grow: 1;
-        }
-
-        header h1 {
+        h1 {
+            color: #124A5C;
             margin-bottom: 20px;
         }
 
-        .form-section input[readonly] {
-            background-color: #f0f0f0;
-            cursor: not-allowed;
+        .container {
+            margin-left: 280px;
+            padding: 20px;
         }
 
-        .form-section label {
+        form {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            margin: 20px auto;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        input[readonly] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        button {
+            background-color: #07ACB9;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px 0;
+        }
+
+        button:hover {
+            background-color: #065d6a;
+        }
+
+        h2 {
+            color: #124A5C;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
         }
 
         .rating-guide table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
         }
 
-        .rating-guide table, .rating-guide table th, .rating-guide table td {
+        .rating-guide table th, 
+        .rating-guide table td {
             border: 1px solid #ccc;
-        }
-
-        .rating-guide table th, .rating-guide table td {
-            padding: 8px;
+            padding: 10px;
             text-align: left;
         }
 
-        .professional-background {
+        .rating-guide table th {
+            background-color: #f1f1f1;
+        }
+
+        .skill-section {
             margin-bottom: 20px;
         }
 
-        .professional-background div {
+        .skill-section div {
             display: flex;
             align-items: center;
             margin-bottom: 10px;
         }
 
-        .professional-background div label {
+        .skill-section div label {
             flex: 1;
             margin-right: 10px;
         }
 
-        .professional-background div input {
+        .skill-section div input {
             width: 60px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
 
-        .communication-skills,
-        .interpersonal-skills,
-        .leadership-qualities {
-            margin-bottom: 20px;
+        .category-total {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
 
-        .total-section h3 {
-            display: inline-block;
+        .category-total span {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .category-total input {
+            width: 80px;
+            padding: 5px;
+            text-align: center;
+            background-color: #e9ecef;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .final-total {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .final-total span {
+            font-size: 18px;
+            font-weight: bold;
             margin-right: 10px;
         }
 
-        .total-section input {
+        .final-total input {
             width: 100px;
-            padding: 5px;
-            background-color: #f0f0f0;
-            cursor: not-allowed;
-        }
-
-        .submit-section {
-            margin-top: 20px;
-        }
-
-        .submit-section button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            cursor: pointer;
+            padding: 10px;
+            text-align: center;
+            background-color: #e9ecef;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             font-size: 16px;
         }
 
+        .additional-info {
+            margin-top: 20px;
+        }
+
+        .additional-info label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .additional-info input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .yes-no-section {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .yes-no-section div {
+            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .yes-no-section div label {
+            display: inline-block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .yes-no-section div input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+
+        .yes-no-section div input[type="checkbox"]:checked + label {
+            color: #28a745; /* Green when checked */
+        }
+
+        .yes-no-section div input[type="checkbox"]:not(:checked) + label {
+            color: #dc3545; /* Red when not checked */
+        }
+
+        .submit-section {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .submit-section button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .submit-section .back {
+            background-color: #6c757d;
+            color: #fff;
+        }
+
+        .submit-section .save {
+            background-color: #ffc107;
+            color: #fff;
+        }
+
+        .submit-section .save-submit {
+            background-color: #007bff;
+            color: #fff;
+        }
+
         .submit-section button:hover {
-            background-color: #0056b3;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin-left: 0;
+            }
+
+            .yes-no-section {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .yes-no-section div {
+                margin-bottom: 20px;
+            }
+
+            form {
+                padding: 10px;
+            }
+
+            .form-section {
+                margin-bottom: 15px;
+            }
+
+            input[type="text"], input[type="date"], input[type="number"], select, textarea {
+                font-size: 14px;
+            }
+
+            button {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Menu</h2>
-        <ul>
-            <li><a href="#form">Interview Form</a></li>
-            <li><a href="#guide">Rating Guide</a></li>
-        </ul>
-    </div>
-
+    <%- include('../../partials/hr_partials') %>
     <div class="container">
         <header>
             <h1>HR Interview Form</h1>
         </header>
+
         <form id="interview-form">
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
@@ -166,123 +310,279 @@
             <div class="rating-guide" id="guide">
                 <h2>Rating Definition Guide</h2>
                 <table>
-                    <tr>
-                        <th>Rating</th>
-                        <th>Description</th>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>Clearly Evident: Thoroughly explains actions, thought processes, and outcomes.</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Moderately Evident: Adequately explains, with some underdeveloped areas.</td>
-                    </tr>
-                    <tr>
-                        <td>1</td>
-                        <td>Not Evident: Struggles to explain actions or lacks understanding.</td>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th>Rating</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>3</td>
+                            <td>Clearly Evident: Thoroughly explains actions, thought processes, and outcomes.</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Moderately Evident: Adequately explains, with some underdeveloped areas.</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td>Not Evident: Struggles to explain actions or lacks understanding.</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
 
-            <div class="professional-background">
+             <!--Professional Background and Experience-->
+            <div class="skill-section">
                 <h2>Professional Background and Experience</h2>
                 <div>
                     <label>Demonstrated understanding of role requirements?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <input type="number" min="1" max="3" class="rating-input" data-cateogry="professional">
                 </div>
                 <div>
                     <label>Relevance of experience to job description?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <input type="number" min="1" max="3" class="rating-input" data-cateogry="professional">
                 </div>
                 <div>
                     <label>Highlighted achievements and contributions in previous roles?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <input type="number" min="1" max="3" class="rating-input" data-cateogry="professional">
                 </div>
             </div>
 
-            <div class="communication-skills">
-                <h2>Communication Skills</h2>
-                <div>
-                    <label>Articulates thoughts clearly and concisely?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-                <div>
-                    <label>Demonstrates active listening?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-                <div>
-                    <label>Responds appropriately to questions?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-            </div>
 
-            <div class="interpersonal-skills">
-                <h2>Interpersonal Skills</h2>
-                <div>
-                    <label>Works effectively with diverse teams?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-                <div>
-                    <label>Builds rapport and demonstrates empathy?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-                <div>
-                    <label>Handles conflict or disagreement professionally?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-            </div>
-
-            <div class="leadership-qualities">
-                <h2>Leadership Qualities</h2>
-                <div>
-                    <label>Inspires and motivates others?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-                <div>
-                    <label>Demonstrates decision-making capabilities?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-                <div>
-                    <label>Takes initiative and responsibility?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-            </div>
-
-            <div class="total-section">
+            <div class="category-total">
                 <h3>Total:</h3>
-                <input type="number" id="total-score" readonly>
+                <input type="number" readonly id="category-total-score" id="professional-total">
             </div>
 
+            <!--Functional Skills-->
+            <div class="skill-section">
+                <h2>Functional Skills</h2>
+                <div>
+                    <label>Proficiency in relevant skills:</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Experience in Finance strategy, industry mapping, P&L management</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Provided examples of skills utilization and success?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+
+            <div class="category-total">
+                <h3>Total:</h3>
+                <input type="number" readonly id="category-total-score" id="functional-total">
+            </div>
+
+             <!--Teamwork and Collaboration-->
+             <div class="skill-section">
+                <h2>Teamwork and Collaboration</h2>
+                <div>
+                    <label>Emphasized importance of collaboration?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Shared experiences of effective teamwork?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+
+            <div class="category-total">
+                <h3>Total:</h3>
+                <input type="number" readonly id="category-total-score" id="teamwork-total">
+            </div>
+
+            <!--Value Creation-->
+            <div class="skill-section">
+                <h2>Value Creation</h2>
+                <div>
+                    <label>Demonstrated ability to generate innovative ideas or solutions?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Contributed to the creation of tangible value for the team or organization?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+
+            <div class="category-total">
+                <h3>Total:</h3>
+                <input type="number" readonly id="category-total-score" id="value-total">
+            </div>
+
+            <!--Integrity-->
+            <div class="skill-section">
+                <h2>Integrity</h2>
+                <div>
+                    <label>Showed respect for colleagues and stakeholders? </label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Acted professionally and courteously in all interactions? </label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+
+            <div class="category-total">
+                <h3>Total:</h3>
+                <input type="number" readonly id="category-total-score" id="integrity-total">
+            </div>
+
+            <!--Problem-Solving Abilities-->
+            <div class="skill-section">
+                <h2>Problem-Solving Abilities</h2>
+                <div>
+                    <label>Demonstrated strong problem-solving skills?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+                <div>
+                    <label>Provided examples of problem-solving approach?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+
+            <div class="category-total">
+                <h3>Total:</h3>
+                <input type="number" readonly id="category-total-score" id="problem-solving-total">
+            </div>
+
+            <!--Motivation and Fit-->
+            <div class="skill-section">
+                <h2>Motivation and Fit</h2>
+                <div>
+                    <label>Demonstrated genuine interest in the position?</label>
+                    <input type="number" min="1" max="3" class="rating-input">
+                </div>
+            </div>
+
+
+            <div class="category-total">
+                <h3>Total:</h3>
+                <input type="number" readonly id="category-total-score" id="motivation-total">
+            </div>
+
+            <!--Calculated Total Assessment Rating-->
+            <div class="final-total">
+                <span>Calculated Total Assessment Rating:</span>
+                <input type="number" readonly id="final-total">
+            </div>
+
+            <!--Additional Info-->
+            <div class="additional-info">
+                <label for="expected-compensation">Expected Compensation:</label>
+                <input type="text" id="expected-compensation" placeholder="Enter expected compensation">
+
+                <label for="reason-applying">Reason for Applying:</label>
+                <input type="text" id="reason-applying" placeholder="Enter reason for applying">
+
+                <label for="availability">Availability:</label>
+                <input type="text" id="availability" placeholder="Enter availability">
+            </div>
+
+            <!--Yes/No Section-->
+            <div class="yes-no-section">
+                <div>
+                    <label>Potential Fit for the Role?</label>
+                    <input type="checkbox" id="fit-role" class="checkbox">
+                    <label for="fit-role">Yes</label>
+                </div>
+
+                <div>
+                    <label>Recommended for Further Consideration in Hiring Process?</label>
+                    <input type="checkbox" id="consideration" class="checkbox">
+                    <label for="consideration">Yes</label>
+                </div>
+            </div>
+
+            <!--Submit Section-->
             <div class="submit-section">
-                <button type="submit">Submit</button>
+                <button type="button" class="back">Back</button>
+                <button type="button" class="save">Save</button>
+                <button type="submit" class="save-submit">Save & Submit</button>
             </div>
         </form>
     </div>
 
     <script>
         const ratingInputs = document.querySelectorAll('.rating-input');
-        const totalScoreInput = document.getElementById('total-score');
+        const categoryTotals = document.querySelectorAll('.category-total-score');
+        const finalTotalInput = document.getElementById('final-total');
 
-        function updateTotal() {
-            let total = 0;
+        function calculateCategoryTotals() {
+            const categories = {};
             ratingInputs.forEach(input => {
+                const category = input.dataset.category;
                 const value = parseInt(input.value, 10);
+                if (!categories[category]) {
+                    categories[category] = 0;
+                }
                 if (!isNaN(value)) {
-                    total += value;
+                    categories[category] += value;
                 }
             });
-            totalScoreInput.value = total;
+            categoryTotals.forEach(totalInput => {
+                const category = totalInput.id.replace('-total', '');
+                totalInput.value = categories[category] || 0;
+            });
+        }
+
+        function calculateFinalTotal() {
+            let finalTotal = 0;
+            categoryTotals.forEach(input => {
+                const value = parseInt(input.value, 10);
+                if (!isNaN(value)) {
+                    finalTotal += value;
+                }
+            });
+            finalTotalInput.value = finalTotal;
         }
 
         ratingInputs.forEach(input => {
-            input.addEventListener('input', updateTotal);
+            input.addEventListener('input', () => {
+                calculateCategoryTotals();
+                calculateFinalTotal();
+            });
         });
 
         document.getElementById('interview-form').addEventListener('submit', (event) => {
             event.preventDefault();
-            alert(`Form submitted with total score: ${totalScoreInput.value}`);
+            alert(`Form submitted with final total score: ${finalTotalInput.value}`);
         });
+
+        // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
     </script>
 </body>
 </html>
