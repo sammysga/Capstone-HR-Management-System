@@ -154,7 +154,7 @@ router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
 router.get('/linemanager/records-performance-tracker', lineManagerController.getRecordsPerformanceTrackerByDepartmentId);
 
 router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getRecordsPerformanceTrackerByUserId);
-router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
+router.get('/linemanager/interview-form', lineManagerController.getApplicantTracker);
 
 router.get('/linemanager/offboarding-requests', lineManagerController.getOffboardingRequestsDash);
 router.get('/linemanager/view-offboarding-request/:userId', lineManagerController.getViewOffboardingRequest);
