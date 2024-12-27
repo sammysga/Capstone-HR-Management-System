@@ -3,10 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interview Booking</title>
+    <title>Interview Tracker</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <style>
+        .main-content {
+            margin-left: 350px;
+            padding: 20px;
+            width: calc(100% - 350px);
+        }
+        .tracking-section {
+            margin-top: 20px;
+        }
+        .tracking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .tracking-table th, .tracking-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .tracking-table th {
+            background-color: #f4f4f4;
+            text-align: left;
+        }
+        .tracking-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .tracking-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        .view-results-button {
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .view-results-button:hover {
+            background-color: #0056b3;
+        }
+        .set-interview-button {
+            padding: 10px 20px;
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            display: block;
+            width: 40%;
+            text-align: center;
+        }
+        .set-interview-button:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
-    <!-- Include Sidebar -->
     <%- include('../../partials/linemanager_partials') %>
+
+    <!-- Main Content Section -->
+    <div class="main-content">
+        <div class="tracking-section">
+            <h2>Interview Tracker</h2>
+            <!-- Table -->
+            <table class="tracking-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Position Applied</th>
+                        <th>Application Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% const applicants = [
+                        { name: "John Doe", position: "Software Engineer", status: "Approved" },
+                        { name: "Jane Smith", position: "Project Manager", status: "Pending" },
+                        { name: "Mike Brown", position: "Data Analyst", status: "Rejected" },
+                        { name: "Anna White", position: "HR Specialist", status: "Approved" },
+                        { name: "Chris Green", position: "UI/UX Designer", status: "Pending" },
+                        { name: "Emma Johnson", position: "Backend Developer", status: "Rejected" },
+                        { name: "Oliver Miller", position: "Frontend Developer", status: "Approved" },
+                        { name: "Sophia Wilson", position: "QA Engineer", status: "Pending" },
+                        { name: "Liam Davis", position: "Product Owner", status: "Approved" },
+                        { name: "Isabella Brown", position: "DevOps Engineer", status: "Rejected" },
+                        { name: "Ethan Jones", position: "Database Administrator", status: "Pending" },
+                        { name: "Mia Moore", position: "Cloud Architect", status: "Approved" },
+                        { name: "Logan Taylor", position: "Scrum Master", status: "Pending" },
+                        { name: "Ava Anderson", position: "Technical Writer", status: "Rejected" },
+                        { name: "Lucas Thomas", position: "System Analyst", status: "Approved" },
+                        { name: "Amelia Lee", position: "Network Engineer", status: "Pending" },
+                        { name: "Benjamin Martin", position: "Business Analyst", status: "Rejected" },
+                        { name: "Charlotte Harris", position: "IT Support Specialist", status: "Approved" },
+                        { name: "Mason Lewis", position: "Cybersecurity Specialist", status: "Pending" },
+                        { name: "Harper Walker", position: "Full Stack Developer", status: "Approved" }
+                    ]; %>
+                    <% applicants.forEach(applicant => { %>
+                    <tr>
+                        <td><%= applicant.name %></td>
+                        <td><%= applicant.position %></td>
+                        <td><%= applicant.status %></td>
+                        <td>
+                            <button class="view-results-button" onclick="viewFinalResults('<%= applicant.name %>')">View Final Results</button>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+
+            <!-- Set Interview Availabilities Button -->
+            <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
+        </div>
+    </div>
 </body>
+<script>
+    function viewFinalResults(applicantName) {
+        alert('Viewing Final Results for ' + applicantName);
+        // Add logic here to navigate to or display the final results for the applicant
+    }
+
+    function setInterviewAvailabilities() {
+        window.location.href = 'https://calendly.com/your-link'; // Replace with your Calendly link
+    }
+
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+
+</script>
 </html>
