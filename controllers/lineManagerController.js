@@ -592,9 +592,9 @@ const lineManagerController = {
         }
     },
 
-    getApplicantTracker: function(req, res) {
+    getEvaluationForm: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/linemangerapplicanttracking');
+            res.render('staffpages/linemanager_pages/linemangerevaluationform');
         } else {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
