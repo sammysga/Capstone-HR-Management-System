@@ -59,6 +59,26 @@
         .set-interview-button:hover {
             background-color: #218838;
         }
+        .search-container {
+            margin-bottom: 20px;
+        }
+        .search-container input {
+            padding: 8px;
+            width: 300px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .search-container button {
+            padding: 8px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-container button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -68,8 +88,15 @@
     <div class="main-content">
         <div class="tracking-section">
             <h2>Interview Tracker</h2>
+
+            <!-- Search Section -->
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search by name or position...">
+                <button onclick="searchInterview()">Search</button>
+            </div>
+
             <!-- Table -->
-            <table class="tracking-table">
+            <table class="tracking-table" id="applicantTable">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -110,7 +137,7 @@
                             <% if (applicant.status === "Approved") { %>
                                 <a href="/linemanager/approved-final-result" class="view-results-button">View Final Results</a>
                             <% } else if (applicant.status === "Rejected") { %>
-                                <a href="/linemanager/final-results/rejected-final-result" class="view-results-button">View Final Results</a>
+                                <a href="/linemanager/rejected-final-result" class="view-results-button">View Final Results</a>
                             <% } else { %>
                                 <button class="view-results-button" disabled>View Final Results</button>
                             <% } %>
@@ -128,6 +155,26 @@
 <script>
     function setInterviewAvailabilities() {
         window.location.href = 'https://calendly.com/your-link'; // Replace with your Calendly link
+    }
+
+    function searchInterview() {
+        let input = document.getElementById("searchInput").value.toLowerCase();
+        let table = document.getElementById("applicantTable");
+        let rows = table.getElementsByTagName("tr");
+        
+        for (let i = 1; i < rows.length; i++) {
+            let name = rows[i].getElementsByTagName("td")[0];
+            let position = rows[i].getElementsByTagName("td")[1];
+            if (name || position) {
+                let nameText = name.textContent || name.innerText;
+                let positionText = position.textContent || position.innerText;
+                if (nameText.toLowerCase().indexOf(input) > -1 || positionText.toLowerCase().indexOf(input) > -1) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
     }
 
     // Toggle active class for sidebar links

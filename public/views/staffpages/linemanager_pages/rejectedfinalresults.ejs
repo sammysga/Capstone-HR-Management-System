@@ -37,6 +37,17 @@
             font-size: 16px;
             margin-top: 20px;
         }
+
+        .approval-button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        
         .back-button:hover {
             background-color: #0056b3;
         }
@@ -58,23 +69,23 @@
         <!-- Applicant Details -->
         <div class="rejection-details">
             <h3>Applicant Details</h3>
-            <p><strong>Name:</strong> <%= name %></p>
-            <p><strong>Position Applied:</strong> <%= position %></p>
-            <p><strong>Department:</strong> <%= department %></p>
+            <p><strong>Name:</strong> John Doe</p>
+            <p><strong>Position Applied:</strong> Software Engineer</p>
+            <p><strong>Department:</strong> IT Department</p>
 
             <h3>Summary of Results:</h3>
             <ul>
-                <li><strong>Initial Screening Interview Result:</strong> <%= screeningResult %></li>
-                <li><strong>HR Evaluation:</strong> <%= hrevaluation %></li>
-                <li><strong>Line Manager Evaluation:</strong> <%= lineManagerEvaluation %></li>
+                <li><strong>Initial Screening Interview Result:</strong> Passed</li>
+                <li><strong>HR Evaluation:</strong> Did not meet cultural fit</li>
+                <li><strong>Line Manager Evaluation:</strong> Insufficient technical expertise</li>
             </ul>
 
             <h3>Reason for Rejection:</h3>
-            <p><%= rejectionReason %></p>
+            <p>Despite passing the initial interview, the candidate did not meet the technical requirements for the role as assessed during the line manager interview. The HR evaluation indicated a lack of cultural fit with the team.</p>
         </div>
 
         <!-- Back Button -->
-        <button class="back-button" onclick="window.history.back()">Back</button>
+        <a href="/linemanager/interview-tracker" class="approval-button">Back to Interview Tracker</a>
     </div>
 </body>
 
