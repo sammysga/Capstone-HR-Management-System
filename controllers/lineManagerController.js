@@ -609,6 +609,15 @@ const lineManagerController = {
             res.redirect('/staff/login');
         }
     },
+
+    getFinalResult: function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
+            res.render('staffpages/linemanager_pages/linemanagerfinalresult');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+            res.redirect('/staff/login');
+        }
+    },
     
     
     getRequestMRF: async function(req, res) {

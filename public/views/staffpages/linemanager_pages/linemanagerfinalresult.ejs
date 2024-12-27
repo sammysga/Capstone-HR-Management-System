@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Results</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <style>
+        .main-content {
+            margin-left: 350px;
+            padding: 20px;
+            width: calc(100% - 350px);
+        }
+        .results-section {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .results-section h2 {
+            margin-bottom: 15px;
+        }
+        .details {
+            margin-bottom: 20px;
+        }
+        .details p {
+            margin: 5px 0;
+        }
+        .summary {
+            margin-bottom: 20px;
+        }
+        .acknowledge-statement {
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+        .approval-options {
+            margin-bottom: 20px;
+        }
+        .approval-options label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .buttons-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .button.secondary {
+            background-color: #6c757d;
+        }
+        .button.secondary:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/linemanager_partials') %>
+
+    <!-- Main Content Section -->
+    <div class="main-content">
+        <div class="results-section">
+            <h2>Final Results</h2>
+            <div class="details">
+                <p><strong>Candidate Name:</strong> John Doe</p>
+                <p><strong>Position Title:</strong> Senior Software Engineer</p>
+                <p><strong>Conducted By:</strong> Jane Smith</p>
+                <p><strong>Position Department:</strong> IT Department</p>
+            </div>
+            <div class="summary">
+                <h3>Summary of Results:</h3>
+                <p><strong>Initial Screening Interview Phase:</strong> Candidate demonstrated strong problem-solving skills and a solid understanding of algorithms.</p>
+                <p><strong>Evaluation of HR:</strong> HR rated the candidate's communication and teamwork abilities as excellent.</p>
+                <p><strong>Evaluation of Line Manager:</strong> Line manager confirmed technical expertise but noted room for improvement in time management skills.</p>
+            </div>
+            <p class="acknowledge-statement">
+                Please review the applicant's details and select one of the options below to confirm the final decision for the recruitment process.
+            </p>
+            <div class="approval-options">
+                <label>
+                    <input type="checkbox" name="approval" value="approved"> 
+                    Approved: I acknowledge that the candidate has successfully met all the job requirements and is approved for hiring. HR will be informed that the candidate is welcomed to the department.
+                </label>
+                <label>
+                    <input type="checkbox" name="approval" value="not-approved"> 
+                    Not Approved: I acknowledge that the candidate has not met the line manager’s standard requirements and is not approved for hiring. HR will be informed accordingly.
+                </label>
+            </div>
+            <div class="buttons-container">
+                <button class="button secondary" onclick="goBack()">Back</button>
+                <button class="button" onclick="saveAndNotify()">Save and Notify HR</button>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    function goBack() {
+        window.history.back();
+    }
+
+    function saveAndNotify() {
+        const approvalOptions = document.querySelectorAll('input[name="approval"]:checked');
+        if (approvalOptions.length === 0) {
+            alert("Please select an approval option before saving.");
+            return;
+        }
+
+        const selectedOption = approvalOptions[0].value;
+        alert(`Final decision: ${selectedOption === "approved" ? "Approved" : "Not Approved"}. Notification sent to HR.`);
+        // Add logic to save the decision and notify HR here
+    }
+
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+    
+</script>
+</html>
