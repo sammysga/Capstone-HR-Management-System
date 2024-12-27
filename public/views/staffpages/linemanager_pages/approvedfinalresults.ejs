@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Approved Final Results</title>
+    <title>Approved Applicant</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
     <style>
@@ -12,81 +12,52 @@
             padding: 20px;
             width: calc(100% - 350px);
         }
-        .results-section {
+        .approval-section {
             margin-top: 20px;
-            background-color: #f9f9f9;
+            background-color: #e9f7ef;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .results-section h2 {
+        .approval-section h2 {
+            color: #2c6d34;
+        }
+        .approval-details {
+            font-size: 18px;
             margin-bottom: 20px;
         }
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
+        .approval-button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
         }
-        .results-table th, .results-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        .results-table th {
-            background-color: #f4f4f4;
-        }
-        .results-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .results-table tr:hover {
-            background-color: #f1f1f1;
-        }
-        .no-results {
-            text-align: center;
-            color: #777;
-            font-style: italic;
-            margin: 20px 0;
+        .approval-button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
+    <%- include('../../partials/linemanager_partials') %>
 
     <!-- Main Content Section -->
     <div class="main-content">
-        <div class="results-section">
-            <h2>Approved Final Results</h2>
-            <table class="results-table">
-                <thead>
-                    <tr>
-                        <th>Candidate Name</th>
-                        <th>Position Title</th>
-                        <th>Department</th>
-                        <th>Approval Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>John Doe</td>
-                        <td>Senior Software Engineer</td>
-                        <td>IT Department</td>
-                        <td>2024-12-27</td>
-                    </tr>
-                    <tr>
-                        <td>Jane Smith</td>
-                        <td>Marketing Manager</td>
-                        <td>Marketing Department</td>
-                        <td>2024-12-25</td>
-                    </tr>
-                    <tr>
-                        <td>Michael Brown</td>
-                        <td>HR Specialist</td>
-                        <td>HR Department</td>
-                        <td>2024-12-20</td>
-                    </tr>
-                </tbody>
-            </table>
-            <!-- Message for no results -->
-            <!-- Uncomment the line below if no results -->
-            <!-- <p class="no-results">No approved candidates to display.</p> -->
+        <div class="approval-section">
+            <h2>Applicant Approved</h2>
+            <div class="approval-details">
+                <p><strong>Candidate Name:</strong> John Doe</p>
+                <p><strong>Position Title:</strong> Senior Software Engineer</p>
+                <p><strong>Department:</strong> IT Department</p>
+                <p><strong>Approval Date:</strong> 2024-12-27</p>
+            </div>
+
+            <p>The candidate has successfully passed all screening phases and has been approved for hiring. HR has been notified about the approval, and John Doe is now welcomed to the IT department.</p>
+
+            <!-- Back Button -->
+            <a href="/linemanager/interview-tracker" class="approval-button">Back to Interview Tracker</a>
         </div>
     </div>
 </body>

@@ -107,7 +107,11 @@
                         <td><%= applicant.position %></td>
                         <td><%= applicant.status %></td>
                         <td>
-                            <button class="view-results-button" onclick="viewFinalResults('<%= applicant.name %>')">View Final Results</button>
+                            <% if (applicant.status === "Approved") { %>
+                                <a href="/linemanager/approved-final-result/<%= applicant.name %>" class="view-results-button">View Final Results</a>
+                            <% } else { %>
+                                <button class="view-results-button" disabled>View Final Results</button>
+                            <% } %>
                         </td>
                     </tr>
                     <% }); %>
@@ -120,11 +124,6 @@
     </div>
 </body>
 <script>
-    function viewFinalResults(applicantName) {
-        alert('Viewing Final Results for ' + applicantName);
-        // Add logic here to navigate to or display the final results for the applicant
-    }
-
     function setInterviewAvailabilities() {
         window.location.href = 'https://calendly.com/your-link'; // Replace with your Calendly link
     }
@@ -154,6 +153,5 @@
             }
         });
     });
-
 </script>
 </html>
