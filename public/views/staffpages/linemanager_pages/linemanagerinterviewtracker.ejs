@@ -109,6 +109,8 @@
                         <td>
                             <% if (applicant.status === "Approved") { %>
                                 <a href="/linemanager/approved-final-result" class="view-results-button">View Final Results</a>
+                            <% } else if (applicant.status === "Rejected") { %>
+                                <a href="/linemanager/final-results/rejected-final-result" class="view-results-button">View Final Results</a>
                             <% } else { %>
                                 <button class="view-results-button" disabled>View Final Results</button>
                             <% } %>
