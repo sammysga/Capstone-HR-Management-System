@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Approved Applicant</title>
+    <title>Final Results - Rejected</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
     <style>
@@ -12,21 +12,23 @@
             padding: 20px;
             width: calc(100% - 350px);
         }
-        .approval-section {
-            margin-top: 20px;
-            background-color: #e9f7ef;
+        .rejection-message {
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .approval-section h2 {
-            color: #2c6d34;
-        }
-        .approval-details {
-            font-size: 18px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
             margin-bottom: 20px;
         }
-        .approval-button {
+        .rejection-message h2 {
+            font-size: 24px;
+        }
+        .rejection-details {
+            margin-top: 20px;
+        }
+        .rejection-details p {
+            font-size: 18px;
+        }
+        .back-button {
             padding: 10px 20px;
             background-color: #007BFF;
             color: white;
@@ -35,7 +37,7 @@
             font-size: 16px;
             margin-top: 20px;
         }
-        .approval-button:hover {
+        .back-button:hover {
             background-color: #0056b3;
         }
     </style>
@@ -45,20 +47,34 @@
 
     <!-- Main Content Section -->
     <div class="main-content">
-        <div class="approval-section">
-            <h2>Applicant Approved</h2>
-            <div class="approval-details">
-                <p><strong>Candidate Name:</strong> John Doe</p>
-                <p><strong>Position Title:</strong> Senior Software Engineer</p>
-                <p><strong>Department:</strong> IT Department</p>
-                <p><strong>Approval Date:</strong> 2024-12-27</p>
-            </div>
+        <h2>Final Results - Rejected</h2>
 
-            <p>The candidate has successfully passed all screening phases and has been approved for hiring. HR has been notified about the approval, and John Doe is now welcomed to the IT department.</p>
-
-            <!-- Back Button -->
-            <a href="/linemanager/interview-tracker" class="approval-button">Back to Interview Tracker</a>
+        <!-- Rejection Message -->
+        <div class="rejection-message">
+            <h2>We regret to inform you that the applicant has been rejected.</h2>
+            <p>The candidate did not meet the required standards for the position.</p>
         </div>
+
+        <!-- Applicant Details -->
+        <div class="rejection-details">
+            <h3>Applicant Details</h3>
+            <p><strong>Name:</strong> <%= name %></p>
+            <p><strong>Position Applied:</strong> <%= position %></p>
+            <p><strong>Department:</strong> <%= department %></p>
+
+            <h3>Summary of Results:</h3>
+            <ul>
+                <li><strong>Initial Screening Interview Result:</strong> <%= screeningResult %></li>
+                <li><strong>HR Evaluation:</strong> <%= hrevaluation %></li>
+                <li><strong>Line Manager Evaluation:</strong> <%= lineManagerEvaluation %></li>
+            </ul>
+
+            <h3>Reason for Rejection:</h3>
+            <p><%= rejectionReason %></p>
+        </div>
+
+        <!-- Back Button -->
+        <button class="back-button" onclick="window.history.back()">Back</button>
     </div>
 </body>
 
@@ -90,4 +106,5 @@
         });
     });
 </script>
+
 </html>

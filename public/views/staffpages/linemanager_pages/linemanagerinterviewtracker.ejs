@@ -108,7 +108,7 @@
                         <td><%= applicant.status %></td>
                         <td>
                             <% if (applicant.status === "Approved") { %>
-                                <a href="/linemanager/approved-final-result/<%= applicant.name %>" class="view-results-button">View Final Results</a>
+                                <a href="/linemanager/approved-final-result" class="view-results-button">View Final Results</a>
                             <% } else { %>
                                 <button class="view-results-button" disabled>View Final Results</button>
                             <% } %>
