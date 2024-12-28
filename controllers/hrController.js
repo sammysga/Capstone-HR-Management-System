@@ -263,7 +263,7 @@ const hrController = {
     },
     
 
-    getApplicantTracker: async function(req, res) {
+    getApplicantTrackerAllJobPositions: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 // Query job positions and departments from Supabase
@@ -318,7 +318,16 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
-    
+
+    getApplicantTrackerByJobPositions: function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/hrapplicanttracking-jobposition');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            res.redirect('staff/login');
+        }
+    },
+ 
 
     //ARCHIVED
     // getApplicantTracking: async function (req, res) {

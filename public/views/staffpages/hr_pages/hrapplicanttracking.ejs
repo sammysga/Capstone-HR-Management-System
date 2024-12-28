@@ -126,39 +126,37 @@
             background-color: #f1f1f1;
         }
 
-        /* Style for the color-coded circle status */
-.jobTitle-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        /* Style for the job title container */
+        .job-title-container {
+            display: flex;
+            align-items: center;
+        }
 
-.jobTitle-circle {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: gray; /* Default color */
-}
+        /* Style for status circle */
+        .status-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px; /* Space between circle and job title */
+        }
 
-.jobTitle-container .green {
-    background-color: green; /* Green circle if date is within range */
-}
-/* Styling for the status circle */
-.status-circle {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 10px; /* Space between the circle and job title */
-}
+        /* Green status circle */
+        .status-circle.green {
+            background-color: green;
+        }
 
+        /* Gray status circle */
+        .status-circle.gray {
+            background-color: gray;
+        }
     </style>
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
 
-       <!-- Main Content Section -->
-       <div class="main-content">
+    <!-- Main Content Section -->
+    <div class="main-content">
         <!-- Header Section -->
         <div class="header-section">
             <h2>Applicant Tracking</h2>
@@ -179,9 +177,9 @@
                             <option value="">No departments available</option>
                         <% } %>
                     </select>
-                                   
-                    <input type="text" class="search-bar" id="searchBar" placeholder="Search Job Position" onkeyup="filterTable()">
-                    <button class="search-button"><i class="fas fa-search"></i> Search</button>
+
+                    <input type="text" class="search-bar" id="searchBar" placeholder="Search Job Position">
+                    <button class="search-button" onclick="filterTable()">Search</button>
                 </div>
                 <div class="right-section">
                     <button>For Review</button>
@@ -206,9 +204,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% jobPositions.forEach((job, index) => { %>
+                    <% 
+                        // Sort job positions by job title alphabetically
+                        jobPositions.sort((a, b) => a.jobTitle.localeCompare(b.jobTitle));
+                        jobPositions.forEach((job, index) => { 
+                    %>
                         <tr class="jobRow" data-department="<%= job.departmentId %>" onclick="redirectToJobPage('<%= job.jobId %>')">
-                            <td class="jobTitleCell"><%= job.jobTitle %></td>
+                            <td class="jobTitleCell">
+                                <div class="job-title-container">
+                                    <div class="status-circle"></div>
+                                    <%= job.jobTitle %>
+                                </div>
+                            </td>
                             <td><%= job.departmentName %></td>
                             <td><%= job.hiringStartDate %></td>
                             <td><%= job.hiringEndDate %></td>
@@ -223,17 +230,22 @@
             </table>
         </div>
     </div>
+
     <script>
         // Redirect to job position page when a row is clicked
         function redirectToJobPage(jobId) {
-            window.location.href = `/hrapplicanttracking-jobposition/${jobId}`;
+
+            window.location.href = `/hr/applicant-tracker-jobposition`;
+            
+            //TODO: Use this when all applicants could be fetched already with their corresponding statuses.
+            // window.location.href = `/hr/applicant-tracker-jobposition/${jobId}`;
         }
-    
+
         // Filter table based on the department selected from dropdown
         function filterByDepartment() {
             const departmentId = document.getElementById("departmentDropdown").value;
             const rows = document.querySelectorAll(".jobRow");
-    
+
             rows.forEach(row => {
                 if (departmentId === "all" || row.getAttribute("data-department") === departmentId) {
                     row.style.display = "";
@@ -242,17 +254,17 @@
                 }
             });
         }
-    
+
         // Filter table based on the search input
         function filterTable() {
             const searchInput = document.getElementById("searchBar").value.toLowerCase();
             const table = document.getElementById("applicantTable");
             const rows = table.getElementsByTagName("tr");
-    
-            for (let i = 1; i < rows.length; i++) {
+
+            for (let i = 1; i < rows.length; i++) { // Starting from 1 to skip header row
                 const cells = rows[i].getElementsByTagName("td");
                 let match = false;
-    
+
                 for (let j = 0; j < cells.length; j++) {
                     if (cells[j].innerText.toLowerCase().includes(searchInput)) {
                         match = true;
@@ -262,40 +274,33 @@
                 rows[i].style.display = match ? "" : "none";
             }
         }
-    
+
         // Function to check if the current date is within the hiring date range
         function isWithinHiringDates(startDate, endDate) {
             const today = new Date();
             const start = new Date(startDate);
             const end = new Date(endDate);
-    
+
             return today >= start && today <= end;
         }
-    
+
         // Adding the color-coded circle next to job titles based on hiring date range
-    document.addEventListener('DOMContentLoaded', () => {
-        const jobRows = document.querySelectorAll('.jobRow');
+        document.addEventListener('DOMContentLoaded', () => {
+            const jobRows = document.querySelectorAll('.jobRow');
 
-        jobRows.forEach(row => {
-            const jobTitleCell = row.querySelector('.jobTitleCell'); // Job title cell
-            const hiringStartDate = row.cells[2].innerText; // Hiring Start Date column
-            const hiringEndDate = row.cells[3].innerText; // Hiring End Date column
+            jobRows.forEach((row) => {
+                const statusCircle = row.querySelector('.status-circle');
+                const hiringStartDate = row.cells[2].innerText.trim(); // Hiring start date
+                const hiringEndDate = row.cells[3].innerText.trim(); // Hiring end date
 
-            const circle = document.createElement('span');
-            circle.classList.add('status-circle');
-
-            if (isWithinHiringDates(hiringStartDate, hiringEndDate)) {
-                circle.style.backgroundColor = 'green'; // Green circle if within date range
-            } else {
-                circle.style.backgroundColor = 'gray'; // Gray circle if not within date range
-            }
-
-            // Insert circle before job title
-            jobTitleCell.insertBefore(circle, jobTitleCell.firstChild);
+                // Ensure we are dealing with valid date strings
+                if (isWithinHiringDates(hiringStartDate, hiringEndDate)) {
+                    statusCircle.classList.add('green'); // Apply green color if within range
+                } else {
+                    statusCircle.classList.add('gray'); // Apply gray color if not within range
+                }
+            });
         });
-    });
     </script>
-    
 </body>
 </html>
-
