@@ -263,15 +263,62 @@ const hrController = {
     },
     
 
-    getApplicantTracker: function(req, res) {
+    getApplicantTracker: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hrapplicanttracking');
+            try {
+                // Query job positions and departments from Supabase
+                const { data: jobpositions, error: jobpositionsError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
+                    .order('hiringStartDate', { ascending: true });
+    
+                if (jobpositionsError) {
+                    console.error('Error fetching job positions:', jobpositionsError);
+                    throw jobpositionsError;
+                }
+                console.log('Fetched job positions:', jobpositions);
+    
+                // Query department names from the departments table
+                const { data: departments, error: departmentsError } = await supabase
+                    .from('departments')
+                    .select('deptName, departmentId');
+    
+                if (departmentsError) {
+                    console.error('Error fetching departments:', departmentsError);
+                    throw departmentsError;
+                }
+                console.log('Fetched departments:', departments);
+    
+                // Map departments to a dictionary for easier lookup
+                const departmentMap = departments.reduce((acc, dept) => {
+                    acc[dept.departmentId] = dept.deptName;
+                    return acc;
+                }, {});
+    
+                // Prepare job positions data with department names
+                const jobPositionsWithDept = jobpositions.map((job) => ({
+                    ...job,
+                    departmentName: departmentMap[job.departmentId] || 'Unknown',
+                }));
+                console.log('Mapped job positions with departments:', jobPositionsWithDept);
+    
+                // Render the page with job positions and departments data
+                res.render('staffpages/hr_pages/hrapplicanttracking', {
+                    jobPositions: jobPositionsWithDept,
+                    departments: departments  // Ensure departments are being sent here
+                });
+    
+            } catch (err) {
+                console.error('Error fetching data from Supabase:', err);
+                req.flash('errors', { databaseError: 'Error fetching job data.' });
+                res.redirect('/staff/login');
+            }
         } else {
             req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
         }
     },
-
+    
 
     //ARCHIVED
     // getApplicantTracking: async function (req, res) {
