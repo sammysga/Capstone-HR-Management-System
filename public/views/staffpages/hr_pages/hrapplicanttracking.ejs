@@ -5,309 +5,229 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR Manager Interview Form</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome for icons -->
     <style>
-        /* Adjust content container to avoid overlap with sidebar */
-        .content-container {
-            margin-left: 300px; /* Adjust based on the width of your sidebar */
-            padding: 20px;
-            background-color: #f9f9f9; /* Light background for readability */
-            min-height: 100vh; /* Ensure it spans the full viewport height */
+        /* Adjust layout to avoid sidebar overlap */
+        
+        .main-content {
+    margin-left: 350px; /* Add margin to avoid sidebar overlap */
+    padding: 20px;
+    width: calc(100% - 350px); /* Ensures content takes up the remaining space */
+    background-color: #FFFFFF; /* Set white background for the entire page */
+}
+/* Header Section: Move it further left and ensure equal margins */
+.header-section {
+    margin-bottom: 30px; /* Increased bottom margin for spacing */
+    margin-left: 5px; /* Move header slightly to the left */
+    margin-right: 5px; /* Add margin to the right to balance the left margin */
+    font-size: 24px; /* Increased font size for larger text */
+    text-align: left; /* Ensures text stays aligned to the left */
+    width: calc(100% - 10px); /* Adjust width to account for left and right margins */
+}
+
+/* Tracking Section: Move it further left and adjust width for equal margins */
+/* Tracking Section: Move it further left and adjust width for equal margins */
+.tracking-section {
+    background-color: #FFFFFF; /* White background */
+    padding: 20px; /* Add padding for content spacing */
+    border-radius: 5px; /* Optional: Rounded corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Add shadow */
+    margin-top: 30px; /* Shift the tracking section a bit lower */
+    margin-left: 5px; /* Move tracking section slightly to the left */
+    margin-right: 5px; /* Add margin to the right to balance the left margin */
+    width: 95%; /* Adjust width to make it a bit smaller */
+}
+
+
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
         }
 
-        /* Styling for the interview details section */
-        .interview-details {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        /* Left Section: Dropdown and Search */
+        .left-section {
+            display: flex;
+            align-items: center;
         }
 
-        .interview-details p {
-            margin: 10px 0;
+        .dropdown {
+            margin-right: 10px;
+            padding: 8px;
             font-size: 16px;
-            color: #333;
+            border: 1px solid #ddd;
+            cursor: pointer;
         }
 
-        .interview-details strong {
-            font-weight: 600;
+        .search-bar {
+            padding: 8px;
+            width: 250px; /* Adjusted width */
+            font-size: 16px;
+            border: 1px solid #ddd;
         }
 
-        /* Styling for the Evaluation Table */
-        .evaluation-table {
-            margin-top: 30px;
+        .search-button {
+            margin-left: 10px;
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Right Section: Status Buttons */
+        .right-section {
+            display: flex;
+            gap: 10px; /* Space between buttons */
+        }
+
+        .right-section button {
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background-color: white; /* Default background */
+            color: black;
+            transition: background-color 0.3s ease;
+        }
+
+        .right-section button:hover {
+            background-color: #124A5C; /* Hover effect */
+            color: white;
+        }
+
+        /* Table styles */
+        .tracking-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        .evaluation-table th, .evaluation-table td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: center;
+        .tracking-table th, 
+        .tracking-table td {
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #ddd;
         }
 
-        .evaluation-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
+        .tracking-table th {
+            background-color: #f4f4f4;
         }
 
-        .evaluation-table td select {
-            width: 80%;
-            padding: 5px;
-            font-size: 14px;
+        .tracking-table th.fixed-width,
+        .tracking-table td.fixed-width {
+            width: 100px; /* Set a fixed width */
+            text-align: center; /* Center-align content */
         }
 
-        /* Styling for the Declaration and Buttons */
-        .declaration-section {
-            margin-top: 40px;
-            padding: 15px;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .tracking-table tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
 
-        .declaration-section p {
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .declaration-section .button-container {
-            margin-top: 20px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .declaration-section button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-
-        .approve-btn {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .approve-btn:hover {
-            background-color: #45a049;
-        }
-
-        .reject-btn {
-            background-color: #f44336;
-            color: white;
-        }
-
-        .reject-btn:hover {
-            background-color: #da190b;
-        }
-
-        .save-btn {
-        background-color: #2196F3;
-        color: white;
-        }
-
-        .save-btn:hover {
-        background-color: #0b7dda;
+        .tracking-table tr:hover {
+            background-color: #f1f1f1;
         }
     </style>
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
 
-    <!-- Line Manager Interview Form Header -->
-    <div class="content-container">
-        <h1>HR Manager Interview Form</h1>
-        
-        <!-- Interview Details Section -->
-        <div class="interview-details">
-            <p><strong>Candidate Name:</strong> Kathyrn Bernardo </p>
-            <p><strong>Position Title:</strong> Marketing </p>
-            <p><strong>Conducted By:</strong> Hannah Fontes</p>
-            <p><strong>Position Department:</strong> HR </p>
+    <!-- Main Content Section -->
+    <div class="main-content">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h2>Applicant Tracking</h2>
         </div>
 
-        <!-- Evaluation Table Section -->
-        <div class="evaluation-section">
-            <h2>Evaluation</h2>
-            <table class="evaluation-table">
+        <!-- Finance Department Applicant Tracking Section -->
+        <div class="tracking-section">
+            <!-- Search Bar and Status Buttons -->
+            <div class="search-container">
+                <!-- Left Section -->
+                <div class="left-section">
+                    <select class="dropdown" id="departmentDropdown">
+                        <option value="all">All Departments</option>
+                        <option value="finance">Finance</option>
+                        <option value="hr">HR</option>
+                        <option value="it">IT</option>
+                    </select>
+                    <input type="text" class="search-bar" id="searchBar" placeholder="Search Job Position" onkeyup="filterTable()">
+                    <button class="search-button"><i class="fas fa-search"></i> Search</button>
+                </div>
+                <!-- Right Section -->
+                <div class="right-section">
+                    <button>For Review</button>
+                    <button>For Evaluation</button>
+                    <button>For Onboarding</button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <table class="tracking-table" id="applicantTable">
                 <thead>
                     <tr>
-                        <th>Core Values</th>
-                        <th>Scoring</th>
+                        <th>Job Name</th>
+                        <th>Department</th>
+                        <th>Hiring Start Date</th>
+                        <th>Hiring End Date</th>
+                        <th class="fixed-width">P1</th>
+                        <th class="fixed-width">P2</th>
+                        <th class="fixed-width">P3</th>
+                        <th class="fixed-width">Offered</th>
+                        <th class="fixed-width">Onboarding</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Core Values and Scoring Options -->
                     <tr>
-                        <td>Function/Job Specifics</td>
-                        <td>
-                            <select class="core-value-score">
-                                <option value="3">3 - Critical</option>
-                                <option value="2" selected>2 - Important</option>
-                                <option value="1">1 - Desired</option>
-                                <option value="0">0 - Not Demonstrated</option>
-                            </select>
-                        </td>
+                        <td>Accountant</td>
+                        <td>Finance</td>
+                        <td>2024-01-01</td>
+                        <td>2024-02-01</td>
+                        <td class="fixed-width">5</td>
+                        <td class="fixed-width">3</td>
+                        <td class="fixed-width">2</td>
+                        <td class="fixed-width">1</td>
+                        <td class="fixed-width">0</td>
                     </tr>
                     <tr>
-                        <td>Analyzing</td>
-                        <td>
-                            <select class="core-value-score">
-                                <option value="3">3 - Critical</option>
-                                <option value="2" selected>2 - Important</option>
-                                <option value="1">1 - Desired</option>
-                                <option value="0">0 - Not Demonstrated</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Learning and Researching</td>
-                        <td>
-                            <select class="core-value-score">
-                                <option value="3">3 - Critical</option>
-                                <option value="2" selected>2 - Important</option>
-                                <option value="1">1 - Desired</option>
-                                <option value="0">0 - Not Demonstrated</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Following instructions and Procedures</td>
-                        <td>
-                            <select class="core-value-score">
-                                <option value="3">3 - Critical</option>
-                                <option value="2" selected>2 - Important</option>
-                                <option value="1">1 - Desired</option>
-                                <option value="0">0 - Not Demonstrated</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Working with People</td>
-                        <td>
-                            <select class="core-value-score">
-                                <option value="3">3 - Critical</option>
-                                <option value="2" selected>2 - Important</option>
-                                <option value="1">1 - Desired</option>
-                                <option value="0">0 - Not Demonstrated</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Writing and Reporting</td>
-                        <td>
-                            <select class="core-value-score">
-                                <option value="3">3 - Critical</option>
-                                <option value="2" selected>2 - Important</option>
-                                <option value="1">1 - Desired</option>
-                                <option value="0">0 - Not Demonstrated</option>
-                            </select>
-                        </td>
+                        <td>HR Specialist</td>
+                        <td>HR</td>
+                        <td>2024-01-15</td>
+                        <td>2024-03-01</td>
+                        <td class="fixed-width">4</td>
+                        <td class="fixed-width">2</td>
+                        <td class="fixed-width">1</td>
+                        <td class="fixed-width">2</td>
+                        <td class="fixed-width">1</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-
-        <!-- Declaration Section -->
-        <div class="declaration-section">
-            <p><strong>Declaration:</strong> Based on the evaluation, the candidate's average score is:</p>
-            <p><strong>Average Score:</strong> <span id="average-score">2.00</span></p>
-            
-            <div class="button-container">
-                <!-- Save Button -->
-                <button class="save-btn" onclick="saveForm()">Save</button>
-
-                <!-- Approve Button -->
-                <button class="approve-btn" onclick="approveCandidate()">Approve and Inform Passed</button>
-                
-                <!-- Reject Button -->
-                <button class="reject-btn" onclick="rejectCandidate()">Reject and Upload Rejection Letter via Chatbot</button>
-            </div>
-        </div>
     </div>
-
-    <script>
-        // Calculate average score based on selections
-        const scoreSelects = document.querySelectorAll('.core-value-score');
-        scoreSelects.forEach(select => {
-            select.addEventListener('change', calculateAverageScore);
-        });
-
-        // Predefined dummy scoring initialization
-        window.addEventListener('load', () => {
-            calculateAverageScore(); // Call once to ensure initial calculation
-        });
-
-        function calculateAverageScore() {
-            let totalScore = 0;
-            let totalValues = 0;
-
-            scoreSelects.forEach(select => {
-                let score = parseInt(select.value);
-                if (!isNaN(score)) {
-                    totalScore += score;
-                    totalValues++;
-                }
-            });
-
-            // Calculate and display the average score
-            const averageScore = totalValues ? (totalScore / totalValues).toFixed(2) : 0;
-            document.getElementById('average-score').innerText = averageScore;
-        }
-
-        // Approve Button Action
-        function approveCandidate() {
-            alert("Candidate Approved and Passed!");
-            // Add any additional logic here, e.g., updating the status in the database.
-        }
-
-        // Reject Button Action with upload functionality
-        function rejectCandidate() {
-            alert("Rejection Process Initiated. Uploading Rejection Letter...");
-            // Here, you can trigger the chatbot interaction or initiate the rejection letter upload process.
-        }
-
-         // Toggle active class for sidebar links
-         document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
-        });
-
-        // Handle navigation for Performance Management links
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default link behavior
-                
-                // Perform the desired action or navigation
-                const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl; // Navigate to the target URL
-            });
-        });
-    </script>
 </body>
+<script>
+    // Filter Table Functionality
+    function filterTable() {
+        const searchInput = document.getElementById("searchBar").value.toLowerCase();
+        const table = document.getElementById("applicantTable");
+        const rows = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName("td");
+            let match = false;
+
+            for (let j = 0; j < cells.length; j++) {
+                if (cells[j].innerText.toLowerCase().includes(searchInput)) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    }
+</script>
 </html>
