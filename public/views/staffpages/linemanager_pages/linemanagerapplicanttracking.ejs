@@ -164,7 +164,8 @@
             text-align: center;
         }
         .set-interview-button:hover {
-            background-color: #218838;
+            background-color: #124A5C;
+            color: white;
         }
     </style>
 </head>
@@ -173,27 +174,21 @@
 
     <!-- Main Content Section -->
     <div class="main-content">
-        <!-- Header Section -->
-        <div class="header-section">
-            <h2>Applicant Tracking</h2>
-        </div>
+<!-- Header Section -->
+<div class="header-section">
+    <h2>Applicant Tracking</h2>
+    <div class="subheader">
+        <p>Department: <strong><%= userDepartmentName %></strong></p>
+    </div>
+</div>
+
+
 
         <!-- Applicant Tracking Section -->
         <div class="tracking-section">
             <!-- Search Bar and Status Buttons -->
             <div class="search-container">
                 <div class="left-section">
-                    <select class="dropdown" id="departmentDropdown" onchange="filterByDepartment()">
-                        <option value="all">All Departments</option>
-                        <% if (departments && departments.length > 0) { %>
-                            <% departments.forEach(function(department) { %>
-                                <option value="<%= department.departmentId %>"><%= department.deptName %></option>
-                            <% }); %>
-                        <% } else { %>
-                            <option value="">No departments available</option>
-                        <% } %>
-                    </select>
-
                     <input type="text" class="search-bar" id="searchBar" placeholder="Search Job Position">
                     <button class="search-button" onclick="filterTable()">Search</button>
                 </div>
@@ -210,7 +205,6 @@
                 <thead>
                     <tr>
                         <th>Job Name</th>
-                        <th>Department</th>
                         <th>Hiring Start Date</th>
                         <th>Hiring End Date</th>
                         <th class="fixed-width">P1</th>
@@ -233,7 +227,6 @@
                                     <%= job.jobTitle %>
                                 </div>
                             </td>
-                            <td><%= job.departmentName %></td>
                             <td><%= job.hiringStartDate %></td>
                             <td><%= job.hiringEndDate %></td>
                             <td class="fixed-width">0</td>
@@ -254,7 +247,7 @@
         // Redirect to job position page when a row is clicked
         function redirectToJobPage(jobId) {
 
-            window.location.href = `/hr/applicant-tracker-jobposition`;
+            window.location.href = `/linemanager/applicant-tracker-jobposition`;
             
             //TODO: Use this when all applicants could be fetched already with their corresponding statuses.
             // window.location.href = `/hr/applicant-tracker-jobposition/${jobId}`;
