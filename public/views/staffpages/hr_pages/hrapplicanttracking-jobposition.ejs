@@ -47,7 +47,7 @@
 
         .search-bar {
             padding: 8px;
-            width: 320px;
+            width: 370px;
             font-size: 16px;
             border: 1px solid #ddd;
         }
@@ -72,43 +72,80 @@
             font-size: 16px;
             font-weight: bold;
             border: none;
-            background-color: white;
-            color: black;
+            background-color:#124A5C;
+            color: white;
             transition: background-color 0.3s ease;
         }
 
         .right-section button:hover {
-            background-color: #124A5C;
+            background-color: #B4E3E3       ;
             color: white;
         }
 
         .tracking-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        width: 100%;
+        border-collapse: collapse;
+    }
 
-        .tracking-table th, 
-        .tracking-table td {
-            padding: 10px 10px;
-            border: 1px solid #ddd;
-        }
+    .tracking-table th, 
+    .tracking-table td {
+        padding: 10px 10px;
+        border: 1px solid #ddd;
+    }
 
-        .tracking-table th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
+    /* Left-align the table headers and cells */
+    .tracking-table th,
+    .tracking-table td {
+        text-align: left;
+    }
 
-        .tracking-table td:last-child {
-            width: 20%; /* Adjusted width for last column */
-        }
+    /* Set fixed, smaller widths for the first four columns */
+    .tracking-table th:nth-child(1),
+    .tracking-table td:nth-child(1) {
+        width: 10%; /* Adjust the width as needed */
+    }
 
-        .tracking-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
+    .tracking-table th:nth-child(2),
+    .tracking-table td:nth-child(2) {
+        width: 20%; /* Adjust the width as needed */
+    }
 
-        .tracking-table tr:hover {
-            background-color: #f1f1f1;
-        }
+    .tracking-table th:nth-child(3),
+    .tracking-table td:nth-child(3) {
+        width: 15%; /* Adjust the width as needed */
+    }
+
+    .tracking-table th:nth-child(4),
+    .tracking-table td:nth-child(4) {
+        width: 15%; /* Adjust the width as needed */
+    }
+
+    /* Right-align buttons, left-align the text in the Applicant Status column */
+    .tracking-table td:last-child {
+        display: flex;
+        justify-content: space-between; /* Ensures buttons are on the right side */
+        align-items: center;
+    }
+
+    /* Align text to the left in the same column */
+    .tracking-table td:last-child span {
+        text-align: left; /* Ensure text is left-aligned */
+        flex-grow: 1; /* Allow text to take available space */
+    }
+
+    /* General table styling */
+    .tracking-table th,
+    .tracking-table td {
+        text-align: left;
+    }
+
+    /* Adjusting layout for action buttons in the last column */
+    .tracking-table td:last-child button {
+        margin-left: 10px; /* Space between buttons */
+    }
+    .tracking-table tr:hover {
+        background-color: #f1f1f1;
+    }
         /* Style for the job title container */
         .job-title-container {
             display: flex;
@@ -133,6 +170,47 @@
         .status-circle.gray {
             background-color: gray;
         }
+
+           /* Button styling for status actions */
+    .status-button {
+        background-color: white; /* White background */
+        color: black; /* Black text */
+        border: 1px solid #124A5C; /* Border color matching the hover */
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+        text-align: center;
+        width: auto;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .status-button:hover {
+        background-color: #124A5C; /* Hover background color */
+        color: white; /* Hover text color */
+    }
+
+/* For consistency with other button styling */
+.btn-review, .btn-evaluation, .btn-onboarding {
+    background-color: white;
+    color: black;
+    border: 1px solid #124A5C;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    width: 150px; /* Set a consistent width */
+    text-align: center; /* Ensures text aligns properly within the button */
+}
+
+.btn-review:hover, .btn-evaluation:hover, .btn-onboarding:hover {
+    background-color: #124A5C;
+    color: white;
+}
+
+
+
     </style>
 </head>
 <body>
@@ -152,171 +230,237 @@
     <div class="tracking-section">
         <div class="search-container">
             <div class="left-section">
-                <input type="text" class="search-bar" id="searchBar" placeholder="Search by Application No., Name, or Email">
+                <input type="text" class="search-bar" id="searchBar" placeholder="Search by Application No., Name, Email, or Status">
                 <button class="search-button"><i class="fas fa-search"></i> Search</button>
             </div>
             <div class="right-section">
-                <button>For Review</button>
-                <button>For Evaluation</button>
-                <button>For Onboarding</button>
-            </div>
+                <button id="filter-all">All</button>
+                <button id="filter-review">For Review</button>
+                <button id="filter-evaluation">For Evaluation</button>
+                <button id="filter-onboarding">For Onboarding</button>
+            </div>            
         </div>
         
-        <!-- Table for Applicant Data -->
-        <table class="tracking-table">
-            <thead>
-                <tr>
-                    <th>Applicant No.</th>
-                    <th>Last Name, First Name</th>
-                    <th>Department</th>
-                    <th>Position Applied</th>
-                    <th>Applicant Status & Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Sample Data Rows -->
-                <tr>
-                    <td>APP00001</td>
-                    <td>John Doe<br>johndoe@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P1: Initial Screening</td>
-                </tr>
-                <tr>
-                    <td>APP00002</td>
-                    <td>Jane Smith<br>janesmith@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P1: Awaiting for Line Manager Action</td>
-                </tr>
-                <tr>
-                    <td>APP00003</td>
-                    <td>Robert Brown<br>robertbrown@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P1: PASSED - Score: 90</td>
-                </tr>
-                <tr>
-                    <td>APP00004</td>
-                    <td>Alice Johnson<br>alicejohnson@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P1: FAILED</td>
-                </tr>
-                <tr>
-                    <td>APP00005</td>
-                    <td>Michael Lee<br>michaellee@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P2: HR Screening Scheduled</td>
-                </tr>
-                <tr>
-                    <td>APP00006</td>
-                    <td>Linda Carter<br>lindacarter@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P2: Awaiting for HR Evaluation</td>
-                </tr>
-                <tr>
-                    <td>APP00007</td>
-                    <td>Chris Walker<br>chriswalker@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P2: HR Evaluation Accomplished - Score: 85</td>
-                </tr>
-                <tr>
-                    <td>APP00008</td>
-                    <td>Emily Davis<br>emilydavis@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P2: HR Evaluation Accomplished - Score: 30</td>
-                </tr>
-                <tr>
-                    <td>APP00009</td>
-                    <td>Daniel Green<br>danielgreen@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P3: Panel Screening Scheduled</td>
-                </tr>
-                <tr>
-                    <td>APP00010</td>
-                    <td>Laura Hall<br>laurahall@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P3: Awaiting for Line Manager Evaluation</td>
-                </tr>
-                <tr>
-                    <td>APP00011</td>
-                    <td>James King<br>jamesking@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P3: Panel Evaluation Accomplished - Score: 85</td>
-                </tr>
-                <tr>
-                    <td>APP00012</td>
-                    <td>Olivia White<br>oliviawhite@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P3: Panel Evaluation Accomplished - Score: 30</td>
-                </tr>
-                <tr>
-                    <td>APP00013</td>
-                    <td>William Scott<br>williamscott@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P3: PASSED</td>
-                </tr>
-                <tr>
-                    <td>APP00014</td>
-                    <td>Grace Taylor<br>gracetaylor@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P3: FAILED</td>
-                </tr>
-                <tr>
-                    <td>APP00015</td>
-                    <td>Ella Martinez<br>ellamartinez@gmail.com</td>
-                    <td>IT</td>
-                    <td>Data Analyst</td>
-                    <td>P3: PASSED - Job Offer Sent</td>
-                </tr>
-            </tbody>
-        </table>
+<!-- Table for Applicant Data -->
+<table class="tracking-table">
+    <thead>
+        <tr>
+            <th>Applicant No.</th>
+            <th>Last Name, First Name</th>
+            <th>Department</th>
+            <th>Position Applied</th>
+            <th>Applicant Status & Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Sample Data Rows -->
+        <tr>
+            <td>APP00001</td>
+            <td>John Doe<br>johndoe@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P1: Initial Screening</td>
+        </tr>
+        <tr>
+            <td>APP00002</td>
+            <td>Jane Smith<br>janesmith@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P1: Awaiting for Line Manager Action</td>
+        </tr>
+        <tr class="status-for-review">
+            <td>APP00003</td>
+            <td>Robert Brown<br>robertbrown@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P1: PASSED - Score: 90 <button class="btn-review">For Review</button></td>
+        </tr>
+        <tr class="status-for-review">
+            <td>APP00004</td>
+            <td>Alice Johnson<br>alicejohnson@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P1: FAILED <button class="btn-review">For Review</button></td>
+        </tr>
+        <tr>
+            <td>APP00005</td>
+            <td>Michael Lee<br>michaellee@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P2: HR Screening Scheduled</td>
+        </tr>
+        <tr class="status-for-evaluation">
+            <td>APP00006</td>
+            <td>Linda Carter<br>lindacarter@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P2: Awaiting for HR Evaluation <button class="btn-evaluation">For Evaluation</button></td>
+        </tr>
+        <tr class="status-for-review">
+            <td>APP00007</td>
+            <td>Chris Walker<br>chriswalker@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P2: HR Evaluation Accomplished - Score: 85 <button class="btn-review">For Review</button></td>
+        </tr>
+        <tr class="status-for-review">
+            <td>APP00008</td>
+            <td>Emily Davis<br>emilydavis@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P2: HR Evaluation Accomplished - Score: 30 <button class="btn-review">For Review</button></td>
+        </tr>
+        <tr>
+            <td>APP00009</td>
+            <td>Daniel Green<br>danielgreen@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P3: Panel Screening Scheduled</td>
+        </tr>
+        <tr>
+            <td>APP00010</td>
+            <td>Laura Hall<br>laurahall@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P3: Awaiting for Line Manager Evaluation</td>
+        </tr>
+        <tr>
+            <td>APP00011</td>
+            <td>James King<br>jamesking@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P3: Panel Evaluation Accomplished - Score: 85</td>
+        </tr>
+        <tr>
+            <td>APP00012</td>
+            <td>Olivia White<br>oliviawhite@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P3: Panel Evaluation Accomplished - Score: 30</td>
+        </tr>
+        <tr class="status-for-review">
+            <td>APP00013</td>
+            <td>William Scott<br>williamscott@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P3: PASSED <button class="btn-review">For Review</button></td>
+        </tr>
+        <tr class="status-for-review">
+            <td>APP00014</td>
+            <td>Grace Taylor<br>gracetaylor@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P3: FAILED <button class="btn-review">For Review</button></td>
+        </tr>
+        <tr class="status-for-onboarding">
+            <td>APP00015</td>
+            <td>Ella Martinez<br>ellamartinez@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>P3: PASSED - Job Offer Sent <button class="btn-onboarding">For Onboarding</button></td>
+        </tr>
+    </tbody>
+</table>
+
     </div>
 </div>
 
 <script>
-    function filterTable() {
-        // Get the value from the search bar
-        const searchValue = document.getElementById("searchBar").value.toLowerCase();
-        const table = document.querySelector(".tracking-table tbody");
-        const rows = table.querySelectorAll("tr");
+    document.addEventListener("DOMContentLoaded", function () {
+        // Function to filter rows based on status
+        function filterRowsByStatus(status) {
+            const rows = document.querySelectorAll('.tracking-table tbody tr');
+            rows.forEach(row => {
+                // Show rows matching the status or all rows if status is "all"
+                if (status === "all" || row.classList.contains(`status-${status}`)) {
+                    row.style.display = ""; // Show
+                } else {
+                    row.style.display = "none"; // Hide
+                }
+            });
 
-        // Loop through the rows and hide/show based on the search term
-        rows.forEach(row => {
-            const cells = row.querySelectorAll("td");
-            const rowText = Array.from(cells)
-                .map(cell => cell.textContent.toLowerCase())
-                .join(" ");
-            if (rowText.includes(searchValue)) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
+            // Highlight the active filter button
+            highlightActiveFilter(status);
+        }
+
+        // Function to filter rows based on the search input
+        function filterTable() {
+            const searchValue = document.getElementById("searchBar").value.toLowerCase();
+            const rows = document.querySelectorAll('.tracking-table tbody tr');
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
+                const rowText = Array.from(cells)
+                    .map(cell => {
+                        const button = cell.querySelector("button");
+                        // Include button text in the searchable content
+                        return button ? cell.textContent.toLowerCase() + " " + button.textContent.toLowerCase() : cell.textContent.toLowerCase();
+                    })
+                    .join(" ");
+                if (rowText.includes(searchValue)) {
+                    row.style.display = ""; // Show if search term matches
+                } else {
+                    row.style.display = "none"; // Hide otherwise
+                }
+            });
+        }
+
+        // Function to highlight the active filter button
+        function highlightActiveFilter(status) {
+            const buttons = document.querySelectorAll(".right-section button");
+            buttons.forEach(button => {
+                if (button.id === `filter-${status}`) {
+                    button.classList.add("active"); // Add active class
+                } else {
+                    button.classList.remove("active"); // Remove active class
+                }
+            });
+        }
+
+        // Initialize buttons for filtering by status
+        const buttons = {
+            all: document.getElementById("filter-all"),
+            review: document.getElementById("filter-review"),
+            evaluation: document.getElementById("filter-evaluation"),
+            onboarding: document.getElementById("filter-onboarding"),
+        };
+
+        // Add event listeners to filter buttons
+        buttons.all.addEventListener("click", () => filterRowsByStatus("all"));
+        buttons.review.addEventListener("click", () => filterRowsByStatus("for-review"));
+        buttons.evaluation.addEventListener("click", () => filterRowsByStatus("for-evaluation"));
+        buttons.onboarding.addEventListener("click", () => filterRowsByStatus("for-onboarding"));
+
+        // Search functionality
+        document.querySelector(".search-button").addEventListener("click", filterTable);
+        document.getElementById("searchBar").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // Prevent form submission if inside a form
+                filterTable();
             }
         });
-    }
 
-    // Add click event listener to the search button
-    document.querySelector(".search-button").addEventListener("click", filterTable);
+        // Set button text dynamically based on row class
+        const rows = document.querySelectorAll('.tracking-table tbody tr');
+        rows.forEach(row => {
+            const statusCell = row.querySelector('td:last-child');
+            const button = statusCell.querySelector('button');
+            if (row.classList.contains('status-for-review')) {
+                button.textContent = "For Review";
+            } else if (row.classList.contains('status-for-onboarding')) {
+                button.textContent = "For Onboarding";
+            } else if (row.classList.contains('status-for-evaluation')) {
+                button.textContent = "For Evaluation";
+            } else {
+                button.textContent = "For Review"; // Default button text
+            }
+        });
 
-    // Allow Enter key to trigger the search
-    document.getElementById("searchBar").addEventListener("keypress", function (e) {
-        if (e.key === "Enter") {
-            e.preventDefault(); // Prevent form submission if inside a form
-            filterTable();
-        }
+        // Display all rows initially
+        filterRowsByStatus("all");
     });
 </script>
+
 
 </body>
 </html>
