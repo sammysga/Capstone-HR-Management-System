@@ -125,6 +125,33 @@
         .tracking-table tr:hover {
             background-color: #f1f1f1;
         }
+
+        /* Style for the color-coded circle status */
+.jobTitle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.jobTitle-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: gray; /* Default color */
+}
+
+.jobTitle-container .green {
+    background-color: green; /* Green circle if date is within range */
+}
+/* Styling for the status circle */
+.status-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 10px; /* Space between the circle and job title */
+}
+
     </style>
 </head>
 <body>
@@ -181,7 +208,7 @@
                 <tbody>
                     <% jobPositions.forEach((job, index) => { %>
                         <tr class="jobRow" data-department="<%= job.departmentId %>" onclick="redirectToJobPage('<%= job.jobId %>')">
-                            <td><%= job.jobTitle %></td>
+                            <td class="jobTitleCell"><%= job.jobTitle %></td>
                             <td><%= job.departmentName %></td>
                             <td><%= job.hiringStartDate %></td>
                             <td><%= job.hiringEndDate %></td>
@@ -196,18 +223,17 @@
             </table>
         </div>
     </div>
-
     <script>
         // Redirect to job position page when a row is clicked
         function redirectToJobPage(jobId) {
             window.location.href = `/hrapplicanttracking-jobposition/${jobId}`;
         }
-
+    
         // Filter table based on the department selected from dropdown
         function filterByDepartment() {
             const departmentId = document.getElementById("departmentDropdown").value;
             const rows = document.querySelectorAll(".jobRow");
-            
+    
             rows.forEach(row => {
                 if (departmentId === "all" || row.getAttribute("data-department") === departmentId) {
                     row.style.display = "";
@@ -216,17 +242,17 @@
                 }
             });
         }
-
+    
         // Filter table based on the search input
         function filterTable() {
             const searchInput = document.getElementById("searchBar").value.toLowerCase();
             const table = document.getElementById("applicantTable");
             const rows = table.getElementsByTagName("tr");
-
+    
             for (let i = 1; i < rows.length; i++) {
                 const cells = rows[i].getElementsByTagName("td");
                 let match = false;
-
+    
                 for (let j = 0; j < cells.length; j++) {
                     if (cells[j].innerText.toLowerCase().includes(searchInput)) {
                         match = true;
@@ -236,7 +262,40 @@
                 rows[i].style.display = match ? "" : "none";
             }
         }
+    
+        // Function to check if the current date is within the hiring date range
+        function isWithinHiringDates(startDate, endDate) {
+            const today = new Date();
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+    
+            return today >= start && today <= end;
+        }
+    
+        // Adding the color-coded circle next to job titles based on hiring date range
+    document.addEventListener('DOMContentLoaded', () => {
+        const jobRows = document.querySelectorAll('.jobRow');
+
+        jobRows.forEach(row => {
+            const jobTitleCell = row.querySelector('.jobTitleCell'); // Job title cell
+            const hiringStartDate = row.cells[2].innerText; // Hiring Start Date column
+            const hiringEndDate = row.cells[3].innerText; // Hiring End Date column
+
+            const circle = document.createElement('span');
+            circle.classList.add('status-circle');
+
+            if (isWithinHiringDates(hiringStartDate, hiringEndDate)) {
+                circle.style.backgroundColor = 'green'; // Green circle if within date range
+            } else {
+                circle.style.backgroundColor = 'gray'; // Gray circle if not within date range
+            }
+
+            // Insert circle before job title
+            jobTitleCell.insertBefore(circle, jobTitleCell.firstChild);
+        });
+    });
     </script>
+    
 </body>
 </html>
 
