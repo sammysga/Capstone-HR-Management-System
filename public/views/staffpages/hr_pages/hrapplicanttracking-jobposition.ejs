@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant Tracker - Job Position</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome for icons -->
+    <style>
+        /* Adjust layout to avoid sidebar overlap */
+        .main-content {
+            margin-left: 350px;
+            padding: 20px;
+            width: calc(100% - 350px);
+            background-color: #FFFFFF;
+        }
+
+        .header-section {
+            margin-bottom: 10px;
+            margin-left: 5px;
+            font-size: 24px;
+            text-align: left;
+        }
+
+        .subheader {
+            font-size: 20px;
+            margin-left: 5px;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .tracking-section {
+            background-color: #FFFFFF;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 10px 5px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .search-bar {
+            padding: 8px;
+            width: 320px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+        }
+
+        .search-button {
+            margin-left: 10px;
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .right-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        .right-section button {
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            background-color: white;
+            color: black;
+            transition: background-color 0.3s ease;
+        }
+
+        .right-section button:hover {
+            background-color: #124A5C;
+            color: white;
+        }
+
+        .tracking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tracking-table th, 
+        .tracking-table td {
+            padding: 10px 10px;
+            border: 1px solid #ddd;
+        }
+
+        .tracking-table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+
+        .tracking-table td:last-child {
+            width: 20%; /* Adjusted width for last column */
+        }
+
+        .tracking-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .tracking-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        /* Style for the job title container */
+        .job-title-container {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Style for status circle */
+        .status-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px; /* Space between circle and job title */
+        }
+
+        /* Green status circle */
+        .status-circle.green {
+            background-color: green;
+        }
+
+        /* Gray status circle */
+        .status-circle.gray {
+            background-color: gray;
+        }
+    </style>
+</head>
+<body>
+
+<%- include('../../partials/hr_partials') %>
+
+<!-- Main Content Section -->
+<div class="main-content">
+
+    <!-- Header Section -->
+    <div class="header-section">
+        <h2>Applicant Tracking</h2>
+        <div class="subheader">Data Analyst</div>
+    </div>
+
+  <!-- Applicant Tracking Section -->
+    <div class="tracking-section">
+        <div class="search-container">
+            <div class="left-section">
+                <input type="text" class="search-bar" id="searchBar" placeholder="Search by Application No., Name, or Email">
+                <button class="search-button"><i class="fas fa-search"></i> Search</button>
+            </div>
+            <div class="right-section">
+                <button>For Review</button>
+                <button>For Evaluation</button>
+                <button>For Onboarding</button>
+            </div>
+        </div>
+        
+        <!-- Table for Applicant Data -->
+        <table class="tracking-table">
+            <thead>
+                <tr>
+                    <th>Applicant No.</th>
+                    <th>Last Name, First Name</th>
+                    <th>Department</th>
+                    <th>Position Applied</th>
+                    <th>Applicant Status & Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Sample Data Rows -->
+                <tr>
+                    <td>APP00001</td>
+                    <td>John Doe<br>johndoe@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P1: Initial Screening</td>
+                </tr>
+                <tr>
+                    <td>APP00002</td>
+                    <td>Jane Smith<br>janesmith@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P1: Awaiting for Line Manager Action</td>
+                </tr>
+                <tr>
+                    <td>APP00003</td>
+                    <td>Robert Brown<br>robertbrown@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P1: PASSED - Score: 90</td>
+                </tr>
+                <tr>
+                    <td>APP00004</td>
+                    <td>Alice Johnson<br>alicejohnson@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P1: FAILED</td>
+                </tr>
+                <tr>
+                    <td>APP00005</td>
+                    <td>Michael Lee<br>michaellee@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P2: HR Screening Scheduled</td>
+                </tr>
+                <tr>
+                    <td>APP00006</td>
+                    <td>Linda Carter<br>lindacarter@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P2: Awaiting for HR Evaluation</td>
+                </tr>
+                <tr>
+                    <td>APP00007</td>
+                    <td>Chris Walker<br>chriswalker@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P2: HR Evaluation Accomplished - Score: 85</td>
+                </tr>
+                <tr>
+                    <td>APP00008</td>
+                    <td>Emily Davis<br>emilydavis@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P2: HR Evaluation Accomplished - Score: 30</td>
+                </tr>
+                <tr>
+                    <td>APP00009</td>
+                    <td>Daniel Green<br>danielgreen@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P3: Panel Screening Scheduled</td>
+                </tr>
+                <tr>
+                    <td>APP00010</td>
+                    <td>Laura Hall<br>laurahall@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P3: Awaiting for Line Manager Evaluation</td>
+                </tr>
+                <tr>
+                    <td>APP00011</td>
+                    <td>James King<br>jamesking@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P3: Panel Evaluation Accomplished - Score: 85</td>
+                </tr>
+                <tr>
+                    <td>APP00012</td>
+                    <td>Olivia White<br>oliviawhite@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P3: Panel Evaluation Accomplished - Score: 30</td>
+                </tr>
+                <tr>
+                    <td>APP00013</td>
+                    <td>William Scott<br>williamscott@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P3: PASSED</td>
+                </tr>
+                <tr>
+                    <td>APP00014</td>
+                    <td>Grace Taylor<br>gracetaylor@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P3: FAILED</td>
+                </tr>
+                <tr>
+                    <td>APP00015</td>
+                    <td>Ella Martinez<br>ellamartinez@gmail.com</td>
+                    <td>IT</td>
+                    <td>Data Analyst</td>
+                    <td>P3: PASSED - Job Offer Sent</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function filterTable() {
+        // Get the value from the search bar
+        const searchValue = document.getElementById("searchBar").value.toLowerCase();
+        const table = document.querySelector(".tracking-table tbody");
+        const rows = table.querySelectorAll("tr");
+
+        // Loop through the rows and hide/show based on the search term
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            const rowText = Array.from(cells)
+                .map(cell => cell.textContent.toLowerCase())
+                .join(" ");
+            if (rowText.includes(searchValue)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+
+    // Add click event listener to the search button
+    document.querySelector(".search-button").addEventListener("click", filterTable);
+
+    // Allow Enter key to trigger the search
+    document.getElementById("searchBar").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Prevent form submission if inside a form
+            filterTable();
+        }
+    });
+</script>
+
+</body>
+</html>
