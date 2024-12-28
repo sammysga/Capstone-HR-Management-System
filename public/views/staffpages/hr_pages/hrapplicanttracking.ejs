@@ -78,22 +78,21 @@
             display: flex;
             gap: 10px; /* Space between buttons */
         }
-
         .right-section button {
             padding: 10px 15px;
             font-size: 16px;
             font-weight: bold;
-            cursor: pointer;
             border: none;
-            background-color: white; /* Default background */
-            color: black;
+            background-color:#124A5C;
+            color: white;
             transition: background-color 0.3s ease;
         }
 
         .right-section button:hover {
-            background-color: #124A5C; /* Hover effect */
+            background-color: #B4E3E3       ;
             color: white;
         }
+
 
         /* Table styles */
         .tracking-table {
@@ -181,11 +180,12 @@
                     <input type="text" class="search-bar" id="searchBar" placeholder="Search Job Position">
                     <button class="search-button" onclick="filterTable()">Search</button>
                 </div>
-                <div class="right-section">
-                    <button>For Review</button>
-                    <button>For Evaluation</button>
-                    <button>For Onboarding</button>
-                </div>
+                <!-- <div class="right-section">
+                    <button id="filter-all">All</button>
+                    <button id="filter-review">For Review</button>
+                    <button id="filter-evaluation">For Evaluation</button>
+                    <button id="filter-onboarding">For Onboarding</button>
+                </div>             -->
             </div>
 
             <!-- Table -->
