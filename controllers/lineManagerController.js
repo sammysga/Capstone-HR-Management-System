@@ -600,15 +600,116 @@ const lineManagerController = {
             res.redirect('/staff/login');
         }
     },
+    
 
-    getInterviewTracker: function(req, res) {
+    getApplicantTracker: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/linemanagerinterviewtracker');
+            try {
+                // Log the session to see the full session object and debug any issues
+                console.log('Full session object:', req.session);
+                console.log('User Department ID:', req.session.user ? req.session.user.departmentId : 'Not available');
+    
+                // If departmentId is missing from the session, fetch it from the staffaccounts table
+                if (!req.session.user.departmentId) {
+                    console.log('Department ID missing, fetching from staffaccounts...');
+    
+                    // Fetch departmentId from staffaccounts table using the logged-in user's email or userId
+                    const { data: staffAccount, error: staffAccountError } = await supabase
+                        .from('staffaccounts')
+                        .select('departmentId')
+                        .eq('userId', req.session.user.userId)  // Assuming userId is stored in session
+                        .single();  // Use .single() to get one result
+    
+                    if (staffAccountError) {
+                        console.error('Error fetching department from staffaccounts:', staffAccountError);
+                        throw staffAccountError;
+                    }
+    
+                    // If a departmentId is found, set it in the session
+                    if (staffAccount && staffAccount.departmentId) {
+                        req.session.user.departmentId = staffAccount.departmentId;
+                        console.log('Fetched and set departmentId:', req.session.user.departmentId);
+                    } else {
+                        console.error('User does not have a departmentId assigned.');
+                        req.flash('errors', { departmentError: 'User is not assigned to a department.' });
+                        return res.redirect('/staff/login');
+                    }
+                }
+    
+                // Ensure departmentId is available now
+                const userDepartmentId = req.session.user.departmentId;
+    
+                // Query job positions and departments from Supabase
+                const { data: jobpositions, error: jobpositionsError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
+                    .order('hiringStartDate', { ascending: true });
+    
+                if (jobpositionsError) {
+                    console.error('Error fetching job positions:', jobpositionsError);
+                    throw jobpositionsError;
+                }
+    
+                console.log('Fetched job positions:', jobpositions);
+    
+                // Query department names from the departments table
+                const { data: departments, error: departmentsError } = await supabase
+                    .from('departments')
+                    .select('deptName, departmentId');
+    
+                if (departmentsError) {
+                    console.error('Error fetching departments:', departmentsError);
+                    throw departmentsError;
+                }
+    
+                console.log('Fetched departments:', departments);
+    
+                // Map departments to a dictionary for easier lookup
+                const departmentMap = departments.reduce((acc, dept) => {
+                    acc[dept.departmentId] = dept.deptName;
+                    return acc;
+                }, {});
+    
+                // Filter job positions to show only those in the user's department
+                const filteredJobPositions = jobpositions.filter(job => job.departmentId === userDepartmentId);
+    
+                // Get the department name for the logged-in user
+                const userDepartmentName = departmentMap[userDepartmentId] || 'Unknown';
+    
+                // Prepare job positions data with department names
+                const jobPositionsWithDept = filteredJobPositions.map((job) => ({
+                    ...job,
+                    departmentName: departmentMap[job.departmentId] || 'Unknown',
+                }));
+    
+                console.log('Mapped and filtered job positions with departments:', jobPositionsWithDept);
+    
+                // Render the page with job positions, departments, and the user's department name
+                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking', {
+                    jobPositions: jobPositionsWithDept,
+                    departments: departments,  // Ensure departments are being sent here
+                    userDepartmentName: userDepartmentName  // Pass the user's department name
+                });
+    
+            } catch (err) {
+                console.error('Error fetching data from Supabase:', err);
+                req.flash('errors', { databaseError: 'Error fetching job data.' });
+                res.redirect('/staff/login');
+            }
         } else {
-            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
             res.redirect('/staff/login');
         }
     },
+    getApplicantTrackerByJobPositions: function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
+            res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            res.redirect('staff/login');
+        }
+    },
+    
 
     getFinalResult: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {

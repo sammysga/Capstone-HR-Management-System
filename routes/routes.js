@@ -134,8 +134,9 @@ router.get('/employee/employeefeedbackquestionnaire/:selectedUserId', employeeCo
 
 // Line Manager Routes
 router.get('/linemanager/interview-bookings', lineManagerController.getInterviewBookings);
-router.get('/linemanager/interview-tracker', lineManagerController.getInterviewTracker);
 router.get('/linemanager/interview-bookingss', lineManagerController.getInterviewBookingss);
+router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
+router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.getApplicantTrackerByJobPositions);
 
 // Staff information
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
