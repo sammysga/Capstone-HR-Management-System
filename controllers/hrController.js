@@ -271,6 +271,55 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+
+
+    //ARCHIVED
+    // getApplicantTracking: async function (req, res) {
+    //     if (!req.session.user) {
+    //         req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
+    //         return res.redirect('/staff/login');
+    //     }
+    
+    //     try {
+    //         const { data: applicants, error } = await supabase
+    //             .from('applicantaccounts')
+    //             .select('applicantId, firstName, lastName, userId, created_at') 
+    //             .order('created_at', { ascending: false }); 
+    
+    //         if (error) {
+    //             console.error('Error fetching applicants:', error);
+    //             return res.status(500).send('Error fetching applicants');
+    //         }
+    
+    //         for (let applicant of applicants) {
+    //             const { data: chatbotResponses, error: chatbotError } = await supabase
+    //                 .from('chatbot_interaction')
+    //                 .select('message, response, applicantStage')
+    //                 .eq('userId', applicant.userId)
+    //                 .order('timestamp', { ascending: true });
+    
+    //             if (chatbotError) {
+    //                 console.error('Error fetching chatbot responses:', chatbotError);
+    //                 return res.status(500).send('Error fetching chatbot responses');
+    //             }
+    
+    //             // Find the position applied from the chatbot messages
+    //             const positionAppliedMessage = chatbotResponses.find(response => response.message.toLowerCase().includes("position applied"));
+    //             applicant.positionApplied = positionAppliedMessage ? positionAppliedMessage.message.split(":")[1].trim() : "N/A";  // Extract position after the colon
+    
+    //             // Find the application status based on the applicantStage
+    //             const applicationStatusMessage = chatbotResponses.find(response => response.applicantStage === "application_complete" || response.applicantStage === "final_status");
+    //             applicant.applicationStatus = applicationStatusMessage ? "Completed" : "Pending";  // Assuming 'Completed' if found, otherwise 'Pending'
+    //         }
+    
+    //         res.render('staffpages/hr_pages/applicant-tracking-system', { applicants });
+    
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //         return res.status(500).send('Error fetching applicants');
+    //     }
+    // },        
+
     
     getManageLeaveTypes: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
@@ -1679,51 +1728,52 @@ updateJobOffer: async function(req, res) {
         }
     },
 
-    getApplicantTracking: async function (req, res) {
-        if (!req.session.user) {
-            req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
-            return res.redirect('/staff/login');
-        }
+    //ARCHIVED
+    // getApplicantTracking: async function (req, res) {
+    //     if (!req.session.user) {
+    //         req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
+    //         return res.redirect('/staff/login');
+    //     }
     
-        try {
-            const { data: applicants, error } = await supabase
-                .from('applicantaccounts')
-                .select('applicantId, firstName, lastName, userId, created_at') 
-                .order('created_at', { ascending: false }); 
+    //     try {
+    //         const { data: applicants, error } = await supabase
+    //             .from('applicantaccounts')
+    //             .select('applicantId, firstName, lastName, userId, created_at') 
+    //             .order('created_at', { ascending: false }); 
     
-            if (error) {
-                console.error('Error fetching applicants:', error);
-                return res.status(500).send('Error fetching applicants');
-            }
+    //         if (error) {
+    //             console.error('Error fetching applicants:', error);
+    //             return res.status(500).send('Error fetching applicants');
+    //         }
     
-            for (let applicant of applicants) {
-                const { data: chatbotResponses, error: chatbotError } = await supabase
-                    .from('chatbot_interaction')
-                    .select('message, response, applicantStage')
-                    .eq('userId', applicant.userId)
-                    .order('timestamp', { ascending: true });
+    //         for (let applicant of applicants) {
+    //             const { data: chatbotResponses, error: chatbotError } = await supabase
+    //                 .from('chatbot_interaction')
+    //                 .select('message, response, applicantStage')
+    //                 .eq('userId', applicant.userId)
+    //                 .order('timestamp', { ascending: true });
     
-                if (chatbotError) {
-                    console.error('Error fetching chatbot responses:', chatbotError);
-                    return res.status(500).send('Error fetching chatbot responses');
-                }
+    //             if (chatbotError) {
+    //                 console.error('Error fetching chatbot responses:', chatbotError);
+    //                 return res.status(500).send('Error fetching chatbot responses');
+    //             }
     
-                // Find the position applied from the chatbot messages
-                const positionAppliedMessage = chatbotResponses.find(response => response.message.toLowerCase().includes("position applied"));
-                applicant.positionApplied = positionAppliedMessage ? positionAppliedMessage.message.split(":")[1].trim() : "N/A";  // Extract position after the colon
+    //             // Find the position applied from the chatbot messages
+    //             const positionAppliedMessage = chatbotResponses.find(response => response.message.toLowerCase().includes("position applied"));
+    //             applicant.positionApplied = positionAppliedMessage ? positionAppliedMessage.message.split(":")[1].trim() : "N/A";  // Extract position after the colon
     
-                // Find the application status based on the applicantStage
-                const applicationStatusMessage = chatbotResponses.find(response => response.applicantStage === "application_complete" || response.applicantStage === "final_status");
-                applicant.applicationStatus = applicationStatusMessage ? "Completed" : "Pending";  // Assuming 'Completed' if found, otherwise 'Pending'
-            }
+    //             // Find the application status based on the applicantStage
+    //             const applicationStatusMessage = chatbotResponses.find(response => response.applicantStage === "application_complete" || response.applicantStage === "final_status");
+    //             applicant.applicationStatus = applicationStatusMessage ? "Completed" : "Pending";  // Assuming 'Completed' if found, otherwise 'Pending'
+    //         }
     
-            res.render('staffpages/hr_pages/applicant-tracking-system', { applicants });
+    //         res.render('staffpages/hr_pages/applicant-tracking-system', { applicants });
     
-        } catch (error) {
-            console.error('Error:', error);
-            return res.status(500).send('Error fetching applicants');
-        }
-    },        
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //         return res.status(500).send('Error fetching applicants');
+    //     }
+    // },        
 
     // Controller method for viewing final results for an individual applicant
     getFinalResults: async function (req, res) {

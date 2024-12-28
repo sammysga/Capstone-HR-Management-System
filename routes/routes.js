@@ -76,8 +76,6 @@ router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPer
 router.get('/hr/view-mrf/:id', hrController.getViewMRF);
 router.post('/hr/view-mrf/:id', hrController.submitMRF);
 router.get('/hr/applicant-tracker', hrController.getApplicantTracker);
-
-router.get('/hr/applicant-tracking', hrController.getApplicantTracking);
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
 router.get('/hr/evaluation-form', hrController.getEvaluationForm);
 
@@ -135,6 +133,7 @@ router.get('/employee/employeefeedbackquestionnaire/:selectedUserId', employeeCo
 
 // Line Manager Routes
 router.get('/linemanager/interview-bookings', lineManagerController.getInterviewBookings);
+router.get('/linemanager/interview-tracker', lineManagerController.getInterviewTracker);
 router.get('/linemanager/interview-bookingss', lineManagerController.getInterviewBookingss);
 
 // Staff information
@@ -158,7 +157,6 @@ router.get('/linemanager/interview-form', lineManagerController.getEvaluationFor
 
 router.get('/linemanager/offboarding-requests', lineManagerController.getOffboardingRequestsDash);
 router.get('/linemanager/view-offboarding-request/:userId', lineManagerController.getViewOffboardingRequest);
-router.get('/linemanager/interview-tracker', lineManagerController.getInterviewTracker);
 router.get('/linemanager/final-result', lineManagerController.getFinalResult);
 router.get('/linemanager/approved-final-result', lineManagerController.getApprovedFinalResult);
 router.get('/linemanager/rejected-final-result', lineManagerController.getRejectedFinalResult);
