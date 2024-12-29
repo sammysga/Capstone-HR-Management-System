@@ -594,6 +594,15 @@ const lineManagerController = {
 
     getEvaluationForm: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
+            res.render('staffpages/linemanager_pages/linemanagerinterviewform');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+
+    getInterviewForm: function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
             res.render('staffpages/linemanager_pages/linemanagerevaluationform');
         } else {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
@@ -601,7 +610,6 @@ const lineManagerController = {
         }
     },
     
-
     getApplicantTracker: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
