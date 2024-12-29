@@ -7,6 +7,7 @@ const employeeController = require('../controllers/employeeController');
 const lineManagerController = require('../controllers/lineManagerController');
 const chatbotController = require('../controllers/chatbotController');
 const fileUpload = require('express-fileupload');  // Make sure you've installed express-fileupload
+const { hr } = require('date-fns/locale');
 // Middleware to parse incoming request bodies
 router.use(express.urlencoded({ extended: true }));
 router.use(fileUpload());
@@ -80,6 +81,7 @@ router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTracker
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
 router.get('/hr/evaluation-form', hrController.getEvaluationForm);
 
+router.get('/hr/onboarding-view', hrController.getHROnboarding);
 router.get('/hr/offboarding-request', hrController.getOffboardingRequest);
 
 router.get('/logout', hrController.getLogoutButton);

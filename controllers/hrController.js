@@ -376,6 +376,14 @@ const hrController = {
     //     }
     // },        
 
+    getHROnboarding: async function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            res.render('staffpages/hr_pages/hr-onboarding');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            res.redirect('staff/login');
+        }
+    },
     
     getManageLeaveTypes: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
