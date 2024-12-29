@@ -603,7 +603,7 @@ const lineManagerController = {
 
     getInterviewForm1: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/linemanagerevaluationform');
+            res.render('staffpages/linemanager_pages/linemanagerevaluationforms');
         } else {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
