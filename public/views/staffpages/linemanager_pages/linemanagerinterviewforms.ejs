@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Line Manager Interview Form</title>
     <link rel="stylesheet" href="/css/sidebar.css">
-    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -59,6 +58,10 @@
             cursor: not-allowed;
         }
 
+        textarea {
+            height: 100px;
+        }
+
         button {
             background-color: #07ACB9;
             color: white;
@@ -75,83 +78,58 @@
             background-color: #065d6a;
         }
 
-        textarea {
-            height: 100px;
-            resize: vertical;
+        @media (max-width: 768px) {
+            .container {
+                margin-left: 0;
+            }
+
+            form {
+                padding: 10px;
+            }
+
+            input[type="text"], input[type="date"], textarea {
+                font-size: 14px;
+            }
+
+            button {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
-    <%- include('../../partials/linemanager_partials') %>
+    <%- include('../../partials/line_manager_partials') %>
     <div class="container">
         <header>
             <h1>Line Manager Interview Form</h1>
         </header>
 
-        <form id="linemanager-interview-form">
+        <form id="interview-form">
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
-                <input type="text" id="candidate-name" placeholder="Enter candidate's name" readonly>
+                <input type="text" id="candidate-name" value="John Doe" readonly>
 
                 <label for="position-title">Position Title:</label>
-                <input type="text" id="position-title" placeholder="Enter position title" readonly>
+                <input type="text" id="position-title" value="Software Engineer" readonly>
 
                 <label for="position-department">Position Department:</label>
-                <input type="text" id="position-department" placeholder="Enter department name" readonly>
+                <input type="text" id="position-department" value="IT Department" readonly>
 
                 <label for="conducted-by">Conducted by:</label>
-                <input type="text" id="conducted-by" placeholder="Enter interviewer name" readonly>
+                <input type="text" id="conducted-by" value="Jane Smith" readonly>
 
                 <label for="date-of-interview">Date of Interview:</label>
-                <input type="text" id="date-of-interview" placeholder="Enter interview date" readonly>
+                <input type="text" id="date-of-interview" value="December 15, 2024" readonly>
             </div>
 
-            <!-- Personal Report Section -->
             <div class="form-section">
                 <h2>Personal Report</h2>
-                <label for="long-term-goals">How does this role fit your long-term career goals?</label>
-                <textarea id="long-term-goals" placeholder="Enter candidate's response here"></textarea>
+                <label for="career-goals">How does this role fit your long-term career goals?</label>
+                <textarea id="career-goals" placeholder="Write your answer here..."></textarea>
             </div>
 
-            <!-- Submit Section -->
-            <div class="form-section">
-                <button type="submit">Submit</button>
-            </div>
+            <button type="submit">Submit</button>
         </form>
     </div>
-
-    <script>
-        document.getElementById('linemanager-interview-form').addEventListener('submit', (event) => {
-            event.preventDefault();
-            alert('Form submitted successfully!');
-        });
-
-         // Toggle active class for sidebar links
-    document.querySelectorAll('.sidebar ul li a').forEach(link => {
-        link.addEventListener('click', function() {
-            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-
-    // Toggle collapsible content
-    document.querySelectorAll('.collapsible-header').forEach(header => {
-        header.addEventListener('click', function() {
-            var content = this.nextElementSibling;
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                // Hide all other collapsible contents
-                document.querySelectorAll('.collapsible-content').forEach(item => {
-                    if (item !== content) {
-                        item.style.display = 'none';
-                    }
-                });
-                content.style.display = 'block';
-            }
-        });
-    });
-    
-    </script>
 </body>
 </html>
