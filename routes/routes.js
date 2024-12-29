@@ -162,7 +162,7 @@ router.get('/linemanager/view-offboarding-request/:userId', lineManagerControlle
 router.get('/linemanager/final-result', lineManagerController.getFinalResult);
 router.get('/linemanager/approved-final-result', lineManagerController.getApprovedFinalResult);
 router.get('/linemanager/rejected-final-result', lineManagerController.getRejectedFinalResult);
-router.get('/linemanager/intervew-form', lineManagerController.getInterviewForm);
+router.get('/linemanager/intervew-form-1', lineManagerController.getInterviewForm);
 
 // Route for viewing an employee's performance tracker with a quarter
 // router.get('/linemanager/records-performance-tracker/:userId/:quarter',
