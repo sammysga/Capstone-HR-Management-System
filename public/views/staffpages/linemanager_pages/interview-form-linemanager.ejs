@@ -78,6 +78,24 @@
             background-color: #065d6a;
         }
 
+        .rating {
+            margin-top: 10px;
+        }
+
+        .rating label {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 5px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin-left: 0;
@@ -126,6 +144,120 @@
                 <h2>Personal Report</h2>
                 <label for="career-goals">How does this role fit your long-term career goals?</label>
                 <textarea id="career-goals" placeholder="Write your answer here..."></textarea>
+
+                <label for="resume-walkthrough">As you walk us through your resume, highlight key experiences that demonstrate your strengths in relation to this position.</label>
+                <textarea id="resume-walkthrough" placeholder="Write your answer here..."></textarea>
+
+                <div class="rating">
+                    <label>Rating: </label>
+                    <select id="personal-report-rating">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Functional/Job Specific Inquiries</h2>
+                <p><strong>Guide:</strong> To evaluate for the specific functional/technical focus of this role, please describe your relevant experience and expertise in this area.</p>
+
+                <label for="situation">Situation:</label>
+                <textarea id="situation" placeholder="Describe the situation..."></textarea>
+
+                <label for="action">Action:</label>
+                <textarea id="action" placeholder="Describe the action taken..."></textarea>
+
+                <label for="result">Result:</label>
+                <textarea id="result" placeholder="Describe the result..."></textarea>
+
+                <div class="rating">
+                    <label>Rating: </label>
+                    <select id="functional-job-rating">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Following Instructions and Procedures</h2>
+                <p><strong>Guide:</strong> Can you tell me about a time when it was essential that you followed clear policies or procedures? What do you think were the benefits in following rules and procedures in such a situation? What were the drawbacks in having to follow policies and procedures closely? How comfortable do you feel in a situation which is quite rule‐bound and procedural?</p>
+
+                <label for="situation-instructions">Situation:</label>
+                <textarea id="situation-instructions" placeholder="Describe the situation..."></textarea>
+
+                <label for="action-instructions">Action:</label>
+                <textarea id="action-instructions" placeholder="Describe the action taken..."></textarea>
+
+                <label for="result-instructions">Result:</label>
+                <textarea id="result-instructions" placeholder="Describe the result..."></textarea>
+
+                <div class="rating">
+                    <label>Rating: </label>
+                    <select id="instructions-rating">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Working with People</h2>
+                <p><strong>Guide:</strong> Describe a situation where it was important that you identified and understood the needs of others. How did this come about? How did you involve and communicate to those involved? What was the outcome?</p>
+
+                <label for="situation-people">Situation:</label>
+                <textarea id="situation-people" placeholder="Describe the situation..."></textarea>
+
+                <label for="action-people">Action:</label>
+                <textarea id="action-people" placeholder="Describe the action taken..."></textarea>
+
+                <label for="result-people">Result:</label>
+                <textarea id="result-people" placeholder="Describe the result..."></textarea>
+
+                <div class="rating">
+                    <label>Rating: </label>
+                    <select id="people-rating">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Writing and Reporting</h2>
+                <p><strong>Guide:</strong> What type of written work do you produce in your current (most recent) role? Which of these do you find most difficult or challenging to produce? What do you enjoy/not enjoy about this aspect of your work? What feedback have you received about your written communication at work?</p>
+
+                <label for="situation-writing">Situation:</label>
+                <textarea id="situation-writing" placeholder="Describe the situation..."></textarea>
+
+                <label for="action-writing">Action:</label>
+                <textarea id="action-writing" placeholder="Describe the action taken..."></textarea>
+
+                <label for="result-writing">Result:</label>
+                <textarea id="result-writing" placeholder="Describe the result..."></textarea>
+
+                <div class="rating">
+                    <label>Rating: </label>
+                    <select id="writing-rating">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
             </div>
 
             <button type="submit">Submit</button>
