@@ -163,6 +163,7 @@ router.get('/linemanager/final-result', lineManagerController.getFinalResult);
 router.get('/linemanager/approved-final-result', lineManagerController.getApprovedFinalResult);
 router.get('/linemanager/rejected-final-result', lineManagerController.getRejectedFinalResult);
 router.get('/linemanager/interview-form-line', lineManagerController.getInterviewFormLinemanager);
+router.get('/linemanager/first-objective-setting', lineManagerController.getFirstDayObjectiveSetting);
 
 // Route for viewing an employee's performance tracker with a quarter
 // router.get('/linemanager/records-performance-tracker/:userId/:quarter',
