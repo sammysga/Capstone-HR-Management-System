@@ -219,6 +219,56 @@
         .set-interview-button:hover {
             background-color: #218838;
         }
+
+
+        /* MODAL CSS*/
+
+
+        /* Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.applicant-details h3 {
+    font-size: 24px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
     </style>
 </head>
 <body>
@@ -271,7 +321,7 @@
             <td>APP00002</td>
             <td>Jane Smith<br>janesmith@gmail.com</td>
             <td>Marketing Assistant</td>
-            <td>P1: Awaiting for Line Manager Action <button class="btn-review">For Review</button></td>
+            <td>P1: Awaiting for Line Manager Action <button class="btn-review" data-modal="true">For Review</button></td>
         </tr>
             <td>APP00003</td>
             <td>Robert Brown<br>robertbrown@gmail.com</td>
@@ -318,7 +368,7 @@
 
 
         <tr>
-            <td>APP00001O</td>
+            <td>APP000010</td>
             <td>Sophia Bell<br>sophiabell@gmail.com</td>
             <td>Marketing Assistant</td>
             <td>P2: FAILED</td>
@@ -365,22 +415,55 @@
         </tr>
     </tbody>
 </table>
+<!-- P1: Awaiting for Line Manager Action Modal -->
+<div id="initialScreeningModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" id="closeModal">&times;</span>
+        <h2>P1: Initial Screening Score Breakdown</h2>
+        <div class="applicant-details">
+            <h3 id="applicant-name">Jane Smith</h3>
+            <p id="applicant-age">Age: 30</p>
+            <p id="applicant-email">Email: janesmith@gmail.com</p>
+            <p id="applicant-contact">Contact No: 123-456-7890</p>
+        </div>
+        <h4>Initial Screening Scores</h4>
+        <p>
+            Industry Specific Degree - 1/1<br>
+            Experiences - 3/4<br>
+            Certifications - 2/3<br>
+            Hard Skills - 4/5<br>
+            Soft Skills - 4/5<br>
+            Work Setup - PASSED<br>
+            Availability - PASSED<br>
+            <strong>Computation Verdict - PASSED | 85.33</strong>
+        </p>
+        <h4>Uploaded Documents</h4>
+        <p><a href="sample_resume.pdf" target="_blank">sample_resume.pdf</a></p>
+        <p>Would you like to recommend this applicant for the HR interview?</p>
+        <div class="modal-buttons">
+            <button id="backButton">Back</button>
+            <button id="confirmButton">Confirm</button>
+        </div>
+    </div>
+</div>
 <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
 
     </div>
 </div>
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Function to filter rows based on status
         function filterRowsByStatus(status) {
+            console.log(`Filtering rows by status: ${status}`);
             const rows = document.querySelectorAll('.tracking-table tbody tr');
             rows.forEach(row => {
                 // Show rows matching the status or all rows if status is "all"
                 if (status === "all" || row.classList.contains(`status-${status}`)) {
                     row.style.display = ""; // Show
+                    console.log(`Showing row: ${row.innerText}`);
                 } else {
                     row.style.display = "none"; // Hide
+                    console.log(`Hiding row: ${row.innerText}`);
                 }
             });
 
@@ -391,6 +474,7 @@
         // Function to filter rows based on the search input
         function filterTable() {
             const searchValue = document.getElementById("searchBar").value.toLowerCase();
+            console.log(`Searching for: ${searchValue}`);
             const rows = document.querySelectorAll('.tracking-table tbody tr');
 
             rows.forEach(row => {
@@ -404,18 +488,22 @@
                     .join(" ");
                 if (rowText.includes(searchValue)) {
                     row.style.display = ""; // Show if search term matches
+                    console.log(`Row matches search: ${row.innerText}`);
                 } else {
                     row.style.display = "none"; // Hide otherwise
+                    console.log(`Row does not match search: ${row.innerText}`);
                 }
             });
         }
 
         // Function to highlight the active filter button
         function highlightActiveFilter(status) {
+            console.log(`Highlighting active filter: ${status}`);
             const buttons = document.querySelectorAll(".right-section button");
             buttons.forEach(button => {
                 if (button.id === `filter-${status}`) {
                     button.classList.add("active"); // Add active class
+                    console.log(`Active button: ${button.id}`);
                 } else {
                     button.classList.remove("active"); // Remove active class
                 }
@@ -431,16 +519,32 @@
         };
 
         // Add event listeners to filter buttons
-        buttons.all.addEventListener("click", () => filterRowsByStatus("all"));
-        buttons.review.addEventListener("click", () => filterRowsByStatus("for-review"));
-        buttons.evaluation.addEventListener("click", () => filterRowsByStatus("for-evaluation"));
-        buttons.onboarding.addEventListener("click", () => filterRowsByStatus("for-onboarding"));
+        buttons.all.addEventListener("click", () => {
+            console.log("All filter button clicked");
+            filterRowsByStatus("all");
+        });
+        buttons.review.addEventListener("click", () => {
+            console.log("Review filter button clicked");
+            filterRowsByStatus("for-review");
+        });
+        buttons.evaluation.addEventListener("click", () => {
+            console.log("Evaluation filter button clicked");
+            filterRowsByStatus("for-evaluation");
+        });
+        buttons.onboarding.addEventListener("click", () => {
+            console.log("Onboarding filter button clicked");
+            filterRowsByStatus("for-onboarding");
+        });
 
         // Search functionality
-        document.querySelector(".search-button").addEventListener("click", filterTable);
+        document.querySelector(".search-button").addEventListener("click", () => {
+            console.log("Search button clicked");
+            filterTable();
+        });
         document.getElementById("searchBar").addEventListener("keypress", function (e) {
             if (e.key === "Enter") {
                 e.preventDefault(); // Prevent form submission if inside a form
+                console.log("Enter key pressed in search bar");
                 filterTable();
             }
         });
@@ -457,15 +561,58 @@
             } else if (row.classList.contains('status-for-evaluation')) {
                 button.textContent = "For Evaluation";
             } else {
-                button.textContent = "For Review"; // Default button text
-            }
+            button.textContent = "For Review";
+        } // Default button text
+        console.log(`Button text set to: ${button.textContent} for row: ${row.innerText}`);
         });
 
         // Display all rows initially
+        console.log("Displaying all rows initially");
         filterRowsByStatus("all");
     });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById("initialScreeningModal");
+        const closeModal = document.getElementById("closeModal");
+        const reviewButtons = document.querySelectorAll("tr.status-for-review .btn-review[data-modal='true']");
+
+        // Open the modal when the "For Review" button is clicked
+        reviewButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                const row = button.closest('tr');
+                const applicantName = row.querySelector('td:nth-child(2)').innerText.split('\n')[0];
+                const applicantEmail = row.querySelector('td:nth-child(2)').innerText.split('\n')[1];
+
+                // Populate modal with applicant details
+                document.getElementById("applicant-name").innerText = applicantName;
+                document.getElementById("applicant-email").innerText = `Email: ${applicantEmail}`;
+                modal.style.display = "block"; // Show the modal
+            });
+        });
+
+        // Close the modal when the close button is clicked
+        closeModal.addEventListener("click", function () {
+            modal.style.display = "none";
+        });
+
+        // Close the modal when clicking outside of the modal content
+        window.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        });
+
+        // Add functionality for the confirm button if needed
+        document.getElementById("confirmButton").addEventListener("click", function () {
+            alert("Applicant recommended for HR interview.");
+            modal.style.display = "none"; // Close the modal after confirmation
+        });
+
+        // Close the modal when the back button is clicked
+        document.getElementById("backButton").addEventListener("click", function () {
+            modal.style.display = "none";
+        });
+    });
 </script>
-
-
 </body>
 </html>
