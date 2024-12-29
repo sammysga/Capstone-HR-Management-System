@@ -601,7 +601,7 @@ const lineManagerController = {
         }
     },
 
-    getInterviewForm: function(req, res) {
+    getInterviewForm1: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             res.render('staffpages/linemanager_pages/linemanagerevaluationform');
         } else {
