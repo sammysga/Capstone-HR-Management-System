@@ -3,10 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interview Booking</title>
+    <title>Line Manager Interview Form</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h1 {
+            color: #124A5C;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            margin-left: 280px;
+            padding: 20px;
+        }
+
+        form {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            margin: 20px auto;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"], input[type="date"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        input[readonly] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            height: 100px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .back-button {
+            background-color: #cccccc;
+        }
+
+        .reject-button {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        .save-button {
+            background-color: #07ACB9;
+            color: white;
+        }
+
+        .notify-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .rating {
+            margin-top: 10px;
+        }
+
+        .rating label {
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .table-container {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f1f1;
+        }
+
+        .first-day-checklist {
+            margin-top: 30px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .first-day-checklist p {
+            margin-top: 10px;
+        }
+
+        .hr-notes {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .hr-notes h3 {
+            margin-bottom: 10px;
+        }
+
+        .hr-notes textarea {
+            width: 100%;
+            height: 150px;
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .remark-section {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .remark-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .remark-section textarea {
+            width: 100%;
+            height: 100px;
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin-left: 0;
+            }
+
+            form {
+                padding: 10px;
+            }
+
+            input[type="text"], input[type="date"], textarea {
+                font-size: 14px;
+            }
+
+            button {
+                font-size: 14px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Include Sidebar -->
     <%- include('../../partials/linemanager_partials') %>
+    <div class="container">
+        <header>
+            <h1>Line Manager Interview Form</h1>
+        </header>
+
+        <form id="interview-form">
+            <div class="form-section">
+                <label for="candidate-name">Candidate Name:</label>
+                <input type="text" id="candidate-name" value="John Doe" readonly>
+
+                <label for="position-title">Position Title:</label>
+                <input type="text" id="position-title" value="Software Engineer" readonly>
+
+                <label for="position-department">Position Department:</label>
+                <input type="text" id="position-department" value="IT Department" readonly>
+
+                <label for="conducted-by">Conducted by:</label>
+                <input type="text" id="conducted-by" value="Jane Smith" readonly>
+
+                <label for="date-of-interview">Date of Interview:</label>
+                <input type="text" id="date-of-interview" value="December 15, 2024" readonly>
+
+                <label for="first-day">First Day:</label>
+                <input type="date" id="first-day">
+
+                <label for="objective-setting-date">Objective Setting Date:</label>
+                <input type="date" id="objective-setting-date">
+            </div>
+
+            <!-- Other sections omitted for brevity -->
+
+            <div class="form-section">
+                <div class="first-day-checklist">
+                    <h2>First Day Checklist Guide for Applicant</h2>
+                    <p>Below is the checklist to help you get ready for your first day:</p>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Activities</th>
+                                <th>Where</th>
+                                <th>Contact Person</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Complete Onboarding Documentation</td>
+                                <td>HR Department</td>
+                                <td>John Adams</td>
+                            </tr>
+                            <tr>
+                                <td>Meet with Team Lead</td>
+                                <td>Team Office</td>
+                                <td>Sarah Johnson</td>
+                            </tr>
+                            <tr>
+                                <td>Set Up Workstation</td>
+                                <td>IT Department</td>
+                                <td>Mike Clark</td>
+                            </tr>
+                            <tr>
+                                <td>Review Department Policies</td>
+                                <td>HR Department</td>
+                                <td>Emma Brown</td>
+                            </tr>
+                            <tr>
+                                <td>Lunch with Team</td>
+                                <td>Cafeteria</td>
+                                <td>Linda Green</td>
+                            </tr>
+                            <tr>
+                                <td>Initial Training Session</td>
+                                <td>Training Room 2</td>
+                                <td>David Wilson</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- HR Notes Section with dummy text -->
+            <div class="form-section">
+                <div class="hr-notes">
+                    <h3>HR Notes:</h3>
+                    <textarea id="hr-notes">John has demonstrated solid technical skills during the interview, especially in problem-solving. He also seems eager to learn and adapt to new technologies. However, he mentioned that he needs further development in time management, which we will need to support. His first day checklist has been assigned, and he is scheduled to meet with his team lead and HR for onboarding documentation. We will monitor his progress closely during the first few months.</textarea>
+                </div>
+            </div>
+
+             <!-- Leave a Remark Section -->
+             <div class="form-section">
+                <div class="remark-section">
+                    <label for="remark">Leave a Remark:</label>
+                    <textarea id="remark" placeholder="Write any additional remarks here..."></textarea>
+                </div>
+            </div>
+
+             <!-- New Buttons -->
+             <div class="form-section">
+                <button type="button" class="back-button">Back</button>
+                <button type="button" class="reject-button">Reject Notify HR</button>
+                <button type="button" class="save-button">Save</button>
+                <button type="button" class="notify-button">Notify Applicant for Onboarding</button>
+            </div>
+
+        </form>
+    </div>
 </body>
 </html>
