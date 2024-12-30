@@ -237,9 +237,8 @@
 
 /* Styling for the finalize review button */
 .set-finalize-review-button {
-    position: absolute;
-    bottom: 10px;
-    right: 10px; /* Right-aligned to the container */
+    position: relative; /* Relative positioning to work well within the container */
+    margin: 5px 10px; /* Spacing between buttons */
     background-color: #124A5C;
     color: white;
     border: none;
@@ -251,20 +250,29 @@
     white-space: nowrap; /* Prevent the text from wrapping */
     text-align: center; /* Center the text inside the button */
     font-size: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Slight shadow for depth */
+    transition: background-color 0.3s ease; /* Smooth hover transition */
 }
 
 .set-finalize-review-button:hover {
     background-color: #B4E3E3;
-    color: white;
+    color: #124A5C; /* Match hover color for contrast */
 }
 
-/* Ensure the finalize button stays at the bottom */
+/* Ensure the finalize container is positioned correctly */
 .finalize-container {
     position: fixed;
     bottom: 20px;  /* Adjust position as necessary */
     right: 20px;   /* Align to the right */
-    display: none; /* Hidden by default */
+    display: none; /* Hidden by default; shown dynamically */
+    background-color: rgba(255, 255, 255, 0.9); /* Light background for contrast */
+    border: 1px solid #ccc; /* Subtle border to distinguish container */
+    padding: 10px; /* Space inside the container */
+    border-radius: 10px; /* Rounded corners for a modern look */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    z-index: 1000; /* Ensure it appears above other elements */
 }
+
 
 
 
@@ -507,8 +515,10 @@
 <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
 
 <!-- Finalize button for review -->
-<div class="finalize-container" style="display: none;">
-    <button class="set-finalize-review-button">Finalize Review and Notify Applicants</button>
+<div class="finalize-container">
+    <button class="set-finalize-review-button" id="finalize-p1">P1: Finalize Review and Notify Applicants</button>
+    <button class="set-finalize-review-button" id="finalize-p2">P2: Finalize Review and Notify Applicants</button>
+    <button class="set-finalize-review-button" id="finalize-p3">P3: Finalize Review and Notify Applicants</button>
 </div>
 
 
@@ -557,6 +567,27 @@
 
         // Highlight the active filter button
         highlightActiveFilter(status);
+    }
+
+    // Event listeners for finalize buttons
+    document.getElementById("finalize-p1").addEventListener("click", function () {
+        finalizeReview("P1");
+    });
+
+    document.getElementById("finalize-p2").addEventListener("click", function () {
+        finalizeReview("P2");
+    });
+
+    document.getElementById("finalize-p3").addEventListener("click", function () {
+        finalizeReview("P3");
+    });
+
+    // Finalize review function
+    function finalizeReview(phase) {
+        alert(`${phase}: Finalizing review and notifying applicants.`);
+        // Add logic to handle finalization for the specified phase
+        // Example: Update database, send notifications, etc.
+        console.log(`${phase}: Review finalized. Notifications sent.`);
     }
 
 
