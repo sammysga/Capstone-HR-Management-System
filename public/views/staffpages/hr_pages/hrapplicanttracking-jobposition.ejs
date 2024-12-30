@@ -7,8 +7,17 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome for icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Adjust layout to avoid sidebar overlap */
+
+        body {
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
         .main-content {
             margin-left: 350px;
             padding: 20px;
@@ -254,7 +263,7 @@
         </div>
         
 <!-- Table for Applicant Data -->
-<table class="tracking-table">
+<table class="tracking-table" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
     <thead>
         <tr>
             <th>Applicant No.</th>
@@ -390,10 +399,49 @@
         </tr>
     </tbody>
 </table>
+
+<h2 class="header-section" style="margin-top: 30px; margin-bottom: 10px;">Onboarding</h2>
+
+<table class="tracking-table" style="width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th>Application No.</th>
+            <th>Last Name, First Name</th>
+            <th>Department</th>
+            <th>Position Applied</th>
+            <th>Application Status & Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>APP00018</td>
+            <td>William Scott<br>williamscott@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>First Day Checklist Sent</td>
+        </tr>
+        <tr class="status-for-onboarding">
+            <td>APP00019</td>
+            <td>Grace Taylor<br>gracetaylor@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>Checklist Accomplished <button class="btn-onboarding">For Onboarding</button></td>
+        </tr>
+        <tr>
+            <td>APP00020</td>
+            <td>Ella Martinez<br>ellamartinez@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>Account Created</td>
+        </tr>
+    </tbody>
+</table>
+
 <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
 
     </div>
 </div>
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
