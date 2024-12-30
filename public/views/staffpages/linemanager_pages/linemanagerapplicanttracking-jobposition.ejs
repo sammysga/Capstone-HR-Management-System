@@ -223,51 +223,115 @@
 
         /* MODAL CSS*/
 
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
 
-        /* Modal Styles */
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; /* Centered */
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px; /* Rounded corners */
+            width: 80%; /* Could be more or less, depending on screen size */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow effect */
+        }
+
+        .modal-header, .modal-body, .modal-footer {
+            text-align: center; /* Center text */
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center; /* Center buttons */
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            margin: 0 10px; /* Space between buttons */
+            border: none;
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-buttons button#backButton {
+            background-color: rgba(18, 74, 92, 0.5); /* 50% opacity */
+            color: white;
+        }
+
+        .modal-buttons button#confirmButton {
+            background-color: #124A5C; 
+            color: white;
+        }
+
+        .modal-buttons button:hover {
+            opacity: 0.8; /* Slightly transparent on hover */
+        }
+        .divider {
+    height: 2px; /* Height of the divider */
+    background-color: #124A5C; /* Color of the divider */
+    margin: 10px 0; /* Space above and below the divider */
 }
 
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto; /* 15% from the top and centered */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
-}
+.scores-table {
+        width: 100%; /* Full width */
+        border-collapse: collapse; /* Merge borders */
+        margin-top: 10px; /* Space above the table */
+    }
 
-.close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
+    .scores-table th, .scores-table td {
+        border: 1px solid #ddd; /* Border for table cells */
+        padding: 8px; /* Padding inside cells */
+        text-align: left; /* Align text to the left */
+    }
 
-.close-button:hover,
-.close-button:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
+    .scores-table th {
+        background-color: #124A5C; /* Header background color */
+        color: white; /* Header text color */
+    }
+
+    .scores-table tr:nth-child(even) {
+        background-color: #f2f2f2; /* Zebra striping for even rows */
+    }
+
+    .scores-table tr:hover {
+        background-color: #ddd; /* Highlight row on hover */
+    }
+    .computation-verdict {
+    margin: 15px 0; /* Space above and below */
+    font-size: 18px; /* Font size */
+    font-weight: bold; /* Bold text */
+    color: #124A5C; /* Color to match your theme */
+    text-align: left; /* Center the text */
 }
 
 .applicant-details h3 {
     font-size: 24px;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
 }
     </style>
 </head>
@@ -420,23 +484,56 @@
     <div class="modal-content">
         <span class="close-button" id="closeModal">&times;</span>
         <h2>P1: Initial Screening Score Breakdown</h2>
+        <div class="divider"></div> <!-- Optional Divider -->
         <div class="applicant-details">
             <h3 id="applicant-name">Jane Smith</h3>
             <p id="applicant-age">Age: 30</p>
             <p id="applicant-email">Email: janesmith@gmail.com</p>
-            <p id="applicant-contact">Contact No: 123-456-7890</p>
+            <p id="applicant-contact">Contact No: 09171234567</p>
         </div>
         <h4>Initial Screening Scores</h4>
-        <p>
-            Industry Specific Degree - 1/1<br>
-            Experiences - 3/4<br>
-            Certifications - 2/3<br>
-            Hard Skills - 4/5<br>
-            Soft Skills - 4/5<br>
-            Work Setup - PASSED<br>
-            Availability - PASSED<br>
-            <strong>Computation Verdict - PASSED | 85.33</strong>
-        </p>
+        <table class="scores-table">
+            <thead>
+                <tr>
+                    <th>Criteria</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Industry Specific Degree</td>
+                    <td>1/1</td>
+                </tr>
+                <tr>
+                    <td>Experiences</td>
+                    <td>3/4</td>
+                </tr>
+                <tr>
+                    <td>Certifications</td>
+                    <td>2/3</td>
+                </tr>
+                <tr>
+                    <td>Hard Skills</td>
+                    <td>4/5</td>
+                </tr>
+                <tr>
+                    <td>Soft Skills</td>
+                    <td>4/5</td>
+                </tr>
+                <tr>
+                    <td>Work Setup</td>
+                    <td>PASSED</td>
+                </tr>
+                <tr>
+                    <td>Availability</td>
+                    <td>PASSED</td>
+                </tr>
+            </tbody>
+        </table>
+       <!-- Computation Verdict Section -->
+       <div class="computation-verdict">
+        <strong>Computation Verdict - PASSED | 85.33</strong>
+    </div>
         <h4>Uploaded Documents</h4>
         <p><a href="sample_resume.pdf" target="_blank">sample_resume.pdf</a></p>
         <p>Would you like to recommend this applicant for the HR interview?</p>
