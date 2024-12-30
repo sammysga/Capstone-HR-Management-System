@@ -333,6 +333,38 @@
 .applicant-details h3 {
     font-size: 24px;
 }
+
+/* Styling for the finalize review button */
+.set-finalize-review-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px; /* Right-aligned to the container */
+    background-color: #124A5C;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    width: auto; /* Let the button width be determined by its content */
+    min-width: 200px; /* Minimum width to ensure the text fits */
+    white-space: nowrap; /* Prevent the text from wrapping */
+    text-align: center; /* Center the text inside the button */
+    font-size: 16px;
+}
+
+.set-finalize-review-button:hover {
+    background-color: #B4E3E3;
+    color: white;
+}
+
+/* Ensure the finalize button stays at the bottom */
+.finalize-container {
+    position: fixed;
+    bottom: 20px;  /* Adjust position as necessary */
+    right: 20px;   /* Align to the right */
+    display: none; /* Hidden by default */
+}
+
     </style>
 </head>
 <body>
@@ -544,6 +576,10 @@
     </div>
 </div>
 <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
+<!-- Finalize button for review -->
+<div class="finalize-container" style="display: none;">
+    <button class="set-finalize-review-button">Finalize Review and Notify HR</button>
+</div>
 
     </div>
 </div>
@@ -551,22 +587,46 @@
     document.addEventListener("DOMContentLoaded", function () {
         // Function to filter rows based on status
         function filterRowsByStatus(status) {
-            console.log(`Filtering rows by status: ${status}`);
-            const rows = document.querySelectorAll('.tracking-table tbody tr');
-            rows.forEach(row => {
-                // Show rows matching the status or all rows if status is "all"
-                if (status === "all" || row.classList.contains(`status-${status}`)) {
-                    row.style.display = ""; // Show
-                    console.log(`Showing row: ${row.innerText}`);
-                } else {
-                    row.style.display = "none"; // Hide
-                    console.log(`Hiding row: ${row.innerText}`);
-                }
-            });
+        const rows = document.querySelectorAll('.tracking-table tbody tr');
+        const rowsForReview = [];
+        const rowsOtherStatus = [];
 
-            // Highlight the active filter button
-            highlightActiveFilter(status);
+        rows.forEach(row => {
+            // Show rows matching the status or all rows if status is "all"
+            if (status === "all" || row.classList.contains(`status-${status}`)) {
+                if (status === "for-review") {
+                    // Separate rows with the "For Review" status
+                    const mailIconButton = row.querySelector("button.btn-review i.fas.fa-envelope"); // Look for the mail icon inside the button
+                    if (mailIconButton) {
+                        rowsForReview.push(row); // Rows with mail icon
+                    } else {
+                        rowsOtherStatus.push(row); // Rows without mail icon
+                    }
+                } else {
+                    rowsOtherStatus.push(row); // All other statuses
+                }
+                row.style.display = ""; // Show
+            } else {
+                row.style.display = "none"; // Hide
+            }
+        });
+
+        // Rearrange "For Review" rows with mail icon last
+        if (status === "for-review") {
+            const sortedRows = [...rowsOtherStatus, ...rowsForReview]; // Move rows with mail icon to the end
+            sortedRows.forEach(row => row.parentElement.appendChild(row)); // Reorder rows in the DOM
+            document.querySelector(".finalize-container").style.display = "block"; // Show the finalize button
+
+        } else {
+            // For other statuses, just display them in the order they appear
+            rowsOtherStatus.forEach(row => row.style.display = "");
+            document.querySelector(".finalize-container").style.display = "none"; // Hide the finalize button
         }
+
+        // Highlight the active filter button
+        highlightActiveFilter(status);
+    }
+
 
         // Function to filter rows based on the search input
         function filterTable() {
