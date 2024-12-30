@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome for icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
         /* Adjust layout to avoid sidebar overlap */
 
@@ -294,14 +295,24 @@
             <td>Robert Brown<br>robertbrown@gmail.com</td>
             <td>IT</td>
             <td>Data Analyst</td>
-            <td>P1: PASSED - Score: 90 <button class="btn-review">For Review</button></td>
+            <td>
+                P1: PASSED - Score: 90 
+                <button class="btn-review">
+                    <i class="fas fa-envelope"></i> For Review
+                </button>
+            </td>
         </tr>
         <tr class="status-for-review">
             <td>APP00004</td>
             <td>Alice Johnson<br>alicejohnson@gmail.com</td>
             <td>IT</td>
             <td>Data Analyst</td>
-            <td>P1: FAILED <button class="btn-review">For Review</button></td>
+            <td>
+                P1: FAILED 
+                <button class="btn-review">
+                    <i class="fas fa-envelope"></i> For Review 
+                </button>
+            </td>
         </tr>
         <tr>
             <td>APP00005</td>
@@ -337,7 +348,12 @@
             <td>Sophia Bell<br>sophiabell@gmail.com</td>
             <td>IT</td>
             <td>Data Analyst</td>
-            <td>P2: PASSED <button class="btn-review">For Review</button></td>
+            <td>
+                P2: PASSED 
+                <button class="btn-review">
+                    <i class="fas fa-envelope"></i> For Review 
+                </button>
+            </td>
         </tr>
 
         <tr class="status-for-review">
@@ -345,7 +361,12 @@
             <td>Daniel Green<br>danielgreen@gmail.com</td>
             <td>IT</td>
             <td>Data Analyst</td>
-            <td>P2: FAILED <button class="btn-review">For Review</button></td>
+            <td>
+                P2: FAILED 
+                <button class="btn-review">
+                    <i class="fas fa-envelope"></i> For Review 
+                </button>
+            </td>
         </tr>
         <tr>
             <td>APP00011</td>
@@ -381,14 +402,24 @@
             <td>William Scott<br>williamscott@gmail.com</td>
             <td>IT</td>
             <td>Data Analyst</td>
-            <td>P3: PASSED <button class="btn-review">For Review</button></td>
+            <td>
+                P3: PASSED [CHOSEN]
+                <button class="btn-review">
+                    <i class="fas fa-envelope"></i> For Review 
+                </button>
+            </td>
         </tr>
         <tr class="status-for-review">
             <td>APP00016</td>
             <td>Grace Taylor<br>gracetaylor@gmail.com</td>
             <td>IT</td>
             <td>Data Analyst</td>
-            <td>P3: FAILED <button class="btn-review">For Review</button></td>
+            <td>
+                P3: FAILED 
+                <button class="btn-review">
+                    <i class="fas fa-envelope"></i> For Review 
+                </button>
+            </td>
         </tr>
         <tr class="status-for-onboarding">
             <td>APP00017</td>
@@ -448,14 +479,37 @@
         // Function to filter rows based on status
         function filterRowsByStatus(status) {
             const rows = document.querySelectorAll('.tracking-table tbody tr');
+            const rowsForReview = [];
+            const rowsOtherStatus = [];
+
             rows.forEach(row => {
                 // Show rows matching the status or all rows if status is "all"
                 if (status === "all" || row.classList.contains(`status-${status}`)) {
+                    if (status === "for-review") {
+                        // Separate rows with the "For Review" status
+                        const mailIconButton = row.querySelector("button.btn-review i.fas.fa-envelope"); // Look for the mail icon inside the button
+                        if (mailIconButton) {
+                            rowsForReview.push(row); // Rows with mail icon
+                        } else {
+                            rowsOtherStatus.push(row); // Rows without mail icon
+                        }
+                    } else {
+                        rowsOtherStatus.push(row); // All other statuses
+                    }
                     row.style.display = ""; // Show
                 } else {
                     row.style.display = "none"; // Hide
                 }
             });
+
+            // Rearrange "For Review" rows with mail icon last
+            if (status === "for-review") {
+                const sortedRows = [...rowsOtherStatus, ...rowsForReview]; // Move rows with mail icon to the end
+                sortedRows.forEach(row => row.parentElement.appendChild(row)); // Reorder rows in the DOM
+            } else {
+                // For other statuses, just display them in the order they appear
+                rowsOtherStatus.forEach(row => row.style.display = "");
+            }
 
             // Highlight the active filter button
             highlightActiveFilter(status);
@@ -491,7 +545,7 @@
                     button.classList.add("active"); // Add active class
                 } else {
                     button.classList.remove("active"); // Remove active class
-                }
+                }r
             });
         }
 
