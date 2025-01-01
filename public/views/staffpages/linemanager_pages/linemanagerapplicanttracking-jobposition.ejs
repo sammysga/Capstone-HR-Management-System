@@ -575,6 +575,34 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for P3 Review -->
+<div id="P3ReviewModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>P3: Panel Evaluation Review</h2>
+        <div class="divider"></div>
+        <div class="applicant-details">
+            <h3 id="applicant-name">[Applicant Name]</h3>
+            <p id="applicant-email">Email: [Email]</p>
+        </div>
+        <h4>Evaluation Scores</h4>
+        <table class="scores-table">
+            <thead>
+                <tr>
+                    <th>Criteria</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody id="scores-tbody">
+                <!-- Scores will be dynamically added -->
+            </tbody>
+        </table>
+        <button id="finalizeReviewButton" class="set-finalize-review-button">Finalize Review</button>
+    </div>
+</div>
+
+
 <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
 <!-- Finalize button for review -->
 <div class="finalize-container" style="display: none;">
@@ -770,6 +798,51 @@
             modal.style.display = "none";
         });
     });
+
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        const reviewButtons = document.querySelectorAll(".btn-review");
+        const modal = document.getElementById("P3ReviewModal");
+        const closeButton = modal.querySelector(".close-button");
+
+        reviewButtons.forEach(button => {
+            button.addEventListener("click", function(event) {
+                // Example dynamic data population
+                const row = event.target.closest("tr");
+                const applicantName = row.children[1].textContent.split("\n")[0]; // Extract name
+                const email = row.children[1].textContent.split("\n")[1]; // Extract email
+
+                modal.querySelector("#applicant-name").textContent = applicantName;
+                modal.querySelector("#applicant-email").textContent = `Email: ${email}`;
+                
+                // Update scores dynamically if needed
+                const scoresTable = modal.querySelector("#scores-tbody");
+                scoresTable.innerHTML = `
+                    <tr>
+                        <td>Communication Skills</td>
+                        <td>8/10</td>
+                    </tr>
+                    <tr>
+                        <td>Technical Expertise</td>
+                        <td>9/10</td>
+                    </tr>
+                `;
+
+                modal.style.display = "block";
+            });
+        });
+
+        closeButton.addEventListener("click", function() {
+            modal.style.display = "none";
+        });
+
+        window.addEventListener("click", function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        });
+    });
+    
 </script>
 </body>
 </html>
