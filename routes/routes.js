@@ -120,7 +120,9 @@ router.get('/employee/viewtimeline', employeeController.getViewPerformanceTimeli
 
 router.get('/employee/attendance', employeeController.getAttendance);
 router.post('/employee/attendance', employeeController.postAttendance);
-router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
+// router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
+router.get('/employee/api/get360FeedbackNotification', employeeController.getNotificationSection_360DegreeFeedback);
+
 // router.get('/employee/employeefeedbackquestionnaire', employeeController.get360FeedbackList);
 // router.get('/employee/employeefeedbackquestionnaire/:selectedUser Id', employeeController.get360FeedbackList);
 router.get('/logout', employeeController.getLogoutButton);

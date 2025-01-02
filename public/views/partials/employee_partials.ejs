@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 <style>
     .logout-container {
     margin-top: 370px; /* Push the logout button to the bottom */
@@ -66,6 +68,57 @@
     }
 } */
 
+ /* Notification Bar Styling */
+/* Notification Icon Styling */
+.notification-icon {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1001;
+        font-size: 36px; /* Increase the icon size */
+        cursor: pointer;
+        background-color: #07ACB9; /* Background color for the circle */
+        color: white ; /* Icon color */
+        border-radius: 50%; /* Make it circular */
+        padding: 15px; /* Add padding to create space around the icon */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for floating effect */
+        transition: background-color 0.3s, transform 0.3s; /* Smooth transition for hover effect */
+    }
+
+    .notification-icon:hover {
+        background-color: #B4E3E3; /* Darker shade on hover */
+        transform: scale(1.1); /* Slightly increase size on hover */
+    }
+
+    .notification-bar {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 300px;
+        height: 100%;
+        background-color: #fff;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s ease;
+        z-index: 1000;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .notification-bar.open {
+        right: 0;
+    }
+
+    .notification-header {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .notification-item {
+        margin-bottom: 10px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 10px;
+    }
+
 </style>
 
 <!-- <div id="toast-notification" class="toast">
@@ -121,3 +174,70 @@
         <a href="/logout" class="logout-button">Logout</a>
     </div>
 </div>
+
+
+<i class="fas fa-bell notification-icon" id="notification-icon"></i>
+
+<div class="notification-bar" id="notification-bar">
+    <div class="notification-header">Notifications</div>
+    <div class="notification-list" id="notification-list"></div>
+</div>
+
+<script>
+    const notificationIcon = document.getElementById('notification-icon');
+    const notificationBar = document.getElementById('notification-bar');
+
+    notificationIcon.addEventListener('click', () => {
+        console.log('Notification icon clicked'); // Log when clicked
+        notificationBar.classList.toggle('open');
+    });
+
+    // Function to add a new notification
+    function addNotification(title, message, startDate, endDate) {
+        console.log('Adding notification:', { title, message, startDate, endDate }); // Log notification details
+        const notificationItem = document.createElement('div');
+        notificationItem.classList.add('notification-item');
+        notificationItem.innerHTML = `
+            <strong>${title}</strong>
+            <p>${message} from <span>${startDate}</span> to <span>${endDate}</span>.</p>
+            <button class="toast-btn" id="toast-action-btn">Go to Staff Feedback List</button>
+            <button class="close-btn" onclick="this.parentElement.remove();">&times;</button>
+        `;
+        document.getElementById('notification-list').appendChild(notificationItem); // Append to notification-list
+        console.log('Notification added to the list.'); // Confirm notification was added
+    }
+
+    // Example of how to call the addNotification function
+    async function fetchNotifications() {
+        try {
+            const response = await fetch('/employee/api/get360FeedbackNotification'); // Adjust the path to your API
+            const data = await response.json();
+
+            console.log('API Response:', data); // Log the response
+
+            if (data.success) {
+                const { feedback, startDate, endDate } = data;
+                console.log('Notification data:', { feedback, startDate, endDate }); // Log the data to be used
+                addNotification('360 Feedback Answers Required', 'Your participation is required.', startDate, endDate);
+            } else {
+                console.error('Error in response:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+    }
+
+    // Call fetchNotifications when the page loads or at a specific interval
+    window.onload = fetchNotifications; // Fetch notifications on page load
+</script>
+
+<!-- 
+<script>
+    const notificationIcon = document.getElementById('notification-icon');
+    const notificationBar = document.getElementById('notification-bar');
+
+    notificationIcon.addEventListener('click', () => {
+        notificationBar.classList.toggle('open');
+    });
+</script> -->
+
