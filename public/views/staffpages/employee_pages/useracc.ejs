@@ -247,99 +247,99 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
-    console.log("Fetching 360 feedback data...");
+    // console.log("Fetching 360 feedback data...");
 
-    try {
-        // Make the fetch request to get the 360 feedback data
-        const response = await fetch(`/employee/api/get360Feedback`);
-        const data = await response.json();
-        console.log("Received response:", data);
+    // try {
+    //     // Make the fetch request to get the 360 feedback data
+    //     const response = await fetch(`/employee/api/get360Feedback`);
+    //     const data = await response.json();
+    //     console.log("Received response:", data);
 
-        if (data.success && data.feedback) {
-            // Ensure feedbackRecords is an array
-            const feedbackRecords = Array.isArray(data.feedback) ? data.feedback : [data.feedback];
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);  // Reset time to 00:00:00
+    //     if (data.success && data.feedback) {
+    //         // Ensure feedbackRecords is an array
+    //         const feedbackRecords = Array.isArray(data.feedback) ? data.feedback : [data.feedback];
+    //         const today = new Date();
+    //         today.setHours(0, 0, 0, 0);  // Reset time to 00:00:00
 
-            // Check if there are any active feedback records based on the start and end dates
-            const activeFeedback = feedbackRecords.some(record => {
-                const feedbackStartDate = new Date(record.setStartDate);
-                const feedbackEndDate = new Date(record.setEndDate);
+    //         // Check if there are any active feedback records based on the start and end dates
+    //         const activeFeedback = feedbackRecords.some(record => {
+    //             const feedbackStartDate = new Date(record.setStartDate);
+    //             const feedbackEndDate = new Date(record.setEndDate);
 
-                feedbackStartDate.setHours(0, 0, 0, 0);  // Reset time for comparison
-                feedbackEndDate.setHours(0, 0, 0, 0);  // Reset time for comparison
+    //             feedbackStartDate.setHours(0, 0, 0, 0);  // Reset time for comparison
+    //             feedbackEndDate.setHours(0, 0, 0, 0);  // Reset time for comparison
 
-                return today >= feedbackStartDate && today <= feedbackEndDate;
-            });
+    //             return today >= feedbackStartDate && today <= feedbackEndDate;
+    //         });
 
-            if (activeFeedback) {
-                console.log("Active feedback found. Displaying toast.");
-                // Extract userId and quarter from the first feedback record
-                const userId = data.userId;
-                const quarter = data.quarter;
-                showToast(feedbackRecords, userId, quarter);  // Pass userId and quarter to showToast
-            } else {
-                console.log("No active feedback period for the user.");
-            }
-        } else {
-            console.error("Failed to fetch feedback or no feedback available:", data.message);
-        }
-    } catch (error) {
-        console.error("Error while fetching 360 feedback data:", error);
-    }
+    //         if (activeFeedback) {
+    //             console.log("Active feedback found. Displaying toast.");
+    //             // Extract userId and quarter from the first feedback record
+    //             const userId = data.userId;
+    //             const quarter = data.quarter;
+    //             showToast(feedbackRecords, userId, quarter);  // Pass userId and quarter to showToast
+    //         } else {
+    //             console.log("No active feedback period for the user.");
+    //         }
+    //     } else {
+    //         console.error("Failed to fetch feedback or no feedback available:", data.message);
+    //     }
+    // } catch (error) {
+    //     console.error("Error while fetching 360 feedback data:", error);
+    // }
 
     // Display the toast with feedback details
-function showToast(feedbackRecords, userId, quarter) {
-    const toast = document.getElementById('toast');
-    const toastTitle = document.getElementById('toast-title');
-    const toastMessage = document.getElementById('toast-message');
-    const toastActionBtn = document.getElementById('toast-action-btn');
-    const closeToastBtn = document.getElementById('close-toast-btn');
-    const toastStartDate = document.getElementById('toast-start-date');
-    const toastEndDate = document.getElementById('toast-end-date');
+// function showToast(feedbackRecords, userId, quarter) {
+//     const toast = document.getElementById('toast');
+//     const toastTitle = document.getElementById('toast-title');
+//     const toastMessage = document.getElementById('toast-message');
+//     const toastActionBtn = document.getElementById('toast-action-btn');
+//     const closeToastBtn = document.getElementById('close-toast-btn');
+//     const toastStartDate = document.getElementById('toast-start-date');
+//     const toastEndDate = document.getElementById('toast-end-date');
 
-    if (!toast || !toastTitle || !toastMessage || !toastActionBtn || !closeToastBtn || !toastStartDate || !toastEndDate) {
-        console.error("One or more toast elements are missing from the DOM.");
-        return;
-    }
+//     if (!toast || !toastTitle || !toastMessage || !toastActionBtn || !closeToastBtn || !toastStartDate || !toastEndDate) {
+//         console.error("One or more toast elements are missing from the DOM.");
+//         return;
+//     }
 
-    // Ensure feedbackRecords is not empty
-    if (feedbackRecords && feedbackRecords.length > 0) {
-        const feedbackRecord = feedbackRecords[0]; // Assume the first record, but you can modify this logic if needed
-        const startDate = new Date(feedbackRecord.setStartDate);
-        const endDate = new Date(feedbackRecord.setEndDate);
+//     // Ensure feedbackRecords is not empty
+//     if (feedbackRecords && feedbackRecords.length > 0) {
+//         const feedbackRecord = feedbackRecords[0]; // Assume the first record, but you can modify this logic if needed
+//         const startDate = new Date(feedbackRecord.setStartDate);
+//         const endDate = new Date(feedbackRecord.setEndDate);
 
-        // Format the dates to a readable format
-        const formattedStartDate = startDate.toLocaleDateString();
-        const formattedEndDate = endDate.toLocaleDateString();
+//         // Format the dates to a readable format
+//         const formattedStartDate = startDate.toLocaleDateString();
+//         const formattedEndDate = endDate.toLocaleDateString();
 
-        toastTitle.innerText = "360 Feedback Answers Required";
-        toastMessage.innerHTML = `The 360-Degree Quarterly Feedback must be accomplished from <span id="toast-start-date">${formattedStartDate}</span> up until <span id="toast-end-date">${formattedEndDate}</span>. Your participation is required. Thank you!`;
+//         toastTitle.innerText = "360 Feedback Answers Required";
+//         toastMessage.innerHTML = `The 360-Degree Quarterly Feedback must be accomplished from <span id="toast-start-date">${formattedStartDate}</span> up until <span id="toast-end-date">${formattedEndDate}</span>. Your participation is required. Thank you!`;
 
-        toast.style.display = 'block';
+//         toast.style.display = 'block';
 
-        // Redirect to feedback page on action button click, passing userId and quarter
-        toastActionBtn.onclick = () => {
-            window.location.href = `/employee/employeefeedbackquestionnaire`;
-        };
+//         // Redirect to feedback page on action button click, passing userId and quarter
+//         toastActionBtn.onclick = () => {
+//             window.location.href = `/employee/employeefeedbackquestionnaire`;
+//         };
 
-        // Close the toast manually
-        closeToastBtn.onclick = hideToast;
-    } else {
-        console.error("No feedback records available.");
-    }
-}
+//         // Close the toast manually
+//         closeToastBtn.onclick = hideToast;
+//     } else {
+//         console.error("No feedback records available.");
+//     }
+// }
 
 
-    // Function to hide the toast notification
-    function hideToast() {
-        const toast = document.getElementById('toast');
-        if (toast) {
-            toast.style.display = 'none';
-        } else {
-            console.error("Toast element is missing from the DOM.");
-        }
-    }
+//     // Function to hide the toast notification
+//     function hideToast() {
+//         const toast = document.getElementById('toast');
+//         if (toast) {
+//             toast.style.display = 'none';
+//         } else {
+//             console.error("Toast element is missing from the DOM.");
+//         }
+//     }
 
     // Toggle editing for user info
     const editBtn = document.getElementById('edit-info-btn');
