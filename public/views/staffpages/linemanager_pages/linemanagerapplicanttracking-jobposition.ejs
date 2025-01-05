@@ -923,9 +923,8 @@
 <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
 <!-- Finalize button for review -->
 <div class="finalize-container">
-    <button class="set-finalize-review-button" id="finalizeReviewBtn">Finalize Review and Notify HR</button>
-    <button class="set-finalize-review-button" id="p1ReviewBtn">P1: Finalize Review</button>
-    <button class="set-finalize-review-button" id="p3ReviewBtn">P3: Finalize Review</button>
+    <button class="set-finalize-review-button" id="p1ReviewBtn">P1: Finalize Review and Notify HR</button>
+    <button class="set-finalize-review-button" id="p3ReviewBtn">P3: Finalize Review and Notify HR</button>
 </div>
 
 <!-- Modal Structure -->
@@ -935,8 +934,8 @@
         <h2>Confirm Final Review and Notify HR</h2>
         <p>You are about to finalize the review process and notify HR of the selected candidates. All applicants who were not chosen will be marked as failed. This action is irreversible. Do you wish to confirm?</p>
         <div class="custom-modal-buttons">
-            <button id="confirmFinalize" class="custom-confirm-button">Confirm</button>
             <button id="cancelFinalize" class="custom-cancel-button">Back</button>
+            <button id="confirmFinalize" class="custom-confirm-button">Confirm</button>
         </div>
     </div>
 </div>
@@ -1198,7 +1197,6 @@
 
 document.addEventListener("DOMContentLoaded", function () {
     // Select buttons and modal elements
-    const finalizeReviewBtn = document.getElementById('finalizeReviewBtn');
     const p1ReviewBtn = document.getElementById('p1ReviewBtn');
     const p3ReviewBtn = document.getElementById('p3ReviewBtn');
     const finalizeModal = document.getElementById('finalizeModal');
@@ -1216,31 +1214,28 @@ document.addEventListener("DOMContentLoaded", function () {
         finalizeModal.style.display = 'none';
     }
 
-    // Event listeners to open modal
-    finalizeReviewBtn.addEventListener('click', openModal);
+    // Add event listeners to buttons
     p1ReviewBtn.addEventListener('click', openModal);
     p3ReviewBtn.addEventListener('click', openModal);
 
-    // Event listener for the close button
+    // Add event listeners to close modal elements
     closeButton.addEventListener('click', closeModal);
-
-    // Event listener for the cancel button (Back)
     cancelButton.addEventListener('click', closeModal);
 
-    // Event listener for the confirm button
+    // Optional: Add functionality for confirming the action
     confirmButton.addEventListener('click', function () {
-        // Here you can add your logic to confirm the review process
-        console.log('Review confirmed and HR notified!');
+        alert('Review finalized and HR notified!');
         closeModal();
     });
 
-    // Close modal if clicked outside of it
+    // Close modal when clicking outside the modal content
     window.addEventListener('click', function (event) {
         if (event.target === finalizeModal) {
             closeModal();
         }
     });
 });
+
 
 </script>
 </body>
