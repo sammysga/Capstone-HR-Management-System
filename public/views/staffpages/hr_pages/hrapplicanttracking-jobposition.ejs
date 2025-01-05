@@ -351,6 +351,78 @@
             font-size: 16px;
         }
 
+        /* Modal Styling */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 60%; /* Adjust as necessary */
+    text-align: center; /* Center content inside modal */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h2, .modal-content p {
+    color: #124A5C;
+    margin-bottom: 20px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Space between buttons */
+}
+
+.modal-buttons button {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.back-button {
+    background-color: rgba(18, 74, 92, 0.5); /* Transparent background */
+    color: white;
+}
+
+.confirm-button {
+    background-color: #124A5C;
+    color: white;
+}
+
+.modal-buttons button:hover {
+    opacity: 0.8;
+}
+
+/* Close Button (X) */
+.close-button {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    float: right;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: black;
+}
+
+
     </style>
 </head>
 <body>
@@ -670,6 +742,46 @@
     <button class="set-finalize-review-button" id="finalize-p3">P3: Finalize Review and Notify Applicants</button>
 </div>
 
+<!-- Modal for P1: Finalize Review and Notify Applicants -->
+<div id="finalizeModalP1" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Confirm Final Review and Notify Applicants</h2>
+        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+            <button id="backButtonP1" class="back-button">Back</button>
+            <button id="confirmButtonP1" class="confirm-button">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for P2: Finalize Review and Notify Applicants -->
+<div id="finalizeModalP2" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Confirm Final Review and Notify Applicants</h2>
+        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+            <button id="backButtonP2" class="back-button">Back</button>
+            <button id="confirmButtonP2" class="confirm-button">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for P3: Finalize Review and Notify Applicants -->
+<div id="finalizeModalP3" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Confirm Final Review and Notify Applicants</h2>
+        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+            <button id="backButtonP3" class="back-button">Back</button>
+            <button id="confirmButtonP3" class="confirm-button">Confirm</button>
+        </div>
+    </div>
+</div>
+
+
 
     </div>
 </div>
@@ -844,6 +956,116 @@
         alert("Account setup confirmed");
         closeModal('accountSetupReminderModal');
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+    const finalizeP1Button = document.getElementById("finalize-p1");
+    const finalizeP2Button = document.getElementById("finalize-p2");
+    const finalizeP3Button = document.getElementById("finalize-p3");
+
+    const modalP1 = document.getElementById("finalizeModalP1");
+    const modalP2 = document.getElementById("finalizeModalP2");
+    const modalP3 = document.getElementById("finalizeModalP3");
+
+    const closeButtonP1 = modalP1.querySelector(".close-button");
+    const backButtonP1 = modalP1.querySelector("#backButtonP1");
+    const confirmButtonP1 = modalP1.querySelector("#confirmButtonP1");
+
+    const closeButtonP2 = modalP2.querySelector(".close-button");
+    const backButtonP2 = modalP2.querySelector("#backButtonP2");
+    const confirmButtonP2 = modalP2.querySelector("#confirmButtonP2");
+
+    const closeButtonP3 = modalP3.querySelector(".close-button");
+    const backButtonP3 = modalP3.querySelector("#backButtonP3");
+    const confirmButtonP3 = modalP3.querySelector("#confirmButtonP3");
+
+    // Show the modal for P1 when the "P1: Finalize Review and Notify Applicants" button is clicked
+    finalizeP1Button.addEventListener("click", function() {
+        modalP1.style.display = "block";
+    });
+
+    // Show the modal for P2 when the "P2: Finalize Review and Notify Applicants" button is clicked
+    finalizeP2Button.addEventListener("click", function() {
+        modalP2.style.display = "block";
+    });
+
+    // Show the modal for P3 when the "P3: Finalize Review and Notify Applicants" button is clicked
+    finalizeP3Button.addEventListener("click", function() {
+        modalP3.style.display = "block";
+    });
+
+    // Close the modal for P1 when the close button (X) is clicked
+    closeButtonP1.addEventListener("click", function() {
+        modalP1.style.display = "none";
+    });
+
+    // Close the modal for P2 when the close button (X) is clicked
+    closeButtonP2.addEventListener("click", function() {
+        modalP2.style.display = "none";
+    });
+
+    // Close the modal for P3 when the close button (X) is clicked
+    closeButtonP3.addEventListener("click", function() {
+        modalP3.style.display = "none";
+    });
+
+    // Close the modal for P1 when the back button is clicked
+    backButtonP1.addEventListener("click", function() {
+        modalP1.style.display = "none";
+    });
+
+    // Close the modal for P2 when the back button is clicked
+    backButtonP2.addEventListener("click", function() {
+        modalP2.style.display = "none";
+    });
+
+    // Close the modal for P3 when the back button is clicked
+    backButtonP3.addEventListener("click", function() {
+        modalP3.style.display = "none";
+    });
+
+    // Handle the confirm action for P1 (you can add your own confirmation logic here)
+    confirmButtonP1.addEventListener("click", function() {
+        // Add your confirmation action here (e.g., notify applicants)
+        alert("P1 Review finalized and applicants notified.");
+        modalP1.style.display = "none"; // Close the modal after confirming
+    });
+
+    // Handle the confirm action for P2 (you can add your own confirmation logic here)
+    confirmButtonP2.addEventListener("click", function() {
+        // Add your confirmation action here (e.g., notify applicants)
+        alert("P2 Review finalized and applicants notified.");
+        modalP2.style.display = "none"; // Close the modal after confirming
+    });
+
+    // Handle the confirm action for P3 (you can add your own confirmation logic here)
+    confirmButtonP3.addEventListener("click", function() {
+        // Add your confirmation action here (e.g., notify applicants)
+        alert("P3 Review finalized and applicants notified.");
+        modalP3.style.display = "none"; // Close the modal after confirming
+    });
+
+    // Close the modal if the user clicks outside of it (for P1)
+    window.addEventListener("click", function(event) {
+        if (event.target == modalP1) {
+            modalP1.style.display = "none";
+        }
+    });
+
+    // Close the modal if the user clicks outside of it (for P2)
+    window.addEventListener("click", function(event) {
+        if (event.target == modalP2) {
+            modalP2.style.display = "none";
+        }
+    });
+
+    // Close the modal if the user clicks outside of it (for P3)
+    window.addEventListener("click", function(event) {
+        if (event.target == modalP3) {
+            modalP3.style.display = "none";
+        }
+    });
+});
+
 
 </script>
 
