@@ -365,6 +365,158 @@
     display: none; /* Hidden by default */
 }
 
+/* Enhanced styling for the assessment form panel */
+.assessment-form-panel {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.assessment-form-panel h4 {
+    color: #124A5C;
+    font-size: 20px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-row label {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-row input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.form-row input:focus {
+    border-color: #124A5C;
+}
+
+.form-row input[type="number"] {
+    -webkit-appearance: none; /* Remove number input arrows */
+    -moz-appearance: textfield; /* Remove number input arrows */
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.modal-buttons button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.modal-buttons button#backButton {
+    background-color: rgba(18, 74, 92, 0.5); /* 50% opacity */
+    color: white;
+}
+
+.modal-buttons button#confirmButton {
+    background-color: #124A5C;
+    color: white;
+}
+
+.modal-buttons button:hover {
+    opacity: 0.8;
+}
+
+/* Divider */
+.divider {
+    height: 2px;
+    background-color: #124A5C;
+    margin: 10px 0;
+}
+
+/* Style the input fields and labels */
+#assessment-form-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-family: 'Arial', sans-serif;
+    padding: 20px;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-field label {
+    font-size: 14px;
+    color: #124A5C;
+    font-weight: bold;
+}
+
+.input-field input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-field input:focus {
+    border-color: #124A5C;
+    box-shadow: 0 0 5px rgba(18, 74, 92, 0.5);
+}
+
+.input-field input[type="number"]::-webkit-outer-spin-button,
+.input-field input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input-field input[type="number"]:focus::-webkit-outer-spin-button,
+.input-field input[type="number"]:focus::-webkit-inner-spin-button {
+    border-color: #124A5C;
+}
+
+/* Add a hover effect to the input fields */
+.input-field input:hover {
+    border-color: #124A5C;
+}
+
+/* Center the question heading */
+.assessment-form-panel h4 {
+    color: #124A5C;
+    font-size: 20px;
+    margin-bottom: 15px;
+    text-align: center; /* Center align the text */
+}
+
+/* Ensure buttons are centered as well */
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
     </style>
 </head>
 <body>
@@ -583,22 +735,38 @@
         <h2>P3: Panel Evaluation Review</h2>
         <div class="divider"></div>
         <div class="applicant-details">
-            <h3 id="applicant-name">[Applicant Name]</h3>
-            <p id="applicant-email">Email: [Email]</p>
+            <h3 id="applicant-name">John Doe</h3>
+            <p id="applicant-age">Age: 30</p>
+            <p id="applicant-email">Email: johndoe@example.com</p>
+            <p id="applicant-contact">Contact No: +1234567890</p>
         </div>
-        <h4>Evaluation Scores</h4>
-        <table class="scores-table">
-            <thead>
-                <tr>
-                    <th>Criteria</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody id="scores-tbody">
-                <!-- Scores will be dynamically added -->
-            </tbody>
-        </table>
-        <button id="finalizeReviewButton" class="set-finalize-review-button">Finalize Review</button>
+
+          <!-- Panel Assessment Form Title -->
+          <div class="assessment-form-title">
+            <h4>Panel Assessment Form</h4>
+        </div>
+
+        <div id="assessment-form-panel">
+            <div class="input-field">
+                <label for="communication-skills">Communication Skills:</label>
+                <input type="number" id="communication-skills" name="communication-skills" min="1" max="10" value="8">
+            </div>
+            <div class="input-field">
+                <label for="technical-expertise">Technical Expertise:</label>
+                <input type="number" id="technical-expertise" name="technical-expertise" min="1" max="10" value="9">
+            </div>
+            <div class="input-field">
+                <label for="problem-solving">Problem Solving:</label>
+                <input type="number" id="problem-solving" name="problem-solving" min="1" max="10" value="7">
+            </div>
+        </div>
+
+        <h4>Would you like to select this applicant as the top candidate for the position they are applying for?</h4>
+
+        <div class="modal-buttons">
+            <button id="backButton" class="back-button">Back</button>
+            <button id="confirmButton" class="confirm-button">Confirm</button>
+        </div>
     </div>
 </div>
 
@@ -801,47 +969,58 @@
 
     
     document.addEventListener("DOMContentLoaded", function() {
-        const reviewButtons = document.querySelectorAll(".btn-reviewP3");
-        const modal = document.getElementById("P3ReviewModal");
-        const closeButton = modal.querySelector(".close-button");
+    const reviewButtons = document.querySelectorAll(".btn-reviewP3");
+    const modal = document.getElementById("P3ReviewModal");
+    const closeButton = modal.querySelector(".close-button");
 
-        reviewButtons.forEach(button => {
-            button.addEventListener("click", function(event) {
-                // Example dynamic data population
-                const row = event.target.closest("tr");
-                const applicantName = row.children[1].textContent.split("\n")[0]; // Extract name
-                const email = row.children[1].textContent.split("\n")[1]; // Extract email
+    reviewButtons.forEach(button => {
+        button.addEventListener("click", function(event) {
+            // Dummy data for the applicant
+            const applicantName = "John Doe";
+            const applicantAge = "30";
+            const email = "johndoe@example.com";
+            const contactNo = "+1234567890";
 
-                modal.querySelector("#applicant-name").textContent = applicantName;
-                modal.querySelector("#applicant-email").textContent = `Email: ${email}`;
-                
-                // Update scores dynamically if needed
-                const scoresTable = modal.querySelector("#scores-tbody");
-                scoresTable.innerHTML = `
-                    <tr>
-                        <td>Communication Skills</td>
-                        <td>8/10</td>
-                    </tr>
-                    <tr>
-                        <td>Technical Expertise</td>
-                        <td>9/10</td>
-                    </tr>
-                `;
+            // Populate modal with dummy applicant details
+            modal.querySelector("#applicant-name").textContent = applicantName;
+            modal.querySelector("#applicant-age").textContent = `Age: ${applicantAge}`;
+            modal.querySelector("#applicant-email").textContent = `Email: ${email}`;
+            modal.querySelector("#applicant-contact").textContent = `Contact No: ${contactNo}`;
+            
+            // Populate the assessment form with dummy values
+            const assessmentPanel = modal.querySelector("#assessment-form-panel");
+            assessmentPanel.innerHTML = `
+                <div>
+                    <label for="communication-skills">Communication Skills:</label>
+                    <input type="number" id="communication-skills" name="communication-skills" min="1" max="10" value="8">
+                </div>
+                <div>
+                    <label for="technical-expertise">Technical Expertise:</label>
+                    <input type="number" id="technical-expertise" name="technical-expertise" min="1" max="10" value="9">
+                </div>
+                <div>
+                    <label for="problem-solving">Problem Solving:</label>
+                    <input type="number" id="problem-solving" name="problem-solving" min="1" max="10" value="7">
+                </div>
+            `;
 
-                modal.style.display = "block";
-            });
-        });
-
-        closeButton.addEventListener("click", function() {
-            modal.style.display = "none";
-        });
-
-        window.addEventListener("click", function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
+            // Show the modal
+            modal.style.display = "block";
         });
     });
+
+    closeButton.addEventListener("click", function() {
+        modal.style.display = "none";
+    });
+
+    window.addEventListener("click", function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    });
+});
+
+
 
     document.addEventListener('DOMContentLoaded', function() {
     const evaluationButtons = document.querySelectorAll('.btn-evaluation');
