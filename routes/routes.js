@@ -41,6 +41,9 @@ router.post('/upload', chatbotController.handleFileUpload); // Directly use the 
 router.get('/staff/login', staffLoginController.getStaffLogin);
 router.post('/staff/login', staffLoginController.postStaffLogin);
 
+// Notification Functions
+router.get('/employee/api/get360FeedbackNotification', employeeController.getNotificationSection_360DegreeFeedback);
+
 // Protected routes (role-specific logic in respective controllers)
 router.get('/hr/dashboard', hrController.getHRDashboard);
 router.get('/hr/manageleavetypes', hrController.getManageLeaveTypes);
@@ -121,8 +124,6 @@ router.get('/employee/viewtimeline', employeeController.getViewPerformanceTimeli
 router.get('/employee/attendance', employeeController.getAttendance);
 router.post('/employee/attendance', employeeController.postAttendance);
 // router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
-router.get('/employee/api/get360FeedbackNotification', employeeController.getNotificationSection_360DegreeFeedback);
-
 // router.get('/employee/employeefeedbackquestionnaire', employeeController.get360FeedbackList);
 // router.get('/employee/employeefeedbackquestionnaire/:selectedUser Id', employeeController.get360FeedbackList);
 router.get('/logout', employeeController.getLogoutButton);

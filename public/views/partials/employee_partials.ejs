@@ -1,6 +1,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 <style>
+
+body {
+    font-family: 'Inter', sans-serif; /* Set the font to Inter */
+}
     .logout-container {
     margin-top: 370px; /* Push the logout button to the bottom */
     text-align: center; /* Center the button */
@@ -70,6 +74,10 @@
 
  /* Notification Bar Styling */
 /* Notification Icon Styling */
+
+body {
+    font-family: 'Inter', sans-serif; /* Set the font to Inter */
+}
 .notification-icon {
         position: fixed;
         top: 20px;
@@ -95,7 +103,8 @@
         top: 0;
         right: -100%;
         width: 300px;
-        height: 100%;
+        height: 100%; /* Allow height to adjust based on content */
+        max-height: 80%; /* Limit the height */
         background-color: #fff;
         box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
         transition: right 0.3s ease;
@@ -109,16 +118,71 @@
     }
 
     .notification-header {
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 20px; /* Increase header font size */
+    text-align: left; /* Align the header to the left */
+    color: #07ACB9; /* Set the text color */
+}
 
+    .notification-section {
+        margin-top: 20px; /* Space between sections */
+        border-top: 1px solid #ccc; /* Divider line */
+        padding-top: 10px; /* Padding for section */
+    }
     .notification-item {
         margin-bottom: 10px;
-        border-bottom: 1px solid #ccc;
         padding-bottom: 10px;
     }
 
+    .notification-item strong {
+        display: block; /* Make title block level */
+        font-size: 16px; /* Title font size */
+    }
+
+    .notification-item p {
+        margin: 5px 0; /* Add margin for paragraph */
+    }
+
+
+/* Floating Action Button Styling */
+.fab {
+        position: fixed;
+        bottom: 20px; /* Position above the bottom */
+        right: 20px; /* Align to the right */
+        z-index: 1001;
+        font-size: 24px; /* Icon size */
+        cursor: pointer;
+        background-color: #07ACB9; /* Background color for the circle */
+        color: white; /* Icon color */
+        border-radius: 50%; /* Make it circular */
+        padding: 15px; /* Add padding to create space around the icon */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for floating effect */
+        transition: background-color 0.3s, transform 0.3s; /* Smooth transition for hover effect */
+    }
+
+    .fab:hover {
+        background-color: #B4E3E3; /* Darker shade on hover */
+        transform: scale(1.1); /* Slightly increase size on hover */
+    }
+
+
+    /* Required Action Buton CSS */
+    
+    .toast-btn {
+    background-color: #07ACB9 ; /* Set background color to red */
+    color: white; /* Set text color to white */
+    border: none; /* Remove default border */
+    padding: 10px 15px; /* Add padding for better appearance */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Change cursor to pointer */
+    font-size: 14px; /* Font size */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.toast-btn:hover {
+    background-color: #B4E3E3; /* Darker shade on hover */
+}
 </style>
 
 <!-- <div id="toast-notification" class="toast">
@@ -179,34 +243,52 @@
 <i class="fas fa-bell notification-icon" id="notification-icon"></i>
 
 <div class="notification-bar" id="notification-bar">
-    <div class="notification-header">Notifications</div>
-    <div class="notification-list" id="notification-list"></div>
+    <div class="notification-header">Notifications</div> <!-- Added Notifications heading -->
+    <div class="notification-list" id="notification-list">
+        <div class="notification-section" id="section-1">
+            <h4>REQUIRED 360 Degree Feedback Submission</h4>
+            <!-- Notifications will be added here -->
+        </div>
+        <div class="notification-section" id="section-2">
+            <h4>Section 2</h4>
+            <!-- Notifications will be added here -->
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fab" id="fab">
+    <i class="fas fa-arrow-right"></i>
 </div>
 
 <script>
     const notificationIcon = document.getElementById('notification-icon');
     const notificationBar = document.getElementById('notification-bar');
+    const fab = document.getElementById('fab');
 
     notificationIcon.addEventListener('click', () => {
         console.log('Notification icon clicked'); // Log when clicked
         notificationBar.classList.toggle('open');
     });
 
-    // Function to add a new notification
-    function addNotification(title, message, startDate, endDate) {
-        console.log('Adding notification:', { title, message, startDate, endDate }); // Log notification details
-        const notificationItem = document.createElement('div');
-        notificationItem.classList.add('notification-item');
-        notificationItem.innerHTML = `
-            <strong>${title}</strong>
-            <p>${message} from <span>${startDate}</span> to <span>${endDate}</span>.</p>
-            <button class="toast-btn" id="toast-action-btn">Go to Staff Feedback List</button>
-            <button class="close-btn" onclick="this.parentElement.remove();">&times;</button>
-        `;
-        document.getElementById('notification-list').appendChild(notificationItem); // Append to notification-list
-        console.log('Notification added to the list.'); // Confirm notification was added
-    }
+    fab.addEventListener('click', () => {
+        console.log('Floating Action Button clicked'); // Log when clicked
+        window.location.href = '/employee/staffFeedbackList'; // Redirect to the Staff Feedback List
+    });
 
+    // Function to add a new notification
+// Function to add a new notification
+function addNotification(title, message, startDate, endDate) {
+    console.log('Adding notification:', { title, message, startDate, endDate }); // Log notification details
+    const notificationItem = document.createElement('div');
+    notificationItem.classList.add('notification-item');
+    notificationItem.innerHTML = `
+        <strong>${title}</strong>
+        <p>${message} from <span>${startDate}</span> to <span>${endDate}</span>.</p>
+        <button class="toast-btn" id="toast-action-btn">Required Action</button>`;
+    document.getElementById('section-1').appendChild(notificationItem); // Append to section 1
+    console.log('Notification added to the list.'); // Confirm notification was added
+}
     // Example of how to call the addNotification function
     async function fetchNotifications() {
         try {
