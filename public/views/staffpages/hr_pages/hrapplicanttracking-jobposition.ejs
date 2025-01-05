@@ -10,14 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
-        /* Adjust layout to avoid sidebar overlap */
-
         body {
-        font-family: 'Inter', sans-serif;
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         .main-content {
             margin-left: 350px;
@@ -93,70 +91,64 @@
         }
 
         .tracking-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-    .tracking-table th, 
-    .tracking-table td {
-        padding: 10px 10px;
-        border: 1px solid #ddd;
-    }
+        .tracking-table th, 
+        .tracking-table td {
+            padding: 10px 10px;
+            border: 1px solid #ddd;
+        }
 
-    /* Left-align the table headers and cells */
-    .tracking-table th,
-    .tracking-table td {
-        text-align: left;
-    }
+        .tracking-table th,
+        .tracking-table td {
+            text-align: left;
+        }
 
-    /* Set fixed, smaller widths for the first four columns */
-    .tracking-table th:nth-child(1),
-    .tracking-table td:nth-child(1) {
-        width: 10%; /* Adjust the width as needed */
-    }
+        .tracking-table th:nth-child(1),
+        .tracking-table td:nth-child(1) {
+            width: 10%; 
+        }
 
-    .tracking-table th:nth-child(2),
-    .tracking-table td:nth-child(2) {
-        width: 20%; /* Adjust the width as needed */
-    }
+        .tracking-table th:nth-child(2),
+        .tracking-table td:nth-child(2) {
+            width: 20%;
+        }
 
-    .tracking-table th:nth-child(3),
-    .tracking-table td:nth-child(3) {
-        width: 15%; /* Adjust the width as needed */
-    }
+        .tracking-table th:nth-child(3),
+        .tracking-table td:nth-child(3) {
+            width: 15%; 
+        }
 
-    .tracking-table th:nth-child(4),
-    .tracking-table td:nth-child(4) {
-        width: 15%; /* Adjust the width as needed */
-    }
+        .tracking-table th:nth-child(4),
+        .tracking-table td:nth-child(4) {
+            width: 15%; 
+        }
 
-    /* Right-align buttons, left-align the text in the Applicant Status column */
-    .tracking-table td:last-child {
-        display: flex;
-        justify-content: space-between; /* Ensures buttons are on the right side */
-        align-items: center;
-    }
+        .tracking-table td:last-child {
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+        }
 
-    /* Align text to the left in the same column */
-    .tracking-table td:last-child span {
-        text-align: left; /* Ensure text is left-aligned */
-        flex-grow: 1; /* Allow text to take available space */
-    }
+        .tracking-table td:last-child span {
+            text-align: left; 
+            flex-grow: 1;
+        }
 
-    /* General table styling */
-    .tracking-table th,
-    .tracking-table td {
-        text-align: left;
-    }
+        .tracking-table th,
+        .tracking-table td {
+            text-align: left;
+        }
 
-    /* Adjusting layout for action buttons in the last column */
-    .tracking-table td:last-child button {
-        margin-left: 10px; /* Space between buttons */
-    }
-    .tracking-table tr:hover {
-        background-color: #f1f1f1;
-    }
-        /* Style for the job title container */
+        .tracking-table td:last-child button {
+            margin-left: 10px; 
+        }
+        .tracking-table tr:hover {
+            background-color: #f1f1f1;
+        }
+       
         .job-title-container {
             display: flex;
             align-items: center;
@@ -168,7 +160,7 @@
             height: 12px;
             border-radius: 50%;
             display: inline-block;
-            margin-right: 8px; /* Space between circle and job title */
+            margin-right: 8px; 
         }
 
         /* Green status circle */
@@ -181,100 +173,183 @@
             background-color: gray;
         }
 
-           /* Button styling for status actions */
-    .status-button {
-        background-color: white; /* White background */
-        color: black; /* Black text */
-        border: 1px solid #124A5C; /* Border color matching the hover */
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 14px;
-        cursor: pointer;
-        text-align: center;
-        width: auto;
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
+        /* Button styling for status actions */
+        .status-button {
+            background-color: white; 
+            color: black; 
+            border: 1px solid #124A5C; 
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            width: auto;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
 
-    .status-button:hover {
-        background-color: #124A5C; /* Hover background color */
-        color: white; /* Hover text color */
-    }
+        .status-button:hover {
+            background-color: #124A5C; 
+            color: white; 
+        }
 
-/* For consistency with other button styling */
-.btn-review, .btn-evaluation, .btn-onboarding {
-    background-color: white;
-    color: black;
-    border: 1px solid #124A5C;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 14px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    width: 150px; /* Set a consistent width */
-    text-align: center; /* Ensures text aligns properly within the button */
-}
-
-.btn-review:hover, .btn-evaluation:hover, .btn-onboarding:hover {
-    background-color: #124A5C;
-    color: white;
-}
-.set-interview-button {
+        .btn-review, .btn-evaluation, .btn-onboarding {
+            background-color: white;
+            color: black;
+            border: 1px solid #124A5C;
             padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            width: 150px;
+            text-align: center; 
+        }
+
+        .btn-review:hover, .btn-evaluation:hover, .btn-onboarding:hover {
+            background-color: #124A5C;
+            color: white;
+        }
+        .set-interview-button {
+                    padding: 10px 20px;
+                    background-color: #124A5C;
+                    color: white;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 16px;
+                    margin-top: 20px;
+                    display: block;
+                    width: 20%;
+                    text-align: center;
+                }
+                .set-interview-button:hover {
+                    background-color: #B4E3E3       ;
+                    color: white;
+                }
+
+
+        .set-finalize-review-button {
+            position: relative; 
+            margin: 5px 10px;
             background-color: #124A5C;
             color: white;
             border: none;
+            padding: 10px 20px;
             cursor: pointer;
+            border-radius: 5px;
+            width: auto; 
+            min-width: 200px; 
+            white-space: nowrap;
+            text-align: center; 
             font-size: 16px;
-            margin-top: 20px;
-            display: block;
-            width: 20%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+            transition: background-color 0.3s ease;
+        }
+
+        .set-finalize-review-button:hover {
+            background-color: #B4E3E3;
+            color: #124A5C; 
+        }
+
+
+        .finalize-container {
+            position: fixed;
+            bottom: 20px; 
+            right: 20px;  
+            display: none;
+            background-color: rgba(255, 255, 255, 0.9); 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000; 
+        }
+
+        /* Styling for the Modals */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px; 
+            width: 80%; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+        }
+
+        .modal-header, .modal-body, .modal-footer {
             text-align: center;
         }
-        .set-interview-button:hover {
-            background-color: #B4E3E3       ;
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-buttons button#backButton {
+            background-color: rgba(18, 74, 92, 0.5); 
             color: white;
         }
 
-/* Styling for the finalize review button */
-.set-finalize-review-button {
-    position: relative; /* Relative positioning to work well within the container */
-    margin: 5px 10px; /* Spacing between buttons */
-    background-color: #124A5C;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 5px;
-    width: auto; /* Let the button width be determined by its content */
-    min-width: 200px; /* Minimum width to ensure the text fits */
-    white-space: nowrap; /* Prevent the text from wrapping */
-    text-align: center; /* Center the text inside the button */
-    font-size: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Slight shadow for depth */
-    transition: background-color 0.3s ease; /* Smooth hover transition */
-}
+        .modal-buttons button#confirmButton {
+            background-color: #124A5C; 
+            color: white;
+        }
 
-.set-finalize-review-button:hover {
-    background-color: #B4E3E3;
-    color: #124A5C; /* Match hover color for contrast */
-}
+        .modal-buttons button:hover {
+            opacity: 0.8; 
+        }
 
-/* Ensure the finalize container is positioned correctly */
-.finalize-container {
-    position: fixed;
-    bottom: 20px;  /* Adjust position as necessary */
-    right: 20px;   /* Align to the right */
-    display: none; /* Hidden by default; shown dynamically */
-    background-color: rgba(255, 255, 255, 0.9); /* Light background for contrast */
-    border: 1px solid #ccc; /* Subtle border to distinguish container */
-    padding: 10px; /* Space inside the container */
-    border-radius: 10px; /* Rounded corners for a modern look */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    z-index: 1000; /* Ensure it appears above other elements */
-}
+        .divider {
+            height: 2px; 
+            background-color: #124A5C; 
+            margin: 10px 0; 
+        }
 
-
-
+        .modal-question {
+            display: flex;
+            justify-content: center;  
+            align-items: center;
+            text-align: center;
+            margin-top: 20px;  
+            margin-bottom: 20px; 
+            font-size: 16px;
+        }
 
     </style>
 </head>
@@ -448,8 +523,8 @@
             <td>Data Analyst</td>
             <td>
                 P3: PASSED [CHOSEN]
-                <button class="btn-review">
-                    <i class="fas fa-envelope"></i> For Review 
+                <button class="btn-review" onclick="openModal('releaseJobOfferModal')">
+                    <i class="fas fa-envelope"></i> For Review
                 </button>
             </td>
         </tr>
@@ -470,7 +545,7 @@
             <td>Ella Martinez<br>ellamartinez@gmail.com</td>
             <td>IT</td>
             <td>Data Analyst</td>
-            <td>P3: PASSED - Job Offer Sent <button class="btn-onboarding">For Onboarding</button></td>
+            <td>P3: PASSED - Job Offer Sent <button class="btn-onboarding"  onclick="openModal('moveToOnboardingModal')">For Onboarding</button></td>
         </tr>
     </tbody>
 </table>
@@ -500,7 +575,7 @@
             <td>Grace Taylor<br>gracetaylor@gmail.com</td>
             <td>IT</td>
             <td>Data Analyst</td>
-            <td>Checklist Accomplished <button class="btn-onboarding">For Onboarding</button></td>
+            <td>Checklist Accomplished <button class="btn-onboarding" onclick="openModal('accountSetupReminderModal')">For Onboarding</button></td>
         </tr>
         <tr>
             <td>APP00020</td>
@@ -511,6 +586,80 @@
         </tr>
     </tbody>
 </table>
+
+<!--Frontend Modals-->
+
+<!-- Modal for Confirm Release of Job Offer -->
+<div id="releaseJobOfferModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('releaseJobOfferModal')">&times;</span>
+        <h2 style="color: #07ACB9;">Name</h2>
+        <p><strong>Age:</strong> Text</p>
+        <p><strong>Email:</strong> Text</p>
+        <p><strong>Contact No:</strong> Text</p>
+        
+        <div class="divider"></div>
+        
+        <h3>Panel Assessment Form Breakdown</h3>
+        <p>[INSERT SUBMITTED FORM HERE]</p>
+        
+        <div class="modal-question">
+            <p><strong>Would you like to release the job offer and notify the applicant they are being considered for hiring?</strong></p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button id="backButton" onclick="closeModal('releaseJobOfferModal')">Back</button>
+            <button id="confirmButton" onclick="sendNotification()">Notify Applicant</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Moving Applicant for Onboarding -->
+<div id="moveToOnboardingModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('moveToOnboardingModal')">&times;</span>
+        <h1>Job Offer Confirmation</h1>
+        
+        <h2><strong>Applicant Personal Information</strong></h2>
+        <h3><strong>Name</strong></h3>
+        <p><strong>Age:</strong> Text</p>
+        <p><strong>Email:</strong> Text</p>
+        <p><strong>Contact No:</strong> Text</p>
+        
+        <div class="modal-question">
+            <p><strong>Would you like to move this applicant for onboarding?</strong></p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button id="backButton" onclick="closeModal('moveToOnboardingModal')">Back</button>
+            <button id="confirmButton" onclick="confirmOnboarding()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Account Setup Creation Reminder -->
+<div id="accountSetupReminderModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('accountSetupReminderModal')">&times;</span>
+        <h1>Account Setup Creation Reminder</h1>
+        
+        <h2><strong>Applicant Personal Information</strong></h2>
+        <h3><strong>Name</strong></h3>
+        <p><strong>Age:</strong> Text</p>
+        <p><strong>Email:</strong> Text</p>
+        <p><strong>Contact No:</strong> Text</p>
+        
+        <div class="modal-question">
+            <p><strong>Have you created an account for the employee through the Manage Employees page and emailed them the account details?</strong></p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button id="backButton" onclick="closeModal('accountSetupReminderModal')">Back</button>
+            <button id="confirmButton" onclick="confirmAccountSetup()">Confirm</button>
+        </div>
+    </div>
+</div>
+
 
 <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
 
@@ -667,6 +816,35 @@
         // Display all rows initially
         filterRowsByStatus("all");
     });
+
+    // Function to open the modal
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = "block";
+    }
+
+    // Function to close the modal
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    // Function for sending notification to the applicant
+    function sendNotification() {
+        alert("Sent notification to applicant");
+        closeModal('releaseJobOfferModal');
+    }
+
+    // Function for confirming onboarding
+    function confirmOnboarding() {
+        alert("Applicant moved to onboarding");
+        closeModal('moveToOnboardingModal');
+    }
+
+    // Function for confirming account setup
+    function confirmAccountSetup() {
+        alert("Account setup confirmed");
+        closeModal('accountSetupReminderModal');
+    }
+
 </script>
 
 
