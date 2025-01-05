@@ -842,6 +842,16 @@
             }
         });
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const evaluationButtons = document.querySelectorAll('.btn-evaluation');
+    evaluationButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            window.location.href = '/linemanager/interview-form-line';
+        });
+    });
+});
+
     
 </script>
 </body>
