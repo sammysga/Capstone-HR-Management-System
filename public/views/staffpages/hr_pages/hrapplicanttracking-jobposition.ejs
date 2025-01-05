@@ -422,6 +422,72 @@
     color: black;
 }
 
+.review-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.review-modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 50%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.review-close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.review-close-button:hover,
+.review-close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.review-modal-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.review-modal-buttons button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.review-modal-back-button {
+    background-color: rgba(18, 74, 92, 0.5);
+    color: white;
+}
+
+.review-modal-confirm-button {
+    background-color: #124A5C;
+    color: white;
+}
+
+.review-modal-buttons button:hover {
+    opacity: 0.8;
+}
 
     </style>
 </head>
@@ -781,6 +847,26 @@
     </div>
 </div>
 
+<!-- Modal -->
+<div id="reviewModal" class="review-modal">
+    <div class="review-modal-content">
+        <span class="review-close-button">&times;</span>
+        <h3>Applicant Details</h3>
+        <div class="applicant-details">
+            <p><strong>Name:</strong> <span id="applicant-name"></span></p>
+            <p><strong>Age:</strong> <span id="applicant-age"></span></p>
+            <p><strong>Email:</strong> <span id="applicant-email"></span></p>
+            <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
+        </div>
+        <h4>HR Assessment Form Breakdown</h4>
+        <!-- Add form breakdown here -->
+        <h4>Would you like to select this applicant as the top candidate and recommend them for the panel interview?</h4>
+        <div class="review-modal-buttons">
+            <button id="backButton" class="review-modal-back-button">Back</button>
+            <button id="confirmButton" class="review-modal-confirm-button">Confirm</button>
+        </div>
+    </div>
+</div>
 
 
     </div>
@@ -1066,6 +1152,49 @@
     });
 });
 
+// Function to open the modal
+function openModal(name, age, email, contact) {
+    document.getElementById("applicant-name").value = name;
+    document.getElementById("applicant-age").value = age;
+    document.getElementById("applicant-email").value = email;
+    document.getElementById("applicant-contact").value = contact;
+    document.getElementById("reviewModal").style.display = "block";
+}
+
+// Add event listeners to all "For Review" buttons
+document.querySelectorAll(".btn-review").forEach(button => {
+    button.addEventListener("click", function() {
+        const parentRow = button.closest("tr");
+        const name = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[0];
+        const email = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[1];
+        const age = "N/A";  // Placeholder for age
+        const contact = "N/A";  // Placeholder for contact
+        openModal(name, age, email, contact);
+    });
+});
+
+// Function to close the modal
+document.querySelector(".review-close-button").addEventListener("click", function() {
+    document.getElementById("reviewModal").style.display = "none";
+});
+
+// Close modal when clicking outside of the modal content
+window.addEventListener("click", function(event) {
+    if (event.target == document.getElementById("reviewModal")) {
+        document.getElementById("reviewModal").style.display = "none";
+    }
+});
+
+// Back button functionality
+document.getElementById("backButton").addEventListener("click", function() {
+    document.getElementById("reviewModal").style.display = "none";
+});
+
+// Confirm button functionality
+document.getElementById("confirmButton").addEventListener("click", function() {
+    alert("Applicant has been selected and recommended for panel interview.");
+    document.getElementById("reviewModal").style.display = "none";
+});
 
 </script>
 
