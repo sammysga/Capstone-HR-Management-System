@@ -363,12 +363,12 @@
     </table>
 </div>
 
-            <!-- Professional Background and Experience -->
-<div class="skill-section">
+           <!-- Professional Background and Experience -->
+<div class="skill-section" id="professional-background-section">
     <h2>Professional Background and Experience</h2>
     <div>
         <label>Demonstrated understanding of role requirements?</label>
-        <select class="rating-dropdown" class="rating" data-index="1">
+        <select class="rating-dropdown" data-category="professional">
             <option value="">Select</option>
             <option value="3">3 (Clearly Evident)</option>
             <option value="2">2 (Moderately Evident)</option>
@@ -377,7 +377,7 @@
     </div>
     <div>
         <label>Relevance of experience to job description?</label>
-        <select class="rating-dropdown" class="rating" data-index="2">
+        <select class="rating-dropdown" data-category="professional">
             <option value="">Select</option>
             <option value="3">3 (Clearly Evident)</option>
             <option value="2">2 (Moderately Evident)</option>
@@ -386,7 +386,7 @@
     </div>
     <div>
         <label>Highlighted achievements and contributions in previous roles?</label>
-        <select class="rating-dropdown" class="rating" data-index="3">
+        <select class="rating-dropdown" data-category="professional">
             <option value="">Select</option>
             <option value="3">3 (Clearly Evident)</option>
             <option value="2">2 (Moderately Evident)</option>
@@ -397,183 +397,180 @@
 
 <div class="category-total">
     <h3>Total:</h3>
-    <input type="number" readonly id="category-total-score" value="0">
+    <input type="number" readonly id="professional-total" value="0">
 </div>
 
-            <!--Functional Skills-->
-            <div class="skill-section">
-                <h2>Functional Skills</h2>
-                <div>
-                    <label>Proficiency in relevant skills:</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Experience in Finance strategy, industry mapping, P&L management</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Provided examples of skills utilization and success?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-            </div>
+            <!-- Functional Skills -->
+<div class="skill-section" id="functional-skills-section">
+    <h2>Functional Skills</h2>
+    <div>
+        <label>Proficiency in relevant skills:</label>
+        <select class="rating-dropdown" data-category="functional">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+    <div>
+        <label>Experience in Finance strategy, industry mapping, P&L management:</label>
+        <select class="rating-dropdown" data-category="functional">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+    <div>
+        <label>Provided examples of skills utilization and success:</label>
+        <select class="rating-dropdown" data-category="functional">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+</div>
+
+<div class="category-total">
+    <h3>Total:</h3>
+    <input type="number" readonly id="functional-total" value="0">
+</div>
+
+             <!-- Teamwork and Collaboration -->
+<div class="skill-section" id="teamwork-section">
+    <h2>Teamwork and Collaboration</h2>
+    <div>
+        <label>Emphasized importance of collaboration?</label>
+        <select class="rating-dropdown" data-category="teamwork">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+    <div>
+        <label>Shared experiences of effective teamwork?</label>
+        <select class="rating-dropdown" data-category="teamwork">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+</div>
+
+<div class="category-total">
+    <h3>Total:</h3>
+    <input type="number" readonly id="teamwork-total" value="0">
+</div>
 
 
-            <div class="category-total">
-                <h3>Total:</h3>
-                <input type="number" readonly id="category-total-score" id="functional-total">
-            </div>
+            <!-- Value Creation -->
+<div class="skill-section" id="value-creation-section">
+    <h2>Value Creation</h2>
+    <div>
+        <label>Demonstrated ability to generate innovative ideas or solutions?</label>
+        <select class="rating-dropdown" data-category="value-creation">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+    <div>
+        <label>Contributed to the creation of tangible value for the team or organization?</label>
+        <select class="rating-dropdown" data-category="value-creation">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+</div>
 
-             <!--Teamwork and Collaboration-->
-             <div class="skill-section">
-                <h2>Teamwork and Collaboration</h2>
-                <div>
-                    <label>Emphasized importance of collaboration?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Shared experiences of effective teamwork?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-            </div>
+<div class="category-total">
+    <h3>Total:</h3>
+    <input type="number" readonly id="value-total" value="0">
+</div>
 
+           <!-- Integrity -->
+<div class="skill-section" id="integrity-section">
+    <h2>Integrity</h2>
+    <div>
+        <label>Showed respect for colleagues and stakeholders?</label>
+        <select class="rating-dropdown" data-category="integrity">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+    <div>
+        <label>Acted professionally and courteously in all interactions?</label>
+        <select class="rating-dropdown" data-category="integrity">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+</div>
 
-            <div class="category-total">
-                <h3>Total:</h3>
-                <input type="number" readonly id="category-total-score" id="teamwork-total">
-            </div>
-
-            <!--Value Creation-->
-            <div class="skill-section">
-                <h2>Value Creation</h2>
-                <div>
-                    <label>Demonstrated ability to generate innovative ideas or solutions?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Contributed to the creation of tangible value for the team or organization?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-            </div>
-
-
-            <div class="category-total">
-                <h3>Total:</h3>
-                <input type="number" readonly id="category-total-score" id="value-total">
-            </div>
-
-            <!--Integrity-->
-            <div class="skill-section">
-                <h2>Integrity</h2>
-                <div>
-                    <label>Showed respect for colleagues and stakeholders? </label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Acted professionally and courteously in all interactions? </label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-            </div>
+<div class="category-total">
+    <h3>Total:</h3>
+    <input type="number" readonly id="integrity-total" value="0">
+</div>
 
 
-            <div class="category-total">
-                <h3>Total:</h3>
-                <input type="number" readonly id="category-total-score" id="integrity-total">
-            </div>
+            <!-- Problem-Solving Abilities -->
+<div class="skill-section" id="problem-solving-section">
+    <h2>Problem-Solving Abilities</h2>
+    <div>
+        <label>Demonstrated strong problem-solving skills?</label>
+        <select class="rating-dropdown" data-category="problem-solving">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+    <div>
+        <label>Provided examples of problem-solving approach?</label>
+        <select class="rating-dropdown" data-category="problem-solving">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+</div>
 
-            <!--Problem-Solving Abilities-->
-            <div class="skill-section">
-                <h2>Problem-Solving Abilities</h2>
-                <div>
-                    <label>Demonstrated strong problem-solving skills?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Provided examples of problem-solving approach?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-            </div>
-
-
-            <div class="category-total">
-                <h3>Total:</h3>
-                <input type="number" readonly id="category-total-score" id="problem-solving-total">
-            </div>
-
-            <!--Motivation and Fit-->
-            <div class="skill-section">
-                <h2>Motivation and Fit</h2>
-                <div>
-                    <label>Demonstrated genuine interest in the position?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
-                </div>
-            </div>
+<div class="category-total">
+    <h3>Total:</h3>
+    <input type="number" readonly id="problem-solving-total" value="0">
+</div>
 
 
-            <div class="category-total">
-                <h3>Total:</h3>
-                <input type="number" readonly id="category-total-score" id="motivation-total">
-            </div>
+            <!-- Motivation and Fit -->
+<div class="skill-section" id="motivation-fit-section">
+    <h2>Motivation and Fit</h2>
+    <div>
+        <label>Demonstrated genuine interest in the position?</label>
+        <input type="number" min="1" max="3" class="rating-input" data-category="motivation-fit">
+    </div>
+</div>
 
-              <!-- Calculated Total Section -->
-              <div class="final-total">
-                <h3>Calculated Total Assessment Rating:</h3>
-                <span id="total-rating">0</span>
-            </div>
+<div class="category-total">
+    <h3>Total:</h3>
+    <input type="number" readonly id="motivation-total" value="0">
+</div>
+
+<!-- Calculated Total Section -->
+<div class="final-total">
+    <h3>Calculated Total Assessment Rating:</h3>
+    <span id="total-rating">0</span>
+</div>
 
             <!--Additional Info-->
             <div class="additional-info">
@@ -611,6 +608,240 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    // Select all rating dropdowns within the Professional Background section
+    const ratingDropdowns = document.querySelectorAll('#professional-background-section .rating-dropdown');
+    const categoryTotalInput = document.getElementById('professional-total');
+
+    // Function to update the total score for Professional Background and Experience
+    function updateProfessionalTotal() {
+        let total = 0;
+
+        // Loop through each dropdown and sum the values
+        ratingDropdowns.forEach((dropdown) => {
+            const value = parseInt(dropdown.value, 10);
+            if (!isNaN(value)) {
+                total += value;
+            }
+        });
+
+        // Update the total score field
+        categoryTotalInput.value = total;
+    }
+
+    // Event listener to update the total when a dropdown value changes
+    ratingDropdowns.forEach((dropdown) => {
+        dropdown.addEventListener('change', updateProfessionalTotal);
+    });
+
+    // Initial call to set the total score on page load
+    updateProfessionalTotal();
+});
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+    // Select all rating dropdowns within the Functional Skills section
+    const ratingDropdowns = document.querySelectorAll('#functional-skills-section .rating-dropdown');
+    const categoryTotalInput = document.getElementById('functional-total');
+
+    // Function to update the total score for Functional Skills
+    function updateFunctionalTotal() {
+        let total = 0;
+
+        // Loop through each dropdown and sum the values
+        ratingDropdowns.forEach((dropdown) => {
+            const value = parseInt(dropdown.value, 10);
+            if (!isNaN(value)) {
+                total += value;
+            }
+        });
+
+        // Update the total score field
+        categoryTotalInput.value = total;
+    }
+
+    // Event listener to update the total when a dropdown value changes
+    ratingDropdowns.forEach((dropdown) => {
+        dropdown.addEventListener('change', updateFunctionalTotal);
+    });
+
+    // Initial call to set the total score on page load
+    updateFunctionalTotal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Select all rating dropdowns within the Teamwork and Collaboration section
+    const ratingDropdowns = document.querySelectorAll('#teamwork-section .rating-dropdown');
+    const categoryTotalInput = document.getElementById('teamwork-total');
+
+    // Function to update the total score for Teamwork and Collaboration
+    function updateTeamworkTotal() {
+        let total = 0;
+
+        // Loop through each dropdown and sum the values
+        ratingDropdowns.forEach((dropdown) => {
+            const value = parseInt(dropdown.value, 10);
+            if (!isNaN(value)) {
+                total += value;
+            }
+        });
+
+        // Update the total score field
+        categoryTotalInput.value = total;
+    }
+
+    // Event listener to update the total when a dropdown value changes
+    ratingDropdowns.forEach((dropdown) => {
+        dropdown.addEventListener('change', updateTeamworkTotal);
+    });
+
+    // Initial call to set the total score on page load
+    updateTeamworkTotal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Select all rating dropdowns within the Value Creation section
+    const ratingDropdowns = document.querySelectorAll('#value-creation-section .rating-dropdown');
+    const categoryTotalInput = document.getElementById('value-total');
+
+    // Function to update the total score for Value Creation
+    function updateValueCreationTotal() {
+        let total = 0;
+
+        // Loop through each dropdown and sum the values
+        ratingDropdowns.forEach((dropdown) => {
+            const value = parseInt(dropdown.value, 10);
+            if (!isNaN(value)) {
+                total += value;
+            }
+        });
+
+        // Update the total score field
+        categoryTotalInput.value = total;
+    }
+
+    // Event listener to update the total when a dropdown value changes
+    ratingDropdowns.forEach((dropdown) => {
+        dropdown.addEventListener('change', updateValueCreationTotal);
+    });
+
+    // Initial call to set the total score on page load
+    updateValueCreationTotal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Select all rating dropdowns within the Integrity section
+    const ratingDropdowns = document.querySelectorAll('#integrity-section .rating-dropdown');
+    const categoryTotalInput = document.getElementById('integrity-total');
+
+    // Function to update the total score for Integrity
+    function updateIntegrityTotal() {
+        let total = 0;
+
+        // Loop through each dropdown and sum the values
+        ratingDropdowns.forEach((dropdown) => {
+            const value = parseInt(dropdown.value, 10);
+            if (!isNaN(value)) {
+                total += value;
+            }
+        });
+
+        // Update the total score field
+        categoryTotalInput.value = total;
+    }
+
+    // Event listener to update the total when a dropdown value changes
+    ratingDropdowns.forEach((dropdown) => {
+        dropdown.addEventListener('change', updateIntegrityTotal);
+    });
+
+    // Initial call to set the total score on page load
+    updateIntegrityTotal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Select all rating dropdowns within the Problem-Solving Abilities section
+    const ratingDropdowns = document.querySelectorAll('#problem-solving-section .rating-dropdown');
+    const categoryTotalInput = document.getElementById('problem-solving-total');
+
+    // Function to update the total score for Problem-Solving Abilities
+    function updateProblemSolvingTotal() {
+        let total = 0;
+
+        // Loop through each dropdown and sum the values
+        ratingDropdowns.forEach((dropdown) => {
+            const value = parseInt(dropdown.value, 10);
+            if (!isNaN(value)) {
+                total += value;
+            }
+        });
+
+        // Update the total score field
+        categoryTotalInput.value = total;
+    }
+
+    // Event listener to update the total when a dropdown value changes
+    ratingDropdowns.forEach((dropdown) => {
+        dropdown.addEventListener('change', updateProblemSolvingTotal);
+    });
+
+    // Initial call to set the total score on page load
+    updateProblemSolvingTotal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Select the rating input field in the Motivation and Fit section
+    const ratingInput = document.querySelector('#motivation-fit-section .rating-input');
+    const categoryTotalInput = document.getElementById('motivation-total');
+
+    // Function to update the total score for Motivation and Fit
+    function updateMotivationTotal() {
+        const value = parseInt(ratingInput.value, 10);
+        // Ensure the value is between 1 and 3, otherwise default to 0
+        const total = isNaN(value) || value < 1 || value > 3 ? 0 : value;
+        categoryTotalInput.value = total;
+    }
+
+    // Event listener to update the total when the rating input changes
+    ratingInput.addEventListener('input', updateMotivationTotal);
+
+    // Initial call to set the total score on page load
+    updateMotivationTotal();
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Function to calculate the total rating from all category totals
+    function calculateFinalTotal() {
+        // Select all category total inputs
+        const categoryTotals = document.querySelectorAll('.category-total input');
+
+        let finalTotal = 0;
+        categoryTotals.forEach(input => {
+            // Parse each category total value and add to final total
+            const value = parseInt(input.value, 10);
+            if (!isNaN(value)) {
+                finalTotal += value;
+            }
+        });
+
+        // Display the final total in the "total-rating" span
+        document.getElementById('total-rating').textContent = finalTotal;
+    }
+
+    // Update the total rating whenever a category total changes
+    const ratingInputs = document.querySelectorAll('.rating-input, .rating-dropdown');
+    ratingInputs.forEach(input => {
+        input.addEventListener('input', calculateFinalTotal);
+        input.addEventListener('change', calculateFinalTotal);
+    });
+
+    // Initial call to set the total rating on page load
+    calculateFinalTotal();
+});
+
+
+
         const ratingInputs = document.querySelectorAll('.rating-input');
         const categoryTotals = document.querySelectorAll('.category-total-score');
         const finalTotalInput = document.getElementById('final-total');
@@ -620,21 +851,29 @@
         const totalRatingDisplay = document.getElementById('total-rating');
     
         function updateTotalRating() {
-            let totalRating = 0;
+    let totalRating = 0;
     
-            ratingDropdowns.forEach((dropdown) => {
-                const value = parseInt(dropdown.value, 10);
-                if (!isNaN(value)) {
-                    totalRating += value;
-                }
-            });
-    
-            totalRatingDisplay.textContent = totalRating;
+    ratingDropdowns.forEach((dropdown) => {
+        const value = parseInt(dropdown.value, 10);
+        if (!isNaN(value)) {
+            totalRating += value;
         }
+    });
+
+    totalRatingDisplay.textContent = totalRating;
+
+    // Update the category-total-score input with the calculated totalRating
+    // You may need to assign it to specific fields based on the category or general total
+    document.getElementById('category-total-score').value = totalRating;
+}
     
-        ratingDropdowns.forEach((dropdown) => {
-            dropdown.addEventListener('change', updateTotalRating);
-        });
+ratingDropdowns.forEach(dropdown => {
+    dropdown.addEventListener('change', () => {
+        updateTotalRating();
+        calculateCategoryTotals();  // Update totals after dropdown change
+        calculateFinalTotal();      // Update final total if needed
+    });
+});
     
         // Ensure all sections are rated before submission
         document.getElementById('submit-button').addEventListener('click', function (event) {
@@ -653,22 +892,23 @@
         });
 
         function calculateCategoryTotals() {
-            const categories = {};
-            ratingInputs.forEach(input => {
-                const category = input.dataset.category;
-                const value = parseInt(input.value, 10);
-                if (!categories[category]) {
-                    categories[category] = 0;
-                }
-                if (!isNaN(value)) {
-                    categories[category] += value;
-                }
-            });
-            categoryTotals.forEach(totalInput => {
-                const category = totalInput.id.replace('-total', '');
-                totalInput.value = categories[category] || 0;
-            });
+    const categories = {};
+    ratingDropdowns.forEach(dropdown => {
+        const category = dropdown.dataset.category;  // Assuming each dropdown has a `data-category` attribute
+        const value = parseInt(dropdown.value, 10);
+        if (!categories[category]) {
+            categories[category] = 0;
         }
+        if (!isNaN(value)) {
+            categories[category] += value;
+        }
+    });
+
+    categoryTotals.forEach(totalInput => {
+        const category = totalInput.id.replace('-total', ''); // Assuming input id is like "category-total-score"
+        totalInput.value = categories[category] || 0;
+    });
+}
 
         function calculateFinalTotal() {
             let finalTotal = 0;
@@ -687,6 +927,7 @@
                 calculateFinalTotal();
             });
         });
+        
 
         document.getElementById('interview-form').addEventListener('submit', (event) => {
             event.preventDefault();
@@ -719,27 +960,8 @@
         });
     });
 
-// Function to calculate the total score
-function calculateTotal() {
-    let total = 0;
-    ratingDropdowns.forEach(dropdown => {
-        const value = dropdown.value;
-        if (value) {
-            total += parseInt(value, 10); // Add the selected value to total
-        }
-    });
+    
 
-    // Set the total value to the total score input field
-    document.getElementById('category-total-score').value = total;
-}
-
-// Add event listeners to all dropdowns to recalculate total when selection changes
-ratingDropdowns.forEach(dropdown => {
-    dropdown.addEventListener('change', calculateTotal);
-});
-
-// Initial call to calculate total (in case the page is pre-filled or default values are set)
-calculateTotal();
 
 
     </script>
