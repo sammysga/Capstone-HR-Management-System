@@ -916,6 +916,7 @@
         highlightActiveFilter(status);
     }
 
+
     // Event listeners for finalize buttons
     document.getElementById("finalize-p1").addEventListener("click", function () {
         finalizeReview("P1");
@@ -1014,6 +1015,19 @@
         // Display all rows initially
         filterRowsByStatus("all");
     });
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Select all buttons with the class 'btn-evaluation'
+      const evaluationButtons = document.querySelectorAll(".btn-evaluation");
+
+      // Add click event listener to each button
+      evaluationButtons.forEach(button => {
+          button.addEventListener("click", function () {
+              // Navigate to the evaluation form
+              window.location.href = "/hr/evaluation-form";
+          });
+      });
+  });
 
     // Function to open the modal
     function openModal(modalId) {
