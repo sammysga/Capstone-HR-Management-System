@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Line Manager Interview Form</title>
     <link rel="stylesheet" href="/css/sidebar.css">
+    
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Inter, sans-serif;
             background-color: #f4f4f9;
             padding: 20px;
             margin: 0;
@@ -96,6 +97,29 @@
             margin-top: 5px;
         }
 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f9;
+        }
+
+        .calculated-total {
+            font-weight: bold;
+            color: #124A5C;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin-left: 0;
@@ -140,6 +164,37 @@
                 <input type="text" id="date-of-interview" value="December 15, 2024" readonly>
             </div>
 
+
+            <div class="form-section">
+                <h2>Rating Definition Guide</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rating Definition Guide</th>
+                            <th>Score Guide</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Strong Evidence</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td>Some Evidence</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td>No Evidence (not demonstrated/no evidence was obtained during the interview)</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td>Evidence of No Success (exact opposite of the competency)</td>
+                            <td>-1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
             <div class="form-section">
                 <h2>Personal Report</h2>
                 <label for="career-goals">How does this role fit your long-term career goals?</label>
@@ -150,12 +205,11 @@
 
                 <div class="rating">
                     <label>Rating: </label>
-                    <select id="personal-report-rating">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
+                    <select id="personal-report-rating" class="rating-dropdown">
+                        <option value="2">2 (Strong Evidence)</option>
+        <option value="1">1 (Some Evidence)</option>
+        <option value="0">0 (No Evidence)</option>
+        <option value="-1">-1 (Evidence of No Success)</option>
                     </select>
                 </div>
             </div>
@@ -175,12 +229,11 @@
 
                 <div class="rating">
                     <label>Rating: </label>
-                    <select id="functional-job-rating">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
+                    <select id="functional-job-rating" class="rating-dropdown">
+                        <option value="2">2 (Strong Evidence)</option>
+                        <option value="1">1 (Some Evidence)</option>
+                        <option value="0">0 (No Evidence)</option>
+                        <option value="-1">-1 (Evidence of No Success)</option>
                     </select>
                 </div>
             </div>
@@ -200,12 +253,11 @@
 
                 <div class="rating">
                     <label>Rating: </label>
-                    <select id="instructions-rating">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
+                    <select id="instructions-rating" class="rating-dropdown">
+                        <option value="2">2 (Strong Evidence)</option>
+                        <option value="1">1 (Some Evidence)</option>
+                        <option value="0">0 (No Evidence)</option>
+                        <option value="-1">-1 (Evidence of No Success)</option>
                     </select>
                 </div>
             </div>
@@ -225,12 +277,11 @@
 
                 <div class="rating">
                     <label>Rating: </label>
-                    <select id="people-rating">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
+                    <select id="people-rating" class="rating-dropdown">
+                        <option value="2">2 (Strong Evidence)</option>
+                        <option value="1">1 (Some Evidence)</option>
+                        <option value="0">0 (No Evidence)</option>
+                        <option value="-1">-1 (Evidence of No Success)</option>
                     </select>
                 </div>
             </div>
@@ -250,17 +301,20 @@
 
                 <div class="rating">
                     <label>Rating: </label>
-                    <select id="writing-rating">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
+                    <select id="writing-rating" class="rating-dropdown">
+                        <option value="2">2 (Strong Evidence)</option>
+        <option value="1">1 (Some Evidence)</option>
+        <option value="0">0 (No Evidence)</option>
+        <option value="-1">-1 (Evidence of No Success)</option>
                     </select>
                 </div>
             </div>
 
             <div class="form-section">
+                <div class="calculated-total">
+                    CALCULATED TOTAL ASSESSMENT RATING: <span id="total-rating">0</span>
+                </div>
+
                 <label for="equipment-tools">Equipments / Tools / Software utilized:</label>
                 <textarea id="equipment-tools" placeholder="List equipments, tools, or software utilized..."></textarea>
 
@@ -268,8 +322,48 @@
                 <textarea id="questions-company" placeholder="Write your questions here..."></textarea>
             </div>
 
-            <button type="submit">Submit</button>
+            <button type="button" id="back-button">Back</button>
+            <button type="submit" id="submit-button">Submit</button>
         </form>
     </div>
+
+    <script>
+        // Update total dynamically on dropdown selection change
+        const ratingDropdowns = document.querySelectorAll('.rating-dropdown');
+        const totalRatingDisplay = document.getElementById('total-rating');
+    
+        function updateTotalRating() {
+            let totalRating = 0;
+    
+            ratingDropdowns.forEach((dropdown) => {
+                const value = parseInt(dropdown.value, 10);
+                if (!isNaN(value)) {
+                    totalRating += value;
+                }
+            });
+    
+            totalRatingDisplay.textContent = totalRating;
+        }
+    
+        ratingDropdowns.forEach((dropdown) => {
+            dropdown.addEventListener('change', updateTotalRating);
+        });
+    
+        // Ensure all sections are rated before submission
+        document.getElementById('submit-button').addEventListener('click', function (event) {
+            let allRated = true;
+    
+            ratingDropdowns.forEach((dropdown) => {
+                if (dropdown.value === "") {
+                    allRated = false;
+                }
+            });
+    
+            if (!allRated) {
+                alert('Please rate all sections before submitting.');
+                event.preventDefault();
+            }
+        });
+    </script>
 </body>
 </html>
