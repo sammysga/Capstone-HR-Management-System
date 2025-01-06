@@ -363,43 +363,42 @@
     </table>
 </div>
 
-             <!--Professional Background and Experience-->
-            <div class="skill-section">
-                <h2>Professional Background and Experience</h2>
-                <div>
-                    <label>Demonstrated understanding of role requirements?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Relevance of experience to job description?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Highlighted achievements and contributions in previous roles?</label>
-                    <select class="rating-dropdown">
-                        <option value="">Select</option>
-                        <option value="3">3 (Clearly Evident)</option>
-                        <option value="2">2 (Moderately Evident)</option>
-                        <option value="1">1 (Not Evident)</option>
-                    </select>
-                </div>
-            </div>
+            <!-- Professional Background and Experience -->
+<div class="skill-section">
+    <h2>Professional Background and Experience</h2>
+    <div>
+        <label>Demonstrated understanding of role requirements?</label>
+        <select class="rating-dropdown" class="rating" data-index="1">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+    <div>
+        <label>Relevance of experience to job description?</label>
+        <select class="rating-dropdown" class="rating" data-index="2">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+    <div>
+        <label>Highlighted achievements and contributions in previous roles?</label>
+        <select class="rating-dropdown" class="rating" data-index="3">
+            <option value="">Select</option>
+            <option value="3">3 (Clearly Evident)</option>
+            <option value="2">2 (Moderately Evident)</option>
+            <option value="1">1 (Not Evident)</option>
+        </select>
+    </div>
+</div>
 
-
-            <div class="category-total">
-                <h3>Total:</h3>
-                <input type="number" readonly id="category-total-score" id="professional-total">
-            </div>
+<div class="category-total">
+    <h3>Total:</h3>
+    <input type="number" readonly id="category-total-score" value="0">
+</div>
 
             <!--Functional Skills-->
             <div class="skill-section">
@@ -719,6 +718,30 @@
             }
         });
     });
+
+// Function to calculate the total score
+function calculateTotal() {
+    let total = 0;
+    ratingDropdowns.forEach(dropdown => {
+        const value = dropdown.value;
+        if (value) {
+            total += parseInt(value, 10); // Add the selected value to total
+        }
+    });
+
+    // Set the total value to the total score input field
+    document.getElementById('category-total-score').value = total;
+}
+
+// Add event listeners to all dropdowns to recalculate total when selection changes
+ratingDropdowns.forEach(dropdown => {
+    dropdown.addEventListener('change', calculateTotal);
+});
+
+// Initial call to calculate total (in case the page is pre-filled or default values are set)
+calculateTotal();
+
+
     </script>
 </body>
 </html>
