@@ -280,6 +280,40 @@
                 font-size: 14px;
             }
         }
+
+
+        .rating-dropdown {
+        width: 130px;
+        padding: 5px;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .rating-explanation {
+        display: none;
+        position: absolute;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        padding: 10px;
+        width: 300px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        font-size: 14px;
+    }
+
+    .rating-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .rating-container:hover .rating-explanation {
+        display: block;
+    }
+
+    .rating-container label {
+        flex: 1;
+    }
     </style>
 </head>
 <body>
@@ -307,46 +341,57 @@
                 <input type="text" id="date-of-interview" placeholder="March 15, 2024" readonly>
             </div>
 
-            <div class="rating-guide" id="guide">
-                <h2>Rating Definition Guide</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rating</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>3</td>
-                            <td>Clearly Evident: Thoroughly explains actions, thought processes, and outcomes.</td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Moderately Evident: Adequately explains, with some underdeveloped areas.</td>
-                        </tr>
-                        <tr>
-                            <td>1</td>
-                            <td>Not Evident: Struggles to explain actions or lacks understanding.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+ <!-- Rating Definition Guide -->
+ <div class="rating-guide">
+    <h2>Rating Definition Guide</h2>
+    <table>
+        <tr>
+            <th>Clearly Evident</th>
+            <td>Clearly and thoroughly explains actions, thought process, and outcomes. Shows a deep understanding and high level of skill in the area being assessed.</td>
+            <td>3</td>
+        </tr>
+        <tr>
+            <th>Moderately Evident</th>
+            <td>Adequately explains actions, thought process, and outcomes, but some aspects may be unclear or underdeveloped. Shows a reasonable understanding and skill level in the area being assessed.</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <th>Not Evident</th>
+            <td>Struggles to explain actions, thought process, and outcomes. Shows a lack of understanding and inadequate skill in the area being assessed.</td>
+            <td>1</td>
+        </tr>
+    </table>
+</div>
 
              <!--Professional Background and Experience-->
             <div class="skill-section">
                 <h2>Professional Background and Experience</h2>
                 <div>
                     <label>Demonstrated understanding of role requirements?</label>
-                    <input type="number" min="1" max="3" class="rating-input" data-cateogry="professional">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
                 <div>
                     <label>Relevance of experience to job description?</label>
-                    <input type="number" min="1" max="3" class="rating-input" data-cateogry="professional">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
                 <div>
                     <label>Highlighted achievements and contributions in previous roles?</label>
-                    <input type="number" min="1" max="3" class="rating-input" data-cateogry="professional">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
             </div>
 
@@ -361,15 +406,30 @@
                 <h2>Functional Skills</h2>
                 <div>
                     <label>Proficiency in relevant skills:</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
                 <div>
                     <label>Experience in Finance strategy, industry mapping, P&L management</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
                 <div>
                     <label>Provided examples of skills utilization and success?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
             </div>
 
@@ -384,11 +444,21 @@
                 <h2>Teamwork and Collaboration</h2>
                 <div>
                     <label>Emphasized importance of collaboration?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
                 <div>
                     <label>Shared experiences of effective teamwork?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
             </div>
 
@@ -403,11 +473,21 @@
                 <h2>Value Creation</h2>
                 <div>
                     <label>Demonstrated ability to generate innovative ideas or solutions?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
                 <div>
                     <label>Contributed to the creation of tangible value for the team or organization?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
             </div>
 
@@ -422,11 +502,21 @@
                 <h2>Integrity</h2>
                 <div>
                     <label>Showed respect for colleagues and stakeholders? </label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
                 <div>
                     <label>Acted professionally and courteously in all interactions? </label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
             </div>
 
@@ -441,11 +531,21 @@
                 <h2>Problem-Solving Abilities</h2>
                 <div>
                     <label>Demonstrated strong problem-solving skills?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
                 <div>
                     <label>Provided examples of problem-solving approach?</label>
-                    <input type="number" min="1" max="3" class="rating-input">
+                    <select class="rating-dropdown">
+                        <option value="">Select</option>
+                        <option value="3">3 (Clearly Evident)</option>
+                        <option value="2">2 (Moderately Evident)</option>
+                        <option value="1">1 (Not Evident)</option>
+                    </select>
                 </div>
             </div>
 
@@ -470,10 +570,10 @@
                 <input type="number" readonly id="category-total-score" id="motivation-total">
             </div>
 
-            <!--Calculated Total Assessment Rating-->
-            <div class="final-total">
-                <span>Calculated Total Assessment Rating:</span>
-                <input type="number" readonly id="final-total">
+              <!-- Calculated Total Section -->
+              <div class="final-total">
+                <h3>Calculated Total Assessment Rating:</h3>
+                <span id="total-rating">0</span>
             </div>
 
             <!--Additional Info-->
@@ -506,7 +606,6 @@
             <!--Submit Section-->
             <div class="submit-section">
                 <button type="button" class="back">Back</button>
-                <button type="button" class="save">Save</button>
                 <button type="submit" class="save-submit">Save & Submit</button>
             </div>
         </form>
@@ -516,6 +615,43 @@
         const ratingInputs = document.querySelectorAll('.rating-input');
         const categoryTotals = document.querySelectorAll('.category-total-score');
         const finalTotalInput = document.getElementById('final-total');
+
+        // Update total dynamically on dropdown selection change
+        const ratingDropdowns = document.querySelectorAll('.rating-dropdown');
+        const totalRatingDisplay = document.getElementById('total-rating');
+    
+        function updateTotalRating() {
+            let totalRating = 0;
+    
+            ratingDropdowns.forEach((dropdown) => {
+                const value = parseInt(dropdown.value, 10);
+                if (!isNaN(value)) {
+                    totalRating += value;
+                }
+            });
+    
+            totalRatingDisplay.textContent = totalRating;
+        }
+    
+        ratingDropdowns.forEach((dropdown) => {
+            dropdown.addEventListener('change', updateTotalRating);
+        });
+    
+        // Ensure all sections are rated before submission
+        document.getElementById('submit-button').addEventListener('click', function (event) {
+            let allRated = true;
+    
+            ratingDropdowns.forEach((dropdown) => {
+                if (dropdown.value === "") {
+                    allRated = false;
+                }
+            });
+    
+            if (!allRated) {
+                alert('Please rate all sections before submitting.');
+                event.preventDefault();
+            }
+        });
 
         function calculateCategoryTotals() {
             const categories = {};
