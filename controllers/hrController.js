@@ -1339,6 +1339,21 @@ updateJobOffer: async function(req, res) {
         }
     },
 
+    getApplicantData: async function(req, res) {
+        try {
+            const { data: applicants, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select('lastName, firstName');
+            
+            if (applicantError) throw applicantError;
+            
+            res.json(applicants);
+        } catch (error) {
+            console.error('Error fetching applicants:', error);
+            res.status(500).json({ error: 'Error fetching applicants' });
+        }
+    },
+
     getApplicants: async function(req, res) {
         try {
             const { data: applicants, error } = await supabase
