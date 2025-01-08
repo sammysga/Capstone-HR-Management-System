@@ -319,14 +319,27 @@ const hrController = {
         }
     },
 
-    getApplicantTrackerByJobPositions: function (req, res) {
+    getApplicantTrackerByJobPositions: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hrapplicanttracking-jobposition');
+            try {
+                const { data: applicants, error: applicantError } = await supabase
+                    .from('applicantaccounts')
+                    .select('lastName, firstName');
+    
+                if (applicantError) throw applicantError;
+    
+                // Render the EJS template and pass the applicants data
+                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
+            } catch (error) {
+                console.error('Error fetching applicants:', error);
+                res.status(500).json({ error: 'Error fetching applicants' });
+            }
         } else {
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
             res.redirect('staff/login');
         }
     },
+    
  
 
     //ARCHIVED
