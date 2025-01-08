@@ -1347,12 +1347,14 @@ updateJobOffer: async function(req, res) {
             
             if (applicantError) throw applicantError;
             
-            res.json(applicants);
+            // Render the EJS template and pass the applicants data
+            res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
         } catch (error) {
             console.error('Error fetching applicants:', error);
             res.status(500).json({ error: 'Error fetching applicants' });
         }
     },
+    
 
 
     // Add a new department on the select picker on add new staff form
