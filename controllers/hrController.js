@@ -1354,45 +1354,6 @@ updateJobOffer: async function(req, res) {
         }
     },
 
-    getApplicants: async function(req, res) {
-        try {
-            const { data: applicants, error } = await supabase
-                .from('applicantaccounts')
-                .select(`
-                    applicant_id, 
-                    last_name, 
-                    first_name, 
-                    status AS applicant_status,
-                    useraccounts (
-                        user_email
-                    ),
-                    jobpositions (
-                        job_title,
-                        departments (
-                            dept_name
-                        )
-                    )
-                `);
-
-            if (error) throw error;
-
-            // Transform data to match the desired format for the frontend
-            const formattedApplicants = applicants.map(applicant => ({
-                applicant_no: applicant.applicant_id,
-                last_name: applicant.last_name,
-                first_name: applicant.first_name,
-                email: applicant.useraccounts.user_email,
-                department: applicant.jobpositions.departments.dept_name,
-                position_applied: applicant.jobpositions.job_title,
-                applicant_status: applicant.applicant_status
-            }));
-
-            res.json(formattedApplicants);
-        } catch (error) {
-            console.error('Error fetching applicants:', error);
-            res.status(500).json({ error: 'Error fetching applicants' });
-        }
-    }, 
 
     // Add a new department on the select picker on add new staff form
     addNewDepartment: async function(req, res) {
