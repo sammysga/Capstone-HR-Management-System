@@ -537,12 +537,12 @@
             <% applicants.forEach((applicant, index) => { %>
                 <% 
                     const jobTitle = applicant.jobpositions ? applicant.jobpositions.jobTitle : null;
-                    const departmentName = applicant.departments ? applicant.departments.departmentName : null;
+                    const deptName = applicant.departments ? applicant.departments.deptName : null;
                 %>
                 <tr>
                     <td><%= index + 1 %></td>
                     <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
-                    <td><%= departmentName || 'N/A' %></td> <!-- Display department name or 'N/A' if missing -->
+                    <td><%= deptName || 'N/A' %></td> <!-- Display deptName or 'N/A' if missing -->
                     <td><%= jobTitle || 'N/A' %></td> <!-- Display jobTitle or 'N/A' if missing -->
                     <td><!-- Add applicant status & actions here --></td>
                 </tr>
@@ -553,6 +553,7 @@
             </tr>
         <% } %>
     </tbody>
+    
     
 
     
