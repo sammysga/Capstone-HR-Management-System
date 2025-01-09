@@ -360,9 +360,20 @@ const hrController = {
                     };
                 });
     
+                // Filter applicants to exclude those with "N/A" as jobTitle
+                const validApplicants = applicantsWithDetails.filter(applicant => applicant.jobTitle !== 'N/A');
+    
+                // If there are no valid applicants, show an error or fallback message
+                if (validApplicants.length === 0) {
+                    res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants: [] });
+                    return;
+                }
+    
+                // Get the first jobTitle from valid applicants to use as the filter condition
+                const firstJobTitle = validApplicants[0].jobTitle;
+    
                 // Filter applicants to only show those with the same jobTitle as the first applicant's jobTitle
-                const firstJobTitle = applicantsWithDetails.length ? applicantsWithDetails[0].jobTitle : null;
-                const filteredApplicants = applicantsWithDetails.filter(applicant => applicant.jobTitle === firstJobTitle);
+                const filteredApplicants = validApplicants.filter(applicant => applicant.jobTitle === firstJobTitle);
     
                 // Render the EJS template and pass the filtered applicants data
                 res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants: filteredApplicants });
@@ -372,10 +383,11 @@ const hrController = {
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('/staff/login');
+            res.redirect('staff/login');
         }
     },
     
+
     
     
     
