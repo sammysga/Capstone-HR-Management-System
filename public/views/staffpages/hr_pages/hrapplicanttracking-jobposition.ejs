@@ -537,14 +537,15 @@
             <% applicants.forEach((applicant, index) => { %>
                 <% 
                     const jobTitle = applicant.jobpositions ? applicant.jobpositions.jobTitle : null;
+                    const departmentId = applicant.departmentId || 'N/A';  // Fetch departmentId
                     if (jobTitle && !displayedPositions[jobTitle]) { 
                         displayedPositions[jobTitle] = true; 
                 %>
                     <tr>
                         <td><%= index + 1 %></td>
                         <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
-                        <td><!-- Add department info here --></td>
-                        <td><%= jobTitle %></td>
+                        <td><%= departmentId %></td> <!-- Display departmentId -->
+                        <td><%= jobTitle %></td> <!-- Display jobTitle -->
                         <td><!-- Add applicant status & actions here --></td>
                     </tr>
                 <% } %>
@@ -555,6 +556,7 @@
             </tr>
         <% } %>
     </tbody>
+    
     
     
     
