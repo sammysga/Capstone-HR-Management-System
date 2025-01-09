@@ -322,7 +322,7 @@ const hrController = {
     getApplicantTrackerByJobPositions: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                // First, fetch applicants along with jobId and departmentId
+                // Fetch applicants, jobId, and departmentId
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
@@ -334,7 +334,7 @@ const hrController = {
     
                 if (applicantError) throw applicantError;
     
-                // Next, fetch job titles based on jobId
+                // Fetch job titles based on jobId
                 const { data: jobTitles, error: jobError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle');
@@ -360,8 +360,12 @@ const hrController = {
                     };
                 });
     
-                // Render the EJS template and pass the merged applicants data
-                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants: applicantsWithDetails });
+                // Filter applicants to only show those with the same jobTitle as the first applicant's jobTitle
+                const firstJobTitle = applicantsWithDetails.length ? applicantsWithDetails[0].jobTitle : null;
+                const filteredApplicants = applicantsWithDetails.filter(applicant => applicant.jobTitle === firstJobTitle);
+    
+                // Render the EJS template and pass the filtered applicants data
+                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants: filteredApplicants });
             } catch (error) {
                 console.error('Error fetching applicants:', error);
                 res.status(500).json({ error: 'Error fetching applicants' });
@@ -371,6 +375,7 @@ const hrController = {
             res.redirect('staff/login');
         }
     },
+    
     
     
     
