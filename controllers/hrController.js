@@ -322,13 +322,15 @@ const hrController = {
     getApplicantTrackerByJobPositions: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
+                // Fetch applicants, jobId, and departmentId along with jobTitle
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
                         lastName, 
                         firstName, 
                         jobId,
-                        jobpositions!left(jobTitle)
+                        departmentId,                  // Fetch departmentId from applicantaccounts
+                        jobpositions!left(jobTitle)     // Fetch jobTitle from jobpositions using jobId
                     `);
     
                 if (applicantError) throw applicantError;
@@ -344,6 +346,7 @@ const hrController = {
             res.redirect('staff/login');
         }
     },
+    
     
     
     
