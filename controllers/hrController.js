@@ -328,7 +328,8 @@ const hrController = {
                         lastName, 
                         firstName, 
                         jobId,
-                        jobpositions!left(jobTitle, departmentId)
+                        jobpositions!left(jobTitle, departmentId),
+                        departments!left(departmentName)
                     `);
     
                 if (applicantError) throw applicantError;
