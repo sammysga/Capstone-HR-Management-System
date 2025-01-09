@@ -328,8 +328,8 @@ const hrController = {
                     .select(`
                         lastName, 
                         firstName, 
-                        jobId,
                         departmentId,                  // Fetch departmentId from applicantaccounts
+                        jobId,
                         jobpositions!left(jobTitle)     // Fetch jobTitle from jobpositions using jobId
                     `);
     
