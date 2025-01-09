@@ -372,7 +372,7 @@ const hrController = {
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('staff/login');
+            res.redirect('/staff/login');
         }
     },
     
