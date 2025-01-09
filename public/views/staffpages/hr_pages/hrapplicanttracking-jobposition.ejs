@@ -533,18 +533,12 @@
     </thead>
     <tbody>
         <% if (applicants && applicants.length) { %>
-            <% let lastJobTitle = ''; %> <!-- Variable to keep track of the last displayed jobTitle -->
             <% applicants.forEach((applicant, index) => { %>
                 <tr>
                     <td><%= index + 1 %></td>
                     <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
-                    <td><!-- Add department info here --></td>
-                    <td>
-                        <% if (applicant.jobpositions && applicant.jobpositions.jobTitle !== lastJobTitle) { %>
-                            <%= applicant.jobpositions.jobTitle %>
-                            <% lastJobTitle = applicant.jobpositions.jobTitle; %> <!-- Update lastJobTitle -->
-                        <% } %>
-                    </td>
+                    <td><%= applicant.deptName %></td> <!-- Display department name -->
+                    <td><%= applicant.jobTitle %></td> <!-- Display job title -->
                     <td><!-- Add applicant status & actions here --></td>
                 </tr>
             <% }); %>
