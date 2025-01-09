@@ -327,9 +327,8 @@ const hrController = {
                     .select(`
                         lastName, 
                         firstName, 
-                        jobpositions (
-                            jobTitle
-                        )
+                        jobId,
+                        jobpositions (jobTitle)
                     `);
     
                 if (applicantError) throw applicantError;
@@ -345,6 +344,7 @@ const hrController = {
             res.redirect('staff/login');
         }
     },
+    
     
     
     
