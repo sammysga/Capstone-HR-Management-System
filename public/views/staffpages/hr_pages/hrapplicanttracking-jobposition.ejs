@@ -531,17 +531,23 @@
             <th>Applicant Status & Actions</th>
         </tr>
     </thead>
-   <tbody>
     <tbody>
         <% if (applicants && applicants.length) { %>
+            <% let displayedPositions = {}; %> <!-- Object to keep track of displayed positions -->
             <% applicants.forEach((applicant, index) => { %>
-                <tr>
-                    <td><%= index + 1 %></td>
-                    <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
-                    <td><%= applicant.deptName || 'N/A' %></td> <!-- Display deptName or 'N/A' -->
-                    <td><%= applicant.jobTitle || 'N/A' %></td> <!-- Display jobTitle or 'N/A' -->
-                    <td><!-- Add applicant status & actions here --></td>
-                </tr>
+                <% 
+                    const jobTitle = applicant.jobpositions ? applicant.jobpositions.jobTitle : null;
+                    if (jobTitle && !displayedPositions[jobTitle]) { 
+                        displayedPositions[jobTitle] = true; 
+                %>
+                    <tr>
+                        <td><%= index + 1 %></td>
+                        <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
+                        <td><!-- Add department info here --></td>
+                        <td><%= jobTitle %></td>
+                        <td><!-- Add applicant status & actions here --></td>
+                    </tr>
+                <% } %>
             <% }); %>
         <% } else { %>
             <tr>
@@ -549,9 +555,6 @@
             </tr>
         <% } %>
     </tbody>
-    
-    
-
     
     
     
