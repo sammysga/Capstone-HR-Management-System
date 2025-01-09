@@ -324,12 +324,7 @@ const hrController = {
             try {
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
-                    .select(`
-                        lastName, 
-                        firstName, 
-                        jobId,
-                        jobpositions (jobTitle)
-                    `);
+                    .select('lastName, firstName, jobId');
     
                 if (applicantError) throw applicantError;
     
@@ -344,6 +339,7 @@ const hrController = {
             res.redirect('staff/login');
         }
     },
+    
     
     
     
