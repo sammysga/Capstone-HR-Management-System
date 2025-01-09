@@ -322,17 +322,45 @@ const hrController = {
     getApplicantTrackerByJobPositions: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
+                // Fetch applicants with jobId and jobposition details
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
                         lastName, 
                         firstName, 
-                        jobId,
-                        jobpositions!left(jobTitle, departmentId),
-                        departments!left(deptName)
+                        jobId
                     `);
     
                 if (applicantError) throw applicantError;
+    
+                // Fetch jobposition details including departmentId
+                const jobPositionIds = applicants.map(applicant => applicant.jobId);
+                const { data: jobPositions, error: jobPositionError } = await supabase
+                    .from('jobpositions')
+                    .select(`
+                        jobTitle,
+                        departmentId
+                    `)
+                    .in('jobId', jobPositionIds); // Filter by the jobIds we retrieved earlier
+    
+                if (jobPositionError) throw jobPositionError;
+    
+                // Fetch departments based on departmentIds
+                const departmentIds = jobPositions.map(position => position.departmentId);
+                const { data: departments, error: departmentError } = await supabase
+                    .from('departments')
+                    .select('deptName')
+                    .in('id', departmentIds); // Filter by the departmentIds we retrieved earlier
+    
+                if (departmentError) throw departmentError;
+    
+                // Combine the data to send to the template
+                applicants.forEach(applicant => {
+                    const jobPosition = jobPositions.find(position => position.jobId === applicant.jobId);
+                    const department = departments.find(department => department.id === jobPosition?.departmentId);
+                    applicant.jobTitle = jobPosition?.jobTitle || 'N/A';
+                    applicant.deptName = department?.deptName || 'N/A';
+                });
     
                 // Render the EJS template and pass the applicants data
                 res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
@@ -345,6 +373,7 @@ const hrController = {
             res.redirect('staff/login');
         }
     },
+    
     
     
     

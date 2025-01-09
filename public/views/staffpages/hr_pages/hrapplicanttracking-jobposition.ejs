@@ -535,15 +535,11 @@
     <tbody>
         <% if (applicants && applicants.length) { %>
             <% applicants.forEach((applicant, index) => { %>
-                <% 
-                    const jobTitle = applicant.jobpositions ? applicant.jobpositions.jobTitle : null;
-                    const deptName = applicant.departments ? applicant.departments.deptName : null;
-                %>
                 <tr>
                     <td><%= index + 1 %></td>
                     <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
-                    <td><%= deptName || 'N/A' %></td> <!-- Display deptName or 'N/A' if missing -->
-                    <td><%= jobTitle || 'N/A' %></td> <!-- Display jobTitle or 'N/A' if missing -->
+                    <td><%= applicant.deptName || 'N/A' %></td> <!-- Display deptName or 'N/A' -->
+                    <td><%= applicant.jobTitle || 'N/A' %></td> <!-- Display jobTitle or 'N/A' -->
                     <td><!-- Add applicant status & actions here --></td>
                 </tr>
             <% }); %>
