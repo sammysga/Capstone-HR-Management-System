@@ -531,26 +531,21 @@
             <th>Applicant Status & Actions</th>
         </tr>
     </thead>
+   <tbody>
     <tbody>
         <% if (applicants && applicants.length) { %>
-            <% let displayedPositions = {}; %> <!-- Object to keep track of displayed positions -->
             <% applicants.forEach((applicant, index) => { %>
                 <% 
                     const jobTitle = applicant.jobpositions ? applicant.jobpositions.jobTitle : null;
-                    const departmentId = applicant.jobpositions ? applicant.jobpositions.departmentId : null;
-                    if (jobTitle && !displayedPositions[jobTitle]) { 
-                        displayedPositions[jobTitle] = true; 
+                    const departmentName = applicant.departments ? applicant.departments.departmentName : null;
                 %>
-                    <tr>
-                        <td><%= index + 1 %></td>
-                        <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
-                        <td><!-- Display department info here -->
-                            <%= departmentId ? 'Department ID: ' + departmentId : 'N/A' %>
-                        </td>
-                        <td><%= jobTitle %></td>
-                        <td><!-- Add applicant status & actions here --></td>
-                    </tr>
-                <% } %>
+                <tr>
+                    <td><%= index + 1 %></td>
+                    <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
+                    <td><%= departmentName || 'N/A' %></td> <!-- Display department name or 'N/A' if missing -->
+                    <td><%= jobTitle || 'N/A' %></td> <!-- Display jobTitle or 'N/A' if missing -->
+                    <td><!-- Add applicant status & actions here --></td>
+                </tr>
             <% }); %>
         <% } else { %>
             <tr>
@@ -559,6 +554,7 @@
         <% } %>
     </tbody>
     
+
     
     
     
