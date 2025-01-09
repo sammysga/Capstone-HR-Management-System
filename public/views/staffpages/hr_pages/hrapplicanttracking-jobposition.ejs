@@ -539,7 +539,16 @@
                     <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
                     <td><%= applicant.deptName %></td> <!-- Display department name -->
                     <td><%= applicant.jobTitle %></td> <!-- Display job title -->
-                    <td><!-- Add applicant status & actions here --></td>
+                    <td>
+                        <!-- Applicant Status -->
+                        <span><strong>Status:</strong> <%= applicant.status || 'Pending' %></span>
+                        <div style="margin-top: 10px;">
+                            <!-- Action Buttons -->
+                            <button class="btn-review" onclick="reviewApplicant('<%= applicant.applicantId %>')">Review</button>
+                            <button class="btn-approve" onclick="approveApplicant('<%= applicant.applicantId %>')">Approve</button>
+                            <button class="btn-reject" onclick="rejectApplicant('<%= applicant.applicantId %>')">Reject</button>
+                        </div>
+                    </td>
                 </tr>
             <% }); %>
         <% } else { %>
@@ -548,9 +557,8 @@
             </tr>
         <% } %>
     </tbody>
-    
-    
 </table>
+
 
 <h2 class="header-section" style="margin-top: 30px; margin-bottom: 10px;">Onboarding</h2>
 

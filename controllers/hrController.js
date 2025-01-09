@@ -319,10 +319,12 @@ const hrController = {
         }
     },
 
-    getApplicantTrackerByJobPositions: async function(req, res) {
+    getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                // Fetch applicants, jobId, and departmentId
+                const { jobId } = req.query; // Extract jobId from query parameters
+    
+                // Fetch applicants by jobId
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
@@ -330,25 +332,25 @@ const hrController = {
                         firstName, 
                         jobId,
                         departmentId
-                    `);
+                    `)
+                    .eq('jobId', jobId); // Filter by jobId
     
                 if (applicantError) throw applicantError;
     
-                // Fetch job titles based on jobId
+                // Fetch job titles and department names
                 const { data: jobTitles, error: jobError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle');
     
                 if (jobError) throw jobError;
     
-                // Fetch department names based on departmentId
                 const { data: departments, error: departmentError } = await supabase
                     .from('departments')
                     .select('departmentId, deptName');
     
                 if (departmentError) throw departmentError;
     
-                // Merge the jobTitle and deptName with applicants data
+                // Merge jobTitle and deptName with applicants data
                 const applicantsWithDetails = applicants.map(applicant => {
                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
@@ -356,27 +358,14 @@ const hrController = {
                     return {
                         ...applicant,
                         jobTitle,
-                        deptName
+                        deptName,
                     };
                 });
     
-                // Filter applicants to exclude those with "N/A" as jobTitle
-                const validApplicants = applicantsWithDetails.filter(applicant => applicant.jobTitle !== 'N/A');
-    
-                // If there are no valid applicants, show an error or fallback message
-                if (validApplicants.length === 0) {
-                    res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants: [] });
-                    return;
-                }
-    
-                // Get the first jobTitle from valid applicants to use as the filter condition
-                const firstJobTitle = validApplicants[0].jobTitle;
-    
-                // Filter applicants to only show those with the same jobTitle as the first applicant's jobTitle
-                const filteredApplicants = validApplicants.filter(applicant => applicant.jobTitle === firstJobTitle);
-    
-                // Render the EJS template and pass the filtered applicants data
-                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants: filteredApplicants });
+                // Render the EJS template with applicants data
+                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', {
+                    applicants: applicantsWithDetails,
+                });
             } catch (error) {
                 console.error('Error fetching applicants:', error);
                 res.status(500).json({ error: 'Error fetching applicants' });
@@ -386,6 +375,7 @@ const hrController = {
             res.redirect('staff/login');
         }
     },
+    
     
 
     
