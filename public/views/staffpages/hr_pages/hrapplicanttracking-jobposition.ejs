@@ -538,7 +538,7 @@
                 <td><%= index + 1 %></td>
                 <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
                 <td><!-- Add department info here --></td>
-                <td><!-- Add position applied info here --></td>
+                <td><%= applicant.jobpositions.jobTitle %></td>
                 <td><!-- Add applicant status & actions here --></td>
             </tr>
         <% }); %>
