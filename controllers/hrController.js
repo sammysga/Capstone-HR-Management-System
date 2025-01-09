@@ -341,7 +341,7 @@ const hrController = {
                         jobTitle,
                         departmentId
                     `)
-                    .in('jobId', jobPositionIds); // Filter by the jobIds we retrieved earlier
+                    .in('jobId', jobPositionId); // Filter by the jobIds we retrieved earlier
     
                 if (jobPositionError) throw jobPositionError;
     
@@ -350,7 +350,7 @@ const hrController = {
                 const { data: departments, error: departmentError } = await supabase
                     .from('departments')
                     .select('deptName')
-                    .in('id', departmentIds); // Filter by the departmentIds we retrieved earlier
+                    .in('id', departmentId); // Filter by the departmentIds we retrieved earlier
     
                 if (departmentError) throw departmentError;
     
