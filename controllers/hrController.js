@@ -322,20 +322,46 @@ const hrController = {
     getApplicantTrackerByJobPositions: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                // Fetch applicants, jobId, and departmentId along with jobTitle
+                // First, fetch applicants along with jobId and departmentId
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
                         lastName, 
                         firstName, 
                         jobId,
-                        jobpositions!left(jobTitle)     // Fetch jobTitle from jobpositions using jobId
+                        departmentId
                     `);
     
                 if (applicantError) throw applicantError;
     
-                // Render the EJS template and pass the applicants data
-                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
+                // Next, fetch job titles based on jobId
+                const { data: jobTitles, error: jobError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle');
+    
+                if (jobError) throw jobError;
+    
+                // Fetch department names based on departmentId
+                const { data: departments, error: departmentError } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName');
+    
+                if (departmentError) throw departmentError;
+    
+                // Merge the jobTitle and deptName with applicants data
+                const applicantsWithDetails = applicants.map(applicant => {
+                    const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+                    const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+    
+                    return {
+                        ...applicant,
+                        jobTitle,
+                        deptName
+                    };
+                });
+    
+                // Render the EJS template and pass the merged applicants data
+                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants: applicantsWithDetails });
             } catch (error) {
                 console.error('Error fetching applicants:', error);
                 res.status(500).json({ error: 'Error fetching applicants' });
@@ -345,6 +371,7 @@ const hrController = {
             res.redirect('staff/login');
         }
     },
+    
     
     
     
