@@ -1074,6 +1074,33 @@ document.getElementById("confirmButton").addEventListener("click", function() {
     document.getElementById("reviewModal").style.display = "none";
 });
 
+// Mock data for job titles (replace with actual data or API call if needed)
+const jobPositions = [
+        { jobId: '1', jobTitle: 'Data Analyst' },
+        { jobId: '2', jobTitle: 'Software Engineer' },
+        { jobId: '3', jobTitle: 'Product Manager' }
+    ];
+
+    // Function to get query parameters
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    // Retrieve jobId from the URL
+    const jobId = getQueryParam('jobId');
+
+    // Find the corresponding job title
+    const job = jobPositions.find(job => job.jobId === jobId);
+
+    // Update the subheader with the job title
+    const subheader = document.querySelector('.subheader');
+    if (job) {
+        subheader.textContent = job.jobTitle;
+    } else {
+        subheader.textContent = 'Job Title Not Found';
+    }
+
 </script>
 
 
