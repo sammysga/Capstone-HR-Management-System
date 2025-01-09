@@ -537,7 +537,7 @@
             <% applicants.forEach((applicant, index) => { %>
                 <% 
                     const jobTitle = applicant.jobpositions ? applicant.jobpositions.jobTitle : null;
-                    const departmentId = applicant.departmentId || 'N/A';  // Fetch departmentId
+                    const departmentId = applicant.departmentId;  // Fetch departmentId
                     if (jobTitle && !displayedPositions[jobTitle]) { 
                         displayedPositions[jobTitle] = true; 
                 %>
