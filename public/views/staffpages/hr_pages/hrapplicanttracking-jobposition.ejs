@@ -536,24 +536,26 @@
             <% applicants.forEach((applicant, index) => { %>
                 <tr>
                     <td><%= index + 1 %></td>
-                    <td><%= applicant.lastName %>, <%= applicant.firstName %></td>
+                    <td>
+                        <%= applicant.lastName %>, <%= applicant.firstName %>
+                        <br>
+                        <small style="color: #555;"><%= applicant.userEmail || 'Email not available' %></small>
+                    </td>
+                    
                     <td><%= applicant.deptName %></td> <!-- Display department name -->
                     <td><%= applicant.jobTitle %></td> <!-- Display job title -->
                     <td>
+                        <!-- Display Applicant Status -->
                         <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
                         <div style="margin-top: 10px;">
-                            <button class="btn-review" onclick="reviewApplicant('<%= applicant.lastName %>', '<%= applicant.firstName %>')">
-                                Review
-                            </button>
-                            <button class="btn-approve" onclick="approveApplicant('<%= applicant.lastName %>', '<%= applicant.firstName %>')">
-                                Approve
-                            </button>
-                            <button class="btn-reject" onclick="rejectApplicant('<%= applicant.lastName %>', '<%= applicant.firstName %>')">
-                                Reject
-                            </button>
+                            <!-- Show Review Button Only for Specific Status -->
+                            <% if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') { %>
+                                <button class="btn-review" onclick="reviewApplicant('<%= applicant.lastName %>', '<%= applicant.firstName %>')">
+                                    For Review
+                                </button>
+                            <% } %>
                         </div>
-                    </td>
-                    
+                    </td>   
                 </tr>
             <% }); %>
         <% } else { %>

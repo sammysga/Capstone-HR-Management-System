@@ -324,12 +324,13 @@ const hrController = {
             try {
                 const { jobId } = req.query; // Extract jobId from query parameters
     
-                // Fetch applicants by jobId, including applicantStatus
+                // Fetch applicants by jobId, including applicantStatus and userId
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
                         lastName, 
                         firstName, 
+                        userId,
                         jobId,
                         departmentId,
                         applicantStatus
@@ -337,6 +338,13 @@ const hrController = {
                     .eq('jobId', jobId); // Filter by jobId
     
                 if (applicantError) throw applicantError;
+    
+                // Fetch user emails using userId
+                const { data: userAccounts, error: userError } = await supabase
+                    .from('useraccounts')
+                    .select('userId, userEmail');
+    
+                if (userError) throw userError;
     
                 // Fetch job titles and department names
                 const { data: jobTitles, error: jobError } = await supabase
@@ -351,15 +359,17 @@ const hrController = {
     
                 if (departmentError) throw departmentError;
     
-                // Merge jobTitle, deptName, and applicantStatus with applicants data
+                // Merge jobTitle, deptName, and userEmail with applicants data
                 const applicantsWithDetails = applicants.map(applicant => {
                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+                    const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
     
                     return {
                         ...applicant,
                         jobTitle,
                         deptName,
+                        userEmail, // Add email to the applicant's data
                     };
                 });
     
@@ -376,6 +386,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
