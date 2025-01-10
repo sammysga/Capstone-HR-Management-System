@@ -540,15 +540,20 @@
                     <td><%= applicant.deptName %></td> <!-- Display department name -->
                     <td><%= applicant.jobTitle %></td> <!-- Display job title -->
                     <td>
-                        <!-- Applicant Status -->
-                        <span><strong>Status:</strong> <%= applicant.status || 'Pending' %></span>
+                        <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
                         <div style="margin-top: 10px;">
-                            <!-- Action Buttons -->
-                            <button class="btn-review" onclick="reviewApplicant('<%= applicant.applicantId %>')">Review</button>
-                            <button class="btn-approve" onclick="approveApplicant('<%= applicant.applicantId %>')">Approve</button>
-                            <button class="btn-reject" onclick="rejectApplicant('<%= applicant.applicantId %>')">Reject</button>
+                            <button class="btn-review" onclick="reviewApplicant('<%= applicant.lastName %>', '<%= applicant.firstName %>')">
+                                Review
+                            </button>
+                            <button class="btn-approve" onclick="approveApplicant('<%= applicant.lastName %>', '<%= applicant.firstName %>')">
+                                Approve
+                            </button>
+                            <button class="btn-reject" onclick="rejectApplicant('<%= applicant.lastName %>', '<%= applicant.firstName %>')">
+                                Reject
+                            </button>
                         </div>
                     </td>
+                    
                 </tr>
             <% }); %>
         <% } else { %>
