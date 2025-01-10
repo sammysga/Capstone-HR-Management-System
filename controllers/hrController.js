@@ -324,18 +324,19 @@ const hrController = {
             try {
                 const { jobId } = req.query; // Extract jobId from query parameters
     
-                // Fetch applicants by jobId, including applicantStatus and userId
+                // Fetch applicants by jobId, including phoneNo
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
                         lastName, 
                         firstName, 
+                        phoneNo,
                         userId,
                         jobId,
                         departmentId,
                         applicantStatus
                     `)
-                    .eq('jobId', jobId); // Filter by jobId
+                    .eq('jobId', jobId);
     
                 if (applicantError) throw applicantError;
     
@@ -386,6 +387,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
