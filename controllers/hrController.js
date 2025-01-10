@@ -324,14 +324,15 @@ const hrController = {
             try {
                 const { jobId } = req.query; // Extract jobId from query parameters
     
-                // Fetch applicants by jobId
+                // Fetch applicants by jobId, including applicantStatus
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
                         lastName, 
                         firstName, 
                         jobId,
-                        departmentId
+                        departmentId,
+                        status as applicantStatus
                     `)
                     .eq('jobId', jobId); // Filter by jobId
     
@@ -350,7 +351,7 @@ const hrController = {
     
                 if (departmentError) throw departmentError;
     
-                // Merge jobTitle and deptName with applicants data
+                // Merge jobTitle, deptName, and applicantStatus with applicants data
                 const applicantsWithDetails = applicants.map(applicant => {
                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
@@ -375,6 +376,7 @@ const hrController = {
             res.redirect('staff/login');
         }
     },
+    
     
     
 
