@@ -550,9 +550,15 @@
                         <div style="margin-top: 10px;">
                             <!-- Show Review Button Only for Specific Status -->
                             <% if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') { %>
-                                <button class="btn-review" onclick="reviewApplicant('<%= applicant.lastName %>', '<%= applicant.firstName %>')">
-                                    For Review
-                                </button>
+                                <button 
+                                class="btn-review" 
+                                onclick="openReviewModal(
+                                    '<%= applicant.lastName %>', 
+                                    '<%= applicant.firstName %>', 
+                                    '<%= applicant.userEmail %>', 
+                                    '<%= applicant.phoneNo %>'
+                                )">
+                                Review
                             <% } %>
                         </div>
                     </td>   
@@ -752,6 +758,29 @@
 </div>
 
 <script>
+
+function openReviewModal(lastName, firstName, email, phoneNo) {
+        document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
+        document.getElementById('applicant-email').textContent = email || 'N/A';
+        document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
+
+        // Show the modal
+        document.getElementById('reviewModal').style.display = 'block';
+    }
+
+    // Close the modal
+    document.querySelector('.review-close-button').addEventListener('click', function () {
+        document.getElementById('reviewModal').style.display = 'none';
+    });
+
+    // Close modal if clicked outside the modal content
+    window.addEventListener('click', function (event) {
+        const modal = document.getElementById('reviewModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
     document.addEventListener("DOMContentLoaded", function () {
         // Function to filter rows based on status
         function filterRowsByStatus(status) {
