@@ -332,7 +332,7 @@ const hrController = {
                         firstName, 
                         jobId,
                         departmentId,
-                        status as applicantStatus
+                        applicantStatus
                     `)
                     .eq('jobId', jobId); // Filter by jobId
     
