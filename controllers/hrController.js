@@ -1660,7 +1660,10 @@ updateJobOffer: async function(req, res) {
                         }
     
                         // If all updates succeed
-                        return res.json({ success: true, message: 'Applicant status updated successfully.' });
+                        res.json({ success: true, message: 'Applicant status updated successfully.' });
+    
+                        // Automatically refresh the page
+                        res.setHeader('Refresh', '0');
                     }
     
                     default: {
