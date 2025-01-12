@@ -115,11 +115,12 @@ botResponse = `You have chosen *${selectedPosition}*. Here are the details of th
     
                 if (questions.length) {
                     botResponse = `Great! Time to assess your suitability. Please answer:\n` +
-                    `1. ${questions[0]}`;
+                                  questions.map((q, index) => `${index + 1}. ${q}`).join('\n');
                     applicantStage = 'screening_questions';
-               } else {
+                } else {
                     botResponse = "No screening questions available for this position.";
                 }
+                
             } 
             // Handling "No" response for application
             else if (userMessage.includes('no')) {
@@ -241,36 +242,37 @@ getInitialScreeningQuestions: async function (jobId) {
         const jobPosition = jobPositionQuery.data[0] || {};
 
         // Combine and structure screening questions
-        const questions = [
-            ...degreesQuery.data.map(d => ({
-                type: 'degree',
-                question: `Do you have a degree related to ${d.jobReqDegreeType}: ${d.jobReqDegreeDescrpt}?`,
-            })),
-            ...experiencesQuery.data.map(e => ({
-                type: 'experience',
-                question: `When it comes to experience, do you qualify (${e.jobReqExperienceType}: ${e.jobReqExperienceDescrpt})?`,
-            })),
-            ...certificationsQuery.data.map(c => ({
-                type: 'certification',
-                question: `When it comes to certifications, have you earned (${c.jobReqCertificateType}: ${c.jobReqCertificateDescrpt})?`,
-            })),
-            ...hardSkillsQuery.data.map(s => ({
-                type: 'hard_skill',
-                question: `To assess your hard skills, please answer the following question: Do you have ${s.jobReqSkillName}?`,
-            })),
-            ...softSkillsQuery.data.map(s => ({
-                type: 'soft_skill',
-                question: `To assess your soft skills, please answer the following question: Do you have ${s.jobReqSkillName}?`,
-            })),
-            {
-                type: 'work_setup',
-                question: `With regards to the work setup, are you comfortable working ${jobPosition.jobType || 'the specified type'}?`,
-            },
-            {
-                type: 'availability',
-                question: `With regards to your availability, are you amenable to working ${jobPosition.jobTimeCommitment || 'the specified hours'} from ${jobPosition.jobTimeCommitment_startTime || 'N/A'} AM to ${jobPosition.jobTimeCommitment_endTime || 'N/A'} PM?`,
-            },
-        ];
+ // Combine and structure screening questions
+const questions = [
+    ...degreesQuery.data.map(d => ({
+        type: 'degree',
+        question: `Do you have a degree related to ${d.jobReqDegreeType}: ${d.jobReqDegreeDescrpt}?`,
+    })),
+    ...experiencesQuery.data.map(e => ({
+        type: 'experience',
+        question: `When it comes to experience, do you qualify (${e.jobReqExperienceType}: ${e.jobReqExperienceDescrpt})?`,
+    })),
+    ...certificationsQuery.data.map(c => ({
+        type: 'certification',
+        question: `When it comes to certifications, have you earned (${c.jobReqCertificateType}: ${c.jobReqCertificateDescrpt})?`,
+    })),
+    ...hardSkillsQuery.data.map(s => ({
+        type: 'hard_skill',
+        question: `To assess your hard skills, please answer the following question: Do you have ${s.jobReqSkillName}?`,
+    })),
+    ...softSkillsQuery.data.map(s => ({
+        type: 'soft_skill',
+        question: `To assess your soft skills, please answer the following question: Do you have ${s.jobReqSkillName}?`,
+    })),
+    {
+        type: 'work_setup',
+        question: `With regards to the work setup, are you comfortable working ${jobPosition.jobType || 'the specified type'}?`,
+    },
+    {
+        type: 'availability',
+        question: `With regards to your availability, are you amenable to working ${jobPosition.jobTimeCommitment || 'the specified hours'} from ${jobPosition.jobTimeCommitment_startTime || 'start time'} AM to ${jobPosition.jobTimeCommitment_endTime || 'end time'} PM?`,
+    },
+];
 
         console.log("Structured Screening Questions:", questions);
 
@@ -278,7 +280,8 @@ getInitialScreeningQuestions: async function (jobId) {
             console.log("No screening questions found for job ID:", jobId);
         }
 
-        return questions;
+        return questions.map(q => q.question);
+
     } catch (error) {
         console.error("An error occurred while fetching screening questions:", error);
         return [];
