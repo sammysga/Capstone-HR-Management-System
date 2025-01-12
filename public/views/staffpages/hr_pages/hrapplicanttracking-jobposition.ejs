@@ -557,10 +557,14 @@
                                         '<%= applicant.userEmail %>', 
                                         '<%= applicant.phoneNo %>'
                                     )">
-                                   For Review
+                                    For Review
                                 </button>
                             <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
-                                <button class="btn-evaluation">For Evaluation</button>
+                                <button 
+                                    class="btn-evaluation" 
+                                    onclick="openEvaluationForm('<%= applicant.applicantId %>')">
+                                    For Evaluation
+                                </button>
                             <% } %>
                         </div>
                     </td>   
@@ -572,6 +576,7 @@
             </tr>
         <% } %>
     </tbody>
+    
     
 </table>
 
@@ -762,6 +767,12 @@
 </div>
 
 <script>
+
+function openEvaluationForm(applicantId) {
+    // Redirect to the HR Evaluation page with applicantId as a query parameter
+    window.location.href = `/hr-evaluation-form?applicantId=${encodeURIComponent(applicantId)}`;
+}
+
     
 
 // confirm button for modal for review
