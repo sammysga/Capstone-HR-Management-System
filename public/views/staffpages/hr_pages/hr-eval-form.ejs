@@ -609,6 +609,41 @@
 
     <script>
 
+document.querySelector(".save-submit").addEventListener("click", async function (event) {
+        event.preventDefault(); // Prevent default form submission behavior
+
+        // Retrieve the score
+        const totalRating = document.getElementById("total-rating").textContent;
+
+        // Replace with the applicant's unique ID or identifier
+        const applicantId = "APPLICANT_ID"; 
+
+        try {
+            // Send the score to the backend
+            const response = await fetch("/save-total-rating", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    applicantId,
+                    totalRating,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Total assessment rating saved successfully!");
+            } else {
+                alert("Failed to save the score. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error saving the score:", error);
+            alert("An error occurred while saving the score.");
+        }
+    });
+
         // Toggle active class for sidebar links
     document.querySelectorAll('.sidebar ul li a').forEach(link => {
         link.addEventListener('click', function() {

@@ -1676,6 +1676,53 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
+
+    saveTotalRating: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === "HR") {
+            try {
+                const { applicantId, totalRating } = req.body;
+    
+                // Validate inputs
+                if (!applicantId || totalRating === undefined) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Applicant ID and total rating are required.",
+                    });
+                }
+    
+                // Save the score to the database
+                const { error } = await supabase
+                    .from("applicantaccounts")
+                    .update({ hrInterviewFormScore: totalRating })
+                    .match({ id: applicantId });
+    
+                if (error) {
+                    console.error("Error saving total rating:", error);
+                    return res.status(500).json({
+                        success: false,
+                        message: "Failed to save total rating.",
+                    });
+                }
+    
+                res.json({
+                    success: true,
+                    message: "Total assessment rating saved successfully.",
+                });
+            } catch (error) {
+                console.error("Error in saveTotalRating:", error);
+                res.status(500).json({
+                    success: false,
+                    message: "Internal server error.",
+                });
+            }
+        } else {
+            res.status(403).json({
+                success: false,
+                message: "Unauthorized access. HR role required.",
+            });
+        }
+    },
+    
     
     
     
