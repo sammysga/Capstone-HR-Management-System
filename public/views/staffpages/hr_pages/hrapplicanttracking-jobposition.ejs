@@ -769,9 +769,14 @@
 <script>
 
 function openEvaluationForm(applicantId) {
-    // Redirect to the HR Evaluation page with applicantId as a query parameter
-    window.location.href = `/hr-evaluation-form?applicantId=${encodeURIComponent(applicantId)}`;
+    if (applicantId) {
+        // Redirect to the evaluation form page with applicantId in the query string
+        window.location.href = `/evaluationForm?applicantId=${applicantId}`;
+    } else {
+        alert("Applicant ID is missing.");
+    }
 }
+
 
     
 
