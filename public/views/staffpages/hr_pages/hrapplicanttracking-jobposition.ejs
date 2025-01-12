@@ -548,7 +548,6 @@
                         <!-- Display Applicant Status -->
                         <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
                         <div style="margin-top: 10px;">
-                            <!-- Show Review Button for P1 Status -->
                             <% if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') { %>
                                 <button 
                                     class="btn-review" 
@@ -560,10 +559,7 @@
                                     )">
                                     Review
                                 </button>
-                            <% } %>
-    
-                            <!-- Show Evaluation Button for P2 Status -->
-                            <% if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
+                            <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
                                 <button class="btn-evaluation">For Evaluation</button>
                             <% } %>
                         </div>
@@ -575,7 +571,8 @@
                 <td colspan="5">No applicants found.</td>
             </tr>
         <% } %>
-    </tbody>    
+    </tbody>
+    
 </table>
 
 
@@ -921,8 +918,6 @@ function openReviewModal(lastName, firstName, email, phoneNo) {
                 button.textContent = "For Onboarding";
             } else if (row.classList.contains('status-for-evaluation')) {
                 button.textContent = "For Evaluation";
-            } else {
-                button.textContent = "For Review"; // Default button text
             }
         });
 
@@ -931,17 +926,14 @@ function openReviewModal(lastName, firstName, email, phoneNo) {
     });
 
     document.addEventListener("DOMContentLoaded", function () {
-      // Select all buttons with the class 'btn-evaluation'
-      const evaluationButtons = document.querySelectorAll(".btn-evaluation");
+        const evaluationButtons = document.querySelectorAll(".btn-evaluation");
 
-      // Add click event listener to each button
-      evaluationButtons.forEach(button => {
-          button.addEventListener("click", function () {
-              // Navigate to the evaluation form
-              window.location.href = "/hr/evaluation-form";
-          });
-      });
-  });
+        evaluationButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                window.location.href = "/hr/evaluation-form";
+            });
+        });
+    });
 
     // Function to open the modal
     function openModal(modalId) {
