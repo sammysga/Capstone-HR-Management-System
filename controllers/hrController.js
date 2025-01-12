@@ -1631,7 +1631,6 @@ updateJobOffer: async function(req, res) {
                 // Use a switch case to handle the update logic
                 switch (true) {
                     case !lastName || !firstName: {
-                        // Case when required fields are missing
                         console.error('Missing applicant details.');
                         return res.status(400).json({ success: false, message: 'Applicant details are missing.' });
                     }
@@ -1660,14 +1659,10 @@ updateJobOffer: async function(req, res) {
                         }
     
                         // If all updates succeed
-                        res.json({ success: true, message: 'Applicant status updated successfully.' });
-    
-                        // Automatically refresh the page
-                        res.setHeader('Refresh', '0');
+                        return res.json({ success: true, message: 'Applicant status updated successfully.' });
                     }
     
                     default: {
-                        // Catch-all case
                         console.error('Unexpected case encountered.');
                         return res.status(400).json({ success: false, message: 'Invalid operation.' });
                     }
