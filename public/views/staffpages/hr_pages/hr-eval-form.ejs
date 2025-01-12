@@ -323,22 +323,24 @@
             <h1>HR Interview Form</h1>
         </header>
 
-        <form id="interview-form">
+        <form id="interview-form" method="POST" action="/saveEvaluation">
+            <input type="hidden" id="applicant-id" name="applicantId" value=""> <!-- Hidden field for applicantId -->
+        
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
-                <input type="text" id="candidate-name" placeholder="Henry, Arthur" readonly>
-
+                <input type="text" id="candidate-name" name="candidateName" placeholder="Henry, Arthur" readonly>
+        
                 <label for="position-title">Position Title:</label>
-                <input type="text" id="position-title" placeholder="Financial Analyst" readonly>
-
+                <input type="text" id="position-title" name="positionTitle" placeholder="Financial Analyst" readonly>
+        
                 <label for="position-department">Position Department:</label>
-                <input type="text" id="position-department" placeholder="Finance" readonly>
-
+                <input type="text" id="position-department" name="positionDepartment" placeholder="Finance" readonly>
+        
                 <label for="conducted-by">Conducted by:</label>
-                <input type="text" id="conducted-by" placeholder="Henry, Arthur" readonly>
-
+                <input type="text" id="conducted-by" name="conductedBy" placeholder="Henry, Arthur" readonly>
+        
                 <label for="date-of-interview">Date of Interview:</label>
-                <input type="text" id="date-of-interview" placeholder="March 15, 2024" readonly>
+                <input type="text" id="date-of-interview" name="dateOfInterview" placeholder="March 15, 2024" readonly>
             </div>
 
  <!-- Rating Definition Guide -->
@@ -609,7 +611,20 @@
 
     <script>
 
-        
+         // Extract the applicantId from the URL query string
+    const urlParams = new URLSearchParams(window.location.search);
+    const applicantId = urlParams.get('applicantId');
+
+    // Validate and display the applicantId
+    if (!applicantId) {
+        alert("Applicant ID is missing.");
+        // Optionally, redirect back to the previous page
+        window.location.href = '/previousPage'; // Replace with actual previous page URL
+    } else {
+        console.log("Applicant ID:", applicantId);
+        // Populate the hidden input field
+        document.getElementById('applicant-id').value = applicantId;
+    }
 
 document.querySelector(".save-submit").addEventListener("click", async function (event) {
         event.preventDefault(); // Prevent default form submission behavior

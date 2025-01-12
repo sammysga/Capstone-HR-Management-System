@@ -1731,6 +1731,65 @@ updateJobOffer: async function(req, res) {
             });
         }
     },
+
+    saveEvaluationForm: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === "HR") {
+            try {
+                let { applicantId, totalRating } = req.body;
+    
+                // Validate that both fields are provided
+                if (!applicantId || totalRating === undefined) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Applicant ID and total rating are required.",
+                    });
+                }
+    
+                // Parse applicantId to ensure it's a number
+                applicantId = parseInt(applicantId, 10);
+                if (isNaN(applicantId)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid applicant ID format.",
+                    });
+                }
+    
+                // Save the total rating into the database
+                const { error } = await supabase
+                    .from("applicantaccounts")
+                    .update({ hrInterviewFormScore: totalRating })
+                    .match({ applicantId });
+    
+                // Handle database errors
+                if (error) {
+                    console.error("Error saving total rating:", error);
+                    return res.status(500).json({
+                        success: false,
+                        message: "Failed to save total rating.",
+                    });
+                }
+    
+                // Respond with success message
+                res.json({
+                    success: true,
+                    message: "Total assessment rating saved successfully.",
+                });
+            } catch (error) {
+                console.error("Error in saveEvaluationForm:", error);
+                res.status(500).json({
+                    success: false,
+                    message: "Internal server error.",
+                });
+            }
+        } else {
+            res.status(403).json({
+                success: false,
+                message: "Unauthorized access. HR role required.",
+            });
+        }
+    },
+    
+    
     
     
     
