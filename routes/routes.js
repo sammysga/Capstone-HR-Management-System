@@ -90,6 +90,9 @@ router.get('/hr/offboarding-request', hrController.getOffboardingRequest);
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
 
+// Route for updating applicant status
+router.post('/update-applicant', hrController.updateApplicantIsChosen);
+
 
 // Employee Routes
 router.get('/employee/dashboard', employeeController.getEmployeeDashboard);
