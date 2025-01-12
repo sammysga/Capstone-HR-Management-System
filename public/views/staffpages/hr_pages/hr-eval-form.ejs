@@ -937,21 +937,25 @@ ratingDropdowns.forEach(dropdown => {
     });
 });
     
-        // Ensure all sections are rated before submission
-        document.getElementById('submit-button').addEventListener('click', function (event) {
-            let allRated = true;
-    
-            ratingDropdowns.forEach((dropdown) => {
-                if (dropdown.value === "") {
-                    allRated = false;
-                }
-            });
-    
-            if (!allRated) {
-                alert('Please rate all sections before submitting.');
-                event.preventDefault();
-            }
-        });
+document.getElementById('submit-button').addEventListener('click', function (event) {
+    const ratingDropdowns = document.querySelectorAll('.rating-dropdown'); // Ensure this class matches your dropdowns
+    let allRated = true;
+
+    ratingDropdowns.forEach((dropdown) => {
+        if (dropdown.value === "") {
+            allRated = false;
+            dropdown.classList.add('error'); // Optionally highlight the empty dropdown
+        } else {
+            dropdown.classList.remove('error'); // Remove the highlight if it's filled
+        }
+    });
+
+    if (!allRated) {
+        alert('Please rate all sections before submitting.');
+        event.preventDefault(); // Prevent form submission
+    }
+});
+
 
         function calculateCategoryTotals() {
     const categories = {};
