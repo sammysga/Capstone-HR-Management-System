@@ -1694,7 +1694,7 @@ updateJobOffer: async function(req, res) {
                 const { error } = await supabase
                     .from("applicantaccounts")
                     .update({ hrInterviewFormScore: totalRating })
-                    .match({ id: applicantId });
+                    .match({ applicantId }); // Ensure this matches the correct column name
     
                 if (error) {
                     console.error("Error saving total rating:", error);
@@ -1722,6 +1722,7 @@ updateJobOffer: async function(req, res) {
             });
         }
     },
+    
     
     
     
