@@ -1628,19 +1628,47 @@ updateJobOffer: async function(req, res) {
             try {
                 const { lastName, firstName } = req.body; // Extract applicant details from the request
     
-                // Update `isChosen1` to true for the matching applicant
-                const { data, error } = await supabase
-                    .from('applicantaccounts')
-                    .update({ isChosen1: true })
-                    .match({ lastName, firstName }); // Match on lastName and firstName
+                // Use a switch case to handle the update logic
+                switch (true) {
+                    case !lastName || !firstName: {
+                        // Case when required fields are missing
+                        console.error('Missing applicant details.');
+                        return res.status(400).json({ success: false, message: 'Applicant details are missing.' });
+                    }
     
-                if (error) {
-                    console.error('Error updating isChosen1:', error);
-                    req.flash('error', { updateError: 'Failed to update applicant status.' });
-                    return res.status(500).json({ success: false, message: 'Failed to update applicant status.' });
+                    case true: {
+                        // Case to update `isChosen1` field
+                        const { error: chosenError } = await supabase
+                            .from('applicantaccounts')
+                            .update({ isChosen1: true })
+                            .match({ lastName, firstName });
+    
+                        if (chosenError) {
+                            console.error('Error updating isChosen1:', chosenError);
+                            return res.status(500).json({ success: false, message: 'Failed to update isChosen1.' });
+                        }
+    
+                        // Case to update `applicationstatus` after `isChosen1` is true
+                        const { error: statusError } = await supabase
+                            .from('applicantaccounts')
+                            .update({ applicationstatus: 'P1 - Awaiting for Line Manager Action; HR PASSED' })
+                            .match({ lastName, firstName, isChosen1: true });
+    
+                        if (statusError) {
+                            console.error('Error updating applicationstatus:', statusError);
+                            return res.status(500).json({ success: false, message: 'Failed to update application status.' });
+                        }
+    
+                        // If all updates succeed
+                        return res.json({ success: true, message: 'Applicant status updated successfully.' });
+                    }
+    
+                    default: {
+                        // Catch-all case
+                        console.error('Unexpected case encountered.');
+                        return res.status(400).json({ success: false, message: 'Invalid operation.' });
+                    }
                 }
-    
-                res.json({ success: true, message: 'Applicant status updated successfully.' });
             } catch (error) {
                 console.error('Error in updateApplicantIsChosen:', error);
                 res.status(500).json({ success: false, message: 'Internal server error.' });
@@ -1650,6 +1678,8 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
+    
+    
     
     
     submitLeaveRequest: async function (req, res) {
