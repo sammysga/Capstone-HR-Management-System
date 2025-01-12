@@ -904,17 +904,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        const ratingInputs = document.querySelectorAll('.rating-input');
-        const categoryTotals = document.querySelectorAll('.category-total-score');
-        const finalTotalInput = document.getElementById('final-total');
-
-        // Update total dynamically on dropdown selection change
-        const ratingDropdowns = document.querySelectorAll('.rating-dropdown');
-        const totalRatingDisplay = document.getElementById('total-rating');
     
-        function updateTotalRating() {
+    function updateTotalRating() {
     let totalRating = 0;
-    
+
+    // Ensure these elements are defined
+    const ratingDropdowns = document.querySelectorAll('.rating-dropdown');
+    const totalRatingDisplay = document.getElementById('total-rating');
+    const categoryTotalScore = document.getElementById('category-total-score');
+
+    // Check if elements exist
+    if (!totalRatingDisplay || !categoryTotalScore) {
+        console.error("Required elements (totalRatingDisplay or categoryTotalScore) are missing.");
+        return;
+    }
+
+    // Calculate total rating
     ratingDropdowns.forEach((dropdown) => {
         const value = parseInt(dropdown.value, 10);
         if (!isNaN(value)) {
@@ -922,12 +927,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Update total rating display
     totalRatingDisplay.textContent = totalRating;
 
-    // Update the category-total-score input with the calculated totalRating
-    // You may need to assign it to specific fields based on the category or general total
-    document.getElementById('category-total-score').value = totalRating;
+    // Update the hidden input value
+    categoryTotalScore.value = totalRating;
 }
+
     
 ratingDropdowns.forEach(dropdown => {
     dropdown.addEventListener('change', () => {
