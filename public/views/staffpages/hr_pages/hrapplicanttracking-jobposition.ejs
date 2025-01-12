@@ -548,17 +548,23 @@
                         <!-- Display Applicant Status -->
                         <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
                         <div style="margin-top: 10px;">
-                            <!-- Show Review Button Only for Specific Status -->
                             <% if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') { %>
                                 <button 
-                                class="btn-review" 
-                                onclick="openReviewModal(
-                                    '<%= applicant.lastName %>', 
-                                    '<%= applicant.firstName %>', 
-                                    '<%= applicant.userEmail %>', 
-                                    '<%= applicant.phoneNo %>'
-                                )">
-                                Review
+                                    class="btn-review" 
+                                    onclick="openReviewModal(
+                                        '<%= applicant.lastName %>', 
+                                        '<%= applicant.firstName %>', 
+                                        '<%= applicant.userEmail %>', 
+                                        '<%= applicant.phoneNo %>'
+                                    )">
+                                    For Review
+                                </button>
+                            <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
+                                <button 
+                                    class="btn-evaluation" 
+                                    onclick="openEvaluationForm('<%= applicant.applicantId %>')">
+                                    For Evaluation
+                                </button>
                             <% } %>
                         </div>
                     </td>   
@@ -570,6 +576,8 @@
             </tr>
         <% } %>
     </tbody>
+    
+    
 </table>
 
 
@@ -748,16 +756,61 @@
         <h4>Would you like to select this applicant as the top candidate and recommend them for the panel interview?</h4>
         <div class="review-modal-buttons">
             <button id="backButton" class="review-modal-back-button">Back</button>
-            <button id="confirmButton" class="review-modal-confirm-button">Confirm</button>
+            <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmSelection()">Confirm</button>
         </div>
     </div>
 </div>
+
 
 
     </div>
 </div>
 
 <script>
+
+function openEvaluationForm(applicantId) {
+    if (applicantId) {
+        // Redirect to the evaluation form page with applicantId in the query string
+        window.location.href = `/evaluationForm?applicantId=${applicantId}`;
+    } else {
+        alert("Applicant ID is missing.");
+    }
+}
+
+
+    
+
+// confirm button for modal for review
+        // Handle Confirm button click in the modal
+        function confirmSelection() {
+    const applicantName = document.getElementById("applicant-name").textContent.split(", ");
+    const lastName = applicantName[0];
+    const firstName = applicantName[1];
+
+    fetch("/update-applicant", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ lastName, firstName }),
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert(result.message);
+                location.reload(); // Refresh the page
+            } else {
+                alert("Failed to update applicant status. Please try again.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while updating the applicant status.");
+        });
+}
+
+
+
 
 function openReviewModal(lastName, firstName, email, phoneNo) {
         document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
@@ -877,7 +930,7 @@ function openReviewModal(lastName, firstName, email, phoneNo) {
                     button.classList.add("active"); // Add active class
                 } else {
                     button.classList.remove("active"); // Remove active class
-                }r
+                }
             });
         }
 
@@ -915,8 +968,6 @@ function openReviewModal(lastName, firstName, email, phoneNo) {
                 button.textContent = "For Onboarding";
             } else if (row.classList.contains('status-for-evaluation')) {
                 button.textContent = "For Evaluation";
-            } else {
-                button.textContent = "For Review"; // Default button text
             }
         });
 
@@ -925,17 +976,14 @@ function openReviewModal(lastName, firstName, email, phoneNo) {
     });
 
     document.addEventListener("DOMContentLoaded", function () {
-      // Select all buttons with the class 'btn-evaluation'
-      const evaluationButtons = document.querySelectorAll(".btn-evaluation");
+        const evaluationButtons = document.querySelectorAll(".btn-evaluation");
 
-      // Add click event listener to each button
-      evaluationButtons.forEach(button => {
-          button.addEventListener("click", function () {
-              // Navigate to the evaluation form
-              window.location.href = "/hr/evaluation-form";
-          });
-      });
-  });
+        evaluationButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                window.location.href = "/hr/evaluation-form";
+            });
+        });
+    });
 
     // Function to open the modal
     function openModal(modalId) {

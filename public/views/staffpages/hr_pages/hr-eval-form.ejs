@@ -323,22 +323,24 @@
             <h1>HR Interview Form</h1>
         </header>
 
-        <form id="interview-form">
+        <form id="interview-form" method="POST" action="/saveEvaluation">
+            <input type="hidden" id="applicant-id" name="applicantId" value=""> <!-- Hidden field for applicantId -->
+        
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
-                <input type="text" id="candidate-name" placeholder="Henry, Arthur" readonly>
-
+                <input type="text" id="candidate-name" name="candidateName" placeholder="Henry, Arthur" readonly>
+        
                 <label for="position-title">Position Title:</label>
-                <input type="text" id="position-title" placeholder="Financial Analyst" readonly>
-
+                <input type="text" id="position-title" name="positionTitle" placeholder="Financial Analyst" readonly>
+        
                 <label for="position-department">Position Department:</label>
-                <input type="text" id="position-department" placeholder="Finance" readonly>
-
+                <input type="text" id="position-department" name="positionDepartment" placeholder="Finance" readonly>
+        
                 <label for="conducted-by">Conducted by:</label>
-                <input type="text" id="conducted-by" placeholder="Henry, Arthur" readonly>
-
+                <input type="text" id="conducted-by" name="conductedBy" placeholder="Henry, Arthur" readonly>
+        
                 <label for="date-of-interview">Date of Interview:</label>
-                <input type="text" id="date-of-interview" placeholder="March 15, 2024" readonly>
+                <input type="text" id="date-of-interview" name="dateOfInterview" placeholder="March 15, 2024" readonly>
             </div>
 
  <!-- Rating Definition Guide -->
@@ -609,6 +611,56 @@
 
     <script>
 
+         // Extract the applicantId from the URL query string
+    const urlParams = new URLSearchParams(window.location.search);
+    const applicantId = urlParams.get('applicantId');
+
+    // Validate and display the applicantId
+    if (!applicantId) {
+        alert("Applicant ID is missing.");
+        // Optionally, redirect back to the previous page
+        window.location.href = '/previousPage'; // Replace with actual previous page URL
+    } else {
+        console.log("Applicant ID:", applicantId);
+        // Populate the hidden input field
+        document.getElementById('applicant-id').value = applicantId;
+    }
+
+document.querySelector(".save-submit").addEventListener("click", async function (event) {
+        event.preventDefault(); // Prevent default form submission behavior
+
+        // Retrieve the score
+        const totalRating = document.getElementById("total-rating").textContent;
+
+        // Replace with the applicant's unique ID or identifier
+        const applicantId = "APPLICANT_ID"; 
+
+        try {
+            // Send the score to the backend
+            const response = await fetch("/save-total-rating", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    applicantId,
+                    totalRating,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Total assessment rating saved successfully!");
+            } else {
+                alert("Failed to save the score. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error saving the score:", error);
+            alert("An error occurred while saving the score.");
+        }
+    });
+
         // Toggle active class for sidebar links
     document.querySelectorAll('.sidebar ul li a').forEach(link => {
         link.addEventListener('click', function() {
@@ -869,54 +921,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        const ratingInputs = document.querySelectorAll('.rating-input');
-        const categoryTotals = document.querySelectorAll('.category-total-score');
-        const finalTotalInput = document.getElementById('final-total');
+    
+document.addEventListener("DOMContentLoaded", () => {
+    // Select all rating dropdowns after DOM is loaded
+    const ratingDropdowns = document.querySelectorAll(".rating-dropdown");
 
-        // Update total dynamically on dropdown selection change
-        const ratingDropdowns = document.querySelectorAll('.rating-dropdown');
-        const totalRatingDisplay = document.getElementById('total-rating');
-    
-        function updateTotalRating() {
-    let totalRating = 0;
-    
+    // Function to update total rating
+    function updateTotalRating() {
+        let totalRating = 0;
+
+        // Iterate over each dropdown to calculate total score
+        ratingDropdowns.forEach((dropdown) => {
+            const value = parseInt(dropdown.value, 10); // Get the selected value
+            if (!isNaN(value)) {
+                totalRating += value;
+            }
+        });
+
+        // Update the displayed total rating
+        document.getElementById("total-rating").textContent = totalRating;
+
+        console.log("Total Rating Updated:", totalRating); // Debugging log
+    }
+
+    // Function to calculate category totals (if needed, provide implementation)
+    function calculateCategoryTotals() {
+        console.log("Category totals calculated.");
+    }
+
+    // Function to calculate the final total (if needed, provide implementation)
+    function calculateFinalTotal() {
+        console.log("Final total calculated.");
+    }
+
+    // Add event listeners to dropdowns after DOM is fully loaded
     ratingDropdowns.forEach((dropdown) => {
-        const value = parseInt(dropdown.value, 10);
-        if (!isNaN(value)) {
-            totalRating += value;
+        dropdown.addEventListener("change", () => {
+            updateTotalRating(); // Update the total rating
+            calculateCategoryTotals(); // Update category totals
+            calculateFinalTotal(); // Update the final total
+        });
+    });
+});
+
+
+
+    
+document.getElementById('submit-button').addEventListener('click', function (event) {
+    const ratingDropdowns = document.querySelectorAll('.rating-dropdown'); // Ensure this class matches your dropdowns
+    let allRated = true;
+
+    ratingDropdowns.forEach((dropdown) => {
+        if (dropdown.value === "") {
+            allRated = false;
+            dropdown.classList.add('error'); // Optionally highlight the empty dropdown
+        } else {
+            dropdown.classList.remove('error'); // Remove the highlight if it's filled
         }
     });
 
-    totalRatingDisplay.textContent = totalRating;
-
-    // Update the category-total-score input with the calculated totalRating
-    // You may need to assign it to specific fields based on the category or general total
-    document.getElementById('category-total-score').value = totalRating;
-}
-    
-ratingDropdowns.forEach(dropdown => {
-    dropdown.addEventListener('change', () => {
-        updateTotalRating();
-        calculateCategoryTotals();  // Update totals after dropdown change
-        calculateFinalTotal();      // Update final total if needed
-    });
+    if (!allRated) {
+        alert('Please rate all sections before submitting.');
+        event.preventDefault(); // Prevent form submission
+    }
 });
-    
-        // Ensure all sections are rated before submission
-        document.getElementById('submit-button').addEventListener('click', function (event) {
-            let allRated = true;
-    
-            ratingDropdowns.forEach((dropdown) => {
-                if (dropdown.value === "") {
-                    allRated = false;
-                }
-            });
-    
-            if (!allRated) {
-                alert('Please rate all sections before submitting.');
-                event.preventDefault();
-            }
-        });
+
 
         function calculateCategoryTotals() {
     const categories = {};

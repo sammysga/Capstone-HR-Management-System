@@ -1622,6 +1622,125 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
+
+    updateApplicantIsChosen: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const { lastName, firstName } = req.body; // Extract applicant details from the request
+    
+                // Use a switch case to handle the update logic
+                switch (true) {
+                    case !lastName || !firstName: {
+                        console.error('Missing applicant details.');
+                        return res.status(400).json({ success: false, message: 'Applicant details are missing.' });
+                    }
+    
+                    case true: {
+                        // Case to update `isChosen1` field
+                        const { error: chosenError } = await supabase
+                            .from('applicantaccounts')
+                            .update({ isChosen1: true })
+                            .match({ lastName, firstName });
+    
+                        if (chosenError) {
+                            console.error('Error updating isChosen1:', chosenError);
+                            return res.status(500).json({ success: false, message: 'Failed to update isChosen1.' });
+                        }
+    
+                        // Case to update `applicantStatus` after `isChosen1` is true
+                        const { error: statusError } = await supabase
+                            .from('applicantaccounts')
+                            .update({ applicantStatus: 'P1 - Awaiting for Line Manager Action; HR PASSED' })
+                            .match({ lastName, firstName, isChosen1: true });
+    
+                        if (statusError) {
+                            console.error('Error updating applicantStatus:', statusError);
+                            return res.status(500).json({ success: false, message: 'Failed to update applicant status.' });
+                        }
+    
+                        // If all updates succeed
+                        return res.json({ success: true, message: 'Applicant status updated successfully.' });
+                    }
+    
+                    default: {
+                        console.error('Unexpected case encountered.');
+                        return res.status(400).json({ success: false, message: 'Invalid operation.' });
+                    }
+                }
+            } catch (error) {
+                console.error('Error in updateApplicantIsChosen:', error);
+                res.status(500).json({ success: false, message: 'Internal server error.' });
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            res.redirect('/staff/login');
+        }
+    },
+
+
+    saveEvaluationForm: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === "HR") {
+            try {
+                let { applicantId, totalRating } = req.body;
+    
+                // Validate that both fields are provided
+                if (!applicantId || totalRating === undefined) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Applicant ID and total rating are required.",
+                    });
+                }
+    
+                // Parse applicantId to ensure it's a number
+                applicantId = parseInt(applicantId, 10);
+                if (isNaN(applicantId)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid applicant ID format.",
+                    });
+                }
+    
+                // Save the total rating into the database
+                const { error } = await supabase
+                    .from("applicantaccounts")
+                    .update({ hrInterviewFormScore: totalRating })
+                    .match({ applicantId });
+    
+                // Handle database errors
+                if (error) {
+                    console.error("Error saving total rating:", error);
+                    return res.status(500).json({
+                        success: false,
+                        message: "Failed to save total rating.",
+                    });
+                }
+    
+                // Respond with success message
+                res.json({
+                    success: true,
+                    message: "Total assessment rating saved successfully.",
+                });
+            } catch (error) {
+                console.error("Error in saveEvaluationForm:", error);
+                res.status(500).json({
+                    success: false,
+                    message: "Internal server error.",
+                });
+            }
+        } else {
+            res.status(403).json({
+                success: false,
+                message: "Unauthorized access. HR role required.",
+            });
+        }
+    },
+    
+    
+    
+    
+    
+    
+    
     
     submitLeaveRequest: async function (req, res) {
         if (!req.session.user || !req.session.user.userId) {
