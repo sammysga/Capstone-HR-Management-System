@@ -905,20 +905,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     
-    // Define the ratingDropdowns variable
-const ratingDropdowns = document.querySelectorAll('.rating-dropdown');
-
-// Add event listeners to dropdowns
-ratingDropdowns.forEach((dropdown) => {
-    dropdown.addEventListener('change', () => {
-        updateTotalRating(); // Update the total rating
-        calculateCategoryTotals(); // Update category totals
-        calculateFinalTotal(); // Update the final total
-    });
-});
-
 document.addEventListener("DOMContentLoaded", () => {
-    // Select all rating dropdowns
+    // Select all rating dropdowns after DOM is loaded
     const ratingDropdowns = document.querySelectorAll(".rating-dropdown");
 
     // Function to update total rating
@@ -939,13 +927,26 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Total Rating Updated:", totalRating); // Debugging log
     }
 
-    // Add event listeners to dropdowns
+    // Function to calculate category totals (if needed, provide implementation)
+    function calculateCategoryTotals() {
+        console.log("Category totals calculated.");
+    }
+
+    // Function to calculate the final total (if needed, provide implementation)
+    function calculateFinalTotal() {
+        console.log("Final total calculated.");
+    }
+
+    // Add event listeners to dropdowns after DOM is fully loaded
     ratingDropdowns.forEach((dropdown) => {
         dropdown.addEventListener("change", () => {
-            updateTotalRating(); // Update the total score whenever a dropdown changes
+            updateTotalRating(); // Update the total rating
+            calculateCategoryTotals(); // Update category totals
+            calculateFinalTotal(); // Update the final total
         });
     });
 });
+
 
 
     
