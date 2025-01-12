@@ -917,27 +917,36 @@ ratingDropdowns.forEach((dropdown) => {
     });
 });
 
-// Function to update the total rating
-function updateTotalRating() {
-    let totalRating = 0;
+document.addEventListener("DOMContentLoaded", () => {
+    // Select all rating dropdowns
+    const ratingDropdowns = document.querySelectorAll(".rating-dropdown");
+
+    // Function to update total rating
+    function updateTotalRating() {
+        let totalRating = 0;
+
+        // Iterate over each dropdown to calculate total score
+        ratingDropdowns.forEach((dropdown) => {
+            const value = parseInt(dropdown.value, 10); // Get the selected value
+            if (!isNaN(value)) {
+                totalRating += value;
+            }
+        });
+
+        // Update the displayed total rating
+        document.getElementById("total-rating").textContent = totalRating;
+
+        console.log("Total Rating Updated:", totalRating); // Debugging log
+    }
+
+    // Add event listeners to dropdowns
     ratingDropdowns.forEach((dropdown) => {
-        const value = parseInt(dropdown.value, 10);
-        if (!isNaN(value)) {
-            totalRating += value;
-        }
+        dropdown.addEventListener("change", () => {
+            updateTotalRating(); // Update the total score whenever a dropdown changes
+        });
     });
-    document.getElementById('total-rating').textContent = totalRating;
-}
+});
 
-// Placeholder for calculateCategoryTotals
-function calculateCategoryTotals() {
-    console.log("Calculating category totals...");
-}
-
-// Placeholder for calculateFinalTotal
-function calculateFinalTotal() {
-    console.log("Calculating final total...");
-}
 
     
 document.getElementById('submit-button').addEventListener('click', function (event) {
