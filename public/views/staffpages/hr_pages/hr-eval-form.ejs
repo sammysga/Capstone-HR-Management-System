@@ -905,43 +905,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     
-    function updateTotalRating() {
+    // Define the ratingDropdowns variable
+const ratingDropdowns = document.querySelectorAll('.rating-dropdown');
+
+// Add event listeners to dropdowns
+ratingDropdowns.forEach((dropdown) => {
+    dropdown.addEventListener('change', () => {
+        updateTotalRating(); // Update the total rating
+        calculateCategoryTotals(); // Update category totals
+        calculateFinalTotal(); // Update the final total
+    });
+});
+
+// Function to update the total rating
+function updateTotalRating() {
     let totalRating = 0;
-
-    // Ensure these elements are defined
-    const ratingDropdowns = document.querySelectorAll('.rating-dropdown');
-    const totalRatingDisplay = document.getElementById('total-rating');
-    const categoryTotalScore = document.getElementById('category-total-score');
-
-    // Check if elements exist
-    if (!totalRatingDisplay || !categoryTotalScore) {
-        console.error("Required elements (totalRatingDisplay or categoryTotalScore) are missing.");
-        return;
-    }
-
-    // Calculate total rating
     ratingDropdowns.forEach((dropdown) => {
         const value = parseInt(dropdown.value, 10);
         if (!isNaN(value)) {
             totalRating += value;
         }
     });
-
-    // Update total rating display
-    totalRatingDisplay.textContent = totalRating;
-
-    // Update the hidden input value
-    categoryTotalScore.value = totalRating;
+    document.getElementById('total-rating').textContent = totalRating;
 }
 
-    
-ratingDropdowns.forEach(dropdown => {
-    dropdown.addEventListener('change', () => {
-        updateTotalRating();
-        calculateCategoryTotals();  // Update totals after dropdown change
-        calculateFinalTotal();      // Update final total if needed
-    });
-});
+// Placeholder for calculateCategoryTotals
+function calculateCategoryTotals() {
+    console.log("Calculating category totals...");
+}
+
+// Placeholder for calculateFinalTotal
+function calculateFinalTotal() {
+    console.log("Calculating final total...");
+}
+
     
 document.getElementById('submit-button').addEventListener('click', function (event) {
     const ratingDropdowns = document.querySelectorAll('.rating-dropdown'); // Ensure this class matches your dropdowns
