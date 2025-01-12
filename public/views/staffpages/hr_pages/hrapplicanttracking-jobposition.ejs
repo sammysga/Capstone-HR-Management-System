@@ -548,17 +548,23 @@
                         <!-- Display Applicant Status -->
                         <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
                         <div style="margin-top: 10px;">
-                            <!-- Show Review Button Only for Specific Status -->
+                            <!-- Show Review Button for P1 Status -->
                             <% if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') { %>
                                 <button 
-                                class="btn-review" 
-                                onclick="openReviewModal(
-                                    '<%= applicant.lastName %>', 
-                                    '<%= applicant.firstName %>', 
-                                    '<%= applicant.userEmail %>', 
-                                    '<%= applicant.phoneNo %>'
-                                )">
-                                Review
+                                    class="btn-review" 
+                                    onclick="openReviewModal(
+                                        '<%= applicant.lastName %>', 
+                                        '<%= applicant.firstName %>', 
+                                        '<%= applicant.userEmail %>', 
+                                        '<%= applicant.phoneNo %>'
+                                    )">
+                                    Review
+                                </button>
+                            <% } %>
+    
+                            <!-- Show Evaluation Button for P2 Status -->
+                            <% if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
+                                <button class="btn-evaluation">For Evaluation</button>
                             <% } %>
                         </div>
                     </td>   
@@ -569,7 +575,7 @@
                 <td colspan="5">No applicants found.</td>
             </tr>
         <% } %>
-    </tbody>
+    </tbody>    
 </table>
 
 
