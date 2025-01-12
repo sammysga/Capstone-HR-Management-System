@@ -1622,6 +1622,35 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
+
+    updateApplicantIsChosen: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const { lastName, firstName } = req.body; // Extract applicant details from the request
+    
+                // Update `isChosen1` to true for the matching applicant
+                const { data, error } = await supabase
+                    .from('applicantaccounts')
+                    .update({ isChosen1: true })
+                    .match({ lastName, firstName }); // Match on lastName and firstName
+    
+                if (error) {
+                    console.error('Error updating isChosen1:', error);
+                    req.flash('error', { updateError: 'Failed to update applicant status.' });
+                    return res.status(500).json({ success: false, message: 'Failed to update applicant status.' });
+                }
+    
+                res.json({ success: true, message: 'Applicant status updated successfully.' });
+            } catch (error) {
+                console.error('Error in updateApplicantIsChosen:', error);
+                res.status(500).json({ success: false, message: 'Internal server error.' });
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            res.redirect('/staff/login');
+        }
+    },
+    
     
     submitLeaveRequest: async function (req, res) {
         if (!req.session.user || !req.session.user.userId) {

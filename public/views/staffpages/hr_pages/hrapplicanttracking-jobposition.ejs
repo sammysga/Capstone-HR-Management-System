@@ -557,7 +557,7 @@
                                         '<%= applicant.userEmail %>', 
                                         '<%= applicant.phoneNo %>'
                                     )">
-                                    Review
+                                   For Review
                                 </button>
                             <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
                                 <button class="btn-evaluation">For Evaluation</button>
@@ -761,6 +761,42 @@
 </div>
 
 <script>
+
+// confirm button for modal for review
+document.addEventListener("DOMContentLoaded", function () {
+    const confirmButton = document.getElementById("confirmButton");
+
+    confirmButton.addEventListener("click", async function () {
+        // Get applicant details from modal
+        const applicantName = document.getElementById("applicant-name").textContent.split(", ");
+        const lastName = applicantName[0];
+        const firstName = applicantName[1];
+
+        try {
+            // Send POST request to update isChosen1
+            const response = await fetch("/update-applicant", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ lastName, firstName }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Applicant has been marked as chosen for the panel interview.");
+                document.getElementById("reviewModal").style.display = "none"; // Close the modal
+            } else {
+                alert("Failed to update applicant status. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred while updating the applicant status.");
+        }
+    });
+});
+
 
 function openReviewModal(lastName, firstName, email, phoneNo) {
         document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
