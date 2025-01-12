@@ -1680,7 +1680,7 @@ updateJobOffer: async function(req, res) {
     saveTotalRating: async function (req, res) {
         if (req.session.user && req.session.user.userRole === "HR") {
             try {
-                const { applicantId, totalRating } = req.body;
+                let { applicantId, totalRating } = req.body;
     
                 // Validate inputs
                 if (!applicantId || totalRating === undefined) {
@@ -1690,11 +1690,20 @@ updateJobOffer: async function(req, res) {
                     });
                 }
     
+                // Parse applicantId to a number
+                applicantId = parseInt(applicantId, 10);
+                if (isNaN(applicantId)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid applicant ID format.",
+                    });
+                }
+    
                 // Save the score to the database
                 const { error } = await supabase
                     .from("applicantaccounts")
                     .update({ hrInterviewFormScore: totalRating })
-                    .match({ applicantId }); // Ensure this matches the correct column name
+                    .match({ applicantId });
     
                 if (error) {
                     console.error("Error saving total rating:", error);
@@ -1722,6 +1731,7 @@ updateJobOffer: async function(req, res) {
             });
         }
     },
+    
     
     
     
