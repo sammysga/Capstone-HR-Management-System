@@ -766,58 +766,32 @@
 
 // confirm button for modal for review
         // Handle Confirm button click in the modal
-        function confirmSelection() {
-            // Get the applicant details from the modal
-            const applicantName = document.getElementById("applicant-name").textContent.split(", ");
-            const lastName = applicantName[0];
-            const firstName = applicantName[1];
+        async function confirmSelection() {
+    const applicantName = document.getElementById("applicant-name").textContent.split(", ");
+    const lastName = applicantName[0].trim();
+    const firstName = applicantName[1].trim();
 
-            // Send a POST request to update isChosen1
-            fetch("/update-applicant", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ lastName, firstName }),
-            })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        alert("Applicant has been marked as chosen for the panel interview.");
-                        document.getElementById("reviewModal").style.display = "none"; // Close the modal
-                    } else {
-                        alert("Failed to update applicant status. Please try again.");
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    alert("An error occurred while updating the applicant status.");
-                });
+    try {
+        const response = await fetch("/update-applicant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lastName, firstName }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert("Applicant has been marked as chosen for the panel interview.");
+            document.getElementById("reviewModal").style.display = "none";
+        } else {
+            alert(result.message || "Failed to update applicant status.");
         }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred while updating the applicant status.");
+    }
+}
 
-        // Attach the confirmSelection function to the Confirm button
-        const confirmButton = document.getElementById("confirmButton");
-        confirmButton.addEventListener("click", confirmSelection);
-
-        // Close the modal when the back button or close button is clicked
-        const backButton = document.getElementById("backButton");
-        const closeButton = document.querySelector(".review-close-button");
-
-        backButton.addEventListener("click", function () {
-            document.getElementById("reviewModal").style.display = "none";
-        });
-
-        closeButton.addEventListener("click", function () {
-            document.getElementById("reviewModal").style.display = "none";
-        });
-
-        // Optional: Close modal when clicking outside of modal content
-        window.addEventListener("click", function (event) {
-            const modal = document.getElementById("reviewModal");
-            if (event.target === modal) {
-                modal.style.display = "none";
-            }
-        });
 
 
 function openReviewModal(lastName, firstName, email, phoneNo) {
