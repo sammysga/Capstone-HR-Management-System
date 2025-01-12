@@ -253,8 +253,8 @@
     <script>
         // Redirect to job position page when a row is clicked
         function redirectToJobPage(jobId) {
-
-            window.location.href = `/hr/applicant-tracker-jobposition`;
+            window.location.href = `/hr/applicant-tracker-jobposition?jobId=${jobId}`;
+            //window.location.href = `/hr/applicant-tracker-jobposition`;
             
             //TODO: Use this when all applicants could be fetched already with their corresponding statuses.
             // window.location.href = `/hr/applicant-tracker-jobposition/${jobId}`;

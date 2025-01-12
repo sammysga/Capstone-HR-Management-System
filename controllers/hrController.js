@@ -319,14 +319,89 @@ const hrController = {
         }
     },
 
-    getApplicantTrackerByJobPositions: function (req, res) {
+    getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hrapplicanttracking-jobposition');
+            try {
+                const { jobId } = req.query; // Extract jobId from query parameters
+    
+                // Fetch applicants by jobId, including phoneNo
+                const { data: applicants, error: applicantError } = await supabase
+                    .from('applicantaccounts')
+                    .select(`
+                        lastName, 
+                        firstName, 
+                        phoneNo,
+                        userId,
+                        jobId,
+                        departmentId,
+                        applicantStatus
+                    `)
+                    .eq('jobId', jobId);
+    
+                if (applicantError) throw applicantError;
+    
+                // Fetch user emails using userId
+                const { data: userAccounts, error: userError } = await supabase
+                    .from('useraccounts')
+                    .select('userId, userEmail');
+    
+                if (userError) throw userError;
+    
+                // Fetch job titles and department names
+                const { data: jobTitles, error: jobError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle');
+    
+                if (jobError) throw jobError;
+    
+                const { data: departments, error: departmentError } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName');
+    
+                if (departmentError) throw departmentError;
+    
+                // Merge jobTitle, deptName, and userEmail with applicants data
+                const applicantsWithDetails = applicants.map(applicant => {
+                    const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+                    const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+                    const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+    
+                    return {
+                        ...applicant,
+                        jobTitle,
+                        deptName,
+                        userEmail, // Add email to the applicant's data
+                    };
+                });
+    
+                // Render the EJS template with applicants data
+                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', {
+                    applicants: applicantsWithDetails,
+                });
+            } catch (error) {
+                console.error('Error fetching applicants:', error);
+                res.status(500).json({ error: 'Error fetching applicants' });
+            }
         } else {
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('staff/login');
+            res.redirect('/staff/login');
         }
     },
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
  
 
     //ARCHIVED
@@ -1338,6 +1413,24 @@ updateJobOffer: async function(req, res) {
             res.status(500).json({ error: 'Error fetching job titles' });
         }
     },
+
+    getApplicantData: async function(req, res) {
+        try {
+            const { data: applicants, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select('lastName, firstName');
+            
+            if (applicantError) throw applicantError;
+            
+            // Render the EJS template and pass the applicants data
+            res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
+        } catch (error) {
+            console.error('Error fetching applicants:', error);
+            res.status(500).json({ error: 'Error fetching applicants' });
+        }
+    },
+    
+
 
     // Add a new department on the select picker on add new staff form
     addNewDepartment: async function(req, res) {
