@@ -1648,15 +1648,15 @@ updateJobOffer: async function(req, res) {
                             return res.status(500).json({ success: false, message: 'Failed to update isChosen1.' });
                         }
     
-                        // Case to update `applicationstatus` after `isChosen1` is true
+                        // Case to update `applicantStatus` after `isChosen1` is true
                         const { error: statusError } = await supabase
                             .from('applicantaccounts')
-                            .update({ applicationstatus: 'P1 - Awaiting for Line Manager Action; HR PASSED' })
+                            .update({ applicantStatus: 'P1 - Awaiting for Line Manager Action; HR PASSED' })
                             .match({ lastName, firstName, isChosen1: true });
     
                         if (statusError) {
-                            console.error('Error updating applicationstatus:', statusError);
-                            return res.status(500).json({ success: false, message: 'Failed to update application status.' });
+                            console.error('Error updating applicantStatus:', statusError);
+                            return res.status(500).json({ success: false, message: 'Failed to update applicant status.' });
                         }
     
                         // If all updates succeed
@@ -1678,7 +1678,6 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
-    
     
     
     
