@@ -766,31 +766,33 @@
 
 // confirm button for modal for review
         // Handle Confirm button click in the modal
-        async function confirmSelection() {
+        function confirmSelection() {
     const applicantName = document.getElementById("applicant-name").textContent.split(", ");
-    const lastName = applicantName[0].trim();
-    const firstName = applicantName[1].trim();
+    const lastName = applicantName[0];
+    const firstName = applicantName[1];
 
-    try {
-        const response = await fetch("/update-applicant", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ lastName, firstName }),
+    fetch("/update-applicant", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ lastName, firstName }),
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert(result.message);
+                location.reload(); // Refresh the page
+            } else {
+                alert("Failed to update applicant status. Please try again.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while updating the applicant status.");
         });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert("Applicant has been marked as chosen for the panel interview.");
-            document.getElementById("reviewModal").style.display = "none";
-        } else {
-            alert(result.message || "Failed to update applicant status.");
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while updating the applicant status.");
-    }
 }
+
 
 
 
