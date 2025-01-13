@@ -2115,8 +2115,8 @@ updateJobOffer: async function(req, res) {
 
     getEvaluationForm: function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            // Extract applicantId from the query parameters
-            const { applicantId } = req.query;
+            // Extract applicantId from the URL path parameters
+            const { applicantId } = req.params;  // Use req.params to capture dynamic URL segments
             
             // Check if applicantId is provided
             if (!applicantId) {
@@ -2131,6 +2131,7 @@ updateJobOffer: async function(req, res) {
             res.redirect('staff/login');
         }
     },
+    
     
 
     getOffboardingRequest: function (req, res) {
