@@ -324,7 +324,7 @@
         </header>
 
         <form id="interview-form" method="POST" action="/saveEvaluation">
-            <input type="hidden" id="applicant-id" name="applicantId" value=""> <!-- Hidden field for applicantId -->
+            <input type="hidden" id="applicant-id" name="applicantId" value="<%= applicantId %>">
         
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
@@ -611,55 +611,55 @@
 
     <script>
 
-         // Extract the applicantId from the URL query string
-    const urlParams = new URLSearchParams(window.location.search);
-    const applicantId = urlParams.get('applicantId');
+ // Extract the applicantId from the URL query string
+const urlParams = new URLSearchParams(window.location.search);
+const applicantId = urlParams.get('applicantId');
 
-    // Validate and display the applicantId
-    if (!applicantId) {
-        alert("Applicant ID is missing.");
-        // Optionally, redirect back to the previous page
-        window.location.href = '/previousPage'; // Replace with actual previous page URL
-    } else {
-        console.log("Applicant ID:", applicantId);
-        // Populate the hidden input field
-        document.getElementById('applicant-id').value = applicantId;
+// Validate and display the applicantId
+if (!applicantId) {
+    alert("Applicant ID is missing.");
+    // Optionally, redirect back to the previous page
+    window.location.href = '/hr/applicant-tracker-jobposition'; // Replace with actual previous page URL
+} else {
+    console.log("Applicant ID:", applicantId);
+    // Populate the hidden input field (assuming you have this input in your form)
+    const applicantIdInput = document.getElementById('applicant-id');
+    if (applicantIdInput) {
+        applicantIdInput.value = applicantId;
     }
+}
 
 document.querySelector(".save-submit").addEventListener("click", async function (event) {
-        event.preventDefault(); // Prevent default form submission behavior
+    event.preventDefault(); // Prevent default form submission behavior
 
-        // Retrieve the score
-        const totalRating = document.getElementById("total-rating").textContent;
+    const totalRating = document.getElementById("total-rating").value;
+    const applicantId = document.getElementById("applicant-id").value;
 
-        // Replace with the applicant's unique ID or identifier
-        const applicantId = "APPLICANT_ID"; 
+    try {
+        const response = await fetch("/save-evaluation-form", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                applicantId,
+                totalRating,
+            }),
+        });
 
-        try {
-            // Send the score to the backend
-            const response = await fetch("/save-total-rating", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    applicantId,
-                    totalRating,
-                }),
-            });
+        const result = await response.json();
 
-            const result = await response.json();
-
-            if (result.success) {
-                alert("Total assessment rating saved successfully!");
-            } else {
-                alert("Failed to save the score. Please try again.");
-            }
-        } catch (error) {
-            console.error("Error saving the score:", error);
-            alert("An error occurred while saving the score.");
+        if (result.success) {
+            alert("Total assessment rating saved successfully!");
+        } else {
+            alert("Failed to save the score. Please try again.");
         }
-    });
+    } catch (error) {
+        console.error("Error saving the score:", error);
+        alert("An error occurred while saving the score.");
+    }
+});
+
 
         // Toggle active class for sidebar links
     document.querySelectorAll('.sidebar ul li a').forEach(link => {
