@@ -2115,12 +2115,23 @@ updateJobOffer: async function(req, res) {
 
     getEvaluationForm: function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hr-eval-form');
+            // Extract applicantId from the query parameters
+            const { applicantId } = req.query;
+            
+            // Check if applicantId is provided
+            if (!applicantId) {
+                req.flash('errors', { authError: 'Applicant ID is missing.' });
+                return res.redirect('/staff/applicant-tracker'); // Or redirect to an appropriate page
+            }
+    
+            // Pass applicantId to the template
+            res.render('staffpages/hr_pages/hr-eval-form', { applicantId });
         } else {
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
             res.redirect('staff/login');
         }
     },
+    
 
     getOffboardingRequest: function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
