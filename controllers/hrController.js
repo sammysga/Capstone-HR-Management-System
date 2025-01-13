@@ -2121,7 +2121,7 @@ updateJobOffer: async function(req, res) {
             // Check if applicantId is provided
             if (!applicantId) {
                 req.flash('errors', { authError: 'Applicant ID is missing.' });
-                return res.redirect('/staff/applicant-tracker'); // Or redirect to an appropriate page
+                return res.redirect('/hr/applicant-tracker-jobposition'); // Or redirect to an appropriate page
             }
     
             // Pass applicantId to the template
