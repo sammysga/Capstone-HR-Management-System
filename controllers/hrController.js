@@ -2115,8 +2115,8 @@ updateJobOffer: async function(req, res) {
 
     getEvaluationForm: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
-            // Extract applicantId from the URL path parameters
-            const { applicantId } = req.params;
+            // Extract applicantId from the query parameters
+            const { applicantId } = req.query;
     
             // Check if applicantId is provided
             if (!applicantId) {
@@ -2128,20 +2128,20 @@ updateJobOffer: async function(req, res) {
                 // Fetch applicant data from the database
                 const { data: applicant, error: applicantError } = await supabase
                     .from('applicantaccounts')
-                    .select('*')  // You can specify columns you want to fetch here
-                    .eq('applicantId', applicantId)  // Ensure you're querying by applicantId
-                    .single();  // Use .single() if you expect only one result
+                    .select('*')  // Select all columns, adjust as needed
+                    .eq('applicantId', applicantId)
+                    .single();  // Assuming only one applicant is fetched
     
                 if (applicantError) {
                     console.error('Error fetching applicant data:', applicantError);
                     req.flash('errors', { dbError: 'Could not fetch applicant data.' });
-                    return res.redirect('/hr/applicant-tracker-jobposition'); // Or redirect to an appropriate page
+                    return res.redirect('/hr/applicant-tracker-jobposition');
                 }
     
                 // Pass applicant data and applicantId to the template
                 res.render('staffpages/hr_pages/hr-eval-form', {
                     applicantId,
-                    applicant,
+                    applicant,  // Pass the fetched applicant data
                 });
             } catch (error) {
                 console.error('Error fetching applicant data:', error);
@@ -2150,9 +2150,10 @@ updateJobOffer: async function(req, res) {
             }
         } else {
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('staff/login');
+            res.redirect('/staff/login');
         }
     },
+    
     
     
     
