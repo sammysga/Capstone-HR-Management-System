@@ -328,14 +328,15 @@ const hrController = {
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
-                        lastName, 
-                        firstName, 
-                        phoneNo,
-                        userId,
-                        jobId,
-                        departmentId,
-                        applicantStatus
-                    `)
+                                lastName, 
+        firstName, 
+        phoneNo,
+        userId,
+        jobId,
+        departmentId,
+        applicantStatus,
+        applicantId
+    `)
                     .eq('jobId', jobId);
     
                 if (applicantError) throw applicantError;
