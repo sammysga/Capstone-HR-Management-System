@@ -202,6 +202,32 @@
             chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
         }
 
+        function displayQuestion(question) {
+    const questionContainer = document.getElementById('question-container');
+    questionContainer.innerHTML = `
+        <p>${question.text}</p>
+        ${question.buttons.map(button => `
+            <button onclick="handleAnswer(${button.value})">${button.text}</button>
+        `).join('')}
+    `;
+}
+
+function handleAnswer(answerValue) {
+    // Send the answer back to the backend
+    fetch('/submit-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: answerValue })
+    }).then(response => response.json()).then(data => {
+        if (data.nextQuestion) {
+            displayQuestion(data.nextQuestion);
+        } else {
+            alert(data.finalMessage);
+        }
+    }).catch(err => console.error(err));
+}
+
+
         document.addEventListener("DOMContentLoaded", function() {
             const initialResponse = "<%= initialResponse %>";
             displayInitialMessage(initialResponse);
