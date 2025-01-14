@@ -560,11 +560,10 @@
                                     For Review
                                 </button>
                             <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
-                                <button 
-                                class="btn-evaluation" 
-                                onclick="openEvaluationForm('<%= applicant.applicantId %>')">
-                                For Evaluation
-</button>                              
+                                <!-- Using anchor tag for direct redirection -->
+                                <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
+                                    <button class="btn-evaluation">For Evaluation</button>
+                                </a>
                             <% } %>
                         </div>
                     </td>   
@@ -576,6 +575,7 @@
             </tr>
         <% } %>
     </tbody>
+    
     
     
 </table>
