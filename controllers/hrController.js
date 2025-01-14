@@ -2083,7 +2083,7 @@ updateJobOffer: async function(req, res) {
     
             if (!applicantId) {
                 req.flash('errors', { message: 'Applicant ID is required.' });
-                return res.redirect('/hr/applicant-tracker-jobposition'); 
+                return res.redirect('/hr/applicant-tracker'); 
             }
     
             try {
