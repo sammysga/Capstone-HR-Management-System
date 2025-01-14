@@ -771,11 +771,13 @@
 function openEvaluationForm(applicantId) {
     console.log("Redirecting with applicantId:", applicantId); // Debugging log
     if (applicantId) {
-        window.location.href = `/hr/evaluation-form?applicantId=${applicantId}`;
+        // Redirect to the new URL with applicantId in the route path
+        window.location.href = `/hr/evaluation-form/${applicantId}`;
     } else {
         alert("Applicant ID is missing.");
     }
 }
+
 
 
 
