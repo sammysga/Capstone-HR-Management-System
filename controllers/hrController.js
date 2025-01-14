@@ -2114,45 +2114,19 @@ updateJobOffer: async function(req, res) {
     },
 
     getEvaluationForm: async function (req, res) {
+        // Check if the user is logged in and has the 'HR' role
         if (req.session.user && req.session.user.userRole === 'HR') {
-            // Extract applicantId from the query parameters
-            const { applicantId } = req.query;
-    
-            // Check if applicantId is provided
-            if (!applicantId) {
-                req.flash('errors', { authError: 'Applicant ID is missing.' });
-                return res.redirect('/hr/applicant-tracker-jobposition'); // Or redirect to an appropriate page
-            }
-    
-            try {
-                // Fetch applicant data from the database
-                const { data: applicant, error: applicantError } = await supabase
-                    .from('applicantaccounts')
-                    .select('*')  // Select all columns, adjust as needed
-                    .eq('applicantId', applicantId)
-                    .single();  // Assuming only one applicant is fetched
-    
-                if (applicantError) {
-                    console.error('Error fetching applicant data:', applicantError);
-                    req.flash('errors', { dbError: 'Could not fetch applicant data.' });
-                    return res.redirect('/hr/applicant-tracker-jobposition');
-                }
-    
-                // Pass applicant data and applicantId to the template
-                res.render('staffpages/hr_pages/hr-eval-form', {
-                    applicantId,
-                    applicant,  // Pass the fetched applicant data
-                });
-            } catch (error) {
-                console.error('Error fetching applicant data:', error);
-                req.flash('errors', { serverError: 'Internal server error.' });
-                res.redirect('/hr/applicant-tracker-jobposition');
-            }
+            // Render the evaluation form, passing the applicantId if provided
+            res.render('staffpages/hr_pages/hr-eval-form', {
+                applicantId: req.query.applicantId || null,
+            });
         } else {
+            // Redirect unauthorized users to the login page
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
