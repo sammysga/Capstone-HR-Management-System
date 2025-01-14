@@ -94,7 +94,7 @@ router.get('/logout', lineManagerController.getLogoutButton);
 // Route for updating applicant status
 router.post('/update-applicant', hrController.updateApplicantIsChosen);
 
-router.post("/saveEvaluation", hrController.saveEvaluationForm);
+router.post("/saveEvaluation", hrController.saveEvaluation);
 
 
 // Employee Routes
