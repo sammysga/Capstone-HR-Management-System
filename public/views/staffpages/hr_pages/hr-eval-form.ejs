@@ -328,10 +328,11 @@
         
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
-                <input type="text" id="candidate-name" name="candidateName" placeholder="Henry, Arthur" readonly>
-        
-                <label for="position-title">Position Title:</label>
-                <input type="text" id="position-title" name="positionTitle" placeholder="Financial Analyst" readonly>
+<input type="text" id="candidate-name" name="candidateName" value="<%= applicant?.firstName %> <%= applicant?.lastName %>" readonly>
+
+<label for="position-title">Position Title:</label>
+<input type="text" id="position-title" name="positionTitle" value="<%= applicant?.jobTitle %>" readonly>
+
         
                 <label for="position-department">Position Department:</label>
                 <input type="text" id="position-department" name="positionDepartment" placeholder="Finance" readonly>
@@ -611,54 +612,32 @@
 
     <script>
 
- // Extract the applicantId from the URL query string
-const urlParams = new URLSearchParams(window.location.search);
-const applicantId = urlParams.get('applicantId');
+document.getElementById("interview-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-// Validate and display the applicantId
-if (!applicantId) {
-    alert("Applicant ID is missing.");
-    // Optionally, redirect back to the previous page
-    window.location.href = '/hr/applicant-tracker-jobposition'; // Replace with actual previous page URL
-} else {
-    console.log("Applicant ID:", applicantId);
-    // Populate the hidden input field (assuming you have this input in your form)
-    const applicantIdInput = document.getElementById('applicant-id');
-    if (applicantIdInput) {
-        applicantIdInput.value = applicantId;
-    }
-}
+        const applicantId = document.getElementById("applicant-id").value;
+        const totalRating = document.getElementById("total-rating").textContent;
 
-document.querySelector(".save-submit").addEventListener("click", async function (event) {
-    event.preventDefault(); // Prevent default form submission behavior
+        try {
+            const response = await fetch("/saveEvaluation", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ applicantId, totalRating }),
+            });
 
-    const totalRating = document.getElementById("total-rating").value;
-    const applicantId = document.getElementById("applicant-id").value;
-
-    try {
-        const response = await fetch("/save-evaluation-form", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                applicantId,
-                totalRating,
-            }),
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert("Total assessment rating saved successfully!");
-        } else {
-            alert("Failed to save the score. Please try again.");
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message);
+            } else {
+                alert("Failed to save the evaluation score.");
+            }
+        } catch (err) {
+            console.error("Error:", err);
+            alert("An error occurred while saving the evaluation.");
         }
-    } catch (error) {
-        console.error("Error saving the score:", error);
-        alert("An error occurred while saving the score.");
-    }
-});
+    });
 
 
         // Toggle active class for sidebar links

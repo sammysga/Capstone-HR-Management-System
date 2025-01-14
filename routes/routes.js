@@ -83,7 +83,8 @@ router.post('/hr/view-mrf/:id', hrController.submitMRF);
 router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
 router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
-router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
+// Backend route to handle evaluation form page
+router.get('/hr/evaluation-form', hrController.getEvaluationForm);
 
 router.get('/hr/onboarding-view', hrController.getHROnboarding);
 router.get('/hr/offboarding-request', hrController.getOffboardingRequest);
@@ -94,7 +95,7 @@ router.get('/logout', lineManagerController.getLogoutButton);
 // Route for updating applicant status
 router.post('/update-applicant', hrController.updateApplicantIsChosen);
 
-router.post("/saveEvaluation", hrController.saveEvaluationForm);
+router.post("/saveEvaluation", hrController.saveEvaluation);
 
 
 // Employee Routes
