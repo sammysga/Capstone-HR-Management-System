@@ -1680,27 +1680,54 @@ updateJobOffer: async function(req, res) {
 
 
     saveEvaluation: async function (req, res) {
-        const { applicantId, totalRating } = req.body;
-    
-        if (!applicantId || !totalRating) {
-            return res.status(400).json({ success: false, message: "Applicant ID and score are required." });
-        }
-    
         try {
-            const { data, error } = await supabase
-                .from('applicantaccounts')
-                .update({ hrInterviewFormScore: totalRating }) // Assuming you have a column `evaluationScore`
-                .eq('applicantId', applicantId);
+            // Destructure required fields from the request body
+            const { applicantId, totalRating } = req.body;
     
-            if (error) {
-                console.error("Error saving evaluation:", error);
-                return res.status(500).json({ success: false, message: "Failed to save the evaluation." });
+            // Validate required inputs
+            if (!applicantId || !totalRating) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Applicant ID and total rating are required.",
+                });
             }
     
-            res.json({ success: true, message: "Evaluation score saved successfully!" });
+            // Convert `applicantId` to an integer (if applicable)
+            const parsedApplicantId = parseInt(applicantId, 10);
+            if (isNaN(parsedApplicantId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Applicant ID format.",
+                });
+            }
+    
+            // Save the evaluation score to the database
+            const { data, error } = await supabase
+                .from("applicantaccounts")
+                .update({ hrInterviewFormScore: totalRating }) // Assuming the column exists
+                .eq("applicantId", parsedApplicantId); // Match on the applicantId column
+    
+            // Check for Supabase errors
+            if (error) {
+                console.error("Error saving evaluation score:", error);
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to save the evaluation score.",
+                });
+            }
+    
+            // Respond with success
+            res.json({
+                success: true,
+                message: "Evaluation score saved successfully!",
+            });
         } catch (err) {
+            // Handle unexpected server errors
             console.error("Server error:", err);
-            res.status(500).json({ success: false, message: "Server error while saving evaluation." });
+            res.status(500).json({
+                success: false,
+                message: "An unexpected error occurred while saving the evaluation.",
+            });
         }
     },
     

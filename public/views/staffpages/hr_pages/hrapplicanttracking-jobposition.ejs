@@ -561,9 +561,9 @@
                                 </button>
                             <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
                                 <button 
-    class="btn-evaluation" 
-    onclick="openEvaluationForm('<%= applicant.applicantId %>')">
-    For Evaluation
+                                class="btn-evaluation" 
+                                onclick="openEvaluationForm('<%= applicant.applicantId %>')">
+                                For Evaluation
 </button>                              
                             <% } %>
                         </div>
@@ -769,14 +769,13 @@
 <script>
 
 function openEvaluationForm(applicantId) {
-    if (applicantId) {
-        console.log('Navigating to evaluation form with applicantId:', applicantId);
-        window.location.href = `/hr/evaluation-form?applicantId=${applicantId}`;
-    } else {
-        alert("Applicant ID is missing.");
+        if (applicantId) {
+            // Redirect to the evaluation form with the applicantId in the query string
+            window.location.href = `/hr/evaluation-form?applicantId=${applicantId}`;
+        } else {
+            alert("Applicant ID is missing.");
+        }
     }
-}
-
 
 
 
