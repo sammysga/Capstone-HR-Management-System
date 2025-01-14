@@ -2083,10 +2083,12 @@ updateJobOffer: async function(req, res) {
     
             if (!applicantId) {
                 req.flash('errors', { message: 'Applicant ID is required.' });
-                return res.redirect('/hr/applicant-tracker-jobposition'); // Corrected redirect
+                return res.redirect('/hr/applicant-tracker-jobposition'); 
             }
     
             try {
+                console.log('Fetching applicant details for applicantId:', applicantId);
+    
                 // Fetch the applicant's details from the database
                 const { data: applicant, error } = await supabase
                     .from('applicantaccounts')
@@ -2094,11 +2096,15 @@ updateJobOffer: async function(req, res) {
                     .eq('applicantId', applicantId)
                     .single();
     
+                console.log('Database Response:', { data: applicant, error });
+    
                 if (error || !applicant) {
                     console.error("Error fetching applicant details:", error);
                     req.flash('errors', { message: 'Could not retrieve applicant details.' });
-                    return res.redirect('/hr/applicant-tracker-jobposition'); // Corrected redirect
+                    return res.redirect('/hr/applicant-tracker-jobposition');
                 }
+    
+                console.log('Applicant Details:', applicant);  // Log the applicant details for inspection
     
                 // Render the evaluation form with applicant details
                 res.render('staffpages/hr_pages/hr-eval-form', {
@@ -2108,7 +2114,7 @@ updateJobOffer: async function(req, res) {
             } catch (err) {
                 console.error("Error loading evaluation form:", err);
                 req.flash('errors', { message: 'Internal server error.' });
-                return res.redirect('/hr/applicant-tracker-jobposition'); // Corrected redirect
+                return res.redirect('/hr/applicant-tracker-jobposition');
             }
         } else {
             // Redirect unauthorized users to the login page
