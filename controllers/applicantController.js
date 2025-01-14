@@ -445,87 +445,84 @@ botResponse = {
                     botResponse = "Sorry, I couldn't find the job details.";
                 }
             } 
-            // Handling "Yes" response for application
-            else if (userMessage.includes('yes')) {
-                const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
+          // Handling "Yes" response for application
+          else if (userMessage.includes('yes')) {
+            const jobId = (await applicantController.getJobDetails(req.session.selectedPosition )).jobId;
+        
+            // Fetch questions only if they haven't been fetched yet
+            if (!req.session.screeningQuestions) {
                 const questions = await applicantController.getInitialScreeningQuestions(jobId);
                 console.log('Initial Screening Questions:', questions);
-    
+        
                 req.session.screeningQuestions = questions;
                 req.session.currentQuestionIndex = 0;
                 req.session.answers = []; // Initialize answers array
-    
-                if (questions.length) {
-                    // Construct the bot response as an object
-                    botResponse = {
-                        text: `Great! Let's start. \n${questions[0].text}`, // Use the text from the first question
-                        buttons: questions[0].buttons // Include the buttons for the first question
-                    };
-                    req.session.applicantStage = 'screening_questions'; // Update applicantStage here
-                } else {
-                    botResponse = "No screening questions available for this position.";
-                }
-            } 
-            // Handling "No" response for application
-            else if (userMessage.includes('no')) {
-                botResponse = 'No problem! Here are our current job openings:\n' + positions.map(pos => `- ${pos}`).join('\n') + '\nPlease select a position.';
-                req.session.applicantStage = 'job_selection'; // Update applicantStage here
             }
-    
-            // Handling screening questions
-            else if (req.session.screeningQuestions) {
-                const questions = req.session.screeningQuestions;
-                const currentIndex = req.session.currentQuestionIndex;
-    
-                console.log('Current Question Index:', currentIndex);
-    
-                // Store the answer based on "Yes" or "No"
-                const answer = userMessage.includes('yes') ? 1 : (userMessage.includes('no') ? 0 : null);
-    
-                if (answer !== null) {
-                    req.session.answers.push(answer); // Store the answer as 1 (Yes) or 0 (No)
-                
-                    // If there are more questions, ask the next one with buttons
-                    if (currentIndex + 1 < questions.length) {
-                        const nextQuestion = questions[currentIndex + 1];
-                        const { text, buttons } = applicantController.handleScreeningQuestions(nextQuestion);
-                        
-                        // Send the next question with buttons
+        
+            // Check if there are questions to ask
+            if (req.session.screeningQuestions.length) {
+                const currentQuestion = req.session.screeningQuestions[req.session.currentQuestionIndex];
+                botResponse = {
+                    text: `Great! Let's start. \n${currentQuestion.text}`, // Use the current question text
+                    buttons: currentQuestion.buttons // Use the current question buttons
+                };
+                req.session.applicantStage = 'screening_questions'; // Update applicantStage here
+            } else {
+                botResponse = "No screening questions available for this position.";
+            }
+        }
+        
+        // Handling screening questions
+        else if (req.session.screeningQuestions) {
+            const questions = req.session.screeningQuestions;
+            const currentIndex = req.session.currentQuestionIndex;
+        
+            console.log('Current Question Index:', currentIndex);
+        
+            // Store the answer based on "Yes" or "No"
+            const answer = userMessage.includes('yes') ? 1 : (userMessage.includes('no') ? 0 : null);
+        
+            if (answer !== null) {
+                req.session.answers.push(answer); // Store the answer as 1 (Yes) or 0 (No)
+        
+                // Increment the current question index
+                req.session.currentQuestionIndex++; // Move to the next question
+        
+                // If there are more questions, ask the next one with buttons
+                if (req.session.currentQuestionIndex < questions.length) {
+                    const nextQuestion = questions[req.session.currentQuestionIndex]; // Get the next question
+                    botResponse = {
+                        text: nextQuestion.text, // Question text
+                        buttons: nextQuestion.buttons // Yes/No buttons
+                    };
+                } else {
+                    // Process the answers and calculate the result
+                    const { weightedScores, result } = await applicantController.calculateWeightedScores(req.session.answers, req.session.selectedPosition, questions);
+                    console.log("Scores:", weightedScores);
+        
+                    if (result === 'pass') {
                         botResponse = {
-                            text: text, // Question text
-                            buttons: buttons // Yes/No buttons
+                            text: "Congratulations! You passed the screening.",
+                            buttons: [] // No buttons needed here, final response
                         };
-                
-                        req.session.currentQuestionIndex++; // Move to the next question
                     } else {
-                        // Process the answers and calculate the result
-                        const { weightedScores, result } = await applicantController.calculateWeightedScores(req.session.answers, req.session.selectedPosition, questions);
-                        console.log("Scores:", weightedScores);
-                
-                        if (result === 'pass') {
-                            botResponse = {
-                                text: "Congratulations! You passed the screening.",
-                                buttons: [] // No buttons needed here, final response
-                            };
-                        } else {
-                            botResponse = {
-                                text: "Sorry, you didn’t meet the required score.",
-                                buttons: [] // No buttons needed here, final response
-                            };
-                        }
-                
-                        req.session.applicantStage = 'application_complete'; // Update applicantStage here
+                        botResponse = {
+                            text: "Sorry, you didn’t meet the required score.",
+                            buttons: [] // No buttons needed here, final response
+                        };
                     }
-                } else {
-                    botResponse = {
-                        text: 'Please answer with "Yes" or "No".',
-                        buttons: [] // No buttons needed here, prompt for proper answer
-                    };
+        
+                    req.session.applicantStage = 'application_complete'; // Update applicantStage here
                 }
-                
+            } else {
+                botResponse = {
+                    text: 'Please answer with "Yes" or "No".',
+                    buttons: [] // No buttons needed here, prompt for proper answer
+                };
             }
-    
-            res.status(200).json({ response: botResponse });
+        }
+        
+        res.status(200).json({ response: botResponse });
         } catch (error) {
             console.error('Error processing chatbot message:', error);
             res.status(500).json({ response: 'Sorry, I am having trouble understanding that.' });
