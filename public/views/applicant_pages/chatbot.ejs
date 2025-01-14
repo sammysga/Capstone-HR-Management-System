@@ -90,6 +90,10 @@
     </div>
 
     <script>
+let screeningQuestions = [];
+let currentQuestionIndex = 0;
+
+
         document.getElementById('send-button').addEventListener('click', () => {
         const inputField = document.getElementById('user-input');
         const userInput = inputField.value.trim();
@@ -103,28 +107,34 @@
             console.log('Input is empty.');
         }
     });
-
     async function sendMessage(message) {
-        console.log('Sending message:', message);
-        try {
-            const response = await fetch('/chatbot', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message }),
-            });
+    console.log('Sending message:', message);
+    try {
+        const response = await fetch('/chatbot', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
+        });
 
-            if (!response.ok) throw new Error("Failed to send message");
+        if (!response.ok) throw new Error("Failed to send message");
 
-            const data = await response.json();
-            console.log('Response from server:', data); // Debug response
-            displayBotResponse(data.response);
-        } catch (error) {
-            console.error("Error sending message:", error);
-            addMessage("Bot", "There was an error sending your message. Please try again later.");
+        const data = await response.json();
+        console.log('Response from server:', data); // Debug response
+
+        // Store the questions and reset the index if they are provided
+        if (data.response.questions) {
+            screeningQuestions = data.response.questions;
+            currentQuestionIndex = 0; // Reset to the first question
         }
+
+        displayBotResponse(data.response);
+    } catch (error) {
+        console.error("Error sending message:", error);
+        addMessage("Bot", "There was an error sending your message. Please try again later.");
     }
+}
 
     function addMessage(sender, message) {
         console.log(`Adding message from ${sender}:`, message);
@@ -162,32 +172,36 @@
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-    function displayBotResponse(response) {
+function displayBotResponse(response) {
     console.log('Bot response:', response);
     const chatMessages = document.getElementById('chat-messages');
 
     // Check if response is an object with text and buttons
     if (typeof response === 'object' && response.text) {
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', 'bot-message');
-    messageDiv.innerText = response.text; // Display the question text
-    chatMessages.appendChild(messageDiv);
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'bot-message');
+        messageDiv.innerText = response.text; // Display the question text
+        chatMessages.appendChild(messageDiv);
 
-    // Create buttons if they exist
-    if (response.buttons && response.buttons.length) {
-        response.buttons.forEach(button => {
-            const btn = document.createElement('button');
-            btn.innerText = button.text;
-            btn.onclick = () => {
-                console.log('Button clicked:', button.text);
-                addMessage('You', button.text);
-                sendMessage(button.text);
-            };
-            btn.classList.add('job-button');
-            chatMessages.appendChild(btn);
-        });
-    }
-} else {
+        // Create buttons if they exist
+        if (response.buttons && response.buttons.length) {
+            response.buttons.forEach(button => {
+                const btn = document.createElement('button');
+                btn.innerText = button.text;
+                btn.onclick = async () => {
+                    console.log('Button clicked:', button.text);
+                    addMessage('You', button.text);
+                    // Send the answer to the server
+                    await sendMessage(button.text);
+                    
+                    // After sending the answer, handle the next question
+                    handleNextQuestion();
+                };
+                btn.classList.add('job-button');
+                chatMessages.appendChild(btn);
+            });
+        }
+    } else {
         // Handle case where response is a string
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot-message');
@@ -197,7 +211,26 @@
 
     chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
 }
-
+async function handleNextQuestion() {
+    // Check if there are more questions
+    if (currentQuestionIndex + 1 < screeningQuestions.length) {
+        currentQuestionIndex++; // Move to the next question
+        const nextQuestion = screeningQuestions[currentQuestionIndex];
+        
+        // Construct the bot response for the next question
+        const botResponse = {
+            text: nextQuestion.text,
+            buttons: nextQuestion.buttons
+        };
+        
+        // Display the next question
+        displayBotResponse(botResponse);
+    } else {
+        // Handle the end of the screening questions
+        addMessage("Bot", "Thank you for completing the screening process.");
+        // Optionally, you can redirect to another part of the application or provide further instructions.
+    }
+}
     function handleAnswer(answerValue) {
         console.log('Handling answer:', answerValue);
         // Send the answer back to the backend
