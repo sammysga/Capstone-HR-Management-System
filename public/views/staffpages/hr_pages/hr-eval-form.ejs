@@ -324,13 +324,15 @@
         </header>
 
         <form id="interview-form" method="POST" action="/saveEvaluation">
+            <input type="hidden" id="applicant-id" name="applicantId" value="<%= applicantId %>">
         
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
-                <input type="text" id="candidate-name" name="candidateName" placeholder="Henry, Arthur" readonly>
-        
-                <label for="position-title">Position Title:</label>
-                <input type="text" id="position-title" name="positionTitle" placeholder="Financial Analyst" readonly>
+<input type="text" id="candidate-name" name="candidateName" value="<%= applicant?.firstName %> <%= applicant?.lastName %>" readonly>
+
+<label for="position-title">Position Title:</label>
+<input type="text" id="position-title" name="positionTitle" value="<%= applicant?.jobTitle %>" readonly>
+
         
                 <label for="position-department">Position Department:</label>
                 <input type="text" id="position-department" name="positionDepartment" placeholder="Finance" readonly>
@@ -610,36 +612,32 @@
 
     <script>
 
-document.querySelector(".save-submit").addEventListener("click", async function (event) {
-    event.preventDefault(); // Prevent default form submission behavior
+document.getElementById("interview-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-    const totalRating = document.getElementById("total-rating").value;
-    const applicantId = document.getElementById("applicant-id").value;
+        const applicantId = document.getElementById("applicant-id").value;
+        const totalRating = document.getElementById("total-rating").textContent;
 
-    try {
-        const response = await fetch("/save-evaluation-form", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                applicantId,
-                totalRating,
-            }),
-        });
+        try {
+            const response = await fetch("/saveEvaluation", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ applicantId, totalRating }),
+            });
 
-        const result = await response.json();
-
-        if (result.success) {
-            alert("Total assessment rating saved successfully!");
-        } else {
-            alert("Failed to save the score. Please try again.");
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message);
+            } else {
+                alert("Failed to save the evaluation score.");
+            }
+        } catch (err) {
+            console.error("Error:", err);
+            alert("An error occurred while saving the evaluation.");
         }
-    } catch (error) {
-        console.error("Error saving the score:", error);
-        alert("An error occurred while saving the score.");
-    }
-});
+    });
 
 
         // Toggle active class for sidebar links
