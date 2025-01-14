@@ -2108,12 +2108,6 @@ updateJobOffer: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             const { applicantId } = req.query; // Extract applicantId from the query string
     
-            // Validate the applicantId parameter
-            if (!applicantId) {
-                req.flash('errors', { message: 'Applicant ID is required.' });
-                return res.redirect('/hr/applicant-tracker');
-            }
-    
             try {
                 console.log('Fetching applicant details for applicantId:', applicantId);
     
