@@ -1679,67 +1679,30 @@ updateJobOffer: async function(req, res) {
     },
 
 
-    saveEvaluationForm: async function (req, res) {
-        if (req.session.user && req.session.user.userRole === "HR") {
-            try {
-                let { applicantId, totalRating } = req.body;
+    saveEvaluation: async function (req, res) {
+        const { applicantId, totalRating } = req.body;
     
-                // Validate that both fields are provided
-                if (!applicantId || totalRating === undefined) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Applicant ID and total rating are required.",
-                    });
-                }
+        if (!applicantId || !totalRating) {
+            return res.status(400).json({ success: false, message: "Applicant ID and score are required." });
+        }
     
-                // Parse applicantId to ensure it's a number
-                applicantId = parseInt(applicantId, 10);
-                if (isNaN(applicantId)) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Invalid applicant ID format.",
-                    });
-                }
+        try {
+            const { data, error } = await supabase
+                .from('applicantaccounts')
+                .update({ hrInterviewFormScore: totalRating }) // Assuming you have a column `evaluationScore`
+                .eq('applicantId', applicantId);
     
-                // Save the total rating into the database
-                const { error } = await supabase
-                    .from("applicantaccounts")
-                    .update({ hrInterviewFormScore: totalRating })
-                    .match({ applicantId });
-    
-                // Handle database errors
-                if (error) {
-                    console.error("Error saving total rating:", error);
-                    return res.status(500).json({
-                        success: false,
-                        message: "Failed to save total rating.",
-                    });
-                }
-    
-                // Respond with success message
-                res.json({
-                    success: true,
-                    message: "Total assessment rating saved successfully.",
-                });
-            } catch (error) {
-                console.error("Error in saveEvaluationForm:", error);
-                res.status(500).json({
-                    success: false,
-                    message: "Internal server error.",
-                });
+            if (error) {
+                console.error("Error saving evaluation:", error);
+                return res.status(500).json({ success: false, message: "Failed to save the evaluation." });
             }
-        } else {
-            res.status(403).json({
-                success: false,
-                message: "Unauthorized access. HR role required.",
-            });
+    
+            res.json({ success: true, message: "Evaluation score saved successfully!" });
+        } catch (err) {
+            console.error("Server error:", err);
+            res.status(500).json({ success: false, message: "Server error while saving evaluation." });
         }
     },
-    
-    
-    
-    
-    
     
     
     
@@ -2116,16 +2079,44 @@ updateJobOffer: async function(req, res) {
     getEvaluationForm: async function (req, res) {
         // Check if the user is logged in and has the 'HR' role
         if (req.session.user && req.session.user.userRole === 'HR') {
-            // Render the evaluation form, passing the applicantId if provided
-            res.render('staffpages/hr_pages/hr-eval-form', {
-                applicantId: req.query.applicantId || null,
-            });
+            const { applicantId } = req.query;
+    
+            if (!applicantId) {
+                req.flash('errors', { message: 'Applicant ID is required.' });
+                return res.redirect('/hr/applicant-tracking'); // Redirect if applicantId is missing
+            }
+    
+            try {
+                // Fetch the applicant's details from the database
+                const { data: applicant, error } = await supabase
+                    .from('applicantaccounts')
+                    .select('*')
+                    .eq('applicantId', applicantId)
+                    .single();
+    
+                if (error || !applicant) {
+                    console.error("Error fetching applicant details:", error);
+                    req.flash('errors', { message: 'Could not retrieve applicant details.' });
+                    return res.redirect('/hr/applicant-tracking');
+                }
+    
+                // Render the evaluation form with applicant details
+                res.render('staffpages/hr_pages/hr-eval-form', {
+                    applicantId,
+                    applicant, // Pass the applicant details
+                });
+            } catch (err) {
+                console.error("Error loading evaluation form:", err);
+                req.flash('errors', { message: 'Internal server error.' });
+                res.redirect('/hr/applicant-tracking');
+            }
         } else {
             // Redirect unauthorized users to the login page
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
