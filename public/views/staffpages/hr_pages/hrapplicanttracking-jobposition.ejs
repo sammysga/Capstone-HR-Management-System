@@ -768,6 +768,8 @@
 
 <script>
 
+
+
 function openEvaluationForm(applicantId) {
     console.log("Redirecting with applicantId:", applicantId); // Debugging log
     if (applicantId) {
@@ -778,7 +780,13 @@ function openEvaluationForm(applicantId) {
     }
 }
 
-
+    // Function to extract applicantId from URL
+    function getApplicantIdFromURL() {
+    const path = window.location.pathname;
+    const parts = path.split('/'); // Split the URL into parts
+    const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
+    return applicantId;
+}
 
     
 
