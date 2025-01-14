@@ -2106,7 +2106,7 @@ updateJobOffer: async function(req, res) {
     getEvaluationForm: async function (req, res) {
         // Check if the user is logged in and has the 'HR' role
         if (req.session.user && req.session.user.userRole === 'HR') {
-            const applicantId = req.params.applicantId; // Directly get applicantId from route params or simply pass it
+            const applicantId = req.params.applicantId; // Get applicantId from URL path
     
             try {
                 console.log('Fetching applicant details for applicantId:', applicantId);
