@@ -774,16 +774,6 @@
             const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
             return applicantId;
         }
-// Function to open the evaluation form and redirect
-function openEvaluationForm(applicantId) {
-            console.log("Redirecting with applicantId:", applicantId); // Debugging log
-            if (applicantId) {
-                // Redirect to the new URL with applicantId in the route path
-                window.location.href = `/hr/evaluation-form`;
-            } else {
-                alert("Applicant ID is missing.");
-            }
-        }
 
        
 
