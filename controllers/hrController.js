@@ -2097,7 +2097,7 @@ updateJobOffer: async function(req, res) {
                 if (error || !applicant) {
                     console.error("Error fetching applicant details:", error);
                     req.flash('errors', { message: 'Could not retrieve applicant details.' });
-                    return res.redirect('/hr/applicant-tracking');
+                    return res.redirect('/hr/applicant-tracker-jobposition'); // Corrected redirect
                 }
     
                 // Render the evaluation form with applicant details
