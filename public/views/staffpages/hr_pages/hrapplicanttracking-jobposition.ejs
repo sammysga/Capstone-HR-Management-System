@@ -769,12 +769,14 @@
 <script>
 
 function openEvaluationForm(applicantId) {
-        if (applicantId) {
-            window.location.href = `/hr/evaluation-form?applicantId=${applicantId}`;
-        } else {
-            alert("Applicant ID is missing.");
-        }
+    if (applicantId) {
+        console.log('Navigating to evaluation form with applicantId:', applicantId);
+        window.location.href = `/hr/evaluation-form?applicantId=${applicantId}`;
+    } else {
+        alert("Applicant ID is missing.");
     }
+}
+
 
 
 
