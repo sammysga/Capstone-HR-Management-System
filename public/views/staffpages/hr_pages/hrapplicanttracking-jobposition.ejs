@@ -767,26 +767,34 @@
 </div>
 
 <script>
-
-
-
+// Function to open the evaluation form and redirect
 function openEvaluationForm(applicantId) {
-    console.log("Redirecting with applicantId:", applicantId); // Debugging log
-    if (applicantId) {
-        // Redirect to the new URL with applicantId in the route path
-        window.location.href = `/hr/evaluation-form/${applicantId}`;
-    } else {
-        alert("Applicant ID is missing.");
-    }
-}
+            console.log("Redirecting with applicantId:", applicantId); // Debugging log
+            if (applicantId) {
+                // Redirect to the new URL with applicantId in the route path
+                window.location.href = `/hr/evaluation-form/${applicantId}`;
+            } else {
+                alert("Applicant ID is missing.");
+            }
+        }
 
-    // Function to extract applicantId from URL
-    function getApplicantIdFromURL() {
-    const path = window.location.pathname;
-    const parts = path.split('/'); // Split the URL into parts
-    const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
-    return applicantId;
-}
+        // Function to extract applicantId from URL
+        function getApplicantIdFromURL() {
+            const path = window.location.pathname;
+            const parts = path.split('/'); // Split the URL into parts
+            const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
+            return applicantId;
+        }
+
+        // Display the applicantId from the URL (if any) when the page is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            const applicantId = getApplicantIdFromURL(); // Extract applicantId from the URL
+            if (applicantId) {
+                document.getElementById('applicantIdDisplay').textContent = `Applicant ID from URL: ${applicantId}`;
+            } else {
+                document.getElementById('applicantIdDisplay').textContent = 'No Applicant ID found in URL.';
+            }
+        });
 
     
 
