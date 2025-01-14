@@ -2083,7 +2083,7 @@ updateJobOffer: async function(req, res) {
     
             if (!applicantId) {
                 req.flash('errors', { message: 'Applicant ID is required.' });
-                return res.redirect('/hr/applicant-tracking'); // Redirect if applicantId is missing
+                return res.redirect('/hr/applicant-tracker-jobposition'); // Corrected redirect
             }
     
             try {
@@ -2108,7 +2108,7 @@ updateJobOffer: async function(req, res) {
             } catch (err) {
                 console.error("Error loading evaluation form:", err);
                 req.flash('errors', { message: 'Internal server error.' });
-                res.redirect('/hr/applicant-tracking');
+                return res.redirect('/hr/applicant-tracker-jobposition'); // Corrected redirect
             }
         } else {
             // Redirect unauthorized users to the login page
