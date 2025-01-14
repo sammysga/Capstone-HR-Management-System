@@ -769,13 +769,13 @@
 <script>
 
 function openEvaluationForm(applicantId) {
-        if (applicantId) {
-            // Redirect to the evaluation form with the applicantId in the query string
-            window.location.href = `/hr/evaluation-form?applicantId=${applicantId}`;
-        } else {
-            alert("Applicant ID is missing.");
-        }
+    console.log("Redirecting with applicantId:", applicantId); // Debugging log
+    if (applicantId) {
+        window.location.href = `/hr/evaluation-form?applicantId=${applicantId}`;
+    } else {
+        alert("Applicant ID is missing.");
     }
+}
 
 
 
