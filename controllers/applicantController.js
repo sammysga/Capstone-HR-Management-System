@@ -342,6 +342,10 @@ const applicantController = {
         }
     },
 
+    getCalendly: async function (req, res) {
+        res.render('applicant_pages/calendly', { errors: {} })
+    },
+
     getOnboarding: async function(req, res) {
         res.render('applicant_pages/onboarding', { errors: {} });
     },
