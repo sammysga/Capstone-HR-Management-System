@@ -3,38 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Manager Interview Form</title>
+    <title>HR Applicant Tracker Main</title>
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome for icons -->
     <style>
-        /* Adjust layout to avoid sidebar overlap */
         .main-content {
-            margin-left: 350px; /* Add margin to avoid sidebar overlap */
+            margin-left: 350px; 
             padding: 20px;
-            width: calc(100% - 350px); /* Ensures content takes up the remaining space */
-            background-color: #FFFFFF; /* Set white background for the entire page */
+            width: calc(100% - 350px); 
+            background-color: #FFFFFF;
         }
 
-        /* Header Section: Move it further left and ensure equal margins */
         .header-section {
-            margin-bottom: 30px; /* Increased bottom margin for spacing */
-            margin-left: 5px; /* Move header slightly to the left */
-            margin-right: 5px; /* Add margin to the right to balance the left margin */
-            font-size: 24px; /* Increased font size for larger text */
-            text-align: left; /* Ensures text stays aligned to the left */
-            width: calc(100% - 10px); /* Adjust width to account for left and right margins */
+            margin-bottom: 30px; 
+            margin-left: 5px; 
+            margin-right: 5px; 
+            font-size: 24px;
+            text-align: left; 
+            width: calc(100% - 10px); 
         }
 
         .tracking-section {
-            background-color: #FFFFFF; /* White background */
-            padding: 20px; /* Add padding for content spacing */
-            border-radius: 5px; /* Optional: Rounded corners */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Add shadow */
-            margin-top: 30px; /* Shift the tracking section a bit lower */
-            margin-left: 5px; /* Move tracking section slightly to the left */
-            margin-right: 5px; /* Add margin to the right to balance the left margin */
-            width: 95%; /* Adjust width to make it a bit smaller */
+            background-color: #FFFFFF; 
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-top: 30px; 
+            margin-left: 5px;
+            margin-right: 5px; 
+            width: 95%; 
         }
 
         .search-container {
@@ -59,7 +57,7 @@
 
         .search-bar {
             padding: 8px;
-            width: 250px; /* Adjusted width */
+            width: 250px;
             font-size: 16px;
             border: 1px solid #ddd;
         }
@@ -76,7 +74,7 @@
 
         .right-section {
             display: flex;
-            gap: 10px; /* Space between buttons */
+            gap: 10px; 
         }
         .right-section button {
             padding: 10px 15px;
@@ -113,8 +111,8 @@
 
         .tracking-table th.fixed-width,
         .tracking-table td.fixed-width {
-            width: 100px; /* Set a fixed width */
-            text-align: center; /* Center-align content */
+            width: 100px;
+            text-align: center; 
         }
 
         .tracking-table tr:nth-child(even) {
@@ -125,27 +123,23 @@
             background-color: #f1f1f1;
         }
 
-        /* Style for the job title container */
         .job-title-container {
             display: flex;
             align-items: center;
         }
 
-        /* Style for status circle */
         .status-circle {
             width: 12px;
             height: 12px;
             border-radius: 50%;
             display: inline-block;
-            margin-right: 8px; /* Space between circle and job title */
+            margin-right: 8px; 
         }
 
-        /* Green status circle */
         .status-circle.green {
             background-color: green;
         }
 
-        /* Gray status circle */
         .status-circle.gray {
             background-color: gray;
         }
@@ -251,6 +245,10 @@
     </div>
 
     <script>
+        // Redirect to Calendly
+        function setInterviewAvailabilities() {
+            window.location.href = 'https://calendly.com/event_types/new?return_to=%2Fevent_types%2Fuser%2Fme';
+        }
         // Redirect to job position page when a row is clicked
         function redirectToJobPage(jobId) {
             window.location.href = `/hr/applicant-tracker-jobposition?jobId=${jobId}`;
