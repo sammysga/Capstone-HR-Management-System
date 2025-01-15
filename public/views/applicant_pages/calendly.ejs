@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schedule Your Appointment</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://assets.calendly.com/assets/external/widget.js" async></script> <!-- calendly integration -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    .container {
+        text-align: center;
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        width: 90%;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+        color: #333333;
+    }
+
+    p {
+        font-size: 1rem;
+        color: #555555;
+        margin-bottom: 20px;
+    }
+
+    button {
+        background-color: #124A5C;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    button:hover {
+        background-color: #059ca4;
+    }
+
+    #calendly-container {
+        margin-bottom: 20px;
+    }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Schedule Your Appointment</h1>
+    <p>
+      Please select a date and time on the embedded Calendly page and wait for
+      email confirmation. Once you’ve received the confirmation, press the
+      "Return to Chatbot" button to continue.
+    </p>
+
+    <div id="calendly-container">
+      <div
+        class="calendly-inline-widget"
+        data-url="https://calendly.com/hr-recruitmentprime00/sample-interview"
+        style="min-width: 320px; height: 630px;">
+      </div>
+    </div>
+
+    <button onclick="returnToChatbot()">Return to Chatbot</button>
+  </div>
+
+  <script>
+    function returnToChatbot() {
+      alert("Returning to the chatbot...");
+      // Redirect or execute chatbot functionality here
+    }
+  </script>
+</body>
+</html>

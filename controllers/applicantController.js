@@ -341,7 +341,6 @@ const applicantController = {
             res.status(500).send('Internal Server Error');
         }
     },
-
     // Function to render chatbot page with the initial greeting
     getChatbotPage: async function(req, res) {
         try {
@@ -630,6 +629,14 @@ handleScreeningQuestions: function (questionObj) {
             return [];
         }
     },
+    getCalendly: async function (req, res) {
+        res.render('applicant_pages/calendly', { errors: {} })
+    },
+
+    getOnboarding: async function(req, res) {
+        res.render('applicant_pages/onboarding', { errors: {} });
+
+    },
 
     // Function to fetch job details from the db
 // Function to fetch detailed job information, including required certifications, degrees, experiences, and skills
@@ -796,6 +803,8 @@ handleFileUpload: async function(req, res) {
         res.status(500).send('Error uploading file.');
     }
 },
+
+
 getOnboarding: async function(req, res) {
     res.render('applicant_pages/onboarding', { errors: {} });
 },
