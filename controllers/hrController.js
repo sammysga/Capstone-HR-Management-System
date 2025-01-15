@@ -2154,11 +2154,6 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
-    
-    
-    
-    
-    
 
     getOffboardingRequest: function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {

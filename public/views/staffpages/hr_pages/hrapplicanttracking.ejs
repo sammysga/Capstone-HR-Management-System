@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome for icons -->
+    <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+    <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
     <style>
         /* Adjust layout to avoid sidebar overlap */
         .main-content {
@@ -246,11 +248,14 @@
                 </tbody>
             </table>
         </div>
-        <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
+        <button class="set-interview-button" onclick="openCalendlyPopup()">Set Interview Availabilities on Calendly</button>
 
     </div>
 
     <script>
+        function openCalendlyPopup() {
+            window.location.href = "https://calendly.com/event_types/user/me";
+        }
         // Redirect to job position page when a row is clicked
         function redirectToJobPage(jobId) {
             window.location.href = `/hr/applicant-tracker-jobposition?jobId=${jobId}`;
