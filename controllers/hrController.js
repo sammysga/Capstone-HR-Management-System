@@ -1680,27 +1680,54 @@ updateJobOffer: async function(req, res) {
 
 
     saveEvaluation: async function (req, res) {
-        const { applicantId, totalRating } = req.body;
-    
-        if (!applicantId || !totalRating) {
-            return res.status(400).json({ success: false, message: "Applicant ID and score are required." });
-        }
-    
         try {
-            const { data, error } = await supabase
-                .from('applicantaccounts')
-                .update({ hrInterviewFormScore: totalRating }) // Assuming you have a column `evaluationScore`
-                .eq('applicantId', applicantId);
+            // Destructure required fields from the request body
+            const { applicantId, totalRating } = req.body;
     
-            if (error) {
-                console.error("Error saving evaluation:", error);
-                return res.status(500).json({ success: false, message: "Failed to save the evaluation." });
+            // Validate required inputs
+            if (!applicantId || !totalRating) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Applicant ID and total rating are required.",
+                });
             }
     
-            res.json({ success: true, message: "Evaluation score saved successfully!" });
+            // Convert `applicantId` to an integer (if applicable)
+            const parsedApplicantId = parseInt(applicantId, 10);
+            if (isNaN(parsedApplicantId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Applicant ID format.",
+                });
+            }
+    
+            // Save the evaluation score to the database
+            const { data, error } = await supabase
+                .from("applicantaccounts")
+                .update({ hrInterviewFormScore: totalRating }) // Assuming the column exists
+                .eq("applicantId", parsedApplicantId); // Match on the applicantId column
+    
+            // Check for Supabase errors
+            if (error) {
+                console.error("Error saving evaluation score:", error);
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to save the evaluation score.",
+                });
+            }
+    
+            // Respond with success
+            res.json({
+                success: true,
+                message: "Evaluation score saved successfully!",
+            });
         } catch (err) {
+            // Handle unexpected server errors
             console.error("Server error:", err);
-            res.status(500).json({ success: false, message: "Server error while saving evaluation." });
+            res.status(500).json({
+                success: false,
+                message: "An unexpected error occurred while saving the evaluation.",
+            });
         }
     },
     
@@ -2079,39 +2106,44 @@ updateJobOffer: async function(req, res) {
     getEvaluationForm: async function (req, res) {
         // Check if the user is logged in and has the 'HR' role
         if (req.session.user && req.session.user.userRole === 'HR') {
-            const { applicantId } = req.query;
-    
-            if (!applicantId) {
-                req.flash('errors', { message: 'Applicant ID is required.' });
-                return res.redirect('/hr/applicant-tracker-jobposition'); 
-            }
+            const applicantId = req.params.applicantId; // Get applicantId from URL path
     
             try {
                 console.log('Fetching applicant details for applicantId:', applicantId);
+    
+                // Parse applicantId to ensure it is a valid integer
+                const parsedApplicantId = parseInt(applicantId, 10);
+                if (isNaN(parsedApplicantId)) {
+                    req.flash('errors', { message: 'Invalid Applicant ID format.' });
+                    return res.redirect('/hr/applicant-tracker-jobposition');
+                }
     
                 // Fetch the applicant's details from the database
                 const { data: applicant, error } = await supabase
                     .from('applicantaccounts')
                     .select('*')
-                    .eq('applicantId', applicantId)
+                    .eq('applicantId', parsedApplicantId)
                     .single();
     
+                // Log the response for debugging
                 console.log('Database Response:', { data: applicant, error });
     
+                // Handle database errors or missing applicant data
                 if (error || !applicant) {
-                    console.error("Error fetching applicant details:", error);
+                    console.error("Error fetching applicant details:", error || "Applicant not found.");
                     req.flash('errors', { message: 'Could not retrieve applicant details.' });
                     return res.redirect('/hr/applicant-tracker-jobposition');
                 }
     
-                console.log('Applicant Details:', applicant);  // Log the applicant details for inspection
+                console.log('Applicant Details:', applicant); // Log the applicant details for inspection
     
                 // Render the evaluation form with applicant details
                 res.render('staffpages/hr_pages/hr-eval-form', {
-                    applicantId,
-                    applicant, // Pass the applicant details
+                    applicantId: parsedApplicantId,
+                    applicant, // Pass the applicant details to the template
                 });
             } catch (err) {
+                // Handle unexpected server errors
                 console.error("Error loading evaluation form:", err);
                 req.flash('errors', { message: 'Internal server error.' });
                 return res.redirect('/hr/applicant-tracker-jobposition');
@@ -2122,7 +2154,6 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
-    
     
     
     

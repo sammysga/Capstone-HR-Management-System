@@ -324,7 +324,7 @@
         </header>
 
         <form id="interview-form" method="POST" action="/saveEvaluation">
-            <input type="hidden" id="applicant-id" name="applicantId" value="<%= applicantId %>">
+            <input type="hidden" id="applicant-id" name="applicantId">
         
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
@@ -612,32 +612,46 @@
 
     <script>
 
-document.getElementById("interview-form").addEventListener("submit", async (event) => {
-        event.preventDefault();
+document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const applicantId = urlParams.get("applicantId");
 
-        const applicantId = document.getElementById("applicant-id").value;
-        const totalRating = document.getElementById("total-rating").textContent;
-
-        try {
-            const response = await fetch("/saveEvaluation", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ applicantId, totalRating }),
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                alert(result.message);
-            } else {
-                alert("Failed to save the evaluation score.");
-            }
-        } catch (err) {
-            console.error("Error:", err);
-            alert("An error occurred while saving the evaluation.");
+        if (applicantId) {
+            document.getElementById("applicant-id").value = applicantId;
+        } else {
+            console.error("Applicant ID not found in URL.");
         }
     });
+
+    document.querySelector(".save-submit").addEventListener("click", async function (event) {
+    event.preventDefault();
+
+    const applicantId = document.getElementById("applicant-id").value;
+    const totalRating = document.getElementById("total-rating").textContent;
+
+    try {
+        const response = await fetch("/saveEvaluation", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ applicantId, totalRating }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert("Total assessment rating saved successfully!");
+            window.location.href = "/hr/success-page"; // Redirect to a success page or elsewhere
+        } else {
+            alert("Failed to save the score. Please try again.");
+        }
+    } catch (error) {
+        console.error("Error saving the score:", error);
+        alert("An error occurred while saving the score.");
+    }
+});
+
 
 
         // Toggle active class for sidebar links

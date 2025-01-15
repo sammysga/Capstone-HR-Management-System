@@ -560,11 +560,10 @@
                                     For Review
                                 </button>
                             <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
-                                <button 
-    class="btn-evaluation" 
-    onclick="openEvaluationForm('<%= applicant.applicantId %>')">
-    For Evaluation
-</button>                              
+                                <!-- Using anchor tag for direct redirection -->
+                                <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
+                                    <button class="btn-evaluation">For Evaluation</button>
+                                </a>
                             <% } %>
                         </div>
                     </td>   
@@ -576,6 +575,7 @@
             </tr>
         <% } %>
     </tbody>
+    
     
     
 </table>
@@ -767,16 +767,25 @@
 </div>
 
 <script>
-
-function openEvaluationForm(applicantId) {
-        if (applicantId) {
-            window.location.href = `/hr/evaluation-form?applicantId=${applicantId}`;
-        } else {
-            alert("Applicant ID is missing.");
+     // Function to extract applicantId from URL
+     function getApplicantIdFromURL() {
+            const path = window.location.pathname;
+            const parts = path.split('/'); // Split the URL into parts
+            const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
+            return applicantId;
         }
-    }
 
+       
 
+        // Display the applicantId from the URL (if any) when the page is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            const applicantId = getApplicantIdFromURL(); // Extract applicantId from the URL
+            if (applicantId) {
+                document.getElementById('applicantIdDisplay').textContent = `Applicant ID from URL: ${applicantId}`;
+            } else {
+                document.getElementById('applicantIdDisplay').textContent = 'No Applicant ID found in URL.';
+            }
+        });
 
     
 
