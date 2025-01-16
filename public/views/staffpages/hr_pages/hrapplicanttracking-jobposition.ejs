@@ -559,9 +559,10 @@
             )">
             For Review
         </button>
-    <% } else if (applicant.applicantStatus.startsWith('P2: Awaiting for HR Evaluation')) { %>
-        <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
-            <button class="btn-evaluation">For Evaluation</button>
+        <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
+            <!-- Using anchor tag for direct redirection -->
+            <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
+                <button class="btn-evaluation">For Evaluation</button>
         </a>
     <% } %>
 </div>
