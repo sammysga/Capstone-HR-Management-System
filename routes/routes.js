@@ -5,7 +5,6 @@ const staffLoginController = require('../controllers/staffloginController');
 const hrController = require('../controllers/hrController');
 const employeeController = require('../controllers/employeeController');
 const lineManagerController = require('../controllers/lineManagerController');
-const chatbotController = require('../controllers/chatbotController');
 const fileUpload = require('express-fileupload');  // Make sure you've installed express-fileupload
 const { hr } = require('date-fns/locale');
 // Middleware to parse incoming request bodies
