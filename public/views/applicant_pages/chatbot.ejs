@@ -130,6 +130,8 @@ let currentQuestionIndex = 0;
         }
 
         displayBotResponse(data.response);
+
+        //TODO: Add logic on saving the yes or no on supabase
     } catch (error) {
         console.error("Error sending message:", error);
         addMessage("Bot", "There was an error sending your message. Please try again later.");
@@ -183,8 +185,8 @@ function displayBotResponse(response) {
         messageDiv.innerText = response.text; // Display the question text
         chatMessages.appendChild(messageDiv);
 
-        // Create buttons if they exist
-        if (response.buttons && response.buttons.length) {
+        // Create buttons if they exist and if it's not the final message
+        if (response.buttons && response.buttons.length && response.text !== "Thank you for completing the screening process.") {
             response.buttons.forEach(button => {
                 const btn = document.createElement('button');
                 btn.innerText = button.text;
@@ -193,9 +195,7 @@ function displayBotResponse(response) {
                     addMessage('You', button.text);
                     // Send the answer to the server
                     await sendMessage(button.text);
-                    
-                    // After sending the answer, handle the next question
-                    handleNextQuestion();
+                    // No need to call handleNextQuestion here
                 };
                 btn.classList.add('job-button');
                 chatMessages.appendChild(btn);
@@ -231,21 +231,21 @@ async function handleNextQuestion() {
         // Optionally, you can redirect to another part of the application or provide further instructions.
     }
 }
-    function handleAnswer(answerValue) {
-        console.log('Handling answer:', answerValue);
-        // Send the answer back to the backend
-        fetch('/submit-answer', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ answer: answerValue })
-        }).then(response => response.json()).then(data => {
-            if (data.nextQuestion) {
-                displayQuestion(data.nextQuestion);
-            } else {
-                alert(data.finalMessage);
-            }
-        }).catch(err => console.error('Error submitting answer:', err));
-    }
+    // function handleAnswer(answerValue) {
+    //     console.log('Handling answer:', answerValue);
+    //     // Send the answer back to the backend
+    //     fetch('/submit-answer', {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({ answer: answerValue })
+    //     }).then(response => response.json()).then(data => {
+    //         if (data.nextQuestion) {
+    //             displayQuestion(data.nextQuestion);
+    //         } else {
+    //             alert(data.finalMessage);
+    //         }
+    //     }).catch(err => console.error('Error submitting answer:', err));
+    // }
 
         document.addEventListener("DOMContentLoaded", function() {
             const initialResponse = "<%= initialResponse %>";
