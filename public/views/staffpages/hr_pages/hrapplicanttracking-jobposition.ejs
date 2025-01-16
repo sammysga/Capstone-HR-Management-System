@@ -559,7 +559,7 @@
             )">
             For Review
         </button>
-    <% } else if (applicant.applicantStatus.includes('P2: Awaiting for HR Evaluation')) { %>
+    <% } else if (applicant.applicantStatus === 'P2: Awaiting for HR Evaluation') { %>
         <!-- Ensure the button for evaluation is displayed -->
         <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
             <button class="btn-evaluation">For Evaluation</button>
