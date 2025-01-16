@@ -324,7 +324,7 @@ const hrController = {
             try {
                 const { jobId } = req.query; // Extract jobId from query parameters
     
-                // Fetch applicants by jobId, including hrInterviewFormScore
+                // Fetch applicants by jobId, including scores
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
@@ -336,7 +336,8 @@ const hrController = {
                         departmentId,
                         applicantStatus,
                         applicantId,
-                        hrInterviewFormScore
+                        hrInterviewFormScore,
+                        initialScreeningScore
                     `)
                     .eq('jobId', jobId);
     
@@ -362,21 +363,26 @@ const hrController = {
     
                 if (departmentError) throw departmentError;
     
-                // Merge jobTitle, deptName, userEmail, and hrInterviewFormScore with applicants data
+                // Merge jobTitle, deptName, userEmail, and scores with applicants data
                 const applicantsWithDetails = applicants.map(applicant => {
                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
                     const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
     
+                    let formattedStatus = applicant.applicantStatus;
+    
+                    if (applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED') {
+                        formattedStatus = `${applicant.applicantStatus} - Score: ${applicant.hrInterviewFormScore || 'N/A'}`;
+                    } else if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') {
+                        formattedStatus = `P1: Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore || 'N/A'}`;
+                    }
+    
                     return {
                         ...applicant,
                         jobTitle,
                         deptName,
-                        userEmail, // Add email to the applicant's data
-                        applicantStatus:
-                            applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED'
-                                ? `${applicant.applicantStatus} - Score: ${applicant.hrInterviewFormScore || 'N/A'}`
-                                : applicant.applicantStatus,
+                        userEmail,
+                        applicantStatus: formattedStatus,
                     };
                 });
     
@@ -393,6 +399,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
