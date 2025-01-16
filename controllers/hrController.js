@@ -324,19 +324,20 @@ const hrController = {
             try {
                 const { jobId } = req.query; // Extract jobId from query parameters
     
-                // Fetch applicants by jobId, including phoneNo
+                // Fetch applicants by jobId, including hrInterviewFormScore
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
-                                lastName, 
-        firstName, 
-        phoneNo,
-        userId,
-        jobId,
-        departmentId,
-        applicantStatus,
-        applicantId
-    `)
+                        lastName, 
+                        firstName, 
+                        phoneNo,
+                        userId,
+                        jobId,
+                        departmentId,
+                        applicantStatus,
+                        applicantId,
+                        hrInterviewFormScore
+                    `)
                     .eq('jobId', jobId);
     
                 if (applicantError) throw applicantError;
@@ -361,7 +362,7 @@ const hrController = {
     
                 if (departmentError) throw departmentError;
     
-                // Merge jobTitle, deptName, and userEmail with applicants data
+                // Merge jobTitle, deptName, userEmail, and hrInterviewFormScore with applicants data
                 const applicantsWithDetails = applicants.map(applicant => {
                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
@@ -372,6 +373,10 @@ const hrController = {
                         jobTitle,
                         deptName,
                         userEmail, // Add email to the applicant's data
+                        applicantStatus:
+                            applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED'
+                                ? `${applicant.applicantStatus} - Score: ${applicant.hrInterviewFormScore || 'N/A'}`
+                                : applicant.applicantStatus,
                     };
                 });
     
