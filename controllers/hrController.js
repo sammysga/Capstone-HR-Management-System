@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const { parse } = require('dotenv');
 const flash = require('connect-flash/lib/flash');
 const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
-const chatbotController = require('../controllers/chatbotController');
+const applicantController = require('../controllers/applicantController');
 
 
 const hrController = {
@@ -2080,7 +2080,7 @@ updateJobOffer: async function(req, res) {
             // Fetch screening questions and calculate weighted scores
             const screeningQuestions = req.session.screeningQuestions || [];
             const answers = req.session.answers || [];
-            const { weightedScores, result } = await chatbotController.calculateWeightedScores(
+            const { weightedScores, result } = await applicantController.calculateWeightedScores(
                 answers, 
                 req.session.selectedPosition, 
                 screeningQuestions
