@@ -1694,6 +1694,7 @@ updateJobOffer: async function(req, res) {
     saveEvaluation: async function (req, res) {
         try {
             // Destructure required fields from the request body
+            console.log("Request Body:", req.body);
             const { applicantId, totalRating } = req.body;
     
             // Validate required inputs
@@ -1718,10 +1719,12 @@ updateJobOffer: async function(req, res) {
                 .from("applicantaccounts")
                 .update({ hrInterviewFormScore: totalRating }) // Assuming the column exists
                 .eq("applicantId", parsedApplicantId); // Match on the applicantId column
-    
+
+            console.log("Supabase Response:", { data, error });
+
             // Check for Supabase errors
             if (error) {
-                console.error("Error saving evaluation score:", error);
+                console.error("Error saving evaluation score:", data, error);
                 return res.status(500).json({
                     success: false,
                     message: "Failed to save the evaluation score.",

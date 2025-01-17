@@ -324,7 +324,7 @@
         </header>
 
         <form id="interview-form" method="POST" action="/saveEvaluation">
-            <input type="hidden" id="applicant-id" name="applicantId">
+            <input type="hidden" id="applicant-id" name="applicantId" value="<%= applicantId %>">
         
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
@@ -627,7 +627,8 @@ document.addEventListener("DOMContentLoaded", () => {
     event.preventDefault();
 
     const applicantId = document.getElementById("applicant-id").value;
-    const totalRating = document.getElementById("total-rating").textContent;
+    const totalRating = parseFloat(document.getElementById("total-rating").textContent);
+    console.log("Sending applicantId:", applicantId, "Total Rating(parsed):", totalRating); // for debugging
 
     try {
         const response = await fetch("/saveEvaluation", {
@@ -642,7 +643,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (result.success) {
             alert("Total assessment rating saved successfully!");
-            window.location.href = "/hr/success-page"; // Redirect to a success page or elsewhere
+            window.location.href = "/hr/applicant-tracker"; // Redirect to a success page or elsewhere
         } else {
             alert("Failed to save the score. Please try again.");
         }
