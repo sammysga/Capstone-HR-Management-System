@@ -293,15 +293,20 @@ const hrController = {
                 // Group and count statuses by jobId
                 const statusCountsMap = {};
                 applicantaccounts.forEach(({ jobId, applicantStatus }) => {
-                    // Log each jobId and applicantStatus
-                    console.log(`Job ID: ${jobId}, Status: ${applicantStatus}`);
-    
                     if (!statusCountsMap[jobId]) {
-                        statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0 };
+                        statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 };
                     }
-                    if (['P1', 'P2', 'P3'].includes(applicantStatus)) {
-                        console.log(`Updating count for Job ID: ${jobId}, Status: ${applicantStatus}`);
-                        statusCountsMap[jobId][applicantStatus]++;
+                    
+                    if (applicantStatus.includes('P1')) {
+                        statusCountsMap[jobId].P1++;
+                    } else if (applicantStatus.includes('P2')) {
+                        statusCountsMap[jobId].P2++;
+                    } else if (applicantStatus.includes('P3')) {
+                        statusCountsMap[jobId].P3++;
+                    } else if (applicantStatus.includes('Offered')) {
+                        statusCountsMap[jobId].Offered++;
+                    } else if (applicantStatus.includes('Onboarding')) {
+                        statusCountsMap[jobId].Onboarding++;
                     }
                 });
     
@@ -312,7 +317,7 @@ const hrController = {
                 const jobPositionsWithCounts = jobpositions.map((job) => ({
                     ...job,
                     departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
-                    counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0 },
+                    counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 },
                 }));
     
                 // Render the page
