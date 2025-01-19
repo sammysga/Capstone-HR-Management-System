@@ -283,7 +283,7 @@ const hrController = {
                 // Fetch all applicant statuses
                 const { data: applicantData, error: applicantDataError } = await supabase
                     .from('applicantaccounts')
-                    .select('jobId, applicantstatus');
+                    .select('jobId, applicantStatus'); // Changed applicantstatus to applicantStatus
     
                 if (applicantDataError) throw applicantDataError;
     
@@ -295,12 +295,12 @@ const hrController = {
     
                 // Aggregate applicant counts by jobId and status
                 const statusCountsMap = {};
-                applicantData.forEach(({ jobId, applicantstatus }) => {
+                applicantData.forEach(({ jobId, applicantStatus }) => { // Updated here
                     if (!statusCountsMap[jobId]) {
                         statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0 };
                     }
-                    if (statusCountsMap[jobId][applicantstatus] !== undefined) {
-                        statusCountsMap[jobId][applicantstatus]++;
+                    if (statusCountsMap[jobId][applicantStatus] !== undefined) { // Updated here
+                        statusCountsMap[jobId][applicantStatus]++;
                     }
                 });
     
@@ -326,6 +326,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
 
