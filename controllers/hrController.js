@@ -272,44 +272,52 @@ const hrController = {
                     .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
                     .order('hiringStartDate', { ascending: true });
     
-                if (jobpositionsError) {
-                    console.error('Error fetching job positions:', jobpositionsError);
-                    throw jobpositionsError;
-                }
-                console.log('Fetched job positions:', jobpositions);
+                if (jobpositionsError) throw jobpositionsError;
     
-                // Query department names from the departments table
                 const { data: departments, error: departmentsError } = await supabase
                     .from('departments')
                     .select('deptName, departmentId');
     
-                if (departmentsError) {
-                    console.error('Error fetching departments:', departmentsError);
-                    throw departmentsError;
-                }
-                console.log('Fetched departments:', departments);
+                if (departmentsError) throw departmentsError;
     
-                // Map departments to a dictionary for easier lookup
+                // Map departments for easier lookup
                 const departmentMap = departments.reduce((acc, dept) => {
                     acc[dept.departmentId] = dept.deptName;
                     return acc;
                 }, {});
     
-                // Prepare job positions data with department names
-                const jobPositionsWithDept = jobpositions.map((job) => ({
+                // Query applicant statuses grouped by jobId and applicantstatus
+                const { data: applicantCounts, error: applicantCountsError } = await supabase
+                    .from('applicantaccounts')
+                    .select('jobId, applicantstatus, count:count(*)')
+                    .group('jobId, applicantstatus');
+    
+                if (applicantCountsError) throw applicantCountsError;
+    
+                // Aggregate counts by jobId
+                const statusCountsMap = applicantCounts.reduce((acc, record) => {
+                    const { jobId, applicantstatus, count } = record;
+                    if (!acc[jobId]) {
+                        acc[jobId] = { P1: 0, P2: 0, P3: 0 };
+                    }
+                    acc[jobId][applicantstatus] = count;
+                    return acc;
+                }, {});
+    
+                // Prepare job positions with status counts
+                const jobPositionsWithCounts = jobpositions.map((job) => ({
                     ...job,
                     departmentName: departmentMap[job.departmentId] || 'Unknown',
+                    counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0 },
                 }));
-                console.log('Mapped job positions with departments:', jobPositionsWithDept);
     
-                // Render the page with job positions and departments data
+                // Render the page
                 res.render('staffpages/hr_pages/hrapplicanttracking', {
-                    jobPositions: jobPositionsWithDept,
-                    departments: departments  // Ensure departments are being sent here
+                    jobPositions: jobPositionsWithCounts,
+                    departments: departments,
                 });
-    
             } catch (err) {
-                console.error('Error fetching data from Supabase:', err);
+                console.error('Error:', err);
                 req.flash('errors', { databaseError: 'Error fetching job data.' });
                 res.redirect('/staff/login');
             }
@@ -318,6 +326,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
 
     getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
