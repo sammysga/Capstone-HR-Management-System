@@ -285,7 +285,7 @@ const hrController = {
                     .from('applicantaccounts')
                     .select('jobId, applicantStatus, count:count(*)')
                     .in('applicantStatus', ['P1', 'P2', 'P3']) // Filter only P1, P2, P3 statuses
-                    .group('jobId, applicantStatus');
+                    .group('jobId, applicantStatus'); // Group by jobId and applicantStatus
     
                 if (statusCountsError) throw statusCountsError;
     
@@ -320,6 +320,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
