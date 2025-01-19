@@ -263,7 +263,7 @@ const hrController = {
     },
     
 
-    getApplicantTrackerAllJobPositions: async function(req, res) {
+    getApplicantTrackerAllJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 // Fetch job positions and departments
@@ -280,41 +280,35 @@ const hrController = {
     
                 if (departmentsError) throw departmentsError;
     
-                // Fetch all applicant statuses
-                const { data: applicantData, error: applicantDataError } = await supabase
+                // Fetch counts of applicants grouped by jobId and applicantStatus
+                const { data: statusCounts, error: statusCountsError } = await supabase
                     .from('applicantaccounts')
-                    .select('jobId, applicantStatus'); // Changed applicantstatus to applicantStatus
+                    .select('jobId, applicantStatus, count:count(*)')
+                    .in('applicantStatus', ['P1', 'P2', 'P3']) // Filter only P1, P2, P3 statuses
+                    .group('jobId, applicantStatus');
     
-                if (applicantDataError) throw applicantDataError;
+                if (statusCountsError) throw statusCountsError;
     
-                // Map departments for easier lookup
-                const departmentMap = departments.reduce((acc, dept) => {
-                    acc[dept.departmentId] = dept.deptName;
-                    return acc;
-                }, {});
-    
-                // Aggregate applicant counts by jobId and status
+                // Create a map to store counts for easier lookup
                 const statusCountsMap = {};
-                applicantData.forEach(({ jobId, applicantStatus }) => { // Updated here
+                statusCounts.forEach(({ jobId, applicantStatus, count }) => {
                     if (!statusCountsMap[jobId]) {
                         statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0 };
                     }
-                    if (statusCountsMap[jobId][applicantStatus] !== undefined) { // Updated here
-                        statusCountsMap[jobId][applicantStatus]++;
-                    }
+                    statusCountsMap[jobId][applicantStatus] = count;
                 });
     
-                // Prepare job positions with counts
+                // Map job positions with counts
                 const jobPositionsWithCounts = jobpositions.map((job) => ({
                     ...job,
-                    departmentName: departmentMap[job.departmentId] || 'Unknown',
+                    departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
                     counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0 },
                 }));
     
                 // Render the page
                 res.render('staffpages/hr_pages/hrapplicanttracking', {
                     jobPositions: jobPositionsWithCounts,
-                    departments: departments,
+                    departments,
                 });
             } catch (err) {
                 console.error('Error:', err);
@@ -326,6 +320,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
