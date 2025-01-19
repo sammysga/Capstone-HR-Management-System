@@ -280,25 +280,25 @@ const hrController = {
     
                 if (departmentsError) throw departmentsError;
     
-                // Fetch counts of applicants grouped by jobId and applicantStatus
-                const { data: statusCounts, error: statusCountsError } = await supabase
+                // Fetch all applicant accounts
+                const { data: applicantaccounts, error: applicantaccountsError } = await supabase
                     .from('applicantaccounts')
-                    .select('jobId, applicantStatus, count:count(*)')
-                    .in('applicantStatus', ['P1', 'P2', 'P3']) // Filter only P1, P2, P3 statuses
-                    .group('jobId, applicantStatus'); // Group by jobId and applicantStatus
+                    .select('jobId, applicantStatus');
     
-                if (statusCountsError) throw statusCountsError;
+                if (applicantaccountsError) throw applicantaccountsError;
     
-                // Create a map to store counts for easier lookup
+                // Group and count statuses by jobId
                 const statusCountsMap = {};
-                statusCounts.forEach(({ jobId, applicantStatus, count }) => {
+                applicantaccounts.forEach(({ jobId, applicantStatus }) => {
                     if (!statusCountsMap[jobId]) {
                         statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0 };
                     }
-                    statusCountsMap[jobId][applicantStatus] = count;
+                    if (['P1', 'P2', 'P3'].includes(applicantStatus)) {
+                        statusCountsMap[jobId][applicantStatus]++;
+                    }
                 });
     
-                // Map job positions with counts
+                // Merge counts into job positions
                 const jobPositionsWithCounts = jobpositions.map((job) => ({
                     ...job,
                     departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
@@ -320,6 +320,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
