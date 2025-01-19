@@ -220,22 +220,22 @@
                         jobPositions.sort((a, b) => a.jobTitle.localeCompare(b.jobTitle));
                         jobPositions.forEach((job, index) => { 
                     %>
-                        <tr class="jobRow" data-department="<%= job.departmentId %>" onclick="redirectToJobPage('<%= job.jobId %>')">
-                            <td class="jobTitleCell">
-                                <div class="job-title-container">
-                                    <div class="status-circle"></div>
-                                    <%= job.jobTitle %>
-                                </div>
-                            </td>
-                            <td><%= job.departmentName %></td>
-                            <td><%= job.hiringStartDate %></td>
-                            <td><%= job.hiringEndDate %></td>
-                            <td class="fixed-width"><%= job.counts.P1 %></td>
-                            <td class="fixed-width"><%= job.counts.P2 %></td>
-                            <td class="fixed-width"><%= job.counts.P3 %></td>
-                            <td class="fixed-width">0</td>
-                            <td class="fixed-width">0</td>
-                        </tr>
+                    <tr class="jobRow" data-department="<%= job.departmentId %>" onclick="redirectToJobPage('<%= job.jobId %>')">
+                        <td class="jobTitleCell">
+                            <div class="job-title-container">
+                                <div class="status-circle"></div>
+                                <%= job.jobTitle %>
+                            </div>
+                        </td>
+                        <td><%= job.departmentName %></td>
+                        <td><%= job.hiringStartDate %></td>
+                        <td><%= job.hiringEndDate %></td>
+                        <td class="fixed-width"><%= job.counts.P1 %></td>
+                        <td class="fixed-width"><%= job.counts.P2 %></td>
+                        <td class="fixed-width"><%= job.counts.P3 %></td>
+                        <td class="fixed-width">0</td>
+                        <td class="fixed-width">0</td>
+                    </tr>
                     <% }); %>
                 </tbody>
             </table>

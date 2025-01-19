@@ -287,16 +287,26 @@ const hrController = {
     
                 if (applicantaccountsError) throw applicantaccountsError;
     
+                // Log raw applicant accounts data
+                console.log('Applicant Accounts:', applicantaccounts);
+    
                 // Group and count statuses by jobId
                 const statusCountsMap = {};
                 applicantaccounts.forEach(({ jobId, applicantStatus }) => {
+                    // Log each jobId and applicantStatus
+                    console.log(`Job ID: ${jobId}, Status: ${applicantStatus}`);
+    
                     if (!statusCountsMap[jobId]) {
                         statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0 };
                     }
                     if (['P1', 'P2', 'P3'].includes(applicantStatus)) {
+                        console.log(`Updating count for Job ID: ${jobId}, Status: ${applicantStatus}`);
                         statusCountsMap[jobId][applicantStatus]++;
                     }
                 });
+    
+                // Log final counts for each jobId
+                console.log('Status Counts Map:', statusCountsMap);
     
                 // Merge counts into job positions
                 const jobPositionsWithCounts = jobpositions.map((job) => ({
@@ -320,6 +330,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
