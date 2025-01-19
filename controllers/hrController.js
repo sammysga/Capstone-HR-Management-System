@@ -266,7 +266,7 @@ const hrController = {
     getApplicantTrackerAllJobPositions: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                // Query job positions and departments from Supabase
+                // Fetch job positions and departments
                 const { data: jobpositions, error: jobpositionsError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
@@ -280,31 +280,31 @@ const hrController = {
     
                 if (departmentsError) throw departmentsError;
     
+                // Fetch all applicant statuses
+                const { data: applicantData, error: applicantDataError } = await supabase
+                    .from('applicantaccounts')
+                    .select('jobId, applicantstatus');
+    
+                if (applicantDataError) throw applicantDataError;
+    
                 // Map departments for easier lookup
                 const departmentMap = departments.reduce((acc, dept) => {
                     acc[dept.departmentId] = dept.deptName;
                     return acc;
                 }, {});
     
-                // Query applicant statuses grouped by jobId and applicantstatus
-                const { data: applicantCounts, error: applicantCountsError } = await supabase
-                    .from('applicantaccounts')
-                    .select('jobId, applicantstatus, count:count(*)')
-                    .group('jobId, applicantstatus');
-    
-                if (applicantCountsError) throw applicantCountsError;
-    
-                // Aggregate counts by jobId
-                const statusCountsMap = applicantCounts.reduce((acc, record) => {
-                    const { jobId, applicantstatus, count } = record;
-                    if (!acc[jobId]) {
-                        acc[jobId] = { P1: 0, P2: 0, P3: 0 };
+                // Aggregate applicant counts by jobId and status
+                const statusCountsMap = {};
+                applicantData.forEach(({ jobId, applicantstatus }) => {
+                    if (!statusCountsMap[jobId]) {
+                        statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0 };
                     }
-                    acc[jobId][applicantstatus] = count;
-                    return acc;
-                }, {});
+                    if (statusCountsMap[jobId][applicantstatus] !== undefined) {
+                        statusCountsMap[jobId][applicantstatus]++;
+                    }
+                });
     
-                // Prepare job positions with status counts
+                // Prepare job positions with counts
                 const jobPositionsWithCounts = jobpositions.map((job) => ({
                     ...job,
                     departmentName: departmentMap[job.departmentId] || 'Unknown',
@@ -326,6 +326,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
 
     getApplicantTrackerByJobPositions: async function (req, res) {
