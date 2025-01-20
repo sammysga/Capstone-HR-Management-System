@@ -186,21 +186,35 @@ function displayBotResponse(response) {
         chatMessages.appendChild(messageDiv);
 
         // Create buttons if they exist and if it's not the final message
-        if (response.buttons && response.buttons.length && response.text !== "Thank you for completing the screening process.") {
-            response.buttons.forEach(button => {
-                const btn = document.createElement('button');
-                btn.innerText = button.text;
-                btn.onclick = async () => {
-                    console.log('Button clicked:', button.text);
-                    addMessage('You', button.text);
-                    // Send the answer to the server
-                    await sendMessage(button.text);
-                    // No need to call handleNextQuestion here
-                };
-                btn.classList.add('job-button');
-                chatMessages.appendChild(btn);
-            });
-        }
+        if (response.buttons && response.buttons.length) {
+    response.buttons.forEach(button => {
+        const btn = document.createElement('button');
+        btn.innerText = button.text;
+        btn.onclick = async () => {
+            console.log('Button clicked:', button.text);
+            addMessage('You', button.text);
+            await sendMessage(button.text); // Send the button text as the user's response
+        };
+        btn.classList.add('job-button');
+        chatMessages.appendChild(btn);
+    });
+}
+
+        // if (response.buttons && response.buttons.length && response.text !== "Thank you for completing the screening process.") {
+        //     response.buttons.forEach(button => {
+        //         const btn = document.createElement('button');
+        //         btn.innerText = button.text;
+        //         btn.onclick = async () => {
+        //             console.log('Button clicked:', button.text);
+        //             addMessage('You', button.text);
+        //             // Send the answer to the server
+        //             await sendMessage(button.text);
+        //             // No need to call handleNextQuestion here
+        //         };
+        //         btn.classList.add('job-button');
+        //         chatMessages.appendChild(btn);
+        //     });
+        // }
     } else {
         // Handle case where response is a string
         const messageDiv = document.createElement('div');

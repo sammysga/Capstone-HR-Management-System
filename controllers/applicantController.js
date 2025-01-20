@@ -360,173 +360,116 @@ const applicantController = {
     
     handleChatbotMessage: async function (req, res) {
         try {
-            console.log('Start processing chatbot message'); // Log the start of the function
+            console.log('Start processing chatbot message'); 
     
-            const userId = req.session.userID; // Corrected line
+            const userId = req.session.userID;
             const userMessage = req.body.message.toLowerCase();
-            const timestamp = new Date().toISOString(); // Current timestamp
+            const timestamp = new Date().toISOString();
             console.log(`User ID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
     
             let botResponse;
-            let applicantStage = req.session.applicantStage || 'initial'; 
+            let applicantStage = req.session.applicantStage || 'initial';
             console.log(`Initial Applicant Stage: ${applicantStage}`);
     
             const positions = await applicantController.getJobPositionsList();
-            console.log('Retrieved Positions:', positions);
-    
             const selectedPosition = positions.find(position => userMessage.includes(position.toLowerCase()));
-           
     
             if (selectedPosition) {
                 req.session.selectedPosition = selectedPosition;
                 console.log('Selected Position:', selectedPosition);
                 const jobDetails = await applicantController.getJobDetails(selectedPosition);
-                console.log('Job Details:', jobDetails);
     
                 if (jobDetails) {
-                    // Process certifications
                     const certifications = jobDetails.jobreqcertifications
-                        ? jobDetails.jobreqcertifications
-                            .map(cert => `${cert.jobReqCertificateType}: ${cert.jobReqCertificateDescrpt}`)
-                            .join(', ')
+                        ? jobDetails.jobreqcertifications.map(cert => `${cert.jobReqCertificateType}: ${cert.jobReqCertificateDescrpt}`).join(', ')
                         : 'None';
-    
-                    // Process degrees
                     const degrees = jobDetails.jobreqdegrees
-                        ? jobDetails.jobreqdegrees
-                            .map(degree => `${degree.jobReqDegreeType}: ${degree.jobReqDegreeDescrpt}`)
-                            .join(', ')
+                        ? jobDetails.jobreqdegrees.map(degree => `${degree.jobReqDegreeType}: ${degree.jobReqDegreeDescrpt}`).join(', ')
                         : 'None';
-    
-                    // Process experiences
                     const experiences = jobDetails.jobreqexperiences
-                        ? jobDetails.jobreqexperiences
-                            .map(exp => `${exp.jobReqExperienceType}: ${exp.jobReqExperienceDescrpt}`)
-                            .join(', ')
+                        ? jobDetails.jobreqexperiences.map(exp => `${exp.jobReqExperienceType}: ${exp.jobReqExperienceDescrpt}`).join(', ')
                         : 'None';
-    
-                    // Process hard skills
                     const hardSkills = jobDetails.jobreqskills
-                        ? jobDetails.jobreqskills
-                            .filter(skill => skill.jobReqSkillType === 'Hard')
-                            .map(skill => skill.jobReqSkillName)
-                            .join(', ')
+                        ? jobDetails.jobreqskills.filter(skill => skill.jobReqSkillType === 'Hard').map(skill => skill.jobReqSkillName).join(', ')
                         : 'None';
-    
-                    // Process soft skills
                     const softSkills = jobDetails.jobreqskills
-                        ? jobDetails.jobreqskills
-                            .filter(skill => skill.jobReqSkillType === 'Soft')
-                            .map(skill => skill.jobReqSkillName)
-                            .join(', ')
+                        ? jobDetails.jobreqskills.filter(skill => skill.jobReqSkillType === 'Soft').map(skill => skill.jobReqSkillName).join(', ')
                         : 'None';
     
-                    // Construct the bot response
-                    // Construct the bot response
-botResponse = {
-    text: `You have chosen *${selectedPosition}*. Here are the details of the chosen job:\n` +
-          `Job Title: ${jobDetails.jobTitle}\n` +
-          `Job Description: ${jobDetails.jobDescrpt}\n` +
-          `The Job Requires the following certifications:\n${certifications}\n` +
-          `The Job Requires the following degrees:\n${degrees}\n` +
-          `The Job Requires the following experiences:\n${experiences}\n` +
-          `The Job Requires the following hard skills:\n${hardSkills}\n` +
-          `The Job Requires the following soft skills:\n${softSkills}\n` +
-          `Would you like to proceed with your application?`,
-    buttons: [
-        { text: 'Yes', value: 1 },
-        { text: 'No', value: 0 }
-    ]
-};
-    
-                    req.session.applicantStage = 'job_selection'; // Update applicantStage here
+                    botResponse = {
+                        text: `You have chosen *${selectedPosition}*. Here are the details:\n` +
+                              `Job Title: ${jobDetails.jobTitle}\n` +
+                              `Job Description: ${jobDetails.jobDescrpt}\n` +
+                              `Certifications: ${certifications}\n` +
+                              `Degrees: ${degrees}\n` +
+                              `Experiences: ${experiences}\n` +
+                              `Hard Skills: ${hardSkills}\n` +
+                              `Soft Skills: ${softSkills}\n` +
+                              `Would you like to proceed with your application?`,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
+                    };
+                    req.session.applicantStage = 'job_selection';
                 } else {
                     botResponse = "Sorry, I couldn't find the job details.";
                 }
-            } 
-          // Handling "Yes" response for application
-          else if (userMessage.includes('yes')) {
-            const jobId = (await applicantController.getJobDetails(req.session.selectedPosition )).jobId;
-        
-            // Fetch questions only if they haven't been fetched yet
-            if (!req.session.screeningQuestions) {
-                const questions = await applicantController.getInitialScreeningQuestions(jobId);
-                console.log('Initial Screening Questions:', questions);
-        
-                req.session.screeningQuestions = questions;
-                req.session.currentQuestionIndex = 0;
-                req.session.answers = []; // Initialize answers array
-            }
-        
-            // Check if there are questions to ask
-            if (req.session.screeningQuestions.length) {
-                const currentQuestion = req.session.screeningQuestions[req.session.currentQuestionIndex];
-                botResponse = {
-                    text: `Great! Let's start. \n${currentQuestion.text}`, // Use the current question text
-                    buttons: currentQuestion.buttons // Use the current question buttons
-                };
-                req.session.applicantStage = 'screening_questions'; // Update applicantStage here
-            } else {
-                botResponse = "No screening questions available for this position.";
-            }
-        }
-        
-        // Handling screening questions
-        else if (req.session.screeningQuestions) {
-            const questions = req.session.screeningQuestions;
-            const currentIndex = req.session.currentQuestionIndex;
-        
-            console.log('Current Question Index:', currentIndex);
-        
-            // Store the answer based on "Yes" or "No"
-            const answer = userMessage.includes('yes') ? 1 : (userMessage.includes('no') ? 0 : null);
-        
-            if (answer !== null) {
-                req.session.answers.push(answer); // Store the answer as 1 (Yes) or 0 (No)
-        
-                // Increment the current question index
-                req.session.currentQuestionIndex++; // Move to the next question
-        
-                // If there are more questions, ask the next one with buttons
-                if (req.session.currentQuestionIndex < questions.length) {
-                    const nextQuestion = questions[req.session.currentQuestionIndex]; // Get the next question
+            } else if (req.session.screeningQuestions) {
+                const questions = req.session.screeningQuestions;
+                const currentIndex = req.session.currentQuestionIndex || 0;
+    
+                if (currentIndex < questions.length) {
                     botResponse = {
-                        text: nextQuestion.text, // Question text
-                        buttons: nextQuestion.buttons // Yes/No buttons
+                        text: questions[currentIndex].text,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
                     };
+                    req.session.currentQuestionIndex = currentIndex + 1;
                 } else {
-                    // Process the answers and calculate the result
-                    const { weightedScores, result } = await applicantController.calculateWeightedScores(req.session.answers, req.session.selectedPosition, questions);
-                    console.log("Scores:", weightedScores);
-        
-                    if (result === 'pass') {
-                        botResponse = {
-                            text: "Congratulations! You passed the screening.",
-                            buttons: [] // No buttons needed here, final response
-                        };
-                    } else {
-                        botResponse = {
-                            text: "Sorry, you didn’t meet the required score.",
-                            buttons: [] // No buttons needed here, final response
-                        };
-                    }
-        
-                    req.session.applicantStage = 'application_complete'; // Update applicantStage here
+                    botResponse = "Thank you for completing the screening questions.";
+                    req.session.screeningQuestions = null;
+                    req.session.currentQuestionIndex = null;
+                }
+            } else if (req.session.applicantStage === 'job_selection' && userMessage.includes('yes')) {
+                const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
+    
+                if (!req.session.screeningQuestions) {
+                    const questions = await applicantController.getInitialScreeningQuestions(jobId);
+                    req.session.screeningQuestions = questions;
+                    req.session.currentQuestionIndex = 0;
+                }
+    
+                const questions = req.session.screeningQuestions;
+                const currentIndex = req.session.currentQuestionIndex;
+    
+                if (currentIndex < questions.length) {
+                    botResponse = {
+                        text: questions[currentIndex].text,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
+                    };
+                    req.session.currentQuestionIndex = currentIndex + 1;
+                    req.session.applicantStage = 'screening_questions';
+                } else {
+                    botResponse = "No screening questions available for this position.";
                 }
             } else {
-                botResponse = {
-                    text: 'Please answer with "Yes" or "No".',
-                    buttons: [] // No buttons needed here, prompt for proper answer
-                };
+                botResponse = { text: 'Please answer with "Yes" or "No".', buttons: [] };
             }
-        }
-        
-        res.status(200).json({ response: botResponse });
+    
+            res.status(200).json({ response: botResponse });
         } catch (error) {
             console.error('Error processing chatbot message:', error);
             res.status(500).json({ response: 'Sorry, I am having trouble understanding that.' });
         }
     },
+    
+    
     
 // Function to fetch and structure all screening questions
 getInitialScreeningQuestions: async function (jobId) {
