@@ -480,6 +480,7 @@ getInitialScreeningQuestions: async function (jobId) {
             supabase.from('jobreqexperiences').select('*').eq('jobId', jobId),
             supabase.from('jobreqcertifications').select('*').eq('jobId', jobId),
             supabase.from('jobreqskills').select('*').eq('jobId', jobId),
+            supabase.from('jobpositions').select('*').eq('jobId', jobId), // Fetch job position details
         ]);
 
         // Check for errors
@@ -494,8 +495,22 @@ getInitialScreeningQuestions: async function (jobId) {
             degreesQuery,
             experiencesQuery,
             certificationsQuery,
-            skillsQuery
+            skillsQuery,
+            jobPositionQuery
         ] = jobDetailsQueries.map(result => result.data);
+
+        // Check if job position data is available
+        if (!jobPositionQuery || jobPositionQuery.length === 0) {
+            console.error("Job position details not found.");
+            return [];
+        }
+
+        const jobPosition = jobPositionQuery[0]; // Assuming one job position per job ID
+
+        // Separate and sort skills by type
+        const hardSkills = skillsQuery.filter(skill => skill.jobReqSkillType === 'Hard');
+        const softSkills = skillsQuery.filter(skill => skill.jobReqSkillType === 'Soft');
+        const sortedSkillsQuery = [...hardSkills, ...softSkills];
 
         // Map questions
         const questions = [
@@ -523,7 +538,7 @@ getInitialScreeningQuestions: async function (jobId) {
                     { text: 'No', value: 0 }
                 ]
             })),
-            ...skillsQuery.map(s => ({
+            ...sortedSkillsQuery.map(s => ({
                 type: s.jobReqSkillType.toLowerCase(),
                 text: `To assess your ${s.jobReqSkillType.toLowerCase()} skills, do you have ${s.jobReqSkillName}?`,
                 buttons: [
@@ -531,6 +546,24 @@ getInitialScreeningQuestions: async function (jobId) {
                     { text: 'No', value: 0 }
                 ]
             })),
+            // Add work setup question
+            {
+                type: 'work_setup',
+                text: `With regards to the work setup, are you comfortable working as ${jobPosition.jobType}?`,
+                buttons: [
+                    { text: 'Yes', value: 1 },
+                    { text: 'No', value: 0 }
+                ]
+            },
+            // Add availability question
+            {
+                type: 'availability',
+                text: `With regards to your availability, are you amenable to working ${jobPosition.jobTimeCommitment} from ${jobPosition.jobTimeCommitment_startTime} AM to ${jobPosition.jobTimeCommitment_endTime} PM?`,
+                buttons: [
+                    { text: 'Yes', value: 1 },
+                    { text: 'No', value: 0 }
+                ]
+            },
         ];
 
         return questions;
