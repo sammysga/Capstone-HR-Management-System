@@ -360,7 +360,7 @@ const applicantController = {
     
     handleChatbotMessage: async function (req, res) {
         try {
-            console.log('Start processing chatbot message'); 
+            console.log('Start processing chatbot message');
     
             const userId = req.session.userID;
             const userMessage = req.body.message.toLowerCase();
@@ -375,8 +375,8 @@ const applicantController = {
             const selectedPosition = positions.find(position => userMessage.includes(position.toLowerCase()));
     
             if (selectedPosition) {
+                // Handle job selection logic
                 req.session.selectedPosition = selectedPosition;
-                console.log('Selected Position:', selectedPosition);
                 const jobDetails = await applicantController.getJobDetails(selectedPosition);
     
                 if (jobDetails) {
@@ -398,14 +398,14 @@ const applicantController = {
     
                     botResponse = {
                         text: `You have chosen *${selectedPosition}*. Here are the details:\n` +
-                              `Job Title: ${jobDetails.jobTitle}\n` +
-                              `Job Description: ${jobDetails.jobDescrpt}\n` +
-                              `Certifications: ${certifications}\n` +
-                              `Degrees: ${degrees}\n` +
-                              `Experiences: ${experiences}\n` +
-                              `Hard Skills: ${hardSkills}\n` +
-                              `Soft Skills: ${softSkills}\n` +
-                              `Would you like to proceed with your application?`,
+                            `Job Title: ${jobDetails.jobTitle}\n` +
+                            `Job Description: ${jobDetails.jobDescrpt}\n` +
+                            `Certifications: ${certifications}\n` +
+                            `Degrees: ${degrees}\n` +
+                            `Experiences: ${experiences}\n` +
+                            `Hard Skills: ${hardSkills}\n` +
+                            `Soft Skills: ${softSkills}\n` +
+                            `Would you like to proceed with your application?`,
                         buttons: [
                             { text: 'Yes', value: 1 },
                             { text: 'No', value: 0 }
@@ -415,25 +415,8 @@ const applicantController = {
                 } else {
                     botResponse = "Sorry, I couldn't find the job details.";
                 }
-            } else if (req.session.screeningQuestions) {
-                const questions = req.session.screeningQuestions;
-                const currentIndex = req.session.currentQuestionIndex || 0;
-    
-                if (currentIndex < questions.length) {
-                    botResponse = {
-                        text: questions[currentIndex].text,
-                        buttons: [
-                            { text: 'Yes', value: 1 },
-                            { text: 'No', value: 0 }
-                        ]
-                    };
-                    req.session.currentQuestionIndex = currentIndex + 1;
-                } else {
-                    botResponse = "Thank you for completing the screening questions.";
-                    req.session.screeningQuestions = null;
-                    req.session.currentQuestionIndex = null;
-                }
             } else if (req.session.applicantStage === 'job_selection' && userMessage.includes('yes')) {
+                // Handle screening questions initialization
                 const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
     
                 if (!req.session.screeningQuestions) {
@@ -458,8 +441,39 @@ const applicantController = {
                 } else {
                     botResponse = "No screening questions available for this position.";
                 }
+            } else if (req.session.screeningQuestions) {
+                // Handle screening questions flow
+                const questions = req.session.screeningQuestions;
+                const currentIndex = req.session.currentQuestionIndex || 0;
+    
+                if (currentIndex < questions.length) {
+                    botResponse = {
+                        text: questions[currentIndex].text,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
+                    };
+                    req.session.currentQuestionIndex = currentIndex + 1;
+                } else {
+                    botResponse = {
+                        text: "After answering the questions, kindly upload your resume for us to review.\nPlease press the button below to upload your resume.",
+                        buttons: [
+                            { text: 'Upload a File', type: 'file_upload', action: 'uploadResume' } // Custom button type for file upload
+                        ]
+                    };
+                    
+                    req.session.screeningQuestions = null;
+                    req.session.currentQuestionIndex = null;
+                }
+            } else if (userMessage === 'upload') {
+                // Handle file upload response
+                botResponse = {
+                    text: "Please upload your resume using the button provided earlier.",
+                    buttons: []
+                };
             } else {
-                botResponse = { text: 'Please answer with "Yes" or "No".', buttons: [] };
+                botResponse = { text: "I'm sorry, I didn't understand that. How can I help you?", buttons: [] };
             }
     
             res.status(200).json({ response: botResponse });
@@ -468,7 +482,6 @@ const applicantController = {
             res.status(500).json({ response: 'Sorry, I am having trouble understanding that.' });
         }
     },
-    
     
     
 // Function to fetch and structure all screening questions
@@ -716,6 +729,7 @@ getJobDetails: async function(jobTitle) {
 
     
 // File upload handler in your controller
+// File upload handler in your controller
 handleFileUpload: async function(req, res) {
     try {
         // Check if file is uploaded
@@ -724,12 +738,29 @@ handleFileUpload: async function(req, res) {
         }
 
         const file = req.files.file;
-        
+
+        // Define allowed MIME types
+        const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+
+        // Validate file type
+        if (!allowedTypes.includes(file.mimetype)) {
+            return res.status(400).send('Invalid file type. Please upload a PDF, PNG, or JPEG.');
+        }
+
+        // Define max file size (5 MB)
+        const maxSize = 5 * 1024 * 1024; // 5 MB
+        if (file.size > maxSize) {
+            return res.status(400).send('File size exceeds the 5 MB limit.');
+        }
+
+        // Generate a unique file name
+        const uniqueName = `${Date.now()}-${file.name}`;
+
         // Check if user is authenticated, if not, use 'anonymous'
-        const userId = req.body.userId || 'anonymous'; // If userId is not provided, mark as 'anonymous'
+        const userId = req.body.userId || 'anonymous';
 
         // Define the local file path
-        const filePath = path.join(__dirname, '../uploads', file.name); // Use the uploads folder path
+        const filePath = path.join(__dirname, '../uploads', uniqueName);
 
         // Ensure the uploads folder exists
         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
@@ -742,7 +773,7 @@ handleFileUpload: async function(req, res) {
         // Upload file to Supabase Storage
         const { data, error } = await supabase.storage
             .from('uploads') // Your Supabase bucket name
-            .upload(file.name, file.data, {
+            .upload(uniqueName, file.data, {
                 cacheControl: '3600',  // Cache control header
                 upsert: false,         // Prevent overwriting files with the same name
             });
@@ -760,7 +791,7 @@ handleFileUpload: async function(req, res) {
             .from('user_files') // Your table for storing file metadata
             .insert([{
                 userId: userId,     // User who uploaded the file (anonymous or authenticated)
-                file_name: file.name, // File name
+                file_name: uniqueName, // File name
                 file_url: fileUrl,    // Public URL of the uploaded file
                 uploaded_at: new Date(),
                 file_size: file.size  // File size in bytes
@@ -779,6 +810,70 @@ handleFileUpload: async function(req, res) {
         res.status(500).send('Error uploading file.');
     }
 },
+
+// handleFileUpload: async function(req, res) {
+//     try {
+//         // Check if file is uploaded
+//         if (!req.files || !req.files.file) {
+//             return res.status(400).send('No file uploaded.');
+//         }
+
+//         const file = req.files.file;
+        
+//         // Check if user is authenticated, if not, use 'anonymous'
+//         const userId = req.body.userId || 'anonymous'; // If userId is not provided, mark as 'anonymous'
+
+//         // Define the local file path
+//         const filePath = path.join(__dirname, '../uploads', file.name); // Use the uploads folder path
+
+//         // Ensure the uploads folder exists
+//         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
+//             fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
+//         }
+
+//         // Save the file to the server locally
+//         await file.mv(filePath);
+
+//         // Upload file to Supabase Storage
+//         const { data, error } = await supabase.storage
+//             .from('uploads') // Your Supabase bucket name
+//             .upload(file.name, file.data, {
+//                 cacheControl: '3600',  // Cache control header
+//                 upsert: false,         // Prevent overwriting files with the same name
+//             });
+
+//         if (error) {
+//             console.error('Error uploading file to Supabase:', error);
+//             return res.status(500).send('Error uploading file to Supabase.');
+//         }
+
+//         // Generate the public URL for the uploaded file
+//         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`; // Replace with your actual Supabase URL
+        
+//         // Insert file metadata into the database (optional)
+//         const { data: insertedFile, error: insertError } = await supabase
+//             .from('user_files') // Your table for storing file metadata
+//             .insert([{
+//                 userId: userId,     // User who uploaded the file (anonymous or authenticated)
+//                 file_name: file.name, // File name
+//                 file_url: fileUrl,    // Public URL of the uploaded file
+//                 uploaded_at: new Date(),
+//                 file_size: file.size  // File size in bytes
+//             }]);
+
+//         if (insertError) {
+//             console.error('Error inserting file metadata:', insertError);
+//             return res.status(500).send('Error inserting file metadata into database.');
+//         }
+
+//         // Return a success message with the file URL
+//         res.send(fileUrl); // Send back the file URL instead of just a success message
+
+//     } catch (error) {
+//         console.error('Error uploading file:', error);
+//         res.status(500).send('Error uploading file.');
+//     }
+// },
 
 
 getOnboarding: async function(req, res) {
