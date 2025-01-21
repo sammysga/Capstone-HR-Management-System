@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
+    <title>Chatbot</title><link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    rel="stylesheet"
+  />
+  
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -87,6 +91,15 @@
             <input type="text" id="user-input" placeholder="Type your message..." />
             <button id="send-button">Send</button>
         </div>
+
+        <!-- Hidden file upload input -->
+        <input
+            type="file"
+            id="fileUpload"
+            accept=".pdf, .png, .jpeg, .jpg"
+            style="display:none"
+            onchange="uploadFile(event)"
+        />
     </div>
 
     <script>
@@ -148,6 +161,35 @@ let currentQuestionIndex = 0;
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
+    async function uploadFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/handleFileUpload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) throw new Error("Failed to upload file");
+
+        const fileUrl = await response.text(); // Assuming the server responds with the file URL
+        addMessage('Bot', "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.");
+
+        console.log('File uploaded successfully. File URL:', fileUrl);
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        addMessage('Bot', 'Error uploading file. Please try again.');
+    }
+}
+
+        function showFileUpload() {
+            document.getElementById('fileUpload').click();
+        }
+
     function displayInitialMessage(initialResponse) {
     console.log('Displaying initial message:', initialResponse);
     const chatMessages = document.getElementById('chat-messages');
@@ -185,20 +227,77 @@ function displayBotResponse(response) {
         messageDiv.innerText = response.text; // Display the question text
         chatMessages.appendChild(messageDiv);
 
-        // Create buttons if they exist and if it's not the final message
+        // Create buttons if they exist
         if (response.buttons && response.buttons.length) {
-    response.buttons.forEach(button => {
-        const btn = document.createElement('button');
-        btn.innerText = button.text;
-        btn.onclick = async () => {
-            console.log('Button clicked:', button.text);
-            addMessage('You', button.text);
-            await sendMessage(button.text); // Send the button text as the user's response
-        };
-        btn.classList.add('job-button');
-        chatMessages.appendChild(btn);
-    });
+            response.buttons.forEach(button => {
+                if (button.type === 'file_upload') {
+                    // Handle file upload button
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.style.display = 'none'; // Hide the file input
+
+                    const uploadButton = document.createElement('button');
+                    uploadButton.innerText = button.text;
+                    uploadButton.onclick = () => {
+                        fileInput.click(); // Trigger file input click
+                    };
+                    uploadButton.classList.add('job-button');
+
+                    fileInput.onchange = async (event) => {
+                        const file = event.target.files[0];
+                        if (!file) {
+                            addMessage('Bot', 'No file selected. Please try again.');
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        try {
+                            const response = await fetch('/handleFileUpload', {
+                                method: 'POST',
+                                body: formData,
+                            });
+
+                            if (response.ok) {
+                                const fileUrl = await response.text();
+                                addMessage('Bot', `File uploaded successfully! File URL: ${fileUrl}`);
+                            } else {
+                                addMessage('Bot', 'Error uploading file. Please try again.');
+                            }
+                        } catch (error) {
+                            console.error('File upload error:', error);
+                            addMessage('Bot', 'An unexpected error occurred while uploading the file.');
+                        }
+                    };
+
+                    chatMessages.appendChild(uploadButton);
+                    chatMessages.appendChild(fileInput); // Append file input to DOM for functionality
+                } else {
+                    // Handle regular buttons
+                    const btn = document.createElement('button');
+                    btn.innerText = button.text;
+                    btn.onclick = async () => {
+                        console.log('Button clicked:', button.text);
+                        addMessage('You', button.text);
+                        await sendMessage(button.text); // Send the button text as the user's response
+                    };
+                    btn.classList.add('job-button');
+                    chatMessages.appendChild(btn);
+                }
+            });
+        }
+    } else {
+        // Handle case where response is a string
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'bot-message');
+        messageDiv.innerText = response; // Fallback for string responses
+        chatMessages.appendChild(messageDiv);
+    }
+
+    chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
 }
+
 
         // if (response.buttons && response.buttons.length && response.text !== "Thank you for completing the screening process.") {
         //     response.buttons.forEach(button => {
@@ -215,16 +314,16 @@ function displayBotResponse(response) {
         //         chatMessages.appendChild(btn);
         //     });
         // }
-    } else {
-        // Handle case where response is a string
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', 'bot-message');
-        messageDiv.innerText = response; // Fallback for string responses
-        chatMessages.appendChild(messageDiv);
-    }
+//     } else {
+//         // Handle case where response is a string
+//         const messageDiv = document.createElement('div');
+//         messageDiv.classList.add('message', 'bot-message');
+//         messageDiv.innerText = response; // Fallback for string responses
+//         chatMessages.appendChild(messageDiv);
+//     }
 
-    chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
-}
+//     chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+// }
 async function handleNextQuestion() {
     // Check if there are more questions
     if (currentQuestionIndex + 1 < screeningQuestions.length) {
