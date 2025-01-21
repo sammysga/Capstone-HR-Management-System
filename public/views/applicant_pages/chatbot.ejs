@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title><link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-    rel="stylesheet"
-  />
-  
+    <title>Chatbot</title>
+    <link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+  rel="stylesheet"
+/>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -100,6 +100,16 @@
             style="display:none"
             onchange="uploadFile(event)"
         />
+
+
+        <button
+        id="upload-button"
+        onclick="document.getElementById('fileUpload').click()"
+      >
+        <i class="fa-duotone fa-solid fa-file"></i> Upload a File
+      </button>
+      
+
     </div>
 
     <script>
@@ -185,6 +195,7 @@ let currentQuestionIndex = 0;
         addMessage('Bot', 'Error uploading file. Please try again.');
     }
 }
+
 
         function showFileUpload() {
             document.getElementById('fileUpload').click();
