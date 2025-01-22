@@ -395,8 +395,8 @@ const hrController = {
     
                     let formattedStatus = applicant.applicantStatus;
     
-                    if (applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED') {
-                        formattedStatus = `${applicant.applicantStatus} - Score: ${applicant.hrInterviewFormScore || 'N/A'}`;
+                    if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') {
+                        formattedStatus = `P1: Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore || 'N/A'}`;
                     } else if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') {
                         formattedStatus = `P1: Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore || 'N/A'}`;
                     }
