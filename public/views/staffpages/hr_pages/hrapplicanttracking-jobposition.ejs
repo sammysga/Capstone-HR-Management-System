@@ -560,16 +560,6 @@
             )">
             For Review
         </button>
-
-        <!-- Initial Screening Score -->
-        <div>
-            <strong>Initial Screening Score:</strong> <%= applicant.initialScreeningScore || 'N/A' %>
-        </div>
-
-        <!-- HR Interview Score -->
-        <div>
-            <strong>HR Interview Score:</strong> <%= applicant.hrInterviewFormScore || 'N/A' %>
-        </div>
     <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
         <!-- Using anchor tag for direct redirection -->
         <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
