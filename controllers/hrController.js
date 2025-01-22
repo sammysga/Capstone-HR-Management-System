@@ -392,23 +392,27 @@ const hrController = {
                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
                     const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
-    
+                
                     let formattedStatus = applicant.applicantStatus;
-    
-                    if (applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED') {
+                
+                    // Check if hrInterviewFormScore is below 50 and set status to "P1 - FAILED"
+                    if (applicant.hrInterviewFormScore < 50) {
+                        formattedStatus = 'P1 - FAILED';
+                    } else if (applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED') {
                         formattedStatus = `${applicant.applicantStatus} - Score: ${applicant.hrInterviewFormScore || 'N/A'}`;
                     } else if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') {
                         formattedStatus = `P1: Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore || 'N/A'}`;
                     }
-    
+                
                     return {
                         ...applicant,
                         jobTitle,
                         deptName,
                         userEmail,
-                        applicantStatus: formattedStatus,  // Use the formatted status here
+                        applicantStatus: formattedStatus,  // Return the formatted status
                     };
                 });
+                
     
                 // Render the EJS template with applicants data
                 res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', {
