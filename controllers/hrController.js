@@ -395,25 +395,25 @@ const hrController = {
                 
                     let formattedStatus = applicant.applicantStatus;
                 
-                    // Check the Initial Screening Score
+                    // Check Initial Screening Score
                     if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
                         // If Initial Screening Score is missing, set status to "P1 - Initial Screening"
                         formattedStatus = 'P1 - Initial Screening';
                     } else if (applicant.initialScreeningScore < 50) {
-                        // If the Initial Screening Score is below 50, mark as FAILED
+                        // If Initial Screening Score is below 50, mark as FAILED
                         formattedStatus = 'P1 - FAILED';
                     } else {
-                        // If the Initial Screening Score is >= 50, move to Awaiting HR Action
-                        formattedStatus = 'P1 - Awaiting for HR Action';
+                        // If the Initial Screening Score is >= 50, move to Awaiting HR Action and append the score
+                        formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
                     }
                 
-                    // Check the HR Interview Score if relevant
+                    // Check HR Interview Score if relevant
                     if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
                         if (applicant.hrInterviewFormScore < 50) {
                             // If the HR Interview Score is below 50, mark as FAILED
                             formattedStatus = 'P1 - FAILED';
-                        } else if (formattedStatus === 'P1 - Awaiting for HR Action') {
-                            // Append HR score to the status for clarity
+                        } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
+                            // Append HR Interview Score to the status for clarity
                             formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
                         }
                     }
@@ -427,10 +427,7 @@ const hrController = {
                         applicantStatus: formattedStatus,  // Return the updated status
                     };
                 });
-                
-                
-                
-    
+            
                 // Render the EJS template with applicants data
                 res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', {
                     applicants: applicantsWithDetails,
