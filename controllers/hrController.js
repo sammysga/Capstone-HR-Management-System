@@ -395,11 +395,13 @@ const hrController = {
                 
                     let formattedStatus = applicant.applicantStatus;
                 
-                    // Check if hrInterviewFormScore is below 50 and set status to "P1 - FAILED"
-                    if (applicant.hrInterviewFormScore < 50) {
-                        formattedStatus = 'P1 - FAILED';
-                    } else if (applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED') {
-                        formattedStatus = `${applicant.applicantStatus} - Score: ${applicant.hrInterviewFormScore || 'N/A'}`;
+                    // Check if the HR interview form score is provided and less than 50
+                    if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
+                        if (applicant.hrInterviewFormScore < 50) {
+                            formattedStatus = 'P1 - FAILED';
+                        } else if (applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED') {
+                            formattedStatus = `${applicant.applicantStatus} - Score: ${applicant.hrInterviewFormScore || 'N/A'}`;
+                        }
                     } else if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') {
                         formattedStatus = `P1: Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore || 'N/A'}`;
                     }
