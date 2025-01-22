@@ -406,7 +406,7 @@ const hrController = {
                         jobTitle,
                         deptName,
                         userEmail,
-                        applicantStatus: formattedStatus,
+                        applicantStatus: applicant.applicantStatus, // pass original status
                     };
                 });
     
