@@ -548,7 +548,7 @@
 <!-- Display Applicant Status -->
 <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
 <div style="margin-top: 10px;">
-    <% if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') { %>
+    <% if (applicant.applicantStatus.startsWith('P1: Awaiting for HR Action')) { %>
         <button 
             class="btn-review" 
             onclick="openReviewModal(
@@ -559,12 +559,16 @@
             )">
             For Review
         </button>
+        <div>
+            <strong>Initial Screening Score:</strong> <%= applicant.initialScreeningScore || 'N/A' %>
+        </div>
     <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
         <!-- Using anchor tag for direct redirection -->
         <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
             <button class="btn-evaluation">For Evaluation</button>
         </a>
     <% } %>
+    
 </div>
 
                     </td>   
