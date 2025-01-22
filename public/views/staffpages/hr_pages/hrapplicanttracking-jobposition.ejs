@@ -548,8 +548,7 @@
 <!-- Display Applicant Status -->
 <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
 <div style="margin-top: 10px;">
-    <% if (applicant.applicantStatus.startsWith('P1: Awaiting for HR Action')) { %>
-        <!-- For Review Button -->
+    <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for HR Action')) { %>
         <button 
             class="btn-review" 
             onclick="openReviewModal(
