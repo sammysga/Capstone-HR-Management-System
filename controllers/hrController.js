@@ -395,32 +395,39 @@ const hrController = {
                 
                     let formattedStatus = applicant.applicantStatus;
                 
-                    // Determine status based on initial screening score
-                    if (applicant.initialScreeningScore !== null && applicant.initialScreeningScore !== undefined) {
-                        if (applicant.initialScreeningScore < 50) {
-                            formattedStatus = 'P1 - FAILED'; // Failed if initial screening score is below 50
-                        } else {
-                            formattedStatus = 'P1 - Awaiting for HR Action'; // Move to HR action if score is 50 or above
-                        }
+                    // Check the Initial Screening Score
+                    if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
+                        // If Initial Screening Score is missing, set status to "P1 - Initial Screening"
+                        formattedStatus = 'P1 - Initial Screening';
+                    } else if (applicant.initialScreeningScore < 50) {
+                        // If the Initial Screening Score is below 50, mark as FAILED
+                        formattedStatus = 'P1 - FAILED';
+                    } else {
+                        // If the Initial Screening Score is >= 50, move to Awaiting HR Action
+                        formattedStatus = 'P1 - Awaiting for HR Action';
                     }
                 
-                    // Check if the HR interview form score is provided and less than 50
+                    // Check the HR Interview Score if relevant
                     if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
                         if (applicant.hrInterviewFormScore < 50) {
-                            formattedStatus = 'P1 - FAILED'; // Failed if HR interview score is below 50
-                        } else if (applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED') {
-                            formattedStatus = `${applicant.applicantStatus} - Score: ${applicant.hrInterviewFormScore || 'N/A'}`;
+                            // If the HR Interview Score is below 50, mark as FAILED
+                            formattedStatus = 'P1 - FAILED';
+                        } else if (formattedStatus === 'P1 - Awaiting for HR Action') {
+                            // Append HR score to the status for clarity
+                            formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
                         }
                     }
                 
+                    // Return the updated applicant object with the formatted status
                     return {
                         ...applicant,
                         jobTitle,
                         deptName,
                         userEmail,
-                        applicantStatus: formattedStatus, // Return the updated status
+                        applicantStatus: formattedStatus,  // Return the updated status
                     };
                 });
+                
                 
                 
     
