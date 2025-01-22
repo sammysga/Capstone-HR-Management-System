@@ -395,15 +395,22 @@ const hrController = {
                 
                     let formattedStatus = applicant.applicantStatus;
                 
+                    // Determine status based on initial screening score
+                    if (applicant.initialScreeningScore !== null && applicant.initialScreeningScore !== undefined) {
+                        if (applicant.initialScreeningScore < 50) {
+                            formattedStatus = 'P1 - FAILED'; // Failed if initial screening score is below 50
+                        } else {
+                            formattedStatus = 'P1 - Awaiting for HR Action'; // Move to HR action if score is 50 or above
+                        }
+                    }
+                
                     // Check if the HR interview form score is provided and less than 50
                     if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
                         if (applicant.hrInterviewFormScore < 50) {
-                            formattedStatus = 'P1 - FAILED';
+                            formattedStatus = 'P1 - FAILED'; // Failed if HR interview score is below 50
                         } else if (applicant.applicantStatus === 'P1 - Awaiting for Line Manager Action; HR PASSED') {
                             formattedStatus = `${applicant.applicantStatus} - Score: ${applicant.hrInterviewFormScore || 'N/A'}`;
                         }
-                    } else if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') {
-                        formattedStatus = `P1: Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore || 'N/A'}`;
                     }
                 
                     return {
@@ -411,9 +418,10 @@ const hrController = {
                         jobTitle,
                         deptName,
                         userEmail,
-                        applicantStatus: formattedStatus,  // Return the formatted status
+                        applicantStatus: formattedStatus, // Return the updated status
                     };
                 });
+                
                 
     
                 // Render the EJS template with applicants data
