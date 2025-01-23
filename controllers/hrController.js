@@ -407,24 +407,26 @@ const hrController = {
                         formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
                     }
                 
-                    // Check HR Interview Score if relevant
+                    // Check HR Interview Score
                     if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
                         if (applicant.hrInterviewFormScore < 50) {
                             // If the HR Interview Score is below 50, mark as FAILED
                             formattedStatus = 'P1 - FAILED';
+                        } else if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
+                            // If HR Interview Score > 45 and isChosen1 is true, set to Line Manager Action
+                            formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
                         } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
                             // Append HR Interview Score to the status for clarity
                             formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
                         }
-                
-                        // New condition: If HR Interview Score > 45 and isChosen1 is true
-                        if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
-                            formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
-                        }
                     }
                 
                     // Log for debugging
-                    console.log("Applicant:", applicant.firstName, applicant.lastName, "=> Status:", formattedStatus);
+                    console.log("Applicant:", applicant.firstName, applicant.lastName, 
+                                "Initial Screening Score:", applicant.initialScreeningScore, 
+                                "HR Interview Score:", applicant.hrInterviewFormScore, 
+                                "isChosen1:", applicant.isChosen1, 
+                                "=> Status:", formattedStatus);
                 
                     // Return the updated applicant object with the formatted status
                     return {
@@ -435,6 +437,7 @@ const hrController = {
                         applicantStatus: formattedStatus, // Return the updated status
                     };
                 });
+                
                 
             
                 // Render the EJS template with applicants data
