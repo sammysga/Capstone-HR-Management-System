@@ -416,7 +416,15 @@ const hrController = {
                             // Append HR Interview Score to the status for clarity
                             formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
                         }
+                
+                        // New condition: If HR Interview Score > 45 and isChosen1 is true
+                        if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
+                            formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
+                        }
                     }
+                
+                    // Log for debugging
+                    console.log("Applicant:", applicant.firstName, applicant.lastName, "=> Status:", formattedStatus);
                 
                     // Return the updated applicant object with the formatted status
                     return {
@@ -424,9 +432,10 @@ const hrController = {
                         jobTitle,
                         deptName,
                         userEmail,
-                        applicantStatus: formattedStatus,  // Return the updated status
+                        applicantStatus: formattedStatus, // Return the updated status
                     };
                 });
+                
             
                 // Render the EJS template with applicants data
                 res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', {
