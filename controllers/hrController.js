@@ -337,12 +337,18 @@ const hrController = {
     },
     
     
+    
+    
+    
+    
+    
+
     getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 const { jobId } = req.query; // Extract jobId from query parameters
     
-                // Fetch applicants by jobId, including scores and isChosen1
+                // Fetch applicants by jobId, including scores
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
                     .select(`
@@ -356,7 +362,7 @@ const hrController = {
                         applicantId,
                         hrInterviewFormScore,
                         initialScreeningScore,
-                        isChosen1 // Ensure this field is included
+                        isChosen1
                     `)
                     .eq('jobId', jobId);
     
@@ -387,9 +393,9 @@ const hrController = {
                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
                     const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
-    
+                
                     let formattedStatus = applicant.applicantStatus;
-    
+                
                     // Check Initial Screening Score
                     if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
                         // If Initial Screening Score is missing, set status to "P1 - Initial Screening"
@@ -401,7 +407,7 @@ const hrController = {
                         // If the Initial Screening Score is >= 50, move to Awaiting HR Action and append the score
                         formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
                     }
-    
+                
                     // Check HR Interview Score
                     if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
                         if (applicant.hrInterviewFormScore < 50) {
@@ -415,14 +421,14 @@ const hrController = {
                             formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
                         }
                     }
-    
+                
                     // Log for debugging
                     console.log("Applicant:", applicant.firstName, applicant.lastName, 
                                 "Initial Screening Score:", applicant.initialScreeningScore, 
                                 "HR Interview Score:", applicant.hrInterviewFormScore, 
                                 "isChosen1:", applicant.isChosen1, 
                                 "=> Status:", formattedStatus);
-    
+                
                     // Return the updated applicant object with the formatted status
                     return {
                         ...applicant,
@@ -432,7 +438,9 @@ const hrController = {
                         applicantStatus: formattedStatus, // Return the updated status
                     };
                 });
-    
+                
+                
+            
                 // Render the EJS template with applicants data
                 res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', {
                     applicants: applicantsWithDetails,
@@ -446,6 +454,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
     
