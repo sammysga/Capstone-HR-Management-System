@@ -1,5 +1,9 @@
 const supabase = require('../public/config/supabaseClient');
 const bcrypt = require('bcrypt');
+const path = require('path');  // Add this line
+const fs = require('fs');  // Add this line
+
+
 
 const applicantController = {
     getPublicHome: function(req, res) {
@@ -422,7 +426,18 @@ const applicantController = {
                     req.session.screeningQuestions = questions;
                     req.session.currentQuestionIndex = 0;
                     req.session.screeningScores = [];
+                    // Initialize counters at the start of the process
+                    req.session.screeningCounters = {
+                        degree: 0,
+                        experience: 0,
+                        certification: 0,
+                        hardSkill: 0,
+                        softSkill: 0,
+                        work_setup: 0,
+                        availability: 0
+                    };
                 }
+    
     
                 const questions = req.session.screeningQuestions;
                 const currentIndex = req.session.currentQuestionIndex;
@@ -446,6 +461,15 @@ const applicantController = {
     
                 if (currentIndex < questions.length) {
                     req.session.screeningScores.push({ question: questions[currentIndex].text, answer: userMessage });
+                    // Update the screening counters based on the answer
+                    if (userMessage === 'yes') {
+                        const currentQuestion = questions[currentIndex];
+                        const type = currentQuestion.type;
+                        if (req.session.screeningCounters[type] !== undefined) {
+                            req.session.screeningCounters[type]++;
+                        }
+                    }
+    
                     botResponse = {
                         text: questions[currentIndex].text,
                         buttons: [
@@ -463,7 +487,8 @@ const applicantController = {
                         ]
                     };
                     req.session.screeningQuestions = null;
-                    req.session.currentQuestionIndex = null;
+                req.session.currentQuestionIndex = null;
+                req.session.screeningCounters = null; // Reset counters
                 }
             } else if (req.body.file) {
                 await this.handleFileUpload(req, res);
@@ -651,117 +676,96 @@ getJobDetails: async function(jobTitle) {
     }
 },
 
-    saveScreeningScores: async function (userId, jobId, responses, resumeUrl) {
-        try {
+saveScreeningScores: async function (userId, jobId, responses, screeningCounters, resumeUrl) {
+    try {
+        console.log('Saving screening scores for user:', userId);
+        
+        // Log input parameters for debugging
+        console.log(`Job ID: ${jobId}`);
+        console.log('Responses:', responses);
+        console.log('Screening Counters:', screeningCounters);
+        console.log('Resume URL:', resumeUrl);
 
-            console.log('Saving screening scores for user:', userId);
+        let degreeScore = 0;
+        let experienceScore = 0;
+        let certificationScore = 0;
+        let hardSkillsScore = 0;
+        let softSkillsScore = 0;
+        let workSetupScore = false;
+        let availabilityScore = false;
 
-            let degreeScore = 0;
-            let experienceScore = 0;
-            let certificationScore = 0;
-            let hardSkillsScore = 0;
-            let softSkillsScore = 0;
-            let workSetupScore = false;
-            let availabilityScore = false;
-    
-            // Process responses
-            responses.forEach(response => {
-                console.log(`Processing response: ${response.type} -> ${response.value}`);
-                if (response.type === 'degree' && response.value === 1) {
-                    degreeScore++;
-                } else if (response.type === 'experience' && response.value === 1) {
-                    experienceScore++;
-                } else if (response.type === 'certification' && response.value === 1) {
-                    certificationScore++;
-                } else if (response.type === 'hard skills' && response.value === 1) {
-                    hardSkillsScore++;
-                } else if (response.type === 'soft skills' && response.value === 1) {
-                    softSkillsScore++;
-                } else if (response.type === 'work_setup') {
-                    workSetupScore = response.value === 1;
-                } else if (response.type === 'availability') {
-                    availabilityScore = response.value === 1;
-                }
-            });
-    
-            // Calculate total score
-            const totalScore = degreeScore + experienceScore + certificationScore + hardSkillsScore + softSkillsScore;
-            const totalScoreCalculatedAt = new Date().toISOString();
-            console.log(`Calculated total score: ${totalScore}`);
+        // Process responses
+        responses.forEach(response => {
+            console.log(`Processing response: ${response.type} -> ${response.value}`);
 
-    
-            // Insert into database
-            const { error } = await supabase
-                .from('applicant_initialscreening_assessment')
-                .insert([
-                    {
-                        userId: userId,
-                        jobId: jobId,
-                        degreeScore: degreeScore,
-                        experienceScore: experienceScore,
-                        certificationScore: certificationScore,
-                        hardSkillsScore: hardSkillsScore,
-                        softSkillsScore: softSkillsScore,
-                        workSetupScore: workSetupScore,
-                        availabilityScore: availabilityScore,
-                        totalScore: totalScore,
-                        totalScoreCalculatedAt: totalScoreCalculatedAt,
-                        resume_url: resumeUrl
-                    }
-                ]);
-    
-            if (error) {
-                console.error('Error saving screening scores:', error);
-                throw new Error('Error saving screening scores.');
+            switch (response.type) {
+                case 'degree':
+                    if (response.value === 1) degreeScore++;
+                    break;
+                case 'experience':
+                    if (response.value === 1) experienceScore++;
+                    break;
+                case 'certification':
+                    if (response.value === 1) certificationScore++;
+                    break;
+                case 'hard skills':
+                    if (response.value === 1) hardSkillsScore++;
+                    break;
+                case 'soft skills':
+                    if (response.value === 1) softSkillsScore++;
+                    break;
+                case 'work_setup':
+                    workSetupScore = response.value === 1; // Boolean
+                    break;
+                case 'availability':
+                    availabilityScore = response.value === 1; // Boolean
+                    break;
+                default:
+                    console.warn(`Unknown response type: ${response.type}`);
             }
-    
-            console.log('Screening scores saved successfully for user:', userId);
-            return "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.";
-        } catch (error) {
-            console.error('Error in saveScreeningScores:', error);
-            return 'An error occurred while saving your screening scores.';
+        });
+
+        // Calculate total score
+        const totalScore = degreeScore + experienceScore + certificationScore + hardSkillsScore + softSkillsScore;
+        const totalScoreCalculatedAt = new Date().toISOString();
+        
+        console.log(`Calculated total score: ${totalScore}`);
+        console.log(`Total score calculated at: ${totalScoreCalculatedAt}`);
+
+        // Insert into database
+        const { data, error } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .insert([
+                {
+                    userId: userId,
+                    jobId: jobId,
+                    degreeScore: degreeScore,
+                    experienceScore: experienceScore,
+                    certificationScore: certificationScore,
+                    hardSkillsScore: hardSkillsScore,
+                    softSkillsScore: softSkillsScore,
+                    workSetupScore: workSetupScore,
+                    availabilityScore: availabilityScore,
+                    totalScore: totalScore,
+                    totalScoreCalculatedAt: totalScoreCalculatedAt,
+                    resume_url: resumeUrl // Pass the resume URL here
+                }
+            ]);
+
+        if (error) {
+            console.error('Error saving screening scores:', error);
+            throw new Error('Error saving screening scores.');
         }
-    },    
-    
 
-    // Function to calculate weighted scores for screening answers
-    // calculateWeightedScores: async function(answers, selectedPosition, screeningQuestions) {
-    //     if (!screeningQuestions || screeningQuestions.length === 0) {
-    //         return { weightedScores: [], result: 'fail' };
-    //     }
-    
-    //     const jobDetails = await chatbotController.getJobDetails(selectedPosition);
-    
-    //     const weightings = {
-    //         degreeRelevance: 1.5,  // Degree-related questions are weighted higher
-    //         softSkills: 1,         // Soft skills-related questions have a standard weight
-    //     };
-    
-    //     let totalScore = 0;
-    //     const weightedScores = answers.map((answer, index) => {
-    //         const question = screeningQuestions[index];
-    //         let weight = 1; // Default weight
-    
-    //         if (question.toLowerCase().includes('degree required')) {
-    //             weight = weightings.degreeRelevance;  
-    //         } else if (question.toLowerCase().includes('experience') || question.toLowerCase().includes('skill')) {
-    //             weight = weightings.softSkills;  
-    //         }
-    
-    //         const weightedScore = answer * weight;
-    //         totalScore += weightedScore;
-    
-    //         return weightedScore;
-    //     });
-    
-    //     // Calculate average score and determine pass/fail
-    //     const averageScore = totalScore / screeningQuestions.length;
-    //     const result = averageScore >= 3 ? 'pass' : 'fail';  // Assume a threshold of 3 to pass
-    
-    //     return { weightedScores, result };
-    // },    
+        console.log('Screening scores saved successfully for user:', userId);
+        return "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.";
+    } catch (error) {
+        console.error('Error in saveScreeningScores:', error);
+        return 'An error occurred while saving your screening scores.';
+    }
+},
 
-    
+// File upload handler in your controller
 // File upload handler in your controller
 handleFileUpload: async function(req, res) {
     try {
@@ -770,10 +774,11 @@ handleFileUpload: async function(req, res) {
         }
 
         const file = req.files.file;
-        const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+        // Update the allowedTypes array to accept more file types
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
         if (!allowedTypes.includes(file.mimetype)) {
-            return res.status(400).send('Invalid file type. Please upload a PDF, PNG, or JPEG.');
+            return res.status(400).send('Invalid file type. Please upload a valid file.');
         }
 
         const maxSize = 5 * 1024 * 1024; // 5 MB
@@ -782,7 +787,7 @@ handleFileUpload: async function(req, res) {
         }
 
         const uniqueName = `${Date.now()}-${file.name}`;
-        const filePath = path.join(__dirname, '../uploads', uniqueName);
+        const filePath = path.join(__dirname, '../uploads', uniqueName);  // Path to save the file
 
         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
             fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
@@ -828,7 +833,7 @@ handleFileUpload: async function(req, res) {
         const { error: updateError } = await supabase
             .from('applicant_initialscreening_assessment')
             .update({ resume_url: fileUrl })
-            .eq('userId', req.body.userId);
+            .eq('userId', req.body.userId); // Adjust this based on how you identify the applicant
 
         if (updateError) {
             console.error('Error updating resume URL:', updateError);
@@ -842,70 +847,6 @@ handleFileUpload: async function(req, res) {
         res.status(500).send('Error uploading file.');
     }
 },
-
-// handleFileUpload: async function(req, res) {
-//     try {
-//         // Check if file is uploaded
-//         if (!req.files || !req.files.file) {
-//             return res.status(400).send('No file uploaded.');
-//         }
-
-//         const file = req.files.file;
-        
-//         // Check if user is authenticated, if not, use 'anonymous'
-//         const userId = req.body.userId || 'anonymous'; // If userId is not provided, mark as 'anonymous'
-
-//         // Define the local file path
-//         const filePath = path.join(__dirname, '../uploads', file.name); // Use the uploads folder path
-
-//         // Ensure the uploads folder exists
-//         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
-//             fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
-//         }
-
-//         // Save the file to the server locally
-//         await file.mv(filePath);
-
-//         // Upload file to Supabase Storage
-//         const { data, error } = await supabase.storage
-//             .from('uploads') // Your Supabase bucket name
-//             .upload(file.name, file.data, {
-//                 cacheControl: '3600',  // Cache control header
-//                 upsert: false,         // Prevent overwriting files with the same name
-//             });
-
-//         if (error) {
-//             console.error('Error uploading file to Supabase:', error);
-//             return res.status(500).send('Error uploading file to Supabase.');
-//         }
-
-//         // Generate the public URL for the uploaded file
-//         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`; // Replace with your actual Supabase URL
-        
-//         // Insert file metadata into the database (optional)
-//         const { data: insertedFile, error: insertError } = await supabase
-//             .from('user_files') // Your table for storing file metadata
-//             .insert([{
-//                 userId: userId,     // User who uploaded the file (anonymous or authenticated)
-//                 file_name: file.name, // File name
-//                 file_url: fileUrl,    // Public URL of the uploaded file
-//                 uploaded_at: new Date(),
-//                 file_size: file.size  // File size in bytes
-//             }]);
-
-//         if (insertError) {
-//             console.error('Error inserting file metadata:', insertError);
-//             return res.status(500).send('Error inserting file metadata into database.');
-//         }
-
-//         // Return a success message with the file URL
-//         res.send(fileUrl); // Send back the file URL instead of just a success message
-
-//     } catch (error) {
-//         console.error('Error uploading file:', error);
-//         res.status(500).send('Error uploading file.');
-//     }
-// },
 
 
 getOnboarding: async function(req, res) {
