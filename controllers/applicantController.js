@@ -421,12 +421,19 @@ const applicantController = {
             } else if (req.session.applicantStage === 'job_selection' && userMessage.includes('yes')) {
                 const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
     
+
                 if (!req.session.screeningQuestions) {
                     const questions = await applicantController.getInitialScreeningQuestions(jobId);
+                    
+                    if (!questions || questions.length === 0) { // Ensure questions are retrieved
+                        botResponse = "No screening questions available for this position.";
+                        res.status(200).json({ response: botResponse });
+                        return;
+                    }
+            
                     req.session.screeningQuestions = questions;
                     req.session.currentQuestionIndex = 0;
                     req.session.screeningScores = [];
-                    // Initialize counters at the start of the process
                     req.session.screeningCounters = {
                         degree: 0,
                         experience: 0,
@@ -437,11 +444,10 @@ const applicantController = {
                         availability: 0
                     };
                 }
-    
-    
+            
                 const questions = req.session.screeningQuestions;
-                const currentIndex = req.session.currentQuestionIndex;
-    
+                const currentIndex = req.session.currentQuestionIndex || 0;
+            
                 if (currentIndex < questions.length) {
                     botResponse = {
                         text: questions[currentIndex].text,
@@ -455,40 +461,53 @@ const applicantController = {
                 } else {
                     botResponse = "No screening questions available for this position.";
                 }
-            } else if (req.session.screeningQuestions) {
+            } else if (req.session.applicantStage === 'screening_questions') {
                 const questions = req.session.screeningQuestions;
-                const currentIndex = req.session.currentQuestionIndex || 0;
+                const currentIndex = req.session.currentQuestionIndex;
     
                 if (currentIndex < questions.length) {
-                    req.session.screeningScores.push({ question: questions[currentIndex].text, answer: userMessage });
+                    const currentQuestion = questions[currentIndex];
+                    const answerValue = userMessage === 'yes' ? 1 : 0;
+    
+                    // Store user answer properly
+                    req.session.screeningScores.push({ question: currentQuestion.text, answer: answerValue });
+    
                     // Update the screening counters based on the answer
+                    const type = currentQuestion.type;
                     if (userMessage === 'yes') {
-                        const currentQuestion = questions[currentIndex];
-                        const type = currentQuestion.type;
-                        if (req.session.screeningCounters[type] !== undefined) {
-                            req.session.screeningCounters[type]++;
-                        }
+                        req.session.screeningCounters[type]++;
                     }
     
-                    botResponse = {
-                        text: questions[currentIndex].text,
-                        buttons: [
-                            { text: 'Yes', value: 1 },
-                            { text: 'No', value: 0 }
-                        ]
-                    };
-                    req.session.currentQuestionIndex = currentIndex + 1;
+                    // Move to the next question
+                    req.session.currentQuestionIndex++;
+    
+                    // Check if there are more questions
+                    if (req.session.currentQuestionIndex < questions.length) {
+                        const nextQuestion = questions[req.session.currentQuestionIndex];
+                        botResponse = {
+                            text: nextQuestion.text,
+                            buttons: [
+                                { text: 'Yes', value: 1 },
+                                { text: 'No', value: 0 }
+                            ]
+                        };
+                    } else {
+                        // All questions answered, save scores
+                        await applicantController.saveScreeningScores(userId, req.session.selectedPosition, req.session.screeningScores, req.session.screeningCounters);
+                        botResponse = {
+                            text: "Thank you for answering the questions. Please upload your resume.",
+                            buttons: [
+                                { text: 'Upload a File', type: 'file_upload', action: 'uploadResume' }
+                            ]
+                        };
+    
+                        // Reset session after processing all questions
+                        req.session.screeningQuestions = null;
+                        req.session.currentQuestionIndex = null;
+                        req.session.screeningCounters = null;
+                    }
                 } else {
-                    await applicantController.saveScreeningScores(userId, req.session.selectedPosition, req.session.screeningScores);
-                    botResponse = {
-                        text: "After answering the questions, kindly upload your resume for us to review.\nPlease press the button below to upload your resume.",
-                        buttons: [
-                            { text: 'Upload a File', type: 'file_upload', action: 'uploadResume' }
-                        ]
-                    };
-                    req.session.screeningQuestions = null;
-                req.session.currentQuestionIndex = null;
-                req.session.screeningCounters = null; // Reset counters
+                    botResponse = "No screening questions available for this position.";
                 }
             } else if (req.body.file) {
                 await this.handleFileUpload(req, res);
@@ -607,19 +626,6 @@ getInitialScreeningQuestions: async function (jobId) {
     }
 },
 
-
-// Function to process screening questions and include Yes/No buttons
-handleScreeningQuestions: function (questionObj) {
-    const questionText = questionObj.question;
-    const buttons = questionObj.options.map(option => {
-        return { type: 'postback', title: option, payload: option }; // For interactive buttons
-    });
-
-    return {
-        text: `${questionText}\nPlease select one of the following options:`,
-        buttons: buttons
-    };
-},
 
     // Function to fetch job positions and format them for chatbot response
     getJobPositionsList: async function() {
@@ -765,7 +771,6 @@ saveScreeningScores: async function (userId, jobId, responses, screeningCounters
     }
 },
 
-// File upload handler in your controller
 // File upload handler in your controller
 handleFileUpload: async function(req, res) {
     try {
