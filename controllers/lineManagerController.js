@@ -622,102 +622,76 @@ const lineManagerController = {
     getApplicantTracker: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
-                // Log the session to see the full session object and debug any issues
-                console.log('Full session object:', req.session);
-                console.log('User Department ID:', req.session.user ? req.session.user.departmentId : 'Not available');
-    
-                // If departmentId is missing from the session, fetch it from the staffaccounts table
-                if (!req.session.user.departmentId) {
-                    console.log('Department ID missing, fetching from staffaccounts...');
-    
-                    // Fetch departmentId from staffaccounts table using the logged-in user's email or userId
-                    const { data: staffAccount, error: staffAccountError } = await supabase
-                        .from('staffaccounts')
-                        .select('departmentId')
-                        .eq('userId', req.session.user.userId)  // Assuming userId is stored in session
-                        .single();  // Use .single() to get one result
-    
-                    if (staffAccountError) {
-                        console.error('Error fetching department from staffaccounts:', staffAccountError);
-                        throw staffAccountError;
-                    }
-    
-                    // If a departmentId is found, set it in the session
-                    if (staffAccount && staffAccount.departmentId) {
-                        req.session.user.departmentId = staffAccount.departmentId;
-                        console.log('Fetched and set departmentId:', req.session.user.departmentId);
-                    } else {
-                        console.error('User does not have a departmentId assigned.');
-                        req.flash('errors', { departmentError: 'User is not assigned to a department.' });
-                        return res.redirect('/staff/login');
-                    }
-                }
-    
-                // Ensure departmentId is available now
-                const userDepartmentId = req.session.user.departmentId;
-    
-                // Query job positions and departments from Supabase
+                // Fetch job positions and departments
                 const { data: jobpositions, error: jobpositionsError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
                     .order('hiringStartDate', { ascending: true });
     
-                if (jobpositionsError) {
-                    console.error('Error fetching job positions:', jobpositionsError);
-                    throw jobpositionsError;
-                }
+                if (jobpositionsError) throw jobpositionsError;
     
-                console.log('Fetched job positions:', jobpositions);
-    
-                // Query department names from the departments table
                 const { data: departments, error: departmentsError } = await supabase
                     .from('departments')
                     .select('deptName, departmentId');
     
-                if (departmentsError) {
-                    console.error('Error fetching departments:', departmentsError);
-                    throw departmentsError;
-                }
+                if (departmentsError) throw departmentsError;
     
-                console.log('Fetched departments:', departments);
+                // Fetch all applicant accounts
+                const { data: applicantaccounts, error: applicantaccountsError } = await supabase
+                    .from('applicantaccounts')
+                    .select('jobId, applicantStatus');
     
-                // Map departments to a dictionary for easier lookup
-                const departmentMap = departments.reduce((acc, dept) => {
-                    acc[dept.departmentId] = dept.deptName;
-                    return acc;
-                }, {});
+                if (applicantaccountsError) throw applicantaccountsError;
     
-                // Filter job positions to show only those in the user's department
-                const filteredJobPositions = jobpositions.filter(job => job.departmentId === userDepartmentId);
+                // Log raw applicant accounts data
+                console.log('Applicant Accounts:', applicantaccounts);
     
-                // Get the department name for the logged-in user
-                const userDepartmentName = departmentMap[userDepartmentId] || 'Unknown';
-    
-                // Prepare job positions data with department names
-                const jobPositionsWithDept = filteredJobPositions.map((job) => ({
-                    ...job,
-                    departmentName: departmentMap[job.departmentId] || 'Unknown',
-                }));
-    
-                console.log('Mapped and filtered job positions with departments:', jobPositionsWithDept);
-    
-                // Render the page with job positions, departments, and the user's department name
-                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking', {
-                    jobPositions: jobPositionsWithDept,
-                    departments: departments,  // Ensure departments are being sent here
-                    userDepartmentName: userDepartmentName  // Pass the user's department name
+                // Group and count statuses by jobId
+                const statusCountsMap = {};
+                applicantaccounts.forEach(({ jobId, applicantStatus }) => {
+                    if (!statusCountsMap[jobId]) {
+                        statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 };
+                    }
+                    
+                    if (applicantStatus.includes('P1')) {
+                        statusCountsMap[jobId].P1++;
+                    } else if (applicantStatus.includes('P2')) {
+                        statusCountsMap[jobId].P2++;
+                    } else if (applicantStatus.includes('P3')) {
+                        statusCountsMap[jobId].P3++;
+                    } else if (applicantStatus.includes('Offered')) {
+                        statusCountsMap[jobId].Offered++;
+                    } else if (applicantStatus.includes('Onboarding')) {
+                        statusCountsMap[jobId].Onboarding++;
+                    }
                 });
     
+                // Log final counts for each jobId
+                console.log('Status Counts Map:', statusCountsMap);
+    
+                // Merge counts into job positions
+                const jobPositionsWithCounts = jobpositions.map((job) => ({
+                    ...job,
+                    departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
+                    counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 },
+                }));
+    
+                // Render the page
+                res.render('staffpages/hr_pages/linemanagerapplicanttracking', {
+                    jobPositions: jobPositionsWithCounts,
+                    departments,
+                });
             } catch (err) {
-                console.error('Error fetching data from Supabase:', err);
+                console.error('Error:', err);
                 req.flash('errors', { databaseError: 'Error fetching job data.' });
                 res.redirect('/staff/login');
             }
         } else {
-            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
         }
     },
+
     getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
