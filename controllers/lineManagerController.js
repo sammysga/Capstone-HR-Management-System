@@ -718,12 +718,115 @@ const lineManagerController = {
             res.redirect('/staff/login');
         }
     },
-    getApplicantTrackerByJobPositions: function (req, res) {
+    getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition');
+            try {
+                const { jobId } = req.query; // Extract jobId from query parameters
+    
+                // Fetch applicants by jobId, including scores
+                const { data: applicants, error: applicantError } = await supabase
+                    .from('applicantaccounts')
+                    .select(`
+                        lastName, 
+                        firstName, 
+                        phoneNo,
+                        userId,
+                        jobId,
+                        departmentId,
+                        applicantStatus,
+                        applicantId,
+                        hrInterviewFormScore,
+                        initialScreeningScore,
+                        isChosen1
+                    `)
+                    .eq('jobId', jobId);
+    
+                if (applicantError) throw applicantError;
+    
+                // Fetch user emails using userId
+                const { data: userAccounts, error: userError } = await supabase
+                    .from('useraccounts')
+                    .select('userId, userEmail');
+    
+                if (userError) throw userError;
+    
+                // Fetch job titles and department names
+                const { data: jobTitles, error: jobError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle');
+    
+                if (jobError) throw jobError;
+    
+                const { data: departments, error: departmentError } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName');
+    
+                if (departmentError) throw departmentError;
+    
+                // Merge jobTitle, deptName, userEmail, and scores with applicants data
+                const applicantsWithDetails = applicants.map(applicant => {
+                    const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+                    const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+                    const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+                
+                    let formattedStatus = applicant.applicantStatus;
+                
+                    // Check Initial Screening Score
+                    if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
+                        // If Initial Screening Score is missing, set status to "P1 - Initial Screening"
+                        formattedStatus = 'P1 - Initial Screening';
+                    } else if (applicant.initialScreeningScore < 50) {
+                        // If Initial Screening Score is below 50, mark as FAILED
+                        formattedStatus = 'P1 - FAILED';
+                    } else {
+                        // If the Initial Screening Score is >= 50, move to Awaiting HR Action and append the score
+                        formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
+                    }
+                
+                    // Check HR Interview Score
+                    if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
+                        if (applicant.hrInterviewFormScore < 50) {
+                            // If the HR Interview Score is below 50, mark as FAILED
+                            formattedStatus = 'P1 - FAILED';
+                        } else if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
+                            // If HR Interview Score > 45 and isChosen1 is true, set to Line Manager Action
+                            formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
+                        } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
+                            // Append HR Interview Score to the status for clarity
+                            formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
+                        }
+                    }
+                
+                    // Log for debugging
+                    console.log("Applicant:", applicant.firstName, applicant.lastName, 
+                                "Initial Screening Score:", applicant.initialScreeningScore, 
+                                "HR Interview Score:", applicant.hrInterviewFormScore, 
+                                "isChosen1:", applicant.isChosen1, 
+                                "=> Status:", formattedStatus);
+                
+                    // Return the updated applicant object with the formatted status
+                    return {
+                        ...applicant,
+                        jobTitle,
+                        deptName,
+                        userEmail,
+                        applicantStatus: formattedStatus, // Return the updated status
+                    };
+                });
+                
+                
+            
+                // Render the EJS template with applicants data
+                res.render('staffpages/hr_pages/linemanagerapplicanttracking-jobposition', {
+                    applicants: applicantsWithDetails,
+                });
+            } catch (error) {
+                console.error('Error fetching applicants:', error);
+                res.status(500).json({ error: 'Error fetching applicants' });
+            }
         } else {
-            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('staff/login');
+            req.flash('errors', { authError: 'Unauthorized access. Line Manager role required.' });
+            res.redirect('/staff/login');
         }
     },
     

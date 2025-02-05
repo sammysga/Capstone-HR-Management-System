@@ -7,8 +7,16 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome for icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
-        /* Adjust layout to avoid sidebar overlap */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         .main-content {
             margin-left: 350px;
             padding: 20px;
@@ -83,66 +91,64 @@
         }
 
         .tracking-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-    .tracking-table th, 
-    .tracking-table td {
-        padding: 10px 10px;
-        border: 1px solid #ddd;
-    }
+        .tracking-table th, 
+        .tracking-table td {
+            padding: 10px 10px;
+            border: 1px solid #ddd;
+        }
 
-    /* Left-align the table headers and cells */
-    .tracking-table th,
-    .tracking-table td {
-        text-align: left;
-    }
+        .tracking-table th,
+        .tracking-table td {
+            text-align: left;
+        }
 
-    /* Set fixed, smaller widths for the first four columns */
-    .tracking-table th:nth-child(1),
-    .tracking-table td:nth-child(1) {
-        width: 10%; /* Adjust the width as needed */
-    }
+        .tracking-table th:nth-child(1),
+        .tracking-table td:nth-child(1) {
+            width: 10%; 
+        }
 
-    .tracking-table th:nth-child(2),
-    .tracking-table td:nth-child(2) {
-        width: 20%; /* Adjust the width as needed */
-    }
+        .tracking-table th:nth-child(2),
+        .tracking-table td:nth-child(2) {
+            width: 20%;
+        }
 
-    .tracking-table th:nth-child(3),
-    .tracking-table td:nth-child(3) {
-        width: 15%; /* Adjust the width as needed */
-    }
+        .tracking-table th:nth-child(3),
+        .tracking-table td:nth-child(3) {
+            width: 15%; 
+        }
 
+        .tracking-table th:nth-child(4),
+        .tracking-table td:nth-child(4) {
+            width: 15%; 
+        }
 
-    /* Right-align buttons, left-align the text in the Applicant Status column */
-    .tracking-table td:last-child {
-        display: flex;
-        justify-content: space-between; /* Ensures buttons are on the right side */
-        align-items: center;
-    }
+        .tracking-table td:last-child {
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+        }
 
-    /* Align text to the left in the same column */
-    .tracking-table td:last-child span {
-        text-align: left; /* Ensure text is left-aligned */
-        flex-grow: 1; /* Allow text to take available space */
-    }
+        .tracking-table td:last-child span {
+            text-align: left; 
+            flex-grow: 1;
+        }
 
-    /* General table styling */
-    .tracking-table th,
-    .tracking-table td {
-        text-align: left;
-    }
+        .tracking-table th,
+        .tracking-table td {
+            text-align: left;
+        }
 
-    /* Adjusting layout for action buttons in the last column */
-    .tracking-table td:last-child button {
-        margin-left: 10px; /* Space between buttons */
-    }
-    .tracking-table tr:hover {
-        background-color: #f1f1f1;
-    }
-        /* Style for the job title container */
+        .tracking-table td:last-child button {
+            margin-left: 10px; 
+        }
+        .tracking-table tr:hover {
+            background-color: #f1f1f1;
+        }
+       
         .job-title-container {
             display: flex;
             align-items: center;
@@ -154,7 +160,7 @@
             height: 12px;
             border-radius: 50%;
             display: inline-block;
-            margin-right: 8px; /* Space between circle and job title */
+            margin-right: 8px; 
         }
 
         /* Green status circle */
@@ -167,86 +173,122 @@
             background-color: gray;
         }
 
-           /* Button styling for status actions */
-    .status-button {
-        background-color: white; /* White background */
-        color: black; /* Black text */
-        border: 1px solid #124A5C; /* Border color matching the hover */
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 14px;
-        cursor: pointer;
-        text-align: center;
-        width: auto;
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
+        /* Button styling for status actions */
+        .status-button {
+            background-color: white; 
+            color: black; 
+            border: 1px solid #124A5C; 
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            width: auto;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
 
-    .status-button:hover {
-        background-color: #124A5C; /* Hover background color */
-        color: white; /* Hover text color */
-    }
+        .status-button:hover {
+            background-color: #124A5C; 
+            color: white; 
+        }
 
-/* For consistency with other button styling */
-.btn-review, .btn-evaluation, .btn-onboarding, .btn-reviewP3 {
-    background-color: white;
-    color: black;
-    border: 1px solid #124A5C;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 14px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    width: 150px; /* Set a consistent width */
-    text-align: center; /* Ensures text aligns properly within the button */
-}
-
-.btn-review:hover, .btn-evaluation:hover, .btn-onboarding:hover, .btn-reviewP3:hover {
-    background-color: #124A5C;
-    color: white;
-}
-.set-interview-button {
+        .btn-review, .btn-evaluation, .btn-onboarding {
+            background-color: white;
+            color: black;
+            border: 1px solid #124A5C;
             padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            width: 150px;
+            text-align: center; 
+        }
+
+        .btn-review:hover, .btn-evaluation:hover, .btn-onboarding:hover {
+            background-color: #124A5C;
+            color: white;
+        }
+        .set-interview-button {
+                    padding: 10px 20px;
+                    background-color: #124A5C;
+                    color: white;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 16px;
+                    margin-top: 20px;
+                    display: block;
+                    width: 20%;
+                    text-align: center;
+                }
+                .set-interview-button:hover {
+                    background-color: #B4E3E3       ;
+                    color: white;
+                }
+
+
+        .set-finalize-review-button {
+            position: relative; 
+            margin: 5px 10px;
             background-color: #124A5C;
             color: white;
             border: none;
+            padding: 10px 20px;
             cursor: pointer;
+            border-radius: 5px;
+            width: auto; 
+            min-width: 200px; 
+            white-space: nowrap;
+            text-align: center; 
             font-size: 16px;
-            margin-top: 20px;
-            display: block;
-            width: 20%;
-            text-align: center;
-        }
-        .set-interview-button:hover {
-            background-color: #218838;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+            transition: background-color 0.3s ease;
         }
 
+        .set-finalize-review-button:hover {
+            background-color: #B4E3E3;
+            color: #124A5C; 
+        }
 
-        /* MODAL CSS*/
 
+        .finalize-container {
+            position: fixed;
+            bottom: 20px; 
+            right: 20px;  
+            display: none;
+            background-color: rgba(255, 255, 255, 0.9); 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000; 
+        }
+
+        /* Styling for the Modals */
         .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
             left: 0;
             top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
         }
 
         .modal-content {
             background-color: #fefefe;
-            margin: 10% auto; /* Centered */
+            margin: 10% auto; 
             padding: 20px;
             border: 1px solid #888;
-            border-radius: 8px; /* Rounded corners */
-            width: 80%; /* Could be more or less, depending on screen size */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow effect */
+            border-radius: 8px; 
+            width: 80%; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
         }
 
         .modal-header, .modal-body, .modal-footer {
-            text-align: center; /* Center text */
+            text-align: center;
         }
 
         .close-button {
@@ -265,22 +307,22 @@
 
         .modal-buttons {
             display: flex;
-            justify-content: center; /* Center buttons */
+            justify-content: center;
             margin-top: 20px;
         }
 
         .modal-buttons button {
             padding: 10px 20px;
-            margin: 0 10px; /* Space between buttons */
+            margin: 0 10px;
             border: none;
-            border-radius: 5px; /* Rounded corners */
+            border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s ease;
         }
 
         .modal-buttons button#backButton {
-            background-color: rgba(18, 74, 92, 0.5); /* 50% opacity */
+            background-color: rgba(18, 74, 92, 0.5); 
             color: white;
         }
 
@@ -290,135 +332,140 @@
         }
 
         .modal-buttons button:hover {
-            opacity: 0.8; /* Slightly transparent on hover */
+            opacity: 0.8; 
         }
+
         .divider {
-    height: 2px; /* Height of the divider */
-    background-color: #124A5C; /* Color of the divider */
-    margin: 10px 0; /* Space above and below the divider */
-}
+            height: 2px; 
+            background-color: #124A5C; 
+            margin: 10px 0; 
+        }
 
-.scores-table {
-        width: 100%; /* Full width */
-        border-collapse: collapse; /* Merge borders */
-        margin-top: 10px; /* Space above the table */
-    }
+        .modal-question {
+            display: flex;
+            justify-content: center;  
+            align-items: center;
+            text-align: center;
+            margin-top: 20px;  
+            margin-bottom: 20px; 
+            font-size: 16px;
+        }
 
-    .scores-table th, .scores-table td {
-        border: 1px solid #ddd; /* Border for table cells */
-        padding: 8px; /* Padding inside cells */
-        text-align: left; /* Align text to the left */
-    }
-
-    .scores-table th {
-        background-color: #124A5C; /* Header background color */
-        color: white; /* Header text color */
-    }
-
-    .scores-table tr:nth-child(even) {
-        background-color: #f2f2f2; /* Zebra striping for even rows */
-    }
-
-    .scores-table tr:hover {
-        background-color: #ddd; /* Highlight row on hover */
-    }
-    .computation-verdict {
-    margin: 15px 0; /* Space above and below */
-    font-size: 18px; /* Font size */
-    font-weight: bold; /* Bold text */
-    color: #124A5C; /* Color to match your theme */
-    text-align: left; /* Center the text */
-}
-
-.applicant-details h3 {
-    font-size: 24px;
-}
-
-/* Styling for the finalize review button */
-.set-finalize-review-button {
-    position: absolute;
-    bottom: 10px;
-    right: 10px; /* Right-aligned to the container */
-    background-color: #124A5C;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 5px;
-    width: auto; /* Let the button width be determined by its content */
-    min-width: 200px; /* Minimum width to ensure the text fits */
-    white-space: nowrap; /* Prevent the text from wrapping */
-    text-align: center; /* Center the text inside the button */
-    font-size: 16px;
-}
-
-.set-finalize-review-button:hover {
-    background-color: #B4E3E3;
-    color: white;
-}
-
-/* Ensure the finalize button stays at the bottom */
-.finalize-container {
-    position: fixed;
-    bottom: 20px;  /* Adjust position as necessary */
-    right: 20px;   /* Align to the right */
+        /* Modal Styling */
+.modal {
     display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow: auto;
 }
 
-/* Enhanced styling for the assessment form panel */
-.assessment-form-panel {
-    background-color: #f9f9f9;
-    border-radius: 8px;
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
     padding: 20px;
-    margin-top: 15px;
+    border-radius: 8px;
+    width: 60%; /* Adjust as necessary */
+    text-align: center; /* Center content inside modal */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.assessment-form-panel h4 {
+.modal-content h2, .modal-content p {
     color: #124A5C;
-    font-size: 20px;
-    margin-bottom: 15px;
-    text-align: center;
-}
-
-.form-row {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-}
-
-.form-row label {
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.form-row input {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    outline: none;
-    transition: border-color 0.3s ease;
-}
-
-.form-row input:focus {
-    border-color: #124A5C;
-}
-
-.form-row input[type="number"] {
-    -webkit-appearance: none; /* Remove number input arrows */
-    -moz-appearance: textfield; /* Remove number input arrows */
+    margin-bottom: 20px;
 }
 
 .modal-buttons {
     display: flex;
     justify-content: center;
-    margin-top: 20px;
+    gap: 20px; /* Space between buttons */
 }
 
 .modal-buttons button {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.back-button {
+    background-color: rgba(18, 74, 92, 0.5); /* Transparent background */
+    color: white;
+}
+
+.confirm-button {
+    background-color: #124A5C;
+    color: white;
+}
+
+.modal-buttons button:hover {
+    opacity: 0.8;
+}
+
+/* Close Button (X) */
+.close-button {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    float: right;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: black;
+}
+
+.review-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.review-modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 50%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.review-close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.review-close-button:hover,
+.review-close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.review-modal-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.review-modal-buttons button {
     padding: 10px 20px;
     margin: 0 10px;
     border: none;
@@ -428,246 +475,25 @@
     transition: background-color 0.3s ease;
 }
 
-.modal-buttons button#backButton {
-    background-color: rgba(18, 74, 92, 0.5); /* 50% opacity */
+.review-modal-back-button {
+    background-color: rgba(18, 74, 92, 0.5);
     color: white;
 }
 
-.modal-buttons button#confirmButton {
+.review-modal-confirm-button {
     background-color: #124A5C;
     color: white;
 }
 
-.modal-buttons button:hover {
+.review-modal-buttons button:hover {
     opacity: 0.8;
 }
-
-/* Divider */
-.divider {
-    height: 2px;
-    background-color: #124A5C;
-    margin: 10px 0;
-}
-
-/* Style the input fields and labels */
-#assessment-form-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    font-family: 'Arial', sans-serif;
-    padding: 20px;
-    background-color: #f8f8f8;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.input-field {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.input-field label {
-    font-size: 14px;
-    color: #124A5C;
-    font-weight: bold;
-}
-
-.input-field input {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    outline: none;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.input-field input:focus {
-    border-color: #124A5C;
-    box-shadow: 0 0 5px rgba(18, 74, 92, 0.5);
-}
-
-.input-field input[type="number"]::-webkit-outer-spin-button,
-.input-field input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.input-field input[type="number"]:focus::-webkit-outer-spin-button,
-.input-field input[type="number"]:focus::-webkit-inner-spin-button {
-    border-color: #124A5C;
-}
-
-/* Add a hover effect to the input fields */
-.input-field input:hover {
-    border-color: #124A5C;
-}
-
-/* Center the question heading */
-.assessment-form-panel h4 {
-    color: #124A5C;
-    font-size: 20px;
-    margin-bottom: 15px;
-    text-align: center; /* Center align the text */
-}
-
-/* Ensure buttons are centered as well */
-.modal-buttons {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-/* Modal Background */
-.custom-modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-}
-
-/* Modal Content */
-.custom-modal-content {
-    background-color: #fefefe;
-    margin: 10% auto; /* Centered */
-    padding: 20px;
-    border: 1px solid #888;
-    border-radius: 8px;
-    width: 80%; /* Could be more or less, depending on screen size */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow effect */
-}
-
-/* Close Button */
-.custom-close-button {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    cursor: pointer;
-}
-
-/* Close Button on Hover */
-.custom-close-button:hover,
-.custom-close-button:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* Modal Heading */
-.custom-modal h2 {
-    text-align: center;
-    font-size: 24px;
-    color: #124A5C;
-}
-
-/* Modal Text */
-.custom-modal p {
-    font-size: 16px;
-    text-align: center;
-    color: #555;
-}
-
-/* Modal Buttons */
-.custom-modal-buttons {
-    display: flex;
-    justify-content: center; /* Center buttons */
-    margin-top: 20px;
-}
-
-/* Button Styling */
-.custom-modal-buttons button {
-    padding: 10px 20px;
-    margin: 0 10px; /* Space between buttons */
-    border: none;
-    border-radius: 5px; /* Rounded corners */
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-}
-
-/* Confirm Button */
-.custom-confirm-button {
-    background-color: #124A5C; 
-    color: white;
-}
-
-/* Cancel Button */
-.custom-cancel-button {
-    background-color: rgba(18, 74, 92, 0.5); /* 50% opacity */
-    color: white;
-}
-
-/* Hover Effects */
-.custom-modal-buttons button:hover {
-    opacity: 0.8;
-}
-
-/* Ensure the buttons are on the same line and spaced */
-.custom-modal-buttons button {
-    width: 150px; /* Set a fixed width for better alignment */
-}
-
-
-/* Finalize Button Container */
-.finalize-container {
-    position: fixed;
-            bottom: 20px; 
-            right: 20px;  
-            display: none;
-            background-color: rgba(255, 255, 255, 0.9); 
-            border: 1px solid #ccc; 
-            padding: 10px; 
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 1000; 
-}
-
-/* Styling for each button */
-.set-finalize-review-button {
-    position: relative; 
-            margin: 5px 10px;
-            background-color: #124A5C;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            width: auto; 
-            min-width: 200px; 
-            white-space: nowrap;
-            text-align: center; 
-            font-size: 16px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-            transition: background-color 0.3s ease;
-}
-
-/* Hover effect for buttons */
-.set-finalize-review-button:hover {
-    background-color: #B4E3E3;
-}
-
-/* Optional: Adjust container width */
-.finalize-container {
-    width: 100%; /* Make the container full width */
-    max-width: 900px; /* Set a maximum width to prevent stretching on large screens */
-    margin: 0 auto; /* Center the container horizontally */
-}
-
-
 
     </style>
 </head>
 <body>
 
-<%- include('../../partials/hr_partials') %>
+<%- include('../../partials/linemanager_partials') %>
 
 <!-- Main Content Section -->
 <div class="main-content">
@@ -675,7 +501,7 @@
     <!-- Header Section -->
     <div class="header-section">
         <h2>Applicant Tracking</h2>
-        <div class="subheader">Marketing Assistant</div>
+        <div class="subheader">Data Analyst</div>
     </div>
 
   <!-- Applicant Tracking Section -->
@@ -692,258 +518,341 @@
                 <button id="filter-onboarding">For Onboarding</button>
             </div>            
         </div>
+
         
 <!-- Table for Applicant Data -->
-<table class="tracking-table">
+<table class="tracking-table" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
     <thead>
         <tr>
             <th>Applicant No.</th>
             <th>Last Name, First Name</th>
+            <th>Department</th>
             <th>Position Applied</th>
             <th>Applicant Status & Actions</th>
         </tr>
     </thead>
     <tbody>
-        <!-- Sample Data Rows -->
-        <tr>
-            <td>APP00001</td>
-            <td>John Doe<br>johndoe@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P1: Initial Screening</td>
-        </tr>
-        <tr class="status-for-review">
-            <td>APP00002</td>
-            <td>Jane Smith<br>janesmith@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P1: Awaiting for Line Manager Action <button class="btn-review" data-modal="true">For Review</button></td>
-        </tr>
-            <td>APP00003</td>
-            <td>Robert Brown<br>robertbrown@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P1: PASSED - Score: 90 </td>
-        </tr>
-            <td>APP00004</td>
-            <td>Alice Johnson<br>alicejohnson@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P1: FAILED</td>
-        </tr>
-        <tr>
-            <td>APP00005</td>
-            <td>Michael Lee<br>michaellee@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P2: HR Screening Scheduled</td>
-        </tr>
-        <tr>
-            <td>APP00006</td>
-            <td>Linda Carter<br>lindacarter@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P2: Awaiting for HR Evaluation</td>
-        </tr>
-        <tr>
-            <td>APP00007</td>
-            <td>Chris Walker<br>chriswalker@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P2: HR Evaluation Accomplished - Score: 85 </td>
-        </tr>
-        <tr>
-            <td>APP00008</td>
-            <td>Emily Davis<br>emilydavis@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P2: HR Evaluation Accomplished - Score: 30 </td>
-        </tr>
+        <% if (applicants && applicants.length) { %>
+            <% applicants.forEach((applicant, index) => { %>
+                <tr>
+                    <td><%= index + 1 %></td>
+                    <td>
+                        <%= applicant.lastName %>, <%= applicant.firstName %>
+                        <br>
+                        <small style="color: #555;"><%= applicant.userEmail || 'Email not available' %></small>
+                    </td>
+                    
+                    <td><%= applicant.deptName %></td> <!-- Display department name -->
+                    <td><%= applicant.jobTitle %></td> <!-- Display job title -->
+                    <td>
+<!-- Display Applicant Status -->
+<span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
+<div style="margin-top: 10px;">
+    <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for HR Action')) { %>
+        <!-- For Review Button -->
+        <button 
+            class="btn-review" 
+            onclick="openReviewModal(
+                '<%= applicant.lastName %>', 
+                '<%= applicant.firstName %>', 
+                '<%= applicant.userEmail %>', 
+                '<%= applicant.phoneNo %>'
+            )">
+            For Review
+        </button>
+    <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
+        <!-- For Evaluation Button -->
+        <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
+            <button class="btn-evaluation">For Evaluation</button>
+        </a>
+    <% } else if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
+        <!-- Message or Button for Line Manager Action -->
+        <button 
+            class="btn-line-manager" 
+            onclick="alert('Awaiting Line Manager Action for <%= applicant.firstName %> <%= applicant.lastName %>');">
+            Notify Line Manager
+        </button>
+    <% } %>
+</div>
 
 
-        <tr>
-            <td>APP00009</td>
-            <td>Samuel Adams<br>samueladams@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P2: PASSED</td>
-        </tr>
+                    </td>   
+                </tr>
+            <% }); %>
+        <% } else { %>
+            <tr>
+                <td colspan="5">No applicants found.</td>
+            </tr>
+        <% } %>
+    </tbody>
+    
+    
+    
+</table>
 
 
+<h2 class="header-section" style="margin-top: 30px; margin-bottom: 10px;">Onboarding</h2>
+
+<table class="tracking-table" style="width: 100%; border-collapse: collapse;">
+    <thead>
         <tr>
-            <td>APP000010</td>
-            <td>Sophia Bell<br>sophiabell@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P2: FAILED</td>
+            <th>Application No.</th>
+            <th>Last Name, First Name</th>
+            <th>Department</th>
+            <th>Position Applied</th>
+            <th>Application Status & Actions</th>
         </tr>
+    </thead>
+    <tbody>
         <tr>
-            <td>APP000011</td>
-            <td>Daniel Green<br>danielgreen@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P3: Panel Screening Scheduled</td>
-        </tr>
-        <tr class="status-for-evaluation">
-            <td>APP00012</td>
-            <td>Laura Hall<br>laurahall@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P3: Awaiting for Line Manager Evaluation <button class="btn-evaluation">For Evaluation</button> </td>
-        </tr>
-        <tr class="status-for-review">
-            <td>APP00013</td>
-            <td>James King<br>jamesking@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P3: Panel Evaluation Accomplished - Score: 85 <button class="btn-reviewP3">For Review</button></td>
-        </tr>
-        <tr class="status-for-review">
-            <td>APP00014</td>
-            <td>Olivia White<br>oliviawhite@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P3: Panel Evaluation Accomplished - Score: 30  <button class="btn-reviewP3">For Review</button> </td>
-        </tr>
-            <td>APP00015</td>
+            <td>APP00018</td>
             <td>William Scott<br>williamscott@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P3: PASSED </td>
-        </tr>
-            <td>APP00016</td>
-            <td>Grace Taylor<br>gracetaylor@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P3: FAILED</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>First Day Checklist Sent</td>
         </tr>
         <tr class="status-for-onboarding">
-            <td>APP00017</td>
+            <td>APP00019</td>
+            <td>Grace Taylor<br>gracetaylor@gmail.com</td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>Checklist Accomplished <button class="btn-onboarding" onclick="openModal('accountSetupReminderModal')">For Onboarding</button></td>
+        </tr>
+        <tr>
+            <td>APP00020</td>
             <td>Ella Martinez<br>ellamartinez@gmail.com</td>
-            <td>Marketing Assistant</td>
-            <td>P3: PASSED - Job Offer Sent </td>
+            <td>IT</td>
+            <td>Data Analyst</td>
+            <td>Account Created</td>
         </tr>
     </tbody>
 </table>
-<!-- P1: Awaiting for Line Manager Action Modal -->
-<div id="initialScreeningModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" id="closeModal">&times;</span>
-        <h2>P1: Initial Screening Score Breakdown</h2>
-        <div class="divider"></div> <!-- Optional Divider -->
-        <div class="applicant-details">
-            <h3 id="applicant-name">Jane Smith</h3>
-            <p id="applicant-age">Age: 30</p>
-            <p id="applicant-email">Email: janesmith@gmail.com</p>
-            <p id="applicant-contact">Contact No: 09171234567</p>
-        </div>
-        <h4>Initial Screening Scores</h4>
-        <table class="scores-table">
-            <thead>
-                <tr>
-                    <th>Criteria</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Industry Specific Degree</td>
-                    <td>1/1</td>
-                </tr>
-                <tr>
-                    <td>Experiences</td>
-                    <td>3/4</td>
-                </tr>
-                <tr>
-                    <td>Certifications</td>
-                    <td>2/3</td>
-                </tr>
-                <tr>
-                    <td>Hard Skills</td>
-                    <td>4/5</td>
-                </tr>
-                <tr>
-                    <td>Soft Skills</td>
-                    <td>4/5</td>
-                </tr>
-                <tr>
-                    <td>Work Setup</td>
-                    <td>PASSED</td>
-                </tr>
-                <tr>
-                    <td>Availability</td>
-                    <td>PASSED</td>
-                </tr>
-            </tbody>
-        </table>
-       <!-- Computation Verdict Section -->
-       <div class="computation-verdict">
-        <strong>Computation Verdict - PASSED | 85.33</strong>
-    </div>
-        <h4>Uploaded Documents</h4>
-        <p><a href="sample_resume.pdf" target="_blank">sample_resume.pdf</a></p>
-        <p>Would you like to recommend this applicant for the HR interview?</p>
-        <div class="modal-buttons">
-            <button id="backButton">Back</button>
-            <button id="confirmButton">Confirm</button>
-        </div>
-    </div>
-</div>
 
-<!-- Modal for P3 Review -->
-<div id="P3ReviewModal" class="modal">
+<!--Frontend Modals-->
+
+<!-- Modal for Confirm Release of Job Offer -->
+<div id="releaseJobOfferModal" class="modal">
     <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h2>P3: Panel Evaluation Review</h2>
+        <span class="close-button" onclick="closeModal('releaseJobOfferModal')">&times;</span>
+        <h2 style="color: #07ACB9;">Name</h2>
+        <p><strong>Age:</strong> Text</p>
+        <p><strong>Email:</strong> Text</p>
+        <p><strong>Contact No:</strong> Text</p>
+        
         <div class="divider"></div>
-        <div class="applicant-details">
-            <h3 id="applicant-name">John Doe</h3>
-            <p id="applicant-age">Age: 30</p>
-            <p id="applicant-email">Email: johndoe@example.com</p>
-            <p id="applicant-contact">Contact No: +1234567890</p>
+        
+        <h3>Panel Assessment Form Breakdown</h3>
+        <p>[INSERT SUBMITTED FORM HERE]</p>
+        
+        <div class="modal-question">
+            <p><strong>Would you like to release the job offer and notify the applicant they are being considered for hiring?</strong></p>
         </div>
-
-          <!-- Panel Assessment Form Title -->
-          <div class="assessment-form-title">
-            <h4>Panel Assessment Form</h4>
-        </div>
-
-        <div id="assessment-form-panel">
-            <div class="input-field">
-                <label for="communication-skills">Communication Skills:</label>
-                <input type="number" id="communication-skills" name="communication-skills" min="1" max="10" value="8">
-            </div>
-            <div class="input-field">
-                <label for="technical-expertise">Technical Expertise:</label>
-                <input type="number" id="technical-expertise" name="technical-expertise" min="1" max="10" value="9">
-            </div>
-            <div class="input-field">
-                <label for="problem-solving">Problem Solving:</label>
-                <input type="number" id="problem-solving" name="problem-solving" min="1" max="10" value="7">
-            </div>
-        </div>
-
-        <h4>Would you like to select this applicant as the top candidate for the position they are applying for?</h4>
-
+        
         <div class="modal-buttons">
-            <button id="backButton" class="back-button">Back</button>
-            <button id="confirmButton" class="confirm-button">Confirm</button>
+            <button id="backButton" onclick="closeModal('releaseJobOfferModal')">Back</button>
+            <button id="confirmButton" onclick="sendNotification()">Notify Applicant</button>
         </div>
     </div>
 </div>
 
+<!-- Modal for Moving Applicant for Onboarding -->
+<div id="moveToOnboardingModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('moveToOnboardingModal')">&times;</span>
+        <h1>Job Offer Confirmation</h1>
+        
+        <h2><strong>Applicant Personal Information</strong></h2>
+        <h3><strong>Name</strong></h3>
+        <p><strong>Age:</strong> Text</p>
+        <p><strong>Email:</strong> Text</p>
+        <p><strong>Contact No:</strong> Text</p>
+        
+        <div class="modal-question">
+            <p><strong>Would you like to move this applicant for onboarding?</strong></p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button id="backButton" onclick="closeModal('moveToOnboardingModal')">Back</button>
+            <button id="confirmButton" onclick="confirmOnboarding()">Confirm</button>
+        </div>
+    </div>
+</div>
 
-
+<!-- Modal for Account Setup Creation Reminder -->
+<div id="accountSetupReminderModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('accountSetupReminderModal')">&times;</span>
+        <h1>Account Setup Creation Reminder</h1>
+        
+        <h2><strong>Applicant Personal Information</strong></h2>
+        <h3><strong>Name</strong></h3>
+        <p><strong>Age:</strong> Text</p>
+        <p><strong>Email:</strong> Text</p>
+        <p><strong>Contact No:</strong> Text</p>
+        
+        <div class="modal-question">
+            <p><strong>Have you created an account for the employee through the Manage Employees page and emailed them the account details?</strong></p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button id="backButton" onclick="closeModal('accountSetupReminderModal')">Back</button>
+            <button id="confirmButton" onclick="confirmAccountSetup()">Confirm</button>
+        </div>
+    </div>
+</div>
 
 
 <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
+
 <!-- Finalize button for review -->
 <div class="finalize-container">
-    <button class="set-finalize-review-button" id="p1ReviewBtn">P1: Finalize Review and Notify HR</button>
-    <button class="set-finalize-review-button" id="p3ReviewBtn">P3: Finalize Review and Notify HR</button>
+    <button class="set-finalize-review-button" id="finalize-p1">P1: Finalize Review and Notify Applicants</button>
+    <button class="set-finalize-review-button" id="finalize-p2">P2: Finalize Review and Notify Applicants</button>
+    <button class="set-finalize-review-button" id="finalize-p3">P3: Finalize Review and Notify Applicants</button>
 </div>
 
-<!-- Modal Structure -->
-<div id="finalizeModal" class="custom-modal">
-    <div class="custom-modal-content">
-        <span class="custom-close-button">&times;</span>
-        <h2>Confirm Final Review and Notify HR</h2>
-        <p>You are about to finalize the review process and notify HR of the selected candidates. All applicants who were not chosen will be marked as failed. This action is irreversible. Do you wish to confirm?</p>
-        <div class="custom-modal-buttons">
-            <button id="cancelFinalize" class="custom-cancel-button">Back</button>
-            <button id="confirmFinalize" class="custom-confirm-button">Confirm</button>
+<!-- Modal for P1: Finalize Review and Notify Applicants -->
+<div id="finalizeModalP1" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Confirm Final Review and Notify Applicants</h2>
+        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+            <button id="backButtonP1" class="back-button">Back</button>
+            <button id="confirmButtonP1" class="confirm-button">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for P2: Finalize Review and Notify Applicants -->
+<div id="finalizeModalP2" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Confirm Final Review and Notify Applicants</h2>
+        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+            <button id="backButtonP2" class="back-button">Back</button>
+            <button id="confirmButtonP2" class="confirm-button">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for P3: Finalize Review and Notify Applicants -->
+<div id="finalizeModalP3" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Confirm Final Review and Notify Applicants</h2>
+        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+            <button id="backButtonP3" class="back-button">Back</button>
+            <button id="confirmButtonP3" class="confirm-button">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="reviewModal" class="review-modal">
+    <div class="review-modal-content">
+        <span class="review-close-button">&times;</span>
+        <h3>Applicant Details</h3>
+        <div class="applicant-details">
+            <p><strong>Name:</strong> <span id="applicant-name"></span></p>
+            <p><strong>Age:</strong> <span id="applicant-age"></span></p>
+            <p><strong>Email:</strong> <span id="applicant-email"></span></p>
+            <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
+        </div>
+        <h4>HR Assessment Form Breakdown</h4>
+        <!-- Add form breakdown here -->
+        <h4>Would you like to select this applicant as the top candidate and recommend them for the panel interview?</h4>
+        <div class="review-modal-buttons">
+            <button id="backButton" class="review-modal-back-button">Back</button>
+            <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmSelection()">Confirm</button>
         </div>
     </div>
 </div>
 
 
+
     </div>
 </div>
+
 <script>
+     // Function to extract applicantId from URL
+     function getApplicantIdFromURL() {
+            const path = window.location.pathname;
+            const parts = path.split('/'); // Split the URL into parts
+            const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
+            return applicantId;
+        }
+
+       
+
+        // Display the applicantId from the URL (if any) when the page is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            const applicantId = getApplicantIdFromURL(); // Extract applicantId from the URL
+            if (applicantId) {
+                document.getElementById('applicantIdDisplay').textContent = `Applicant ID from URL: ${applicantId}`;
+            } else {
+                document.getElementById('applicantIdDisplay').textContent = 'No Applicant ID found in URL.';
+            }
+        });
+
+    
+
+// confirm button for modal for review
+        // Handle Confirm button click in the modal
+        function confirmSelection() {
+    const applicantName = document.getElementById("applicant-name").textContent.split(", ");
+    const lastName = applicantName[0];
+    const firstName = applicantName[1];
+
+    fetch("/update-applicant", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ lastName, firstName }),
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert(result.message);
+                location.reload(); // Refresh the page
+            } else {
+                alert("Failed to update applicant status. Please try again.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while updating the applicant status.");
+        });
+}
+
+
+
+
+function openReviewModal(lastName, firstName, email, phoneNo) {
+        document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
+        document.getElementById('applicant-email').textContent = email || 'N/A';
+        document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
+
+        // Show the modal
+        document.getElementById('reviewModal').style.display = 'block';
+    }
+
+    // Close the modal
+    document.querySelector('.review-close-button').addEventListener('click', function () {
+        document.getElementById('reviewModal').style.display = 'none';
+    });
+
+    // Close modal if clicked outside the modal content
+    window.addEventListener('click', function (event) {
+        const modal = document.getElementById('reviewModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
     document.addEventListener("DOMContentLoaded", function () {
         // Function to filter rows based on status
         function filterRowsByStatus(status) {
@@ -988,10 +897,31 @@
     }
 
 
+    // Event listeners for finalize buttons
+    document.getElementById("finalize-p1").addEventListener("click", function () {
+        finalizeReview("P1");
+    });
+
+    document.getElementById("finalize-p2").addEventListener("click", function () {
+        finalizeReview("P2");
+    });
+
+    document.getElementById("finalize-p3").addEventListener("click", function () {
+        finalizeReview("P3");
+    });
+
+    // Finalize review function
+    function finalizeReview(phase) {
+        alert(`${phase}: Finalizing review and notifying applicants.`);
+        // Add logic to handle finalization for the specified phase
+        // Example: Update database, send notifications, etc.
+        console.log(`${phase}: Review finalized. Notifications sent.`);
+    }
+
+
         // Function to filter rows based on the search input
         function filterTable() {
             const searchValue = document.getElementById("searchBar").value.toLowerCase();
-            console.log(`Searching for: ${searchValue}`);
             const rows = document.querySelectorAll('.tracking-table tbody tr');
 
             rows.forEach(row => {
@@ -1005,22 +935,18 @@
                     .join(" ");
                 if (rowText.includes(searchValue)) {
                     row.style.display = ""; // Show if search term matches
-                    console.log(`Row matches search: ${row.innerText}`);
                 } else {
                     row.style.display = "none"; // Hide otherwise
-                    console.log(`Row does not match search: ${row.innerText}`);
                 }
             });
         }
 
         // Function to highlight the active filter button
         function highlightActiveFilter(status) {
-            console.log(`Highlighting active filter: ${status}`);
             const buttons = document.querySelectorAll(".right-section button");
             buttons.forEach(button => {
                 if (button.id === `filter-${status}`) {
                     button.classList.add("active"); // Add active class
-                    console.log(`Active button: ${button.id}`);
                 } else {
                     button.classList.remove("active"); // Remove active class
                 }
@@ -1036,32 +962,16 @@
         };
 
         // Add event listeners to filter buttons
-        buttons.all.addEventListener("click", () => {
-            console.log("All filter button clicked");
-            filterRowsByStatus("all");
-        });
-        buttons.review.addEventListener("click", () => {
-            console.log("Review filter button clicked");
-            filterRowsByStatus("for-review");
-        });
-        buttons.evaluation.addEventListener("click", () => {
-            console.log("Evaluation filter button clicked");
-            filterRowsByStatus("for-evaluation");
-        });
-        buttons.onboarding.addEventListener("click", () => {
-            console.log("Onboarding filter button clicked");
-            filterRowsByStatus("for-onboarding");
-        });
+        buttons.all.addEventListener("click", () => filterRowsByStatus("all"));
+        buttons.review.addEventListener("click", () => filterRowsByStatus("for-review"));
+        buttons.evaluation.addEventListener("click", () => filterRowsByStatus("for-evaluation"));
+        buttons.onboarding.addEventListener("click", () => filterRowsByStatus("for-onboarding"));
 
         // Search functionality
-        document.querySelector(".search-button").addEventListener("click", () => {
-            console.log("Search button clicked");
-            filterTable();
-        });
+        document.querySelector(".search-button").addEventListener("click", filterTable);
         document.getElementById("searchBar").addEventListener("keypress", function (e) {
             if (e.key === "Enter") {
                 e.preventDefault(); // Prevent form submission if inside a form
-                console.log("Enter key pressed in search bar");
                 filterTable();
             }
         });
@@ -1077,166 +987,206 @@
                 button.textContent = "For Onboarding";
             } else if (row.classList.contains('status-for-evaluation')) {
                 button.textContent = "For Evaluation";
-            } else {
-            button.textContent = "For Review";
-        } // Default button text
-        console.log(`Button text set to: ${button.textContent} for row: ${row.innerText}`);
+            }
         });
 
         // Display all rows initially
-        console.log("Displaying all rows initially");
         filterRowsByStatus("all");
     });
 
     document.addEventListener("DOMContentLoaded", function () {
-        const modal = document.getElementById("initialScreeningModal");
-        const closeModal = document.getElementById("closeModal");
-        const reviewButtons = document.querySelectorAll("tr.status-for-review .btn-review[data-modal='true']");
+        const evaluationButtons = document.querySelectorAll(".btn-evaluation");
 
-        // Open the modal when the "For Review" button is clicked
-        reviewButtons.forEach(button => {
+        evaluationButtons.forEach(button => {
             button.addEventListener("click", function () {
-                const row = button.closest('tr');
-                const applicantName = row.querySelector('td:nth-child(2)').innerText.split('\n')[0];
-                const applicantEmail = row.querySelector('td:nth-child(2)').innerText.split('\n')[1];
-
-                // Populate modal with applicant details
-                document.getElementById("applicant-name").innerText = applicantName;
-                document.getElementById("applicant-email").innerText = `Email: ${applicantEmail}`;
-                modal.style.display = "block"; // Show the modal
+                window.location.href = "/hr/evaluation-form";
             });
         });
-
-        // Close the modal when the close button is clicked
-        closeModal.addEventListener("click", function () {
-            modal.style.display = "none";
-        });
-
-        // Close the modal when clicking outside of the modal content
-        window.addEventListener("click", function (event) {
-            if (event.target === modal) {
-                modal.style.display = "none";
-            }
-        });
-
-        // Add functionality for the confirm button if needed
-        document.getElementById("confirmButton").addEventListener("click", function () {
-            alert("Applicant recommended for HR interview.");
-            modal.style.display = "none"; // Close the modal after confirmation
-        });
-
-        // Close the modal when the back button is clicked
-        document.getElementById("backButton").addEventListener("click", function () {
-            modal.style.display = "none";
-        });
     });
 
-    
+    // Function to open the modal
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = "block";
+    }
+
+    // Function to close the modal
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    // Function for sending notification to the applicant
+    function sendNotification() {
+        alert("Sent notification to applicant");
+        closeModal('releaseJobOfferModal');
+    }
+
+    // Function for confirming onboarding
+    function confirmOnboarding() {
+        alert("Applicant moved to onboarding");
+        closeModal('moveToOnboardingModal');
+    }
+
+    // Function for confirming account setup
+    function confirmAccountSetup() {
+        alert("Account setup confirmed");
+        closeModal('accountSetupReminderModal');
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
-    const reviewButtons = document.querySelectorAll(".btn-reviewP3");
-    const modal = document.getElementById("P3ReviewModal");
-    const closeButton = modal.querySelector(".close-button");
+    const finalizeP1Button = document.getElementById("finalize-p1");
+    const finalizeP2Button = document.getElementById("finalize-p2");
+    const finalizeP3Button = document.getElementById("finalize-p3");
 
-    reviewButtons.forEach(button => {
-        button.addEventListener("click", function(event) {
-            // Dummy data for the applicant
-            const applicantName = "John Doe";
-            const applicantAge = "30";
-            const email = "johndoe@example.com";
-            const contactNo = "+1234567890";
+    const modalP1 = document.getElementById("finalizeModalP1");
+    const modalP2 = document.getElementById("finalizeModalP2");
+    const modalP3 = document.getElementById("finalizeModalP3");
 
-            // Populate modal with dummy applicant details
-            modal.querySelector("#applicant-name").textContent = applicantName;
-            modal.querySelector("#applicant-age").textContent = `Age: ${applicantAge}`;
-            modal.querySelector("#applicant-email").textContent = `Email: ${email}`;
-            modal.querySelector("#applicant-contact").textContent = `Contact No: ${contactNo}`;
-            
-            // Populate the assessment form with dummy values
-            const assessmentPanel = modal.querySelector("#assessment-form-panel");
-            assessmentPanel.innerHTML = `
-                <div>
-                    <label for="communication-skills">Communication Skills:</label>
-                    <input type="number" id="communication-skills" name="communication-skills" min="1" max="10" value="8">
-                </div>
-                <div>
-                    <label for="technical-expertise">Technical Expertise:</label>
-                    <input type="number" id="technical-expertise" name="technical-expertise" min="1" max="10" value="9">
-                </div>
-                <div>
-                    <label for="problem-solving">Problem Solving:</label>
-                    <input type="number" id="problem-solving" name="problem-solving" min="1" max="10" value="7">
-                </div>
-            `;
+    const closeButtonP1 = modalP1.querySelector(".close-button");
+    const backButtonP1 = modalP1.querySelector("#backButtonP1");
+    const confirmButtonP1 = modalP1.querySelector("#confirmButtonP1");
 
-            // Show the modal
-            modal.style.display = "block";
-        });
+    const closeButtonP2 = modalP2.querySelector(".close-button");
+    const backButtonP2 = modalP2.querySelector("#backButtonP2");
+    const confirmButtonP2 = modalP2.querySelector("#confirmButtonP2");
+
+    const closeButtonP3 = modalP3.querySelector(".close-button");
+    const backButtonP3 = modalP3.querySelector("#backButtonP3");
+    const confirmButtonP3 = modalP3.querySelector("#confirmButtonP3");
+
+    // Show the modal for P1 when the "P1: Finalize Review and Notify Applicants" button is clicked
+    finalizeP1Button.addEventListener("click", function() {
+        modalP1.style.display = "block";
     });
 
-    closeButton.addEventListener("click", function() {
-        modal.style.display = "none";
+    // Show the modal for P2 when the "P2: Finalize Review and Notify Applicants" button is clicked
+    finalizeP2Button.addEventListener("click", function() {
+        modalP2.style.display = "block";
     });
 
+    // Show the modal for P3 when the "P3: Finalize Review and Notify Applicants" button is clicked
+    finalizeP3Button.addEventListener("click", function() {
+        modalP3.style.display = "block";
+    });
+
+    // Close the modal for P1 when the close button (X) is clicked
+    closeButtonP1.addEventListener("click", function() {
+        modalP1.style.display = "none";
+    });
+
+    // Close the modal for P2 when the close button (X) is clicked
+    closeButtonP2.addEventListener("click", function() {
+        modalP2.style.display = "none";
+    });
+
+    // Close the modal for P3 when the close button (X) is clicked
+    closeButtonP3.addEventListener("click", function() {
+        modalP3.style.display = "none";
+    });
+
+    // Close the modal for P1 when the back button is clicked
+    backButtonP1.addEventListener("click", function() {
+        modalP1.style.display = "none";
+    });
+
+    // Close the modal for P2 when the back button is clicked
+    backButtonP2.addEventListener("click", function() {
+        modalP2.style.display = "none";
+    });
+
+    // Close the modal for P3 when the back button is clicked
+    backButtonP3.addEventListener("click", function() {
+        modalP3.style.display = "none";
+    });
+
+    // Handle the confirm action for P1 (you can add your own confirmation logic here)
+    confirmButtonP1.addEventListener("click", function() {
+        // Add your confirmation action here (e.g., notify applicants)
+        alert("P1 Review finalized and applicants notified.");
+        modalP1.style.display = "none"; // Close the modal after confirming
+    });
+
+    // Handle the confirm action for P2 (you can add your own confirmation logic here)
+    confirmButtonP2.addEventListener("click", function() {
+        // Add your confirmation action here (e.g., notify applicants)
+        alert("P2 Review finalized and applicants notified.");
+        modalP2.style.display = "none"; // Close the modal after confirming
+    });
+
+    // Handle the confirm action for P3 (you can add your own confirmation logic here)
+    confirmButtonP3.addEventListener("click", function() {
+        // Add your confirmation action here (e.g., notify applicants)
+        alert("P3 Review finalized and applicants notified.");
+        modalP3.style.display = "none"; // Close the modal after confirming
+    });
+
+    // Close the modal if the user clicks outside of it (for P1)
     window.addEventListener("click", function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
+        if (event.target == modalP1) {
+            modalP1.style.display = "none";
+        }
+    });
+
+    // Close the modal if the user clicks outside of it (for P2)
+    window.addEventListener("click", function(event) {
+        if (event.target == modalP2) {
+            modalP2.style.display = "none";
+        }
+    });
+
+    // Close the modal if the user clicks outside of it (for P3)
+    window.addEventListener("click", function(event) {
+        if (event.target == modalP3) {
+            modalP3.style.display = "none";
         }
     });
 });
 
+// Function to open the modal
+function openModal(name, age, email, contact) {
+    document.getElementById("applicant-name").value = name;
+    document.getElementById("applicant-age").value = age;
+    document.getElementById("applicant-email").value = email;
+    document.getElementById("applicant-contact").value = contact;
+    document.getElementById("reviewModal").style.display = "block";
+}
 
-
-    document.addEventListener('DOMContentLoaded', function() {
-    const evaluationButtons = document.querySelectorAll('.btn-evaluation');
-    evaluationButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            window.location.href = '/linemanager/interview-form-line';
-        });
+// Add event listeners to all "For Review" buttons
+document.querySelectorAll(".btn-review").forEach(button => {
+    button.addEventListener("click", function() {
+        const parentRow = button.closest("tr");
+        const name = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[0];
+        const email = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[1];
+        const age = "N/A";  // Placeholder for age
+        const contact = "N/A";  // Placeholder for contact
+        openModal(name, age, email, contact);
     });
 });
 
-document.addEventListener("DOMContentLoaded", function () {
-    // Select buttons and modal elements
-    const p1ReviewBtn = document.getElementById('p1ReviewBtn');
-    const p3ReviewBtn = document.getElementById('p3ReviewBtn');
-    const finalizeModal = document.getElementById('finalizeModal');
-    const closeButton = document.querySelector('.custom-close-button');
-    const cancelButton = document.getElementById('cancelFinalize');
-    const confirmButton = document.getElementById('confirmFinalize');
-    
-    // Open modal function
-    function openModal() {
-        finalizeModal.style.display = 'block';
-    }
-
-    // Close modal function
-    function closeModal() {
-        finalizeModal.style.display = 'none';
-    }
-
-    // Add event listeners to buttons
-    p1ReviewBtn.addEventListener('click', openModal);
-    p3ReviewBtn.addEventListener('click', openModal);
-
-    // Add event listeners to close modal elements
-    closeButton.addEventListener('click', closeModal);
-    cancelButton.addEventListener('click', closeModal);
-
-    // Optional: Add functionality for confirming the action
-    confirmButton.addEventListener('click', function () {
-        alert('Review finalized and HR notified!');
-        closeModal();
-    });
-
-    // Close modal when clicking outside the modal content
-    window.addEventListener('click', function (event) {
-        if (event.target === finalizeModal) {
-            closeModal();
-        }
-    });
+// Function to close the modal
+document.querySelector(".review-close-button").addEventListener("click", function() {
+    document.getElementById("reviewModal").style.display = "none";
 });
 
+// Close modal when clicking outside of the modal content
+window.addEventListener("click", function(event) {
+    if (event.target == document.getElementById("reviewModal")) {
+        document.getElementById("reviewModal").style.display = "none";
+    }
+});
+
+// Back button functionality
+document.getElementById("backButton").addEventListener("click", function() {
+    document.getElementById("reviewModal").style.display = "none";
+});
+
+// Confirm button functionality
+document.getElementById("confirmButton").addEventListener("click", function() {
+    alert("Applicant has been selected and recommended for panel interview.");
+    document.getElementById("reviewModal").style.display = "none";
+});
 
 </script>
+
+
 </body>
 </html>
