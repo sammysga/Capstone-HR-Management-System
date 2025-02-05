@@ -807,7 +807,7 @@ const lineManagerController = {
     postApproveLineManager: async function (req, res) {
         console.log('Request Body:', req.body); // Log the entire request body
     
-        if (req.session.user && req.session.user.userRole === 'HR') {
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
             const { applicantId } = req.body; // Get applicantId from request body
     
             if (!applicantId) {
@@ -831,7 +831,7 @@ const lineManagerController = {
                 return res.status(500).json({ success: false, error: 'Failed to approve Line Manager' });
             }
         } else {
-            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            req.flash('errors', { authError: 'Unauthorized access. Line Manager role required.' });
             res.redirect('/staff/login');
         }
     },
