@@ -464,23 +464,22 @@ const applicantController = {
             } else if (req.session.applicantStage === 'screening_questions') {
                 const questions = req.session.screeningQuestions;
                 const currentIndex = req.session.currentQuestionIndex;
-    
+            
                 if (currentIndex < questions.length) {
                     const currentQuestion = questions[currentIndex];
                     const answerValue = userMessage === 'yes' ? 1 : 0;
-    
+            
                     // Store user answer properly
-                    req.session.screeningScores.push({ question: currentQuestion.text, answer: answerValue });
-    
+                    req.session.screeningScores.push({ question: currentQuestion.text, answer: answerValue, type: currentQuestion.type });
+            
                     // Update the screening counters based on the answer
-                    const type = currentQuestion.type;
                     if (userMessage === 'yes') {
-                        req.session.screeningCounters[type]++;
+                        req.session.screeningCounters[currentQuestion.type]++;
                     }
-    
+            
                     // Move to the next question
                     req.session.currentQuestionIndex++;
-    
+            
                     // Check if there are more questions
                     if (req.session.currentQuestionIndex < questions.length) {
                         const nextQuestion = questions[req.session.currentQuestionIndex];
@@ -493,14 +492,15 @@ const applicantController = {
                         };
                     } else {
                         // All questions answered, save scores
-                        await applicantController.saveScreeningScores(userId, req.session.selectedPosition, req.session.screeningScores, req.session.screeningCounters);
+                        const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId; // Ensure you get the jobId here
+                        await applicantController.saveScreeningScores(userId, jobId, req.session.screeningScores, req.session.screeningCounters);
                         botResponse = {
                             text: "Thank you for answering the questions. Please upload your resume.",
                             buttons: [
                                 { text: 'Upload a File', type: 'file_upload', action: 'uploadResume' }
                             ]
                         };
-    
+            
                         // Reset session after processing all questions
                         req.session.screeningQuestions = null;
                         req.session.currentQuestionIndex = null;
@@ -591,9 +591,18 @@ getInitialScreeningQuestions: async function (jobId) {
                     { text: 'No', value: 0 }
                 ]
             })),
-            ...sortedSkillsQuery.map(s => ({
-                type: s.jobReqSkillType.toLowerCase(),
-                text: `To assess your ${s.jobReqSkillType.toLowerCase()} skills, do you have ${s.jobReqSkillName}?`,
+
+            ...hardSkills.map(s => ({
+                type: 'hardSkill', // Ensure this is set correctly
+                text: `To assess your hard skills, do you have ${s.jobReqSkillName}?`,
+                buttons: [
+                    { text: 'Yes', value: 1 },
+                    { text: 'No', value: 0 }
+                ]
+            })),
+            ...softSkills.map(s => ({
+                type: 'softSkill', // Ensure this is set correctly
+                text: `To assess your soft skills, do you have ${s.jobReqSkillName}?`,
                 buttons: [
                     { text: 'Yes', value: 1 },
                     { text: 'No', value: 0 }
@@ -692,44 +701,13 @@ saveScreeningScores: async function (userId, jobId, responses, screeningCounters
         console.log('Screening Counters:', screeningCounters);
         console.log('Resume URL:', resumeUrl);
 
-        let degreeScore = 0;
-        let experienceScore = 0;
-        let certificationScore = 0;
-        let hardSkillsScore = 0;
-        let softSkillsScore = 0;
-        let workSetupScore = false;
-        let availabilityScore = false;
-
-        // Process responses
-        responses.forEach(response => {
-            console.log(`Processing response: ${response.type} -> ${response.value}`);
-
-            switch (response.type) {
-                case 'degree':
-                    if (response.value === 1) degreeScore++;
-                    break;
-                case 'experience':
-                    if (response.value === 1) experienceScore++;
-                    break;
-                case 'certification':
-                    if (response.value === 1) certificationScore++;
-                    break;
-                case 'hard skills':
-                    if (response.value === 1) hardSkillsScore++;
-                    break;
-                case 'soft skills':
-                    if (response.value === 1) softSkillsScore++;
-                    break;
-                case 'work_setup':
-                    workSetupScore = response.value === 1; // Boolean
-                    break;
-                case 'availability':
-                    availabilityScore = response.value === 1; // Boolean
-                    break;
-                default:
-                    console.warn(`Unknown response type: ${response.type}`);
-            }
-        });
+        let degreeScore = screeningCounters.degree || 0;
+        let experienceScore = screeningCounters.experience || 0;
+        let certificationScore = screeningCounters.certification || 0;
+        let hardSkillsScore = screeningCounters.hardSkill || 0;
+        let softSkillsScore = screeningCounters.softSkill || 0;
+        let workSetupScore = screeningCounters.work_setup > 0; // Boolean
+        let availabilityScore = screeningCounters.availability > 0; // Boolean
 
         // Calculate total score
         const totalScore = degreeScore + experienceScore + certificationScore + hardSkillsScore + softSkillsScore;
