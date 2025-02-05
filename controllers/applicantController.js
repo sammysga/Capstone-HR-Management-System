@@ -1,5 +1,9 @@
 const supabase = require('../public/config/supabaseClient');
 const bcrypt = require('bcrypt');
+const path = require('path');  // Add this line
+const fs = require('fs');  // Add this line
+
+
 
 const applicantController = {
     getPublicHome: function(req, res) {
@@ -375,7 +379,6 @@ const applicantController = {
             const selectedPosition = positions.find(position => userMessage.includes(position.toLowerCase()));
     
             if (selectedPosition) {
-                // Handle job selection logic
                 req.session.selectedPosition = selectedPosition;
                 const jobDetails = await applicantController.getJobDetails(selectedPosition);
     
@@ -416,18 +419,35 @@ const applicantController = {
                     botResponse = "Sorry, I couldn't find the job details.";
                 }
             } else if (req.session.applicantStage === 'job_selection' && userMessage.includes('yes')) {
-                // Handle screening questions initialization
                 const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
     
+
                 if (!req.session.screeningQuestions) {
                     const questions = await applicantController.getInitialScreeningQuestions(jobId);
+                    
+                    if (!questions || questions.length === 0) { // Ensure questions are retrieved
+                        botResponse = "No screening questions available for this position.";
+                        res.status(200).json({ response: botResponse });
+                        return;
+                    }
+            
                     req.session.screeningQuestions = questions;
                     req.session.currentQuestionIndex = 0;
+                    req.session.screeningScores = [];
+                    req.session.screeningCounters = {
+                        degree: 0,
+                        experience: 0,
+                        certification: 0,
+                        hardSkill: 0,
+                        softSkill: 0,
+                        work_setup: 0,
+                        availability: 0
+                    };
                 }
-    
+            
                 const questions = req.session.screeningQuestions;
-                const currentIndex = req.session.currentQuestionIndex;
-    
+                const currentIndex = req.session.currentQuestionIndex || 0;
+            
                 if (currentIndex < questions.length) {
                     botResponse = {
                         text: questions[currentIndex].text,
@@ -441,37 +461,57 @@ const applicantController = {
                 } else {
                     botResponse = "No screening questions available for this position.";
                 }
-            } else if (req.session.screeningQuestions) {
-                // Handle screening questions flow
+            } else if (req.session.applicantStage === 'screening_questions') {
                 const questions = req.session.screeningQuestions;
-                const currentIndex = req.session.currentQuestionIndex || 0;
-    
+                const currentIndex = req.session.currentQuestionIndex;
+            
                 if (currentIndex < questions.length) {
-                    botResponse = {
-                        text: questions[currentIndex].text,
-                        buttons: [
-                            { text: 'Yes', value: 1 },
-                            { text: 'No', value: 0 }
-                        ]
-                    };
-                    req.session.currentQuestionIndex = currentIndex + 1;
+                    const currentQuestion = questions[currentIndex];
+                    const answerValue = userMessage === 'yes' ? 1 : 0;
+            
+                    // Store user answer properly
+                    req.session.screeningScores.push({ question: currentQuestion.text, answer: answerValue, type: currentQuestion.type });
+            
+                    // Update the screening counters based on the answer
+                    if (userMessage === 'yes') {
+                        req.session.screeningCounters[currentQuestion.type]++;
+                    }
+            
+                    // Move to the next question
+                    req.session.currentQuestionIndex++;
+            
+                    // Check if there are more questions
+                    if (req.session.currentQuestionIndex < questions.length) {
+                        const nextQuestion = questions[req.session.currentQuestionIndex];
+                        botResponse = {
+                            text: nextQuestion.text,
+                            buttons: [
+                                { text: 'Yes', value: 1 },
+                                { text: 'No', value: 0 }
+                            ]
+                        };
+                    } else {
+                        // All questions answered, save scores
+                        const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId; // Ensure you get the jobId here
+                        await applicantController.saveScreeningScores(userId, jobId, req.session.screeningScores, req.session.screeningCounters);
+                        botResponse = {
+                            text: "Thank you for answering the questions. Please upload your resume.",
+                            buttons: [
+                                { text: 'Upload a File', type: 'file_upload', action: 'uploadResume' }
+                            ]
+                        };
+            
+                        // Reset session after processing all questions
+                        req.session.screeningQuestions = null;
+                        req.session.currentQuestionIndex = null;
+                        req.session.screeningCounters = null;
+                    }
                 } else {
-                    botResponse = {
-                        text: "After answering the questions, kindly upload your resume for us to review.\nPlease press the button below to upload your resume.",
-                        buttons: [
-                            { text: 'Upload a File', type: 'file_upload', action: 'uploadResume' } // Custom button type for file upload
-                        ]
-                    };
-                    
-                    req.session.screeningQuestions = null;
-                    req.session.currentQuestionIndex = null;
+                    botResponse = "No screening questions available for this position.";
                 }
-            } else if (userMessage === 'upload') {
-                // Handle file upload response
-                botResponse = {
-                    text: "Please upload your resume using the button provided earlier.",
-                    buttons: []
-                };
+            } else if (req.body.file) {
+                await this.handleFileUpload(req, res);
+                return;
             } else {
                 botResponse = { text: "I'm sorry, I didn't understand that. How can I help you?", buttons: [] };
             }
@@ -551,9 +591,18 @@ getInitialScreeningQuestions: async function (jobId) {
                     { text: 'No', value: 0 }
                 ]
             })),
-            ...sortedSkillsQuery.map(s => ({
-                type: s.jobReqSkillType.toLowerCase(),
-                text: `To assess your ${s.jobReqSkillType.toLowerCase()} skills, do you have ${s.jobReqSkillName}?`,
+
+            ...hardSkills.map(s => ({
+                type: 'hardSkill', // Ensure this is set correctly
+                text: `To assess your hard skills, do you have ${s.jobReqSkillName}?`,
+                buttons: [
+                    { text: 'Yes', value: 1 },
+                    { text: 'No', value: 0 }
+                ]
+            })),
+            ...softSkills.map(s => ({
+                type: 'softSkill', // Ensure this is set correctly
+                text: `To assess your soft skills, do you have ${s.jobReqSkillName}?`,
                 buttons: [
                     { text: 'Yes', value: 1 },
                     { text: 'No', value: 0 }
@@ -586,19 +635,6 @@ getInitialScreeningQuestions: async function (jobId) {
     }
 },
 
-
-// Function to process screening questions and include Yes/No buttons
-handleScreeningQuestions: function (questionObj) {
-    const questionText = questionObj.question;
-    const buttons = questionObj.options.map(option => {
-        return { type: 'postback', title: option, payload: option }; // For interactive buttons
-    });
-
-    return {
-        text: `${questionText}\nPlease select one of the following options:`,
-        buttons: buttons
-    };
-},
 
     // Function to fetch job positions and format them for chatbot response
     getJobPositionsList: async function() {
@@ -655,146 +691,120 @@ getJobDetails: async function(jobTitle) {
     }
 },
 
-    // Calculate weighted scores based on answers
-    calculateWeightedScores: async function (answers, selectedPosition, questions) {
-        try {
-            const scores = {
-                degreeScore: 0,
-                experienceScore: 0,
-                certificationScore: 0,
-                hardSkillsScore: 0,
-                softSkillsScore: 0,
-                totalScore: 0
-            };
-    
-            for (let i = 0; i < answers.length; i++) {
-                const question = questions[i].toLowerCase();
-                if (question.includes('degree')) scores.degreeScore += answers[i];
-                else if (question.includes('experience')) scores.experienceScore += answers[i];
-                else if (question.includes('certifications')) scores.certificationScore += answers[i];
-                else if (question.includes('hard skills')) scores.hardSkillsScore += answers[i];
-                else if (question.includes('soft skills')) scores.softSkillsScore += answers[i];
-            }
-    
-            const totalScore = scores.degreeScore + scores.experienceScore +
-                scores.certificationScore + scores.hardSkillsScore + scores.softSkillsScore;
-            scores.totalScore = totalScore;
-    
-            const result = totalScore >= 15 ? 'pass' : 'fail';
-    
-            return { weightedScores: scores, result };
-        } catch (error) {
-            console.error("Error calculating scores:", error);
-            return { weightedScores: {}, result: 'fail' };
+saveScreeningScores: async function (userId, jobId, responses, screeningCounters, resumeUrl) {
+    try {
+        console.log('Saving screening scores for user:', userId);
+        
+        // Log input parameters for debugging
+        console.log(`Job ID: ${jobId}`);
+        console.log('Responses:', responses);
+        console.log('Screening Counters:', screeningCounters);
+        console.log('Resume URL:', resumeUrl);
+
+        let degreeScore = screeningCounters.degree || 0;
+        let experienceScore = screeningCounters.experience || 0;
+        let certificationScore = screeningCounters.certification || 0;
+        let hardSkillsScore = screeningCounters.hardSkill || 0;
+        let softSkillsScore = screeningCounters.softSkill || 0;
+        let workSetupScore = screeningCounters.work_setup > 0; // Boolean
+        let availabilityScore = screeningCounters.availability > 0; // Boolean
+
+        // Calculate total score
+        const totalScore = degreeScore + experienceScore + certificationScore + hardSkillsScore + softSkillsScore;
+        const totalScoreCalculatedAt = new Date().toISOString();
+        
+        console.log(`Calculated total score: ${totalScore}`);
+        console.log(`Total score calculated at: ${totalScoreCalculatedAt}`);
+
+        // Insert into database
+        const { data, error } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .insert([
+                {
+                    userId: userId,
+                    jobId: jobId,
+                    degreeScore: degreeScore,
+                    experienceScore: experienceScore,
+                    certificationScore: certificationScore,
+                    hardSkillsScore: hardSkillsScore,
+                    softSkillsScore: softSkillsScore,
+                    workSetupScore: workSetupScore,
+                    availabilityScore: availabilityScore,
+                    totalScore: totalScore,
+                    totalScoreCalculatedAt: totalScoreCalculatedAt,
+                    resume_url: resumeUrl // Pass the resume URL here
+                }
+            ]);
+
+        if (error) {
+            console.error('Error saving screening scores:', error);
+            throw new Error('Error saving screening scores.');
         }
-    },
-    
 
-    // Function to calculate weighted scores for screening answers
-    // calculateWeightedScores: async function(answers, selectedPosition, screeningQuestions) {
-    //     if (!screeningQuestions || screeningQuestions.length === 0) {
-    //         return { weightedScores: [], result: 'fail' };
-    //     }
-    
-    //     const jobDetails = await chatbotController.getJobDetails(selectedPosition);
-    
-    //     const weightings = {
-    //         degreeRelevance: 1.5,  // Degree-related questions are weighted higher
-    //         softSkills: 1,         // Soft skills-related questions have a standard weight
-    //     };
-    
-    //     let totalScore = 0;
-    //     const weightedScores = answers.map((answer, index) => {
-    //         const question = screeningQuestions[index];
-    //         let weight = 1; // Default weight
-    
-    //         if (question.toLowerCase().includes('degree required')) {
-    //             weight = weightings.degreeRelevance;  
-    //         } else if (question.toLowerCase().includes('experience') || question.toLowerCase().includes('skill')) {
-    //             weight = weightings.softSkills;  
-    //         }
-    
-    //         const weightedScore = answer * weight;
-    //         totalScore += weightedScore;
-    
-    //         return weightedScore;
-    //     });
-    
-    //     // Calculate average score and determine pass/fail
-    //     const averageScore = totalScore / screeningQuestions.length;
-    //     const result = averageScore >= 3 ? 'pass' : 'fail';  // Assume a threshold of 3 to pass
-    
-    //     return { weightedScores, result };
-    // },    
+        console.log('Screening scores saved successfully for user:', userId);
+        return "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.";
+    } catch (error) {
+        console.error('Error in saveScreeningScores:', error);
+        return 'An error occurred while saving your screening scores.';
+    }
+},
 
-    
-// File upload handler in your controller
 // File upload handler in your controller
 handleFileUpload: async function(req, res) {
     try {
-        // Check if file is uploaded
         if (!req.files || !req.files.file) {
             return res.status(400).send('No file uploaded.');
         }
 
         const file = req.files.file;
+        // Update the allowedTypes array to accept more file types
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
-        // Define allowed MIME types
-        const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
-
-        // Validate file type
         if (!allowedTypes.includes(file.mimetype)) {
-            return res.status(400).send('Invalid file type. Please upload a PDF, PNG, or JPEG.');
+            return res.status(400).send('Invalid file type. Please upload a valid file.');
         }
 
-        // Define max file size (5 MB)
         const maxSize = 5 * 1024 * 1024; // 5 MB
         if (file.size > maxSize) {
             return res.status(400).send('File size exceeds the 5 MB limit.');
         }
 
-        // Generate a unique file name
         const uniqueName = `${Date.now()}-${file.name}`;
+        const filePath = path.join(__dirname, '../uploads', uniqueName);  // Path to save the file
 
-        // Check if user is authenticated, if not, use 'anonymous'
-        const userId = req.body.userId || 'anonymous';
-
-        // Define the local file path
-        const filePath = path.join(__dirname, '../uploads', uniqueName);
-
-        // Ensure the uploads folder exists
         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
             fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
         }
 
-        // Save the file to the server locally
         await file.mv(filePath);
 
         // Upload file to Supabase Storage
-        const { data, error } = await supabase.storage
-            .from('uploads') // Your Supabase bucket name
-            .upload(uniqueName, file.data, {
-                cacheControl: '3600',  // Cache control header
-                upsert: false,         // Prevent overwriting files with the same name
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('uploads')
+            .upload(uniqueName, fs.readFileSync(filePath), {
+                contentType: file.mimetype,
+                cacheControl: '3600',
+                upsert: false,
             });
 
-        if (error) {
-            console.error('Error uploading file to Supabase:', error);
+        fs.unlinkSync(filePath);
+
+        if (uploadError) {
+            console.error('Error uploading file to Supabase:', uploadError);
             return res.status(500).send('Error uploading file to Supabase.');
         }
 
-        // Generate the public URL for the uploaded file
-        const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`; // Replace with your actual Supabase URL
-        
-        // Insert file metadata into the database (optional)
-        const { data: insertedFile, error: insertError } = await supabase
-            .from('user_files') // Your table for storing file metadata
+        const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uploadData.path}`;
+
+        // Insert file metadata into user_files table
+        const { error: insertError } = await supabase
+            .from('user_files')
             .insert([{
-                userId: userId,     // User who uploaded the file (anonymous or authenticated)
-                file_name: uniqueName, // File name
-                file_url: fileUrl,    // Public URL of the uploaded file
+                userId: req.body.userId,
+                file_name: uniqueName,
+                file_url: fileUrl,
                 uploaded_at: new Date(),
-                file_size: file.size  // File size in bytes
+                file_size: file.size,
             }]);
 
         if (insertError) {
@@ -802,78 +812,24 @@ handleFileUpload: async function(req, res) {
             return res.status(500).send('Error inserting file metadata into database.');
         }
 
-        // Return a success message with the file URL
-        res.send(fileUrl); // Send back the file URL instead of just a success message
+        // Update applicant_initialscreening_assessment with resume URL
+        const { error: updateError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .update({ resume_url: fileUrl })
+            .eq('userId', req.body.userId); // Adjust this based on how you identify the applicant
+
+        if (updateError) {
+            console.error('Error updating resume URL:', updateError);
+            return res.status(500).send('Error updating resume URL.');
+        }
+
+        res.send({ fileUrl });
 
     } catch (error) {
         console.error('Error uploading file:', error);
         res.status(500).send('Error uploading file.');
     }
 },
-
-// handleFileUpload: async function(req, res) {
-//     try {
-//         // Check if file is uploaded
-//         if (!req.files || !req.files.file) {
-//             return res.status(400).send('No file uploaded.');
-//         }
-
-//         const file = req.files.file;
-        
-//         // Check if user is authenticated, if not, use 'anonymous'
-//         const userId = req.body.userId || 'anonymous'; // If userId is not provided, mark as 'anonymous'
-
-//         // Define the local file path
-//         const filePath = path.join(__dirname, '../uploads', file.name); // Use the uploads folder path
-
-//         // Ensure the uploads folder exists
-//         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
-//             fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
-//         }
-
-//         // Save the file to the server locally
-//         await file.mv(filePath);
-
-//         // Upload file to Supabase Storage
-//         const { data, error } = await supabase.storage
-//             .from('uploads') // Your Supabase bucket name
-//             .upload(file.name, file.data, {
-//                 cacheControl: '3600',  // Cache control header
-//                 upsert: false,         // Prevent overwriting files with the same name
-//             });
-
-//         if (error) {
-//             console.error('Error uploading file to Supabase:', error);
-//             return res.status(500).send('Error uploading file to Supabase.');
-//         }
-
-//         // Generate the public URL for the uploaded file
-//         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${data.Key}`; // Replace with your actual Supabase URL
-        
-//         // Insert file metadata into the database (optional)
-//         const { data: insertedFile, error: insertError } = await supabase
-//             .from('user_files') // Your table for storing file metadata
-//             .insert([{
-//                 userId: userId,     // User who uploaded the file (anonymous or authenticated)
-//                 file_name: file.name, // File name
-//                 file_url: fileUrl,    // Public URL of the uploaded file
-//                 uploaded_at: new Date(),
-//                 file_size: file.size  // File size in bytes
-//             }]);
-
-//         if (insertError) {
-//             console.error('Error inserting file metadata:', insertError);
-//             return res.status(500).send('Error inserting file metadata into database.');
-//         }
-
-//         // Return a success message with the file URL
-//         res.send(fileUrl); // Send back the file URL instead of just a success message
-
-//     } catch (error) {
-//         console.error('Error uploading file:', error);
-//         res.status(500).send('Error uploading file.');
-//     }
-// },
 
 
 getOnboarding: async function(req, res) {
