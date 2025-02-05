@@ -155,6 +155,9 @@ router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboa
 router.get('/linemanager/leaverequest', lineManagerController.getLeaveRequest); // Fetch leave request
 router.post('/linemanager/leaverequest/update', lineManagerController.updateLeaveRequest); // Update leave request
 
+// New route to notify Line Manager
+router.post('/linemanager/notify', lineManagerController.notifyLineManager);
+
 router.get('/linemanager/useraccount', lineManagerController.getUserAccount);
 router.post('/linemanager/update-info', lineManagerController.updateUserInfo);
 router.get('/linemanager/persinfocareerprog', lineManagerController.getPersInfoCareerProg); // copied this url since HR is an employee

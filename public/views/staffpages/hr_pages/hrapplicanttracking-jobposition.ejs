@@ -780,12 +780,17 @@
 
 async function notifyLineManager(applicantId) {
         try {
-            const response = await fetch(`/notify-line-manager?applicantId=${applicantId}`);
-            const result = await response.json();
+            const response = await fetch('/notify-line-manager', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ applicantId })
+            });
 
+            const result = await response.json();
+            
             if (result.success) {
                 alert('Line Manager has been notified!');
-                location.reload(); // Refresh to reflect changes
+                location.reload(); // Refresh the page to reflect changes
             } else {
                 alert('Failed to notify Line Manager.');
             }

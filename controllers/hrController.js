@@ -450,6 +450,8 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+
+    
     
 
     
@@ -2247,7 +2249,32 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         });
     },
+
+    
     
 };
+
+app.post('/notify-line-manager', async (req, res) => {
+    const { applicantId } = req.body;
+
+    if (!applicantId) {
+        return res.status(400).json({ success: false, error: 'Missing applicantId' });
+    }
+
+    try {
+        const { error } = await supabase
+            .from('applicantaccounts')
+            .update({ LM_notified: true })
+            .eq('applicantId', applicantId);
+
+        if (error) throw error;
+
+        res.json({ success: true, message: 'Line Manager notified successfully' });
+    } catch (error) {
+        console.error('Error updating LM_notified:', error);
+        res.status(500).json({ success: false, error: 'Failed to update Line Manager notification' });
+    }
+});
+
 
 module.exports = hrController;
