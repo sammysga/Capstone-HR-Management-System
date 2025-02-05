@@ -568,10 +568,10 @@
     <% } else if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
         <!-- Message or Button for Line Manager Action -->
         <button 
-            class="btn-line-manager" 
-            onclick="alert('Awaiting Line Manager Action for <%= applicant.firstName %> <%= applicant.lastName %>');">
-            Notify Line Manager
-        </button>
+        class="btn-line-manager" 
+        onclick="notifyLineManager('<%= applicant.applicantId %>')">
+        Notify Line Manager
+    </button>
     <% } %>
 </div>
 
@@ -777,6 +777,26 @@
 </div>
 
 <script>
+
+async function notifyLineManager(applicantId) {
+        try {
+            const response = await fetch(`/hr/applicant-tracker?notifyApplicantId=${applicantId}`, {
+                method: 'GET'
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Line Manager has been notified successfully!');
+                location.reload(); // Refresh the page to reflect changes
+            } else {
+                alert('Failed to notify Line Manager. Try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Something went wrong.');
+        }
+    }
+    
      // Function to extract applicantId from URL
      function getApplicantIdFromURL() {
             const path = window.location.pathname;
