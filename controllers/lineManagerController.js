@@ -803,6 +803,39 @@ const lineManagerController = {
             res.redirect('/staff/login');
         }
     },
+
+    postApproveLineManager: async function (req, res) {
+        console.log('Request Body:', req.body); // Log the entire request body
+    
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            const { applicantId } = req.body; // Get applicantId from request body
+    
+            if (!applicantId) {
+                return res.status(400).json({ success: false, error: 'Missing applicantId' });
+            }
+    
+            try {
+                const { error } = await supabase
+                    .from('applicantaccounts')
+                    .update({ 
+                        applicantStatus: 'P2 - Awaiting for HR Evaluation', // Update status as part of approval
+                        lineManagerApproved: true // Set lineManagerApproved to true
+                    })
+                    .eq('applicantId', applicantId);
+    
+                if (error) throw error;
+    
+                res.json({ success: true, message: 'Line Manager approved successfully' });
+            } catch (error) {
+                console.error('Error updating applicant status:', error);
+                return res.status(500).json({ success: false, error: 'Failed to approve Line Manager' });
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+            res.redirect('/staff/login');
+        }
+    },
+    
     
 
     getFinalResult: function(req, res) {

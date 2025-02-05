@@ -156,6 +156,7 @@ router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.g
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
 router.get('/linemanager/leaverequest', lineManagerController.getLeaveRequest); // Fetch leave request
 router.post('/linemanager/leaverequest/update', lineManagerController.updateLeaveRequest); // Update leave request
+router.post('/hr/approve-line-manager', hrController.postApproveLineManager); // Approve Line Manager Action
 
 // New route to notify Line Manager
 //router.post('/linemanager/notify', lineManagerController.notifyLineManager);
