@@ -778,26 +778,26 @@
 
 <script>
 
-async function notifyLineManager(applicantId) {
-        try {
-            const response = await fetch('/notify-line-manager', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ applicantId })
-            });
-
-            const result = await response.json();
-            
-            if (result.success) {
-                alert('Line Manager has been notified!');
-                location.reload(); // Refresh the page to reflect changes
+function notifyLineManager(applicantId) {
+        fetch('/notify-line-manager', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ applicantId: applicantId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);  // Success message
             } else {
-                alert('Failed to notify Line Manager.');
+                alert(data.error);    // Error message
             }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('Error:', error);
-            alert('Something went wrong.');
-        }
+            alert('An error occurred.');
+        });
     }
     
      // Function to extract applicantId from URL

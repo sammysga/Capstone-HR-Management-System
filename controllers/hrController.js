@@ -452,6 +452,37 @@ const hrController = {
     },
 
     
+    postNotifyLineManager: async function(req, res) {
+        console.log('Request Body:', req.body); // Log the entire request body
+    
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            const { applicantId } = req.body; // Destructure the applicantId from the request body
+    
+            console.log('Received ApplicantId:', applicantId);
+    
+            // Validate applicantId
+            if (!applicantId) {
+                return res.status(400).json({ success: false, error: 'Applicant ID is required.' });
+            }
+    
+            try {
+                const { error } = await supabase
+                    .from('applicantaccounts')
+                    .update({ LM_notified: true }) // Set LM_notified to true
+                    .eq('applicantId', applicantId);
+    
+                if (error) throw error;
+    
+                res.status(200).json({ success: true, message: 'Line Manager notified successfully.' });
+            } catch (error) {
+                console.error('Error updating LM_notified:', error);
+                return res.status(500).json({ success: false, error: 'Failed to notify Line Manager. Please try again.' });
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
     
 
     
@@ -2253,28 +2284,6 @@ updateJobOffer: async function(req, res) {
     
     
 };
-
-app.post('/notify-line-manager', async (req, res) => {
-    const { applicantId } = req.body;
-
-    if (!applicantId) {
-        return res.status(400).json({ success: false, error: 'Missing applicantId' });
-    }
-
-    try {
-        const { error } = await supabase
-            .from('applicantaccounts')
-            .update({ LM_notified: true })
-            .eq('applicantId', applicantId);
-
-        if (error) throw error;
-
-        res.json({ success: true, message: 'Line Manager notified successfully' });
-    } catch (error) {
-        console.error('Error updating LM_notified:', error);
-        res.status(500).json({ success: false, error: 'Failed to update Line Manager notification' });
-    }
-});
 
 
 module.exports = hrController;
