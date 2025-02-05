@@ -780,16 +780,14 @@
 
 async function notifyLineManager(applicantId) {
         try {
-            const response = await fetch(`/hr/applicant-tracker?applicantId=${applicantId}`, {
-                method: 'GET'
-            });
-
+            const response = await fetch(`/notify-line-manager?applicantId=${applicantId}`);
             const result = await response.json();
+
             if (result.success) {
-                alert('Line Manager has been notified successfully!');
-                location.reload(); // Refresh the page to reflect changes
+                alert('Line Manager has been notified!');
+                location.reload(); // Refresh to reflect changes
             } else {
-                alert('Failed to notify Line Manager. Try again.');
+                alert('Failed to notify Line Manager.');
             }
         } catch (error) {
             console.error('Error:', error);
