@@ -780,7 +780,7 @@
 
 async function notifyLineManager(applicantId) {
         try {
-            const response = await fetch(`/hr/applicant-tracker?notifyApplicantId=${applicantId}`, {
+            const response = await fetch(`/hr/applicant-tracker?applicantId=${applicantId}`, {
                 method: 'GET'
             });
 
