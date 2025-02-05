@@ -82,6 +82,8 @@ router.post('/hr/view-mrf/:id', hrController.submitMRF);
 router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
 router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
+
+router.post('/notify-line-manager', hrController.postNotifyLineManager);
 // Backend route to handle evaluation form page
 router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
 
@@ -156,7 +158,7 @@ router.get('/linemanager/leaverequest', lineManagerController.getLeaveRequest); 
 router.post('/linemanager/leaverequest/update', lineManagerController.updateLeaveRequest); // Update leave request
 
 // New route to notify Line Manager
-router.post('/linemanager/notify', lineManagerController.notifyLineManager);
+//router.post('/linemanager/notify', lineManagerController.notifyLineManager);
 
 router.get('/linemanager/useraccount', lineManagerController.getUserAccount);
 router.post('/linemanager/update-info', lineManagerController.updateUserInfo);
