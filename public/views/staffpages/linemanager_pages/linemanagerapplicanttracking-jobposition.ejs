@@ -566,11 +566,11 @@
             <button class="btn-evaluation">For Evaluation</button>
         </a>
     <% } else if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
-        <!-- Message or Button for Line Manager Action -->
+        <!-- Approve Button for Line Manager Action -->
         <button 
-            class="btn-line-manager" 
-            onclick="alert('Awaiting Line Manager Action for <%= applicant.firstName %> <%= applicant.lastName %>');">
-            Notify Line Manager
+            class="btn-approve" 
+            onclick="approveLineManager('<%= applicant.applicantId %>')">
+            Approve
         </button>
     <% } %>
 </div>
@@ -777,6 +777,31 @@
 </div>
 
 <script>
+
+function approveLineManager(applicantId) {
+    fetch('/hr/approve-line-manager', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Line Manager Approved!');
+            location.reload(); // Reload page to reflect the changes
+        } else {
+            alert('Failed to approve line manager.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred.');
+    });
+}
+
+
      // Function to extract applicantId from URL
      function getApplicantIdFromURL() {
             const path = window.location.pathname;
