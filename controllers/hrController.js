@@ -341,14 +341,14 @@ const hrController = {
     getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { jobId, notifyApplicantId } = req.query; // Extract jobId & notify request
+                const { jobId, applicantId } = req.query; // Extract jobId & applicantId
     
-                // If notifyApplicantId is provided, update LM_notified in Supabase
-                if (notifyApplicantId) {
+                // If applicantId is provided, update LM_notified in Supabase
+                if (applicantId) {
                     const { error: updateError } = await supabase
                         .from('applicantaccounts')
                         .update({ LM_notified: true }) // Set LM_notified to true
-                        .eq('applicantId', notifyApplicantId);
+                        .eq('applicantId', applicantId);
     
                     if (updateError) {
                         console.error('Error updating LM_notified:', updateError);
