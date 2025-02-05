@@ -677,7 +677,7 @@ const lineManagerController = {
                 }));
     
                 // Render the page
-                res.render('staffpages/hr_pages/linemanagerapplicanttracking', {
+                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking', {
                     jobPositions: jobPositionsWithCounts,
                     departments,
                 });
@@ -791,7 +791,7 @@ const lineManagerController = {
                 
             
                 // Render the EJS template with applicants data
-                res.render('staffpages/hr_pages/linemanagerapplicanttracking-jobposition', {
+                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', {
                     applicants: applicantsWithDetails,
                 });
             } catch (error) {
