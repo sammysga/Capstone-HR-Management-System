@@ -818,7 +818,7 @@ const lineManagerController = {
                 const { error } = await supabase
                 .from('applicantaccounts')
                 .update({ 
-                    applicantStatus: 'P1: PASSED', // Ensure correct status
+                    applicantStatus: 'P1 - PASSED', // Ensure correct status
                     lineManagerApproved: true 
                 })
                 .eq('applicantId', applicantId);
