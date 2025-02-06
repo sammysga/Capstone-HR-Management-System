@@ -744,32 +744,31 @@ const lineManagerController = {
                     const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
                 
                     let formattedStatus = applicant.applicantStatus;
-                
-                    // Check Initial Screening Score
-                    if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
-                        // If Initial Screening Score is missing, set status to "P1 - Initial Screening"
-                        formattedStatus = 'P1 - Initial Screening';
-                    } else if (applicant.initialScreeningScore < 50) {
-                        // If Initial Screening Score is below 50, mark as FAILED
-                        formattedStatus = 'P1 - FAILED';
-                    } else {
-                        // If the Initial Screening Score is >= 50, move to Awaiting HR Action and append the score
-                        formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
-                    }
-                
-                    // Check HR Interview Score
-                    if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
-                        if (applicant.hrInterviewFormScore < 50) {
-                            // If the HR Interview Score is below 50, mark as FAILED
-                            formattedStatus = 'P1 - FAILED';
-                        } else if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
-                            // If HR Interview Score > 45 and isChosen1 is true, set to Line Manager Action
-                            formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
-                        } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
-                            // Append HR Interview Score to the status for clarity
-                            formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
-                        }
-                    }
+
+// If Line Manager has approved, set status to "P1: PASSED"
+if (applicant.lineManagerApproved) {
+    formattedStatus = 'P1: PASSED';
+} else {
+    // Check Initial Screening Score
+    if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
+        formattedStatus = 'P1 - Initial Screening';
+    } else if (applicant.initialScreeningScore < 50) {
+        formattedStatus = 'P1 - FAILED';
+    } else {
+        formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
+    }
+
+    // Check HR Interview Score
+    if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
+        if (applicant.hrInterviewFormScore < 50) {
+            formattedStatus = 'P1 - FAILED';
+        } else if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
+            formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
+        } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
+            formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
+        }
+    }
+}
                 
                     // Log for debugging
                     console.log("Applicant:", applicant.firstName, applicant.lastName, 
