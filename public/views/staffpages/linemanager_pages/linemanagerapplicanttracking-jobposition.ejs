@@ -501,8 +501,15 @@
     <!-- Header Section -->
     <div class="header-section">
         <h2>Applicant Tracking</h2>
-        <div class="subheader">Data Analyst</div>
-    </div>
+        <% if (applicants && applicants.length > 0) { %>
+          <div class="subheader">
+            <%= applicants[0].jobTitle %>
+          </div>
+        <% } else { %>
+          <p>No applicant found.</p>
+        <% } %>
+      </div>
+      
 
   <!-- Applicant Tracking Section -->
     <div class="tracking-section">
