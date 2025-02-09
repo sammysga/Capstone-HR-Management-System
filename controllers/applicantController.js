@@ -750,35 +750,45 @@ saveScreeningScores: async function (userId, jobId, responses, screeningCounters
 },
 
 // File upload handler in your controller
-handleFileUpload: async function(req, res) {
+handleFileUpload: async function (req, res) {
     try {
+        console.log('Starting file upload process...');
+        
+        const userId = req.session.userID; // Fetch userId from session
+        console.log(`User ID: ${userId}`);
+
         if (!req.files || !req.files.file) {
+            console.log('No file uploaded.');
             return res.status(400).send('No file uploaded.');
         }
 
         const file = req.files.file;
-        // Update the allowedTypes array to accept more file types
-        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        console.log(`File received: ${file.name}, Type: ${file.mimetype}, Size: ${file.size} bytes`);
 
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
         if (!allowedTypes.includes(file.mimetype)) {
+            console.log('Invalid file type uploaded.');
             return res.status(400).send('Invalid file type. Please upload a valid file.');
         }
 
         const maxSize = 5 * 1024 * 1024; // 5 MB
         if (file.size > maxSize) {
+            console.log('File size exceeds the 5 MB limit.');
             return res.status(400).send('File size exceeds the 5 MB limit.');
         }
 
         const uniqueName = `${Date.now()}-${file.name}`;
-        const filePath = path.join(__dirname, '../uploads', uniqueName);  // Path to save the file
+        const filePath = path.join(__dirname, '../uploads', uniqueName);
+        console.log(`Saving file locally: ${filePath}`);
 
         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
+            console.log('Creating uploads directory...');
             fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
         }
 
         await file.mv(filePath);
+        console.log('File successfully saved locally. Uploading to Supabase...');
 
-        // Upload file to Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from('uploads')
             .upload(uniqueName, fs.readFileSync(filePath), {
@@ -788,6 +798,7 @@ handleFileUpload: async function(req, res) {
             });
 
         fs.unlinkSync(filePath);
+        console.log('Local file deleted after upload to Supabase.');
 
         if (uploadError) {
             console.error('Error uploading file to Supabase:', uploadError);
@@ -795,12 +806,12 @@ handleFileUpload: async function(req, res) {
         }
 
         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uploadData.path}`;
+        console.log(`File uploaded successfully: ${fileUrl}`);
 
-        // Insert file metadata into user_files table
         const { error: insertError } = await supabase
             .from('user_files')
             .insert([{
-                userId: req.body.userId,
+                userId: userId,
                 file_name: uniqueName,
                 file_url: fileUrl,
                 uploaded_at: new Date(),
@@ -811,23 +822,25 @@ handleFileUpload: async function(req, res) {
             console.error('Error inserting file metadata:', insertError);
             return res.status(500).send('Error inserting file metadata into database.');
         }
+        console.log('File metadata successfully inserted into database.');
 
-        // Update applicant_initialscreening_assessment with resume URL
         const { error: updateError } = await supabase
             .from('applicant_initialscreening_assessment')
             .update({ resume_url: fileUrl })
-            .eq('userId', req.body.userId); // Adjust this based on how you identify the applicant
+            .eq('userId', userId);
 
         if (updateError) {
             console.error('Error updating resume URL:', updateError);
             return res.status(500).send('Error updating resume URL.');
         }
+        console.log('Resume URL updated successfully in applicant_initialscreening_assessment table.');
 
         res.send({ fileUrl });
+        console.log('File upload process completed successfully.');
 
     } catch (error) {
         console.error('Error uploading file:', error);
-        res.status(500).send('Error uploading file.');
+        res.status(500).send('Internal Server Error.');
     }
 },
 
