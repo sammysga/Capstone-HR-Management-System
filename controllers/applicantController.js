@@ -699,7 +699,6 @@ saveScreeningScores: async function (userId, jobId, responses, screeningCounters
         console.log(`Job ID: ${jobId}`);
         console.log('Responses:', responses);
         console.log('Screening Counters:', screeningCounters);
-        console.log('Resume URL:', resumeUrl);
 
         let degreeScore = screeningCounters.degree || 0;
         let experienceScore = screeningCounters.experience || 0;
@@ -750,6 +749,7 @@ saveScreeningScores: async function (userId, jobId, responses, screeningCounters
 },
 
 // File upload handler in your controller
+// File upload handler in your controller
 handleFileUpload: async function (req, res) {
     try {
         console.log('Starting file upload process...');
@@ -789,7 +789,7 @@ handleFileUpload: async function (req, res) {
         await file.mv(filePath);
         console.log('File successfully saved locally. Uploading to Supabase...');
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
             .from('uploads')
             .upload(uniqueName, fs.readFileSync(filePath), {
                 contentType: file.mimetype,
@@ -805,7 +805,7 @@ handleFileUpload: async function (req, res) {
             return res.status(500).send('Error uploading file to Supabase.');
         }
 
-        const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uploadData.path}`;
+        const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
         console.log(`File uploaded successfully: ${fileUrl}`);
 
         const { error: insertError } = await supabase
@@ -827,7 +827,8 @@ handleFileUpload: async function (req, res) {
         const { error: updateError } = await supabase
             .from('applicant_initialscreening_assessment')
             .update({ resume_url: fileUrl })
-            .eq('userId', userId);
+            .eq('userId', userId)
+            .select(); // Added select() to debug
 
         if (updateError) {
             console.error('Error updating resume URL:', updateError);
