@@ -357,6 +357,24 @@ const hrController = {
     
                     return res.json({ success: true, message: 'Line Manager notified successfully' });
                 }
+
+                // If applicantId is provided, update p2_Approved and applicantStatus
+if (req.body.applicantId) {
+    const { error: moveToP2Error } = await supabase
+        .from('applicantaccounts')
+        .update({
+            p2_Approved: true, 
+            applicantStatus: 'P2 - HR Screening Scheduled'
+        })
+        .eq('applicantId', req.body.applicantId);
+
+    if (moveToP2Error) {
+        console.error('Error updating applicant to P2:', moveToP2Error);
+        return res.status(500).json({ success: false, error: 'Failed to move applicant to P2' });
+    }
+
+    return res.json({ success: true, message: 'Applicant moved to P2 successfully!' });
+}
     
                 // Fetch applicants by jobId, including scores
                 const { data: applicants, error: applicantError } = await supabase
@@ -374,7 +392,8 @@ const hrController = {
                         initialScreeningScore,
                         isChosen1,
                         LM_notified,
-                        lineManagerApproved
+                        lineManagerApproved,
+                        p2_Approved
                     `)
                     .eq('jobId', jobId);
     
@@ -489,6 +508,42 @@ if (applicant.lineManagerApproved) {
             res.redirect('/staff/login');
         }
     },
+
+    postMoveToP2: async function (req, res) {
+        console.log('Request Body:', req.body); // Log the entire request body
+    
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            const { applicantId } = req.body; // Destructure the applicantId from the request body
+    
+            console.log('Received ApplicantId:', applicantId);
+    
+            // Validate applicantId
+            if (!applicantId) {
+                return res.status(400).json({ success: false, error: 'Applicant ID is required.' });
+            }
+    
+            try {
+                const { error } = await supabase
+                    .from('applicantaccounts')
+                    .update({
+                        p2_Approved: true, 
+                        applicantStatus: 'P2 - HR Screening Scheduled'
+                    }) // Update p2_Approved and applicantStatus
+                    .eq('applicantId', applicantId);
+    
+                if (error) throw error;
+    
+                res.status(200).json({ success: true, message: 'Applicant moved to P2 successfully!' });
+            } catch (error) {
+                console.error('Error updating applicant to P2:', error);
+                return res.status(500).json({ success: false, error: 'Failed to move applicant to P2. Please try again.' });
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            res.redirect('/staff/login');
+        }
+    },
+    
     
 
     
