@@ -82,6 +82,7 @@ router.post('/hr/view-mrf/:id', hrController.submitMRF);
 router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
 router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
+router.post('/hr/move-to-p2', hrController.postMoveToP2);
 
 router.post('/notify-line-manager', hrController.postNotifyLineManager);
 // Backend route to handle evaluation form page

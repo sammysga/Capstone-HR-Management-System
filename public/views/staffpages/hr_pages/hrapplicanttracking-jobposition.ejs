@@ -554,6 +554,7 @@
                     <td>
 <!-- Display Applicant Status -->
 <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
+
 <div style="margin-top: 10px;">
     <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for HR Action')) { %>
         <!-- For Review Button -->
@@ -567,18 +568,28 @@
             )">
             For Review
         </button>
+
     <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
         <!-- For Evaluation Button -->
         <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
             <button class="btn-evaluation">For Evaluation</button>
         </a>
+
     <% } else if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
-        <!-- Message or Button for Line Manager Action -->
+        <!-- Notify Line Manager Button -->
         <button 
-        class="btn-line-manager" 
-        onclick="notifyLineManager('<%= applicant.applicantId %>')">
-        Notify Line Manager
-    </button>
+            class="btn-line-manager" 
+            onclick="notifyLineManager('<%= applicant.applicantId %>')">
+            Notify Line Manager
+        </button>
+
+    <% } else if (applicant.applicantStatus === 'P1 - PASSED') { %>
+        <!-- Move to P2 Button -->
+        <button 
+            class="btn-move-to-p2" 
+            onclick="moveToP2('<%= applicant.applicantId %>')">
+            Move to P2
+        </button>
     <% } %>
 </div>
 
@@ -784,6 +795,34 @@
 </div>
 
 <script>
+
+async function moveToP2(applicantId) {
+        if (!confirm("Are you sure you want to move this applicant to P2?")) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/hr/move-to-p2', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ applicantId })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Applicant successfully moved to P2!');
+                location.reload(); // Refresh the page to update the status
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error moving applicant to P2:', error);
+            alert('Failed to move applicant to P2. Please try again.');
+        }
+    }
 
 function notifyLineManager(applicantId) {
         fetch('/notify-line-manager', {
