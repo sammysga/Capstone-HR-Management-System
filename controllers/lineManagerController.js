@@ -747,7 +747,7 @@ const lineManagerController = {
 
 // If Line Manager has approved, set status to "P1: PASSED"
 if (applicant.lineManagerApproved) {
-    formattedStatus = 'P1: PASSED';
+    formattedStatus = 'P1 - PASSED';
 } else {
     // Check Initial Screening Score
     if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
