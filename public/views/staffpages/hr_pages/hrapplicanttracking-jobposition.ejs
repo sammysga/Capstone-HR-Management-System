@@ -814,7 +814,13 @@ async function moveToP2(applicantId) {
 
             if (result.success) {
                 alert('Applicant successfully moved to P2!');
-                location.reload(); // Refresh the page to update the status
+                
+                // Update status directly in the UI without reloading
+                document.getElementById(`status-${applicantId}`).innerText = result.updatedStatus;
+
+                // Optionally, hide the button after status update
+                document.getElementById(`move-btn-${applicantId}`).style.display = "none";
+
             } else {
                 alert('Error: ' + result.error);
             }

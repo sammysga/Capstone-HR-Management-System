@@ -358,23 +358,7 @@ const hrController = {
                     return res.json({ success: true, message: 'Line Manager notified successfully' });
                 }
 
-                // If applicantId is provided, update p2_Approved and applicantStatus
-if (req.body.applicantId) {
-    const { error: moveToP2Error } = await supabase
-        .from('applicantaccounts')
-        .update({
-            p2_Approved: true, 
-            applicantStatus: 'P2 - HR Screening Scheduled'
-        })
-        .eq('applicantId', req.body.applicantId);
-
-    if (moveToP2Error) {
-        console.error('Error updating applicant to P2:', moveToP2Error);
-        return res.status(500).json({ success: false, error: 'Failed to move applicant to P2' });
-    }
-
-    return res.json({ success: true, message: 'Applicant moved to P2 successfully!' });
-}
+               
     
                 // Fetch applicants by jobId, including scores
                 const { data: applicants, error: applicantError } = await supabase
