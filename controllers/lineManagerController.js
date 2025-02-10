@@ -712,6 +712,8 @@ const lineManagerController = {
                         hrInterviewFormScore,
                         initialScreeningScore,
                         isChosen1
+                        LM_notified,
+                        lineManagerApproved
                     `)
                     .eq('jobId', jobId);
     
