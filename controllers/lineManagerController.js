@@ -711,7 +711,7 @@ const lineManagerController = {
                         applicantId,
                         hrInterviewFormScore,
                         initialScreeningScore,
-                        isChosen1
+                        isChosen1,
                         LM_notified,
                         lineManagerApproved
                     `)
