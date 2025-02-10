@@ -770,12 +770,14 @@ if (applicant.lineManagerApproved) {
     }
 }
                 
-                    // Log for debugging
-                    console.log("Applicant:", applicant.firstName, applicant.lastName, 
-                                "Initial Screening Score:", applicant.initialScreeningScore, 
-                                "HR Interview Score:", applicant.hrInterviewFormScore, 
-                                "isChosen1:", applicant.isChosen1, 
-                                "=> Status:", formattedStatus);
+// Log for debugging
+console.log("Applicant:", applicant.firstName, applicant.lastName, 
+    "Initial Screening Score:", applicant.initialScreeningScore, 
+    "HR Interview Score:", applicant.hrInterviewFormScore, 
+    "isChosen1:", applicant.isChosen1, 
+    "lineManagerApproved:", applicant.lineManagerApproved,
+    "LM_notified:", applicant.LM_notified,
+    "=> Status:", formattedStatus);
                 
                     // Return the updated applicant object with the formatted status
                     return {
