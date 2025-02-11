@@ -263,6 +263,8 @@ const hrController = {
     },
     
 
+
+    /* ATS CODES DIVIDER  */
     getApplicantTrackerAllJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
@@ -539,9 +541,120 @@ if (applicant.lineManagerApproved) {
             return res.status(500).json({ success: false, error: 'Failed to update applicant status.' });
         }
     },
+        // Controller method for viewing final results for an individual applicant
+        getFinalResults: async function (req, res) {
+            try {
+                const userId = req.session.user?.userId; // Get the current user's ID (from session)
     
+                if (!userId) {
+                    req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
+                    return res.redirect('/staff/login');
+                }
     
+                // Fetch the chatbot interaction history for the current applicant
+                const { data: chatbotInteractions, error: chatbotError } = await supabase
+                    .from('chatbot_interaction')
+                    .select('message, response, timestamp, applicantStage')
+                    .eq('userId', userId)
+                    .order('timestamp', { ascending: true }); // Sort by timestamp in ascending order
+    
+                if (chatbotError) {
+                    console.error('Error fetching chatbot interactions:', chatbotError);
+                    return res.status(500).send('Error fetching chatbot interactions');
+                }
+    
+                // If no interactions are found, send a relevant message to the view
+                if (chatbotInteractions.length === 0) {
+                    return res.render('staffpages/hr_pages/ats-final-results', {
+                        error: "No interactions found for your application process.",
+                        chatbotInteractions: [],
+                        message: "There were no interactions to display.",
+                        screeningQuestions: [],
+                        answers: [],
+                        weightedScores: [],
+                        result: 'fail'
+                    });
+                }
+    
+                // Fetch screening questions and calculate weighted scores
+                const screeningQuestions = req.session.screeningQuestions || [];
+                const answers = req.session.answers || [];
+                const { weightedScores, result } = await applicantController.calculateWeightedScores(
+                    answers, 
+                    req.session.selectedPosition, 
+                    screeningQuestions
+                );
+    
+                // Render the page with the chatbot interactions and additional data
+                res.render('staffpages/hr_pages/ats-final-results', {
+                    chatbotInteractions: chatbotInteractions, // Send the entire interaction history to the view
+                    message: "Here is the entire interaction with the chatbot for your application process.",
+                    error: null, // Send null for the error if no error occurs
+                    screeningQuestions: screeningQuestions,
+                    answers: answers,
+                    weightedScores: weightedScores,
+                    result: result
+                });
+    
+            } catch (error) {
+                console.error('Error fetching chatbot interaction history:', error);
+                return res.status(500).send('Error fetching chatbot interaction history');
+            }
+        },
+    
+        getEvaluationForm: async function (req, res) {
+            // Check if the user is logged in and has the 'HR' role
+            if (req.session.user && req.session.user.userRole === 'HR') {
+                const applicantId = req.params.applicantId; // Get applicantId from URL path
+        
+                try {
+                    console.log('Fetching applicant details for applicantId:', applicantId);
+        
+                    // Parse applicantId to ensure it is a valid integer
+                    const parsedApplicantId = parseInt(applicantId, 10);
+                    if (isNaN(parsedApplicantId)) {
+                        req.flash('errors', { message: 'Invalid Applicant ID format.' });
+                        return res.redirect('/hr/applicant-tracker-jobposition');
+                    }
+        
+                    // Fetch the applicant's details from the database
+                    const { data: applicant, error } = await supabase
+                        .from('applicantaccounts')
+                        .select('*')
+                        .eq('applicantId', parsedApplicantId)
+                        .single();
+        
+                    // Log the response for debugging
+                    console.log('Database Response:', { data: applicant, error });
+        
+                    // Handle database errors or missing applicant data
+                    if (error || !applicant) {
+                        console.error("Error fetching applicant details:", error || "Applicant not found.");
+                        req.flash('errors', { message: 'Could not retrieve applicant details.' });
+                        return res.redirect('/hr/applicant-tracker-jobposition');
+                    }
+        
+                    console.log('Applicant Details:', applicant); // Log the applicant details for inspection
+        
+                    // Render the evaluation form with applicant details
+                    res.render('staffpages/hr_pages/hr-eval-form', {
+                        applicantId: parsedApplicantId,
+                        applicant, // Pass the applicant details to the template
+                    });
+                } catch (err) {
+                    // Handle unexpected server errors
+                    console.error("Error loading evaluation form:", err);
+                    req.flash('errors', { message: 'Internal server error.' });
+                    return res.redirect('/hr/applicant-tracker-jobposition');
+                }
+            } else {
+                // Redirect unauthorized users to the login page
+                req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+                res.redirect('/staff/login');
+            }
+        },
 
+    /* END OF ATS CODES DIVIDER  */
     
     
     
@@ -2201,119 +2314,6 @@ updateJobOffer: async function(req, res) {
     //     }
     // },        
 
-    // Controller method for viewing final results for an individual applicant
-    getFinalResults: async function (req, res) {
-        try {
-            const userId = req.session.user?.userId; // Get the current user's ID (from session)
-
-            if (!userId) {
-                req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
-                return res.redirect('/staff/login');
-            }
-
-            // Fetch the chatbot interaction history for the current applicant
-            const { data: chatbotInteractions, error: chatbotError } = await supabase
-                .from('chatbot_interaction')
-                .select('message, response, timestamp, applicantStage')
-                .eq('userId', userId)
-                .order('timestamp', { ascending: true }); // Sort by timestamp in ascending order
-
-            if (chatbotError) {
-                console.error('Error fetching chatbot interactions:', chatbotError);
-                return res.status(500).send('Error fetching chatbot interactions');
-            }
-
-            // If no interactions are found, send a relevant message to the view
-            if (chatbotInteractions.length === 0) {
-                return res.render('staffpages/hr_pages/ats-final-results', {
-                    error: "No interactions found for your application process.",
-                    chatbotInteractions: [],
-                    message: "There were no interactions to display.",
-                    screeningQuestions: [],
-                    answers: [],
-                    weightedScores: [],
-                    result: 'fail'
-                });
-            }
-
-            // Fetch screening questions and calculate weighted scores
-            const screeningQuestions = req.session.screeningQuestions || [];
-            const answers = req.session.answers || [];
-            const { weightedScores, result } = await applicantController.calculateWeightedScores(
-                answers, 
-                req.session.selectedPosition, 
-                screeningQuestions
-            );
-
-            // Render the page with the chatbot interactions and additional data
-            res.render('staffpages/hr_pages/ats-final-results', {
-                chatbotInteractions: chatbotInteractions, // Send the entire interaction history to the view
-                message: "Here is the entire interaction with the chatbot for your application process.",
-                error: null, // Send null for the error if no error occurs
-                screeningQuestions: screeningQuestions,
-                answers: answers,
-                weightedScores: weightedScores,
-                result: result
-            });
-
-        } catch (error) {
-            console.error('Error fetching chatbot interaction history:', error);
-            return res.status(500).send('Error fetching chatbot interaction history');
-        }
-    },
-
-    getEvaluationForm: async function (req, res) {
-        // Check if the user is logged in and has the 'HR' role
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            const applicantId = req.params.applicantId; // Get applicantId from URL path
-    
-            try {
-                console.log('Fetching applicant details for applicantId:', applicantId);
-    
-                // Parse applicantId to ensure it is a valid integer
-                const parsedApplicantId = parseInt(applicantId, 10);
-                if (isNaN(parsedApplicantId)) {
-                    req.flash('errors', { message: 'Invalid Applicant ID format.' });
-                    return res.redirect('/hr/applicant-tracker-jobposition');
-                }
-    
-                // Fetch the applicant's details from the database
-                const { data: applicant, error } = await supabase
-                    .from('applicantaccounts')
-                    .select('*')
-                    .eq('applicantId', parsedApplicantId)
-                    .single();
-    
-                // Log the response for debugging
-                console.log('Database Response:', { data: applicant, error });
-    
-                // Handle database errors or missing applicant data
-                if (error || !applicant) {
-                    console.error("Error fetching applicant details:", error || "Applicant not found.");
-                    req.flash('errors', { message: 'Could not retrieve applicant details.' });
-                    return res.redirect('/hr/applicant-tracker-jobposition');
-                }
-    
-                console.log('Applicant Details:', applicant); // Log the applicant details for inspection
-    
-                // Render the evaluation form with applicant details
-                res.render('staffpages/hr_pages/hr-eval-form', {
-                    applicantId: parsedApplicantId,
-                    applicant, // Pass the applicant details to the template
-                });
-            } catch (err) {
-                // Handle unexpected server errors
-                console.error("Error loading evaluation form:", err);
-                req.flash('errors', { message: 'Internal server error.' });
-                return res.redirect('/hr/applicant-tracker-jobposition');
-            }
-        } else {
-            // Redirect unauthorized users to the login page
-            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('/staff/login');
-        }
-    },
-    
     
     
     
