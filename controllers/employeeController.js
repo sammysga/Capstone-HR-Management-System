@@ -1181,6 +1181,7 @@ getAttendance: async function (req, res) {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 },
+
 postAttendance: async function (req, res) {
     // Check if the user is authenticated
     if (!req.session.user || !req.session.user.userId) {
@@ -1188,18 +1189,18 @@ postAttendance: async function (req, res) {
     }
 
     // Destructure the relevant fields from the request body
-    const { attendanceAction, attendanceTime, selectedDate } = req.body; // Include selectedDate if available
+    const { attendanceAction, attendanceTime, selectedDate, latitude, longitude, city } = req.body; // Include selectedDate if available
 
     // Ensure mandatory fields are provided
     if (!attendanceAction || !attendanceTime) {
-        return res.status(400).json({ message: 'Attendance action and time are required.' });
+        return res.status(400).json({ message: 'Attendance action and time, and location are required.' });
     }
 
     try {
         // Fetch staffId and user details associated with the userId
         const { data: userData, error: fetchError } = await supabase
             .from('staffaccounts')
-            .select('staffId, firstName, lastName')
+            .select('staffId, firstName, lastName, officeLatitude, officeLongitude')
             .eq('userId', req.session.user.userId)
             .single();
 
@@ -1207,7 +1208,20 @@ postAttendance: async function (req, res) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const { staffId, firstName, lastName } = userData;
+        const { staffId, firstName, lastName, officeLatitude, officeLongitude } = userData;
+
+        // Function to calculate distance between two coordinates
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const toRad = x => x * Math.PI / 180;
+            const R = 6371; // Radius of Earth in km
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c * 1000; // Convert to meters
+        }
 
         // Determine the attendance date (use selectedDate or default to yesterday's date)
         const currentDate = new Date();
@@ -1225,7 +1239,10 @@ postAttendance: async function (req, res) {
                     userId: req.session.user.userId,  // Add userId directly
                     attendanceDate,                   // Use selectedDate or default to yesterday
                     attendanceTime,                   // User-provided time
-                    attendanceAction                  // Action: Time In or Time Out
+                    attendanceAction,                  // Action: Time In or Time Out
+                    latitude,
+                    longitude,
+                    city
                 }
             ]);
 
@@ -1242,7 +1259,6 @@ postAttendance: async function (req, res) {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 },
-
 
 
 getViewPerformanceTimeline: function(req, res){
