@@ -88,53 +88,83 @@
         </form>
     </div>
 
+    //TODO: Add a table for today's attendance
     <div class="records-container" id="records-container">
         <h2>Attendance Records</h2>
         <div id="attendance-records"></div>
     </div>
 
+
     <script>
-        // Handle form submission using JavaScript
-        document.getElementById('attendance-form').addEventListener('submit', async function(event) {
-    event.preventDefault(); // Prevent form from submitting the traditional way
+    // Handle form submission using JavaScript
+    document.getElementById('attendance-form').addEventListener('submit', async function (event) {
+        event.preventDefault(); // Prevent traditional form submission
 
-    const formData = {
-        attendanceDate: document.getElementById('attendanceDate').value,
-        attendanceTime: document.getElementById('attendanceTime').value,
-        attendanceAction: document.getElementById('actionSelect').value // Use 'attendanceAction' instead of 'action'
-    };
-
-    // Log the form data for debugging purposes
-    console.log('Form data:', formData);
-
-    try {
-        const response = await fetch('/employee/attendance', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Show a success message
-            alert(data.message);  // Pop-up message indicating success
-
-            // Redirect back to the attendance page after success
-            window.location.href = 'http://localhost:4000/employee/attendance';
-        } else {
-            // Handle errors (e.g., display a message)
-            alert('Error: ' + data.message);
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            return;
         }
-    } catch (error) {
-        console.error('Error submitting attendance:', error);
-        alert('There was an error submitting your attendance.');
-    }
-});
 
-        
+        navigator.geolocation.getCurrentPosition(
+            async function (position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude; // Fixed Typo
+                const city = await getCityFromCoordinates(latitude, longitude);
+
+                submitAttendance(latitude, longitude, city); // Pass city
+            },
+            function (error) {
+                console.warn("Skipping location check. Error:", error.message);
+                submitAttendance(null, null, "Unknown");  // Default to "Unknown" if location fails
+            },
+            { timeout: 10000 }
+        );
+    });
+
+    // Function to get city name from latitude and longitude
+    async function getCityFromCoordinates(latitude, longitude) {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+            const data = await response.json();
+            return data.address.city || data.address.town || data.address.village || "Unknown";
+        } catch (error) {
+            console.error('Error fetching city:', error);
+            return "Unknown";
+        }
+    }
+
+    // Function to submit attendance
+    async function submitAttendance(latitude, longitude, city) {
+        const formData = {
+            attendanceDate: document.getElementById('attendanceDate').value,
+            attendanceTime: document.getElementById('attendanceTime').value,
+            attendanceAction: document.getElementById('actionSelect').value, // Time In or Time Out
+            latitude,
+            longitude,
+            city  
+        };
+
+        console.log('Form data with location:', formData); 
+
+        try {
+            const response = await fetch('/employee/attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert(data.message);
+                window.location.href = 'http://localhost:4000/employee/attendance';
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error submitting attendance:', error);
+            alert('There was an error submitting your attendance.');
+        }
+    }
         // Fetch attendance records when the page loads
         window.onload = async function() {
             try {
@@ -205,4 +235,3 @@
     </script>
 </body>
 </html>
-
