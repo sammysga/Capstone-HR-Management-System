@@ -376,7 +376,7 @@ const hrController = {
                         LM_notified,
                         lineManagerApproved,
                         p2_Approved,
-                        p2_hrevalscheduled  -- ✅ FIX: Ensure this field is included in the query
+                        p2_hrevalscheduled 
                     `)
                     .eq('jobId', jobId);
     
