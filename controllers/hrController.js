@@ -401,6 +401,22 @@ const hrController = {
     
                 for (const applicant of applicants) {
                     let formattedStatus = applicant.applicantStatus;
+
+                    if (applicant.p2_hrevalscheduled) {
+                        formattedStatus = 'P2 - Awaiting for HR Evaluation';
+                    } else if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
+                        formattedStatus = 'P2 - HR Screening Scheduled';
+                
+                        // Ensure database update is awaited properly
+                        const { error: updateError } = await supabase
+                            .from('applicantaccounts')
+                            .update({ applicantStatus: formattedStatus })
+                            .eq('applicantId', applicant.applicantId);
+                
+                        if (updateError) {
+                            console.error(`Error updating applicant ${applicant.applicantId} to P2:`, updateError);
+                        }
+                    } 
                 
                     if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
                         formattedStatus = 'P2 - HR Screening Scheduled';
