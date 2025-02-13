@@ -401,9 +401,19 @@ const hrController = {
     
                 for (const applicant of applicants) {
                     let formattedStatus = applicant.applicantStatus;
-    
-                    if (applicant.lineManagerApproved) {
+                
+                    if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
                         formattedStatus = 'P2 - HR Screening Scheduled';
+                
+                        // Ensure database update is awaited properly
+                        const { error: updateError } = await supabase
+                            .from('applicantaccounts')
+                            .update({ applicantStatus: formattedStatus })
+                            .eq('applicantId', applicant.applicantId);
+                
+                        if (updateError) {
+                            console.error(`Error updating applicant ${applicant.applicantId} to P2:`, updateError);
+                        }
                     } else {
                         if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
                             formattedStatus = 'P1 - Initial Screening';
@@ -412,7 +422,7 @@ const hrController = {
                         } else {
                             formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
                         }
-    
+                
                         if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
                             if (applicant.hrInterviewFormScore < 50) {
                                 formattedStatus = 'P1 - FAILED';
@@ -423,14 +433,7 @@ const hrController = {
                             }
                         }
                     }
-    
-                    if (formattedStatus === 'P1 - PASSED') {
-                        formattedStatus = 'P2 - HR Screening Scheduled';
-                        await supabase.from('applicantaccounts')
-                            .update({ applicantStatus: formattedStatus })
-                            .eq('applicantId', applicant.applicantId);
-                    }
-    
+                
                     applicant.applicantStatus = formattedStatus;
                     applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
