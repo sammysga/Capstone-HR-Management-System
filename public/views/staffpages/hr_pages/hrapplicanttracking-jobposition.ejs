@@ -569,6 +569,10 @@
             For Review
         </button>
 
+    <% } else if (applicant.applicantStatus === 'P2 - HR Screening Scheduled') { %>
+        <!-- Show HR Screening Scheduled Message -->
+        <span>HR Screening Scheduled</span>
+
     <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
         <!-- For Evaluation Button -->
         <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
@@ -584,7 +588,6 @@
         </button>
     <% } %>
 </div>
-
 
 
                     </td>   
