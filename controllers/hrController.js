@@ -376,8 +376,7 @@ const hrController = {
                         LM_notified,
                         lineManagerApproved,
                         p2_Approved,
-                        p2_hrevalscheduled
-
+                        p2_hrevalscheduled  -- ✅ FIX: Ensure this field is included in the query
                     `)
                     .eq('jobId', jobId);
     
@@ -403,36 +402,34 @@ const hrController = {
     
                 for (const applicant of applicants) {
                     let formattedStatus = applicant.applicantStatus;
-
+    
                     if (applicant.p2_hrevalscheduled) {
                         formattedStatus = 'P2 - Awaiting for HR Evaluation';
-                    } else if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
-                        formattedStatus = 'P2 - HR Screening Scheduled';
-                
-                        // Ensure database update is awaited properly
+    
+                        // ✅ FIX: Ensure database is updated when p2_hrevalscheduled is true
                         const { error: updateError } = await supabase
                             .from('applicantaccounts')
                             .update({ applicantStatus: formattedStatus })
                             .eq('applicantId', applicant.applicantId);
-                
+    
                         if (updateError) {
-                            console.error(`Error updating applicant ${applicant.applicantId} to P2:`, updateError);
+                            console.error(`Error updating applicant ${applicant.applicantId} to P2 - Awaiting for HR Evaluation:`, updateError);
                         }
                     } 
-                
-                    if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
+                    else if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
                         formattedStatus = 'P2 - HR Screening Scheduled';
-                
-                        // Ensure database update is awaited properly
+    
+                        // ✅ FIX: Ensure database update for HR Screening Scheduled happens only once
                         const { error: updateError } = await supabase
                             .from('applicantaccounts')
                             .update({ applicantStatus: formattedStatus })
                             .eq('applicantId', applicant.applicantId);
-                
+    
                         if (updateError) {
-                            console.error(`Error updating applicant ${applicant.applicantId} to P2:`, updateError);
+                            console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Screening Scheduled:`, updateError);
                         }
                     } else {
+                        // ✅ Keep existing logic for handling P1 statuses
                         if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
                             formattedStatus = 'P1 - Initial Screening';
                         } else if (applicant.initialScreeningScore < 50) {
@@ -440,7 +437,7 @@ const hrController = {
                         } else {
                             formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
                         }
-                
+    
                         if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
                             if (applicant.hrInterviewFormScore < 50) {
                                 formattedStatus = 'P1 - FAILED';
@@ -451,7 +448,8 @@ const hrController = {
                             }
                         }
                     }
-                
+    
+                    // ✅ Assign updated status to the applicant
                     applicant.applicantStatus = formattedStatus;
                     applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
@@ -470,6 +468,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
 
     
