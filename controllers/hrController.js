@@ -403,10 +403,22 @@ const hrController = {
                 for (const applicant of applicants) {
                     let formattedStatus = applicant.applicantStatus;
     
-                    if (applicant.p2_hrevalscheduled) {
+                    // ✅ NEW: If HR Evaluation Score is not 0, update the status to 'P2 - HR Evaluation Accomplished'
+                    if (applicant.hrInterviewFormScore && applicant.hrInterviewFormScore > 0) {
+                        formattedStatus = `P2 - HR Evaluation Accomplished - Score: ${applicant.hrInterviewFormScore}`;
+    
+                        const { error: updateError } = await supabase
+                            .from('applicantaccounts')
+                            .update({ applicantStatus: formattedStatus })
+                            .eq('applicantId', applicant.applicantId);
+    
+                        if (updateError) {
+                            console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Evaluation Accomplished:`, updateError);
+                        }
+                    }
+                    else if (applicant.p2_hrevalscheduled) {
                         formattedStatus = 'P2 - Awaiting for HR Evaluation';
     
-                        // ✅ FIX: Ensure database is updated when p2_hrevalscheduled is true
                         const { error: updateError } = await supabase
                             .from('applicantaccounts')
                             .update({ applicantStatus: formattedStatus })
@@ -419,7 +431,6 @@ const hrController = {
                     else if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
                         formattedStatus = 'P2 - HR Screening Scheduled';
     
-                        // ✅ FIX: Ensure database update for HR Screening Scheduled happens only once
                         const { error: updateError } = await supabase
                             .from('applicantaccounts')
                             .update({ applicantStatus: formattedStatus })
@@ -429,7 +440,6 @@ const hrController = {
                             console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Screening Scheduled:`, updateError);
                         }
                     } else {
-                        // ✅ Keep existing logic for handling P1 statuses
                         if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
                             formattedStatus = 'P1 - Initial Screening';
                         } else if (applicant.initialScreeningScore < 50) {
@@ -449,7 +459,6 @@ const hrController = {
                         }
                     }
     
-                    // ✅ Assign updated status to the applicant
                     applicant.applicantStatus = formattedStatus;
                     applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                     applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
@@ -468,6 +477,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
+    
     
     
 
