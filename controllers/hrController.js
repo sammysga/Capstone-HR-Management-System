@@ -484,52 +484,7 @@ const hrController = {
         }
     },
 
-    moveApplicantToP2: async function (req, res) {
-        console.log('Received move-to-P2 request:', req.body);  // ✅ Debug log
-    
-        if (!req.session.user || req.session.user.userRole !== 'HR') {
-            return res.status(403).json({ success: false, error: 'Unauthorized access.' });
-        }
-    
-        const { applicantId } = req.body;
-        console.log('Applicant ID:', applicantId);  // ✅ Debug log
-    
-        if (!applicantId) {
-            return res.status(400).json({ success: false, error: 'Applicant ID is required.' });
-        }
-    
-        try {
-            // Update applicant status
-            const { error } = await supabase
-                .from('applicantaccounts')
-                .update({
-                    p2_Approved: true,
-                    applicantStatus: 'P2 - HR Screening Scheduled'
-                })
-                .eq('applicantId', applicantId);
-    
-            if (error) throw error;
-    
-            console.log('Successfully updated applicant status');  // ✅ Debug log
-    
-            // Fetch updated data
-            const { data: updatedApplicant, error: fetchError } = await supabase
-                .from('applicantaccounts')
-                .select('applicantStatus')
-                .eq('applicantId', applicantId)
-                .single();
-    
-            if (fetchError) throw fetchError;
-    
-            console.log('Updated status from database:', updatedApplicant);  // ✅ Debug log
-    
-            res.status(200).json({ success: true, updatedStatus: updatedApplicant.applicantStatus });
-    
-        } catch (error) {
-            console.error('Error updating applicant status:', error);
-            return res.status(500).json({ success: false, error: 'Failed to update applicant status.' });
-        }
-    },
+   
         // Controller method for viewing final results for an individual applicant
         getFinalResults: async function (req, res) {
             try {

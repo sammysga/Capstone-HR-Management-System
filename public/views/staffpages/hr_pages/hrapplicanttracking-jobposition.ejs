@@ -582,16 +582,9 @@
             onclick="notifyLineManager('<%= applicant.applicantId %>')">
             Notify Line Manager
         </button>
-
-    <% } else if (applicant.applicantStatus === 'P1 - PASSED') { %>
-        <!-- Move to P2 Button -->
-        <button 
-            class="btn-move-to-p2" 
-            onclick="moveToP2('<%= applicant.applicantId %>')">
-            Move to P2
-        </button>
     <% } %>
 </div>
+
 
 
                     </td>   
