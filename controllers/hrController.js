@@ -403,7 +403,7 @@ const hrController = {
                     let formattedStatus = applicant.applicantStatus;
     
                     if (applicant.lineManagerApproved) {
-                        formattedStatus = 'P1 - PASSED';
+                        formattedStatus = 'P2 - HR Screening Scheduled';
                     } else {
                         if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
                             formattedStatus = 'P1 - Initial Screening';
