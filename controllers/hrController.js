@@ -375,7 +375,9 @@ const hrController = {
                         isChosen1,
                         LM_notified,
                         lineManagerApproved,
-                        p2_Approved
+                        p2_Approved,
+                        p2_hrevalscheduled
+
                     `)
                     .eq('jobId', jobId);
     
