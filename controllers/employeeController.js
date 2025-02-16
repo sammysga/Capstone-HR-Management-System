@@ -1126,14 +1126,17 @@ getAttendance: async function (req, res) {
         return res.status(401).json({ message: 'Unauthorized access' });
     }
 
+    const userId = req.session.user.userId;
+
     try {
         // Fetch user details associated with the userId
         const { data: userData, error: fetchError } = await supabase
             .from('staffaccounts')
             .select('staffId, departmentId, firstName, lastName')
-            .eq('userId', req.session.user.userId)
+            .eq('userId', userId)
             .single();
 
+        console.log('User Data:', userData);
         if (fetchError) {
             console.error('Fetch Error:', fetchError);
             return res.status(404).json({ message: 'User not found', error: fetchError.message });
@@ -1148,21 +1151,24 @@ getAttendance: async function (req, res) {
         // Fetch attendance records for the user by userId
         const { data: attendanceRecords, error: attendanceError } = await supabase
             .from('attendance')
-            .select('attendanceDate, attendanceTime, attendanceAction')
-            .eq('userId', req.session.user.userId) // Changed to filter by userId
-            .order('attendanceDate', { ascending: false }); // Order by date descending
+            .select('*')
+            .eq('userId', userId)
+            .order('attendanceDate', { ascending: false });
 
         if (attendanceError) {
             console.error('Attendance Fetch Error:', attendanceError);
-            throw attendanceError;
+            return res.status(500).json({ message: 'Error fetching attendance records', error: attendanceError.message });
         }
+
+        // Log the fetched attendance records
+        console.log('Attendance Records:', attendanceRecords);
 
         // Get today's date and current time
         const todayDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         const currentTime = new Date().toTimeString().split(' ')[0]; // HH:mm:ss
 
         // Render the attendance page with the attendance records and user details
-        res.render('staffpages/employee_pages/employeeattendance', {
+        return res.render('staffpages/employee_pages/employeeattendance', {
             user: {
                 staffId,
                 departmentId,
@@ -1170,15 +1176,15 @@ getAttendance: async function (req, res) {
                 lastName
             },
             records: attendanceRecords || [],
-            todayDate, // Pass the todayDate
-            currentTime, // Pass the currentTime
-            message: 'Attendance records retrieved successfully' // You can include other data as needed
+            todayDate,
+            currentTime,
+            message: 'Attendance records retrieved successfully'
         });
 
     } catch (error) {
         // Log and respond with error in case of failure
         console.error('Error retrieving attendance records:', error);
-        res.status(500).json({ message: 'Internal server error', error: error.message });
+        return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 },
 
@@ -1225,11 +1231,9 @@ postAttendance: async function (req, res) {
 
         // Determine the attendance date (use selectedDate or default to yesterday's date)
         const currentDate = new Date();
-        const yesterday = new Date(currentDate);
-        yesterday.setDate(currentDate.getDate() - 1);  // Set the date to yesterday
+        const today = currentDate.toISOString().split('T')[0];
 
-        // If no selectedDate is provided, default to yesterday's date
-        const attendanceDate = selectedDate || yesterday.toISOString().split('T')[0]; // Use selectedDate or yesterday if not provided
+        const attendanceDate = selectedDate || today; // Use selectedDate or yesterday if not provided
 
         // Insert the attendance record into the attendance table using userId
         const { error: insertError } = await supabase
