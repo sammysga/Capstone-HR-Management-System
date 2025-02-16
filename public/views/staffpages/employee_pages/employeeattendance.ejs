@@ -11,18 +11,33 @@
             font-family: Arial, sans-serif;
             margin: 20px;
             padding: 20px;
+            display: flex;
             background-color: #f9f9f9;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            width: calc(100% - 250px); 
         }
         h1 {
             text-align: center;
             color: #124A5C;
         }
+        .sidebar {
+            width: 250px; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            padding-top: 20px;
+        }
         .form-container {
-            max-width: 400px;
+            max-width: 600px;
+            width: 100%;
             margin: auto;
-            padding: 20px;
+            padding: 30px;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 10px;
             background-color: white;
         }
         .form-input, .action-select {
@@ -49,6 +64,7 @@
         }
         .records-container {
             margin-top: 20px;
+            overflow-x: auto;
         }
         .record {
             border: 1px solid #ccc;
@@ -61,13 +77,33 @@
             color: #124A5C;
             font-weight: bold;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #124A5C;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
 
     <%- include('../../partials/employee_partials') %>
-    <h1>Attendance</h1>
-    <div class="form-container">
+
+    <div class="main-content">
+        <h1>Attendance</h1>
+        <div class="form-container">
         <form id="attendance-form">
             <label for="employeeName">Employee Name</label>
             <input type="text" id="employeeName" name="employeeName" value="<%= user.firstName %> <%= user.lastName %>" class="form-input" required readonly>
@@ -86,15 +122,53 @@
             </select>
             <button type="submit" class="save-btn">Submit</button>
         </form>
+        </div>
+
+        <!-- Table for today's attendance -->
+        <div class="records-container" id="records-container">
+            <h2>Attendance Records</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Action</th>
+                        <th>Time</th>
+                        <th>Location (City)</th>
+                    </tr>
+                </thead>
+                <tbody id="attendance-records">
+                    <% if (records && records.length > 0) { %>
+                        <% let hasRecordsForToday = false; %>
+                        <% records.forEach(record => { %>
+                            <% if (new Date(record.attendanceDate).toISOString().split('T')[0] === todayDate) { %>
+                                <% hasRecordsForToday = true; %>
+                                <tr>
+                                    <td><%= record.attendanceDate %></td>
+                                    <td><%= record.attendanceAction %></td>
+                                    <td><%= record.attendanceTime %></td>
+                                    <td><%= record.city || 'Unknown' %></td>
+                                </tr>
+                            <% } %>
+                        <% }) %>
+        
+                        <% if (!hasRecordsForToday) { %>
+                            <tr>
+                                <td colspan="4" class="no-records">No attendance records found for today.</td>
+                            </tr>
+                        <% } %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="4" class="no-records">No attendance records found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>          
+            </table>
+            <div id="no-records-message" class="no-records" style="display: none;">
+                No attendance records found for today.
+            </div>
+        </div>        
     </div>
-
-    //TODO: Add a table for today's attendance
-    <div class="records-container" id="records-container">
-        <h2>Attendance Records</h2>
-        <div id="attendance-records"></div>
-    </div>
-
-
+    
     <script>
     // Handle form submission using JavaScript
     document.getElementById('attendance-form').addEventListener('submit', async function (event) {
@@ -144,7 +218,7 @@
             city  
         };
 
-        console.log('Form data with location:', formData); 
+        console.log('Form data being sent:', formData); 
 
         try {
             const response = await fetch('/employee/attendance', {
@@ -165,73 +239,57 @@
             alert('There was an error submitting your attendance.');
         }
     }
-        // Fetch attendance records when the page loads
-        window.onload = async function() {
-            try {
-                const response = await fetch('/employee/attendance'); // Adjusted the URL
-                const data = await response.json();
 
-                // Check if any records are found
-                if (data.records.length > 0) {
-                    const recordsContainer = document.getElementById('attendance-records');
-                    data.records.forEach(record => {
-                        const recordHTML = `
-                            <div class="record">
-                                <p>Attendance Date: ${record.attendanceDate}</p>
-                                <p>Attendance Time: ${record.attendanceTime}</p>
-                                <p>Attendance Action: ${record.attendanceAction}</p>
-                            </div>
-                        `;
-                        recordsContainer.innerHTML += recordHTML;
-                    });
-                } else {
-                    // Display message when no records found
-                    document.getElementById('attendance-records').innerHTML = `
-                        <p class="no-records">No attendance records found for today.</p>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error fetching attendance records:', error);
+    // Helper function to format date (YYYY-MM-DD -> Month Day, Year)
+    function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // Helper function to format time (24-hour to 12-hour format)
+    function formatTime(timeStr) {
+        const [hours, minutes] = timeStr.split(':');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const formattedHours = hours % 12 || 12; 
+        return `${formattedHours}:${minutes} ${ampm}`;
+    }
+
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
             }
-        };
-
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
         });
+    });
 
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
+    // Handle navigation for Performance Management links
+    document.querySelectorAll('.collapsible-content a').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default link behavior
+            
+            // Perform the desired action or navigation
+            const targetUrl = this.getAttribute('href');
+            window.location.href = targetUrl; // Navigate to the target URL
         });
-
-        // Handle navigation for Performance Management links
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default link behavior
-                
-                // Perform the desired action or navigation
-                const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl; // Navigate to the target URL
-            });
-        });
-        
+    });
     </script>
 </body>
 </html>
