@@ -762,9 +762,9 @@ postEmployeeOffboarding: async function(req, res) {
             return res.redirect('/staff/login');
         }
 
-        const { message, lastDay } = req.body;
+        const { message, lastDay, reason } = req.body;
 
-        if (!message || !lastDay) {
+        if (!message || !lastDay || !reason) {
             req.flash('errors', { formError: 'Please fill in all required fields.' });
             return res.redirect('employee/employeeoffboarding');
         }
@@ -778,6 +778,7 @@ postEmployeeOffboarding: async function(req, res) {
                     message,
                     last_day: lastDay,
                     status: 'Pending', // Default status
+                    reason
                 },
             ])
             .single();

@@ -4,49 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Request for Offboarding</title>
-    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
     <style>
-        /* Styles for Resignation Title */
+        /* Styling */
         .account-info-header {
             margin-top: 40px;
             font-size: 1.5rem;
             font-weight: bold;
             color: #059ca4;
         }
-
         .form-group {
             margin-bottom: 20px;
         }
-
         .form-group label {
             display: block;
             margin-bottom: 5px;
             color: #555;
         }
-
-        .form-group input,
-        .form-group textarea {
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 1rem;
         }
-
         .form-group textarea {
             resize: none;
             height: 150px;
         }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
             border-color: #059ca4;
             outline: none;
         }
-
-        /* Button Styling */
-        .update-password-btn, .offboarding-btn {
+        .offboarding-btn {
             background-color: #124A5C;
             color: white;
             border: none;
@@ -56,8 +47,7 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-
-        .update-password-btn:hover, .offboarding-btn:hover {
+        .offboarding-btn:hover {
             background-color: #059ca4;
         }
     </style>
@@ -66,64 +56,48 @@
     <%- include('../../partials/employee_partials') %> 
 
     <div class="main-content">
-        <h1 class="account-info-header">Resignation</h1>
+        <h1 class="account-info-header">Resignation Request</h1>
         <form id="resignationForm" action="/employee/employeeoffboarding" method="POST">
             <div class="form-group">
-                <label for="message">Message:</label>
-                <textarea id="message" name="message" placeholder="Input your resignation message here" required></textarea>
+                <label for="reason">Reason for Resignation:</label>
+                <select id="reason" name="reason" required>
+                    <option value="">Select a reason</option>
+                    <option value="Personal/Family Reasons">Personal/Family Reasons</option>
+                    <option value="Career Advancement">Career Advancement</option>
+                    <option value="Job Dissatisfaction">Job Dissatisfaction</option>
+                    <option value="Retirement">Retirement</option>
+                    <option value="Relocation">Relocation</option>
+                    <option value="Change in Career Path">Change in Career Path</option>
+                </select>
             </div>
             <div class="form-group">
-                <label for="lastDay">Preferred Last Day:</label>
+                <label for="message">Resignation Message:</label>
+                <textarea id="message" name="message" placeholder="Explain your reason for resigning" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="lastDay">Preferred Last Working Day:</label>
                 <input type="date" id="lastDay" name="lastDay" required>
             </div>
-            <button type="submit" class="offboarding-btn">Send</button>
+            <div class="form-group">
+                <label for="noticePeriod">Notice Period (Auto-calculated 60 Days):</label>
+                <input type="text" id="noticePeriod" name="noticePeriod" disabled>
+            </div>
+            <button type="submit" class="offboarding-btn">Submit Resignation</button>
         </form>
     </div>
 
     <script>
-        // JavaScript for form validation
-        document.getElementById('resignationForm').addEventListener('submit', function(event) {
-            const message = document.getElementById('message').value.trim();
-            const lastDay = document.getElementById('lastDay').value.trim();
-
-            if (!message || !lastDay) {
-                alert('Please fill out all fields before submitting.');
-                event.preventDefault(); // Prevent form submission
-            } else {
-                alert('Your resignation request has been sent successfully.');
-            }
+        document.getElementById('lastDay').addEventListener('change', function () {
+            let lastDay = new Date(this.value);
+            let noticeDate = new Date(lastDay);
+            noticeDate.setDate(noticeDate.getDate() - 60);
+            document.getElementById('noticePeriod').value = noticeDate.toISOString().split('T')[0];
         });
 
-        // Existing sidebar JavaScript functionality
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
-        });
-
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault();
-                const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl;
-            });
+        document.getElementById('resignationForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            alert('Resignation request submitted. HR will review your request.');
+            this.submit();
         });
     </script>
 </body>
