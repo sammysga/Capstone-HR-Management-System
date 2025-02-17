@@ -383,12 +383,12 @@ const applicantController = {
                 const jobDetails = await applicantController.getJobDetails(selectedPosition);
     
                 if (jobDetails) {
+                    const degrees = jobDetails.jobreqdegrees && jobDetails.jobreqdegrees.length > 0
+                        ? jobDetails.jobreqdegrees.map(degree => `${degree.jobReqDegreeType}: ${degree.jobReqDegreeDescrpt}`).join(', ')
+                        : 'None';   
                     const certifications = jobDetails.jobreqcertifications
                         ? jobDetails.jobreqcertifications.map(cert => `${cert.jobReqCertificateType}: ${cert.jobReqCertificateDescrpt}`).join(', ')
-                        : 'None';
-                    const degrees = jobDetails.jobreqdegrees
-                        ? jobDetails.jobreqdegrees.map(degree => `${degree.jobReqDegreeType}: ${degree.jobReqDegreeDescrpt}`).join(', ')
-                        : 'None';
+                        : 'None';                 
                     const experiences = jobDetails.jobreqexperiences
                         ? jobDetails.jobreqexperiences.map(exp => `${exp.jobReqExperienceType}: ${exp.jobReqExperienceDescrpt}`).join(', ')
                         : 'None';
@@ -420,7 +420,18 @@ const applicantController = {
                 }
             } else if (req.session.applicantStage === 'job_selection' && userMessage.includes('yes')) {
                 const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
-    
+
+
+                // ✅ Update applicant status to P1 - Initial screening
+                const result = await applicantController.updateApplicantStatusToP1Initial(userId);
+
+                if (!result.success) {
+                    console.error(result.message);
+                    res.status(500).json({ response: result.message });
+                    return;
+                }
+                
+
 
                 if (!req.session.screeningQuestions) {
                     const questions = await applicantController.getInitialScreeningQuestions(jobId);
@@ -464,23 +475,32 @@ const applicantController = {
             } else if (req.session.applicantStage === 'screening_questions') {
                 const questions = req.session.screeningQuestions;
                 const currentIndex = req.session.currentQuestionIndex;
-            
+                
                 if (currentIndex < questions.length) {
                     const currentQuestion = questions[currentIndex];
-                    const answerValue = userMessage === 'yes' ? 1 : 0;
+            
+                    // Ensure answer is recorded correctly
+                    const answerValue = userMessage.trim().toLowerCase() === 'yes' ? 1 : 0;
             
                     // Store user answer properly
-                    req.session.screeningScores.push({ question: currentQuestion.text, answer: answerValue, type: currentQuestion.type });
+                    req.session.screeningScores.push({ 
+                        question: currentQuestion.text, 
+                        answer: answerValue, 
+                        type: currentQuestion.type 
+                    });
             
-                    // Update the screening counters based on the answer
-                    if (userMessage === 'yes') {
-                        req.session.screeningCounters[currentQuestion.type]++;
+                    // Update screening counters based on type
+                    if (answerValue === 1) {
+                        if (!req.session.screeningCounters[currentQuestion.type]) {
+                            req.session.screeningCounters[currentQuestion.type] = 0;
+                        }
+                        req.session.screeningCounters[currentQuestion.type]++;  
                     }
-            
+                    
                     // Move to the next question
                     req.session.currentQuestionIndex++;
             
-                    // Check if there are more questions
+                    // Check if more questions remain
                     if (req.session.currentQuestionIndex < questions.length) {
                         const nextQuestion = questions[req.session.currentQuestionIndex];
                         botResponse = {
@@ -492,7 +512,7 @@ const applicantController = {
                         };
                     } else {
                         // All questions answered, save scores
-                        const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId; // Ensure you get the jobId here
+                        const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
                         await applicantController.saveScreeningScores(userId, jobId, req.session.screeningScores, req.session.screeningCounters);
                         botResponse = {
                             text: "Thank you for answering the questions. Please upload your resume.",
@@ -509,7 +529,8 @@ const applicantController = {
                 } else {
                     botResponse = "No screening questions available for this position.";
                 }
-            } else if (req.body.file) {
+            }
+             else if (req.body.file) {
                 await this.handleFileUpload(req, res);
                 return;
             } else {
@@ -636,6 +657,7 @@ getInitialScreeningQuestions: async function (jobId) {
 },
 
 
+
     // Function to fetch job positions and format them for chatbot response
     getJobPositionsList: async function() {
         try {
@@ -749,12 +771,11 @@ saveScreeningScores: async function (userId, jobId, responses, screeningCounters
 },
 
 // File upload handler in your controller
-// File upload handler in your controller
 handleFileUpload: async function (req, res) {
     try {
         console.log('Starting file upload process...');
         
-        const userId = req.session.userID; // Fetch userId from session
+        const userId = req.session.userID;
         console.log(`User ID: ${userId}`);
 
         if (!req.files || !req.files.file) {
@@ -827,8 +848,7 @@ handleFileUpload: async function (req, res) {
         const { error: updateError } = await supabase
             .from('applicant_initialscreening_assessment')
             .update({ resume_url: fileUrl })
-            .eq('userId', userId)
-            .select(); // Added select() to debug
+            .eq('userId', userId);
 
         if (updateError) {
             console.error('Error updating resume URL:', updateError);
@@ -836,7 +856,25 @@ handleFileUpload: async function (req, res) {
         }
         console.log('Resume URL updated successfully in applicant_initialscreening_assessment table.');
 
-        res.send({ fileUrl });
+        // ✅ Update applicantStatus to "P1 - Awaiting for HR Action"
+        const { error: statusUpdateError } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'P1 - Awaiting for HR Action' })
+            .eq('userId', userId);
+
+        if (statusUpdateError) {
+            console.error('Error updating applicant status:', statusUpdateError);
+            return res.status(500).send('Error updating applicant status.');
+        }
+        console.log('Applicant status updated successfully to P1 - Awaiting for HR Action.');
+
+        // ✅ Send chatbot message after successful upload
+        res.status(200).json({
+            response: {
+                text: "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made."
+            }
+        });
+
         console.log('File upload process completed successfully.');
 
     } catch (error) {
@@ -845,6 +883,32 @@ handleFileUpload: async function (req, res) {
     }
 },
 
+
+
+/* STATUS UPDATE FUNCTIONS */
+
+updateApplicantStatusToP1Initial: async function (userId) {
+    try {
+        if (!userId) {
+            throw new Error("User ID is missing.");
+        }
+
+        const { error } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'P1 - Initial screening' })
+            .eq('userId', userId);
+
+        if (error) {
+            console.error("Error updating applicant status:", error);
+            return { success: false, message: "Error updating applicant status." };
+        }
+
+        return { success: true, message: "Applicant status updated successfully." };
+    } catch (err) {
+        console.error("Unexpected error:", err);
+        return { success: false, message: "Unexpected error occurred." };
+    }
+},
 
 getOnboarding: async function(req, res) {
     res.render('applicant_pages/onboarding', { errors: {} });
