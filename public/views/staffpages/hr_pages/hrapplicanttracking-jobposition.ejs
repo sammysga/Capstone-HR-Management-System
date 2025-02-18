@@ -586,6 +586,46 @@
             onclick="notifyLineManager('<%= applicant.applicantId %>')">
             Notify Line Manager
         </button>
+
+    <% } else if (applicant.applicantStatus === 'P2 - FAILED') { %>
+        <!-- Action Button for P2 - FAILED -->
+        <button 
+            class="btn-failed" 
+            onclick="handleFailedAction('<%= applicant.applicantId %>')">
+            Take Action (P2 - Failed)
+        </button>
+
+    <% } else if (applicant.applicantStatus === 'P2 - PASSED') { %>
+        <!-- Action Button for P2 - PASSED -->
+        <button 
+            class="btn-passed" 
+            onclick="handlePassedAction('<%= applicant.applicantId %>')">
+            Take Action (P2 - Passed)
+        </button>
+
+    <% } else if (applicant.applicantStatus === 'P3 - FAILED') { %>
+        <!-- Action Button for P3 - FAILED -->
+        <button 
+            class="btn-failed-p3" 
+            onclick="handleP3FailedAction('<%= applicant.applicantId %>')">
+            Take Action (P3 - Failed)
+        </button>
+
+    <% } else if (applicant.applicantStatus === 'P3 - PASSED') { %>
+        <!-- Action Button for P3 - PASSED -->
+        <button 
+            class="btn-passed-p3" 
+            onclick="handleP3PassedAction('<%= applicant.applicantId %>')">
+            Take Action (P3 - Passed)
+        </button>
+
+    <% } else if (applicant.applicantStatus === 'P3 - PASSED - Job Offer Sent') { %>
+        <!-- Action Button for P3 - PASSED - Job Offer Sent -->
+        <button 
+            class="btn-job-offer" 
+            onclick="handleJobOfferAction('<%= applicant.applicantId %>')">
+            Take Action (Job Offer Sent)
+        </button>
     <% } %>
 </div>
 
@@ -791,6 +831,41 @@
 </div>
 
 <script>
+
+function handleFailedAction(applicantId) {
+        alert('Action required for P2 - FAILED applicant: ' + applicantId);
+        // Implement logic for failed status (e.g., notify applicant, reject process)
+    }
+
+    function handlePassedAction(applicantId) {
+        alert('Action required for P2 - PASSED applicant: ' + applicantId);
+        // Implement logic for passed status (e.g., schedule next steps, notify team)
+    }
+
+    function handleP3FailedAction(applicantId) {
+        alert('Action required for P3 - FAILED applicant: ' + applicantId);
+        // Implement logic for P3 failed status
+    }
+
+    function handleP3PassedAction(applicantId) {
+        alert('Action required for P3 - PASSED applicant: ' + applicantId);
+        // Implement logic for P3 passed status
+    }
+
+    function handleJobOfferAction(applicantId) {
+        alert('Action required for Job Offer Sent applicant: ' + applicantId);
+        // Implement logic for job offer status (e.g., follow-up, onboarding)
+    }
+
+function handleFailedAction(applicantId) {
+        alert('Action required for FAILED applicant: ' + applicantId);
+        // Implement logic for failed status (e.g., notify applicant, reject process)
+    }
+
+    function handlePassedAction(applicantId) {
+        alert('Action required for PASSED applicant: ' + applicantId);
+        // Implement logic for passed status (e.g., schedule next steps, notify team)
+    }
 
 function notifyLineManager(applicantId) {
         fetch('/notify-line-manager', {
