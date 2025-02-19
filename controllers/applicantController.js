@@ -383,6 +383,20 @@ const applicantController = {
                 const jobDetails = await applicantController.getJobDetails(selectedPosition);
     
                 if (jobDetails) {
+
+// Update applicantaccounts with jobId and departmentId
+const updateJobResult = await applicantController.updateApplicantJobAndDepartmentOnATS(
+    userId,
+    jobDetails.jobId,
+    jobDetails.departmentId  // departmentId fetched from jobDetails
+);
+if (!updateJobResult.success) {
+    console.error(updateJobResult.message);
+    botResponse = "Error updating your application details. Please try again later.";
+    res.status(500).json({ response: botResponse });
+    return;
+}
+
                     const degrees = jobDetails.jobreqdegrees && jobDetails.jobreqdegrees.length > 0
                         ? jobDetails.jobreqdegrees.map(degree => `${degree.jobReqDegreeType}: ${degree.jobReqDegreeDescrpt}`).join(', ')
                         : 'None';   
@@ -692,7 +706,7 @@ getJobDetails: async function(jobTitle) {
         const { data: jobDetails, error } = await supabase
             .from('jobpositions')
             .select(`
-                jobId, jobTitle, jobDescrpt,
+                jobId, jobTitle, jobDescrpt,  departmentId,
                 jobreqcertifications(jobReqCertificateType, jobReqCertificateDescrpt),
                 jobreqdegrees(jobReqDegreeType, jobReqDegreeDescrpt),
                 jobreqexperiences(jobReqExperienceType, jobReqExperienceDescrpt),
@@ -886,6 +900,26 @@ handleFileUpload: async function (req, res) {
 
 
 /* STATUS UPDATE FUNCTIONS */
+updateApplicantJobAndDepartmentOnATS: async function (userId, jobId, departmentId) {
+    try {
+        if (!userId || !jobId || !departmentId) {
+            return { success: false, message: "Missing userId, jobId, or departmentId." };
+        }
+        const { error } = await supabase
+            .from('applicantaccounts')
+            .update({ jobId: jobId, departmentId: departmentId })
+            .eq('userId', userId);
+        
+        if (error) {
+            console.error("Error updating applicant job and department:", error);
+            return { success: false, message: "Error updating applicant job and department." };
+        }
+        return { success: true, message: "Applicant job and department updated successfully." };
+    } catch (err) {
+        console.error("Unexpected error in updateApplicantJobAndDepartment:", err);
+        return { success: false, message: "Unexpected error occurred." };
+    }
+},
 
 updateApplicantStatusToP1Initial: async function (userId) {
     try {
