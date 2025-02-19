@@ -762,41 +762,59 @@ postEmployeeOffboarding: async function(req, res) {
             return res.redirect('/staff/login');
         }
 
-        const { message, lastDay, reason } = req.body;
+        const { message, lastDay, reason, offboardingType, yearsOfService, earlyRetirement } = req.body;
 
-        if (!message || !lastDay || !reason) {
+        // Validate required fields based on the offboarding type
+        if (!message || !lastDay || !offboardingType) {
             req.flash('errors', { formError: 'Please fill in all required fields.' });
-            return res.redirect('employee/employeeoffboarding');
+            return res.redirect('/employee/employeeoffboarding');
         }
 
-        // Insert details to db
+        if (offboardingType === 'Resignation' && !reason) {
+            req.flash('errors', { formError: 'Please provide a reason for resignation.' });
+            return res.redirect('/employee/employeeoffboarding');
+        }
+
+        if (offboardingType === 'Retirement' && (yearsOfService === undefined || earlyRetirement === undefined)) {
+            req.flash('errors', { formError: 'Please provide years of service and early retirement status.' });
+            return res.redirect('/employee/employeeoffboarding');
+        }
+
+        // Convert earlyRetirement to a boolean if needed
+        const earlyRetirementBoolean = earlyRetirement === 'Yes';
+
+        const offboardingData = {
+            userId,
+            message,
+            last_day: lastDay,
+            status: 'Pending Line Manager', // Default status
+            reason: offboardingType === 'Resignation' ? reason : null,
+            offboardingType,
+            yearsOfService: offboardingType === 'Retirement' ? yearsOfService : null,
+            earlyRetirement: offboardingType === 'Retirement' ? earlyRetirementBoolean : null
+        };
+
+        // Insert into the database
         const { data: offboarding, error: insertError } = await supabase
             .from('offboarding_requests')
-            .insert([
-                {
-                    userId,
-                    message,
-                    last_day: lastDay,
-                    status: 'Pending', // Default status
-                    reason
-                },
-            ])
+            .insert([offboardingData])
+            .select('*')
             .single();
 
-            console.log(req.body);
-        
+        console.log('Insert Result:', offboarding);
+
         if (insertError) {
             console.error('Error inserting offboarding request:', insertError);
-            req.flash('errors', { dbError: 'Failed to save resignation details.' });
-            return res.redirect('employee/employeeoffboarding');
+            req.flash('errors', { dbError: 'Failed to save offboarding details.' });
+            return res.redirect('/employee/employeeoffboarding');
         }
 
-        req.flash('success', 'Your resignation request has been submitted successfully.');
-        res.redirect('/employee/employeepersinfocareerprog');
+        req.flash('success', 'Your offboarding request has been submitted successfully.');
+        res.redirect('/employee/useracc');
     } catch (err) {
         console.error('Error in postEmployeeOffboarding controller:', err);
         req.flash('errors', { dbError: 'An error occurred while processing the request.' });
-        res.redirect('employee/employeeoffboarding');
+        res.redirect('/employee/employeeoffboarding');
     }
 },
 

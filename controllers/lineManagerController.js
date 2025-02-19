@@ -1883,7 +1883,7 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             const { data: requests, error: requestsError } = await supabase
                 .from('offboarding_requests')
                 .select('userId, message, last_day, status, created_at')
-                .eq('status', 'Pending')  // Fetch only pending requests
+                .eq('status', 'Pending Line Manager')  // Fetch only pending requests
                 .order('created_at', { ascending: false });
     
             if (requestsError) {
