@@ -29,16 +29,16 @@ app.set('views', path.join(__dirname, 'public/views'));
 
 
 // Session configuration
-app.use(session({
-    secret: 'secret-key',  
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        maxAge: null, // or a very large value like 10 years in milliseconds: 10 * 365 * 24 * 60 * 60 * 1000
-        secure: false, // Set to true if your app is served over HTTPS
-        httpOnly: true, // This is recommended to prevent client-side JavaScript from accessing the cookie
-    }
-}));
+// app.use(session({
+//     secret: 'secret-key',  
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: {
+//         maxAge: null, // or a very large value like 10 years in milliseconds: 10 * 365 * 24 * 60 * 60 * 1000
+//         secure: false, // Set to true if your app is served over HTTPS
+//         httpOnly: true, // This is recommended to prevent client-side JavaScript from accessing the cookie
+//     }
+// }));
 
 app.use(session({
     secret: 'your-secret-key',

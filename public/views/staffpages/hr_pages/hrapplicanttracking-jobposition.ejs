@@ -559,15 +559,28 @@
     <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for HR Action')) { %>
         <!-- For Review Button -->
         <button 
-            class="btn-review" 
-            onclick="openReviewModal(
-                '<%= applicant.lastName %>', 
-                '<%= applicant.firstName %>', 
-                '<%= applicant.userEmail %>', 
-                '<%= applicant.phoneNo %>'
-            )">
-            For Review
-        </button>
+        class="btn-review" 
+        onclick="hrInitialScreeningModal(
+            '<%= applicant.lastName %>', 
+            '<%= applicant.firstName %>', 
+            '<%= applicant.birthDate %>', 
+            '<%= applicant.userEmail %>', 
+            '<%= applicant.phoneNo %>', 
+            {
+                degree: '<%= applicant.degreeScore %>',
+                experience: '<%= applicant.experienceScore %>',
+                certifications: '<%= applicant.certificationScore %>',
+                hardSkills: '<%= applicant.hardSkillsScore %>',
+                softSkills: '<%= applicant.softSkillsScore %>',
+                workSetup: '<%= applicant.workSetupScore %>',
+                availability: '<%= applicant.availabilityScore %>'
+            }, 
+            '<%= applicant.totalScore %>', 
+            '<%= applicant.resume_url %>'
+        )">
+        For Review
+    </button>
+    
 
     <% } else if (applicant.applicantStatus === 'P2 - HR Screening Scheduled') { %>
         <!-- Show HR Screening Scheduled Message -->
@@ -808,15 +821,63 @@
 <div id="reviewModal" class="review-modal">
     <div class="review-modal-content">
         <span class="review-close-button">&times;</span>
-        <h3>Applicant Details</h3>
+        <h2>P1: Initial Screening Score Breakdown</h2> 
+        <div class="divider"></div>
         <div class="applicant-details">
             <p><strong>Name:</strong> <span id="applicant-name"></span></p>
-            <p><strong>Age:</strong> <span id="applicant-age"></span></p>
+            <p><strong>Birthday:</strong> <span id="applicant-birthday"></span></p>
             <p><strong>Email:</strong> <span id="applicant-email"></span></p>
             <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
         </div>
         <h4>HR Assessment Form Breakdown</h4>
-        <!-- Add form breakdown here -->
+        <h4>Initial Screening Scores</h4> 
+
+        <table class="scores-table"> 
+            <thead> 
+                <tr> 
+                    <th>Criteria</th> 
+                    <th>Score</th> 
+                </tr> 
+            </thead> 
+            <tbody> 
+                <tr> 
+                    <td>Industry Specific Degree</td> 
+                    <td id="score-degree"></td> 
+                </tr> 
+                <tr> 
+                    <td>Experiences</td> 
+                    <td id="score-experience"></td> 
+                </tr> 
+                <tr> 
+                    <td>Certifications</td> 
+                    <td id="score-certifications"></td> 
+                </tr> 
+                <tr> 
+                    <td>Hard Skills</td> 
+                    <td id="score-hard-skills"></td> 
+                </tr> 
+                <tr> 
+                    <td>Soft Skills</td> 
+                    <td id="score-soft-skills"></td> 
+                </tr> 
+                <tr> 
+                    <td>Work Setup</td> 
+                    <td id="score-work-setup"></td> 
+                </tr> 
+                <tr> 
+                    <td>Availability</td> 
+                    <td id="score-availability"></td> 
+                </tr> 
+            </tbody> 
+        </table> 
+
+        <div class="computation-verdict"> 
+            <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
+        </div> 
+
+        <h4>Uploaded Documents</h4> 
+        <p><a id="uploaded-doc" href="#" target="_blank">No document uploaded</a></p> 
+        
         <h4>Would you like to select this applicant as the top candidate and recommend them for the panel interview?</h4>
         <div class="review-modal-buttons">
             <button id="backButton" class="review-modal-back-button">Back</button>
@@ -824,8 +885,6 @@
         </div>
     </div>
 </div>
-
-
 
     </div>
 </div>
@@ -943,14 +1002,35 @@ function notifyLineManager(applicantId) {
 
 
 
-function openReviewModal(lastName, firstName, email, phoneNo) {
-        document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
-        document.getElementById('applicant-email').textContent = email || 'N/A';
-        document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
+function hrInitialScreeningModal(lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink) {
+    document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
+    document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
+    document.getElementById('applicant-email').textContent = email || 'N/A';
+    document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
 
-        // Show the modal
-        document.getElementById('reviewModal').style.display = 'block';
+    document.getElementById('score-degree').textContent = scores.degree || 'N/A';
+    document.getElementById('score-experience').textContent = scores.experience || 'N/A';
+    document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
+    document.getElementById('score-hard-skills').textContent = scores.hardSkills || 'N/A';
+    document.getElementById('score-soft-skills').textContent = scores.softSkills || 'N/A';
+    document.getElementById('score-work-setup').textContent = scores.workSetup || 'N/A';
+    document.getElementById('score-availability').textContent = scores.availability || 'N/A';
+
+    document.getElementById('computation-verdict').textContent = verdict || 'N/A';
+    
+    let docElement = document.getElementById('uploaded-doc');
+    if (documentLink) {
+        docElement.href = documentLink;
+        docElement.textContent = documentLink.split('/').pop();
+    } else {
+        docElement.href = '#';
+        docElement.textContent = 'No document uploaded';
     }
+    
+    // Show the modal
+    document.getElementById('reviewModal').style.display = 'block';
+}
+
 
     // Close the modal
     document.querySelector('.review-close-button').addEventListener('click', function () {
@@ -1256,7 +1336,7 @@ function openReviewModal(lastName, firstName, email, phoneNo) {
 // Function to open the modal
 function openModal(name, age, email, contact) {
     document.getElementById("applicant-name").value = name;
-    document.getElementById("applicant-age").value = age;
+    document.getElementById("applicant-birthday").value = age;
     document.getElementById("applicant-email").value = email;
     document.getElementById("applicant-contact").value = contact;
     document.getElementById("reviewModal").style.display = "block";
