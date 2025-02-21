@@ -345,19 +345,19 @@ const hrController = {
             try {
                 const { jobId, applicantId } = req.query;
     
-                if (applicantId) {
-                    const { error: updateError } = await supabase
-                        .from('applicantaccounts')
-                        .update({ LM_notified: true })
-                        .eq('applicantId', applicantId);
+                // if (applicantId) {
+                //     const { error: updateError } = await supabase
+                //         .from('applicantaccounts')
+                //         .update({ LM_notified: true })
+                //         .eq('applicantId', applicantId);
     
-                    if (updateError) {
-                        console.error('Error updating LM_notified:', updateError);
-                        return res.status(500).json({ success: false, error: 'Failed to notify Line Manager' });
-                    }
+                //     if (updateError) {
+                //         console.error('Error updating LM_notified:', updateError);
+                //         return res.status(500).json({ success: false, error: 'Failed to notify Line Manager' });
+                //     }
     
-                    return res.json({ success: true, message: 'Line Manager notified successfully' });
-                }
+                //     return res.json({ success: true, message: 'Line Manager notified successfully' });
+                // }
     
                 const { data: applicants, error: applicantError } = await supabase
                     .from('applicantaccounts')
@@ -372,9 +372,6 @@ const hrController = {
                         applicantId,
                         hrInterviewFormScore,
                         initialScreeningScore,
-                        isChosen1,
-                        LM_notified,
-                        lineManagerApproved,
                         p2_Approved,
                         p2_hrevalscheduled 
                     `)
@@ -404,60 +401,44 @@ const hrController = {
                     let formattedStatus = applicant.applicantStatus;
     
                     // ✅ NEW: If HR Evaluation Score is not 0, update the status to 'P2 - HR Evaluation Accomplished'
-                    if (applicant.hrInterviewFormScore && applicant.hrInterviewFormScore > 0) {
-                        formattedStatus = `P2 - HR Evaluation Accomplished - Score: ${applicant.hrInterviewFormScore}`;
+                    // if (applicant.hrInterviewFormScore && applicant.hrInterviewFormScore > 0) {
+                    //     formattedStatus = `P2 - HR Evaluation Accomplished - Score: ${applicant.hrInterviewFormScore}`;
     
-                        const { error: updateError } = await supabase
-                            .from('applicantaccounts')
-                            .update({ applicantStatus: formattedStatus })
-                            .eq('applicantId', applicant.applicantId);
+                    //     const { error: updateError } = await supabase
+                    //         .from('applicantaccounts')
+                    //         .update({ applicantStatus: formattedStatus })
+                    //         .eq('applicantId', applicant.applicantId);
     
-                        if (updateError) {
-                            console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Evaluation Accomplished:`, updateError);
-                        }
-                    }
-                    else if (applicant.p2_hrevalscheduled) {
-                        formattedStatus = 'P2 - Awaiting for HR Evaluation';
+                    //     if (updateError) {
+                    //         console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Evaluation Accomplished:`, updateError);
+                    //     }
+                    // }
+                    // else if (applicant.p2_hrevalscheduled) {
+                    //     formattedStatus = 'P2 - Awaiting for HR Evaluation';
     
-                        const { error: updateError } = await supabase
-                            .from('applicantaccounts')
-                            .update({ applicantStatus: formattedStatus })
-                            .eq('applicantId', applicant.applicantId);
+                    //     const { error: updateError } = await supabase
+                    //         .from('applicantaccounts')
+                    //         .update({ applicantStatus: formattedStatus })
+                    //         .eq('applicantId', applicant.applicantId);
     
-                        if (updateError) {
-                            console.error(`Error updating applicant ${applicant.applicantId} to P2 - Awaiting for HR Evaluation:`, updateError);
-                        }
-                    } 
-                    else if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
-                        formattedStatus = 'P2 - HR Screening Scheduled';
+                    //     if (updateError) {
+                    //         console.error(`Error updating applicant ${applicant.applicantId} to P2 - Awaiting for HR Evaluation:`, updateError);
+                    //     }
+                    // } 
+                    // else if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
+                    //     formattedStatus = 'P2 - HR Screening Scheduled';
     
-                        const { error: updateError } = await supabase
-                            .from('applicantaccounts')
-                            .update({ applicantStatus: formattedStatus })
-                            .eq('applicantId', applicant.applicantId);
+                    //     const { error: updateError } = await supabase
+                    //         .from('applicantaccounts')
+                    //         .update({ applicantStatus: formattedStatus })
+                    //         .eq('applicantId', applicant.applicantId);
     
-                        if (updateError) {
-                            console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Screening Scheduled:`, updateError);
-                        }
-                    } else {
-                        if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
-                            formattedStatus = 'P1 - Initial Screening';
-                        } else if (applicant.initialScreeningScore < 50) {
-                            formattedStatus = 'P1 - FAILED';
-                        } else {
-                            formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
-                        }
-    
-                        if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
-                            if (applicant.hrInterviewFormScore < 50) {
-                                formattedStatus = 'P1 - FAILED';
-                            } else if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
-                                formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
-                            } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
-                                formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
-                            }
-                        }
-                    }
+                    //     if (updateError) {
+                    //         console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Screening Scheduled:`, updateError);
+                    //     }
+                    // } else {
+                    // }
+                       
     
                     applicant.applicantStatus = formattedStatus;
                     applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
@@ -496,16 +477,35 @@ const hrController = {
             }
     
             try {
-                const { error } = await supabase
+                // Step 1: Get userId from applicantaccounts using applicantId
+                const { data: applicantData, error: applicantError } = await supabase
                     .from('applicantaccounts')
-                    .update({ LM_notified: true }) // Set LM_notified to true
-                    .eq('applicantId', applicantId);
+                    .select('userId')
+                    .eq('applicantId', applicantId)
+                    .single();
     
-                if (error) throw error;
+                if (applicantError || !applicantData) {
+                    console.error('Error fetching userId:', applicantError);
+                    return res.status(404).json({ success: false, error: 'Applicant not found.' });
+                }
+    
+                const userId = applicantData.userId;
+                console.log('Fetched UserId:', userId);
+    
+                // Step 2: Update isHRChosen in applicant_initialscreening_assessment where userId matches
+                const { error: updateError } = await supabase
+                    .from('applicant_initialscreening_assessment')
+                    .update({ isHRChosen: true })
+                    .eq('userId', userId);
+    
+                if (updateError) {
+                    console.error('Error updating isHRChosen:', updateError);
+                    throw updateError;
+                }
     
                 res.status(200).json({ success: true, message: 'Line Manager notified successfully.' });
             } catch (error) {
-                console.error('Error updating LM_notified:', error);
+                console.error('Unexpected error:', error);
                 return res.status(500).json({ success: false, error: 'Failed to notify Line Manager. Please try again.' });
             }
         } else {
@@ -513,7 +513,7 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
-
+    
    
         // Controller method for viewing final results for an individual applicant
         getFinalResults: async function (req, res) {
@@ -1660,21 +1660,44 @@ updateJobOffer: async function(req, res) {
 
     getApplicantData: async function(req, res) {
         try {
+            // Fetch applicants with their respective screening assessment data
             const { data: applicants, error: applicantError } = await supabase
                 .from('applicantaccounts')
-                .select('lastName, firstName');
-            
+                .select(`
+                    lastName, 
+                    firstName, 
+                    birthDate, 
+                    phoneNo,
+                    userId, 
+                    applicant_initialscreening_assessment(
+                        initialScreeningId,
+                        jobId,
+                        degreeScore,
+                        experienceScore,
+                        certificationScore,
+                        hardSkillsScore,
+                        softSkillsScore,
+                        workSetupScore,
+                        availabilityScore,
+                        totalScore,
+                        totalScoreCalculatedAt,
+                         resume_url,
+                        isHRChosen,
+                        isLineManagerChosen
+                    )
+                `);
+    
             if (applicantError) throw applicantError;
-            
+    
             // Render the EJS template and pass the applicants data
             res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
+    
         } catch (error) {
             console.error('Error fetching applicants:', error);
             res.status(500).json({ error: 'Error fetching applicants' });
         }
     },
     
-
 
     // Add a new department on the select picker on add new staff form
     addNewDepartment: async function(req, res) {
