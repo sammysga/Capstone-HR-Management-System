@@ -897,7 +897,11 @@
         </div> 
 
         <h4>Uploaded Documents</h4> 
-        <p><a id="uploaded-doc" href="#" target="_blank">No document uploaded</a></p> 
+        <p>
+            <a id="uploaded-doc" href="#" target="_blank">No document uploaded</a>
+        </p>
+        <div id="doc-preview" style="margin-top: 10px;"></div> <!-- Preview area -->
+        
         
         <h4>Would you like to select this applicant as the top candidate and recommend them for the panel interview?</h4>
         <div class="review-modal-buttons">
@@ -1041,18 +1045,42 @@ function hrInitialScreeningModal(lastName, firstName, birthday, email, phoneNo, 
 
     document.getElementById('computation-verdict').textContent = verdict || 'N/A';
 
-    let docElement = document.getElementById('uploaded-doc');
-    if (documentLink && documentLink !== '#') {
-        docElement.href = documentLink;
-        docElement.textContent = documentLink.split('/').pop();
-    } else {
-        docElement.href = '#';
-        docElement.textContent = 'No document uploaded';
-    }
+    // Update the uploaded document section
+    displayUploadedDocument(documentLink);
 
     document.getElementById('reviewModal').style.display = 'block';
 }
 
+
+function displayUploadedDocument(fileUrl) {
+    const docLink = document.getElementById("uploaded-doc");
+    const docPreview = document.getElementById("doc-preview");
+
+    if (!fileUrl) {
+        docLink.href = "#";
+        docLink.textContent = "No document uploaded";
+        docPreview.innerHTML = ""; // Clear preview
+        return;
+    }
+
+    docLink.href = fileUrl;
+    docLink.textContent = "View Uploaded Document";
+
+    // Determine file type based on extension
+    const fileExtension = fileUrl.split('.').pop().toLowerCase();
+
+    if (["jpg", "jpeg", "png"].includes(fileExtension)) {
+        // Display image preview
+        docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
+    } else if (fileExtension === "pdf") {
+        // Display embedded PDF viewer
+        docPreview.innerHTML = `
+            <iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>
+        `;
+    } else {
+        docPreview.innerHTML = ""; // No preview for other file types
+    }
+}
 
 
     // Close the modal
