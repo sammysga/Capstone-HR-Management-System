@@ -560,26 +560,47 @@
         <!-- For Review Button -->
         <button 
         class="btn-review" 
-        onclick="hrInitialScreeningModal(
-            '<%= applicant.lastName %>', 
-            '<%= applicant.firstName %>', 
-            '<%= applicant.birthDate %>', 
-            '<%= applicant.userEmail %>', 
-            '<%= applicant.phoneNo %>', 
-            {
-                degree: '<%= applicant.degreeScore %>',
-                experience: '<%= applicant.experienceScore %>',
-                certifications: '<%= applicant.certificationScore %>',
-                hardSkills: '<%= applicant.hardSkillsScore %>',
-                softSkills: '<%= applicant.softSkillsScore %>',
-                workSetup: '<%= applicant.workSetupScore %>',
-                availability: '<%= applicant.availabilityScore %>'
-            }, 
-            '<%= applicant.totalScore %>', 
-            '<%= applicant.resume_url %>'
-        )">
+        onclick="
+            console.log('Opening Modal with:', {
+                lastName: '<%= applicant.lastName %>',
+                firstName: '<%= applicant.firstName %>',
+                birthDate: '<%= applicant.birthDate %>',
+                email: '<%= applicant.userEmail %>',
+                phoneNo: '<%= applicant.phoneNo %>',
+                scores: {
+                    degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
+                    experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
+                    certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
+                    hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
+                    softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
+                    workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
+                    availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
+                },
+                totalScore: '<%= applicant.initialScreeningAssessment.totalScore %>',
+                resumeURL: '<%= applicant.initialScreeningAssessment.resume_url %>'
+            });
+
+            hrInitialScreeningModal(
+                '<%= applicant.lastName %>', 
+                '<%= applicant.firstName %>', 
+                '<%= applicant.birthDate %>', 
+                '<%= applicant.userEmail %>', 
+                '<%= applicant.phoneNo %>', 
+                {
+                    degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
+                    experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
+                    certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
+                    hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
+                    softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
+                    workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
+                    availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
+                }, 
+                '<%= applicant.initialScreeningAssessment.totalScore %>', 
+                '<%= applicant.initialScreeningAssessment.resume_url %>'
+            )
+        ">
         For Review
-    </button>
+        </button>
     
 
     <% } else if (applicant.applicantStatus === 'P2 - HR Screening Scheduled') { %>
@@ -1003,6 +1024,8 @@ function notifyLineManager(applicantId) {
 
 
 function hrInitialScreeningModal(lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink) {
+    console.log('Modal Data:', { lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
+
     document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
     document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
     document.getElementById('applicant-email').textContent = email || 'N/A';
@@ -1017,19 +1040,19 @@ function hrInitialScreeningModal(lastName, firstName, birthday, email, phoneNo, 
     document.getElementById('score-availability').textContent = scores.availability || 'N/A';
 
     document.getElementById('computation-verdict').textContent = verdict || 'N/A';
-    
+
     let docElement = document.getElementById('uploaded-doc');
-    if (documentLink) {
+    if (documentLink && documentLink !== '#') {
         docElement.href = documentLink;
         docElement.textContent = documentLink.split('/').pop();
     } else {
         docElement.href = '#';
         docElement.textContent = 'No document uploaded';
     }
-    
-    // Show the modal
+
     document.getElementById('reviewModal').style.display = 'block';
 }
+
 
 
     // Close the modal

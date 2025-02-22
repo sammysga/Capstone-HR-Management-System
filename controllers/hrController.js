@@ -344,6 +344,8 @@ const hrController = {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
                 const { jobId, applicantId } = req.query;
+                console.log('Received request with jobId:', jobId, 'and applicantId:', applicantId);
+
     
                 // if (applicantId) {
                 //     const { error: updateError } = await supabase
@@ -360,24 +362,56 @@ const hrController = {
                 // }
     
                 const { data: applicants, error: applicantError } = await supabase
-                    .from('applicantaccounts')
-                    .select(`
-                        lastName, 
-                        firstName, 
-                        phoneNo,
-                        userId,
-                        jobId,
-                        departmentId,
-                        applicantStatus,
-                        applicantId,
-                        hrInterviewFormScore,
-                        initialScreeningScore,
-                        p2_Approved,
-                        p2_hrevalscheduled 
-                    `)
-                    .eq('jobId', jobId);
-    
-                if (applicantError) throw applicantError;
+    .from('applicantaccounts')
+    .select(`
+        lastName, 
+        firstName, 
+        phoneNo,
+        userId,
+        jobId,
+        departmentId,
+        birthDate,
+        applicantStatus,
+        applicantId,
+        hrInterviewFormScore,
+        initialScreeningScore,
+        p2_Approved,
+        p2_hrevalscheduled
+    `)
+    .eq('jobId', jobId);
+
+    if (applicantError) {
+        console.error('Error fetching applicants:', applicantError);
+        throw applicantError;
+    }
+    console.log('Fetched applicants:', applicants);
+
+// Fetch initial screening assessments separately
+const { data: screeningAssessments, error: screeningError } = await supabase
+    .from('applicant_initialscreening_assessment')
+    .select(`
+        userId,
+        initialScreeningId,
+        degreeScore,
+        experienceScore,
+        certificationScore,
+        hardSkillsScore,
+        softSkillsScore,
+        workSetupScore,
+        availabilityScore,
+        totalScore,
+        totalScoreCalculatedAt,
+        resume_url,
+        isHRChosen,
+        isLineManagerChosen
+    `);
+
+    if (screeningError) {
+        console.error('Error fetching screening assessments:', screeningError);
+        throw screeningError;
+    }
+    console.log('Fetched screening assessments:', screeningAssessments);
+
     
                 const { data: userAccounts, error: userError } = await supabase
                     .from('useraccounts')
@@ -395,10 +429,16 @@ const hrController = {
                     .from('departments')
                     .select('departmentId, deptName');
     
-                if (departmentError) throw departmentError;
+                    if (departmentError) {
+                        console.error('Error fetching departments:', departmentError);
+                        throw departmentError;
+                    }
+                    console.log('Fetched departments:', departments);
     
                 for (const applicant of applicants) {
-                    let formattedStatus = applicant.applicantStatus;
+                    console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
+
+                    // let formattedStatus = applicant.applicantStatus;
     
                     // ✅ NEW: If HR Evaluation Score is not 0, update the status to 'P2 - HR Evaluation Accomplished'
                     // if (applicant.hrInterviewFormScore && applicant.hrInterviewFormScore > 0) {
@@ -440,20 +480,44 @@ const hrController = {
                     // }
                        
     
-                    applicant.applicantStatus = formattedStatus;
-                    applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
-                    applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
-                    applicant.userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
-                }
-    
-                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', {
-                    applicants,
-                });
+                    // applicant.applicantStatus = formattedStatus;
+                     // Assign job title, department name, and user email
+    applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+    applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+    applicant.userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+    applicant.birthDate = userAccounts.find(user => user.userId === applicant.userId)?.birthDate || 'N/A';
+
+
+    // Match `userId` to fetch the corresponding initial screening assessment
+    const screeningData = screeningAssessments.find(assessment => assessment.userId === applicant.userId) || {};
+
+    // Merge the screening assessment data into the applicant object
+    applicant.initialScreeningAssessment = {
+        degreeScore: screeningData.degreeScore || 'N/A',
+        experienceScore: screeningData.experienceScore || 'N/A',
+        certificationScore: screeningData.certificationScore || 'N/A',
+        hardSkillsScore: screeningData.hardSkillsScore || 'N/A',
+        softSkillsScore: screeningData.softSkillsScore || 'N/A',
+        workSetupScore: screeningData.workSetupScore || 'N/A',
+        availabilityScore: screeningData.availabilityScore || 'N/A',
+        totalScore: screeningData.totalScore || 'N/A',
+        resume_url: screeningData.resume_url || '#',
+    };
+
+    console.log('Updated applicant details:', applicant);
+}
+
+console.log('Final applicants list:', applicants);
+
+// Render the page with updated applicants
+res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
             } catch (error) {
                 console.error('Error fetching applicants:', error);
                 res.status(500).json({ error: 'Error fetching applicants' });
             }
         } else {
+            console.warn('Unauthorized access attempt detected.');
+
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
             res.redirect('/staff/login');
         }
