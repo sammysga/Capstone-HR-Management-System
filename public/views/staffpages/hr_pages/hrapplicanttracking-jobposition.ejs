@@ -489,6 +489,13 @@
     opacity: 0.8;
 }
 
+
+/*USER ID CSS*/
+#applicant-userId {
+    display: none;
+}
+
+
     </style>
 </head>
 <body>
@@ -581,6 +588,7 @@
             });
 
             hrInitialScreeningModal(
+                '<%= applicant.userId %>', 
                 '<%= applicant.lastName %>', 
                 '<%= applicant.firstName %>', 
                 '<%= applicant.birthDate %>', 
@@ -838,13 +846,16 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div id="reviewModal" class="review-modal">
+<!-- P1 - HR Choosing Modal -->
+<div id="hrInitialScreeningModalHtml" class="review-modal">
     <div class="review-modal-content">
         <span class="review-close-button">&times;</span>
         <h2>P1: Initial Screening Score Breakdown</h2> 
         <div class="divider"></div>
         <div class="applicant-details">
+            <input type="hidden" id="applicantId" value="12345">
+            <input type="hidden" id="jobId" value="67890">
+
             <p><strong>Name:</strong> <span id="applicant-name"></span></p>
             <p><strong>Birthday:</strong> <span id="applicant-birthday"></span></p>
             <p><strong>Email:</strong> <span id="applicant-email"></span></p>
@@ -903,10 +914,10 @@
         <div id="doc-preview" style="margin-top: 10px;"></div> <!-- Preview area -->
         
         
-        <h4>Would you like to select this applicant as the top candidate and recommend them for the panel interview?</h4>
+        <h4>Would you like to recommend this applicant to the Line Manager for shortlisting and proceeding to the HR interview?</h4>
         <div class="review-modal-buttons">
             <button id="backButton" class="review-modal-back-button">Back</button>
-            <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmSelection()">Confirm</button>
+            <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmHRInitialScreeningModal()">Confirm</button>
         </div>
     </div>
 </div>
@@ -993,36 +1004,89 @@ function notifyLineManager(applicantId) {
             }
         });
 
+
+
+
+    
+
+
+        function confirmHRInitialScreeningModal() {
+    const applicantElement = document.getElementById("applicantId");
+    const jobElement = document.getElementById("jobId");
+
+    console.log("Checking elements...");
+    console.log("applicantElement:", applicantElement);
+    console.log("jobElement:", jobElement);
+
+    if (!applicantElement || !jobElement) {
+        console.error("Error: One or both elements (applicantId, jobId) are missing!");
+        alert("Error: Required fields are missing. Please try again.");
+        return; // Stop function execution if elements are missing
+    }
+
+    const applicantId = applicantElement.value;
+    const jobId = jobElement.value;
+
+    console.log("Applicant ID:", applicantId);
+    console.log("Job ID:", jobId);
+
+    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
+        method: 'POST', 
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId, jobId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Server Response:", data);
+
+        if (data.success) {
+            const modal = document.getElementById('hrInitialScreeningModalHtml');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            alert("Successfully updated applicant status!");
+        } else {
+            alert("Error updating applicant status.");
+        }
+    })
+    .catch(error => {
+        console.error("Fetch Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
     
 
 // confirm button for modal for review
         // Handle Confirm button click in the modal
-        function confirmSelection() {
-    const applicantName = document.getElementById("applicant-name").textContent.split(", ");
-    const lastName = applicantName[0];
-    const firstName = applicantName[1];
+//         function confirmSelection() {
+//     const applicantName = document.getElementById("applicant-name").textContent.split(", ");
+//     const lastName = applicantName[0];
+//     const firstName = applicantName[1];
 
-    fetch("/update-applicant", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ lastName, firstName }),
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert(result.message);
-                location.reload(); // Refresh the page
-            } else {
-                alert("Failed to update applicant status. Please try again.");
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("An error occurred while updating the applicant status.");
-        });
-}
+//     fetch("/update-applicant", {
+//         method: "POST",
+//         headers: {
+//             "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({ lastName, firstName }),
+//     })
+//         .then(response => response.json())
+//         .then(result => {
+//             if (result.success) {
+//                 alert(result.message);
+//                 location.reload(); // Refresh the page
+//             } else {
+//                 alert("Failed to update applicant status. Please try again.");
+//             }
+//         })
+//         .catch(error => {
+//             console.error("Error:", error);
+//             alert("An error occurred while updating the applicant status.");
+//         });
+// }
 
 
 
@@ -1030,6 +1094,10 @@ function notifyLineManager(applicantId) {
 function hrInitialScreeningModal(lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink) {
     console.log('Modal Data:', { lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
 
+    let userIdElement = document.getElementById("applicant-userId").parentElement;
+    if (userIdElement) {
+        userIdElement.style.display = "none"; // Hide the entire <p> element
+    }
     document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
     document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
     document.getElementById('applicant-email').textContent = email || 'N/A';
@@ -1048,7 +1116,7 @@ function hrInitialScreeningModal(lastName, firstName, birthday, email, phoneNo, 
     // Update the uploaded document section
     displayUploadedDocument(documentLink);
 
-    document.getElementById('reviewModal').style.display = 'block';
+    document.getElementById('hrInitialScreeningModalHtml').style.display = 'block';
 }
 
 
@@ -1085,12 +1153,12 @@ function displayUploadedDocument(fileUrl) {
 
     // Close the modal
     document.querySelector('.review-close-button').addEventListener('click', function () {
-        document.getElementById('reviewModal').style.display = 'none';
+        document.getElementById('hrInitialScreeningModalHtml').style.display = 'none';
     });
 
     // Close modal if clicked outside the modal content
     window.addEventListener('click', function (event) {
-        const modal = document.getElementById('reviewModal');
+        const modal = document.getElementById('hrInitialScreeningModalHtml');
         if (event.target === modal) {
             modal.style.display = 'none';
         }
@@ -1390,7 +1458,7 @@ function openModal(name, age, email, contact) {
     document.getElementById("applicant-birthday").value = age;
     document.getElementById("applicant-email").value = email;
     document.getElementById("applicant-contact").value = contact;
-    document.getElementById("reviewModal").style.display = "block";
+    document.getElementById("hrInitialScreeningModalHtml").style.display = "block";
 }
 
 // Add event listeners to all "For Review" buttons
@@ -1407,7 +1475,7 @@ document.querySelectorAll(".btn-review").forEach(button => {
 
 // Function to close the modal
 document.querySelector(".review-close-button").addEventListener("click", function() {
-    document.getElementById("reviewModal").style.display = "none";
+    document.getElementById("hrInitialScreeningModalHtml").style.display = "none";
 });
 
 // Close modal when clicking outside of the modal content
