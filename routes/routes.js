@@ -79,10 +79,6 @@ router.get('/hr/records-performance-tracker', hrController.getRecordsPerformance
 router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPerformanceTrackerByUserId);
 router.get('/hr/view-mrf/:id', hrController.getViewMRF);
 router.post('/hr/view-mrf/:id', hrController.submitMRF);
-router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
-router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
-router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
-
 
 router.post('/notify-line-manager', hrController.postNotifyLineManager);
 // Backend route to handle evaluation form page
@@ -150,8 +146,6 @@ router.get('/employee/employeefeedbackquestionnaire/:selectedUserId', employeeCo
 // Line Manager Routes
 router.get('/linemanager/interview-bookings', lineManagerController.getInterviewBookings);
 router.get('/linemanager/interview-bookingss', lineManagerController.getInterviewBookingss);
-router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
-router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.getApplicantTrackerByJobPositions);
 
 // Staff information
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
@@ -195,6 +189,15 @@ router.post('/linemanager/records-performance-tracker/questionnaire/:userId', li
 
 // router.get('/linemanager/records-performance-tracker/stepper/:quarter', lineManagerController.getQuarterStepper);
 
+
+/* ORDER OF ATS CODES  */ 
+router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
+router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
+router.post('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', hrController.updateStatusToP1AwaitingforLineManager);
+router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
+
+router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
+router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.getApplicantTrackerByJobPositions);
 
 
 module.exports = router; 

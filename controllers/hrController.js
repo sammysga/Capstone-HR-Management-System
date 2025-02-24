@@ -524,9 +524,36 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
     },
     
     
+    updateStatusToP1AwaitingforLineManager: async function(req, res) {
+        const { jobId, applicantId } = req.body; // Get jobId and applicantId from request body
     
-
+        try {
+            // Update `applicant_initialscreening_assessment`
+            const { error: assessmentError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .update({ isHRChosen: true })
+                .eq('applicantId', applicantId)
+                .eq('jobId', jobId);
     
+            if (assessmentError) throw assessmentError;
+    
+            // Update `applicantaccounts`
+            const { data: applicantData, error: statusError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: "P1 - Awaiting for Line Manager Action" })
+                .eq('applicantId', applicantId)
+                .select('userId');
+    
+            if (statusError) throw statusError;
+    
+            const userId = applicantData && applicantData.length > 0 ? applicantData[0].userId : null;
+    
+            res.json({ success: true, message: "Applicant status updated successfully.", userId });
+        } catch (error) {
+            res.json({ success: false, message: error.message });
+        }
+    },
+        
     postNotifyLineManager: async function(req, res) {
         console.log('Request Body:', req.body); // Log the entire request body
     
