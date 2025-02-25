@@ -853,8 +853,9 @@
         <h2>P1: Initial Screening Score Breakdown</h2> 
         <div class="divider"></div>
         <div class="applicant-details">
-            <input type="hidden" id="applicantId" value="12345">
-            <input type="hidden" id="jobId" value="67890">
+            <input type="hidden" id="userId">
+            <input type="hidden" id="jobId">            
+            <input type="hidden" id="applicantId">
 
             <p><strong>Name:</strong> <span id="applicant-name"></span></p>
             <p><strong>Birthday:</strong> <span id="applicant-birthday"></span></p>
@@ -1007,102 +1008,35 @@ function notifyLineManager(applicantId) {
 
 
 
+        function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink) {
+    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
     
+    // If userId is missing or "undefined", log an error and stop further processing.
+    if (!userId || userId === "undefined") {
+        console.error("Invalid userId passed to modal:", userId);
+        alert("Error: Invalid User ID. Cannot display applicant details.");
+        return;
+    }
+    
+    // Set the hidden input value for userId
+    document.getElementById('userId').value = userId;
+    
+    // (If you have a jobId, set it similarly.)
+    // document.getElementById('jobId').value = jobId;
 
-
-        function confirmHRInitialScreeningModal() {
-    const applicantElement = document.getElementById("applicantId");
-    const jobElement = document.getElementById("jobId");
-
-    console.log("Checking elements...");
-    console.log("applicantElement:", applicantElement);
-    console.log("jobElement:", jobElement);
-
-    if (!applicantElement || !jobElement) {
-        console.error("Error: One or both elements (applicantId, jobId) are missing!");
-        alert("Error: Required fields are missing. Please try again.");
-        return; // Stop function execution if elements are missing
+    // Optionally hide the applicantId container if not needed
+    let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
+    if (applicantIdContainer) {
+        applicantIdContainer.style.display = "none";
     }
 
-    const applicantId = applicantElement.value;
-    const jobId = jobElement.value;
-
-    console.log("Applicant ID:", applicantId);
-    console.log("Job ID:", jobId);
-
-    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
-        method: 'POST', 
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ applicantId, jobId }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Server Response:", data);
-
-        if (data.success) {
-            const modal = document.getElementById('hrInitialScreeningModalHtml');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-            alert("Successfully updated applicant status!");
-        } else {
-            alert("Error updating applicant status.");
-        }
-    })
-    .catch(error => {
-        console.error("Fetch Error:", error);
-        alert("Failed to update applicant status.");
-    });
-}
-
-    
-
-// confirm button for modal for review
-        // Handle Confirm button click in the modal
-//         function confirmSelection() {
-//     const applicantName = document.getElementById("applicant-name").textContent.split(", ");
-//     const lastName = applicantName[0];
-//     const firstName = applicantName[1];
-
-//     fetch("/update-applicant", {
-//         method: "POST",
-//         headers: {
-//             "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({ lastName, firstName }),
-//     })
-//         .then(response => response.json())
-//         .then(result => {
-//             if (result.success) {
-//                 alert(result.message);
-//                 location.reload(); // Refresh the page
-//             } else {
-//                 alert("Failed to update applicant status. Please try again.");
-//             }
-//         })
-//         .catch(error => {
-//             console.error("Error:", error);
-//             alert("An error occurred while updating the applicant status.");
-//         });
-// }
-
-
-
-
-function hrInitialScreeningModal(lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink) {
-    console.log('Modal Data:', { lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
-
-    let userIdElement = document.getElementById("applicant-userId").parentElement;
-    if (userIdElement) {
-        userIdElement.style.display = "none"; // Hide the entire <p> element
-    }
+    // Populate visible applicant details
     document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
     document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
     document.getElementById('applicant-email').textContent = email || 'N/A';
     document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
 
+    // Populate score details
     document.getElementById('score-degree').textContent = scores.degree || 'N/A';
     document.getElementById('score-experience').textContent = scores.experience || 'N/A';
     document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
@@ -1116,6 +1050,7 @@ function hrInitialScreeningModal(lastName, firstName, birthday, email, phoneNo, 
     // Update the uploaded document section
     displayUploadedDocument(documentLink);
 
+    // Display the modal
     document.getElementById('hrInitialScreeningModalHtml').style.display = 'block';
 }
 
@@ -1149,6 +1084,54 @@ function displayUploadedDocument(fileUrl) {
         docPreview.innerHTML = ""; // No preview for other file types
     }
 }
+function confirmHRInitialScreeningModal() {
+    const userIdElement = document.getElementById("userId");
+    console.log("userIdElement:", userIdElement);
+
+    if (!userIdElement) {
+        alert("Error: userId is missing. Please try again.");
+        return;
+    }
+
+    const userIdRaw = userIdElement.value.trim();
+    console.log("User ID (raw):", userIdRaw);
+
+    if (!userIdRaw || userIdRaw === "undefined") {
+        alert("Error: User ID is invalid. Please try again.");
+        return;
+    }
+
+    // Convert to an integer if your backend expects a bigint
+    const userId = parseInt(userIdRaw, 10);
+    console.log("User ID (parsed):", userId);
+
+    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
+        method: 'POST', 
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Server Response:", data);
+
+        if (data.success) {
+            const modal = document.getElementById('hrInitialScreeningModalHtml');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            alert("Successfully updated applicant status!");
+        } else {
+            alert("Error updating applicant status: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Fetch Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
 
 
     // Close the modal

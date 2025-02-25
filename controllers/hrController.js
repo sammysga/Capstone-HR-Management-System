@@ -343,8 +343,9 @@ const hrController = {
     getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { jobId, applicantId } = req.query;
+                const { jobId, applicantId, userId } = req.query;
                 console.log('Received request with jobId:', jobId, 'and applicantId:', applicantId);
+                console.log('Received request with userId:', userId);
 
     
                 // if (applicantId) {
@@ -525,35 +526,32 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
     
     
     updateStatusToP1AwaitingforLineManager: async function(req, res) {
-        const { jobId, applicantId } = req.body; // Get jobId and applicantId from request body
+        const { userId, jobId } = req.body; // Get userId and jobId from request body
     
         try {
-            // Update `applicant_initialscreening_assessment`
+            // Update `applicant_initialscreening_assessment` using `userId`
             const { error: assessmentError } = await supabase
                 .from('applicant_initialscreening_assessment')
                 .update({ isHRChosen: true })
-                .eq('applicantId', applicantId)
+                .eq('userId', userId)
                 .eq('jobId', jobId);
     
             if (assessmentError) throw assessmentError;
     
-            // Update `applicantaccounts`
-            const { data: applicantData, error: statusError } = await supabase
+            // Update `applicantaccounts` using `userId`
+            const { error: statusError } = await supabase
                 .from('applicantaccounts')
-                .update({ applicantStatus: "P1 - Awaiting for Line Manager Action" })
-                .eq('applicantId', applicantId)
-                .select('userId');
+                .update({ applicantStatus: "P1 - Awaiting for Line Manager Action; HR PASSED" })
+                .eq('userId', userId);
     
             if (statusError) throw statusError;
-    
-            const userId = applicantData && applicantData.length > 0 ? applicantData[0].userId : null;
     
             res.json({ success: true, message: "Applicant status updated successfully.", userId });
         } catch (error) {
             res.json({ success: false, message: error.message });
         }
     },
-        
+    
     postNotifyLineManager: async function(req, res) {
         console.log('Request Body:', req.body); // Log the entire request body
     
