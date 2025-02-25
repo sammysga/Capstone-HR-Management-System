@@ -369,6 +369,33 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
+
+        // Function to fetch notifications dynamically
+async function fetchNotifications() {
+    try {
+        const response = await fetch('/api/notifications'); // Adjust the API endpoint as needed
+        const data = await response.json();
+
+        // Transform backend data into notification format
+        const notifications = data.map(item => {
+            return {
+                employeePhoto: "/images/profile.png", // Update with actual user image if available
+                headline: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
+                    ? "Awaiting Your Approval" 
+                    : item.headline,
+                content: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
+                    ? "Required Line Manager Action" 
+                    : item.content,
+                date: new Date(item.date)
+            };
+        });
+
+        displayNotifications(notifications);
+    } catch (error) {
+        console.error("Error fetching notifications:", error);
+    }
+}
+
         // Line Graph: Attendance Logs (based on Active Working Hours)
         const attendanceLogsData = <%- JSON.stringify(attendanceLogs) %>;
 
@@ -502,27 +529,29 @@
             }
         });
 
-        // Sample notification data
-        const notifications = [
-            {
-                employeePhoto: "/images/profile.png",
-                headline: "REQUIRED 360 Degree Feedback Submission",
-                content: "Your feedback is required. Deadline of Submitting Feedback is at 5 PM.",
-                date: new Date('2025-01-24T10:00:00')
-            },
-            {
-                employeePhoto: "/images/profile.png",
-                headline: "REQUIRED 360 Degree Feedback Submission",
-                content: "Your feedback is required. Deadline of Submitting Feedback is at 5 PM.",
-                date: new Date('2025-01-23T10:00:00')
-            },
-            {
-                employeePhoto: "/images/profile.png",
-                headline: "System Maintenance Tomorrow",
-                content: "The system will be down from 2 AM to 4 AM for maintenance.",
-                date: new Date('2025-01-22T08:30:00')
-            },
-        ];
+        // // Sample notification data
+        // const notifications = [
+        //     {
+        //         employeePhoto: "/images/profile.png",
+        //         headline: "REQUIRED 360 Degree Feedback Submission",
+        //         content: "Your feedback is required. Deadline of Submitting Feedback is at 5 PM.",
+        //         date: new Date('2025-01-24T10:00:00')
+        //     },
+        //     {
+        //         employeePhoto: "/images/profile.png",
+        //         headline: "REQUIRED 360 Degree Feedback Submission",
+        //         content: "Your feedback is required. Deadline of Submitting Feedback is at 5 PM.",
+        //         date: new Date('2025-01-23T10:00:00')
+        //     },
+        //     {
+        //         employeePhoto: "/images/profile.png",
+        //         headline: "System Maintenance Tomorrow",
+        //         content: "The system will be down from 2 AM to 4 AM for maintenance.",
+        //         date: new Date('2025-01-22T08:30:00')
+        //     },
+        // ];
+
+        
 
         // Function to format date
         function formatDate(date) {

@@ -92,6 +92,18 @@ const lineManagerController = {
     
                     return attendanceLogs;
                 };
+
+                 // Fetch applicant statuses for line manager actions
+            const fetchPendingApprovals = async () => {
+                const { data, error } = await supabase
+                    .from('applicantaccounts')
+                    .select('applicantStatus')
+                    .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED');
+
+                if (error) throw error;
+
+                return data.length > 0 ? 'P1 - Awaiting for Line Manager Action; HR PASSED' : null;
+            };
     
                 // Function to format attendance logs
                 const formatAttendanceLogs = (attendanceLogs) => {
@@ -171,12 +183,14 @@ const lineManagerController = {
                 const formattedAllLeaves = await fetchAndFormatLeaves();
                 const formattedApprovedLeaves = await fetchAndFormatLeaves('Approved');
                 const attendanceLogs = await fetchAttendanceLogs();
+                const pendingApprovalStatus = await fetchPendingApprovals();
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
                 // Render the dashboard with all relevant data
                 return res.render('staffpages/linemanager_pages/managerdashboard', { 
                     allLeaves: formattedAllLeaves,
                     approvedLeaves: formattedApprovedLeaves,
+                    pendingApprovalStatus,
                     attendanceLogs: formattedAttendanceDisplay,
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors')
