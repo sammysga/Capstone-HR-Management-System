@@ -587,25 +587,25 @@ const notifications = [
         }
 
         // Function to display all notifications (including older ones)
-        function displayAllNotifications() {
-            const recentNotificationsContainer = document.getElementById("recent-notifications");
-            recentNotificationsContainer.innerHTML = ''; // Clear recent notifications
+        function displayNotifications() {
+    const recentNotificationsContainer = document.getElementById("recent-notifications");
+    recentNotificationsContainer.innerHTML = ''; // Clear previous notifications
 
-            notifications.forEach(notification => {
-                const notificationElement = document.createElement("div");
-                notificationElement.classList.add("notification-item");
+    notifications.forEach(notification => {
+        const notificationElement = document.createElement("div");
+        notificationElement.classList.add("notification-item");
 
-                notificationElement.innerHTML = `
-                    <img src="${notification.employeePhoto}" alt="Employee Photo">
-                    <div class="notification-content">
-                        <div class="headline">${notification.headline}</div>
-                        <div class="content">${notification.content}</div>
-                        <div class="date">${formatDate(notification.date)}</div>
-                    </div>
-                `;
+        notificationElement.innerHTML = `
+            <img src="${notification.employeePhoto}" alt="Employee Photo">
+            <div class="notification-content">
+                <div class="headline">${notification.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" ? "Awaiting Your Approval" : notification.headline}</div>
+                <div class="content">${notification.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" ? "Required Line Manager Action" : notification.content}</div>
+                <div class="date">${formatDate(notification.date)}</div>
+            </div>
+        `;
 
-                recentNotificationsContainer.appendChild(notificationElement);
-            });
+        recentNotificationsContainer.appendChild(notificationElement);
+    });
 
             // Hide the "See Previous Notifications" button after it's clicked
             document.getElementById("see-previous-notifications").style.display = "none";
