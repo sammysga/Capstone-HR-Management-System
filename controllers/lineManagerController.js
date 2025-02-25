@@ -202,7 +202,7 @@ const lineManagerController = {
             }
         } else {
             // Redirect or handle unauthorized access here if needed
-            return res.redirect('/login');
+            return res.redirect('/staff/login');
         }
     },
     getLeaveRequest: async function(req, res) {
