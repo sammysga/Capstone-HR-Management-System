@@ -205,6 +205,57 @@ const lineManagerController = {
             return res.redirect('/staff/login');
         }
     },
+
+    // Fetch notifications from Supabase for Line Manager Dashboard
+getLineManagerNotifications: async function (req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null; // Ensure user is authenticated
+        if (!userId) {
+            req.flash('errors', { authError: 'User not logged in.' });
+            return res.redirect('/staff/login');
+        }
+
+        // Fetch notifications from 'applicantaccounts'
+        const { data: applicants, error } = await supabase
+            .from('applicantaccounts')
+            .select('firstName, lastName, applicantStatus, created_at')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching notifications:', error);
+            req.flash('errors', { dbError: 'Error retrieving notifications.' });
+            return res.redirect('/staff/managerdashboard');
+        }
+
+        // Transform the data for the front-end
+        const notifications = applicants.map(applicant => ({
+            firstName: applicant.firstName,
+            lastName: applicant.lastName,
+            applicantStatus: applicant.applicantStatus,
+            date: applicant.created_at,
+            employeePhoto: "/images/profile.png", // Placeholder, update if actual image exists
+            headline: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                ? "Awaiting Your Approval"
+                : "New Application Received",
+            content: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                ? `Required Line Manager Action for ${applicant.firstName} ${applicant.lastName}`
+                : `${applicant.firstName} ${applicant.lastName} submitted an application.`
+        }));
+
+        // Render the manager dashboard with notifications
+        res.render('staffpages/linemanager_pages/managerdashboard', { 
+            notifications,
+            successMessage: req.flash('success'),
+            errorMessage: req.flash('errors')
+        });
+
+    } catch (err) {
+        console.error('Error in getLineManagerNotifications controller:', err);
+        req.flash('errors', { dbError: 'An unexpected error occurred while loading notifications.' });
+        res.redirect('/staff/managerdashboard');
+    }
+},
+
     getLeaveRequest: async function(req, res) {
         const userId = req.query.userId;
     
