@@ -115,7 +115,8 @@ const hrController = {
                         userId, 
                         attendanceDate, 
                         attendanceAction, 
-                        attendanceTime, 
+                        attendanceTime,
+                        city, 
                         useraccounts (
                             userId, 
                             staffaccounts (
