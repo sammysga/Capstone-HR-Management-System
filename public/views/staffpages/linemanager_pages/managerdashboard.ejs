@@ -86,11 +86,10 @@
             color: #333;
         }
         #notification-bell {
-            margin-right: 15px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            position: relative;
+            position: absolute;
+    right: 15px;
+    top: 5%; 
+    transform: translateY(-50%);
         }
 
         #notification-bell i {
@@ -203,8 +202,7 @@
     <%- include('../../partials/linemanager_partials') %>
     <!-- Main content -->
     <div class="main-content">
-        <h2>
-            Line Manager Dashboard
+        <h2>Line Manager Dashboard</h2>
             <!-- Notification Bell Icon -->
 <button id="notification-bell">
     <i class="fas fa-bell"></i>
