@@ -205,16 +205,32 @@
     <div class="main-content">
         <h2>
             Line Manager Dashboard
-            <button id="notification-bell">
-                <i class="fas fa-bell"></i>
-                <span id="notification-count">3</span>
-            </button>
-        </h2>
-        <div id="notification-panel">
-            <h3>Notifications</h3>
-            <div id="recent-notifications"></div>
-            <button id="see-previous-notifications" style="display:none;">See Previous Notifications</button>
-        </div>
+            <!-- Notification Bell Icon -->
+<button id="notification-bell">
+    <i class="fas fa-bell"></i>
+    <span id="notification-count"><%= notifications.length %></span>
+</button>
+
+<!-- Notification Panel -->
+<div id="notification-panel">
+    <h3>Notifications</h3>
+    <div id="recent-notifications">
+        <% if (notifications.length > 0) { %>
+            <% notifications.forEach(notification => { %>
+                <div class="notification-item">
+                    <img src="<%= notification.employeePhoto %>" alt="Employee Photo">
+                    <div class="notification-content">
+                        <div class="headline"><%= notification.headline %></div>
+                        <div class="content"><%= notification.content %></div>
+                        <div class="date"><%= new Date(notification.date).toLocaleString() %></div>
+                    </div>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <p>No new notifications.</p>
+        <% } %>
+    </div>
+</div>
         <!-- Success and Error Messages -->
         <div class="messages">
             <% if (successMessage && successMessage.length > 0) { %>
@@ -541,32 +557,32 @@
 //     }
 // ];
 
-// Function to fetch notifications dynamically from Supabase
-async function fetchNotifications() {
-    try {
-        const response = await fetch('/api/notifications'); // Adjust API endpoint as needed
-        const data = await response.json();
+// // Function to fetch notifications dynamically from Supabase
+// async function fetchNotifications() {
+//     try {
+//         const response = await fetch('/api/notifications'); // Adjust API endpoint as needed
+//         const data = await response.json();
 
-        // Transform backend data into notification format
-        const notifications = data.map(item => ({
-            employeePhoto: "/images/profile.png", // Update with actual user image if available
-            applicantStatus: item.applicantStatus,
-            headline: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
-                ? "Awaiting Your Approval" 
-                : item.headline,
-            content: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
-                ? `Required Line Manager Action for ${item.firstName} ${item.lastName}` 
-                : item.content,
-            firstName: item.firstName,
-            lastName: item.lastName,
-            date: new Date(item.date)
-        }));
+//         // Transform backend data into notification format
+//         const notifications = data.map(item => ({
+//             employeePhoto: "/images/profile.png", // Update with actual user image if available
+//             applicantStatus: item.applicantStatus,
+//             headline: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
+//                 ? "Awaiting Your Approval" 
+//                 : item.headline,
+//             content: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
+//                 ? `Required Line Manager Action for ${item.firstName} ${item.lastName}` 
+//                 : item.content,
+//             firstName: item.firstName,
+//             lastName: item.lastName,
+//             date: new Date(item.date)
+//         }));
 
-        displayNotifications(notifications);
-    } catch (error) {
-        console.error("Error fetching notifications:", error);
-    }
-}
+//         displayNotifications(notifications);
+//     } catch (error) {
+//         console.error("Error fetching notifications:", error);
+//     }
+// }
 
 
         
@@ -632,11 +648,6 @@ async function fetchNotifications() {
             // Hide the "See Previous Notifications" button after it's clicked
             document.getElementById("see-previous-notifications").style.display = "none";
         }
-
-        // Call the function to display recent notifications on page load
-        window.onload = function() {
-            fetchNotifications();
-        };
 
     </script>
 </body>
