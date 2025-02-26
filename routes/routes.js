@@ -190,7 +190,7 @@ router.post('/linemanager/records-performance-tracker/questionnaire/:userId', li
 // router.get('/linemanager/records-performance-tracker/stepper/:quarter', lineManagerController.getQuarterStepper);
 
 // notification Line Manager
-router.get('/staff/managerdashboard', controller.getLineManagerNotifications);
+router.get('/staff/managerdashboard', lineManagerController.getLineManagerNotifications);
 
 
 
