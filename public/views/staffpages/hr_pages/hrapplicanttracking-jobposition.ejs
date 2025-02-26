@@ -1008,7 +1008,7 @@ function notifyLineManager(applicantId) {
 
 
 
-        function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink) {
+        function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink, jobId) {
     console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
     
     // If userId is missing or "undefined", log an error and stop further processing.
@@ -1020,15 +1020,16 @@ function notifyLineManager(applicantId) {
     
     // Set the hidden input value for userId
     document.getElementById('userId').value = userId;
-    
-    // (If you have a jobId, set it similarly.)
-    // document.getElementById('jobId').value = jobId;
+
+    // Set the hidden input value for jobId
+    document.getElementById('jobId').value = jobId; // Ensure jobId is passed to this function
 
     // Optionally hide the applicantId container if not needed
     let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
     if (applicantIdContainer) {
         applicantIdContainer.style.display = "none";
     }
+
 
     // Populate visible applicant details
     document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
@@ -1086,31 +1087,28 @@ function displayUploadedDocument(fileUrl) {
 }
 function confirmHRInitialScreeningModal() {
     const userIdElement = document.getElementById("userId");
-    console.log("userIdElement:", userIdElement);
-
     if (!userIdElement) {
         alert("Error: userId is missing. Please try again.");
         return;
     }
 
     const userIdRaw = userIdElement.value.trim();
-    console.log("User ID (raw):", userIdRaw);
+    console.log("User  ID (raw):", userIdRaw);
 
-    if (!userIdRaw || userIdRaw === "undefined") {
+    const userId = parseInt(userIdRaw, 10);
+    console.log("User  ID (parsed):", userId);
+
+    if (isNaN(userId)) {
         alert("Error: User ID is invalid. Please try again.");
         return;
     }
-
-    // Convert to an integer if your backend expects a bigint
-    const userId = parseInt(userIdRaw, 10);
-    console.log("User ID (parsed):", userId);
 
     fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
         method: 'POST', 
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId }), // Only send userId
     })
     .then(response => response.json())
     .then(data => {
@@ -1131,9 +1129,6 @@ function confirmHRInitialScreeningModal() {
         alert("Failed to update applicant status.");
     });
 }
-
-
-
     // Close the modal
     document.querySelector('.review-close-button').addEventListener('click', function () {
         document.getElementById('hrInitialScreeningModalHtml').style.display = 'none';
