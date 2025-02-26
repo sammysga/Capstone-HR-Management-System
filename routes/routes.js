@@ -189,6 +189,10 @@ router.post('/linemanager/records-performance-tracker/questionnaire/:userId', li
 
 // router.get('/linemanager/records-performance-tracker/stepper/:quarter', lineManagerController.getQuarterStepper);
 
+// notification Line Manager
+router.get('/staff/managerdashboard', controller.getLineManagerNotifications);
+
+
 
 /* ORDER OF ATS CODES  */ 
 router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
