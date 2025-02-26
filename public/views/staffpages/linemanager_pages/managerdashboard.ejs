@@ -542,31 +542,31 @@
 // ];
 
 // Function to fetch notifications dynamically from Supabase
-// async function fetchNotifications() {
-//     try {
-//         const response = await fetch('/api/notifications'); // Adjust API endpoint as needed
-//         const data = await response.json();
+async function fetchNotifications() {
+    try {
+        const response = await fetch('/api/notifications'); // Adjust API endpoint as needed
+        const data = await response.json();
 
-//         // Transform backend data into notification format
-//         const notifications = data.map(item => ({
-//             employeePhoto: "/images/profile.png", // Update with actual user image if available
-//             applicantStatus: item.applicantStatus,
-//             headline: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
-//                 ? "Awaiting Your Approval" 
-//                 : item.headline,
-//             content: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
-//                 ? `Required Line Manager Action for ${item.firstName} ${item.lastName}` 
-//                 : item.content,
-//             firstName: item.firstName,
-//             lastName: item.lastName,
-//             date: new Date(item.date)
-//         }));
+        // Transform backend data into notification format
+        const notifications = data.map(item => ({
+            employeePhoto: "/images/profile.png", // Update with actual user image if available
+            applicantStatus: item.applicantStatus,
+            headline: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
+                ? "Awaiting Your Approval" 
+                : item.headline,
+            content: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
+                ? `Required Line Manager Action for ${item.firstName} ${item.lastName}` 
+                : item.content,
+            firstName: item.firstName,
+            lastName: item.lastName,
+            date: new Date(item.date)
+        }));
 
-//         displayNotifications(notifications);
-//     } catch (error) {
-//         console.error("Error fetching notifications:", error);
-//     }
-// }
+        displayNotifications(notifications);
+    } catch (error) {
+        console.error("Error fetching notifications:", error);
+    }
+}
 
 
         
@@ -608,35 +608,35 @@
             }
         }
 
-         // Function to display notifications
-    function displayNotifications(notifications) {
-        const recentNotificationsContainer = document.getElementById("recent-notifications");
-        recentNotificationsContainer.innerHTML = ''; // Clear previous notifications
+        // Function to display all notifications (including older ones)
+        function displayNotifications() {
+    const recentNotificationsContainer = document.getElementById("recent-notifications");
+    recentNotificationsContainer.innerHTML = ''; // Clear previous notifications
 
-        notifications.forEach(notification => {
-            const notificationElement = document.createElement("div");
-            notificationElement.classList.add("notification-item");
+    notifications.forEach(notification => {
+        const notificationElement = document.createElement("div");
+        notificationElement.classList.add("notification-item");
 
-            notificationElement.innerHTML = `
-                <img src="${notification.employeePhoto}" alt="Employee Photo">
-                <div class="notification-content">
-                    <div class="headline">${notification.headline}</div>
-                    <div class="content">${notification.content}</div>
-                    <div class="date">${formatDate(notification.date)}</div>
-                </div>
-            `;
+        notificationElement.innerHTML = `
+            <img src="${notification.employeePhoto}" alt="Employee Photo">
+            <div class="notification-content">
+                <div class="headline">${notification.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" ? "Awaiting Your Approval" : notification.headline}</div>
+                <div class="content">${notification.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" ? "Required Line Manager Action" : notification.content}</div>
+                <div class="date">${formatDate(notification.date)}</div>
+            </div>
+        `;
 
-            recentNotificationsContainer.appendChild(notificationElement);
-        });
-    }
+        recentNotificationsContainer.appendChild(notificationElement);
+    });
 
-    // Notifications from EJS template
-    const notifications = <%- JSON.stringify(notifications) %>;
+            // Hide the "See Previous Notifications" button after it's clicked
+            document.getElementById("see-previous-notifications").style.display = "none";
+        }
 
-    // Display notifications on page load
-    window.onload = function() {
-        displayNotifications(notifications);
-    };
+        // Call the function to display recent notifications on page load
+        window.onload = function() {
+            fetchNotifications();
+        };
 
     </script>
 </body>
