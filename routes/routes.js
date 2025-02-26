@@ -28,6 +28,7 @@ router.get('/job-details/:jobId', applicantController.getJobDetails);
 // router.get('/chatbothome', applicantController.getChatbotPage);
 router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);
 router.get('/onboarding', applicantController.getOnboarding);
+router.post('/onboarding', applicantController.postOnboarding);
 router.get('/onboarding/employee-records', applicantController.getOnboardingEmployeeRecords);
 router.get('/onboarding/osd-wait', applicantController.getOnboardingWaitOSD);
 router.get('/onboarding/objective-setting-view', applicantController.getOnboardingObjectiveSetting);

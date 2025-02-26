@@ -164,3 +164,123 @@ textarea {
 .btn-submit:hover {
     background-color: #059ca4;
 }
+
+.signature-container {
+    display: none;
+    background-color: #fff;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+  }
+
+  .signature-canvas {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: block;
+    margin: 0 auto 10px auto;
+  }
+
+  .action-buttons {
+    text-align: center;
+  }
+
+  .action-buttons button {
+    padding: 6px 12px;
+    margin: 0 5px;
+    font-size: 0.9em;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .btn-submit-signature {
+    background-color: #07ACB9;
+    color: #fff;
+  }
+
+  .btn-submit-signature:hover {
+    background-color: #059ca4;
+  }
+
+  .btn-clear-signature {
+    background-color: #e0e0e0;
+    color: #333;
+  }
+
+  .btn-clear-signature:hover {
+    background-color: #ccc;
+  }
+
+  .btn-cancel-signature {
+    background-color: #f44336;
+    color: #fff;
+  }
+
+  .btn-cancel-signature:hover {
+    background-color: #d32f2f;
+  }
+
+  /* Style for the Sign Here button */
+  .btn-sign {
+    padding: 8px 16px;
+    background-color: #124A5C;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 0.9em;
+    margin-top: 5px;
+  }
+
+  .btn-sign:hover {
+    background-color: #0e3b4a;
+  }
+
+  /* Signature preview image styling */
+  .signature-preview img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+
+  /* Verification section styling using flexbox */
+  .verification-section {
+    width: 80%;
+    margin: 40px auto;
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Left column for verification text */
+  .verification-left {
+    flex: 1;
+    margin-right: 20px;
+  }
+
+  .verification-left h2 {
+    margin-top: 0;
+    color: #124A5C;
+  }
+
+  /* Right column for manager signature */
+  .manager-signature {
+    width: 320px; /* Fixed width */
+    text-align: center;
+  }
+
+  .manager-signature h3 {
+    margin-top: 0;
+    margin-bottom: 0;
+    color: #124A5C;
+  }
