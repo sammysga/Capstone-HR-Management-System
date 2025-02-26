@@ -791,29 +791,61 @@ getLineManagerNotifications: async function (req, res) {
     getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
-                const { jobId } = req.query; // Extract jobId from query parameters
-    
-                // Fetch applicants by jobId, including scores
+                const { jobId, applicantId, userId } = req.query;
+                console.log('Received request with jobId:', jobId, 'and applicantId:', applicantId);
+                console.log('Received request with userId:', userId);
+
                 const { data: applicants, error: applicantError } = await supabase
-                    .from('applicantaccounts')
-                    .select(`
-                        lastName, 
-                        firstName, 
-                        phoneNo,
-                        userId,
-                        jobId,
-                        departmentId,
-                        applicantStatus,
-                        applicantId,
-                        hrInterviewFormScore,
-                        initialScreeningScore,
-                        isChosen1,
-                        LM_notified,
-                        lineManagerApproved
-                    `)
-                    .eq('jobId', jobId);
-    
-                if (applicantError) throw applicantError;
+                .from('applicantaccounts')
+                .select(`
+                    lastName, 
+                    firstName, 
+                    phoneNo,
+                    userId,
+                    jobId,
+                    departmentId,
+                    birthDate,
+                    applicantStatus,
+                    applicantId,
+                    hrInterviewFormScore,
+                    initialScreeningScore,
+                    p2_Approved,
+                    p2_hrevalscheduled
+                `)
+                .eq('jobId', jobId);
+            
+                if (applicantError) {
+                    console.error('Error fetching applicants:', applicantError);
+                    throw applicantError;
+                }
+                console.log('Fetched applicants:', applicants);
+            
+            // Fetch initial screening assessments separately
+            const { data: screeningAssessments, error: screeningError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .select(`
+                    userId,
+                    initialScreeningId,
+                    degreeScore,
+                    experienceScore,
+                    certificationScore,
+                    hardSkillsScore,
+                    softSkillsScore,
+                    workSetupScore,
+                    availabilityScore,
+                    totalScore,
+                    totalScoreCalculatedAt,
+                    resume_url,
+                    isHRChosen,
+                    isLineManagerChosen
+                `);
+            
+                if (screeningError) {
+                    console.error('Error fetching screening assessments:', screeningError);
+                    throw screeningError;
+                }
+                console.log('Fetched screening assessments:', screeningAssessments);
+            
     
                 // Fetch user emails using userId
                 const { data: userAccounts, error: userError } = await supabase
@@ -830,69 +862,105 @@ getLineManagerNotifications: async function (req, res) {
                 if (jobError) throw jobError;
     
                 const { data: departments, error: departmentError } = await supabase
-                    .from('departments')
-                    .select('departmentId, deptName');
-    
-                if (departmentError) throw departmentError;
-    
-                // Merge jobTitle, deptName, userEmail, and scores with applicants data
-                const applicantsWithDetails = applicants.map(applicant => {
-                    const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
-                    const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
-                    const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
-                
-                    let formattedStatus = applicant.applicantStatus;
+                .from('departments')
+                .select('departmentId, deptName');
 
-// If Line Manager has approved, set status to "P1: PASSED"
-if (applicant.lineManagerApproved) {
-    formattedStatus = 'P1 - PASSED';
-} else {
-    // Check Initial Screening Score
-    if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
-        formattedStatus = 'P1 - Initial Screening';
-    } else if (applicant.initialScreeningScore < 50) {
-        formattedStatus = 'P1 - FAILED';
-    } else {
-        formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
-    }
+                if (departmentError) {
+                    console.error('Error fetching departments:', departmentError);
+                    throw departmentError;
+                }
+                console.log('Fetched departments:', departments);
 
-    // Check HR Interview Score
-    if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
-        if (applicant.hrInterviewFormScore < 50) {
-            formattedStatus = 'P1 - FAILED';
-        } else if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
-            formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
-        } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
-            formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
-        }
-    }
+            for (const applicant of applicants) {
+                console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
+
+
+                applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+    applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+    applicant.userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+    applicant.birthDate = userAccounts.find(user => user.userId === applicant.userId)?.birthDate || 'N/A';
+
+
+    // Match `userId` to fetch the corresponding initial screening assessment
+    const screeningData = screeningAssessments.find(assessment => assessment.userId === applicant.userId) || {};
+
+    // Merge the screening assessment data into the applicant object
+    applicant.initialScreeningAssessment = {
+        degreeScore: screeningData.degreeScore || 'N/A',
+        experienceScore: screeningData.experienceScore || 'N/A',
+        certificationScore: screeningData.certificationScore || 'N/A',
+        hardSkillsScore: screeningData.hardSkillsScore || 'N/A',
+        softSkillsScore: screeningData.softSkillsScore || 'N/A',
+        workSetupScore: screeningData.workSetupScore || 'N/A',
+        availabilityScore: screeningData.availabilityScore || 'N/A',
+        totalScore: screeningData.totalScore || 'N/A',
+        resume_url: screeningData.resume_url || '#',
+    };
+
+    console.log('Updated applicant details:', applicant);
 }
+
+console.log('Final applicants list:', applicants);
+    
+//                 // Merge jobTitle, deptName, userEmail, and scores with applicants data
+//                 const applicantsWithDetails = applicants.map(applicant => {
+//                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+//                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+//                     const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
                 
-// Log for debugging
-console.log("Applicant:", applicant.firstName, applicant.lastName, 
-    "Initial Screening Score:", applicant.initialScreeningScore, 
-    "HR Interview Score:", applicant.hrInterviewFormScore, 
-    "isChosen1:", applicant.isChosen1, 
-    "lineManagerApproved:", applicant.lineManagerApproved,
-    "LM_notified:", applicant.LM_notified,
-    "=> Status:", formattedStatus);
+//                     let formattedStatus = applicant.applicantStatus;
+
+// // If Line Manager has approved, set status to "P1: PASSED"
+// if (applicant.lineManagerApproved) {
+//     formattedStatus = 'P1 - PASSED';
+// } else {
+//     // Check Initial Screening Score
+//     if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
+//         formattedStatus = 'P1 - Initial Screening';
+//     } else if (applicant.initialScreeningScore < 50) {
+//         formattedStatus = 'P1 - FAILED';
+//     } else {
+//         formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
+//     }
+
+//     // Check HR Interview Score
+//     if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
+//         if (applicant.hrInterviewFormScore < 50) {
+//             formattedStatus = 'P1 - FAILED';
+//         } else if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
+//             formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
+//         } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
+//             formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
+//         }
+//     }
+// }
                 
-                    // Return the updated applicant object with the formatted status
-                    return {
-                        ...applicant,
-                        jobTitle,
-                        deptName,
-                        userEmail,
-                        applicantStatus: formattedStatus, // Return the updated status
-                    };
-                });
+// // Log for debugging
+// console.log("Applicant:", applicant.firstName, applicant.lastName, 
+//     "Initial Screening Score:", applicant.initialScreeningScore, 
+//     "HR Interview Score:", applicant.hrInterviewFormScore, 
+//     "isChosen1:", applicant.isChosen1, 
+//     "lineManagerApproved:", applicant.lineManagerApproved,
+//     "LM_notified:", applicant.LM_notified,
+//     "=> Status:", formattedStatus);
                 
+//                     // Return the updated applicant object with the formatted status
+//                     return {
+//                         ...applicant,
+//                         jobTitle,
+//                         deptName,
+//                         userEmail,
+//                         applicantStatus: formattedStatus, // Return the updated status
+//                     };
+//                 });
                 
-            
-                // Render the EJS template with applicants data
-                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', {
-                    applicants: applicantsWithDetails,
-                });
+                // // Render the EJS template with applicants data
+                // res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', {
+                //     applicants: applicantsWithDetails,
+                // });
+
+                // Render the page with updated applicants
+res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
             } catch (error) {
                 console.error('Error fetching applicants:', error);
                 res.status(500).json({ error: 'Error fetching applicants' });

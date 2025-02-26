@@ -559,14 +559,29 @@
         <!-- For Review Button -->
         <button 
             class="btn-review" 
-            onclick="openReviewModal(
+            onclick="lineManagerInitialScreeningModal(
+                  '<%= applicant.userId %>', 
                 '<%= applicant.lastName %>', 
                 '<%= applicant.firstName %>', 
+                '<%= applicant.birthDate %>', 
                 '<%= applicant.userEmail %>', 
-                '<%= applicant.phoneNo %>'
-            )">
-            For Review
+                '<%= applicant.phoneNo %>', 
+                {
+                    degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
+                    experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
+                    certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
+                    hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
+                    softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
+                    workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
+                    availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
+                }, 
+                '<%= applicant.initialScreeningAssessment.totalScore %>', 
+                '<%= applicant.initialScreeningAssessment.resume_url %>'
+            )
+        ">
+        For Review
         </button>
+
     <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
         <!-- For Evaluation Button -->
         <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
@@ -757,28 +772,82 @@
     </div>
 </div>
 
-<!-- Modal -->
-<div id="reviewModal" class="review-modal">
+<!-- P1 - HR Choosing Modal -->
+<div id="lineManagerInitialScreeningModalHtml" class="review-modal">
     <div class="review-modal-content">
         <span class="review-close-button">&times;</span>
-        <h3>Applicant Details</h3>
+        <h2>P1: Initial Screening Score Breakdown</h2> 
+        <div class="divider"></div>
         <div class="applicant-details">
+            <input type="hidden" id="userId">
+            <input type="hidden" id="jobId">            
+            <input type="hidden" id="applicantId">
+
             <p><strong>Name:</strong> <span id="applicant-name"></span></p>
-            <p><strong>Age:</strong> <span id="applicant-age"></span></p>
+            <p><strong>Birthday:</strong> <span id="applicant-birthday"></span></p>
             <p><strong>Email:</strong> <span id="applicant-email"></span></p>
             <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
         </div>
         <h4>HR Assessment Form Breakdown</h4>
-        <!-- Add form breakdown here -->
-        <h4>Would you like to select this applicant as the top candidate and recommend them for the panel interview?</h4>
+        <h4>Initial Screening Scores</h4> 
+
+        <table class="scores-table"> 
+            <thead> 
+                <tr> 
+                    <th>Criteria</th> 
+                    <th>Score</th> 
+                </tr> 
+            </thead> 
+            <tbody> 
+                <tr> 
+                    <td>Industry Specific Degree</td> 
+                    <td id="score-degree"></td> 
+                </tr> 
+                <tr> 
+                    <td>Experiences</td> 
+                    <td id="score-experience"></td> 
+                </tr> 
+                <tr> 
+                    <td>Certifications</td> 
+                    <td id="score-certifications"></td> 
+                </tr> 
+                <tr> 
+                    <td>Hard Skills</td> 
+                    <td id="score-hard-skills"></td> 
+                </tr> 
+                <tr> 
+                    <td>Soft Skills</td> 
+                    <td id="score-soft-skills"></td> 
+                </tr> 
+                <tr> 
+                    <td>Work Setup</td> 
+                    <td id="score-work-setup"></td> 
+                </tr> 
+                <tr> 
+                    <td>Availability</td> 
+                    <td id="score-availability"></td> 
+                </tr> 
+            </tbody> 
+        </table> 
+
+        <div class="computation-verdict"> 
+            <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
+        </div> 
+
+        <h4>Uploaded Documents</h4> 
+        <p>
+            <a id="uploaded-doc" href="#" target="_blank">No document uploaded</a>
+        </p>
+        <div id="doc-preview" style="margin-top: 10px;"></div> <!-- Preview area -->
+        
+        
+        <h4>Would you like to recommend this applicant to the Line Manager for shortlisting and proceeding to the HR interview?</h4>
         <div class="review-modal-buttons">
             <button id="backButton" class="review-modal-back-button">Back</button>
-            <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmSelection()">Confirm</button>
+            <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmHRInitialScreeningModal()">Confirm</button>
         </div>
     </div>
 </div>
-
-
 
     </div>
 </div>
@@ -863,23 +932,136 @@ function approveLineManager(applicantId) {
 
 
 
-function openReviewModal(lastName, firstName, email, phoneNo) {
-        document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
-        document.getElementById('applicant-email').textContent = email || 'N/A';
-        document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
-
-        // Show the modal
-        document.getElementById('reviewModal').style.display = 'block';
+function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink, jobId) {
+    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
+    
+    // If userId is missing or "undefined", log an error and stop further processing.
+    if (!userId || userId === "undefined") {
+        console.error("Invalid userId passed to modal:", userId);
+        alert("Error: Invalid User ID. Cannot display applicant details.");
+        return;
     }
+    
+    // Set the hidden input value for userId
+    document.getElementById('userId').value = userId;
+
+    // Set the hidden input value for jobId
+    document.getElementById('jobId').value = jobId; // Ensure jobId is passed to this function
+
+    // Optionally hide the applicantId container if not needed
+    let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
+    if (applicantIdContainer) {
+        applicantIdContainer.style.display = "none";
+    }
+
+
+    // Populate visible applicant details
+    document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
+    document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
+    document.getElementById('applicant-email').textContent = email || 'N/A';
+    document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
+
+    // Populate score details
+    document.getElementById('score-degree').textContent = scores.degree || 'N/A';
+    document.getElementById('score-experience').textContent = scores.experience || 'N/A';
+    document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
+    document.getElementById('score-hard-skills').textContent = scores.hardSkills || 'N/A';
+    document.getElementById('score-soft-skills').textContent = scores.softSkills || 'N/A';
+    document.getElementById('score-work-setup').textContent = scores.workSetup || 'N/A';
+    document.getElementById('score-availability').textContent = scores.availability || 'N/A';
+
+    document.getElementById('computation-verdict').textContent = verdict || 'N/A';
+
+    // Update the uploaded document section
+    displayUploadedDocument(documentLink);
+
+    // Display the modal
+    document.getElementById('hrInitialScreeningModalHtml').style.display = 'block';
+}
+
+
+function displayUploadedDocument(fileUrl) {
+    const docLink = document.getElementById("uploaded-doc");
+    const docPreview = document.getElementById("doc-preview");
+
+    if (!fileUrl) {
+        docLink.href = "#";
+        docLink.textContent = "No document uploaded";
+        docPreview.innerHTML = ""; // Clear preview
+        return;
+    }
+
+    docLink.href = fileUrl;
+    docLink.textContent = "View Uploaded Document";
+
+    // Determine file type based on extension
+    const fileExtension = fileUrl.split('.').pop().toLowerCase();
+
+    if (["jpg", "jpeg", "png"].includes(fileExtension)) {
+        // Display image preview
+        docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
+    } else if (fileExtension === "pdf") {
+        // Display embedded PDF viewer
+        docPreview.innerHTML = `
+            <iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>
+        `;
+    } else {
+        docPreview.innerHTML = ""; // No preview for other file types
+    }
+}
+function confirmHRInitialScreeningModal() {
+    const userIdElement = document.getElementById("userId");
+    if (!userIdElement) {
+        alert("Error: userId is missing. Please try again.");
+        return;
+    }
+
+    const userIdRaw = userIdElement.value.trim();
+    console.log("User  ID (raw):", userIdRaw);
+
+    const userId = parseInt(userIdRaw, 10);
+    console.log("User  ID (parsed):", userId);
+
+    if (isNaN(userId)) {
+        alert("Error: User ID is invalid. Please try again.");
+        return;
+    }
+
+    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
+        method: 'POST', 
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }), // Only send userId
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Server Response:", data);
+
+        if (data.success) {
+            const modal = document.getElementById('hrInitialScreeningModalHtml');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            alert("Successfully updated applicant status!");
+        } else {
+            alert("Error updating applicant status: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Fetch Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
 
     // Close the modal
     document.querySelector('.review-close-button').addEventListener('click', function () {
-        document.getElementById('reviewModal').style.display = 'none';
+        document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
     });
 
     // Close modal if clicked outside the modal content
     window.addEventListener('click', function (event) {
-        const modal = document.getElementById('reviewModal');
+        const modal = document.getElementById('lineManagerInitialScreeningModalHtml');
         if (event.target === modal) {
             modal.style.display = 'none';
         }
