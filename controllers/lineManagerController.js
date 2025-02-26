@@ -217,11 +217,11 @@ const lineManagerController = {
     
                 // ✅ Render with notifications
                 return res.render('staffpages/linemanager_pages/managerdashboard', { 
-                    allLeaves: formattedAllLeaves,
-                    approvedLeaves: formattedApprovedLeaves,
-                    pendingApprovalStatus,
-                    attendanceLogs: formattedAttendanceDisplay,
-                    notifications, // ✅ Added notifications
+                    allLeaves: formattedAllLeaves || [],
+                    approvedLeaves: formattedApprovedLeaves || [],
+                    pendingApprovalStatus: pendingApprovalStatus || '',
+                    attendanceLogs: formattedAttendanceDisplay || [],
+                    notifications: notifications || [], 
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors')
                 });
