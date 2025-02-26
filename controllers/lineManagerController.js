@@ -16,7 +16,7 @@ const lineManagerController = {
     getLineManagerDashboard: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
-                // Fetch and format leave data
+                // Common function to fetch and format leave data
                 const fetchAndFormatLeaves = async (statusFilter = null) => {
                     const query = supabase
                         .from('leaverequests')
@@ -49,7 +49,7 @@ const lineManagerController = {
                     if (error) throw error;
     
                     return data.map(leave => ({
-                        userId: leave.userId, 
+                        userId: leave.userId,
                         lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
                         firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
                         department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
@@ -61,7 +61,7 @@ const lineManagerController = {
                     }));
                 };
     
-                // Fetch attendance logs
+                // Function to fetch attendance logs
                 const fetchAttendanceLogs = async () => {
                     const { data: attendanceLogs, error: attendanceError } = await supabase
                         .from('attendance')
@@ -93,7 +93,7 @@ const lineManagerController = {
                     return attendanceLogs;
                 };
     
-                // Fetch pending approvals for line manager actions
+                // Fetch applicant statuses for line manager actions
                 const fetchPendingApprovals = async () => {
                     const { data, error } = await supabase
                         .from('applicantaccounts')
@@ -122,7 +122,7 @@ const lineManagerController = {
                         lastName: applicant.lastName,
                         applicantStatus: applicant.applicantStatus,
                         date: applicant.created_at,
-                        employeePhoto: "/images/profile.png", // Placeholder, update if actual image exists
+                        employeePhoto: "/images/profile.png", // Placeholder image
                         headline: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
                             ? "Awaiting Your Approval"
                             : "New Application Received",
@@ -132,18 +132,18 @@ const lineManagerController = {
                     }));
                 };
     
-                // Format attendance logs
+                // Function to format attendance logs
                 const formatAttendanceLogs = (attendanceLogs) => {
-                    return attendanceLogs.reduce((acc, attendance) => {
+                    const formattedAttendanceLogs = attendanceLogs.reduce((acc, attendance) => {
                         const attendanceDate = attendance.attendanceDate;
                         const attendanceTime = attendance.attendanceTime || '00:00:00';
                         const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
                         const localDate = new Date(attendanceDate);
                         localDate.setHours(hours, minutes, seconds);
-                
+    
                         const userId = attendance.userId;
                         const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
-                
+    
                         if (attendance.attendanceAction === 'Time In') {
                             if (existingEntry) {
                                 existingEntry.timeIn = localDate;
@@ -169,29 +169,31 @@ const lineManagerController = {
                                 });
                             }
                         }
-                
+    
                         return acc;
-                    }, []).map(log => {
+                    }, []);
+    
+                    return formattedAttendanceLogs.map(log => {
                         let activeWorkingHours = 0;
                         let timeOutMessage = '';
                         const now = new Date();
-                
+    
                         if (log.timeIn) {
                             const endOfDay = new Date(log.date);
-                            endOfDay.setHours(23, 59, 59, 999);
+                            endOfDay.setHours(23, 59, 59, 999); // End of the day
                             const endTime = log.timeOut || now;
-                
+    
                             if (!log.timeOut && endTime <= endOfDay) {
                                 timeOutMessage = `(In Work)`;
-                                activeWorkingHours = (endTime - log.timeIn) / 3600000;
+                                activeWorkingHours = (endTime - log.timeIn) / 3600000; // Calculate hours
                             } else if (!log.timeOut && endTime > endOfDay) {
                                 timeOutMessage = `(User did not Record Time Out)`;
-                                activeWorkingHours = (endOfDay - log.timeIn) / 3600000;
+                                activeWorkingHours = (endOfDay - log.timeIn) / 3600000; // Up to end of day
                             } else {
-                                activeWorkingHours = (log.timeOut - log.timeIn) / 3600000;
+                                activeWorkingHours = (log.timeOut - log.timeIn) / 3600000; // Normal calculation
                             }
                         }
-                
+    
                         return {
                             department: log.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
                             firstName: log.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
@@ -205,21 +207,21 @@ const lineManagerController = {
                     });
                 };
     
-                // Fetch all data
+                // ✅ Fetch data
                 const formattedAllLeaves = await fetchAndFormatLeaves();
                 const formattedApprovedLeaves = await fetchAndFormatLeaves('Approved');
                 const attendanceLogs = await fetchAttendanceLogs();
                 const pendingApprovalStatus = await fetchPendingApprovals();
-                const notifications = await fetchNotifications(); // ✅ Fetch notifications
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+                const notifications = await fetchNotifications(); // ✅ Notifications
     
-                // Render dashboard
+                // ✅ Render with notifications
                 return res.render('staffpages/linemanager_pages/managerdashboard', { 
                     allLeaves: formattedAllLeaves,
                     approvedLeaves: formattedApprovedLeaves,
                     pendingApprovalStatus,
                     attendanceLogs: formattedAttendanceDisplay,
-                    notifications, // ✅ Pass notifications
+                    notifications, // ✅ Added notifications
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors')
                 });
