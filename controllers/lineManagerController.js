@@ -16,7 +16,7 @@ const lineManagerController = {
     getLineManagerDashboard: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
-                // Common function to fetch and format leave data
+                // Fetch and format leave data
                 const fetchAndFormatLeaves = async (statusFilter = null) => {
                     const query = supabase
                         .from('leaverequests')
@@ -49,7 +49,7 @@ const lineManagerController = {
                     if (error) throw error;
     
                     return data.map(leave => ({
-                        userId: leave.userId, // Include userId here
+                        userId: leave.userId, 
                         lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
                         firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
                         department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
@@ -61,7 +61,7 @@ const lineManagerController = {
                     }));
                 };
     
-                // Function to fetch attendance logs
+                // Fetch attendance logs
                 const fetchAttendanceLogs = async () => {
                     const { data: attendanceLogs, error: attendanceError } = await supabase
                         .from('attendance')
@@ -92,22 +92,49 @@ const lineManagerController = {
     
                     return attendanceLogs;
                 };
-
-                 // Fetch applicant statuses for line manager actions
-            const fetchPendingApprovals = async () => {
-                const { data, error } = await supabase
-                    .from('applicantaccounts')
-                    .select('applicantStatus')
-                    .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED');
-
-                if (error) throw error;
-
-                return data.length > 0 ? 'P1 - Awaiting for Line Manager Action; HR PASSED' : null;
-            };
     
-                // Function to format attendance logs
+                // Fetch pending approvals for line manager actions
+                const fetchPendingApprovals = async () => {
+                    const { data, error } = await supabase
+                        .from('applicantaccounts')
+                        .select('applicantStatus')
+                        .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED');
+    
+                    if (error) throw error;
+    
+                    return data.length > 0 ? 'P1 - Awaiting for Line Manager Action; HR PASSED' : null;
+                };
+    
+                // ✅ Fetch notifications
+                const fetchNotifications = async () => {
+                    const { data: applicants, error } = await supabase
+                        .from('applicantaccounts')
+                        .select('firstName, lastName, applicantStatus, created_at')
+                        .order('created_at', { ascending: false });
+    
+                    if (error) {
+                        console.error('Error fetching notifications:', error);
+                        throw new Error('Error retrieving notifications.');
+                    }
+    
+                    return applicants.map(applicant => ({
+                        firstName: applicant.firstName,
+                        lastName: applicant.lastName,
+                        applicantStatus: applicant.applicantStatus,
+                        date: applicant.created_at,
+                        employeePhoto: "/images/profile.png", // Placeholder, update if actual image exists
+                        headline: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                            ? "Awaiting Your Approval"
+                            : "New Application Received",
+                        content: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                            ? `Required Line Manager Action for ${applicant.firstName} ${applicant.lastName}`
+                            : `${applicant.firstName} ${applicant.lastName} submitted an application.`
+                    }));
+                };
+    
+                // Format attendance logs
                 const formatAttendanceLogs = (attendanceLogs) => {
-                    const formattedAttendanceLogs = attendanceLogs.reduce((acc, attendance) => {
+                    return attendanceLogs.reduce((acc, attendance) => {
                         const attendanceDate = attendance.attendanceDate;
                         const attendanceTime = attendance.attendanceTime || '00:00:00';
                         const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
@@ -144,26 +171,24 @@ const lineManagerController = {
                         }
                 
                         return acc;
-                    }, []);
-                
-                    return formattedAttendanceLogs.map(log => {
+                    }, []).map(log => {
                         let activeWorkingHours = 0;
                         let timeOutMessage = '';
                         const now = new Date();
                 
                         if (log.timeIn) {
                             const endOfDay = new Date(log.date);
-                            endOfDay.setHours(23, 59, 59, 999); // End of the day
+                            endOfDay.setHours(23, 59, 59, 999);
                             const endTime = log.timeOut || now;
                 
                             if (!log.timeOut && endTime <= endOfDay) {
                                 timeOutMessage = `(In Work)`;
-                                activeWorkingHours = (endTime - log.timeIn) / 3600000; // Calculate hours
+                                activeWorkingHours = (endTime - log.timeIn) / 3600000;
                             } else if (!log.timeOut && endTime > endOfDay) {
                                 timeOutMessage = `(User did not Record Time Out)`;
-                                activeWorkingHours = (endOfDay - log.timeIn) / 3600000; // Up to end of day
+                                activeWorkingHours = (endOfDay - log.timeIn) / 3600000;
                             } else {
-                                activeWorkingHours = (log.timeOut - log.timeIn) / 3600000; // Normal calculation
+                                activeWorkingHours = (log.timeOut - log.timeIn) / 3600000;
                             }
                         }
                 
@@ -179,32 +204,36 @@ const lineManagerController = {
                         };
                     });
                 };
-                // Fetch formatted leave data
+    
+                // Fetch all data
                 const formattedAllLeaves = await fetchAndFormatLeaves();
                 const formattedApprovedLeaves = await fetchAndFormatLeaves('Approved');
                 const attendanceLogs = await fetchAttendanceLogs();
                 const pendingApprovalStatus = await fetchPendingApprovals();
+                const notifications = await fetchNotifications(); // ✅ Fetch notifications
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
     
-                // Render the dashboard with all relevant data
+                // Render dashboard
                 return res.render('staffpages/linemanager_pages/managerdashboard', { 
                     allLeaves: formattedAllLeaves,
                     approvedLeaves: formattedApprovedLeaves,
                     pendingApprovalStatus,
                     attendanceLogs: formattedAttendanceDisplay,
+                    notifications, // ✅ Pass notifications
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors')
                 });
+    
             } catch (err) {
                 console.error('Error fetching data for the dashboard:', err);
                 req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
                 return res.redirect('/linemanager/dashboard');
             }
         } else {
-            // Redirect or handle unauthorized access here if needed
             return res.redirect('/staff/login');
         }
     },
+    
 
     // Fetch notifications from Supabase for Line Manager Dashboard
 getLineManagerNotifications: async function (req, res) {
