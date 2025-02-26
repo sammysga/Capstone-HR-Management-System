@@ -699,6 +699,68 @@ getInitialScreeningQuestions: async function (jobId) {
 
     },
 
+    postOnboarding: async function (req, res) {
+        try {
+            console.log('Received data:', req.body); // Debugging
+    
+            const { checklist, signatures, managerVerified, notes } = req.body;
+    
+            // Validate required fields
+            if (!managerVerified) {
+                return res.status(400).json({ success: false, message: 'Manager verification required.' });
+            }
+    
+            // Insert into the `onboarding` table
+            const { data: onboardingData, error: onboardingError } = await supabase
+                .from('onboarding')
+                .insert([
+                    {
+                        manager_signature: signatures['manager-signature-canvas'], // Manager's signature
+                        notes: notes,
+                        checklist_verified: managerVerified,
+                        created_at: new Date().toISOString()
+                    }
+                ])
+                .select('onboardingId');
+    
+            if (onboardingError) {
+                console.error('Error inserting into onboarding table:', onboardingError);
+                throw onboardingError;
+            }
+    
+            console.log('Inserted into onboarding table:', onboardingData); // Debugging
+    
+            const onboardingId = onboardingData[0].onboardingId;
+    
+            // Prepare tasks data for insertion into `onboarding_tasks`
+            const tasksData = checklist.map((task, index) => ({
+                onboardingId: onboardingId, 
+                taskId: index + 1, 
+                taskName: task.task,
+                contactPerson: task.contactPerson, 
+                signature: signatures[`signature-canvas-${index + 1}`], 
+                created_at: new Date().toISOString()
+            }));
+    
+            // Insert tasks into the `onboarding_tasks` table
+            const { data: tasksDataResult, error: tasksError } = await supabase
+                .from('onboarding_tasks')
+                .insert(tasksData);
+    
+            if (tasksError) {
+                console.error('Error inserting into onboarding_tasks table:', tasksError);
+                throw tasksError;
+            }
+    
+            console.log('Inserted into onboarding_tasks table:', tasksDataResult); 
+    
+            res.json({ success: true, message: 'Checklist saved successfully!', onboardingId });
+        } catch (error) {
+            console.error('Error saving checklist:', error);
+            res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+        }
+    },
+
     // Function to fetch job details from the db
 // Function to fetch detailed job information, including required certifications, degrees, experiences, and skills
 getJobDetails: async function(jobTitle) {

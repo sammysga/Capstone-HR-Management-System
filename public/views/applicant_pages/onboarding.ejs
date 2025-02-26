@@ -1,79 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Onboarding</title>
-    <link rel="stylesheet" href="/css/applicant_onboarding.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Onboarding</title>
+  <link rel="stylesheet" href="/css/applicant_onboarding.css" />
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 </head>
 <body>
-    <!-- Header with logo on the left and title centered -->
-    <div class="header-container">
-        <div class="header">
-            <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Prime Infra Logo" class="logo">
-            <h1>Onboarding</h1>
-        </div>
+  <div class="header-container">
+    <div class="header">
+      <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Prime Infra Logo" class="logo" />
+      <h1>Onboarding</h1>
     </div>
+  </div>
 
-    <!-- Subheader for checklist section -->
-    <div class="subheader">1. Accomplishing of First Day Checklist</div>
+  <div class="subheader">1. Accomplishing of First Day Checklist</div>
+  <div class="table-header-left">First Day Checklist Guide for Applicant</div>
 
-    <!-- Checklist Guide title aligned with the left side of the screen -->
-    <div class="table-header-left">First Day Checklist Guide for Applicant</div>
+  <!-- Checklist Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Activities</th>
+        <th>Where</th>
+        <th>Contact Person &amp; Signature Verification</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <label>
+            <input type="checkbox" class="table-checkbox" />
+            <span>Finding your Workstation + Meeting your Team</span>
+          </label>
+        </td>
+        <td>20th Floor, Facilities</td>
+        <td>
+          Kyrah Santos
+          <br />
+          <button class="btn-sign" data-target="signature-container-1">Sign Here</button>
+          <div id="signature-container-1" class="signature-container">
+            <canvas id="signature-canvas-1" class="signature-canvas" width="300" height="100"></canvas>
+            <div class="action-buttons">
+              <button class="btn-submit-signature" data-canvas="signature-canvas-1" data-container="signature-container-1">
+                Submit Signature
+              </button>
+              <button class="btn-clear-signature" data-canvas="signature-canvas-1">Clear</button>
+              <button class="btn-cancel-signature" data-container="signature-container-1">Cancel</button>
+            </div>
+          </div>
+          <div id="signature-preview-1" class="signature-preview"></div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <label>
+            <input type="checkbox" class="table-checkbox" />
+            <span>Creation of company ID</span>
+          </label>
+        </td>
+        <td>HR Department</td>
+        <td>
+          Lia Bacani
+          <br />
+          <button class="btn-sign" data-target="signature-container-2">Sign Here</button>
+          <div id="signature-container-2" class="signature-container">
+            <canvas id="signature-canvas-2" class="signature-canvas" width="300" height="100"></canvas>
+            <div class="action-buttons">
+              <button class="btn-submit-signature" data-canvas="signature-canvas-2" data-container="signature-container-2">
+                Submit Signature
+              </button>
+              <button class="btn-clear-signature" data-canvas="signature-canvas-2">Clear</button>
+              <button class="btn-cancel-signature" data-container="signature-container-2">Cancel</button>
+            </div>
+          </div>
+          <div id="signature-preview-2" class="signature-preview"></div>
+        </td>
+      </tr>
+      <!-- Additional tasks can be added here following the same pattern -->
+    </tbody>
+  </table>
 
-    <!-- Table with checklist items -->
-    <table>
-        <thead>
-            <tr>
-                <th>Activities</th>
-                <th>Where</th>
-                <th>Contact Person</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><label><input type="checkbox" class="table-checkbox"><span>Finding your Workstation + Meeting your Team</span></label></td>
-                <td>20th Floor, Facilities</td>
-                <td>Kyrah Santos</td>
-            </tr>
-            <tr>
-                <td><label><input type="checkbox" class="table-checkbox"><span>Creation of company ID</span></label></td>
-                <td>HR Department</td>
-                <td>Lia Bacani</td>
-            </tr>
-            <tr>
-                <td><label><input type="checkbox" class="table-checkbox"><span>Building/Door access</span></label></td>
-                <td>Security Office</td>
-                <td>Paul Bulaon</td>
-            </tr>
-            <tr>
-                <td><label><input type="checkbox" class="table-checkbox"><span>Claim IT equipment</span></label></td>
-                <td>IT Department</td>
-                <td>IT Staff</td>
-            </tr>
-            <tr>
-                <td><label><input type="checkbox" class="table-checkbox"><span>Quick Tour of the office</span></label></td>
-                <td>Facilities</td>
-                <td>Moises Oblepias</td>
-            </tr>
-            <tr>
-                <td><label><input type="checkbox" class="table-checkbox"><span>Contract Signing</span></label></td>
-                <td>HR Department</td>
-                <td>Lia Bacani</td>
-            </tr>
-        </tbody>
-    </table>
+  <!-- Notes Section -->
+  <div class="notes">
+    <label for="notes">Notes:</label>
+    <div id="notes" class="non-editable-notes">Add any notes here...</div>
+  </div>
 
-    <!-- Notes section (non-editable for applicant) -->
-    <div class="notes">
-        <label for="notes">Notes:</label>
-        <div id="notes" class="non-editable-notes">
-            Add any notes here...
-        </div>
+  <!-- Line Manager Verification Section -->
+  <div class="verification-section">
+    <div class="verification-left">
+      <h2>Line Manager Verification</h2>
+      <p>
+        Review the checklist and captured signatures below. Then verify by signing
+        in the designated area.
+      </p>
+      <label>
+        <input type="checkbox" id="manager-verify-checkbox" class="manager-verify" />
+        <span>Checklist Verified by Line Manager</span>
+      </label>
     </div>
+    <div class="manager-signature">
+      <h3>Manager Signature</h3>
+      <button class="btn-sign" data-target="manager-signature-container">Sign Here</button>
+      <div id="manager-signature-container" class="signature-container">
+        <canvas id="manager-signature-canvas" class="signature-canvas" width="300" height="100"></canvas>
+        <div class="action-buttons">
+          <button class="btn-submit-signature" data-canvas="manager-signature-canvas" data-container="manager-signature-container">
+            Submit Signature
+          </button>
+          <button class="btn-clear-signature" data-canvas="manager-signature-canvas">Clear</button>
+          <button class="btn-cancel-signature" data-container="manager-signature-container">Cancel</button>
+        </div>
+      </div>
+      <div id="manager-signature-preview" class="signature-preview"></div>
+    </div>
+  </div>
 
+  <button class="btn-submit">Proceed to Account Creation</button>
 
-    <!-- Submit button -->
-    <button class="btn-submit">Proceed to Account Creation</button>
+  <script>
+    const signaturePads = {};
+
+    // Function to initialize a signature pad on a canvas element if not already done
+    function initSignaturePad(canvas) {
+      if (!signaturePads[canvas.id]) {
+        signaturePads[canvas.id] = new SignaturePad(canvas, {
+          backgroundColor: 'rgba(255, 255, 255, 0)',
+          penColor: 'black'
+        });
+      }
+    }
+
+    // Show signature container on "Sign Here" click
+    document.querySelectorAll('.btn-sign').forEach((button) => {
+      button.addEventListener('click', function () {
+        const target = this.getAttribute('data-target');
+        const container = document.getElementById(target);
+        container.style.display = 'block';
+        const canvas = container.querySelector('canvas');
+        initSignaturePad(canvas);
+      });
+    });
+
+    // Submit signature: capture and preview the signature image, then hide container
+    document.querySelectorAll('.btn-submit-signature').forEach((button) => {
+      button.addEventListener('click', function () {
+        const canvasId = this.getAttribute('data-canvas');
+        const containerId = this.getAttribute('data-container');
+        const canvas = document.getElementById(canvasId);
+        const container = document.getElementById(containerId);
+        if (signaturePads[canvasId].isEmpty()) {
+          alert('Please provide a signature before submitting.');
+          return;
+        }
+        const signatureImage = signaturePads[canvasId].toDataURL();
+        let previewId;
+        if (canvasId === 'manager-signature-canvas') {
+          previewId = 'manager-signature-preview';
+        } else {
+          previewId = 'signature-preview-' + canvasId.split('-')[2];
+        }
+        const previewContainer = document.getElementById(previewId);
+        previewContainer.innerHTML = '<img src="' + signatureImage + '" alt="Signature Preview" />';
+        container.style.display = 'none';
+      });
+    });
+
+    // Clear signature pad
+    document.querySelectorAll('.btn-clear-signature').forEach((button) => {
+      button.addEventListener('click', function () {
+        const canvasId = this.getAttribute('data-canvas');
+        signaturePads[canvasId].clear();
+      });
+    });
+
+    // Cancel signature: hide container without saving
+    document.querySelectorAll('.btn-cancel-signature').forEach((button) => {
+      button.addEventListener('click', function () {
+        const containerId = this.getAttribute('data-container');
+        document.getElementById(containerId).style.display = 'none';
+      });
+    });
+
+    // Final submission: validate checklist items, signatures, and manager verification/signature
+    document.querySelector('.btn-submit').addEventListener('click', async function () {
+    let allChecked = true;
+    let allSigned = true;
+    const checklistData = [];
+    const signatureData = {};
+
+    // Collect checkbox & signature data
+    document.querySelectorAll('.table-checkbox').forEach((checkbox, index) => {
+        checklistData.push({
+            task: checkbox.nextElementSibling.innerText.trim(),
+            completed: checkbox.checked
+        });
+
+        const preview = document.getElementById('signature-preview-' + (index + 1));
+        if (!preview || !preview.innerHTML.trim()) {
+            allSigned = false;
+        }
+    });
+
+    const managerVerified = document.getElementById('manager-verify-checkbox').checked;
+    const managerSignaturePreview = document.getElementById('manager-signature-preview');
+    const managerSigned = managerSignaturePreview && managerSignaturePreview.innerHTML.trim();
+
+    if (!allChecked) {
+        alert('Please complete all checklist items.');
+        return;
+    }
+    if (!allSigned) {
+        alert('Please capture the signature for all tasks.');
+        return;
+    }
+    if (!managerVerified) {
+        alert('Line manager must verify the checklist.');
+        return;
+    }
+    if (!managerSigned) {
+        alert('Line manager must provide a signature.');
+        return;
+    }
+
+    // Collect signatures
+    Object.keys(signaturePads).forEach((canvasId) => {
+        if (!signaturePads[canvasId].isEmpty()) {
+            signatureData[canvasId] = signaturePads[canvasId].toDataURL();
+        }
+    });
+
+    const notes = document.getElementById('notes').innerText.trim();
+
+    // Send Data to Backend
+    try {
+        const response = await fetch('/onboarding', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                checklist: checklistData,
+                signatures: signatureData,
+                managerVerified,
+                notes
+            })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert('Checklist successfully submitted!');
+            window.location.href = '/onboarding/employee-records'; // Redirect to next step
+        } else {
+            alert('Error submitting checklist: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error submitting form:', error);
+        alert('Failed to submit checklist. Try again.');
+    }
+});
+  </script>
 </body>
 </html>
