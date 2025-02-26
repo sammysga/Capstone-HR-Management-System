@@ -87,7 +87,8 @@ router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
 
 
 router.get('/hr/onboarding-view', hrController.getHROnboarding);
-router.get('/hr/offboarding-request', hrController.getOffboardingRequest);
+router.get('/hr/offboarding-request', hrController.getOffboardingRequestsDash);
+router.get('/hr/view-offboarding-request/:requestId', hrController.getViewOffboardingRequest);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
@@ -187,6 +188,7 @@ router.get('/linemanager/records-performance-tracker/:userId', lineManagerContro
 
 router.post('/linemanager/records-performance-tracker/:userId', lineManagerController.saveObjectiveSettings);
 router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.save360DegreeFeedback);
+router.post('/linemanager/offboarding/update', lineManagerController.updateOffboardingRequest);
 
 // router.get('/linemanager/records-performance-tracker/stepper/:quarter', lineManagerController.getQuarterStepper);
 

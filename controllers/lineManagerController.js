@@ -2132,7 +2132,55 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             req.flash('errors', { dbError: 'An error occurred while loading the offboarding request.' });
             return res.redirect('/linemanager/dashboard');
         }
-    },    
+    },
+    
+    // Approve or Disapprove Offboarding Request
+    updateOffboardingRequest: async function (req, res) {
+        console.log("Received request body:", req.body);
+        const { requestId, action, reason, newLastDay } = req.body;
+    
+        try {
+            let newStatus = '';
+            let lineManagerDecision = '';
+    
+            if (action === 'approveAsIs') {
+                newStatus = 'Pending HR'; 
+                lineManagerDecision = 'Approved';
+            } else if (action === 'proposeNewDate') {
+                newStatus = 'Pending HR'; 
+                lineManagerDecision = 'Proposed New Date';
+            } else {
+                return res.status(400).json({ success: false, message: 'Invalid action.' });
+            }
+
+            const updateData = {
+                status: newStatus, 
+                line_manager_notes: reason || null, 
+                new_last_day: newLastDay || null,
+                line_manager_decision: lineManagerDecision 
+            };
+    
+            console.log("Updating with data:", { updateData, requestId }); 
+    
+            const { data, error } = await supabase
+                .from('offboarding_requests')
+                .update(updateData)
+                .eq('userId', requestId); 
+    
+            console.log("Supabase response:", { data, error }); 
+    
+            if (error) {
+                console.error('Error updating offboarding request:', error);
+                return res.status(500).json({ success: false, message: 'Failed to update request status.', error: error.message });
+            }
+    
+            return res.status(200).json({ success: true, message: `Request ${newStatus === 'Pending HR' ? 'approved' : 'updated'} successfully.` });
+    
+        } catch (err) {
+            console.error('Error in updateOffboardingRequest:', err);
+            return res.status(500).json({ success: false, message: 'An error occurred while processing the request.', error: err.message });
+        }
+    },
      
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {

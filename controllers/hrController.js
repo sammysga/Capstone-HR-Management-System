@@ -2402,15 +2402,98 @@ updateJobOffer: async function(req, res) {
 
     
     
+    getOffboardingRequestsDash: async function (req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
     
+            if (!userId || req.session.user.userRole !== 'HR') { // Change role check to 'HR'
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
     
+            // Fetch offboarding requests with userId and status
+            const { data: requests, error: requestsError } = await supabase
+                .from('offboarding_requests')
+                .select('userId, message, last_day, status, created_at')
+                .eq('status', 'Pending HR')  // Fetch only requests pending HR approval
+                .order('created_at', { ascending: false });
+    
+            if (requestsError) {
+                console.error('Error fetching offboarding requests:', requestsError);
+                req.flash('errors', { dbError: 'Failed to load offboarding requests.' });
+                return res.redirect('/hr/dashboard');
+            }
+    
+            // Fetch employee names based on userId
+            const userIds = requests.map(request => request.userId);
+            const { data: staffAccounts, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('userId, firstName, lastName')
+                .in('userId', userIds);  // Fetch staff details for each userId
+    
+            if (staffError) {
+                console.error('Error fetching staff accounts:', staffError);
+                req.flash('errors', { dbError: 'Failed to load employee names.' });
+                return res.redirect('/hr/dashboard');
+            }
+    
+            // Combine offboarding requests with staff details
+            const requestsWithNames = requests.map(request => {
+                const staff = staffAccounts.find(staff => staff.userId === request.userId);
+                return {
+                    ...request,
+                    staffName: staff ? `${staff.firstName} ${staff.lastName}` : 'Unknown'
+                };
+            });
+    
+            res.render('staffpages/hr_pages/offboardingrequest', { requests: requestsWithNames }); // Render HR-specific view
+        } catch (err) {
+            console.error('Error in getOffboardingRequestsDash controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading offboarding requests.' });
+            res.redirect('/hr/dashboard');
+        }
+    },
 
-    getOffboardingRequest: function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/offboardingrequest');
-        } else {
-            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('staff/login');
+    getViewOffboardingRequest: async function (req, res) {
+        const userId = req.params.userId; 
+    
+        if (!userId) {
+            return res.redirect('/staff/login'); 
+        }
+    
+        try {
+            const { data: requests, error } = await supabase
+                .from('offboarding_requests')
+                .select('requestId, message, last_day, status')  // Include status if needed
+                .eq('userId', userId)  
+                .order('requestId', { ascending: false }) 
+                .limit(1);  
+    
+            if (error) {
+                console.error('Error fetching offboarding request:', error);
+                return res.redirect('/hr/dashboard');
+            }
+    
+            if (!requests || requests.length === 0) {
+                console.log('No offboarding request found for userId:', userId);
+                return res.redirect('/hr/dashboard');
+            }
+    
+            // Fetch staff details
+            const { data: staff } = await supabase
+                .from('staffaccounts')
+                .select('firstName, lastName')
+                .eq('userId', userId)
+                .single();
+    
+            res.render('staffpages/hr_pages/viewoffboardingrequest', {
+                request: requests[0],  
+                staffName: `${staff.firstName} ${staff.lastName}`
+            });
+        } catch (err) {
+            console.error('Error in getViewOffboardingRequest controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading the offboarding request.' });
+            return res.redirect('/hr/dashboard');
         }
     },
     
