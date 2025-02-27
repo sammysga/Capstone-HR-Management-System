@@ -546,11 +546,33 @@ if (!updateJobResult.success) {
             }
              else if (req.body.file) {
                 await this.handleFileUpload(req, res);
-                return;
+
+                // After file upload, retrieve the applicant's status from the database
+            const applicantRecord = await applicantController.getApplicantStatus(userId);
+            if (applicantRecord && applicantRecord.applicantStatus === "P1 - PASSED") {
+                botResponse = {
+                    messages: [
+                        { 
+                            text: "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process." 
+                        },
+                        { 
+                            text: "Please proceed to the next step by clicking the “Schedule on Calendly” button. Select a convenient date and time for your interview through the redirected Calendly link. We look forward to meeting you!" 
+                        },
+                        { 
+                            text: "Please press the button below for your next step.",
+                            buttons: [
+                                { text: "Schedule on Calendly", url: "/applicant/schedule-interview" }
+                            ]
+                        }
+                    ]
+                };
+                req.session.applicantStage = 'interview_scheduled';
+                return res.status(200).json({ response: botResponse });
+        
             } else {
                 botResponse = { text: "I'm sorry, I didn't understand that. How can I help you?", buttons: [] };
             }
-    
+        }
             res.status(200).json({ response: botResponse });
         } catch (error) {
             console.error('Error processing chatbot message:', error);
@@ -558,6 +580,29 @@ if (!updateJobResult.success) {
         }
     },
     
+
+
+
+    getApplicantStatus: async function(userId) {
+        try {
+            // Fetch a single record with applicantStatus for the given userId
+            const { data, error } = await supabase
+                .from('applicantaccounts')
+                .select('applicantStatus')
+                .eq('userId', userId)
+                .single(); // assuming each user has a single applicant record
+    
+            if (error) {
+                console.error('Error fetching applicant status:', error);
+                return null;
+            }
+    
+            return data; // data will be an object like { applicantStatus: "P1 - PASSED" }
+        } catch (error) {
+            console.error('Error in getApplicantStatus:', error);
+            return null;
+        }
+    },    
     
 // Function to fetch and structure all screening questions
 getInitialScreeningQuestions: async function (jobId) {

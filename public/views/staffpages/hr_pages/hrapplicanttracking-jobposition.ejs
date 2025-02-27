@@ -623,11 +623,11 @@
 
     <% } else if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
         <!-- Notify Line Manager Button -->
-        <button 
+        <!-- <button 
             class="btn-line-manager" 
             onclick="notifyLineManager('<%= applicant.applicantId %>')">
             Notify Line Manager
-        </button>
+        </button> -->
 
     <% } else if (applicant.applicantStatus === 'P2 - FAILED') { %>
         <!-- Action Button for P2 - FAILED -->
