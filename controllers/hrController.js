@@ -552,56 +552,56 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
         }
     },
     
-    postNotifyLineManager: async function(req, res) {
-        console.log('Request Body:', req.body); // Log the entire request body
+    // postNotifyLineManager: async function(req, res) {
+    //     console.log('Request Body:', req.body); // Log the entire request body
     
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            const { applicantId } = req.body; // Destructure the applicantId from the request body
+    //     if (req.session.user && req.session.user.userRole === 'HR') {
+    //         const { applicantId } = req.body; // Destructure the applicantId from the request body
     
-            console.log('Received ApplicantId:', applicantId);
+    //         console.log('Received ApplicantId:', applicantId);
     
-            // Validate applicantId
-            if (!applicantId) {
-                return res.status(400).json({ success: false, error: 'Applicant ID is required.' });
-            }
+    //         // Validate applicantId
+    //         if (!applicantId) {
+    //             return res.status(400).json({ success: false, error: 'Applicant ID is required.' });
+    //         }
     
-            try {
-                // Step 1: Get userId from applicantaccounts using applicantId
-                const { data: applicantData, error: applicantError } = await supabase
-                    .from('applicantaccounts')
-                    .select('userId')
-                    .eq('applicantId', applicantId)
-                    .single();
+    //         try {
+    //             // Step 1: Get userId from applicantaccounts using applicantId
+    //             const { data: applicantData, error: applicantError } = await supabase
+    //                 .from('applicantaccounts')
+    //                 .select('userId')
+    //                 .eq('applicantId', applicantId)
+    //                 .single();
     
-                if (applicantError || !applicantData) {
-                    console.error('Error fetching userId:', applicantError);
-                    return res.status(404).json({ success: false, error: 'Applicant not found.' });
-                }
+    //             if (applicantError || !applicantData) {
+    //                 console.error('Error fetching userId:', applicantError);
+    //                 return res.status(404).json({ success: false, error: 'Applicant not found.' });
+    //             }
     
-                const userId = applicantData.userId;
-                console.log('Fetched UserId:', userId);
+    //             const userId = applicantData.userId;
+    //             console.log('Fetched UserId:', userId);
     
-                // Step 2: Update isHRChosen in applicant_initialscreening_assessment where userId matches
-                const { error: updateError } = await supabase
-                    .from('applicant_initialscreening_assessment')
-                    .update({ isHRChosen: true })
-                    .eq('userId', userId);
+    //             // Step 2: Update isHRChosen in applicant_initialscreening_assessment where userId matches
+    //             const { error: updateError } = await supabase
+    //                 .from('applicant_initialscreening_assessment')
+    //                 .update({ isHRChosen: true })
+    //                 .eq('userId', userId);
     
-                if (updateError) {
-                    console.error('Error updating isHRChosen:', updateError);
-                    throw updateError;
-                }
+    //             if (updateError) {
+    //                 console.error('Error updating isHRChosen:', updateError);
+    //                 throw updateError;
+    //             }
     
-                res.status(200).json({ success: true, message: 'Line Manager notified successfully.' });
-            } catch (error) {
-                console.error('Unexpected error:', error);
-                return res.status(500).json({ success: false, error: 'Failed to notify Line Manager. Please try again.' });
-            }
-        } else {
-            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
-            res.redirect('/staff/login');
-        }
-    },
+    //             res.status(200).json({ success: true, message: 'Line Manager notified successfully.' });
+    //         } catch (error) {
+    //             console.error('Unexpected error:', error);
+    //             return res.status(500).json({ success: false, error: 'Failed to notify Line Manager. Please try again.' });
+    //         }
+    //     } else {
+    //         req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+    //         res.redirect('/staff/login');
+    //     }
+    // },
     
    
         // Controller method for viewing final results for an individual applicant

@@ -965,7 +965,7 @@ console.log('Final applicants list:', applicants);
                 // });
 
                 // Render the page with updated applicants
-res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
+res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { applicants });
             } catch (error) {
                 console.error('Error fetching applicants:', error);
                 res.status(500).json({ error: 'Error fetching applicants' });
@@ -973,6 +973,32 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
         } else {
             req.flash('errors', { authError: 'Unauthorized access. Line Manager role required.' });
             res.redirect('/staff/login');
+        }
+    },
+
+    updateP1LineManagerPassed: async function(req, res) {
+        const { userId } = req.body; // Only get userId from request body
+    
+        try {
+            // Update `applicant_initialscreening_assessment` using `userId`
+            const { error: assessmentError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .update({ isLineManagerChosen: true })
+                .eq('userId', userId);
+            
+            if (assessmentError) throw assessmentError;
+    
+            // Update `applicantaccounts` using `userId`
+            const { error: statusError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: "P1 - PASSED" })
+                .eq('userId', userId);
+            
+            if (statusError) throw statusError;
+    
+            res.json({ success: true, message: "Applicant status updated successfully.", userId });
+        } catch (error) {
+            res.json({ success: false, message: error.message });
         }
     },
 

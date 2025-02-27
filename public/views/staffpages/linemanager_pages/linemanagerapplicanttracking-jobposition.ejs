@@ -555,7 +555,7 @@
 <!-- Display Applicant Status -->
 <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
 <div style="margin-top: 10px;">
-    <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for HR Action')) { %>
+    <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action; HR PASSED')) { %>
         <!-- For Review Button -->
         <button 
             class="btn-review" 
@@ -788,7 +788,7 @@
             <p><strong>Email:</strong> <span id="applicant-email"></span></p>
             <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
         </div>
-        <h4>HR Assessment Form Breakdown</h4>
+        <h4>HR Online Assessment Form Breakdown</h4>
         <h4>Initial Screening Scores</h4> 
 
         <table class="scores-table"> 
@@ -844,7 +844,7 @@
         <h4>Would you like to recommend this applicant to the Line Manager for shortlisting and proceeding to the HR interview?</h4>
         <div class="review-modal-buttons">
             <button id="backButton" class="review-modal-back-button">Back</button>
-            <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmHRInitialScreeningModal()">Confirm</button>
+            <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmP1LineManagerPassed()">Confirm</button>
         </div>
     </div>
 </div>
@@ -976,7 +976,7 @@ function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday,
     displayUploadedDocument(documentLink);
 
     // Display the modal
-    document.getElementById('hrInitialScreeningModalHtml').style.display = 'block';
+    document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
 }
 
 
@@ -1009,7 +1009,7 @@ function displayUploadedDocument(fileUrl) {
         docPreview.innerHTML = ""; // No preview for other file types
     }
 }
-function confirmHRInitialScreeningModal() {
+function confirmP1LineManagerPassed() {
     const userIdElement = document.getElementById("userId");
     if (!userIdElement) {
         alert("Error: userId is missing. Please try again.");
@@ -1027,7 +1027,7 @@ function confirmHRInitialScreeningModal() {
         return;
     }
 
-    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
+    fetch('/linemanager/applicant-tracker-jobposition/P1LineManagerPassed', {
         method: 'POST', 
         headers: {
             'Content-Type': 'application/json',
@@ -1180,7 +1180,7 @@ function confirmHRInitialScreeningModal() {
         buttons.review.addEventListener("click", () => filterRowsByStatus("for-review"));
         buttons.evaluation.addEventListener("click", () => filterRowsByStatus("for-evaluation"));
         buttons.onboarding.addEventListener("click", () => filterRowsByStatus("for-onboarding"));
-
+s
         // Search functionality
         document.querySelector(".search-button").addEventListener("click", filterTable);
         document.getElementById("searchBar").addEventListener("keypress", function (e) {
