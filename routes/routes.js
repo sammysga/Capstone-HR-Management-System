@@ -81,7 +81,7 @@ router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPer
 router.get('/hr/view-mrf/:id', hrController.getViewMRF);
 router.post('/hr/view-mrf/:id', hrController.submitMRF);
 
-router.post('/notify-line-manager', hrController.postNotifyLineManager);
+// router.post('/notify-line-manager', hrController.postNotifyLineManager);
 // Backend route to handle evaluation form page
 router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
 
@@ -205,7 +205,7 @@ router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
 
 router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
 router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.getApplicantTrackerByJobPositions);
-
+router.post('/linemanager/applicant-tracker-jobposition/P1LineManagerPassed', lineManagerController.updateP1LineManagerPassed);
 
 module.exports = router; 
 
