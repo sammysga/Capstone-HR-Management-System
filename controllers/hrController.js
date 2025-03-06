@@ -156,6 +156,7 @@ const hrController = {
         
                     const userId = attendance.userId;
                     const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
+                    const city = attendance.city || 'N/A'
         
                     if (attendance.attendanceAction === 'Time In') {
                         if (existingEntry) {
@@ -166,6 +167,7 @@ const hrController = {
                                 date: attendanceDate,
                                 timeIn: localDate,
                                 timeOut: null,
+                                city,
                                 useraccounts: attendance.useraccounts
                             });
                         }
@@ -178,6 +180,7 @@ const hrController = {
                                 date: attendanceDate,
                                 timeIn: null,
                                 timeOut: localDate,
+                                city,
                                 useraccounts: attendance.useraccounts
                             });
                         }
@@ -215,6 +218,7 @@ const hrController = {
                     date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
                     timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
                     timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : timeOutMessage,
+                    city: log.city || 'N/A',
                     activeWorkingHours: activeWorkingHours.toFixed(2)
                 };
             });
