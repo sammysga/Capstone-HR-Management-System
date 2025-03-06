@@ -7,11 +7,16 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
         /* Adding styles for the dashboard */
         h2 {
             color: #2385B0; /* Color for the dashboard title */
             margin-left: 40px; /* Increased space from the left */
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            justify-content: space-between;
         }
         h3 {
             margin-left: 40px; /* Increased space from the left for the sub-header */
@@ -80,6 +85,117 @@
             font-size: 18px;
             color: #333;
         }
+        #notification-bell {
+            position: absolute;
+    right: 15px;
+    top: 5%; 
+    transform: translateY(-50%);
+        }
+
+        #notification-bell i {
+            font-size: 25px;
+            color: #07ACB9;
+        }
+
+        #notification-bell i:hover {
+            color: #065d6a;
+        }
+
+        #notification-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* Notification Panel */
+        #notification-panel {
+            position: fixed;
+            top: 0;
+            right: -60%; /* hidden off-screen */
+            width: 50%; 
+            height: 100%;
+            background-color: #fff;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transition: right 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        #notification-panel h3 {
+            margin: 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+            font-size: 20px;
+            color: #07ACB9;
+        }
+
+        #notification-panel ul {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+
+        #notification-panel ul li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+
+        #notification-panel ul li:last-child {
+            border-bottom: none;
+        }
+
+        /* Show panel */
+        #notification-panel.open {
+            right: 0; /* Slide into view */
+        }
+
+        /* Notification Item Styles */
+        .notification-item {
+            margin-top: 20px;
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .notification-item img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+
+        .notification-item .notification-content {
+            flex: 1;
+        }
+
+        .notification-item .headline {
+            font-weight: bold;
+            color: black;
+        }
+
+        .notification-item .content {
+            margin-left: 0px;
+            padding: 0px;
+            margin-top: 5px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .notification-item .date {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -87,6 +203,32 @@
     <!-- Main content -->
     <div class="main-content">
         <h2>Line Manager Dashboard</h2>
+            <!-- Notification Bell Icon -->
+<button id="notification-bell">
+    <i class="fas fa-bell"></i>
+    <span id="notification-count"><%= notifications.length %></span>
+</button>
+
+<!-- Notification Panel -->
+<div id="notification-panel">
+    <h3>Notifications</h3>
+    <div id="recent-notifications">
+        <% if (notifications.length > 0) { %>
+            <% notifications.forEach(notification => { %>
+                <div class="notification-item">
+                    <img src="<%= notification.employeePhoto %>" alt="Employee Photo">
+                    <div class="notification-content">
+                        <div class="headline"><%= notification.headline %></div>
+                        <div class="content"><%= notification.content %></div>
+                        <div class="date"><%= new Date(notification.date).toLocaleString() %></div>
+                    </div>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <p>No new notifications.</p>
+        <% } %>
+    </div>
+</div>
         <!-- Success and Error Messages -->
         <div class="messages">
             <% if (successMessage && successMessage.length > 0) { %>
@@ -132,6 +274,7 @@
                         <th>Job Position</th>
                         <th>Time In</th>
                         <th>Time Out</th>
+                        <th>Location</th>
                         <th>Active Working Hours</th>
                     </tr>
                 </thead>
@@ -145,6 +288,7 @@
                             <td><%= log.jobTitle %></td>
                             <td><%= log.timeIn %></td>
                             <td><%= log.timeOut %></td>
+                            <td><%= log.city || 'Unknown' %></td>
                             <td><%= log.activeWorkingHours %></td>
                         </tr>
                     <% }) %>
@@ -359,6 +503,152 @@
                 }
             });
         });
+
+        document.getElementById('notification-bell').addEventListener('click', function () {
+            const panel = document.getElementById('notification-panel');
+            panel.classList.toggle('open'); 
+        });
+
+        // close panel by clicking out of it
+        document.addEventListener('click', function (event) {
+            const panel = document.getElementById('notification-panel');
+            const bell = document.getElementById('notification-bell');
+            if (!panel.contains(event.target) && !bell.contains(event.target)) {
+                panel.classList.remove('open');
+            }
+        });
+
+        // // Sample notification data
+        // const notifications = [
+        //     {
+        //         employeePhoto: "/images/profile.png",
+        //         headline: "REQUIRED 360 Degree Feedback Submission",
+        //         content: "Your feedback is required. Deadline of Submitting Feedback is at 5 PM.",
+        //         date: new Date('2025-01-24T10:00:00')
+        //     },
+        //     {
+        //         employeePhoto: "/images/profile.png",
+        //         headline: "REQUIRED 360 Degree Feedback Submission",
+        //         content: "Your feedback is required. Deadline of Submitting Feedback is at 5 PM.",
+        //         date: new Date('2025-01-23T10:00:00')
+        //     },
+        //     {
+        //         employeePhoto: "/images/profile.png",
+        //         headline: "System Maintenance Tomorrow",
+        //         content: "The system will be down from 2 AM to 4 AM for maintenance.",
+        //         date: new Date('2025-01-22T08:30:00')
+        //     },
+        // ];
+
+//         // Sample notification data (Replace this with dynamic data if needed)
+// const notifications = [
+//     {
+//         employeePhoto: "/images/profile.png",
+//         applicantStatus: "P1 - Awaiting for Line Manager Action; HR PASSED",
+//         headline: "Awaiting Your Approval",
+//         content: "Required Line Manager Action",
+//         date: new Date()
+//     },
+//     {
+//         employeePhoto: "/images/profile.png",
+//         headline: "System Maintenance Tomorrow",
+//         content: "The system will be down from 2 AM to 4 AM for maintenance.",
+//         date: new Date('2025-01-22T08:30:00')
+//     }
+// ];
+
+// // Function to fetch notifications dynamically from Supabase
+// async function fetchNotifications() {
+//     try {
+//         const response = await fetch('/api/notifications'); // Adjust API endpoint as needed
+//         const data = await response.json();
+
+//         // Transform backend data into notification format
+//         const notifications = data.map(item => ({
+//             employeePhoto: "/images/profile.png", // Update with actual user image if available
+//             applicantStatus: item.applicantStatus,
+//             headline: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
+//                 ? "Awaiting Your Approval" 
+//                 : item.headline,
+//             content: item.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" 
+//                 ? `Required Line Manager Action for ${item.firstName} ${item.lastName}` 
+//                 : item.content,
+//             firstName: item.firstName,
+//             lastName: item.lastName,
+//             date: new Date(item.date)
+//         }));
+
+//         displayNotifications(notifications);
+//     } catch (error) {
+//         console.error("Error fetching notifications:", error);
+//     }
+// }
+
+
+        
+
+        // Function to format date
+        function formatDate(date) {
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Intl.DateTimeFormat('en-US', options).format(date);
+        }
+
+        // Function to display recent notifications
+        function displayNotifications(notifications) {
+    const recentNotificationsContainer = document.getElementById("recent-notifications");
+    recentNotificationsContainer.innerHTML = ''; // Clear previous notifications
+
+    notifications.forEach(notification => {
+        const notificationElement = document.createElement("div");
+        notificationElement.classList.add("notification-item");
+
+        notificationElement.innerHTML = `
+            <img src="${notification.employeePhoto}" alt="Employee Photo">
+            <div class="notification-content">
+                <div class="headline">${notification.headline}</div>
+                <div class="content">${notification.content}</div>
+                <div class="date">${formatDate(notification.date)}</div>
+            </div>
+        `;
+
+        recentNotificationsContainer.appendChild(notificationElement);
+    });
+
+            // Show "See Previous Notifications" button if there are older notifications
+            if (recentNotifications.length < notifications.length) {
+                seePreviousButton.style.display = "block";
+                seePreviousButton.addEventListener("click", () => {
+                    // Show all notifications when the button is clicked
+                    displayAllNotifications();
+                });
+            }
+        }
+
+        // Function to display all notifications (including older ones)
+        function displayNotifications() {
+    const recentNotificationsContainer = document.getElementById("recent-notifications");
+    recentNotificationsContainer.innerHTML = ''; // Clear previous notifications
+
+    notifications.forEach(notification => {
+        const notificationElement = document.createElement("div");
+        notificationElement.classList.add("notification-item");
+
+        notificationElement.innerHTML = `
+            <img src="${notification.employeePhoto}" alt="Employee Photo">
+            <div class="notification-content">
+                <div class="headline">${notification.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" ? "Awaiting Your Approval" : notification.headline}</div>
+                <div class="content">${notification.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED" ? "Required Line Manager Action" : notification.content}</div>
+                <div class="date">${formatDate(notification.date)}</div>
+            </div>
+        `;
+
+        recentNotificationsContainer.appendChild(notificationElement);
+    });
+
+            // Hide the "See Previous Notifications" button after it's clicked
+            document.getElementById("see-previous-notifications").style.display = "none";
+        }
+
     </script>
 </body>
 </html>

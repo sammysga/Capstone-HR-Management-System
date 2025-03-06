@@ -49,7 +49,7 @@ const lineManagerController = {
                     if (error) throw error;
     
                     return data.map(leave => ({
-                        userId: leave.userId, // Include userId here
+                        userId: leave.userId,
                         lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
                         firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
                         department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
@@ -70,6 +70,7 @@ const lineManagerController = {
                             attendanceDate, 
                             attendanceAction, 
                             attendanceTime, 
+                            city,
                             useraccounts (
                                 userId, 
                                 staffaccounts (
@@ -93,46 +94,92 @@ const lineManagerController = {
                     return attendanceLogs;
                 };
     
+                // Fetch applicant statuses for line manager actions
+                const fetchPendingApprovals = async () => {
+                    const { data, error } = await supabase
+                        .from('applicantaccounts')
+                        .select('applicantStatus')
+                        .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED');
+    
+                    if (error) throw error;
+    
+                    return data.length > 0 ? 'P1 - Awaiting for Line Manager Action; HR PASSED' : null;
+                };
+    
+                // ✅ Fetch notifications
+                const fetchNotifications = async () => {
+                    const { data: applicants, error } = await supabase
+                        .from('applicantaccounts')
+                        .select('firstName, lastName, applicantStatus, created_at')
+                        .order('created_at', { ascending: false });
+    
+                    if (error) {
+                        console.error('Error fetching notifications:', error);
+                        throw new Error('Error retrieving notifications.');
+                    }
+    
+                    return applicants.map(applicant => ({
+                        firstName: applicant.firstName,
+                        lastName: applicant.lastName,
+                        applicantStatus: applicant.applicantStatus,
+                        date: applicant.created_at,
+                        employeePhoto: "/images/profile.png", // Placeholder image
+                        headline: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                            ? "Awaiting Your Approval"
+                            : "New Application Received",
+                        content: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                            ? `Required Line Manager Action for ${applicant.firstName} ${applicant.lastName}`
+                            : `${applicant.firstName} ${applicant.lastName} submitted an application.`
+                    }));
+                };
+    
                 // Function to format attendance logs
-                const formatAttendanceLogs = (attendanceLogs) => {
-                    const formattedAttendanceLogs = attendanceLogs.reduce((acc, attendance) => {
-                        const attendanceDate = attendance.attendanceDate;
-                        const attendanceTime = attendance.attendanceTime || '00:00:00';
-                        const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
-                        const localDate = new Date(attendanceDate);
-                        localDate.setHours(hours, minutes, seconds);
+                const formatAttendanceLogs = (attendanceLogs, selectedDate = null) => {
+                    const filterDate = selectedDate || new Date().toISOString().split('T')[0];
                 
-                        const userId = attendance.userId;
-                        const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
+                    const formattedAttendanceLogs = attendanceLogs
+                        .filter(attendance => attendance.attendanceDate === filterDate) 
+                        .reduce((acc, attendance) => {
+                            const attendanceDate = attendance.attendanceDate;
+                            const attendanceTime = attendance.attendanceTime || '00:00:00';
+                            const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
+                            const localDate = new Date(attendanceDate);
+                            localDate.setHours(hours, minutes, seconds);
                 
-                        if (attendance.attendanceAction === 'Time In') {
-                            if (existingEntry) {
-                                existingEntry.timeIn = localDate;
-                            } else {
-                                acc.push({
-                                    userId,
-                                    date: attendanceDate,
-                                    timeIn: localDate,
-                                    timeOut: null,
-                                    useraccounts: attendance.useraccounts
-                                });
+                            const userId = attendance.userId;
+                            const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
+                            const city = attendance.city || 'N/A'
+                
+                            if (attendance.attendanceAction === 'Time In') {
+                                if (existingEntry) {
+                                    existingEntry.timeIn = localDate;
+                                } else {
+                                    acc.push({
+                                        userId,
+                                        date: attendanceDate,
+                                        timeIn: localDate,
+                                        timeOut: null,
+                                        city,
+                                        useraccounts: attendance.useraccounts
+                                    });
+                                }
+                            } else if (attendance.attendanceAction === 'Time Out') {
+                                if (existingEntry) {
+                                    existingEntry.timeOut = localDate;
+                                } else {
+                                    acc.push({
+                                        userId,
+                                        date: attendanceDate,
+                                        timeIn: null,
+                                        timeOut: localDate,
+                                        city,
+                                        useraccounts: attendance.useraccounts
+                                    });
+                                }
                             }
-                        } else if (attendance.attendanceAction === 'Time Out') {
-                            if (existingEntry) {
-                                existingEntry.timeOut = localDate;
-                            } else {
-                                acc.push({
-                                    userId,
-                                    date: attendanceDate,
-                                    timeIn: null,
-                                    timeOut: localDate,
-                                    useraccounts: attendance.useraccounts
-                                });
-                            }
-                        }
                 
-                        return acc;
-                    }, []);
+                            return acc;
+                        }, []);
                 
                     return formattedAttendanceLogs.map(log => {
                         let activeWorkingHours = 0;
@@ -163,34 +210,92 @@ const lineManagerController = {
                             date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
                             timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
                             timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : timeOutMessage,
+                            city: log.city || 'N/A',
                             activeWorkingHours: activeWorkingHours.toFixed(2)
                         };
                     });
                 };
-                // Fetch formatted leave data
+    
+                // ✅ Fetch data
                 const formattedAllLeaves = await fetchAndFormatLeaves();
                 const formattedApprovedLeaves = await fetchAndFormatLeaves('Approved');
                 const attendanceLogs = await fetchAttendanceLogs();
+                const pendingApprovalStatus = await fetchPendingApprovals();
                 const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+                const notifications = await fetchNotifications(); // ✅ Notifications
     
-                // Render the dashboard with all relevant data
+                // ✅ Render with notifications
                 return res.render('staffpages/linemanager_pages/managerdashboard', { 
-                    allLeaves: formattedAllLeaves,
-                    approvedLeaves: formattedApprovedLeaves,
-                    attendanceLogs: formattedAttendanceDisplay,
+                    allLeaves: formattedAllLeaves || [],
+                    approvedLeaves: formattedApprovedLeaves || [],
+                    pendingApprovalStatus: pendingApprovalStatus || '',
+                    attendanceLogs: formattedAttendanceDisplay || [],
+                    notifications: notifications || [], 
                     successMessage: req.flash('success'),
                     errorMessage: req.flash('errors')
                 });
+    
             } catch (err) {
                 console.error('Error fetching data for the dashboard:', err);
                 req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
                 return res.redirect('/linemanager/dashboard');
             }
         } else {
-            // Redirect or handle unauthorized access here if needed
-            return res.redirect('/login');
+            return res.redirect('/staff/login');
         }
     },
+    
+
+    // Fetch notifications from Supabase for Line Manager Dashboard
+getLineManagerNotifications: async function (req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null; // Ensure user is authenticated
+        if (!userId) {
+            req.flash('errors', { authError: 'User not logged in.' });
+            return res.redirect('/staff/login');
+        }
+
+        // Fetch notifications from 'applicantaccounts'
+        const { data: applicants, error } = await supabase
+            .from('applicantaccounts')
+            .select('firstName, lastName, applicantStatus, created_at')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching notifications:', error);
+            req.flash('errors', { dbError: 'Error retrieving notifications.' });
+            return res.redirect('/staff/managerdashboard');
+        }
+
+        // Transform the data for the front-end
+        const notifications = applicants.map(applicant => ({
+            firstName: applicant.firstName,
+            lastName: applicant.lastName,
+            applicantStatus: applicant.applicantStatus,
+            date: applicant.created_at,
+            employeePhoto: "/images/profile.png", // Placeholder, update if actual image exists
+            headline: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                ? "Awaiting Your Approval"
+                : "New Application Received",
+            content: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                ? `Required Line Manager Action for ${applicant.firstName} ${applicant.lastName}`
+                : `${applicant.firstName} ${applicant.lastName} submitted an application.`
+        }));
+
+        // Render the manager dashboard with notifications
+        res.render('staffpages/linemanager_pages/managerdashboard', { 
+            notifications,
+            successMessage: req.flash('success'),
+            errorMessage: req.flash('errors')
+        });
+
+    } catch (err) {
+        console.error('Error in getLineManagerNotifications controller:', err);
+        req.flash('errors', { dbError: 'An unexpected error occurred while loading notifications.' });
+        res.redirect('/staff/managerdashboard');
+    }
+},
+
     getLeaveRequest: async function(req, res) {
         const userId = req.query.userId;
     
@@ -622,110 +727,317 @@ const lineManagerController = {
     getApplicantTracker: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
-                // Log the session to see the full session object and debug any issues
-                console.log('Full session object:', req.session);
-                console.log('User Department ID:', req.session.user ? req.session.user.departmentId : 'Not available');
-    
-                // If departmentId is missing from the session, fetch it from the staffaccounts table
-                if (!req.session.user.departmentId) {
-                    console.log('Department ID missing, fetching from staffaccounts...');
-    
-                    // Fetch departmentId from staffaccounts table using the logged-in user's email or userId
-                    const { data: staffAccount, error: staffAccountError } = await supabase
-                        .from('staffaccounts')
-                        .select('departmentId')
-                        .eq('userId', req.session.user.userId)  // Assuming userId is stored in session
-                        .single();  // Use .single() to get one result
-    
-                    if (staffAccountError) {
-                        console.error('Error fetching department from staffaccounts:', staffAccountError);
-                        throw staffAccountError;
-                    }
-    
-                    // If a departmentId is found, set it in the session
-                    if (staffAccount && staffAccount.departmentId) {
-                        req.session.user.departmentId = staffAccount.departmentId;
-                        console.log('Fetched and set departmentId:', req.session.user.departmentId);
-                    } else {
-                        console.error('User does not have a departmentId assigned.');
-                        req.flash('errors', { departmentError: 'User is not assigned to a department.' });
-                        return res.redirect('/staff/login');
-                    }
-                }
-    
-                // Ensure departmentId is available now
-                const userDepartmentId = req.session.user.departmentId;
-    
-                // Query job positions and departments from Supabase
+                // Fetch job positions and departments
                 const { data: jobpositions, error: jobpositionsError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
                     .order('hiringStartDate', { ascending: true });
     
-                if (jobpositionsError) {
-                    console.error('Error fetching job positions:', jobpositionsError);
-                    throw jobpositionsError;
-                }
+                if (jobpositionsError) throw jobpositionsError;
     
-                console.log('Fetched job positions:', jobpositions);
-    
-                // Query department names from the departments table
                 const { data: departments, error: departmentsError } = await supabase
                     .from('departments')
                     .select('deptName, departmentId');
     
-                if (departmentsError) {
-                    console.error('Error fetching departments:', departmentsError);
-                    throw departmentsError;
-                }
+                if (departmentsError) throw departmentsError;
     
-                console.log('Fetched departments:', departments);
+                // Fetch all applicant accounts
+                const { data: applicantaccounts, error: applicantaccountsError } = await supabase
+                    .from('applicantaccounts')
+                    .select('jobId, applicantStatus');
     
-                // Map departments to a dictionary for easier lookup
-                const departmentMap = departments.reduce((acc, dept) => {
-                    acc[dept.departmentId] = dept.deptName;
-                    return acc;
-                }, {});
+                if (applicantaccountsError) throw applicantaccountsError;
     
-                // Filter job positions to show only those in the user's department
-                const filteredJobPositions = jobpositions.filter(job => job.departmentId === userDepartmentId);
+                // Log raw applicant accounts data
+                console.log('Applicant Accounts:', applicantaccounts);
     
-                // Get the department name for the logged-in user
-                const userDepartmentName = departmentMap[userDepartmentId] || 'Unknown';
-    
-                // Prepare job positions data with department names
-                const jobPositionsWithDept = filteredJobPositions.map((job) => ({
-                    ...job,
-                    departmentName: departmentMap[job.departmentId] || 'Unknown',
-                }));
-    
-                console.log('Mapped and filtered job positions with departments:', jobPositionsWithDept);
-    
-                // Render the page with job positions, departments, and the user's department name
-                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking', {
-                    jobPositions: jobPositionsWithDept,
-                    departments: departments,  // Ensure departments are being sent here
-                    userDepartmentName: userDepartmentName  // Pass the user's department name
+                // Group and count statuses by jobId
+                const statusCountsMap = {};
+                applicantaccounts.forEach(({ jobId, applicantStatus }) => {
+                    if (!statusCountsMap[jobId]) {
+                        statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 };
+                    }
+                    
+                    if (applicantStatus.includes('P1')) {
+                        statusCountsMap[jobId].P1++;
+                    } else if (applicantStatus.includes('P2')) {
+                        statusCountsMap[jobId].P2++;
+                    } else if (applicantStatus.includes('P3')) {
+                        statusCountsMap[jobId].P3++;
+                    } else if (applicantStatus.includes('Offered')) {
+                        statusCountsMap[jobId].Offered++;
+                    } else if (applicantStatus.includes('Onboarding')) {
+                        statusCountsMap[jobId].Onboarding++;
+                    }
                 });
     
+                // Log final counts for each jobId
+                console.log('Status Counts Map:', statusCountsMap);
+    
+                // Merge counts into job positions
+                const jobPositionsWithCounts = jobpositions.map((job) => ({
+                    ...job,
+                    departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
+                    counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 },
+                }));
+    
+                // Render the page
+                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking', {
+                    jobPositions: jobPositionsWithCounts,
+                    departments,
+                });
             } catch (err) {
-                console.error('Error fetching data from Supabase:', err);
+                console.error('Error:', err);
                 req.flash('errors', { databaseError: 'Error fetching job data.' });
                 res.redirect('/staff/login');
             }
         } else {
-            req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
         }
     },
-    getApplicantTrackerByJobPositions: function (req, res) {
+
+    getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition');
+            try {
+                const { jobId, applicantId, userId } = req.query;
+                console.log('Received request with jobId:', jobId, 'and applicantId:', applicantId);
+                console.log('Received request with userId:', userId);
+
+                const { data: applicants, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    lastName, 
+                    firstName, 
+                    phoneNo,
+                    userId,
+                    jobId,
+                    departmentId,
+                    birthDate,
+                    applicantStatus,
+                    applicantId,
+                    hrInterviewFormScore,
+                    initialScreeningScore,
+                    p2_Approved,
+                    p2_hrevalscheduled
+                `)
+                .eq('jobId', jobId);
+            
+                if (applicantError) {
+                    console.error('Error fetching applicants:', applicantError);
+                    throw applicantError;
+                }
+                console.log('Fetched applicants:', applicants);
+            
+            // Fetch initial screening assessments separately
+            const { data: screeningAssessments, error: screeningError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .select(`
+                    userId,
+                    initialScreeningId,
+                    degreeScore,
+                    experienceScore,
+                    certificationScore,
+                    hardSkillsScore,
+                    softSkillsScore,
+                    workSetupScore,
+                    availabilityScore,
+                    totalScore,
+                    totalScoreCalculatedAt,
+                    resume_url,
+                    isHRChosen,
+                    isLineManagerChosen
+                `);
+            
+                if (screeningError) {
+                    console.error('Error fetching screening assessments:', screeningError);
+                    throw screeningError;
+                }
+                console.log('Fetched screening assessments:', screeningAssessments);
+            
+    
+                // Fetch user emails using userId
+                const { data: userAccounts, error: userError } = await supabase
+                    .from('useraccounts')
+                    .select('userId, userEmail');
+    
+                if (userError) throw userError;
+    
+                // Fetch job titles and department names
+                const { data: jobTitles, error: jobError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle');
+    
+                if (jobError) throw jobError;
+    
+                const { data: departments, error: departmentError } = await supabase
+                .from('departments')
+                .select('departmentId, deptName');
+
+                if (departmentError) {
+                    console.error('Error fetching departments:', departmentError);
+                    throw departmentError;
+                }
+                console.log('Fetched departments:', departments);
+
+            for (const applicant of applicants) {
+                console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
+
+
+                applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+    applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+    applicant.userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+    applicant.birthDate = userAccounts.find(user => user.userId === applicant.userId)?.birthDate || 'N/A';
+
+
+    // Match `userId` to fetch the corresponding initial screening assessment
+    const screeningData = screeningAssessments.find(assessment => assessment.userId === applicant.userId) || {};
+
+    // Merge the screening assessment data into the applicant object
+    applicant.initialScreeningAssessment = {
+        degreeScore: screeningData.degreeScore || 'N/A',
+        experienceScore: screeningData.experienceScore || 'N/A',
+        certificationScore: screeningData.certificationScore || 'N/A',
+        hardSkillsScore: screeningData.hardSkillsScore || 'N/A',
+        softSkillsScore: screeningData.softSkillsScore || 'N/A',
+        workSetupScore: screeningData.workSetupScore || 'N/A',
+        availabilityScore: screeningData.availabilityScore || 'N/A',
+        totalScore: screeningData.totalScore || 'N/A',
+        resume_url: screeningData.resume_url || '#',
+    };
+
+    console.log('Updated applicant details:', applicant);
+}
+
+console.log('Final applicants list:', applicants);
+    
+//                 // Merge jobTitle, deptName, userEmail, and scores with applicants data
+//                 const applicantsWithDetails = applicants.map(applicant => {
+//                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+//                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+//                     const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+                
+//                     let formattedStatus = applicant.applicantStatus;
+
+// // If Line Manager has approved, set status to "P1: PASSED"
+// if (applicant.lineManagerApproved) {
+//     formattedStatus = 'P1 - PASSED';
+// } else {
+//     // Check Initial Screening Score
+//     if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
+//         formattedStatus = 'P1 - Initial Screening';
+//     } else if (applicant.initialScreeningScore < 50) {
+//         formattedStatus = 'P1 - FAILED';
+//     } else {
+//         formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
+//     }
+
+//     // Check HR Interview Score
+//     if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
+//         if (applicant.hrInterviewFormScore < 50) {
+//             formattedStatus = 'P1 - FAILED';
+//         } else if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
+//             formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
+//         } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
+//             formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
+//         }
+//     }
+// }
+                
+// // Log for debugging
+// console.log("Applicant:", applicant.firstName, applicant.lastName, 
+//     "Initial Screening Score:", applicant.initialScreeningScore, 
+//     "HR Interview Score:", applicant.hrInterviewFormScore, 
+//     "isChosen1:", applicant.isChosen1, 
+//     "lineManagerApproved:", applicant.lineManagerApproved,
+//     "LM_notified:", applicant.LM_notified,
+//     "=> Status:", formattedStatus);
+                
+//                     // Return the updated applicant object with the formatted status
+//                     return {
+//                         ...applicant,
+//                         jobTitle,
+//                         deptName,
+//                         userEmail,
+//                         applicantStatus: formattedStatus, // Return the updated status
+//                     };
+//                 });
+                
+                // // Render the EJS template with applicants data
+                // res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', {
+                //     applicants: applicantsWithDetails,
+                // });
+
+                // Render the page with updated applicants
+res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { applicants });
+            } catch (error) {
+                console.error('Error fetching applicants:', error);
+                res.status(500).json({ error: 'Error fetching applicants' });
+            }
         } else {
-            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('staff/login');
+            req.flash('errors', { authError: 'Unauthorized access. Line Manager role required.' });
+            res.redirect('/staff/login');
         }
     },
+
+    updateP1LineManagerPassed: async function(req, res) {
+        const { userId } = req.body; // Only get userId from request body
+    
+        try {
+            // Update `applicant_initialscreening_assessment` using `userId`
+            const { error: assessmentError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .update({ isLineManagerChosen: true })
+                .eq('userId', userId);
+            
+            if (assessmentError) throw assessmentError;
+    
+            // Update `applicantaccounts` using `userId`
+            const { error: statusError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: "P1 - PASSED" })
+                .eq('userId', userId);
+            
+            if (statusError) throw statusError;
+    
+            res.json({ success: true, message: "Applicant status updated successfully.", userId });
+        } catch (error) {
+            res.json({ success: false, message: error.message });
+        }
+    },
+
+    postApproveLineManager: async function (req, res) {
+        console.log('Request Body:', req.body); // Log the entire request body
+    
+        if (req.session.user && req.session.user.userRole === 'Line Manager') {
+            const { applicantId } = req.body; // Get applicantId from request body
+    
+            if (!applicantId) {
+                return res.status(400).json({ success: false, error: 'Missing applicantId' });
+            }
+    
+            try {
+                const { error } = await supabase
+                .from('applicantaccounts')
+                .update({ 
+                    applicantStatus: 'P1 - PASSED', // Ensure correct status
+                    lineManagerApproved: true 
+                })
+                .eq('applicantId', applicantId);
+    
+                if (error) throw error;
+    
+                res.json({ success: true, message: 'Line Manager approved successfully' });
+            } catch (error) {
+                console.error('Error updating applicant status:', error);
+                return res.status(500).json({ success: false, error: 'Failed to approve Line Manager' });
+            }
+        } else {
+            req.flash('errors', { authError: 'Unauthorized access. Line Manager role required.' });
+            res.redirect('/staff/login');
+        }
+    },
+    
     
 
     getFinalResult: function(req, res) {
@@ -1770,7 +2082,7 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             const { data: requests, error: requestsError } = await supabase
                 .from('offboarding_requests')
                 .select('userId, message, last_day, status, created_at')
-                .eq('status', 'Pending')  // Fetch only pending requests
+                .eq('status', 'Pending Line Manager')  // Fetch only pending requests
                 .order('created_at', { ascending: false });
     
             if (requestsError) {
@@ -1850,7 +2162,55 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             req.flash('errors', { dbError: 'An error occurred while loading the offboarding request.' });
             return res.redirect('/linemanager/dashboard');
         }
-    },    
+    },
+    
+    // Approve or Disapprove Offboarding Request
+    updateOffboardingRequest: async function (req, res) {
+        console.log("Received request body:", req.body);
+        const { requestId, action, reason, newLastDay } = req.body;
+    
+        try {
+            let newStatus = '';
+            let lineManagerDecision = '';
+    
+            if (action === 'approveAsIs') {
+                newStatus = 'Pending HR'; 
+                lineManagerDecision = 'Approved';
+            } else if (action === 'proposeNewDate') {
+                newStatus = 'Pending HR'; 
+                lineManagerDecision = 'Proposed New Date';
+            } else {
+                return res.status(400).json({ success: false, message: 'Invalid action.' });
+            }
+
+            const updateData = {
+                status: newStatus, 
+                line_manager_notes: reason || null, 
+                new_last_day: newLastDay || null,
+                line_manager_decision: lineManagerDecision 
+            };
+    
+            console.log("Updating with data:", { updateData, requestId }); 
+    
+            const { data, error } = await supabase
+                .from('offboarding_requests')
+                .update(updateData)
+                .eq('userId', requestId); 
+    
+            console.log("Supabase response:", { data, error }); 
+    
+            if (error) {
+                console.error('Error updating offboarding request:', error);
+                return res.status(500).json({ success: false, message: 'Failed to update request status.', error: error.message });
+            }
+    
+            return res.status(200).json({ success: true, message: `Request ${newStatus === 'Pending HR' ? 'approved' : 'updated'} successfully.` });
+    
+        } catch (err) {
+            console.error('Error in updateOffboardingRequest:', err);
+            return res.status(500).json({ success: false, message: 'An error occurred while processing the request.', error: err.message });
+        }
+    },
      
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {

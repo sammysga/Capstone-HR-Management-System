@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const { parse } = require('dotenv');
 const flash = require('connect-flash/lib/flash');
 const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
-const chatbotController = require('../controllers/chatbotController');
+const applicantController = require('../controllers/applicantController');
 
 
 const hrController = {
@@ -115,7 +115,8 @@ const hrController = {
                         userId, 
                         attendanceDate, 
                         attendanceAction, 
-                        attendanceTime, 
+                        attendanceTime,
+                        city, 
                         useraccounts (
                             userId, 
                             staffaccounts (
@@ -155,6 +156,7 @@ const hrController = {
         
                     const userId = attendance.userId;
                     const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
+                    const city = attendance.city || 'N/A'
         
                     if (attendance.attendanceAction === 'Time In') {
                         if (existingEntry) {
@@ -165,6 +167,7 @@ const hrController = {
                                 date: attendanceDate,
                                 timeIn: localDate,
                                 timeOut: null,
+                                city,
                                 useraccounts: attendance.useraccounts
                             });
                         }
@@ -177,6 +180,7 @@ const hrController = {
                                 date: attendanceDate,
                                 timeIn: null,
                                 timeOut: localDate,
+                                city,
                                 useraccounts: attendance.useraccounts
                             });
                         }
@@ -214,6 +218,7 @@ const hrController = {
                     date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
                     timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
                     timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : timeOutMessage,
+                    city: log.city || 'N/A',
                     activeWorkingHours: activeWorkingHours.toFixed(2)
                 };
             });
@@ -263,53 +268,72 @@ const hrController = {
     },
     
 
-    getApplicantTrackerAllJobPositions: async function(req, res) {
+
+    /* ATS CODES DIVIDER  */
+    getApplicantTrackerAllJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                // Query job positions and departments from Supabase
+                // Fetch job positions and departments
                 const { data: jobpositions, error: jobpositionsError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
                     .order('hiringStartDate', { ascending: true });
     
-                if (jobpositionsError) {
-                    console.error('Error fetching job positions:', jobpositionsError);
-                    throw jobpositionsError;
-                }
-                console.log('Fetched job positions:', jobpositions);
+                if (jobpositionsError) throw jobpositionsError;
     
-                // Query department names from the departments table
                 const { data: departments, error: departmentsError } = await supabase
                     .from('departments')
                     .select('deptName, departmentId');
     
-                if (departmentsError) {
-                    console.error('Error fetching departments:', departmentsError);
-                    throw departmentsError;
-                }
-                console.log('Fetched departments:', departments);
+                if (departmentsError) throw departmentsError;
     
-                // Map departments to a dictionary for easier lookup
-                const departmentMap = departments.reduce((acc, dept) => {
-                    acc[dept.departmentId] = dept.deptName;
-                    return acc;
-                }, {});
+                // Fetch all applicant accounts
+                const { data: applicantaccounts, error: applicantaccountsError } = await supabase
+                    .from('applicantaccounts')
+                    .select('jobId, applicantStatus');
     
-                // Prepare job positions data with department names
-                const jobPositionsWithDept = jobpositions.map((job) => ({
-                    ...job,
-                    departmentName: departmentMap[job.departmentId] || 'Unknown',
-                }));
-                console.log('Mapped job positions with departments:', jobPositionsWithDept);
+                if (applicantaccountsError) throw applicantaccountsError;
     
-                // Render the page with job positions and departments data
-                res.render('staffpages/hr_pages/hrapplicanttracking', {
-                    jobPositions: jobPositionsWithDept,
-                    departments: departments  // Ensure departments are being sent here
+                // Log raw applicant accounts data
+                console.log('Applicant Accounts:', applicantaccounts);
+    
+                // Group and count statuses by jobId
+                const statusCountsMap = {};
+                applicantaccounts.forEach(({ jobId, applicantStatus }) => {
+                    if (!statusCountsMap[jobId]) {
+                        statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 };
+                    }
+                    
+                    if (applicantStatus.includes('P1')) {
+                        statusCountsMap[jobId].P1++;
+                    } else if (applicantStatus.includes('P2')) {
+                        statusCountsMap[jobId].P2++;
+                    } else if (applicantStatus.includes('P3')) {
+                        statusCountsMap[jobId].P3++;
+                    } else if (applicantStatus.includes('Offered')) {
+                        statusCountsMap[jobId].Offered++;
+                    } else if (applicantStatus.includes('Onboarding')) {
+                        statusCountsMap[jobId].Onboarding++;
+                    }
                 });
     
+                // Log final counts for each jobId
+                console.log('Status Counts Map:', statusCountsMap);
+    
+                // Merge counts into job positions
+                const jobPositionsWithCounts = jobpositions.map((job) => ({
+                    ...job,
+                    departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
+                    counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 },
+                }));
+    
+                // Render the page
+                res.render('staffpages/hr_pages/hrapplicanttracking', {
+                    jobPositions: jobPositionsWithCounts,
+                    departments,
+                });
             } catch (err) {
-                console.error('Error fetching data from Supabase:', err);
+                console.error('Error:', err);
                 req.flash('errors', { databaseError: 'Error fetching job data.' });
                 res.redirect('/staff/login');
             }
@@ -318,36 +342,89 @@ const hrController = {
             res.redirect('/staff/login');
         }
     },
-
+    
+    
+    
     getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { jobId } = req.query; // Extract jobId from query parameters
+                const { jobId, applicantId, userId } = req.query;
+                console.log('Received request with jobId:', jobId, 'and applicantId:', applicantId);
+                console.log('Received request with userId:', userId);
+
     
-                // Fetch applicants by jobId, including phoneNo
+                // if (applicantId) {
+                //     const { error: updateError } = await supabase
+                //         .from('applicantaccounts')
+                //         .update({ LM_notified: true })
+                //         .eq('applicantId', applicantId);
+    
+                //     if (updateError) {
+                //         console.error('Error updating LM_notified:', updateError);
+                //         return res.status(500).json({ success: false, error: 'Failed to notify Line Manager' });
+                //     }
+    
+                //     return res.json({ success: true, message: 'Line Manager notified successfully' });
+                // }
+    
                 const { data: applicants, error: applicantError } = await supabase
-                    .from('applicantaccounts')
-                    .select(`
-                        lastName, 
-                        firstName, 
-                        phoneNo,
-                        userId,
-                        jobId,
-                        departmentId,
-                        applicantStatus
-                    `)
-                    .eq('jobId', jobId);
+    .from('applicantaccounts')
+    .select(`
+        lastName, 
+        firstName, 
+        phoneNo,
+        userId,
+        jobId,
+        departmentId,
+        birthDate,
+        applicantStatus,
+        applicantId,
+        hrInterviewFormScore,
+        initialScreeningScore,
+        p2_Approved,
+        p2_hrevalscheduled
+    `)
+    .eq('jobId', jobId);
+
+    if (applicantError) {
+        console.error('Error fetching applicants:', applicantError);
+        throw applicantError;
+    }
+    console.log('Fetched applicants:', applicants);
+
+// Fetch initial screening assessments separately
+const { data: screeningAssessments, error: screeningError } = await supabase
+    .from('applicant_initialscreening_assessment')
+    .select(`
+        userId,
+        initialScreeningId,
+        degreeScore,
+        experienceScore,
+        certificationScore,
+        hardSkillsScore,
+        softSkillsScore,
+        workSetupScore,
+        availabilityScore,
+        totalScore,
+        totalScoreCalculatedAt,
+        resume_url,
+        isHRChosen,
+        isLineManagerChosen
+    `);
+
+    if (screeningError) {
+        console.error('Error fetching screening assessments:', screeningError);
+        throw screeningError;
+    }
+    console.log('Fetched screening assessments:', screeningAssessments);
+
     
-                if (applicantError) throw applicantError;
-    
-                // Fetch user emails using userId
                 const { data: userAccounts, error: userError } = await supabase
                     .from('useraccounts')
                     .select('userId, userEmail');
     
                 if (userError) throw userError;
     
-                // Fetch job titles and department names
                 const { data: jobTitles, error: jobError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle');
@@ -358,35 +435,295 @@ const hrController = {
                     .from('departments')
                     .select('departmentId, deptName');
     
-                if (departmentError) throw departmentError;
+                    if (departmentError) {
+                        console.error('Error fetching departments:', departmentError);
+                        throw departmentError;
+                    }
+                    console.log('Fetched departments:', departments);
     
-                // Merge jobTitle, deptName, and userEmail with applicants data
-                const applicantsWithDetails = applicants.map(applicant => {
-                    const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
-                    const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
-                    const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+                for (const applicant of applicants) {
+                    console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
+
+                    // let formattedStatus = applicant.applicantStatus;
     
-                    return {
-                        ...applicant,
-                        jobTitle,
-                        deptName,
-                        userEmail, // Add email to the applicant's data
-                    };
-                });
+                    // ✅ NEW: If HR Evaluation Score is not 0, update the status to 'P2 - HR Evaluation Accomplished'
+                    // if (applicant.hrInterviewFormScore && applicant.hrInterviewFormScore > 0) {
+                    //     formattedStatus = `P2 - HR Evaluation Accomplished - Score: ${applicant.hrInterviewFormScore}`;
     
-                // Render the EJS template with applicants data
-                res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', {
-                    applicants: applicantsWithDetails,
-                });
+                    //     const { error: updateError } = await supabase
+                    //         .from('applicantaccounts')
+                    //         .update({ applicantStatus: formattedStatus })
+                    //         .eq('applicantId', applicant.applicantId);
+    
+                    //     if (updateError) {
+                    //         console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Evaluation Accomplished:`, updateError);
+                    //     }
+                    // }
+                    // else if (applicant.p2_hrevalscheduled) {
+                    //     formattedStatus = 'P2 - Awaiting for HR Evaluation';
+    
+                    //     const { error: updateError } = await supabase
+                    //         .from('applicantaccounts')
+                    //         .update({ applicantStatus: formattedStatus })
+                    //         .eq('applicantId', applicant.applicantId);
+    
+                    //     if (updateError) {
+                    //         console.error(`Error updating applicant ${applicant.applicantId} to P2 - Awaiting for HR Evaluation:`, updateError);
+                    //     }
+                    // } 
+                    // else if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
+                    //     formattedStatus = 'P2 - HR Screening Scheduled';
+    
+                    //     const { error: updateError } = await supabase
+                    //         .from('applicantaccounts')
+                    //         .update({ applicantStatus: formattedStatus })
+                    //         .eq('applicantId', applicant.applicantId);
+    
+                    //     if (updateError) {
+                    //         console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Screening Scheduled:`, updateError);
+                    //     }
+                    // } else {
+                    // }
+                       
+    
+                    // applicant.applicantStatus = formattedStatus;
+                     // Assign job title, department name, and user email
+    applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+    applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+    applicant.userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+    applicant.birthDate = userAccounts.find(user => user.userId === applicant.userId)?.birthDate || 'N/A';
+
+
+    // Match `userId` to fetch the corresponding initial screening assessment
+    const screeningData = screeningAssessments.find(assessment => assessment.userId === applicant.userId) || {};
+
+    // Merge the screening assessment data into the applicant object
+    applicant.initialScreeningAssessment = {
+        degreeScore: screeningData.degreeScore || 'N/A',
+        experienceScore: screeningData.experienceScore || 'N/A',
+        certificationScore: screeningData.certificationScore || 'N/A',
+        hardSkillsScore: screeningData.hardSkillsScore || 'N/A',
+        softSkillsScore: screeningData.softSkillsScore || 'N/A',
+        workSetupScore: screeningData.workSetupScore || 'N/A',
+        availabilityScore: screeningData.availabilityScore || 'N/A',
+        totalScore: screeningData.totalScore || 'N/A',
+        resume_url: screeningData.resume_url || '#',
+    };
+
+    console.log('Updated applicant details:', applicant);
+}
+
+console.log('Final applicants list:', applicants);
+
+// Render the page with updated applicants
+res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
             } catch (error) {
                 console.error('Error fetching applicants:', error);
                 res.status(500).json({ error: 'Error fetching applicants' });
             }
         } else {
+            console.warn('Unauthorized access attempt detected.');
+
             req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
             res.redirect('/staff/login');
         }
     },
+    
+    
+    updateStatusToP1AwaitingforLineManager: async function(req, res) {
+        const { userId } = req.body; // Only get userId from request body
+    
+        try {
+            // Update `applicant_initialscreening_assessment` using `userId`
+            const { error: assessmentError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .update({ isHRChosen: true })
+                .eq('userId', userId);
+            
+            if (assessmentError) throw assessmentError;
+    
+            // Update `applicantaccounts` using `userId`
+            const { error: statusError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: "P1 - Awaiting for Line Manager Action; HR PASSED" })
+                .eq('userId', userId);
+            
+            if (statusError) throw statusError;
+    
+            res.json({ success: true, message: "Applicant status updated successfully.", userId });
+        } catch (error) {
+            res.json({ success: false, message: error.message });
+        }
+    },
+    
+    // postNotifyLineManager: async function(req, res) {
+    //     console.log('Request Body:', req.body); // Log the entire request body
+    
+    //     if (req.session.user && req.session.user.userRole === 'HR') {
+    //         const { applicantId } = req.body; // Destructure the applicantId from the request body
+    
+    //         console.log('Received ApplicantId:', applicantId);
+    
+    //         // Validate applicantId
+    //         if (!applicantId) {
+    //             return res.status(400).json({ success: false, error: 'Applicant ID is required.' });
+    //         }
+    
+    //         try {
+    //             // Step 1: Get userId from applicantaccounts using applicantId
+    //             const { data: applicantData, error: applicantError } = await supabase
+    //                 .from('applicantaccounts')
+    //                 .select('userId')
+    //                 .eq('applicantId', applicantId)
+    //                 .single();
+    
+    //             if (applicantError || !applicantData) {
+    //                 console.error('Error fetching userId:', applicantError);
+    //                 return res.status(404).json({ success: false, error: 'Applicant not found.' });
+    //             }
+    
+    //             const userId = applicantData.userId;
+    //             console.log('Fetched UserId:', userId);
+    
+    //             // Step 2: Update isHRChosen in applicant_initialscreening_assessment where userId matches
+    //             const { error: updateError } = await supabase
+    //                 .from('applicant_initialscreening_assessment')
+    //                 .update({ isHRChosen: true })
+    //                 .eq('userId', userId);
+    
+    //             if (updateError) {
+    //                 console.error('Error updating isHRChosen:', updateError);
+    //                 throw updateError;
+    //             }
+    
+    //             res.status(200).json({ success: true, message: 'Line Manager notified successfully.' });
+    //         } catch (error) {
+    //             console.error('Unexpected error:', error);
+    //             return res.status(500).json({ success: false, error: 'Failed to notify Line Manager. Please try again.' });
+    //         }
+    //     } else {
+    //         req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+    //         res.redirect('/staff/login');
+    //     }
+    // },
+    
+   
+        // Controller method for viewing final results for an individual applicant
+        getFinalResults: async function (req, res) {
+            try {
+                const userId = req.session.user?.userId; // Get the current user's ID (from session)
+    
+                if (!userId) {
+                    req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
+                    return res.redirect('/staff/login');
+                }
+    
+                // Fetch the chatbot interaction history for the current applicant
+                const { data: chatbotInteractions, error: chatbotError } = await supabase
+                    .from('chatbot_interaction')
+                    .select('message, response, timestamp, applicantStage')
+                    .eq('userId', userId)
+                    .order('timestamp', { ascending: true }); // Sort by timestamp in ascending order
+    
+                if (chatbotError) {
+                    console.error('Error fetching chatbot interactions:', chatbotError);
+                    return res.status(500).send('Error fetching chatbot interactions');
+                }
+    
+                // If no interactions are found, send a relevant message to the view
+                if (chatbotInteractions.length === 0) {
+                    return res.render('staffpages/hr_pages/ats-final-results', {
+                        error: "No interactions found for your application process.",
+                        chatbotInteractions: [],
+                        message: "There were no interactions to display.",
+                        screeningQuestions: [],
+                        answers: [],
+                        weightedScores: [],
+                        result: 'fail'
+                    });
+                }
+    
+                // Fetch screening questions and calculate weighted scores
+                const screeningQuestions = req.session.screeningQuestions || [];
+                const answers = req.session.answers || [];
+                const { weightedScores, result } = await applicantController.calculateWeightedScores(
+                    answers, 
+                    req.session.selectedPosition, 
+                    screeningQuestions
+                );
+    
+                // Render the page with the chatbot interactions and additional data
+                res.render('staffpages/hr_pages/ats-final-results', {
+                    chatbotInteractions: chatbotInteractions, // Send the entire interaction history to the view
+                    message: "Here is the entire interaction with the chatbot for your application process.",
+                    error: null, // Send null for the error if no error occurs
+                    screeningQuestions: screeningQuestions,
+                    answers: answers,
+                    weightedScores: weightedScores,
+                    result: result
+                });
+    
+            } catch (error) {
+                console.error('Error fetching chatbot interaction history:', error);
+                return res.status(500).send('Error fetching chatbot interaction history');
+            }
+        },
+    
+        getEvaluationForm: async function (req, res) {
+            // Check if the user is logged in and has the 'HR' role
+            if (req.session.user && req.session.user.userRole === 'HR') {
+                const applicantId = req.params.applicantId; // Get applicantId from URL path
+        
+                try {
+                    console.log('Fetching applicant details for applicantId:', applicantId);
+        
+                    // Parse applicantId to ensure it is a valid integer
+                    const parsedApplicantId = parseInt(applicantId, 10);
+                    if (isNaN(parsedApplicantId)) {
+                        req.flash('errors', { message: 'Invalid Applicant ID format.' });
+                        return res.redirect('/hr/applicant-tracker-jobposition');
+                    }
+        
+                    // Fetch the applicant's details from the database
+                    const { data: applicant, error } = await supabase
+                        .from('applicantaccounts')
+                        .select('*')
+                        .eq('applicantId', parsedApplicantId)
+                        .single();
+        
+                    // Log the response for debugging
+                    console.log('Database Response:', { data: applicant, error });
+        
+                    // Handle database errors or missing applicant data
+                    if (error || !applicant) {
+                        console.error("Error fetching applicant details:", error || "Applicant not found.");
+                        req.flash('errors', { message: 'Could not retrieve applicant details.' });
+                        return res.redirect('/hr/applicant-tracker-jobposition');
+                    }
+        
+                    console.log('Applicant Details:', applicant); // Log the applicant details for inspection
+        
+                    // Render the evaluation form with applicant details
+                    res.render('staffpages/hr_pages/hr-eval-form', {
+                        applicantId: parsedApplicantId,
+                        applicant, // Pass the applicant details to the template
+                    });
+                } catch (err) {
+                    // Handle unexpected server errors
+                    console.error("Error loading evaluation form:", err);
+                    req.flash('errors', { message: 'Internal server error.' });
+                    return res.redirect('/hr/applicant-tracker-jobposition');
+                }
+            } else {
+                // Redirect unauthorized users to the login page
+                req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+                res.redirect('/staff/login');
+            }
+        },
+
+    /* END OF ATS CODES DIVIDER  */
+    
+    
     
     
     
@@ -1416,21 +1753,44 @@ updateJobOffer: async function(req, res) {
 
     getApplicantData: async function(req, res) {
         try {
+            // Fetch applicants with their respective screening assessment data
             const { data: applicants, error: applicantError } = await supabase
                 .from('applicantaccounts')
-                .select('lastName, firstName');
-            
+                .select(`
+                    lastName, 
+                    firstName, 
+                    birthDate, 
+                    phoneNo,
+                    userId, 
+                    applicant_initialscreening_assessment(
+                        initialScreeningId,
+                        jobId,
+                        degreeScore,
+                        experienceScore,
+                        certificationScore,
+                        hardSkillsScore,
+                        softSkillsScore,
+                        workSetupScore,
+                        availabilityScore,
+                        totalScore,
+                        totalScoreCalculatedAt,
+                         resume_url,
+                        isHRChosen,
+                        isLineManagerChosen
+                    )
+                `);
+    
             if (applicantError) throw applicantError;
-            
+    
             // Render the EJS template and pass the applicants data
             res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants });
+    
         } catch (error) {
             console.error('Error fetching applicants:', error);
             res.status(500).json({ error: 'Error fetching applicants' });
         }
     },
     
-
 
     // Add a new department on the select picker on add new staff form
     addNewDepartment: async function(req, res) {
@@ -1678,67 +2038,60 @@ updateJobOffer: async function(req, res) {
     },
 
 
-    saveEvaluationForm: async function (req, res) {
-        if (req.session.user && req.session.user.userRole === "HR") {
-            try {
-                let { applicantId, totalRating } = req.body;
+    saveEvaluation: async function (req, res) {
+        try {
+            // Destructure required fields from the request body
+            console.log("Request Body:", req.body);
+            const { applicantId, totalRating } = req.body;
     
-                // Validate that both fields are provided
-                if (!applicantId || totalRating === undefined) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Applicant ID and total rating are required.",
-                    });
-                }
-    
-                // Parse applicantId to ensure it's a number
-                applicantId = parseInt(applicantId, 10);
-                if (isNaN(applicantId)) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Invalid applicant ID format.",
-                    });
-                }
-    
-                // Save the total rating into the database
-                const { error } = await supabase
-                    .from("applicantaccounts")
-                    .update({ hrInterviewFormScore: totalRating })
-                    .match({ applicantId });
-    
-                // Handle database errors
-                if (error) {
-                    console.error("Error saving total rating:", error);
-                    return res.status(500).json({
-                        success: false,
-                        message: "Failed to save total rating.",
-                    });
-                }
-    
-                // Respond with success message
-                res.json({
-                    success: true,
-                    message: "Total assessment rating saved successfully.",
-                });
-            } catch (error) {
-                console.error("Error in saveEvaluationForm:", error);
-                res.status(500).json({
+            // Validate required inputs
+            if (!applicantId || !totalRating) {
+                return res.status(400).json({
                     success: false,
-                    message: "Internal server error.",
+                    message: "Applicant ID and total rating are required.",
                 });
             }
-        } else {
-            res.status(403).json({
+    
+            // Convert `applicantId` to an integer (if applicable)
+            const parsedApplicantId = parseInt(applicantId, 10);
+            if (isNaN(parsedApplicantId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Applicant ID format.",
+                });
+            }
+    
+            // Save the evaluation score to the database
+            const { data, error } = await supabase
+                .from("applicantaccounts")
+                .update({ hrInterviewFormScore: totalRating }) // Assuming the column exists
+                .eq("applicantId", parsedApplicantId); // Match on the applicantId column
+
+            console.log("Supabase Response:", { data, error });
+
+            // Check for Supabase errors
+            if (error) {
+                console.error("Error saving evaluation score:", data, error);
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to save the evaluation score.",
+                });
+            }
+    
+            // Respond with success
+            res.json({
+                success: true,
+                message: "Evaluation score saved successfully!",
+            });
+        } catch (err) {
+            // Handle unexpected server errors
+            console.error("Server error:", err);
+            res.status(500).json({
                 success: false,
-                message: "Unauthorized access. HR role required.",
+                message: "An unexpected error occurred while saving the evaluation.",
             });
         }
     },
-    
-    
-    
-    
-    
     
     
     
@@ -2051,82 +2404,100 @@ updateJobOffer: async function(req, res) {
     //     }
     // },        
 
-    // Controller method for viewing final results for an individual applicant
-    getFinalResults: async function (req, res) {
+    
+    
+    getOffboardingRequestsDash: async function (req, res) {
         try {
-            const userId = req.session.user?.userId; // Get the current user's ID (from session)
-
-            if (!userId) {
-                req.flash('errors', { authError: 'Unauthorized. Access only for authorized users.' });
+            const userId = req.session.user ? req.session.user.userId : null;
+    
+            if (!userId || req.session.user.userRole !== 'HR') { // Change role check to 'HR'
+                req.flash('errors', { authError: 'Unauthorized access.' });
                 return res.redirect('/staff/login');
             }
-
-            // Fetch the chatbot interaction history for the current applicant
-            const { data: chatbotInteractions, error: chatbotError } = await supabase
-                .from('chatbot_interaction')
-                .select('message, response, timestamp, applicantStage')
-                .eq('userId', userId)
-                .order('timestamp', { ascending: true }); // Sort by timestamp in ascending order
-
-            if (chatbotError) {
-                console.error('Error fetching chatbot interactions:', chatbotError);
-                return res.status(500).send('Error fetching chatbot interactions');
+    
+            // Fetch offboarding requests with userId and status
+            const { data: requests, error: requestsError } = await supabase
+                .from('offboarding_requests')
+                .select('userId, message, last_day, status, created_at')
+                .eq('status', 'Pending HR')  // Fetch only requests pending HR approval
+                .order('created_at', { ascending: false });
+    
+            if (requestsError) {
+                console.error('Error fetching offboarding requests:', requestsError);
+                req.flash('errors', { dbError: 'Failed to load offboarding requests.' });
+                return res.redirect('/hr/dashboard');
             }
-
-            // If no interactions are found, send a relevant message to the view
-            if (chatbotInteractions.length === 0) {
-                return res.render('staffpages/hr_pages/ats-final-results', {
-                    error: "No interactions found for your application process.",
-                    chatbotInteractions: [],
-                    message: "There were no interactions to display.",
-                    screeningQuestions: [],
-                    answers: [],
-                    weightedScores: [],
-                    result: 'fail'
-                });
+    
+            // Fetch employee names based on userId
+            const userIds = requests.map(request => request.userId);
+            const { data: staffAccounts, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('userId, firstName, lastName')
+                .in('userId', userIds);  // Fetch staff details for each userId
+    
+            if (staffError) {
+                console.error('Error fetching staff accounts:', staffError);
+                req.flash('errors', { dbError: 'Failed to load employee names.' });
+                return res.redirect('/hr/dashboard');
             }
-
-            // Fetch screening questions and calculate weighted scores
-            const screeningQuestions = req.session.screeningQuestions || [];
-            const answers = req.session.answers || [];
-            const { weightedScores, result } = await chatbotController.calculateWeightedScores(
-                answers, 
-                req.session.selectedPosition, 
-                screeningQuestions
-            );
-
-            // Render the page with the chatbot interactions and additional data
-            res.render('staffpages/hr_pages/ats-final-results', {
-                chatbotInteractions: chatbotInteractions, // Send the entire interaction history to the view
-                message: "Here is the entire interaction with the chatbot for your application process.",
-                error: null, // Send null for the error if no error occurs
-                screeningQuestions: screeningQuestions,
-                answers: answers,
-                weightedScores: weightedScores,
-                result: result
+    
+            // Combine offboarding requests with staff details
+            const requestsWithNames = requests.map(request => {
+                const staff = staffAccounts.find(staff => staff.userId === request.userId);
+                return {
+                    ...request,
+                    staffName: staff ? `${staff.firstName} ${staff.lastName}` : 'Unknown'
+                };
             });
-
-        } catch (error) {
-            console.error('Error fetching chatbot interaction history:', error);
-            return res.status(500).send('Error fetching chatbot interaction history');
+    
+            res.render('staffpages/hr_pages/offboardingrequest', { requests: requestsWithNames }); // Render HR-specific view
+        } catch (err) {
+            console.error('Error in getOffboardingRequestsDash controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading offboarding requests.' });
+            res.redirect('/hr/dashboard');
         }
     },
 
-    getEvaluationForm: function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/hr-eval-form');
-        } else {
-            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('staff/login');
+    getViewOffboardingRequest: async function (req, res) {
+        const userId = req.params.userId; 
+    
+        if (!userId) {
+            return res.redirect('/staff/login'); 
         }
-    },
-
-    getOffboardingRequest: function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            res.render('staffpages/hr_pages/offboardingrequest');
-        } else {
-            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('staff/login');
+    
+        try {
+            const { data: requests, error } = await supabase
+                .from('offboarding_requests')
+                .select('requestId, message, last_day, status')  // Include status if needed
+                .eq('userId', userId)  
+                .order('requestId', { ascending: false }) 
+                .limit(1);  
+    
+            if (error) {
+                console.error('Error fetching offboarding request:', error);
+                return res.redirect('/hr/dashboard');
+            }
+    
+            if (!requests || requests.length === 0) {
+                console.log('No offboarding request found for userId:', userId);
+                return res.redirect('/hr/dashboard');
+            }
+    
+            // Fetch staff details
+            const { data: staff } = await supabase
+                .from('staffaccounts')
+                .select('firstName, lastName')
+                .eq('userId', userId)
+                .single();
+    
+            res.render('staffpages/hr_pages/viewoffboardingrequest', {
+                request: requests[0],  
+                staffName: `${staff.firstName} ${staff.lastName}`
+            });
+        } catch (err) {
+            console.error('Error in getViewOffboardingRequest controller:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading the offboarding request.' });
+            return res.redirect('/hr/dashboard');
         }
     },
     
@@ -2139,7 +2510,10 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         });
     },
+
+    
     
 };
+
 
 module.exports = hrController;

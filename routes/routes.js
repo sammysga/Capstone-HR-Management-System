@@ -5,7 +5,6 @@ const staffLoginController = require('../controllers/staffloginController');
 const hrController = require('../controllers/hrController');
 const employeeController = require('../controllers/employeeController');
 const lineManagerController = require('../controllers/lineManagerController');
-const chatbotController = require('../controllers/chatbotController');
 const fileUpload = require('express-fileupload');  // Make sure you've installed express-fileupload
 const { hr } = require('date-fns/locale');
 // Middleware to parse incoming request bodies
@@ -19,6 +18,7 @@ router.get('/applicant/signup', applicantController.getApplicantRegisterPage);
 router.post('/applicant/signup', applicantController.handleRegisterPage);
 router.get('/applicant/login', applicantController.getApplicantLogin);
 router.post('/applicant/login', applicantController.handleLoginSubmit);
+router.get('/applicant/schedule-interview', applicantController.getCalendly);
 
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
@@ -28,14 +28,15 @@ router.get('/job-details/:jobId', applicantController.getJobDetails);
 // router.get('/chatbothome', applicantController.getChatbotPage);
 router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);
 router.get('/onboarding', applicantController.getOnboarding);
+router.post('/onboarding', applicantController.postOnboarding);
 router.get('/onboarding/employee-records', applicantController.getOnboardingEmployeeRecords);
 router.get('/onboarding/osd-wait', applicantController.getOnboardingWaitOSD);
 router.get('/onboarding/objective-setting-view', applicantController.getOnboardingObjectiveSetting);
 
 // Chatbot routes
-router.get('/chatbothome', chatbotController.getChatbotPage);
-router.post('/chatbot', chatbotController.handleChatbotMessage);
-router.post('/upload', chatbotController.handleFileUpload); // Directly use the controller method for file handling
+router.get('/chatbothome', applicantController.getChatbotPage);
+router.post('/chatbothome', applicantController.handleChatbotMessage);
+router.post('/handleFileUpload', applicantController.handleFileUpload); // Directly use the controller method for file handling
 
 // Staff Log in
 router.get('/staff/login', staffLoginController.getStaffLogin);
@@ -79,13 +80,15 @@ router.get('/hr/records-performance-tracker', hrController.getRecordsPerformance
 router.get('/hr/records-performance-tracker/:userId', hrController.getRecordsPerformanceTrackerByUserId);
 router.get('/hr/view-mrf/:id', hrController.getViewMRF);
 router.post('/hr/view-mrf/:id', hrController.submitMRF);
-router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
-router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
-router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
-router.get('/hr/evaluation-form', hrController.getEvaluationForm);
+
+// router.post('/notify-line-manager', hrController.postNotifyLineManager);
+// Backend route to handle evaluation form page
+router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
+
 
 router.get('/hr/onboarding-view', hrController.getHROnboarding);
-router.get('/hr/offboarding-request', hrController.getOffboardingRequest);
+router.get('/hr/offboarding-request', hrController.getOffboardingRequestsDash);
+router.get('/hr/view-offboarding-request/:requestId', hrController.getViewOffboardingRequest);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
@@ -93,7 +96,7 @@ router.get('/logout', lineManagerController.getLogoutButton);
 // Route for updating applicant status
 router.post('/update-applicant', hrController.updateApplicantIsChosen);
 
-router.post("/saveEvaluation", hrController.saveEvaluationForm);
+router.post("/saveEvaluation", hrController.saveEvaluation);
 
 
 // Employee Routes
@@ -145,13 +148,15 @@ router.get('/employee/employeefeedbackquestionnaire/:selectedUserId', employeeCo
 // Line Manager Routes
 router.get('/linemanager/interview-bookings', lineManagerController.getInterviewBookings);
 router.get('/linemanager/interview-bookingss', lineManagerController.getInterviewBookingss);
-router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
-router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.getApplicantTrackerByJobPositions);
 
 // Staff information
 router.get('/linemanager/dashboard', lineManagerController.getLineManagerDashboard);
 router.get('/linemanager/leaverequest', lineManagerController.getLeaveRequest); // Fetch leave request
 router.post('/linemanager/leaverequest/update', lineManagerController.updateLeaveRequest); // Update leave request
+router.post('/linemanager/approve-line-manager', lineManagerController.postApproveLineManager); // Approve Line Manager Action
+
+// New route to notify Line Manager
+//router.post('/linemanager/notify', lineManagerController.notifyLineManager);
 
 router.get('/linemanager/useraccount', lineManagerController.getUserAccount);
 router.post('/linemanager/update-info', lineManagerController.updateUserInfo);
@@ -183,10 +188,24 @@ router.get('/linemanager/records-performance-tracker/:userId', lineManagerContro
 
 router.post('/linemanager/records-performance-tracker/:userId', lineManagerController.saveObjectiveSettings);
 router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.save360DegreeFeedback);
+router.post('/linemanager/offboarding/update', lineManagerController.updateOffboardingRequest);
 
 // router.get('/linemanager/records-performance-tracker/stepper/:quarter', lineManagerController.getQuarterStepper);
 
+// notification Line Manager
+router.get('/staff/managerdashboard', lineManagerController.getLineManagerNotifications);
 
+
+
+/* ORDER OF ATS CODES  */ 
+router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
+router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
+router.post('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', hrController.updateStatusToP1AwaitingforLineManager);
+router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
+
+router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
+router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.getApplicantTrackerByJobPositions);
+router.post('/linemanager/applicant-tracker-jobposition/P1LineManagerPassed', lineManagerController.updateP1LineManagerPassed);
 
 module.exports = router; 
 

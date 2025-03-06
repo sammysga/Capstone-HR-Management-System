@@ -4,66 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Offboarding Request</title>
-    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css"> 
+    <link rel="stylesheet" href="/css/linemanager.css"> 
     <style>
-        /* Styles for Resignation Title */
-        .main-content {
-            margin-left: 290px;
-        }
-        .account-info-header {
-            margin-top: 40px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #059ca4;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        .form-group textarea {
-            resize: none;
-            height: 150px;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            border-color: #059ca4;
-            outline: none;
-        }
-
-        /* Button Styling */
-        .update-password-btn, .offboarding-btn {
-            background-color: #124A5C;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .update-password-btn:hover, .offboarding-btn:hover {
-            background-color: #059ca4;
-        }
-
+        .main-content { margin-left: 290px; }
+        .account-info-header { margin-top: 40px; font-size: 1.5rem; font-weight: bold; color: #059ca4; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #555; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        .form-group textarea { resize: none; height: 150px; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #059ca4; outline: none; }
+        .offboarding-btn { background-color: #124A5C; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s ease; }
+        .offboarding-btn:hover { background-color: #059ca4; }
     </style>
 </head>
 <body>
@@ -82,18 +34,25 @@
                     <label for="message">Message:</label>
                     <textarea id="message" name="message" readonly required><%= request.message %></textarea>
                 </div>
-
                 <div class="form-group">
                     <label for="lastDay">Preferred Last Day:</label>
                     <input type="text" id="lastDay" name="lastDay" value="<%= new Date(request.last_day).toLocaleDateString() %>" disabled required>
                 </div>
-
+                <div class="form-group">
+                    <label for="newLastDay">Proposed Last Day (Optional):</label>
+                    <input type="date" id="newLastDay" name="newLastDay">
+                </div>
                 <div class="form-group">
                     <label for="notesToHR">Notes to HR:</label>
                     <textarea id="notesToHR" name="notesToHR"></textarea>
                 </div>
 
-                <button type="submit" class="offboarding-btn">Approve</button>
+                <button type="button" class="offboarding-btn" id="approveAsIs" data-userid="<%= request.userId %>" data-requestid="<%= request.requestId %>">
+                    Approve as is
+                </button>
+                <button type="button" class="offboarding-btn" id="proposeNewDate" data-userid="<%= request.userId %>" data-requestid="<%= request.requestId %>">
+                    Propose New Last Day
+                </button>
             </form>
         <% } else { %>
             <p>No offboarding request found for this user.</p>
@@ -101,49 +60,58 @@
     </div>
 
     <script>
-        // JavaScript for form validation
-        document.getElementById('resignationForm').addEventListener('submit', function(event) {
+        document.getElementById('approveAsIs').addEventListener('click', function(event) {
+            event.preventDefault();
+            submitForm(false, this.getAttribute('data-userid'));
+        });
+
+        document.getElementById('proposeNewDate').addEventListener('click', function(event) {
+            event.preventDefault();
+            submitForm(true, this.getAttribute('data-userid'));
+        });
+
+        function submitForm(withNewDate, userId) {
+            const requestId = document.getElementById(withNewDate ? 'proposeNewDate' : 'approveAsIs').getAttribute('data-requestid');
             const notesToHR = document.getElementById('notesToHR').value.trim();
+            const newLastDay = document.getElementById('newLastDay').value;
 
             if (!notesToHR) {
-                alert('Please fill out Notes to HR before submitting.');
-                event.preventDefault(); // Prevent form submission
-            } else {
-                alert('Approval/Disapproval successful!');
+                alert('Please provide notes to HR.');
+                return;
             }
-        });
 
-        // Existing sidebar JavaScript functionality
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
+            const action = withNewDate ? 'proposeNewDate' : 'approveAsIs';
 
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
+            const requestData = {
+                requestId: requestId, 
+                action: action, 
+                reason: notesToHR, 
+                newLastDay: newLastDay 
+            };
+
+            console.log("Submitting data:", requestData); 
+
+            fetch(`/linemanager/offboarding/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; }); 
                 }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Response received:", data); // Debugging line
+                alert(data.message);
+                window.location.href = '/linemanager/offboarding-requests';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message || 'Something went wrong.');
             });
-        });
-
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault();
-                const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl;
-            });
-        });
+        }
     </script>
 </body>
 </html>
