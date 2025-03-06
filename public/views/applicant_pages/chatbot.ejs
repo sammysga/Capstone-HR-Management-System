@@ -111,271 +111,418 @@
       
 
     </div>
-
     <script>
-let screeningQuestions = [];
-let currentQuestionIndex = 0;
+        let screeningQuestions = [];
+        let currentQuestionIndex = 0;
 
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("Page loaded. Initializing chat...");
+            loadChatHistory();
 
-        document.getElementById('send-button').addEventListener('click', () => {
-        const inputField = document.getElementById('user-input');
-        const userInput = inputField.value.trim();
-        console.log('User  input:', userInput);
-        if (userInput) {
-            console.log('Adding user message to chat:', userInput);
-            addMessage('You', userInput);
-            inputField.value = '';
-            sendMessage(userInput);
-        } else {
-            console.log('Input is empty.');
-        }
-    });
-    async function sendMessage(message) {
-    console.log('Sending message:', message);
-    try {
-        const response = await fetch('/chatbot', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message }),
-        });
-
-        if (!response.ok) throw new Error("Failed to send message");
-
-        const data = await response.json();
-        console.log('Response from server:', data); // Debug response
-
-        // Store the questions and reset the index if they are provided
-        if (data.response.questions) {
-            screeningQuestions = data.response.questions;
-            currentQuestionIndex = 0; // Reset to the first question
-        }
-
-        displayBotResponse(data.response);
-
-        //TODO: Add logic on saving the yes or no on supabase
-    } catch (error) {
-        console.error("Error sending message:", error);
-        addMessage("Bot", "There was an error sending your message. Please try again later.");
-    }
-}
-
-    function addMessage(sender, message) {
-        console.log(`Adding message from ${sender}:`, message);
-        const chatMessages = document.getElementById('chat-messages');
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', sender === 'You' ? 'user-message' : 'bot-message');
-        messageDiv.textContent = message;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    async function uploadFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-        const response = await fetch('/handleFileUpload', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (!response.ok) throw new Error("Failed to upload file");
-
-        const fileUrl = await response.text(); // Assuming the server responds with the file URL
-        addMessage('Bot', "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.");
-
-        console.log('File uploaded successfully. File URL:', fileUrl);
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        addMessage('Bot', 'Error uploading file. Please try again.');
-    }
-}
-
-
-        function showFileUpload() {
-            document.getElementById('fileUpload').click();
-        }
-
-    function displayInitialMessage(initialResponse) {
-    console.log('Displaying initial message:', initialResponse);
-    const chatMessages = document.getElementById('chat-messages');
-    const responseLines = initialResponse.split('\n');
-
-    responseLines.forEach(line => {
-        if (line.startsWith('-')) {
-            const button = document.createElement('button');
-            button.innerText = line.slice(2);
-            button.onclick = () => {
-                console.log('Button clicked:', button.innerText);
-                addMessage('You', button.innerText);
-                sendMessage(button.innerText);
-            }; 
-            button.classList.add('job-button');
-            chatMessages.appendChild(button);
-        } else {
-            const textNode = document.createElement('div');
-            textNode.classList.add('message', 'bot-message');
-            textNode.innerText = line;
-            chatMessages.appendChild(textNode);
-        }
-    });
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function displayBotResponse(response) {
-    console.log('Bot response:', response);
-    const chatMessages = document.getElementById('chat-messages');
-
-    // Check if response is an object with text and buttons
-    if (typeof response === 'object' && response.text) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', 'bot-message');
-        messageDiv.innerText = response.text; // Display the question text
-        chatMessages.appendChild(messageDiv);
-
-        // Create buttons if they exist
-        if (response.buttons && response.buttons.length) {
-            response.buttons.forEach(button => {
-                if (button.type === 'file_upload') {
-                    // Handle file upload button
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'file';
-                    fileInput.style.display = 'none'; // Hide the file input
-
-                    const uploadButton = document.createElement('button');
-                    uploadButton.innerText = button.text;
-                    uploadButton.onclick = () => {
-                        fileInput.click(); // Trigger file input click
-                    };
-                    uploadButton.classList.add('job-button');
-
-                    fileInput.onchange = async (event) => {
-                        const file = event.target.files[0];
-                        if (!file) {
-                            addMessage('Bot', 'No file selected. Please try again.');
-                            return;
-                        }
-
-                        const formData = new FormData();
-                        formData.append('file', file);
-
-                        try {
-                            const response = await fetch('/handleFileUpload', {
-                                method: 'POST',
-                                body: formData,
-                            });
-
-                            if (response.ok) {
-                                const fileUrl = await response.text();
-                                addMessage('Bot', `File uploaded successfully! File URL: ${fileUrl}`);
-                            } else {
-                                addMessage('Bot', 'Error uploading file. Please try again.');
-                            }
-                        } catch (error) {
-                            console.error('File upload error:', error);
-                            addMessage('Bot', 'An unexpected error occurred while uploading the file.');
-                        }
-                    };
-
-                    chatMessages.appendChild(uploadButton);
-                    chatMessages.appendChild(fileInput); // Append file input to DOM for functionality
-                } else {
-                    // Handle regular buttons
-                    const btn = document.createElement('button');
-                    btn.innerText = button.text;
-                    btn.onclick = async () => {
-                        console.log('Button clicked:', button.text);
-                        addMessage('You', button.text);
-                        await sendMessage(button.text); // Send the button text as the user's response
-                    };
-                    btn.classList.add('job-button');
-                    chatMessages.appendChild(btn);
+            document.getElementById("send-button").addEventListener("click", handleUserInput);
+            document.getElementById("user-input").addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    handleUserInput();
                 }
             });
-        }
-    } else {
-        // Handle case where response is a string
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', 'bot-message');
-        messageDiv.innerText = response; // Fallback for string responses
-        chatMessages.appendChild(messageDiv);
-    }
 
-    chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
-}
-
-
-        // if (response.buttons && response.buttons.length && response.text !== "Thank you for completing the screening process.") {
-        //     response.buttons.forEach(button => {
-        //         const btn = document.createElement('button');
-        //         btn.innerText = button.text;
-        //         btn.onclick = async () => {
-        //             console.log('Button clicked:', button.text);
-        //             addMessage('You', button.text);
-        //             // Send the answer to the server
-        //             await sendMessage(button.text);
-        //             // No need to call handleNextQuestion here
-        //         };
-        //         btn.classList.add('job-button');
-        //         chatMessages.appendChild(btn);
-        //     });
-        // }
-//     } else {
-//         // Handle case where response is a string
-//         const messageDiv = document.createElement('div');
-//         messageDiv.classList.add('message', 'bot-message');
-//         messageDiv.innerText = response; // Fallback for string responses
-//         chatMessages.appendChild(messageDiv);
-//     }
-
-//     chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
-// }
-async function handleNextQuestion() {
-    // Check if there are more questions
-    if (currentQuestionIndex + 1 < screeningQuestions.length) {
-        currentQuestionIndex++; // Move to the next question
-        const nextQuestion = screeningQuestions[currentQuestionIndex];
-        
-        // Construct the bot response for the next question
-        const botResponse = {
-            text: nextQuestion.text,
-            buttons: nextQuestion.buttons
-        };
-        
-        // Display the next question
-        displayBotResponse(botResponse);
-    } else {
-        // Handle the end of the screening questions
-        addMessage("Bot", "Thank you for completing the screening process.");
-        // Optionally, you can redirect to another part of the application or provide further instructions.
-    }
-}
-    // function handleAnswer(answerValue) {
-    //     console.log('Handling answer:', answerValue);
-    //     // Send the answer back to the backend
-    //     fetch('/submit-answer', {
-    //         method: 'POST',
-    //         headers: { 'Content-Type': 'application/json' },
-    //         body: JSON.stringify({ answer: answerValue })
-    //     }).then(response => response.json()).then(data => {
-    //         if (data.nextQuestion) {
-    //             displayQuestion(data.nextQuestion);
-    //         } else {
-    //             alert(data.finalMessage);
-    //         }
-    //     }).catch(err => console.error('Error submitting answer:', err));
-    // }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const initialResponse = "<%= initialResponse %>";
-            displayInitialMessage(initialResponse);
-            console.log('Initial response being displayed:', initialResponse);
+            fetchInitialResponse();
         });
+
+        function handleUserInput() {
+            const inputField = document.getElementById("user-input");
+            const userInput = inputField.value.trim();
+
+            if (!userInput) {
+                console.log("Input is empty.");
+                return;
+            }
+
+            console.log("User  input:", userInput);
+            addMessage("You", userInput);
+            inputField.value = "";
+
+            sendMessage(userInput);
+        }
+
+        async function sendMessage(message) {
+            try {
+                const response = await fetch("/chatbothome", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message }),
+                });
+
+                if (!response.ok) throw new Error("Failed to send message");
+
+                const data = await response.json();
+                console.log("Response from server:", data);
+
+                // Display the entire chat history
+                if (data.chatHistory) {
+                    data.chatHistory.forEach(chat => {
+                        if (chat.sender === 'user') {
+                            addMessage("You", chat.message);
+                        } else if (chat.sender === 'bot') {
+                            try {
+                                const botMessage = JSON.parse(chat.message);
+                                displayBotResponse(botMessage);
+                            } catch (error) {
+                                addMessage("Bot", chat.message);
+                            }
+                        }
+                    });
+                }
+
+                // Handle the latest bot response
+                if (data.response) {
+                    displayBotResponse(data.response);
+                }
+            } catch (error) {
+                console.error("Error sending message:", error);
+                addMessage("Bot", "There was an error sending your message. Please try again.");
+            }
+        }
+
+        function addMessage(sender, message) {
+            console.log(`Adding message from ${sender}:`, message);
+            const chatMessages = document.getElementById("chat-messages");
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", sender === "You" ? "user-message" : "bot-message");
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            saveChatHistory(sender, message);
+        }
+
+        function saveChatHistory(sender, message) {
+            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+            chatHistory.push({ sender, message });
+            localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+        }
+
+        function loadChatHistory() {
+            const chatMessages = document.getElementById("chat-messages");
+            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+
+            chatHistory.forEach((chat) => {
+                addMessage(chat.sender, chat.message);
+            });
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function uploadFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            console.log("Uploading file:", file.name);
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/handleFileUpload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error("Failed to upload file");
+
+                const fileUrl = await response.text();
+                addMessage(
+                    "Bot",
+                    "Thank you for answering. We have forwarded your resume to the department's Line Manager. We will notify you once a decision has been made."
+                );
+
+                console.log("File uploaded successfully. File URL:", fileUrl);
+            } catch (error) {
+                console.error("Error uploading file:", error);
+                addMessage("Bot", "Error uploading file. Please try again.");
+            }
+        }
+
+        function displayBotResponse(response) {
+            console.log("Bot response:", response);
+            const chatMessages = document.getElementById("chat-messages");
+
+            if (typeof response === "object" && response.text) {
+                addMessage("Bot", response.text);
+
+                if (response.buttons && response.buttons.length) {
+                    response.buttons.forEach((button) => {
+                        const btn = document.createElement("button");
+                        btn.innerText = button.text;
+                        btn.classList.add("job-button");
+
+                        if (button.type === "file_upload") {
+                            btn.onclick = () => document.getElementById("fileUpload").click();
+                        } else {
+                            btn.onclick = async () => {
+                                console.log("Button clicked:", button.text);
+                                addMessage("You", button.text);
+                                await sendMessage(button.text);
+                            };
+                        }
+
+                        chatMessages.appendChild(btn);
+                    });
+                }
+            } else {
+                addMessage("Bot", response);
+            }
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function fetchInitialResponse() {
+            console.log("Fetching initial response...");
+            try {
+                const response = await fetch("/chatbothome", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: "init" }),
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch initial response");
+
+                const data = await response.json();
+                console.log("Initial response:", data);
+
+                // Check if data.response is an array
+                if (Array.isArray(data.chatHistory)) {
+                    data.chatHistory.forEach(chat => {
+                        if (chat.sender === 'user') {
+                            addMessage("You", chat.message);
+                        } else if (chat.sender === 'bot') {
+                            try {
+                                const botMessage = JSON.parse(chat.message);
+                                displayBotResponse(botMessage);
+                            } catch (error) {
+                                addMessage("Bot", chat.message);
+                            }
+                        }
+                    });
+                } else {
+                    // Handle the case where data.response is not an array
+                    addMessage("Bot", data.response || "Hi! Welcome to Prime Infrastructure's recruitment portal. What position are you going to apply for?");
+                }
+            } catch (error) {
+                console.error("Error fetching initial response:", error);
+                addMessage("Bot", "Welcome! How can I assist you today?");
+            }
+        }
     </script>
 </body>
 </html>
+
+
+    <!-- ARCHIVED UNFINISHED SESSIONS -->
+    <!-- <script>
+        let screeningQuestions = [];
+        let currentQuestionIndex = 0;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("Page loaded. Initializing chat...");
+            loadChatHistory();
+
+            document.getElementById("send-button").addEventListener("click", handleUserInput);
+            document.getElementById("user-input").addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    handleUserInput();
+                }
+            });
+
+            fetchInitialResponse();
+        });
+
+
+        function handleUserInput() {
+            const inputField = document.getElementById("user-input");
+            const userInput = inputField.value.trim();
+
+            if (!userInput) {
+                console.log("Input is empty.");
+                return;
+            }
+
+            console.log("User  input:", userInput);
+            addMessage("You", userInput);
+            inputField.value = "";
+
+            sendMessage(userInput);
+        }
+
+
+        async function sendMessage(message) {
+            try {
+                const response = await fetch("/chatbothome", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message }),
+                });
+
+                if (!response.ok) throw new Error("Failed to send message");
+
+                const data = await response.json();
+                console.log("Response from server:", data);
+
+                // Display the entire chat history
+                if (data.chatHistory) {
+                    data.chatHistory.forEach(chat => {
+                        if (chat.sender === 'user') {
+                            addMessage("You", chat.message);
+                        } else if (chat.sender === 'bot') {
+                            try {
+                                const botMessage = JSON.parse(chat.message);
+                                displayBotResponse(botMessage);
+                            } catch (error) {
+                                addMessage("Bot", chat.message);
+                            }
+                        }
+                    });
+                }
+
+                // Handle the latest bot response
+                if (data.response) {
+                    displayBotResponse(data.response);
+                }
+            } catch (error) {
+                console.error("Error sending message:", error);
+                addMessage("Bot", "There was an error sending your message. Please try again.");
+            }
+        }
+
+        function addMessage(sender, message) {
+            console.log(`Adding message from ${sender}:`, message);
+            const chatMessages = document.getElementById("chat-messages");
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", sender === "You" ? "user-message" : "bot-message");
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            saveChatHistory(sender, message);
+        }
+
+        function saveChatHistory(sender, message) {
+            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+            chatHistory.push({ sender, message });
+            localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+        }
+
+
+        function loadChatHistory() {
+            const chatMessages = document.getElementById("chat-messages");
+            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+
+            chatHistory.forEach((chat) => {
+                addMessage(chat.sender, chat.message);
+            });
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+
+        async function uploadFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            console.log("Uploading file:", file.name);
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/handleFileUpload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error("Failed to upload file");
+
+                const fileUrl = await response.text();
+                addMessage(
+                    "Bot",
+                    "Thank you for answering. We have forwarded your resume to the department's Line Manager. We will notify you once a decision has been made."
+                );
+
+                console.log("File uploaded successfully. File URL:", fileUrl);
+            } catch (error) {
+                console.error("Error uploading file:", error);
+                addMessage("Bot", "Error uploading file. Please try again.");
+            }
+        }
+
+        function displayBotResponse(response) {
+    console.log("Bot response:", response);
+    const chatMessages = document.getElementById("chat-messages");
+
+    if (typeof response === "object" && response.text) {
+        addMessage("Bot", response.text);
+
+        if (response.buttons && response.buttons.length) {
+            response.buttons.forEach((button) => {
+                const btn = document.createElement("button");
+                btn.innerText = button.text;
+                btn.classList.add("job-button");
+
+                if (button.type === "file_upload") {
+                    btn.onclick = () => document.getElementById("fileUpload").click();
+                } else {
+                    btn.onclick = async () => {
+                        console.log("Button clicked:", button.text);
+                        addMessage("You", button.text);
+                        await sendMessage(button.text);
+                    };
+                }
+
+                chatMessages.appendChild(btn);
+            });
+        }
+    } else {
+        addMessage("Bot", response);
+    }
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+        async function handleNextQuestion() {
+            if (currentQuestionIndex + 1 < screeningQuestions.length) {
+                currentQuestionIndex++;
+                displayBotResponse({
+                    text: screeningQuestions[currentQuestionIndex].text,
+                    buttons: screeningQuestions[currentQuestionIndex].buttons,
+                });
+            } else {
+                addMessage("Bot", "Thank you for completing the screening process.");
+            }
+        }
+
+        async function fetchInitialResponse() {
+            console.log("Fetching initial response...");
+            try {
+                const response = await fetch("/chatbothome", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: "init" }),
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch initial response");
+
+                const data = await response.json();
+                console.log("Initial response:", data);
+
+                // Check if data.response is an array
+                if (Array.isArray(data.response)) {
+                    data.response.forEach(chat => {
+                        addMessage(chat.sender === 'user' ? "You" : "Bot", chat.message);
+                    });
+                } else {
+                    // Handle the case where data.response is not an array
+                    addMessage("Bot", data.response || "Hi! Welcome to Prime Infrastructure's recruitment portal. What position are you going to apply for?");
+                }
+            } catch (error) {
+                console.error("Error fetching initial response:", error);
+                addMessage("Bot", "Welcome! How can I assist you today?");
+            }
+        }
+    </script> -->
