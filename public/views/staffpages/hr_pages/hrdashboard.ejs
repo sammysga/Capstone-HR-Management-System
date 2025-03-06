@@ -126,6 +126,7 @@
                         <th>Job Position</th>
                         <th>Time In</th>
                         <th>Time Out</th>
+                        <th>Location</th>
                         <th>Active Working Hours</th>
                     </tr>
                 </thead>
@@ -140,6 +141,7 @@
                                 <td><%= log.jobTitle %></td>
                                 <td><%= log.timeIn %></td>
                                 <td><%= log.timeOut %></td>
+                                <td><%= log.city || 'Unknown' %></td>
                                 <td><%= log.activeWorkingHours %></td>
                             </tr>
                         <% }); %>

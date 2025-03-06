@@ -324,14 +324,15 @@
         </header>
 
         <form id="interview-form" method="POST" action="/saveEvaluation">
-            <input type="hidden" id="applicant-id" name="applicantId" value=""> <!-- Hidden field for applicantId -->
+            <input type="hidden" id="applicant-id" name="applicantId" value="<%= applicantId %>">
         
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
-                <input type="text" id="candidate-name" name="candidateName" placeholder="Henry, Arthur" readonly>
-        
-                <label for="position-title">Position Title:</label>
-                <input type="text" id="position-title" name="positionTitle" placeholder="Financial Analyst" readonly>
+<input type="text" id="candidate-name" name="candidateName" value="<%= applicant?.firstName %> <%= applicant?.lastName %>" readonly>
+
+<label for="position-title">Position Title:</label>
+<input type="text" id="position-title" name="positionTitle" value="<%= applicant?.jobTitle %>" readonly>
+
         
                 <label for="position-department">Position Department:</label>
                 <input type="text" id="position-department" name="positionDepartment" placeholder="Finance" readonly>
@@ -611,55 +612,48 @@
 
     <script>
 
-         // Extract the applicantId from the URL query string
-    const urlParams = new URLSearchParams(window.location.search);
-    const applicantId = urlParams.get('applicantId');
+document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const applicantId = urlParams.get("applicantId");
 
-    // Validate and display the applicantId
-    if (!applicantId) {
-        alert("Applicant ID is missing.");
-        // Optionally, redirect back to the previous page
-        window.location.href = '/previousPage'; // Replace with actual previous page URL
-    } else {
-        console.log("Applicant ID:", applicantId);
-        // Populate the hidden input field
-        document.getElementById('applicant-id').value = applicantId;
-    }
-
-document.querySelector(".save-submit").addEventListener("click", async function (event) {
-        event.preventDefault(); // Prevent default form submission behavior
-
-        // Retrieve the score
-        const totalRating = document.getElementById("total-rating").textContent;
-
-        // Replace with the applicant's unique ID or identifier
-        const applicantId = "APPLICANT_ID"; 
-
-        try {
-            // Send the score to the backend
-            const response = await fetch("/save-total-rating", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    applicantId,
-                    totalRating,
-                }),
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert("Total assessment rating saved successfully!");
-            } else {
-                alert("Failed to save the score. Please try again.");
-            }
-        } catch (error) {
-            console.error("Error saving the score:", error);
-            alert("An error occurred while saving the score.");
+        if (applicantId) {
+            document.getElementById("applicant-id").value = applicantId;
+        } else {
+            console.error("Applicant ID not found in URL.");
         }
     });
+
+    document.querySelector(".save-submit").addEventListener("click", async function (event) {
+    event.preventDefault();
+
+    const applicantId = document.getElementById("applicant-id").value;
+    const totalRating = parseFloat(document.getElementById("total-rating").textContent);
+    console.log("Sending applicantId:", applicantId, "Total Rating(parsed):", totalRating); // for debugging
+
+    try {
+        const response = await fetch("/saveEvaluation", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ applicantId, totalRating }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert("Total assessment rating saved successfully!");
+            window.location.href = "/hr/applicant-tracker"; // Redirect to a success page or elsewhere
+        } else {
+            alert("Failed to save the score. Please try again.");
+        }
+    } catch (error) {
+        console.error("Error saving the score:", error);
+        alert("An error occurred while saving the score.");
+    }
+});
+
+
 
         // Toggle active class for sidebar links
     document.querySelectorAll('.sidebar ul li a').forEach(link => {

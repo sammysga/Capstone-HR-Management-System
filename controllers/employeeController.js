@@ -762,40 +762,59 @@ postEmployeeOffboarding: async function(req, res) {
             return res.redirect('/staff/login');
         }
 
-        const { message, lastDay } = req.body;
+        const { message, lastDay, reason, offboardingType, yearsOfService, earlyRetirement } = req.body;
 
-        if (!message || !lastDay) {
+        // Validate required fields based on the offboarding type
+        if (!message || !lastDay || !offboardingType) {
             req.flash('errors', { formError: 'Please fill in all required fields.' });
-            return res.redirect('employee/employeeoffboarding');
+            return res.redirect('/employee/employeeoffboarding');
         }
 
-        // Insert details to db
+        if (offboardingType === 'Resignation' && !reason) {
+            req.flash('errors', { formError: 'Please provide a reason for resignation.' });
+            return res.redirect('/employee/employeeoffboarding');
+        }
+
+        if (offboardingType === 'Retirement' && (yearsOfService === undefined || earlyRetirement === undefined)) {
+            req.flash('errors', { formError: 'Please provide years of service and early retirement status.' });
+            return res.redirect('/employee/employeeoffboarding');
+        }
+
+        // Convert earlyRetirement to a boolean if needed
+        const earlyRetirementBoolean = earlyRetirement === 'Yes';
+
+        const offboardingData = {
+            userId,
+            message,
+            last_day: lastDay,
+            status: 'Pending Line Manager', // Default status
+            reason: offboardingType === 'Resignation' ? reason : null,
+            offboardingType,
+            yearsOfService: offboardingType === 'Retirement' ? yearsOfService : null,
+            earlyRetirement: offboardingType === 'Retirement' ? earlyRetirementBoolean : null
+        };
+
+        // Insert into the database
         const { data: offboarding, error: insertError } = await supabase
             .from('offboarding_requests')
-            .insert([
-                {
-                    userId,
-                    message,
-                    last_day: lastDay,
-                    status: 'Pending', // Default status
-                },
-            ])
+            .insert([offboardingData])
+            .select('*')
             .single();
 
-            console.log(req.body);
-        
+        console.log('Insert Result:', offboarding);
+
         if (insertError) {
             console.error('Error inserting offboarding request:', insertError);
-            req.flash('errors', { dbError: 'Failed to save resignation details.' });
-            return res.redirect('employee/employeeoffboarding');
+            req.flash('errors', { dbError: 'Failed to save offboarding details.' });
+            return res.redirect('/employee/employeeoffboarding');
         }
 
-        req.flash('success', 'Your resignation request has been submitted successfully.');
-        res.redirect('/employee/employeepersinfocareerprog');
+        req.flash('success', 'Your offboarding request has been submitted successfully.');
+        res.redirect('/employee/useracc');
     } catch (err) {
         console.error('Error in postEmployeeOffboarding controller:', err);
         req.flash('errors', { dbError: 'An error occurred while processing the request.' });
-        res.redirect('employee/employeeoffboarding');
+        res.redirect('/employee/employeeoffboarding');
     }
 },
 
@@ -1126,14 +1145,17 @@ getAttendance: async function (req, res) {
         return res.status(401).json({ message: 'Unauthorized access' });
     }
 
+    const userId = req.session.user.userId;
+
     try {
         // Fetch user details associated with the userId
         const { data: userData, error: fetchError } = await supabase
             .from('staffaccounts')
             .select('staffId, departmentId, firstName, lastName')
-            .eq('userId', req.session.user.userId)
+            .eq('userId', userId)
             .single();
 
+        console.log('User Data:', userData);
         if (fetchError) {
             console.error('Fetch Error:', fetchError);
             return res.status(404).json({ message: 'User not found', error: fetchError.message });
@@ -1148,21 +1170,24 @@ getAttendance: async function (req, res) {
         // Fetch attendance records for the user by userId
         const { data: attendanceRecords, error: attendanceError } = await supabase
             .from('attendance')
-            .select('attendanceDate, attendanceTime, attendanceAction')
-            .eq('userId', req.session.user.userId) // Changed to filter by userId
-            .order('attendanceDate', { ascending: false }); // Order by date descending
+            .select('*')
+            .eq('userId', userId)
+            .order('attendanceDate', { ascending: false });
 
         if (attendanceError) {
             console.error('Attendance Fetch Error:', attendanceError);
-            throw attendanceError;
+            return res.status(500).json({ message: 'Error fetching attendance records', error: attendanceError.message });
         }
+
+        // Log the fetched attendance records
+        console.log('Attendance Records:', attendanceRecords);
 
         // Get today's date and current time
         const todayDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         const currentTime = new Date().toTimeString().split(' ')[0]; // HH:mm:ss
 
         // Render the attendance page with the attendance records and user details
-        res.render('staffpages/employee_pages/employeeattendance', {
+        return res.render('staffpages/employee_pages/employeeattendance', {
             user: {
                 staffId,
                 departmentId,
@@ -1170,17 +1195,18 @@ getAttendance: async function (req, res) {
                 lastName
             },
             records: attendanceRecords || [],
-            todayDate, // Pass the todayDate
-            currentTime, // Pass the currentTime
-            message: 'Attendance records retrieved successfully' // You can include other data as needed
+            todayDate,
+            currentTime,
+            message: 'Attendance records retrieved successfully'
         });
 
     } catch (error) {
         // Log and respond with error in case of failure
         console.error('Error retrieving attendance records:', error);
-        res.status(500).json({ message: 'Internal server error', error: error.message });
+        return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 },
+
 postAttendance: async function (req, res) {
     // Check if the user is authenticated
     if (!req.session.user || !req.session.user.userId) {
@@ -1188,18 +1214,18 @@ postAttendance: async function (req, res) {
     }
 
     // Destructure the relevant fields from the request body
-    const { attendanceAction, attendanceTime, selectedDate } = req.body; // Include selectedDate if available
+    const { attendanceAction, attendanceTime, selectedDate, latitude, longitude, city } = req.body; // Include selectedDate if available
 
     // Ensure mandatory fields are provided
     if (!attendanceAction || !attendanceTime) {
-        return res.status(400).json({ message: 'Attendance action and time are required.' });
+        return res.status(400).json({ message: 'Attendance action and time, and location are required.' });
     }
 
     try {
         // Fetch staffId and user details associated with the userId
         const { data: userData, error: fetchError } = await supabase
             .from('staffaccounts')
-            .select('staffId, firstName, lastName')
+            .select('staffId, firstName, lastName, officeLatitude, officeLongitude')
             .eq('userId', req.session.user.userId)
             .single();
 
@@ -1207,15 +1233,26 @@ postAttendance: async function (req, res) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const { staffId, firstName, lastName } = userData;
+        const { staffId, firstName, lastName, officeLatitude, officeLongitude } = userData;
+
+        // Function to calculate distance between two coordinates
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const toRad = x => x * Math.PI / 180;
+            const R = 6371; // Radius of Earth in km
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c * 1000; // Convert to meters
+        }
 
         // Determine the attendance date (use selectedDate or default to yesterday's date)
         const currentDate = new Date();
-        const yesterday = new Date(currentDate);
-        yesterday.setDate(currentDate.getDate() - 1);  // Set the date to yesterday
+        const today = currentDate.toISOString().split('T')[0];
 
-        // If no selectedDate is provided, default to yesterday's date
-        const attendanceDate = selectedDate || yesterday.toISOString().split('T')[0]; // Use selectedDate or yesterday if not provided
+        const attendanceDate = selectedDate || today; // Use selectedDate or yesterday if not provided
 
         // Insert the attendance record into the attendance table using userId
         const { error: insertError } = await supabase
@@ -1225,7 +1262,10 @@ postAttendance: async function (req, res) {
                     userId: req.session.user.userId,  // Add userId directly
                     attendanceDate,                   // Use selectedDate or default to yesterday
                     attendanceTime,                   // User-provided time
-                    attendanceAction                  // Action: Time In or Time Out
+                    attendanceAction,                  // Action: Time In or Time Out
+                    latitude,
+                    longitude,
+                    city
                 }
             ]);
 
@@ -1242,7 +1282,6 @@ postAttendance: async function (req, res) {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 },
-
 
 
 getViewPerformanceTimeline: function(req, res){
