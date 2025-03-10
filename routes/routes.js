@@ -19,6 +19,7 @@ router.post('/applicant/signup', applicantController.handleRegisterPage);
 router.get('/applicant/login', applicantController.getApplicantLogin);
 router.post('/applicant/login', applicantController.handleLoginSubmit);
 router.get('/applicant/schedule-interview', applicantController.getCalendly);
+router.get('/logout', applicantController.getLogoutButton);
 
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
