@@ -19,7 +19,6 @@ router.post('/applicant/signup', applicantController.handleRegisterPage);
 router.get('/applicant/login', applicantController.getApplicantLogin);
 router.post('/applicant/login', applicantController.handleLoginSubmit);
 router.get('/applicant/schedule-interview', applicantController.getCalendly);
-router.get('/logout', applicantController.getLogoutButton);
 
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
@@ -89,7 +88,10 @@ router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
 
 router.get('/hr/onboarding-view', hrController.getHROnboarding);
 router.get('/hr/offboarding-request', hrController.getOffboardingRequestsDash);
-router.get('/hr/view-offboarding-request/:requestId', hrController.getViewOffboardingRequest);
+router.get('/hr/view-offboarding-request/:userId', hrController.getViewOffboardingRequest);
+router.post('/save-checklist', hrController.saveChecklist);
+router.post('/send-clearance', hrController.sendClearanceToEmployee);
+router.get('/hr/retirement-tracker', hrController.getRetirementTracker);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);

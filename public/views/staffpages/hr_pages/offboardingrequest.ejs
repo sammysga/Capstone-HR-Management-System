@@ -61,7 +61,7 @@
             <tbody>
                 <% if (requests && requests.length > 0) { %>
                     <% requests.forEach(request => { %>
-                        <tr onclick="window.location.href='/hr/view-offboarding-request/<%= request.requestId %>';">
+                        <tr onclick="window.location.href='/hr/view-offboarding-request/<%= request.userId %>';">
                             <td><%= request.staffName %></td>
                             <td><%= request.department %></td>
                             <td><%= request.status %></td>
@@ -76,5 +76,32 @@
             </tbody>
         </table>
     </div>
+    <script>
+        // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+    </script>
 </body>
 </html>

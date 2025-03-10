@@ -2078,11 +2078,11 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
                 return res.redirect('/staff/login');
             }
     
-            // Fetch offboarding requests with userId and status
+            // Fetch pending offboarding requests
             const { data: requests, error: requestsError } = await supabase
                 .from('offboarding_requests')
-                .select('userId, message, last_day, status, created_at')
-                .eq('status', 'Pending Line Manager')  // Fetch only pending requests
+                .select('requestId, userId, message, last_day, status, created_at')
+                .eq('status', 'Pending Line Manager')
                 .order('created_at', { ascending: false });
     
             if (requestsError) {
@@ -2091,12 +2091,16 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
                 return res.redirect('/employee/dashboard');
             }
     
-            // Fetch employee names based on userId
+            if (!requests || requests.length === 0) {
+                return res.render('staffpages/linemanager_pages/linemanageroffboarding', { requests: [] });
+            }
+    
+            // Fetch employee names
             const userIds = requests.map(request => request.userId);
             const { data: staffAccounts, error: staffError } = await supabase
                 .from('staffaccounts')
                 .select('userId, firstName, lastName')
-                .in('userId', userIds);  // Fetch staff details for each userId
+                .in('userId', userIds);
     
             if (staffError) {
                 console.error('Error fetching staff accounts:', staffError);
@@ -2119,22 +2123,22 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             req.flash('errors', { dbError: 'An error occurred while loading offboarding requests.' });
             res.redirect('/employee/dashboard');
         }
-    },    
-
+    },
+    
     getViewOffboardingRequest: async function (req, res) {
-        const userId = req.params.userId; 
+        const userId = req.params.userId;
     
         if (!userId) {
-            return res.redirect('/staff/login'); 
+            return res.redirect('/staff/login');
         }
     
         try {
             const { data: requests, error } = await supabase
                 .from('offboarding_requests')
-                .select('requestId, message, last_day')  
-                .eq('userId', userId)  
-                .order('requestId', { ascending: false }) 
-                .limit(1);  
+                .select('requestId, message, last_day')
+                .eq('userId', userId)
+                .order('requestId', { ascending: false })
+                .limit(1);
     
             if (error) {
                 console.error('Error fetching offboarding request:', error);
@@ -2147,15 +2151,21 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             }
     
             // Fetch staff details
-            const { data: staff } = await supabase
+            const { data: staff, error: staffError } = await supabase
                 .from('staffaccounts')
                 .select('firstName, lastName')
                 .eq('userId', userId)
                 .single();
     
+            if (staffError) {
+                console.error('Error fetching staff details:', staffError);
+                req.flash('errors', { dbError: 'Failed to load staff details.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+    
             res.render('staffpages/linemanager_pages/viewoffboardingrequest', {
-                request: requests[0],  
-                staffName: `${staff.firstName} ${staff.lastName}`
+                request: requests[0],
+                staffName: staff ? `${staff.firstName} ${staff.lastName}` : 'Unknown'
             });
         } catch (err) {
             console.error('Error in getViewOffboardingRequest controller:', err);
@@ -2164,53 +2174,48 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
         }
     },
     
-    // Approve or Disapprove Offboarding Request
     updateOffboardingRequest: async function (req, res) {
         console.log("Received request body:", req.body);
-        const { requestId, action, reason, newLastDay } = req.body;
+        const { requestId, action, reason } = req.body;
     
         try {
-            let newStatus = '';
-            let lineManagerDecision = '';
-    
-            if (action === 'approveAsIs') {
-                newStatus = 'Pending HR'; 
-                lineManagerDecision = 'Approved';
-            } else if (action === 'proposeNewDate') {
-                newStatus = 'Pending HR'; 
-                lineManagerDecision = 'Proposed New Date';
-            } else {
+            // Only the 'acceptResignation' action exists now
+            if (action !== 'acceptResignation') {
                 return res.status(400).json({ success: false, message: 'Invalid action.' });
             }
-
+    
+            if (!reason) {
+                return res.status(400).json({ success: false, message: 'Approval notes are required.' });
+            }
+    
             const updateData = {
-                status: newStatus, 
-                line_manager_notes: reason || null, 
-                new_last_day: newLastDay || null,
-                line_manager_decision: lineManagerDecision 
+                status: 'Pending HR',  
+                line_manager_notes: reason, 
+                line_manager_decision: 'Approved',
+                accept_resignation: true
             };
     
-            console.log("Updating with data:", { updateData, requestId }); 
+            console.log("Updating with data:", { updateData, requestId });
     
             const { data, error } = await supabase
                 .from('offboarding_requests')
                 .update(updateData)
-                .eq('userId', requestId); 
+                .eq('requestId', requestId);  // Update by requestId
     
-            console.log("Supabase response:", { data, error }); 
+            console.log("Supabase response:", { data, error });
     
             if (error) {
                 console.error('Error updating offboarding request:', error);
                 return res.status(500).json({ success: false, message: 'Failed to update request status.', error: error.message });
             }
     
-            return res.status(200).json({ success: true, message: `Request ${newStatus === 'Pending HR' ? 'approved' : 'updated'} successfully.` });
+            return res.status(200).json({ success: true, message: 'Resignation accepted successfully.' });
     
         } catch (err) {
             console.error('Error in updateOffboardingRequest:', err);
             return res.status(500).json({ success: false, message: 'An error occurred while processing the request.', error: err.message });
         }
-    },
+    },    
      
     getLogoutButton: function(req, res) {
         req.session.destroy(err => {

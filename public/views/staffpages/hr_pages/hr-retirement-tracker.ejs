@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Tracker</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_page.css">
+    <style>
+        /* Styles for the retirement tracker table and button */
+        .main-content {
+            margin-left: 300px; /* Space for sidebar */
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow-x: auto;
+        }
+
+        .retirement-header {
+            color: #07ACB9;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 20px;
+            padding-left: 20px;
+        }
+
+        .staff-table-container {
+            margin-top: 10px;
+        }
+
+        .staff-table {
+            width: 100%;
+            margin-top: 10px;
+            table-layout: auto;
+            border-collapse: collapse;
+            max-width: 100%;
+            overflow-x: auto;
+            margin-left: 20px;
+        }
+
+        .staff-table th, .staff-table td {
+            padding: 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #e0e4e8;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        button {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #058b8b;
+        }
+
+    </style>
+</head>
+<body>
+
+    <%- include('../../partials/hr_partials') %>
+    <div class="main-content">
+        <h1>Retirement Tracker</h1>
+        <div id="staffTableContainer">
+            <% if (departments && Object.keys(departments).length > 0) { %>
+                <% Object.keys(departments).forEach(function(departmentName) { %>
+                    <div class="retirement-header"><%= departmentName %></div>
+                    <div class="staff-table-container">
+                        <% let department = departments[departmentName]; %>
+                        <% if (department && department.length > 0) { %>
+                            <table class="staff-table">
+                                <thead>
+                                    <tr>
+                                        <th>Last Name</th>
+                                        <th>First Name</th>
+                                        <th>Email</th>
+                                        <th>Age</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% department.forEach(function(staff) { 
+                                        // Calculate age based on birthdate
+                                        const birthDate = new Date(staff.birthDate); 
+                                        const today = new Date();
+                                        let age = today.getFullYear() - birthDate.getFullYear();
+                                        const month = today.getMonth();
+                                        if (month < birthDate.getMonth() || (month === birthDate.getMonth() && today.getDate() < birthDate.getDate())) {
+                                            age--;
+                                        }
+                                    %>
+                                        <tr>
+                                            <td><%= staff.lastName %></td>
+                                            <td><%= staff.firstName %></td>
+                                            <td><%= staff.userEmail %></td>
+                                            <td><%= age %></td>
+                                            <td>
+                                                <% if (age >= 59) { %>
+                                                    <button onclick="notifyEmployee('<%= staff.userId %>')">Notify Employee</button>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>                                
+                            </table>
+                        <% } else { %>
+                            <p>No staff members available</p>
+                        <% } %>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p>No departments available</p>
+            <% } %>
+        </div>
+    </div>
+
+    <script>
+        // Function to notify the employee when they're close to retirement age
+        function notifyEmployee(userId) {
+            if (confirm("Are you sure you want to notify this employee about their retirement?")) {
+                // Send notification to employee (this could be an email or a message)
+                fetch(`/notify-employee/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userId: userId })
+                }).then(response => {
+                    if (response.ok) {
+                        alert("Employee has been notified!");
+                    } else {
+                        alert("Failed to notify employee.");
+                    }
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>
