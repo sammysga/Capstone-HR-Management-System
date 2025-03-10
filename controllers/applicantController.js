@@ -360,7 +360,6 @@ const applicantController = {
         }
     },
     
-    // Function to render chatbot page with the initial greeting
     getChatbotPage: async function (req, res) {
         try {
             const userId = req.session.userID;
@@ -371,11 +370,10 @@ const applicantController = {
                 return res.redirect('/login');
             }
     
-            let chatData = req.session?.chatHistory || []; // Retrieve from session
+            let chatData = req.session.chatHistory || []; // Retrieve from session
             console.log('Chat Data from session:', chatData);
-            let initialResponse = "";
     
-            if (chatData.length === 0 && userId) {
+            if (chatData.length === 0) {
                 // Fetch from database if session data is missing
                 const { data: chatHistory, error } = await supabase
                     .from('chatbot_history')
@@ -405,23 +403,22 @@ const applicantController = {
     
                 try {
                     const positions = await applicantController.getJobPositionsList();
-                    initialResponse = `${initialMessage}\nHere are our current job openings:\n${positions.map(pos => `- ${pos}`).join('\n')}\nPlease select a position.`;
+                    const initialResponse = `${initialMessage}\nHere are our current job openings:\n${positions.map(pos => `- ${pos}`).join('\n')}\nPlease select a position.`;
                     chatData.push({ message: initialResponse, sender: 'bot', timestamp: new Date().toISOString() });
                     console.log('Initial Response:', initialResponse);
                 } catch (jobError) {
                     console.error("Error fetching job positions:", jobError);
-                    initialResponse = initialMessage;
-                    chatData.push({ message: initialMessage, sender: 'bot', timestamp: new Date().toISOString() });
+                    const initialResponse = initialMessage;
+                    chatData.push({ message: initialResponse, sender: 'bot', timestamp: new Date().toISOString() });
                 }
             }
     
-            res.render('applicant_pages/chatbot', { chatData, initialResponse });  // Pass initialResponse here
+            res.render('applicant_pages/chatbot', { chatData });  // Pass chatData here
         } catch (error) {
             console.error('Error rendering chatbot page:', error);
             res.status(500).send('Error loading chatbot page');
         }
     },
-    
     handleChatbotMessage: async function (req, res) {
         try {
             console.log('Start processing chatbot message');
@@ -1093,6 +1090,17 @@ getOnboardingWaitOSD: async function(req, res) {
 getOnboardingObjectiveSetting: async function(req, res) {
     res.render('applicant_pages/onboarding-object-setting', { errors: {} });
 },
+
+getLogoutButton: function(req, res) {
+    req.session.destroy(err => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+        res.redirect('/login');
+    });
+},
+
 
 
     // commented out login submit solution only for external applicants

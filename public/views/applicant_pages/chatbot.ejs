@@ -81,11 +81,29 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        #logout-button {
+            background-color: #D8D8D8; /* Bootstrap's danger color for logout */
+            color: #2385B0; /* Text color */
+    border: none; /* No border */
+    border-radius: 5px; /* Rounded corners */
+    padding: 5px 10px; /* Padding for size */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s; /* Smooth transition */
+}
+
+#logout-button:hover {
+    background-color: #2385B0; 
+    color: #D8D8D8;
+    font-weight: bold;
+}
     </style>
 </head>
 <body>
     <div class="chat-container">
-        <div class="chat-header">Chatbot</div>
+        <div class="chat-header">
+            Chatbot
+            <button id="logout-button" style="float: right; background-color: #dc3545; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer;">Logout</button>
+        </div>
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input">
             <input type="text" id="user-input" placeholder="Type your message..." />
@@ -128,6 +146,26 @@
 
             fetchInitialResponse();
         });
+
+        document.getElementById("logout-button").addEventListener("click", function() {
+    fetch("/logout", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.href = "/login";
+        } else {
+            console.error("Logout failed");
+        }
+    })
+    .catch(error => {
+        console.error("Error during logout:", error);
+    });
+});
+
 
         function handleUserInput() {
             const inputField = document.getElementById("user-input");

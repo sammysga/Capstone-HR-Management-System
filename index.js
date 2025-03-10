@@ -40,12 +40,18 @@ app.set('views', path.join(__dirname, 'public/views'));
 //     }
 // }));
 
+// Session configuration
 app.use(session({
-    secret: 'your-secret-key',
+    secret: 'your-secret-key', // Use a strong secret key
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } 
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7, // Set cookie expiration to 1 week (adjust as needed)
+        secure: false, // Set to true if your app is served over HTTPS
+        httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
+    }
 }));
+
 // Flash middleware
 app.use(flash());
 
