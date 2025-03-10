@@ -433,7 +433,7 @@ const applicantController = {
     
             const userMessage = req.body.message.toLowerCase();
             const timestamp = new Date().toISOString();
-            console.log(`User  ID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
+            console.log(`User ID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
     
             // Save user message in chatbot history
             await supabase
@@ -454,25 +454,14 @@ const applicantController = {
     
             // Determine the current stage based on chat history
             let botResponse;
-            let applicantStage = 'initial'; // Default to initial stage
+            let applicantStage = req.session.applicantStage || 'initial';
     
-            // If there is chat history, determine the last state
-            if (chatHistory.length > 0) {
-                const lastMessage = chatHistory[chatHistory.length - 1];
-                applicantStage = lastMessage.applicantStage || applicantStage;
-    
-                // If the last message was from the bot, parse it
-                if (lastMessage.sender === 'bot') {
-                    try {
-                        const lastBotMessage = JSON.parse(lastMessage.message);
-                        botResponse = lastBotMessage; // Use the last bot response
-                    } catch (error) {
-                        console.error('Error parsing last bot message:', error);
-                    }
-                }
+            // Gracefully handle unknown messages without breaking
+            if (!userMessage) {
+                botResponse = "I didn't quite get that. Could you please rephrase or select from the options?";
             }
     
-            // Process the user message based on the current stage
+            // Handle stages flow
             if (applicantStage === 'initial') {
                 const positions = await applicantController.getJobPositionsList();
                 const selectedPosition = positions.find(position => userMessage.includes(position.toLowerCase()));
@@ -497,8 +486,8 @@ const applicantController = {
     
                         botResponse = {
                             text: `You have chosen *${selectedPosition}*. Here are the details:\n` +
-                                `Job Title: ${jobDetails.jobTitle}\n` +
-                                `Job Description: ${jobDetails.jobDescrpt}\n` +
+                                `**Job Title:** ${jobDetails.jobTitle}\n` +
+                                `**Description:** ${jobDetails.jobDescrpt}\n\n` +
                                 `Would you like to proceed with your application?`,
                             buttons: [
                                 { text: 'Yes', value: 1 },
@@ -510,8 +499,9 @@ const applicantController = {
                         botResponse = "Sorry, I couldn't find the job details.";
                     }
                 } else {
-                    botResponse = "Please specify a job position.";
+                    botResponse = "Please specify a job position from the available list.";
                 }
+    
             } else if (applicantStage === 'job_selection' && userMessage.includes('yes')) {
                 const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
                 const result = await applicantController.updateApplicantStatusToP1Initial(userId);
@@ -522,6 +512,7 @@ const applicantController = {
                     return;
                 }
     
+                // Retrieve screening questions
                 if (!req.session.screeningQuestions) {
                     const questions = await applicantController.getInitialScreeningQuestions(jobId);
     
@@ -539,6 +530,7 @@ const applicantController = {
                 const questions = req.session.screeningQuestions;
                 const currentIndex = req.session.currentQuestionIndex || 0;
     
+                // Ask the first question
                 if (currentIndex < questions.length) {
                     botResponse = {
                         text: questions[currentIndex].text,
@@ -550,8 +542,9 @@ const applicantController = {
                     req.session.currentQuestionIndex = currentIndex + 1;
                     req.session.applicantStage = 'screening_questions';
                 } else {
-                    botResponse = "No screening questions available for this position.";
+                    botResponse = "All screening questions have been answered.";
                 }
+    
             } else if (applicantStage === 'screening_questions') {
                 const questions = req.session.screeningQuestions;
                 const currentIndex = req.session.currentQuestionIndex;
@@ -574,21 +567,18 @@ const applicantController = {
                             ]
                         };
                     } else {
-                        const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
-                        await applicantController.saveScreeningScores(userId, jobId, req.session.screeningScores);
+                        await applicantController.saveScreeningScores(userId, req.session.selectedPosition, req.session.screeningScores);
                         botResponse = {
                             text: "Thank you for answering the questions. Please upload your resume.",
                             buttons: [
-                                { text: 'Upload a File', type: 'file_upload', action: 'uploadResume' }
+                                { text: 'Upload File', type: 'file_upload', action: 'uploadResume' }
                             ]
                         };
     
-                        req.session.screeningQuestions = null;
-                        req.session.currentQuestionIndex = null;
+                        req.session.applicantStage = 'file_upload';
                     }
-                } else {
-                    botResponse = "No screening questions available for this position.";
                 }
+    
             } else if (req.body.file) {
                 await this.handleFileUpload(req, res);
     
@@ -596,10 +586,10 @@ const applicantController = {
                 if (applicantRecord && applicantRecord.applicantStatus === "P1 - PASSED") {
                     botResponse = {
                         messages: [
-                            { text: "Congratulations! You passed the initial screening." },
-                            { text: "Please schedule your interview." },
+                            { text: "✅ Congratulations! You passed the initial screening." },
+                            { text: "📅 Please schedule your interview now." },
                             { 
-                                text: "Press the button below to proceed.",
+                                text: "Click the button below to schedule.",
                                 buttons: [
                                     { text: "Schedule on Calendly", url: "/applicant/schedule-interview" }
                                 ]
@@ -610,26 +600,36 @@ const applicantController = {
                 } else {
                     botResponse = "Your application is under review.";
                 }
+    
             } else {
-                botResponse = "I'm not sure how to respond to that.";
+                // ✅ Handle unknown messages without breaking
+                botResponse = {
+                    text: "I didn't quite get that. Please try again or choose an option below.",
+                    buttons: [
+                        { text: 'See Job Openings', value: 'job_positions' },
+                        { text: 'Check Application Status', value: 'application_status' }
+                    ]
+                };
             }
     
-            // Save bot response in chatbot history
-            const { error: botMessageError } = await supabase
+            // Save bot response
+            await supabase
                 .from('chatbot_history')
-                .insert([{ userId, message: typeof botResponse === "string" ? botResponse : JSON.stringify(botResponse), sender: 'bot', timestamp }]);
+                .insert([{ 
+                    userId, 
+                    message: typeof botResponse === 'string' ? botResponse : JSON.stringify(botResponse), 
+                    sender: 'bot', 
+                    timestamp 
+                }]);
     
-            if (botMessageError) {
-                console.error('Error saving bot response:', botMessageError);
-            }
-    
-            // Return the updated chat history
             res.status(200).json({ response: botResponse, chatHistory });
+    
         } catch (error) {
             console.error('Error handling chatbot message:', error);
             res.status(500).send('Internal Server Error');
         }
     },
+    
     
 // Function to fetch and structure all screening questions
 getInitialScreeningQuestions: async function (jobId) {
