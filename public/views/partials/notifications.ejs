@@ -1,0 +1,161 @@
+<!-- partials/notification.ejs -->
+<style>
+        #notification-bell {
+        margin-right: 15px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        position: relative;
+    }
+
+    #notification-bell i {
+        font-size: 25px;
+        color: #07ACB9;
+    }
+
+    #notification-bell i:hover {
+        color: #065d6a;
+    }
+
+    #notification-count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #notification-panel {
+        position: fixed;
+        top: 0;
+        right: -60%;
+        width: 50%;
+        height: 100%;
+        background-color: #fff;
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        overflow-y: auto;
+        transition: right 0.3s ease-in-out;
+        z-index: 1000;
+    }
+
+    #notification-panel.open {
+        right: 0;
+    }
+
+    .notification-item {
+        margin-top: 20px;
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .notification-item img {
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        margin-right: 15px;
+    }
+
+    .notification-item .notification-content {
+        flex: 1;
+    }
+
+    .notification-item .headline {
+        font-weight: bold;
+        color: black;
+    }
+
+    .notification-item .content {
+        margin-left: 0px;
+        padding: 0px;
+        margin-top: 5px;
+        color: #555;
+        font-size: 14px;
+    }
+
+    .notification-item .date {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #888;
+    }
+</style>
+
+<button id="notification-bell">
+    <i class="fas fa-bell"></i>
+    <span id="notification-count">0</span>
+</button>
+<div id="notification-panel">
+    <h3>Notifications</h3>
+    <div id="recent-notifications"></div>
+    <button id="see-previous-notifications" style="display:none;">See Previous Notifications</button>
+</div>
+
+<script>
+    document.getElementById('notification-bell').addEventListener('click', function () {
+        const panel = document.getElementById('notification-panel');
+        panel.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function (event) {
+        const panel = document.getElementById('notification-panel');
+        const bell = document.getElementById('notification-bell');
+        if (!panel.contains(event.target) && !bell.contains(event.target)) {
+            panel.classList.remove('open');
+        }
+    });
+
+    function formatDate(date) {
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return new Intl.DateTimeFormat('en-US', options).format(date);
+    }
+
+    function displayNotifications(notifications) {
+        const recentNotificationsContainer = document.getElementById("recent-notifications");
+        const seePreviousButton = document.getElementById("see-previous-notifications");
+
+        recentNotificationsContainer.innerHTML = ''; // Clear existing notifications
+
+        notifications.forEach(notification => {
+            const notificationElement = document.createElement("div");
+            notificationElement.classList.add("notification-item");
+
+            notificationElement.innerHTML = `
+                <div class="notification-content">
+                    <div class="headline">${notification.message}</div>
+                    <div class="date">${formatDate(new Date(notification.timestamp))}</div>
+                </div>
+            `;
+
+            recentNotificationsContainer.appendChild(notificationElement);
+        });
+
+        // Show "See Previous Notifications" button if there are more notifications
+        if (notifications.length > 3) {
+            seePreviousButton.style.display = "block";
+            seePreviousButton.addEventListener("click", () => {
+                // Fetch and display all notifications
+                fetch('/notifications')
+                    .then(response => response.json())
+                    .then(data => displayNotifications(data))
+                    .catch(error => console.error('Error fetching notifications:', error));
+            });
+        }
+    }
+
+    // Fetch and display notifications on page load
+    fetch('/notifications/recent')
+        .then(response => response.json())
+        .then(data => {
+            displayNotifications(data);
+            document.getElementById('notification-count').textContent = data.length;
+        })
+        .catch(error => console.error('Error fetching notifications:', error));
+</script>
