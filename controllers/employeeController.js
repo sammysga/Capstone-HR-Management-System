@@ -762,7 +762,7 @@ postEmployeeOffboarding: async function(req, res) {
             return res.redirect('/staff/login');
         }
 
-        const { message, lastDay, reason, offboardingType, yearsOfService, earlyRetirement } = req.body;
+        const { message, lastDay, reason, offboardingType, yearsOfService, noticePeriod } = req.body;
 
         // Validate required fields based on the offboarding type
         if (!message || !lastDay || !offboardingType) {
@@ -775,23 +775,24 @@ postEmployeeOffboarding: async function(req, res) {
             return res.redirect('/employee/employeeoffboarding');
         }
 
-        if (offboardingType === 'Retirement' && (yearsOfService === undefined || earlyRetirement === undefined)) {
+        if (offboardingType === 'Retirement' && (yearsOfService === undefined || yearsOfService.trim() === "")) {
             req.flash('errors', { formError: 'Please provide years of service and early retirement status.' });
             return res.redirect('/employee/employeeoffboarding');
         }
 
-        // Convert earlyRetirement to a boolean if needed
-        const earlyRetirementBoolean = earlyRetirement === 'Yes';
+        // // Convert earlyRetirement to a boolean if needed
+        // const earlyRetirementBoolean = earlyRetirement === 'Yes';
 
         const offboardingData = {
             userId,
             message,
             last_day: lastDay,
+            notice_period_start: noticePeriod,
             status: 'Pending Line Manager', // Default status
             reason: offboardingType === 'Resignation' ? reason : null,
             offboardingType,
             yearsOfService: offboardingType === 'Retirement' ? yearsOfService : null,
-            earlyRetirement: offboardingType === 'Retirement' ? earlyRetirementBoolean : null
+            // earlyRetirement: offboardingType === 'Retirement' ? earlyRetirementBoolean : null
         };
 
         // Insert into the database

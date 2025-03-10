@@ -35,23 +35,16 @@
                     <textarea id="message" name="message" readonly required><%= request.message %></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="lastDay">Preferred Last Day:</label>
+                    <label for="lastDay">Last Working Day:</label>
                     <input type="text" id="lastDay" name="lastDay" value="<%= new Date(request.last_day).toLocaleDateString() %>" disabled required>
                 </div>
                 <div class="form-group">
-                    <label for="newLastDay">Proposed Last Day (Optional):</label>
-                    <input type="date" id="newLastDay" name="newLastDay">
-                </div>
-                <div class="form-group">
                     <label for="notesToHR">Notes to HR:</label>
-                    <textarea id="notesToHR" name="notesToHR"></textarea>
+                    <textarea id="notesToHR" name="notesToHR" placeholder="Enter approval notes"></textarea>
                 </div>
 
-                <button type="button" class="offboarding-btn" id="approveAsIs" data-userid="<%= request.userId %>" data-requestid="<%= request.requestId %>">
-                    Approve as is
-                </button>
-                <button type="button" class="offboarding-btn" id="proposeNewDate" data-userid="<%= request.userId %>" data-requestid="<%= request.requestId %>">
-                    Propose New Last Day
+                <button type="button" class="offboarding-btn" id="acceptResignation" data-userid="<%= request.userId %>" data-requestid="<%= request.requestId %>">
+                    Accept Resignation
                 </button>
             </form>
         <% } else { %>
@@ -60,36 +53,25 @@
     </div>
 
     <script>
-        document.getElementById('approveAsIs').addEventListener('click', function(event) {
+        document.getElementById('acceptResignation').addEventListener('click', function(event) {
             event.preventDefault();
-            submitForm(false, this.getAttribute('data-userid'));
-        });
-
-        document.getElementById('proposeNewDate').addEventListener('click', function(event) {
-            event.preventDefault();
-            submitForm(true, this.getAttribute('data-userid'));
-        });
-
-        function submitForm(withNewDate, userId) {
-            const requestId = document.getElementById(withNewDate ? 'proposeNewDate' : 'approveAsIs').getAttribute('data-requestid');
+            
+            const requestId = this.getAttribute('data-requestid');
             const notesToHR = document.getElementById('notesToHR').value.trim();
-            const newLastDay = document.getElementById('newLastDay').value;
 
             if (!notesToHR) {
                 alert('Please provide notes to HR.');
                 return;
             }
 
-            const action = withNewDate ? 'proposeNewDate' : 'approveAsIs';
-
             const requestData = {
                 requestId: requestId, 
-                action: action, 
-                reason: notesToHR, 
-                newLastDay: newLastDay 
+                action: 'acceptResignation', 
+                reason: notesToHR,
+                accept_resignation: true 
             };
 
-            console.log("Submitting data:", requestData); 
+            console.log("Submitting data:", requestData);
 
             fetch(`/linemanager/offboarding/update`, {
                 method: 'POST',
@@ -103,7 +85,7 @@
                 return response.json();
             })
             .then(data => {
-                console.log("Response received:", data); // Debugging line
+                console.log("Response received:", data);
                 alert(data.message);
                 window.location.href = '/linemanager/offboarding-requests';
             })
@@ -111,7 +93,7 @@
                 console.error('Error:', error);
                 alert(error.message || 'Something went wrong.');
             });
-        }
+        });
     </script>
 </body>
 </html>

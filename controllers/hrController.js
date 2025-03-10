@@ -2410,7 +2410,7 @@ updateJobOffer: async function(req, res) {
         try {
             const userId = req.session.user ? req.session.user.userId : null;
     
-            if (!userId || req.session.user.userRole !== 'HR') { // Change role check to 'HR'
+            if (!userId || req.session.user.userRole !== 'HR') { 
                 req.flash('errors', { authError: 'Unauthorized access.' });
                 return res.redirect('/staff/login');
             }
@@ -2418,7 +2418,7 @@ updateJobOffer: async function(req, res) {
             // Fetch offboarding requests with userId and status
             const { data: requests, error: requestsError } = await supabase
                 .from('offboarding_requests')
-                .select('userId, message, last_day, status, created_at')
+                .select('requestId, userId, message, last_day, status, created_at')
                 .eq('status', 'Pending HR')  // Fetch only requests pending HR approval
                 .order('created_at', { ascending: false });
     
@@ -2428,11 +2428,11 @@ updateJobOffer: async function(req, res) {
                 return res.redirect('/hr/dashboard');
             }
     
-            // Fetch employee names based on userId
+            // Fetch employee names and department names based on userId
             const userIds = requests.map(request => request.userId);
             const { data: staffAccounts, error: staffError } = await supabase
                 .from('staffaccounts')
-                .select('userId, firstName, lastName')
+                .select('userId, firstName, lastName, departmentId, departments (deptName)')
                 .in('userId', userIds);  // Fetch staff details for each userId
     
             if (staffError) {
@@ -2441,12 +2441,13 @@ updateJobOffer: async function(req, res) {
                 return res.redirect('/hr/dashboard');
             }
     
-            // Combine offboarding requests with staff details
+            // Combine offboarding requests with staff details and department names
             const requestsWithNames = requests.map(request => {
                 const staff = staffAccounts.find(staff => staff.userId === request.userId);
                 return {
                     ...request,
-                    staffName: staff ? `${staff.firstName} ${staff.lastName}` : 'Unknown'
+                    staffName: staff ? `${staff.firstName} ${staff.lastName}` : 'Unknown',
+                    department: staff ? staff.departments.deptName : 'Unknown'
                 };
             });
     
@@ -2459,22 +2460,23 @@ updateJobOffer: async function(req, res) {
     },
 
     getViewOffboardingRequest: async function (req, res) {
-        const userId = req.params.userId; 
+        const userId = req.params.userId;
     
         if (!userId) {
-            return res.redirect('/staff/login'); 
+            return res.redirect('/staff/login');
         }
     
         try {
-            const { data: requests, error } = await supabase
+            // Fetch offboarding request
+            const { data: requests, error: requestError } = await supabase
                 .from('offboarding_requests')
-                .select('requestId, message, last_day, status')  // Include status if needed
-                .eq('userId', userId)  
-                .order('requestId', { ascending: false }) 
-                .limit(1);  
+                .select('requestId, userId, offboardingType, reason, message, last_day, status, created_at')
+                .eq('userId', userId)
+                .order('created_at', { ascending: false })
+                .limit(1);
     
-            if (error) {
-                console.error('Error fetching offboarding request:', error);
+            if (requestError) {
+                console.error('Error fetching offboarding request:', requestError);
                 return res.redirect('/hr/dashboard');
             }
     
@@ -2483,21 +2485,181 @@ updateJobOffer: async function(req, res) {
                 return res.redirect('/hr/dashboard');
             }
     
+            const requestId = requests[0].requestId;
+    
+            // Fetch checklist for the request
+            const { data: checklistData, error: checklistError } = await supabase
+                .from('offboarding_checklist')
+                .select('checklist_items, created_at')
+                .eq('requestId', requestId)
+                .single();
+    
+            if (checklistError && checklistError.code !== 'PGRST116') { // Ignore "No rows found" error
+                console.error('Error fetching checklist:', checklistError);
+                return res.redirect('/hr/dashboard');
+            }
+    
             // Fetch staff details
             const { data: staff } = await supabase
                 .from('staffaccounts')
-                .select('firstName, lastName')
+                .select('firstName, lastName, departmentId, departments (deptName)')
                 .eq('userId', userId)
                 .single();
     
             res.render('staffpages/hr_pages/viewoffboardingrequest', {
-                request: requests[0],  
-                staffName: `${staff.firstName} ${staff.lastName}`
+                request: requests[0],
+                staffName: `${staff.firstName} ${staff.lastName}`,
+                department: staff.departments.deptName,
+                checklist: checklistData ? checklistData.checklist_items : [], // Pass checklist items
+                checklistCreatedAt: checklistData ? checklistData.created_at : null // Pass checklist creation date
             });
         } catch (err) {
             console.error('Error in getViewOffboardingRequest controller:', err);
             req.flash('errors', { dbError: 'An error occurred while loading the offboarding request.' });
             return res.redirect('/hr/dashboard');
+        }
+    },
+    
+    saveChecklist: async function (req, res) {
+        try {
+            const { requestId, checklist } = req.body;
+    
+            if (!requestId || !Array.isArray(checklist)) {
+                return res.status(400).json({ error: "Invalid request data." });
+            }
+    
+            // Check if a checklist already exists for this request
+            const { data: existingChecklist, error: fetchError } = await supabase
+                .from("offboarding_checklist")
+                .select("checklistId")
+                .eq("requestId", requestId)
+                .single();
+    
+            if (fetchError && fetchError.code !== 'PGRST116') { // Ignore "No rows found" error
+                console.error("Error fetching existing checklist:", fetchError);
+                return res.status(500).json({ error: "Failed to fetch existing checklist." });
+            }
+    
+            // Insert or update the checklist
+            const { error } = await supabase
+                .from("offboarding_checklist")
+                .upsert([
+                    {
+                        checklistId: existingChecklist ? existingChecklist.checklistId : undefined, // Update if exists
+                        requestId: requestId,
+                        checklist_items: checklist, // Save the checklist items as JSON
+                        created_at: new Date().toISOString(), // Update the timestamp
+                    },
+                ]);
+    
+            if (error) {
+                console.error("Error saving checklist:", error);
+                return res.status(500).json({ error: "Failed to save checklist." });
+            }
+    
+            res.json({ success: true, message: "Checklist saved successfully!" });
+        } catch (err) {
+            console.error("Error in saveChecklist controller:", err);
+            res.status(500).json({ error: "An error occurred while saving the checklist." });
+        }
+    },
+
+    sendClearanceToEmployee: async function (req, res) {
+        try {
+            const { requestId } = req.body;
+    
+            if (!requestId) {
+                return res.status(400).json({ error: "Invalid request data." });
+            }
+    
+            // Update the offboarding_request status to "Sent to Employee"
+            const { data, error } = await supabase
+                .from("offboarding_requests")
+                .update({ status: "Sent to Employee" })
+                .eq("requestId", requestId)
+                .select(); // Return the updated record
+    
+            if (error) {
+                console.error("Error sending clearance to employee:", error);
+                return res.status(500).json({ error: "Failed to send clearance to employee." });
+            }
+    
+            res.json({ success: true, message: "Clearance sent to employee successfully!", data });
+        } catch (err) {
+            console.error("Error in sendClearanceToEmployee controller:", err);
+            res.status(500).json({ error: "An error occurred while sending the clearance." });
+        }
+    },
+    
+    // New getRetirementTracker function
+    getRetirementTracker: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                console.log("Fetching retirement tracker data...");
+
+                // Fetch staff-related data, including dateOfBirth and hireDate
+                const { data: staffData, error: staffError } = await supabase
+                    .from('staffaccounts')
+                    .select(`
+                        staffId, 
+                        userId, 
+                        departmentId, 
+                        jobId, 
+                        lastName, 
+                        firstName,
+                        dateOfBirth,  
+                        hireDate,
+                        useraccounts (
+                            userId, 
+                            userEmail
+                        ),
+                        departments (
+                            deptName
+                        ),
+                        jobpositions (
+                            jobTitle
+                        )
+                    `)
+                    .order('lastName', { ascending: true });
+
+                if (staffError) throw staffError;
+
+                console.log("Staff data fetched successfully:", staffData);
+
+                // Calculate years of service and categorize employees based on retirement eligibility
+                const departmentMap = staffData.reduce((acc, staff) => {
+                    const deptName = staff.departments?.deptName || 'Unknown';
+                    const hireDate = new Date(staff.hireDate);
+                    const currentDate = new Date();
+                    const yearsOfService = currentDate.getFullYear() - hireDate.getFullYear();
+
+                    if (!acc[deptName]) {
+                        acc[deptName] = [];
+                    }
+
+                    acc[deptName].push({
+                        userId: staff.userId,
+                        jobTitle: staff.jobpositions?.jobTitle || 'No job title assigned',
+                        lastName: staff.lastName,
+                        firstName: staff.firstName,
+                        userEmail: staff.useraccounts?.userEmail || 'N/A',
+                        dateOfBirth: staff.dateOfBirth, 
+                        hireDate: staff.hireDate,
+                        yearsOfService: yearsOfService,
+                        retirementEligibility: yearsOfService >= 30 ? 'Eligible for Retirement' : 'Not Eligible for Retirement'  // Assume 30 years of service for eligibility
+                    });
+                    return acc;
+                }, {});
+
+                // Render the data in the view
+                res.render('staffpages/hr_pages/hr-retirement-tracker', { departments: departmentMap });
+
+            } catch (error) {
+                console.error("Error fetching retirement tracker data:", error);
+                res.status(500).send("Error fetching retirement tracker data");
+            }
+        } else {
+            res.redirect('/login');
         }
     },
     

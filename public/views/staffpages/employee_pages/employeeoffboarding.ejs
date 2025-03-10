@@ -78,26 +78,26 @@
             </div>
             <div class="form-group" id="yearsOfServiceGroup" style="display: none;">
                 <label for="yearsOfService">Years of Service:</label>
-                <input type="number" id="yearsOfService" name="yearsOfService" min="0">
+                <input type="number" id="yearsOfService" name="yearsOfService" min="0" required>
             </div>
-            <div class="form-group" id="earlyRetirementGroup" style="display: none;">
+            <!-- <div class="form-group" id="earlyRetirementGroup" style="display: none;">
                 <label for="earlyRetirement">Early Retirement:</label>
                 <select id="earlyRetirement" name="earlyRetirement">
                     <option value="No">No</option>
                     <option value="Yes">Yes</option>
                 </select>
-            </div>
+            </div> -->
             <div class="form-group">
                 <label for="message">Resignation Message:</label>
                 <textarea id="message" name="message" placeholder="Explain your reason for resigning" required></textarea>
             </div>
             <div class="form-group">
-                <label for="lastDay">Preferred Last Working Day:</label>
-                <input type="date" id="lastDay" name="lastDay" required>
+                <label for="lastDay">Last Working Day (Auto-calculated 60 Days):</label>
+                <input type="text" id="lastDay" name="lastDay" readonly>
             </div>
             <div class="form-group">
-                <label for="noticePeriod">Notice Period (Auto-calculated 60 Days):</label>
-                <input type="text" id="noticePeriod" name="noticePeriod" disabled>
+                <label for="noticePeriod">Notice Period Start Date (Auto-calculated 60 Days):</label>
+                <input type="text" id="noticePeriod" name="noticePeriod" readonly>
             </div>
             <button type="submit" class="offboarding-btn">Submit Request</button>
         </form>
@@ -105,17 +105,28 @@
 
     <script>
         document.getElementById('offboardingType').addEventListener('change', function () {
+
             let offboardingType = this.value;
+            let yearsOfServiceInput = document.getElementById('yearsOfService');
+
             document.getElementById('reasonGroup').style.display = offboardingType === 'Resignation' ? 'block' : 'none';
             document.getElementById('yearsOfServiceGroup').style.display = offboardingType === 'Retirement' ? 'block' : 'none';
-            document.getElementById('earlyRetirementGroup').style.display = offboardingType === 'Retirement' ? 'block' : 'none';
+            // document.getElementById('earlyRetirementGroup').style.display = offboardingType === 'Retirement' ? 'block' : 'none';
+
+            if (offboardingType === 'Retirement') {
+                yearsOfServiceInput.setAttribute('required', 'required');
+            } else {
+                yearsOfServiceInput.removeAttribute('required');
+            }
         });
 
-        document.getElementById('lastDay').addEventListener('change', function () {
-            let lastDay = new Date(this.value);
-            let noticeDate = new Date(lastDay);
-            noticeDate.setDate(noticeDate.getDate() - 60);
-            document.getElementById('noticePeriod').value = noticeDate.toISOString().split('T')[0];
+        document.addEventListener('DOMContentLoaded', function () {
+            let today = new Date();
+            let lastDay = new Date();
+            lastDay.setDate(today.getDate() + 60);
+
+            document.getElementById('lastDay').value = lastDay.toISOString().split('T')[0];
+            document.getElementById('noticePeriod').value = today.toISOString().split('T')[0]; // Current date as notice start
         });
 
         document.getElementById('offboardingForm').addEventListener('submit', function (event) {
