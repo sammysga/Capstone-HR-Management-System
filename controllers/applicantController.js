@@ -359,66 +359,176 @@ const applicantController = {
             return res.status(500).send('Internal Server Error');
         }
     },
-    
-    getChatbotPage: async function (req, res) {
+
+    getChatbotPage: async function(req, res) {
         try {
             const userId = req.session.userID;
-            console.log('User  ID from session:', userId);
+            console.log('✅ [getChatbotPage] User ID from session:', userId);
     
+            // ✅ Check if user is authenticated
             if (!userId) {
-                console.log('User  not authenticated, redirecting to login...');
+                console.log('❌ [getChatbotPage] User not authenticated. Redirecting to login...');
                 return res.redirect('/login');
             }
     
-            let chatData = req.session.chatHistory || []; // Retrieve from session
-            console.log('Chat Data from session:', chatData);
+            // ✅ Check if there's already chat history in the session
+            let chatData = req.session.chatHistory || [];
+            let initialResponse = {};
     
+            // ✅ Always define an initialResponse (even if empty)
+            const initialMessage = "Hi! Welcome to Prime Infrastructure Recruitment Screening Portal. What position are you going to apply for?";
+    
+            // ✅ If no chat history in session, fetch it from Supabase
             if (chatData.length === 0) {
-                // Fetch from database if session data is missing
+                console.log('✅ [getChatbotPage] No chat history in session. Fetching from database...');
+    
                 const { data: chatHistory, error } = await supabase
                     .from('chatbot_history')
                     .select('message, sender, timestamp')
                     .eq('userId', userId)
                     .order('timestamp', { ascending: true });
     
-                if (!error && chatHistory.length > 0) {
+                if (error) {
+                    console.error('❌ [getChatbotPage] Error fetching chat history from database:', error);
+                }
+    
+                if (chatHistory && chatHistory.length > 0) {
+                    console.log('✅ [getChatbotPage] Chat history found in database. Mapping it now...');
+    
+                    // ✅ Map the fetched data to session format
                     chatData = chatHistory.map(chat => ({
                         message: chat.message,
                         sender: chat.sender,
-                        timestamp: chat.timestamp,
+                        timestamp: chat.timestamp
                     }));
     
-                    // Store it in session for next time
+                    // ✅ Store it in the session for faster loading next time
                     req.session.chatHistory = chatData;
-                    console.log('Fetched Chat History from database:', chatData);
+                    console.log('✅ [getChatbotPage] Chat history stored in session.');
                 } else {
-                    console.error('Error fetching chat history from database:', error);
+                    console.log('✅ [getChatbotPage] No chat history in database. Preparing initial message.');
+    
+                    try {
+                        // ✅ Fetch job positions from your controller
+                        const positions = await applicantController.getJobPositionsList();
+                        console.log('✅ [getChatbotPage] Job positions fetched successfully:', positions);
+    
+                        // ✅ Prepare the initial response
+                        initialResponse = {
+                            text: `${initialMessage}\nHere are our current job openings:`,
+                            buttons: positions.map(pos => ({
+                                text: pos,
+                                value: pos
+                            }))
+                        };
+    
+                        // ✅ Push the initial message to chat history
+                        chatData.push({
+                            message: JSON.stringify(initialResponse),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString()
+                        });
+    
+                        // ✅ Save it in session
+                        req.session.chatHistory = chatData;
+                    } catch (jobError) {
+                        console.error("❌ [getChatbotPage] Error fetching job positions:", jobError);
+                        initialResponse = { text: initialMessage, buttons: [] };
+                    }
                 }
             }
     
-            if (chatData.length === 0) {
-                // Default welcome message
-                const initialMessage = "Hi! Welcome to Prime Infrastructure's recruitment portal. What position are you going to apply for?";
-                console.log('No chat history found, setting initial message.');
+            // ✅ Render the chatbot page with chatData
+          // Render the chatbot page with chatData
+res.render('applicant_pages/chatbot', {
+    initialResponse,
+    chatData: JSON.stringify(chatData) // Pass as a JSON string
+});
     
-                try {
-                    const positions = await applicantController.getJobPositionsList();
-                    const initialResponse = `${initialMessage}\nHere are our current job openings:\n${positions.map(pos => `- ${pos}`).join('\n')}\nPlease select a position.`;
-                    chatData.push({ message: initialResponse, sender: 'bot', timestamp: new Date().toISOString() });
-                    console.log('Initial Response:', initialResponse);
-                } catch (jobError) {
-                    console.error("Error fetching job positions:", jobError);
-                    const initialResponse = initialMessage;
-                    chatData.push({ message: initialResponse, sender: 'bot', timestamp: new Date().toISOString() });
-                }
-            }
-    
-            res.render('applicant_pages/chatbot', { chatData });  // Pass chatData here
         } catch (error) {
-            console.error('Error rendering chatbot page:', error);
+            console.error('❌ [getChatbotPage] Error rendering chatbot page:', error);
             res.status(500).send('Error loading chatbot page');
         }
     },
+    
+    
+    
+    // getChatbotPage: async function(req, res) {
+    //     try {
+    //         const userId = req.session.userID;
+    //         console.log('✅ [getChatbotPage] User ID from session:', userId);
+    
+    //         // Check if user is authenticated
+    //         if (!userId) {
+    //             console.log('❌ [getChatbotPage] User not authenticated. Redirecting to login...');
+    //             return res.redirect('/login');
+    //         }
+    
+    //         // Retrieve existing chat history if any
+    //         let chatData = req.session.chatHistory || [];
+    //         let initialResponse = {};
+    
+    //         // Only show initial message if there's no chat history
+    //         if (chatData.length === 0) {
+    //             const initialMessage = "Hi! Welcome to Prime Infrastructure Recruitment Screening Portal. What position are you going to apply for?";
+    //             console.log('✅ [getChatbotPage] No chat history found, preparing initial message...');
+    
+    //             try {
+    //                 // Fetch job positions from the controller
+    //                 const positions = await applicantController.getJobPositionsList();
+    //                 console.log('✅ [getChatbotPage] Job positions fetched successfully:', positions);
+    
+    //                 // Construct buttons from positions
+    //                 initialResponse = {
+    //                     text: `${initialMessage}\nHere are our current job openings:`,
+    //                     buttons: positions.map(pos => ({
+    //                         text: pos,
+    //                         value: pos
+    //                     }))
+    //                 };
+    
+    //                 // Push the initial message to chat history
+    //                 chatData.push({
+    //                     message: JSON.stringify(initialResponse),
+    //                     sender: 'bot',
+    //                     timestamp: new Date().toISOString()
+    //                 });
+    
+    //                 // Update the session
+    //                 req.session.chatHistory = chatData;
+    //                 console.log('✅ [getChatbotPage] Initial message and buttons pushed to chat history.');
+    //             } catch (jobError) {
+    //                 console.error("❌ [getChatbotPage] Error fetching job positions:", jobError);
+    //                 initialResponse = {
+    //                     text: initialMessage,
+    //                     buttons: []
+    //                 };
+    
+    //                 // Push empty buttons if error
+    //                 chatData.push({
+    //                     message: JSON.stringify(initialResponse),
+    //                     sender: 'bot',
+    //                     timestamp: new Date().toISOString()
+    //                 });
+    //             }
+    //         } else {
+    //             console.log('✅ [getChatbotPage] Existing chat history found. Skipping initial message.');
+    //         }
+    
+    //         // Log the initialResponse before rendering
+    //         console.log('✅ [getChatbotPage] Initial response to be sent:', JSON.stringify(initialResponse));
+    
+    //         // Render the page and pass the initialResponse safely
+    //         res.render('applicant_pages/chatbot', {
+    //             initialResponse,
+    //             chatData
+    //         });
+                
+    //     } catch (error) {
+    //         console.error('❌ [getChatbotPage] Error rendering chatbot page:', error);
+    //         res.status(500).send('Error loading chatbot page');
+    //     }
+    // },
     handleChatbotMessage: async function (req, res) {
         try {
             console.log('Start processing chatbot message');
@@ -430,12 +540,7 @@ const applicantController = {
     
             const userMessage = req.body.message.toLowerCase();
             const timestamp = new Date().toISOString();
-            console.log(`User ID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
-    
-            // Save user message in chatbot history
-            await supabase
-                .from('chatbot_history')
-                .insert([{ userId, message: userMessage, sender: 'user', timestamp }]);
+            console.log(`User  ID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
     
             // Fetch existing chat history
             const { data: chatHistory, error: chatHistoryError } = await supabase
@@ -448,6 +553,11 @@ const applicantController = {
                 console.error('Error fetching chat history:', chatHistoryError);
                 return res.status(500).json({ response: "Error fetching chat history." });
             }
+    
+            // Save user message in chatbot history
+            await supabase
+                .from('chatbot_history')
+                .insert([{ userId, message: userMessage, sender: 'user', timestamp }]);
     
             // Determine the current stage based on chat history
             let botResponse;
@@ -585,7 +695,7 @@ const applicantController = {
                         messages: [
                             { text: "✅ Congratulations! You passed the initial screening." },
                             { text: "📅 Please schedule your interview now." },
-                            { 
+                            {
                                 text: "Click the button below to schedule.",
                                 buttons: [
                                     { text: "Schedule on Calendly", url: "/applicant/schedule-interview" }
@@ -599,7 +709,7 @@ const applicantController = {
                 }
     
             } else {
-                // ✅ Handle unknown messages without breaking
+                // Handle unknown messages without breaking
                 botResponse = {
                     text: "I didn't quite get that. Please try again or choose an option below.",
                     buttons: [
@@ -609,24 +719,23 @@ const applicantController = {
                 };
             }
     
-            // Save bot response
+            // Save bot response to chatbot history
             await supabase
                 .from('chatbot_history')
-                .insert([{ 
-                    userId, 
-                    message: typeof botResponse === 'string' ? botResponse : JSON.stringify(botResponse), 
-                    sender: 'bot', 
-                    timestamp 
+                .insert([{
+                    userId,
+                    message: typeof botResponse === 'string' ? botResponse : JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp
                 }]);
     
-            res.status(200).json({ response: botResponse, chatHistory });
+            res.status(200).json({ response: botResponse });
     
         } catch (error) {
             console.error('Error handling chatbot message:', error);
             res.status(500).send('Internal Server Error');
         }
     },
-    
     
 // Function to fetch and structure all screening questions
 getInitialScreeningQuestions: async function (jobId) {
