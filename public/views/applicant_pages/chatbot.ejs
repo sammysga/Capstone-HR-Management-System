@@ -117,7 +117,8 @@
             accept=".pdf, .png, .jpeg, .jpg"
             style="display:none"
             onchange="uploadFile(event)"
-        />
+        />\
+        <div id="chat-data" style="display: none;"><%= chatData %></div>
 
 
         <!-- <button
@@ -130,22 +131,93 @@
 
     </div>
     <script>
-        let screeningQuestions = [];
-        let currentQuestionIndex = 0;
+let screeningQuestions = [];
+let currentQuestionIndex = 0;
+let initialResponse = {}; // ✅ Declare initialResponse globally
 
-        document.addEventListener("DOMContentLoaded", function () {
-            console.log("Page loaded. Initializing chat...");
-            loadChatHistory();
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("✅ [Chatbot] Page loaded. Initializing chat...");
 
-            document.getElementById("send-button").addEventListener("click", handleUserInput);
-            document.getElementById("user-input").addEventListener("keypress", function (event) {
-                if (event.key === "Enter") {
-                    handleUserInput();
-                }
-            });
+    // ✅ Safely parse initialResponse without breaking JSON
+    try {
+        initialResponse = <%- JSON.stringify(initialResponse) %>;
+        if (initialResponse.text && initialResponse.text !== "") {
+            displayInitialMessage(initialResponse);
+        }
+    } catch (error) {
+        console.error('❌ [Chatbot] Error parsing initialResponse:', error);
+    }
 
-            fetchInitialResponse();
-        });
+    // ✅ Now safely load the chat history without ReferenceError
+    loadChatHistory();
+
+    // ✅ Event listeners for input
+    document.getElementById("send-button").addEventListener("click", handleUserInput);
+    document.getElementById("user-input").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            handleUserInput();
+        }
+    });
+});
+
+    //     document.addEventListener("DOMContentLoaded", function() {
+    //     console.log("✅ [Chatbot] Page loaded. Initializing chat...");
+    //     loadChatHistory();
+
+    //     // Safely parse initialResponse without breaking JSON
+    //     try {
+    //         // Use the variable directly without additional formatting
+    //         const initialResponse = <%- JSON.stringify(initialResponse) %>;
+    //         displayInitialMessage(initialResponse);
+
+    //         console.log('✅ [Chatbot] Initial response being displayed:', initialResponse);
+
+    //         // if (initialResponse && initialResponse.text) {
+    //         //     displayInitialMessage(initialResponse);
+    //         // }
+    //     } catch (error) {
+    //         console.error('❌ [Chatbot] Error parsing initialResponse:', error);
+    //     }
+
+    //     // Add event listener for user input
+    //     document.getElementById("send-button").addEventListener("click", handleUserInput);
+    //     document.getElementById("user-input").addEventListener("keypress", function(event) {
+    //         if (event.key === "Enter") {
+    //             handleUserInput();
+    //         }
+    //     });
+    // });
+
+    // Function to display the initial message with buttons
+    function displayInitialMessage(response) {
+    const chatMessages = document.getElementById('chat-messages');
+
+    // Prevent duplicate initial messages
+    if (document.querySelector('.bot-message')) return;
+
+    // Append bot message text
+    const botMessageDiv = document.createElement('div');
+    botMessageDiv.classList.add('message', 'bot-message');
+    botMessageDiv.innerText = response.text;
+    chatMessages.appendChild(botMessageDiv);
+
+    // Append buttons for job positions
+    response.buttons.forEach(button => {
+        const jobButton = document.createElement('button');
+        jobButton.innerText = button.text;
+        jobButton.onclick = () => {
+            console.log('✅ [Chatbot] Button clicked:', button.text);
+            addMessage('You', button.text);
+            sendMessage(button.text);
+        };
+        jobButton.classList.add('job-button');
+        chatMessages.appendChild(jobButton);
+    });
+
+    // Auto-scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 
         document.getElementById("logout-button").addEventListener("click", function() {
     fetch("/logout", {
@@ -241,15 +313,36 @@
         }
 
         function loadChatHistory() {
-            const chatMessages = document.getElementById("chat-messages");
-            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+    const chatMessages = document.getElementById("chat-messages");
+    // Parse the chatData directly from the rendered JSON string
+    let chatHistory = JSON.parse(document.getElementById("chat-data").textContent) || []; // Assuming you have an element with id "chat-data"
 
-            chatHistory.forEach((chat) => {
-                addMessage(chat.sender, chat.message);
-            });
+    console.log("✅ [Chatbot] Loading chat history from Supabase:", chatHistory);
 
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+    if (chatHistory.length > 0) {
+        chatHistory.forEach((chat) => {
+            if (chat.sender === 'user') {
+                addMessage("You", chat.message);
+            } else if (chat.sender === 'bot') {
+                try {
+                    const botMessage = JSON.parse(chat.message);
+                    displayBotResponse(botMessage);
+                } catch (error) {
+                    addMessage("Bot", chat.message);
+                }
+            }
+        });
+
+        console.log("✅ [Chatbot] Chat history successfully rendered.");
+    } else {
+        console.log("✅ [Chatbot] No chat history. Displaying initial message.");
+        displayInitialMessage(initialResponse);
+    }
+
+    // Auto-scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 
         async function uploadFile(event) {
             const file = event.target.files[0];
@@ -313,43 +406,50 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        async function fetchInitialResponse() {
-            console.log("Fetching initial response...");
-            try {
-                const response = await fetch("/chatbothome", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: "init" }),
-                });
+//         async function fetchInitialResponse() {
+//     console.log("Fetching initial response...");
+//     try {
+//         const response = await fetch("/chatbothome", {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.strinsfy({ message: "retrieve_history" }), // This will fetch chat history
+//         });
 
-                if (!response.ok) throw new Error("Failed to fetch initial response");
+//         if (!response.ok) throw new Error("Failed to fetch initial response");
 
-                const data = await response.json();
-                console.log("Initial response:", data);
+//         const data = await response.json();
+//         console.log("Initial response:", data);
 
-                // Check if data.response is an array
-                if (Array.isArray(data.chatHistory)) {
-                    data.chatHistory.forEach(chat => {
-                        if (chat.sender === 'user') {
-                            addMessage("You", chat.message);
-                        } else if (chat.sender === 'bot') {
-                            try {
-                                const botMessage = JSON.parse(chat.message);
-                                displayBotResponse(botMessage);
-                            } catch (error) {
-                                addMessage("Bot", chat.message);
-                            }
-                        }
-                    });
-                } else {
-                    // Handle the case where data.response is not an array
-                    addMessage("Bot", data.response || "Hi! Welcome to Prime Infrastructure's recruitment portal. What position are you going to apply for?");
-                }
-            } catch (error) {
-                console.error("Error fetching initial response:", error);
-                addMessage("Bot", "Welcome! How can I assist you today?");
-            }
-        }
+//         // Check if there is chat history
+//         if (data.chatHistory && data.chatHistory.length > 0) {
+//             // Display existing chat history
+//             data.chatHistory.forEach(chat => {
+//                 if (chat.sender === 'user') {
+//                     addMessage("You", chat.message);
+//                 } else if (chat.sender === 'bot') {
+//                     try {
+//                          const botMessage = JSON.parse(chat.message);
+//                         displayBotResponse(botMessage);
+//                     } catch (error) {
+//                         addMessage("Bot", chat.message);
+//                     }
+//                 }
+//             });
+//         } else {
+//             // Use the initial message from the session
+//             const initialMessage = sessionStorage.getItem('initialMessage'); // Assuming you store it in session storage
+//             if (initialMessage) {
+//                 displayBotResponse(initialMessage);
+//             } else {
+//                 addMessage("Bot", "Welcome! How can I assist you today?");
+//             }
+//         }
+
+//     } catch (error) {
+//         console.error("Error fetching initial response:", error);
+//         addMessage("Bot", "Welcome! How can I assist you today?");
+//     }
+// }
     </script>
 </body>
 </html>
