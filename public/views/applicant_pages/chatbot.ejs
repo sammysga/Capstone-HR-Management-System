@@ -139,14 +139,14 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("✅ [Chatbot] Page loaded. Initializing chat...");
 
     // ✅ Safely parse initialResponse without breaking JSON
-    try {
-        initialResponse = <%- JSON.stringify(initialResponse) %>;
-        if (initialResponse.text && initialResponse.text !== "") {
-            displayInitialMessage(initialResponse);
-        }
-    } catch (error) {
-        console.error('❌ [Chatbot] Error parsing initialResponse:', error);
-    }
+    // try {
+    //     initialResponse = <%- JSON.stringify(initialResponse) %>;
+    //     if (initialResponse.text && initialResponse.text !== "") {
+    //         displayInitialMessage(initialResponse);
+    //     }
+    // } catch (error) {
+    //     console.error('❌ [Chatbot] Error parsing initialResponse:', error);
+    // }
 
     // ✅ Now safely load the chat history without ReferenceError
     loadChatHistory();
