@@ -51,75 +51,102 @@ const applicantController = {
         }
     },
 
-    getJobDetails: async function(req, res) {
+    // getJobDetails: async function(req, res) {
+    //     try {
+    //         const jobId = req.params.jobId;
+    
+    //         // Fetch job details
+    //         const { data: job, error: jobError } = await supabase
+    //             .from('jobpositions')
+    //             .select('*')
+    //             .eq('jobId', jobId)
+    //             .single();
+            
+    //         if (jobError) {
+    //             console.error('Error fetching job details:', jobError);
+    //             return res.status(500).send('Error fetching job details');
+    //         }
+    
+    //         // Fetch job skills
+    //         const { data: jobSkills, error: jobSkillsError } = await supabase
+    //             .from('jobreqskills') // updated to the new table name
+    //             .select('*')
+    //             .eq('jobId', jobId);
+            
+    //         if (jobSkillsError) {
+    //             console.error('Error fetching job skills:', jobSkillsError);
+    //             return res.status(500).send('Error fetching job skills');
+    //         }
+    
+    //         // Separate hard and soft skills
+    //         const hardSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Hard");
+    //         const softSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Soft");
+    
+    //         // Fetch job certifications from jobreqcertifications
+    //         const { data: certifications, error: certificationsError } = await supabase
+    //             .from('jobreqcertifications')
+    //             .select('jobReqCertificateType, jobReqCertificateDescrpt')
+    //             .eq('jobId', jobId);
+            
+    //         if (certificationsError) {
+    //             console.error('Error fetching job certifications:', certificationsError);
+    //             return res.status(500).send('Error fetching job certifications');
+    //         }
+    
+    //         // Fetch job degrees from jobreqdegrees
+    //         const { data: degrees, error: degreesError } = await supabase
+    //             .from('jobreqdegrees')
+    //             .select('jobReqDegreeType, jobReqDegreeDescrpt')
+    //             .eq('jobId', jobId);
+            
+    //         if (degreesError) {
+    //             console.error('Error fetching job degrees:', degreesError);
+    //             return res.status(500).send('Error fetching job degrees');
+    //         }
+    
+    //         // Fetch job experiences from jobreqexperiences
+    //         const { data: experiences, error: experiencesError } = await supabase
+    //             .from('jobreqexperiences')
+    //             .select('jobReqExperienceType, jobReqExperienceDescrpt')
+    //             .eq('jobId', jobId);
+            
+    //         if (experiencesError) {
+    //             console.error('Error fetching job experiences:', experiencesError);
+    //             return res.status(500).send('Error fetching job experiences');
+    //         }
+    
+    //         // Render the job-details page with all fetched data
+    //         res.render('applicant_pages/job-details', { job, hardSkills, softSkills, certifications, degrees, experiences });
+    //     } catch (err) {
+    //         console.error('Server error:', err);
+    //         res.status(500).send('Server error');
+    //     }
+    // },
+    
+
+    getJobDetails: async function(jobTitle) {
         try {
-            const jobId = req.params.jobId;
-    
-            // Fetch job details
-            const { data: job, error: jobError } = await supabase
+            const { data: jobDetails, error } = await supabase
                 .from('jobpositions')
-                .select('*')
-                .eq('jobId', jobId)
+                .select(`
+                    jobId, jobTitle, jobDescrpt,  departmentId,
+                    jobreqcertifications(jobReqCertificateType, jobReqCertificateDescrpt),
+                    jobreqdegrees(jobReqDegreeType, jobReqDegreeDescrpt),
+                    jobreqexperiences(jobReqExperienceType, jobReqExperienceDescrpt),
+                    jobreqskills(jobReqSkillType, jobReqSkillName)
+                `)
+                .eq('jobTitle', jobTitle)
                 .single();
-            
-            if (jobError) {
-                console.error('Error fetching job details:', jobError);
-                return res.status(500).send('Error fetching job details');
+    
+            if (error) {
+                console.error('Error fetching job details:', error);
+                return null;
             }
     
-            // Fetch job skills
-            const { data: jobSkills, error: jobSkillsError } = await supabase
-                .from('jobreqskills') // updated to the new table name
-                .select('*')
-                .eq('jobId', jobId);
-            
-            if (jobSkillsError) {
-                console.error('Error fetching job skills:', jobSkillsError);
-                return res.status(500).send('Error fetching job skills');
-            }
-    
-            // Separate hard and soft skills
-            const hardSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Hard");
-            const softSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Soft");
-    
-            // Fetch job certifications from jobreqcertifications
-            const { data: certifications, error: certificationsError } = await supabase
-                .from('jobreqcertifications')
-                .select('jobReqCertificateType, jobReqCertificateDescrpt')
-                .eq('jobId', jobId);
-            
-            if (certificationsError) {
-                console.error('Error fetching job certifications:', certificationsError);
-                return res.status(500).send('Error fetching job certifications');
-            }
-    
-            // Fetch job degrees from jobreqdegrees
-            const { data: degrees, error: degreesError } = await supabase
-                .from('jobreqdegrees')
-                .select('jobReqDegreeType, jobReqDegreeDescrpt')
-                .eq('jobId', jobId);
-            
-            if (degreesError) {
-                console.error('Error fetching job degrees:', degreesError);
-                return res.status(500).send('Error fetching job degrees');
-            }
-    
-            // Fetch job experiences from jobreqexperiences
-            const { data: experiences, error: experiencesError } = await supabase
-                .from('jobreqexperiences')
-                .select('jobReqExperienceType, jobReqExperienceDescrpt')
-                .eq('jobId', jobId);
-            
-            if (experiencesError) {
-                console.error('Error fetching job experiences:', experiencesError);
-                return res.status(500).send('Error fetching job experiences');
-            }
-    
-            // Render the job-details page with all fetched data
-            res.render('applicant_pages/job-details', { job, hardSkills, softSkills, certifications, degrees, experiences });
-        } catch (err) {
-            console.error('Server error:', err);
-            res.status(500).send('Server error');
+            return jobDetails;
+        } catch (error) {
+            console.error('Server error:', error);
+            return null;
         }
     },
     
@@ -250,7 +277,6 @@ const applicantController = {
         // Redirect upon success
         res.redirect('/applicant/login');
     },
-
     handleLoginSubmit: async function (req, res) {
         try {
             const { email, password } = req.body;
@@ -292,6 +318,46 @@ const applicantController = {
                     req.session.userID = userData[0].userId;
                     req.session.userRole = userData[0].userRole;
     
+                    // Fetch existing screening data for the user
+                    let { data: screeningData, error: screeningError } = await supabase
+                        .from('applicant_initialscreening_assessment')
+                        .select('*')
+                        .eq('userId', userData[0].userId)
+                        .single();
+    
+                    if (screeningError) {
+                        console.error('Error fetching screening data:', screeningError);
+                    }
+    
+                    // Store screening data in session if it exists
+                    if (screeningData) {
+                        req.session.screeningCounters = {
+                            degree: screeningData.degreeScore,
+                            experience: screeningData.experienceScore,
+                            certification: screeningData.certificationScore,
+                            hardSkill: screeningData.hardSkillsScore,
+                            softSkill: screeningData.softSkillsScore,
+                            work_setup: screeningData.workSetupScore ? 1 : 0,
+                            availability: screeningData.availabilityScore ? 1 : 0
+                        };
+                        req.session.currentQuestionIndex = screeningData.currentQuestionIndex || 0; // Store the last answered question index
+                        req.session.selectedPosition = screeningData.jobId; // Store the job ID
+                        req.session.applicantStage = 'screening_questions'; // Set the stage to continue
+                    } else {
+                        // Initialize session variables if no screening data exists
+                        req.session.screeningCounters = {
+                            degree: 0, // Add this entry
+                            experience: 0,
+                            certification: 0,
+                            hardSkill: 0,
+                            softSkill: 0,
+                            work_setup: 0,
+                            availability: 0
+                        };
+                        req.session.currentQuestionIndex = 0; // Start from the beginning
+                        req.session.applicantStage = 'initial'; // Set the stage to initial
+                    }
+    
                     // Fetch chatbot history for the user
                     let { data: chatHistory, error: chatHistoryError } = await supabase
                         .from('chatbot_history')
@@ -318,35 +384,6 @@ const applicantController = {
                     }
                 } else {
                     console.log('Password mismatch for user:', email);
-                    return res.render('applicant_pages/login', { message: 'Wrong password' });
-                }
-            }
-    
-            console.log('User  not found in useraccounts, checking staffaccounts...');
-            let { data: staffData, error: staffError } = await supabase
-                .from('staffaccounts')
-                .select('userId, userPass, userRole')
-                .eq('userEmail', email);
-    
-            if (staffError) {
-                console.error('Error querying staffaccounts:', staffError);
-                return res.status(500).send('Internal Server Error');
-            }
-    
-            console.log('Staff Data:', staffData);
-    
-            if (staffData.length > 0) {
-                const passwordMatch = await bcrypt.compare(password, staffData[0].userPass);
-    
-                if (passwordMatch) {
-                    req.session.authenticated = true;
-                    req.session.userID = staffData[0].userId;
-                    req.session.userRole = staffData[0].userRole;
-    
-                    console.log('Redirecting to employee chatbot...');
-                    return res.redirect('/employeechatbothome'); 
-                } else {
-                    console.log('Password mismatch for staff user:', email);
                     return res.render('applicant_pages/login', { message: 'Wrong password' });
                 }
             }
@@ -451,87 +488,9 @@ res.render('applicant_pages/chatbot', {
         }
     },
     
-    
-    
-    // getChatbotPage: async function(req, res) {
-    //     try {
-    //         const userId = req.session.userID;
-    //         console.log('✅ [getChatbotPage] User ID from session:', userId);
-    
-    //         // Check if user is authenticated
-    //         if (!userId) {
-    //             console.log('❌ [getChatbotPage] User not authenticated. Redirecting to login...');
-    //             return res.redirect('/login');
-    //         }
-    
-    //         // Retrieve existing chat history if any
-    //         let chatData = req.session.chatHistory || [];
-    //         let initialResponse = {};
-    
-    //         // Only show initial message if there's no chat history
-    //         if (chatData.length === 0) {
-    //             const initialMessage = "Hi! Welcome to Prime Infrastructure Recruitment Screening Portal. What position are you going to apply for?";
-    //             console.log('✅ [getChatbotPage] No chat history found, preparing initial message...');
-    
-    //             try {
-    //                 // Fetch job positions from the controller
-    //                 const positions = await applicantController.getJobPositionsList();
-    //                 console.log('✅ [getChatbotPage] Job positions fetched successfully:', positions);
-    
-    //                 // Construct buttons from positions
-    //                 initialResponse = {
-    //                     text: `${initialMessage}\nHere are our current job openings:`,
-    //                     buttons: positions.map(pos => ({
-    //                         text: pos,
-    //                         value: pos
-    //                     }))
-    //                 };
-    
-    //                 // Push the initial message to chat history
-    //                 chatData.push({
-    //                     message: JSON.stringify(initialResponse),
-    //                     sender: 'bot',
-    //                     timestamp: new Date().toISOString()
-    //                 });
-    
-    //                 // Update the session
-    //                 req.session.chatHistory = chatData;
-    //                 console.log('✅ [getChatbotPage] Initial message and buttons pushed to chat history.');
-    //             } catch (jobError) {
-    //                 console.error("❌ [getChatbotPage] Error fetching job positions:", jobError);
-    //                 initialResponse = {
-    //                     text: initialMessage,
-    //                     buttons: []
-    //                 };
-    
-    //                 // Push empty buttons if error
-    //                 chatData.push({
-    //                     message: JSON.stringify(initialResponse),
-    //                     sender: 'bot',
-    //                     timestamp: new Date().toISOString()
-    //                 });
-    //             }
-    //         } else {
-    //             console.log('✅ [getChatbotPage] Existing chat history found. Skipping initial message.');
-    //         }
-    
-    //         // Log the initialResponse before rendering
-    //         console.log('✅ [getChatbotPage] Initial response to be sent:', JSON.stringify(initialResponse));
-    
-    //         // Render the page and pass the initialResponse safely
-    //         res.render('applicant_pages/chatbot', {
-    //             initialResponse,
-    //             chatData
-    //         });
-                
-    //     } catch (error) {
-    //         console.error('❌ [getChatbotPage] Error rendering chatbot page:', error);
-    //         res.status(500).send('Error loading chatbot page');
-    //     }
-    // },
     handleChatbotMessage: async function (req, res) {
         try {
-            console.log('Start processing chatbot message');
+            console.log('✅ [Chatbot] Start processing chatbot message');
     
             const userId = req.session.userID;
             if (!userId) {
@@ -540,7 +499,7 @@ res.render('applicant_pages/chatbot', {
     
             const userMessage = req.body.message.toLowerCase();
             const timestamp = new Date().toISOString();
-            console.log(`User  ID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
+            console.log(`✅ [Chatbot] UserID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
     
             // Fetch existing chat history
             const { data: chatHistory, error: chatHistoryError } = await supabase
@@ -550,34 +509,49 @@ res.render('applicant_pages/chatbot', {
                 .order('timestamp', { ascending: true });
     
             if (chatHistoryError) {
-                console.error('Error fetching chat history:', chatHistoryError);
+                console.error('❌ [Chatbot] Error fetching chat history:', chatHistoryError);
                 return res.status(500).json({ response: "Error fetching chat history." });
             }
     
             // Save user message in chatbot history
             await supabase
                 .from('chatbot_history')
-                .insert([{ userId, message: userMessage, sender: 'user', timestamp }]);
+                .insert([{
+                    userId,
+                    message: userMessage,
+                    sender: 'user',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
     
-            // Determine the current stage based on chat history
             let botResponse;
             let applicantStage = req.session.applicantStage || 'initial';
     
-            // Gracefully handle unknown messages without breaking
-            if (!userMessage) {
-                botResponse = "I didn't quite get that. Could you please rephrase or select from the options?";
+            // ✅ Initialize screening counters if not set
+            if (!req.session.screeningCounters) {
+                req.session.screeningCounters = {
+                    degree: 0,
+                    experience: 0,
+                    certification: 0,
+                    hardSkill: 0,
+                    softSkill: 0,
+                    work_setup: 0,
+                    availability: 0
+                };
             }
     
-            // Handle stages flow
+            // ✅ Handle Job Selection
             if (applicantStage === 'initial') {
                 const positions = await applicantController.getJobPositionsList();
                 const selectedPosition = positions.find(position => userMessage.includes(position.toLowerCase()));
     
                 if (selectedPosition) {
                     req.session.selectedPosition = selectedPosition;
-                    const jobDetails = await applicantController.getJobDetails(selectedPosition);
+                    const jobDetails = await applicantController.getJobDetails(req.session.selectedPosition);
+                    console.log('✅ [Chatbot] Job Details Fetched:', jobDetails);
     
                     if (jobDetails) {
+                        // ✅ Update ATS with Job Details
                         const updateJobResult = await applicantController.updateApplicantJobAndDepartmentOnATS(
                             userId,
                             jobDetails.jobId,
@@ -585,12 +559,11 @@ res.render('applicant_pages/chatbot', {
                         );
     
                         if (!updateJobResult.success) {
-                            console.error(updateJobResult.message);
-                            botResponse = "Error updating your application details. Please try again later.";
-                            res.status(500).json({ response: botResponse });
-                            return;
+                            console.error('❌ [Chatbot] Failed to update applicant job:', updateJobResult.message);
+                            return res.status(500).json({ response: "Failed to update your job details. Please try again later." });
                         }
     
+                        // ✅ Proceed to screening questions
                         botResponse = {
                             text: `You have chosen *${selectedPosition}*. Here are the details:\n` +
                                 `**Job Title:** ${jobDetails.jobTitle}\n` +
@@ -609,24 +582,28 @@ res.render('applicant_pages/chatbot', {
                     botResponse = "Please specify a job position from the available list.";
                 }
     
+            // ✅ Handle Screening Questions
             } else if (applicantStage === 'job_selection' && userMessage.includes('yes')) {
-                const jobId = (await applicantController.getJobDetails(req.session.selectedPosition)).jobId;
+                const jobDetails = await applicantController.getJobDetails(req.session.selectedPosition);
+                if (!jobDetails || isNaN(jobDetails.jobId)) {
+                    console.error('❌ [Chatbot] Invalid jobId:', jobDetails.jobId);
+                    return res.status(500).json({ response: 'Error identifying job details. Please try again later.' });
+                }
+    
+                const jobId = jobDetails.jobId;
                 const result = await applicantController.updateApplicantStatusToP1Initial(userId);
     
                 if (!result.success) {
-                    console.error(result.message);
-                    res.status(500).json({ response: result.message });
-                    return;
+                    console.error('❌ [Chatbot] Failed to update applicant status:', result.message);
+                    return res.status(500).json({ response: result.message });
                 }
     
-                // Retrieve screening questions
+                // ✅ Retrieve Screening Questions
                 if (!req.session.screeningQuestions) {
                     const questions = await applicantController.getInitialScreeningQuestions(jobId);
-    
                     if (!questions || questions.length === 0) {
                         botResponse = "No screening questions available for this position.";
-                        res.status(200).json({ response: botResponse });
-                        return;
+                        return res.status(200).json({ response: botResponse });
                     }
     
                     req.session.screeningQuestions = questions;
@@ -634,105 +611,121 @@ res.render('applicant_pages/chatbot', {
                     req.session.screeningScores = [];
                 }
     
+                // ✅ Ask the first question
                 const questions = req.session.screeningQuestions;
-                const currentIndex = req.session.currentQuestionIndex || 0;
+                const currentIndex = req.session.currentQuestionIndex;
+                botResponse = {
+                    text: questions[currentIndex].text,
+                    buttons: [
+                        { text: 'Yes', value: 1 },
+                        { text: 'No', value: 0 }
+                    ]
+                };
+                req.session.applicantStage = 'screening_questions';
     
-                // Ask the first question
-                if (currentIndex < questions.length) {
-                    botResponse = {
-                        text: questions[currentIndex].text,
-                        buttons: [
-                            { text: 'Yes', value: 1 },
-                            { text: 'No', value: 0 }
-                        ]
-                    };
-                    req.session.currentQuestionIndex = currentIndex + 1;
-                    req.session.applicantStage = 'screening_questions';
-                } else {
-                    botResponse = "All screening questions have been answered.";
-                }
-    
+            // ✅ Process Answered Questions
             } else if (applicantStage === 'screening_questions') {
                 const questions = req.session.screeningQuestions;
                 const currentIndex = req.session.currentQuestionIndex;
     
                 if (currentIndex < questions.length) {
                     const currentQuestion = questions[currentIndex];
-                    const answerValue = userMessage.trim().toLowerCase() === 'yes' ? 1 : 0;
+                    const answerValue = userMessage.includes('yes') ? 1 : 0;
+                    
+                    // Track the type of question being answered
+                    const questionType = currentQuestion.type;
+                    
+                    // Store the question and answer
+                    req.session.screeningScores.push({
+                        question: currentQuestion.text,
+                        answer: answerValue,
+                        type: questionType
+                    });
     
-                    req.session.screeningScores.push({ question: currentQuestion.text, answer: answerValue });
-    
-                    req.session.currentQuestionIndex++;
-    
-                    if (req.session.currentQuestionIndex < questions.length) {
-                        const nextQuestion = questions[req.session.currentQuestionIndex];
+                    // Update the appropriate counter
+                    if (req.session.screeningCounters && questionType) {
+                        req.session.screeningCounters[questionType] = 
+                            (req.session.screeningCounters[questionType] || 0) + answerValue;
+                    }
+                    
+                    // Check for automatic rejection conditions
+                    if ((questionType === 'work_setup' || questionType === 'availability') && answerValue === 0) {
+                        console.log(`❌ [Chatbot] Automatic rejection triggered: ${questionType} = No`);
+                        
+                        // Save the remaining questions with default "No" answers to complete the record
+                        for (let i = currentIndex + 1; i < questions.length; i++) {
+                            req.session.screeningScores.push({
+                                question: questions[i].text,
+                                answer: 0,
+                                type: questions[i].type
+                            });
+                        }
+                        
+                        // Save the scores
+                        const saveResult = await applicantController.saveScreeningScores(
+                            userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
+                        );
+                        
+                        // Return the rejection message
                         botResponse = {
-                            text: nextQuestion.text,
-                            buttons: [
-                                { text: 'Yes', value: 1 },
-                                { text: 'No', value: 0 }
-                            ]
+                            text: "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors."
                         };
+                        
+                        req.session.applicantStage = 'rejected';
+                        
                     } else {
-                        await applicantController.saveScreeningScores(userId, req.session.selectedPosition, req.session.screeningScores);
-                        botResponse = {
-                            text: "Thank you for answering the questions. Please upload your resume.",
-                            buttons: [
-                                { text: 'Upload File', type: 'file_upload', action: 'uploadResume' }
-                            ]
-                        };
+                        // Proceed to next question normally
+                        req.session.currentQuestionIndex++;
+                        
+                        if (req.session.currentQuestionIndex < questions.length) {
+                            const nextQuestion = questions[req.session.currentQuestionIndex];
+                            botResponse = {
+                                text: nextQuestion.text,
+                                buttons: [
+                                    { text: 'Yes', value: 1 },
+                                    { text: 'No', value: 0 }
+                                ]
+                            };
+                        } else {
+                            // All questions answered, save scores
+                            console.log('✅ [Chatbot] Saving Final Scores...');
+                            const saveResult = await applicantController.saveScreeningScores(
+                                userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
+                            );
     
-                        req.session.applicantStage = 'file_upload';
+                            if (saveResult.success) {
+                                console.log('✅ [Chatbot] Scores Successfully Saved');
+                                botResponse = {
+                                    text: saveResult.message,
+                                    buttons: (saveResult.message.includes("not met the requirements")) ? 
+                                        [] : [{ text: 'Upload File', type: 'file_upload' }]
+                                };
+                            } else {
+                                console.error('❌ [Chatbot] Failed to Save Scores');
+                                botResponse = "There was an error processing your application. Please try again later.";
+                            }
+                            
+                            req.session.applicantStage = (saveResult.message.includes("not met the requirements")) ? 
+                                'rejected' : 'file_upload';
+                        }
                     }
                 }
-    
-            } else if (req.body.file) {
-                await this.handleFileUpload(req, res);
-    
-                const applicantRecord = await applicantController.getApplicantStatus(userId);
-                if (applicantRecord && applicantRecord.applicantStatus === "P1 - PASSED") {
-                    botResponse = {
-                        messages: [
-                            { text: "✅ Congratulations! You passed the initial screening." },
-                            { text: "📅 Please schedule your interview now." },
-                            {
-                                text: "Click the button below to schedule.",
-                                buttons: [
-                                    { text: "Schedule on Calendly", url: "/applicant/schedule-interview" }
-                                ]
-                            }
-                        ]
-                    };
-                    req.session.applicantStage = 'interview_scheduling';
-                } else {
-                    botResponse = "Your application is under review.";
-                }
-    
-            } else {
-                // Handle unknown messages without breaking
-                botResponse = {
-                    text: "I didn't quite get that. Please try again or choose an option below.",
-                    buttons: [
-                        { text: 'See Job Openings', value: 'job_positions' },
-                        { text: 'Check Application Status', value: 'application_status' }
-                    ]
-                };
             }
     
-            // Save bot response to chatbot history
+            // ✅ Save bot response to chatbot history
             await supabase
                 .from('chatbot_history')
                 .insert([{
                     userId,
-                    message: typeof botResponse === 'string' ? botResponse : JSON.stringify(botResponse),
+                    message: JSON.stringify(botResponse),
                     sender: 'bot',
-                    timestamp
+                    timestamp,
+                    applicantStage: req.session.applicantStage
                 }]);
     
             res.status(200).json({ response: botResponse });
-    
         } catch (error) {
-            console.error('Error handling chatbot message:', error);
+            console.error('❌ [Chatbot] Error:', error);
             res.status(500).send('Internal Server Error');
         }
     },
@@ -939,90 +932,126 @@ getInitialScreeningQuestions: async function (jobId) {
         }
     },
 
-    // Function to fetch job details from the db
-// Function to fetch detailed job information, including required certifications, degrees, experiences, and skills
-getJobDetails: async function(jobTitle) {
-    try {
-        const { data: jobDetails, error } = await supabase
-            .from('jobpositions')
-            .select(`
-                jobId, jobTitle, jobDescrpt,  departmentId,
-                jobreqcertifications(jobReqCertificateType, jobReqCertificateDescrpt),
-                jobreqdegrees(jobReqDegreeType, jobReqDegreeDescrpt),
-                jobreqexperiences(jobReqExperienceType, jobReqExperienceDescrpt),
-                jobreqskills(jobReqSkillType, jobReqSkillName)
-            `)
-            .eq('jobTitle', jobTitle)
-            .single();
-
-        if (error) {
-            console.error('Error fetching job details:', error);
-            return null;
-        }
-
-        return jobDetails;
-    } catch (error) {
-        console.error('Server error:', error);
-        return null;
-    }
-},
-
-saveScreeningScores: async function (userId, jobId, responses, screeningCounters, resumeUrl) {
-    try {
-        console.log('Saving screening scores for user:', userId);
-        
-        // Log input parameters for debugging
-        console.log(`Job ID: ${jobId}`);
-        console.log('Responses:', responses);
-        console.log('Screening Counters:', screeningCounters);
-
-        let degreeScore = screeningCounters.degree || 0;
-        let experienceScore = screeningCounters.experience || 0;
-        let certificationScore = screeningCounters.certification || 0;
-        let hardSkillsScore = screeningCounters.hardSkill || 0;
-        let softSkillsScore = screeningCounters.softSkill || 0;
-        let workSetupScore = screeningCounters.work_setup > 0; // Boolean
-        let availabilityScore = screeningCounters.availability > 0; // Boolean
-
-        // Calculate total score
-        const totalScore = degreeScore + experienceScore + certificationScore + hardSkillsScore + softSkillsScore;
-        const totalScoreCalculatedAt = new Date().toISOString();
-        
-        console.log(`Calculated total score: ${totalScore}`);
-        console.log(`Total score calculated at: ${totalScoreCalculatedAt}`);
-
-        // Insert into database
-        const { data, error } = await supabase
-            .from('applicant_initialscreening_assessment')
-            .insert([
-                {
-                    userId: userId,
-                    jobId: jobId,
-                    degreeScore: degreeScore,
-                    experienceScore: experienceScore,
-                    certificationScore: certificationScore,
-                    hardSkillsScore: hardSkillsScore,
-                    softSkillsScore: softSkillsScore,
-                    workSetupScore: workSetupScore,
-                    availabilityScore: availabilityScore,
-                    totalScore: totalScore,
-                    totalScoreCalculatedAt: totalScoreCalculatedAt,
-                    resume_url: resumeUrl // Pass the resume URL here
+    saveScreeningScores: async function (userId, jobPosition, responses, resumeUrl) {
+        try {
+            console.log('Saving screening scores for user:', userId);
+            
+            // Get the actual jobId from the database using the position name
+            const { data: jobData, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobId')
+                .ilike('jobTitle', jobPosition)
+                .single();
+            
+            if (jobError || !jobData) {
+                console.error('Error fetching job ID:', jobError);
+                throw new Error('Error finding job position ID.');
+            }
+            
+            const jobId = jobData.jobId;
+            console.log(`Job ID: ${jobId}`);
+            console.log('Responses:', responses);
+            console.log('Resume URL:', resumeUrl);
+    
+            // Initialize category counters
+            let degreeScore = 0;
+            let experienceScore = 0;
+            let certificationScore = 0;
+            let hardSkillsScore = 0;
+            let softSkillsScore = 0;
+            let workSetupScore = 0;
+            let availabilityScore = 0;
+            
+            // Check if any "no" answers for critical fields
+            let hasRejectionTrigger = false;
+            
+            // Process each response and categorize by question type
+            responses.forEach(response => {
+                const question = response.question.toLowerCase();
+                const answer = response.answer;
+                
+                // Check for automatic rejection conditions
+                if (question.includes('work setup') && answer === 0) {
+                    workSetupScore = 0;
+                    hasRejectionTrigger = true;
+                } else if (question.includes('availability') && answer === 0) {
+                    availabilityScore = 0;
+                    hasRejectionTrigger = true;
+                } else if (question.includes('work setup') && answer === 1) {
+                    workSetupScore = 1;
+                } else if (question.includes('availability') && answer === 1) {
+                    availabilityScore = 1;
                 }
-            ]);
-
-        if (error) {
-            console.error('Error saving screening scores:', error);
-            throw new Error('Error saving screening scores.');
+                
+                // Count scores by category
+                if (question.includes('degree')) {
+                    degreeScore += answer;
+                } else if (question.includes('experience')) {
+                    experienceScore += answer;
+                } else if (question.includes('certification') || question.includes('earned')) {
+                    certificationScore += answer;
+                } else if (question.includes('hard skills')) {
+                    hardSkillsScore += answer;
+                } else if (question.includes('soft skills')) {
+                    softSkillsScore += answer;
+                }
+            });
+            
+            // Calculate total score
+            const totalScore = degreeScore + experienceScore + certificationScore + 
+                              hardSkillsScore + softSkillsScore;
+            const totalScoreCalculatedAt = new Date().toISOString();
+            
+            console.log(`Calculated total score: ${totalScore}`);
+            console.log(`Total score calculated at: ${totalScoreCalculatedAt}`);
+            
+            // Insert into database
+            const { data, error } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .insert([
+                    {
+                        userId: userId,
+                        jobId: jobId,
+                        degreeScore: degreeScore,
+                        experienceScore: experienceScore,
+                        certificationScore: certificationScore,
+                        hardSkillsScore: hardSkillsScore,
+                        softSkillsScore: softSkillsScore,
+                        workSetupScore: workSetupScore,
+                        availabilityScore: availabilityScore,
+                        totalScore: totalScore,
+                        totalScoreCalculatedAt: totalScoreCalculatedAt,
+                        resume_url: resumeUrl
+                    }
+                ]);
+    
+            if (error) {
+                console.error('Error saving screening scores:', error);
+                throw new Error('Error saving screening scores.');
+            }
+    
+            console.log('Screening scores saved successfully for user:', userId);
+            
+            // Return rejection message if workSetup or availability is No
+            if (hasRejectionTrigger) {
+                return {
+                    success: true,
+                    message: "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors."
+                };
+            }
+            
+            return {
+                success: true,
+                message: "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made."
+            };
+        } catch (error) {
+            console.error('Error in saveScreeningScores:', error);
+            return {
+                success: false,
+                message: 'An error occurred while saving your screening scores.'
+            };
         }
-
-        console.log('Screening scores saved successfully for user:', userId);
-        return "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.";
-    } catch (error) {
-        console.error('Error in saveScreeningScores:', error);
-        return 'An error occurred while saving your screening scores.';
-    }
-},
+    },
 
 // File upload handler in your controller
 handleFileUpload: async function (req, res) {
