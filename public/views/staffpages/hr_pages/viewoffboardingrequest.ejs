@@ -266,7 +266,7 @@
 
     <script>
         document.getElementById("sendClearance").addEventListener("click", function () {
-            const requestId = "<%= request.requestId %>"; // Pass the requestId from the server
+            const requestId = "<%= request.requestId %>"; 
 
             fetch("/send-clearance", {
                 method: "POST",

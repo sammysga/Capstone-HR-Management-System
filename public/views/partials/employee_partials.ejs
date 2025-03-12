@@ -1,26 +1,26 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 <style>
-
 body {
-    font-family: 'Inter', sans-serif; /* Set the font to Inter */
+    font-family: 'Inter', sans-serif;
 }
-    .logout-container {
-    margin-top: 370px; /* Push the logout button to the bottom */
-    text-align: center; /* Center the button */
+
+.logout-container {
+    margin-top: 370px;
+    text-align: center;
     margin-right: 35px;
 }
 
 .logout-button {
     text-decoration: none;
-    color: #2385B0; /* Text color */
+    color: #2385B0;
     font-weight: bold;
-    background-color: #D8D8D8; /* Bootstrap's danger color for logout */
-    padding: 15px 15px; /* Padding for button */
-    border-radius: 5px; /* Rounded corners */
-    display: block; /* Align as a block */
-    transition: background-color 0.3s; /* Smooth hover effect */
-    font-size: 16px; /* Font size */
+    background-color: #D8D8D8;
+    padding: 15px 15px;
+    border-radius: 5px;
+    display: block;
+    transition: background-color 0.3s;
+    font-size: 16px;
     width: 100%;
 }
 
@@ -30,177 +30,171 @@ body {
     font-weight: bold;
 }
 
-/* toast notification css */
-/* .toast {
+/* Notification Bell and Counter Styles*/
+#notification-bell {
     position: fixed;
     top: 20px;
     right: 20px;
-    background-color: #f9f9f9;
-    border: 1px solid #ccc;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    padding: 16px;
-    border-radius: 8px;
-    display: none;
-    z-index: 9999;
-    animation: slide-in 0.5s ease-out;
-    font-family: Arial, sans-serif;
+    z-index: 1001;
+    background: none;
+    border: none;
+    cursor: pointer;
 }
 
-.toast button {
-    margin-top: 10px;
-    background-color: #2385B0;
+#notification-bell i {
+    font-size: 36px;
+    color: #07ACB9;
+    background-color: #07ACB9;
     color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    border-radius: 50%;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#notification-bell i:hover {
+    background-color: #B4E3E3;
+    transform: scale(1.1);
+}
+
+#notification-count {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Notification Panel */
+#notification-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 350px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease-in-out;
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+#notification-panel.open {
+    right: 0;
+}
+
+#notification-panel h3 {
+    font-weight: bold;
+    margin-bottom: 20px;
+    font-size: 20px;
+    color: #07ACB9;
+}
+
+.notification-section {
+    margin-top: 20px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+}
+
+.notification-section h4 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.notification-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.notification-item .headline {
+    display: block;
+    font-weight: bold;
+    font-size: 16px;
+    color: #000;
+}
+
+.notification-item .content {
+    margin: 5px 0;
+    color: #555;
     font-size: 14px;
 }
 
-.toast button:hover {
-    background-color: #1a6a8b;
+.notification-item .date {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
 }
 
-@keyframes slide-in {
-    from {
-        opacity: 0;
-        transform: translateX(100%);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-} */
-
- /* Notification Bar Styling */
-/* Notification Icon Styling */
-
-body {
-    font-family: 'Inter', sans-serif; /* Set the font to Inter */
-}
-.notification-icon {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1001;
-        font-size: 36px; /* Increase the icon size */
-        cursor: pointer;
-        background-color: #07ACB9; /* Background color for the circle */
-        color: white ; /* Icon color */
-        border-radius: 50%; /* Make it circular */
-        padding: 15px; /* Add padding to create space around the icon */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for floating effect */
-        transition: background-color 0.3s, transform 0.3s; /* Smooth transition for hover effect */
-    }
-
-    .notification-icon:hover {
-        background-color: #B4E3E3; /* Darker shade on hover */
-        transform: scale(1.1); /* Slightly increase size on hover */
-    }
-
-    .notification-bar {
-        position: fixed;
-        top: 0;
-        right: -100%;
-        width: 300px;
-        height: 100%; /* Allow height to adjust based on content */
-        max-height: 80%; /* Limit the height */
-        background-color: #fff;
-        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-        transition: right 0.3s ease;
-        z-index: 1000;
-        padding: 20px;
-        overflow-y: auto;
-    }
-
-    .notification-bar.open {
-        right: 0;
-    }
-
-    .notification-header {
-    font-weight: bold;
-    margin-bottom: 10px;
-    font-size: 20px; /* Increase header font size */
-    text-align: left; /* Align the header to the left */
-    color: #07ACB9; /* Set the text color */
+.notification-item button {
+    background-color: #07ACB9;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background-color 0.3s;
 }
 
-    .notification-section {
-        margin-top: 20px; /* Space between sections */
-        border-top: 1px solid #ccc; /* Divider line */
-        padding-top: 10px; /* Padding for section */
-    }
-    .notification-item {
-        margin-bottom: 10px;
-        padding-bottom: 10px;
-    }
-
-    .notification-item strong {
-        display: block; /* Make title block level */
-        font-size: 16px; /* Title font size */
-    }
-
-    .notification-item p {
-        margin: 5px 0; /* Add margin for paragraph */
-    }
-
+.notification-item button:hover {
+    background-color: #B4E3E3;
+}
 
 /* Floating Action Button Styling */
 .fab {
-        position: fixed;
-        bottom: 20px; /* Position above the bottom */
-        right: 20px; /* Align to the right */
-        z-index: 1001;
-        font-size: 24px; /* Icon size */
-        cursor: pointer;
-        background-color: #07ACB9; /* Background color for the circle */
-        color: white; /* Icon color */
-        border-radius: 50%; /* Make it circular */
-        padding: 15px; /* Add padding to create space around the icon */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for floating effect */
-        transition: background-color 0.3s, transform 0.3s; /* Smooth transition for hover effect */
-    }
-
-    .fab:hover {
-        background-color: #B4E3E3; /* Darker shade on hover */
-        transform: scale(1.1); /* Slightly increase size on hover */
-    }
-
-
-    /* Required Action Buton CSS */
-    
-    .toast-btn {
-    background-color: #07ACB9 ; /* Set background color to red */
-    color: white; /* Set text color to white */
-    border: none; /* Remove default border */
-    padding: 10px 15px; /* Add padding for better appearance */
-    border-radius: 5px; /* Rounded corners */
-    cursor: pointer; /* Change cursor to pointer */
-    font-size: 14px; /* Font size */
-    transition: background-color 0.3s; /* Smooth transition for hover effect */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+    font-size: 24px;
+    cursor: pointer;
+    background-color: #07ACB9;
+    color: white;
+    border-radius: 50%;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.3s;
 }
 
-.toast-btn:hover {
-    background-color: #B4E3E3; /* Darker shade on hover */
+.fab:hover {
+    background-color: #B4E3E3;
+    transform: scale(1.1);
 }
+
+#see-previous-notifications {
+    background-color: #07ACB9;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 20px;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+#see-previous-notifications:hover {
+    background-color: #B4E3E3;
+}
+
 </style>
-
-<!-- <div id="toast-notification" class="toast">
-    <strong>360 Feedback Answers Required</strong>
-    <p>
-        The 360-Degree Feedback process starts on <span id="startDate"></span> 
-        and ends at <span id="endDate"></span>. Please submit your feedback before the end. 
-        Your participation is required. Thank you.
-    </p>
-    <button id="feedback-button">Go to Staff Feedback List</button>
-</div> -->
 
 <div class="sidebar">
     <div class="logo-container">
         <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Logo" class="logo">
     </div>
     <ul>
-        <!-- Updated Recruitment Management to Staff Information -->
         <li class="collapsible">
             <a href="#" class="collapsible-header">Staff Information</a>
             <ul class="collapsible-content">
@@ -208,7 +202,6 @@ body {
                 <li><a href="/employee/employeepersinfocareerprog">Personal Information & Career Progression</a></li>
             </ul>
         </li>
-        <!-- Updated Performance Management to Attendance Request -->
         <li class="collapsible">
             <a href="#" class="collapsible-header">Attendance and Requests</a>
             <ul class="collapsible-content">
@@ -222,16 +215,8 @@ body {
                 <li><a href="/employee/employeeobjectivebasedprog">Objective-based Progress Overview</a></li>
                 <li><a href="/employee/employeeskillsproggapanal">Skills Progress & Gap Analysis Overview</a></li>
                 <li><a href="/employee/viewtimeline">View Performance Review Timeline</a></li>
-
             </ul>
         </li>
-        <!-- Uncommented section for Employee Management, if needed -->
-        <!-- <li class="collapsible">
-            <a href="#" class="collapsible-header">Employee Management</a>
-            <ul class="collapsible-content">
-                <li><a href="/hr/managestaff">Manage Employee Accounts</a></li>
-            </ul>
-        </li> -->
     </ul>
 
     <div class="logout-container">
@@ -239,21 +224,44 @@ body {
     </div>
 </div>
 
+<!-- Notification Bell with Counter -->
+<button id="notification-bell">
+    <i class="fas fa-bell"></i>
+    <span id="notification-count">6</span>
+</button>
 
-<i class="fas fa-bell notification-icon" id="notification-icon"></i>
-
-<div class="notification-bar" id="notification-bar">
-    <div class="notification-header">Notifications</div> <!-- Added Notifications heading -->
-    <div class="notification-list" id="notification-list">
+<!-- Notification Panel -->
+<div id="notification-panel">
+    <h3>Notifications</h3>
+    <div id="recent-notifications">
         <div class="notification-section" id="section-1">
             <h4>REQUIRED 360 Degree Feedback Submission</h4>
-            <!-- Notifications will be added here -->
+            <!-- Sample 360 Feedback notifications -->
+            <div class="notification-item">
+                <div class="headline">360 Feedback Answers Required</div>
+                <div class="content">Your participation is required from March 15, 2025 to March 30, 2025.</div>
+                <div class="date">Wed, Mar 12, 2025, 09:15 AM</div>
+                <button class="action-btn">Required Action</button>
+            </div>
         </div>
         <div class="notification-section" id="section-2">
-            <h4>Section 2</h4>
-            <!-- Notifications will be added here -->
+            <h4>Recent Notifications</h4>
+            <!-- Sample recent notifications - only showing 3 initially -->
+            <div class="notification-item">
+                <div class="headline">Team Meeting Scheduled</div>
+                <div class="date">Wed, Mar 12, 2025, 08:30 AM</div>
+            </div>
+            <div class="notification-item">
+                <div class="headline">Project Deadline Updated</div>
+                <div class="date">Tue, Mar 11, 2025, 04:45 PM</div>
+            </div>
+            <div class="notification-item">
+                <div class="headline">New Training Available</div>
+                <div class="date">Mon, Mar 10, 2025, 11:20 AM</div>
+            </div>
         </div>
     </div>
+    <button id="see-previous-notifications">See Previous Notifications</button>
 </div>
 
 <!-- Floating Action Button -->
@@ -262,64 +270,103 @@ body {
 </div>
 
 <script>
-    const notificationIcon = document.getElementById('notification-icon');
-    const notificationBar = document.getElementById('notification-bar');
+    // Notification bell functionality
+    const notificationBell = document.getElementById('notification-bell');
+    const notificationPanel = document.getElementById('notification-panel');
+    const notificationCount = document.getElementById('notification-count');
     const fab = document.getElementById('fab');
+    const seePreviousButton = document.getElementById('see-previous-notifications');
 
-    notificationIcon.addEventListener('click', () => {
-        console.log('Notification icon clicked'); // Log when clicked
-        notificationBar.classList.toggle('open');
+    notificationBell.addEventListener('click', function() {
+        console.log('Notification bell clicked');
+        notificationPanel.classList.toggle('open');
     });
 
-    fab.addEventListener('click', () => {
-        console.log('Floating Action Button clicked'); // Log when clicked
-        window.location.href = '/employee/staffFeedbackList'; // Redirect to the Staff Feedback List
-    });
-
-    // Function to add a new notification
-// Function to add a new notification
-function addNotification(title, message, startDate, endDate) {
-    console.log('Adding notification:', { title, message, startDate, endDate }); // Log notification details
-    const notificationItem = document.createElement('div');
-    notificationItem.classList.add('notification-item');
-    notificationItem.innerHTML = `
-        <strong>${title}</strong>
-        <p>${message} from <span>${startDate}</span> to <span>${endDate}</span>.</p>
-        <button class="toast-btn" id="toast-action-btn">Required Action</button>`;
-    document.getElementById('section-1').appendChild(notificationItem); // Append to section 1
-    console.log('Notification added to the list.'); // Confirm notification was added
-}
-    // Example of how to call the addNotification function
-    async function fetchNotifications() {
-        try {
-            const response = await fetch('/employee/api/get360FeedbackNotification'); // Adjust the path to your API
-            const data = await response.json();
-
-            console.log('API Response:', data); // Log the response
-
-            if (data.success) {
-                const { feedback, startDate, endDate } = data;
-                console.log('Notification data:', { feedback, startDate, endDate }); // Log the data to be used
-                addNotification('360 Feedback Answers Required', 'Your participation is required.', startDate, endDate);
-            } else {
-                console.error('Error in response:', data.message);
-            }
-        } catch (error) {
-            console.error('Error fetching notifications:', error);
+    // Close notification panel when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!notificationPanel.contains(event.target) && !notificationBell.contains(event.target)) {
+            notificationPanel.classList.remove('open');
         }
+    });
+
+    // Format date function
+    function formatDate(date) {
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return new Intl.DateTimeFormat('en-US', options).format(date);
     }
 
-    // Call fetchNotifications when the page loads or at a specific interval
-    window.onload = fetchNotifications; // Fetch notifications on page load
-</script>
+    // Sample older notifications data
+    const olderNotifications = [
+        { message: "Team Meeting Scheduled", timestamp: "2025-03-12T08:30:00" },
+        { message: "Project Deadline Updated", timestamp: "2025-03-11T16:45:00" },
+        { message: "New Training Available", timestamp: "2025-03-10T11:20:00" },
+        { message: "Performance Review Reminder", timestamp: "2025-03-09T10:15:00" },
+        { message: "System Maintenance Scheduled", timestamp: "2025-03-08T14:30:00" },
+        { message: "Holiday Schedule Updated", timestamp: "2025-03-07T09:45:00" },
+        { message: "New Company Policy", timestamp: "2025-03-06T13:20:00" },
+        { message: "Team Building Event", timestamp: "2025-03-05T15:10:00" },
+        { message: "Quarterly Report Due", timestamp: "2025-03-04T11:00:00" }
+    ];
 
-<!-- 
-<script>
-    const notificationIcon = document.getElementById('notification-icon');
-    const notificationBar = document.getElementById('notification-bar');
-
-    notificationIcon.addEventListener('click', () => {
-        notificationBar.classList.toggle('open');
+    // See previous notifications button functionality
+    seePreviousButton.addEventListener('click', function() {
+        console.log('See Previous Notifications clicked');
+        // Clear section-2 before adding all notifications
+        document.getElementById('section-2').innerHTML = '<h4>All Notifications</h4>';
+        
+        // Add all notifications to section-2
+        olderNotifications.forEach(notification => {
+            const notificationItem = document.createElement('div');
+            notificationItem.classList.add('notification-item');
+            notificationItem.innerHTML = `
+                <div class="headline">${notification.message}</div>
+                <div class="date">${formatDate(new Date(notification.timestamp))}</div>
+            `;
+            document.getElementById('section-2').appendChild(notificationItem);
+        });
+        
+        // Hide the button after showing all notifications
+        seePreviousButton.style.display = 'none';
+        
+        // Add a "Show Less" button
+        const showLessButton = document.createElement('button');
+        showLessButton.id = 'show-less-notifications';
+        showLessButton.textContent = 'Show Less';
+        showLessButton.style = seePreviousButton.style.cssText;
+        document.getElementById('recent-notifications').appendChild(showLessButton);
+        
+        showLessButton.addEventListener('click', function() {
+            // Reset to initial state
+            document.getElementById('section-2').innerHTML = '<h4>Recent Notifications</h4>';
+            olderNotifications.slice(0, 3).forEach(notification => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <div class="headline">${notification.message}</div>
+                    <div class="date">${formatDate(new Date(notification.timestamp))}</div>
+                `;
+                document.getElementById('section-2').appendChild(notificationItem);
+            });
+            
+            // Show the "See Previous" button again
+            seePreviousButton.style.display = 'block';
+            
+            // Remove the "Show Less" button
+            this.remove();
+        });
     });
-</script> -->
 
+    // Initialize button click handlers for sample notifications
+    document.querySelectorAll('.action-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            console.log('Action button clicked');
+            window.location.href = '/employee/staffFeedbackList';
+        });
+    });
+
+    // Floating action button functionality
+    fab.addEventListener('click', () => {
+        console.log('Floating Action Button clicked');
+        window.location.href = '/employee/staffFeedbackList';
+    });
+</script>

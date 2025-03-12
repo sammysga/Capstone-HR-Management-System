@@ -1,5 +1,5 @@
 <style>
-    .logout-container {
+.logout-container {
     margin-top: 370px; /* Push the logout button to the bottom */
     text-align: center; /* Center the button */
     margin-right: 35px;
@@ -22,6 +22,164 @@
     background-color: #2385B0; 
     color: #D8D8D8;
     font-weight: bold;
+}
+
+/* Notification Bell and Counter Styles*/
+#notification-bell {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1001;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+#notification-bell i {
+    font-size: 36px;
+    color: #07ACB9;
+    background-color: #07ACB9;
+    color: white;
+    border-radius: 50%;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#notification-bell i:hover {
+    background-color: #B4E3E3;
+    transform: scale(1.1);
+}
+
+#notification-count {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Notification Panel */
+#notification-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 350px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease-in-out;
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+#notification-panel.open {
+    right: 0;
+}
+
+#notification-panel h3 {
+    font-weight: bold;
+    margin-bottom: 20px;
+    font-size: 20px;
+    color: #07ACB9;
+}
+
+.notification-section {
+    margin-top: 20px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+}
+
+.notification-section h4 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.notification-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.notification-item .headline {
+    display: block;
+    font-weight: bold;
+    font-size: 16px;
+    color: #000;
+}
+
+.notification-item .content {
+    margin: 5px 0;
+    color: #555;
+    font-size: 14px;
+}
+
+.notification-item .date {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+}
+
+.notification-item button {
+    background-color: #07ACB9;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.notification-item button:hover {
+    background-color: #B4E3E3;
+}
+
+/* Floating Action Button Styling */
+.fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+    font-size: 24px;
+    cursor: pointer;
+    background-color: #07ACB9;
+    color: white;
+    border-radius: 50%;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.fab:hover {
+    background-color: #B4E3E3;
+    transform: scale(1.1);
+}
+
+#see-previous-notifications {
+    background-color: #07ACB9;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 20px;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+#see-previous-notifications:hover {
+    background-color: #B4E3E3;
 }
 
 </style>
