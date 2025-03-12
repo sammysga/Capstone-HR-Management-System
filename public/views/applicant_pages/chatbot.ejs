@@ -138,17 +138,6 @@ let initialResponse = {}; // ✅ Declare initialResponse globally
 document.addEventListener("DOMContentLoaded", function() {
     console.log("✅ [Chatbot] Page loaded. Initializing chat...");
 
-    // ✅ Safely parse initialResponse without breaking JSON
-    // try {
-    //     initialResponse = <%- JSON.stringify(initialResponse) %>;
-    //     if (initialResponse.text && initialResponse.text !== "") {
-    //         displayInitialMessage(initialResponse);
-    //     }
-    // } catch (error) {
-    //     console.error('❌ [Chatbot] Error parsing initialResponse:', error);
-    // }
-
-    // ✅ Now safely load the chat history without ReferenceError
     loadChatHistory();
 
     // ✅ Event listeners for input
@@ -160,33 +149,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-    //     document.addEventListener("DOMContentLoaded", function() {
-    //     console.log("✅ [Chatbot] Page loaded. Initializing chat...");
-    //     loadChatHistory();
 
-    //     // Safely parse initialResponse without breaking JSON
-    //     try {
-    //         // Use the variable directly without additional formatting
-    //         const initialResponse = <%- JSON.stringify(initialResponse) %>;
-    //         displayInitialMessage(initialResponse);
-
-    //         console.log('✅ [Chatbot] Initial response being displayed:', initialResponse);
-
-    //         // if (initialResponse && initialResponse.text) {
-    //         //     displayInitialMessage(initialResponse);
-    //         // }
-    //     } catch (error) {
-    //         console.error('❌ [Chatbot] Error parsing initialResponse:', error);
-    //     }
-
-    //     // Add event listener for user input
-    //     document.getElementById("send-button").addEventListener("click", handleUserInput);
-    //     document.getElementById("user-input").addEventListener("keypress", function(event) {
-    //         if (event.key === "Enter") {
-    //             handleUserInput();
-    //         }
-    //     });
-    // });
 
     // Function to display the initial message with buttons
     function displayInitialMessage(response) {
@@ -344,67 +307,86 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 
 
-        async function uploadFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+async function uploadFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-            console.log("Uploading file:", file.name);
-            const formData = new FormData();
-            formData.append("file", file);
+    console.log("Uploading file:", file.name);
+    
+    // Create loading message
+    addMessage("Bot", "Uploading file... Please wait.");
+    
+    const formData = new FormData();
+    formData.append("file", file);
 
-            try {
-                const response = await fetch("/handleFileUpload", {
-                    method: "POST",
-                    body: formData,
-                });
+    try {
+        const response = await fetch("/handleFileUpload", {
+            method: "POST",
+            body: formData,
+        });
 
-                if (!response.ok) throw new Error("Failed to upload file");
+        if (!response.ok) throw new Error("Failed to upload file");
 
-                const fileUrl = await response.text();
-                addMessage(
-                    "Bot",
-                    "Thank you for answering. We have forwarded your resume to the department's Line Manager. We will notify you once a decision has been made."
-                );
+        const result = await response.json();
 
-                console.log("File uploaded successfully. File URL:", fileUrl);
-            } catch (error) {
-                console.error("Error uploading file:", error);
-                addMessage("Bot", "Error uploading file. Please try again.");
-            }
+        // Remove loading message
+        const chatMessages = document.getElementById("chat-messages");
+        if (chatMessages.lastChild && chatMessages.lastChild.textContent === "Uploading file... Please wait.") {
+            chatMessages.removeChild(chatMessages.lastChild);
         }
 
-        function displayBotResponse(response) {
-            console.log("Bot response:", response);
-            const chatMessages = document.getElementById("chat-messages");
+        // Display success message
+        if (result.response && result.response.text) {
+            addMessage("Bot", result.response.text);
+            
+            // Handle next question if it exists
+            if (result.response.nextQuestion) {
+                // Small delay to make it feel more natural
+                setTimeout(() => {
+                    displayBotResponse(result.response.nextQuestion);
+                }, 1000);
+            }
+        } else {
+            addMessage("Bot", "File uploaded successfully!");
+        }
+    } catch (error) {
+        console.error("Error uploading file:", error);
+        addMessage("Bot", "Error uploading file. Please try again.");
+    }
+}
 
-            if (typeof response === "object" && response.text) {
-                addMessage("Bot", response.text);
+function displayBotResponse(response) {
+    console.log("Bot response:", response);
+    const chatMessages = document.getElementById("chat-messages");
 
-                if (response.buttons && response.buttons.length) {
-                    response.buttons.forEach((button) => {
-                        const btn = document.createElement("button");
-                        btn.innerText = button.text;
-                        btn.classList.add("job-button");
+    if (typeof response === "object" && response.text) {
+        addMessage("Bot", response.text);
 
-                        if (button.type === "file_upload") {
-                            btn.onclick = () => document.getElementById("fileUpload").click();
-                        } else {
-                            btn.onclick = async () => {
-                                console.log("Button clicked:", button.text);
-                                addMessage("You", button.text);
-                                await sendMessage(button.text);
-                            };
-                        }
+        if (response.buttons && response.buttons.length) {
+            response.buttons.forEach((button) => {
+                const btn = document.createElement("button");
+                btn.innerText = button.text;
+                btn.classList.add("job-button");
 
-                        chatMessages.appendChild(btn);
-                    });
+                if (button.type === "file_upload") {
+                    btn.onclick = () => document.getElementById("fileUpload").click();
+                } else {
+                    btn.onclick = async () => {
+                        console.log("Button clicked:", button.text);
+                        addMessage("You", button.text);
+                        await sendMessage(button.text);
+                    };
                 }
-            } else {
-                addMessage("Bot", response);
-            }
 
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+                chatMessages.appendChild(btn);
+            });
         }
+    } else {
+        addMessage("Bot", response);
+    }
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
 //         async function fetchInitialResponse() {
 //     console.log("Fetching initial response...");
