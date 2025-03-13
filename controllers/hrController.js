@@ -2701,9 +2701,12 @@ updateJobOffer: async function(req, res) {
             // Update the offboarding_request status to "Sent to Employee"
             const { data, error } = await supabase
                 .from("offboarding_requests")
-                .update({ status: "Sent to Employee" })
+                .update({ 
+                    status: "Sent to Employee",
+                    clearance_sent_date: new Date().toISOString()
+                })
                 .eq("requestId", requestId)
-                .select(); // Return the updated record
+                .select();
     
             if (error) {
                 console.error("Error sending clearance to employee:", error);

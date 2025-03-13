@@ -121,6 +121,9 @@ router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
 router.post('/employee/employeeoffboarding', employeeController.postEmployeeOffboarding);
+router.post('/employee-cancel-offboarding', employeeController.cancelOffboardingRequest);
+router.get('/employee/get-clearance-items/:requestId', employeeController.getClearanceItems);
+router.post('/employee/submit-clearance', employeeController.submitEmployeeClearance);
 
 
 

@@ -19,13 +19,15 @@ const employeeController = {
             req.flash('errors', { authError: 'User not logged in.' });
             return res.redirect('/staff/login');
         }
-
+        
+        // Fetch user account details
         const { data: user, error } = await supabase
             .from('useraccounts')
             .select('userEmail, userRole')
             .eq('userId', userId)
             .single();
-
+            
+        // Fetch staff details with department and job title
         const { data: staff, error: staffError } = await supabase
             .from('staffaccounts')
             .select(`
@@ -36,13 +38,26 @@ const employeeController = {
             `)
             .eq('userId', userId)
             .single();
-
+            
+        // Fetch any active offboarding requests for this user
+        const { data: offboardingRequests, error: offboardingError } = await supabase
+            .from('offboarding_requests')
+            .select('*')
+            .eq('userId', userId)
+            .order('created_at', { ascending: false });
+            
         if (error || staffError) {
             console.error('Error fetching user or staff details:', error || staffError);
             req.flash('errors', { dbError: 'Error fetching user data.' });
             return res.redirect('/staff/employee/dashboard');
         }
-
+        
+        if (offboardingError) {
+            console.error('Error fetching offboarding requests:', offboardingError);
+            // Continue without offboarding data rather than failing the page load
+        }
+        
+        // Combine user data
         const userData = {
             ...user,
             firstName: staff.firstName,
@@ -50,8 +65,11 @@ const employeeController = {
             deptName: staff.departments.deptName,
             jobTitle: staff.jobpositions.jobTitle
         };
-
-        res.render('staffpages/employee_pages/useracc', { user: userData });
+        
+        res.render('staffpages/employee_pages/useracc', { 
+            user: userData,
+            offboardingRequests: offboardingRequests || [] 
+        });
     } catch (err) {
         console.error('Error in getUserAccount controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the account page.' });
@@ -818,6 +836,254 @@ postEmployeeOffboarding: async function(req, res) {
         res.redirect('/employee/employeeoffboarding');
     }
 },
+
+// Get clearance items for a specific request
+getClearanceItems: async function(req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null;
+        const requestId = req.params.requestId;
+        
+        if (!userId) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Unauthorized access.' 
+            });
+        }
+        
+        console.log(`Getting clearance items for request ID: ${requestId}, user ID: ${userId}`);
+        
+        // Verify request exists and belongs to the user
+        const { data: request, error: requestError } = await supabase
+            .from('offboarding_requests')
+            .select('*')
+            .eq('requestId', requestId)
+            .eq('userId', userId)
+            .single();
+            
+        if (requestError) {
+            console.error('Error fetching offboarding request:', requestError);
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Request not found or unauthorized access.' 
+            });
+        }
+        
+        if (!request) {
+            console.error('Request not found for ID:', requestId);
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Request not found or unauthorized access.' 
+            });
+        }
+        
+        // Check if the request status is "Sent to Employee"
+        if (request.status !== 'Sent to Employee') {
+            console.log(`Request status is ${request.status}, not "Sent to Employee"`);
+            return res.status(400).json({ 
+                success: false, 
+                error: 'This clearance form is not available for completion yet.' 
+            });
+        }
+        
+        // Fetch clearance checklist
+        const { data: checklistData, error: checklistError } = await supabase
+            .from('offboarding_checklist')
+            .select('checklist_items')
+            .eq('requestId', requestId)
+            .single();
+            
+        if (checklistError && checklistError.code !== 'PGRST116') { // Ignore "No rows found" error
+            console.error('Error fetching checklist:', checklistError);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Failed to load clearance checklist.' 
+            });
+        }
+        
+        console.log('Checklist data found:', checklistData ? 'Yes' : 'No');
+        
+        return res.json({ 
+            success: true, 
+            checklist: checklistData ? checklistData.checklist_items : [],
+            lastDay: request.last_day
+        });
+    } catch (err) {
+        console.error('Error in getClearanceItems controller:', err);
+        return res.status(500).json({ 
+            success: false, 
+            error: 'An error occurred while loading clearance items.' 
+        });
+    }
+},
+
+// Cancel offboarding request
+cancelOffboardingRequest: async function(req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null;
+        const { requestId } = req.body;
+        
+        if (!userId) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Unauthorized access.' 
+            });
+        }
+        
+        console.log(`Cancelling request ID: ${requestId} for user ID: ${userId}`);
+        
+        // Verify request exists and belongs to the user
+        const { data: request, error: requestError } = await supabase
+            .from('offboarding_requests')
+            .select('status')
+            .eq('requestId', requestId)
+            .eq('userId', userId)
+            .single();
+            
+        if (requestError || !request) {
+            console.error('Error fetching offboarding request:', requestError);
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Request not found or unauthorized access.' 
+            });
+        }
+        
+        // Check if the request can be cancelled (only in Pending status)
+        if (request.status !== 'Pending Line Manager' && request.status !== 'Pending HR') {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'This request cannot be cancelled in its current status.' 
+            });
+        }
+        
+        // Delete the request
+        const { error: deleteError } = await supabase
+            .from('offboarding_requests')
+            .delete()
+            .eq('requestId', requestId)
+            .eq('userId', userId);
+            
+        if (deleteError) {
+            console.error('Error deleting offboarding request:', deleteError);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Failed to cancel offboarding request.' 
+            });
+        }
+        
+        console.log('Request cancelled successfully');
+        
+        return res.json({ 
+            success: true, 
+            message: 'Offboarding request cancelled successfully.' 
+        });
+    } catch (err) {
+        console.error('Error in cancelOffboardingRequest controller:', err);
+        return res.status(500).json({ 
+            success: false, 
+            error: 'An error occurred while processing the request.' 
+        });
+    }
+},
+
+// Submit completed clearance
+submitEmployeeClearance: async function(req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null;
+        const { requestId, signatures, completed } = req.body;
+        
+        if (!userId) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Unauthorized access.' 
+            });
+        }
+        
+        console.log(`Submitting clearance for request ID: ${requestId}, user ID: ${userId}`);
+        
+        // Verify request exists and belongs to the user
+        const { data: request, error: requestError } = await supabase
+            .from('offboarding_requests')
+            .select('*')
+            .eq('requestId', requestId)
+            .eq('userId', userId)
+            .single();
+            
+        if (requestError || !request) {
+            console.error('Error fetching offboarding request:', requestError);
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Request not found or unauthorized access.' 
+            });
+        }
+        
+        // Store signature and update request status
+        try {
+            const { data: offboardingCompletion, error: insertError } = await supabase
+                .from('offboarding_completion')
+                .insert([{
+                    requestId: requestId,
+                    employee_signature: JSON.stringify(signatures), // Store as JSON string
+                    completion_date: new Date().toISOString(),
+                    completed_by: userId
+                }]);
+                
+            if (insertError) {
+                console.error('Error storing completion data:', insertError);
+                return res.status(500).json({ 
+                    success: false, 
+                    error: 'Failed to store completion data.' 
+                });
+            }
+            
+            console.log('Completion data stored successfully');
+        } catch (err) {
+            console.error('Exception storing completion data:', err);
+            return res.status(500).json({
+                success: false,
+                error: 'Exception occurred while storing completion data.'
+            });
+        }
+        
+        // Update request status
+        try {
+            const { error: updateError } = await supabase
+                .from('offboarding_requests')
+                .update({ 
+                    status: 'Completed by Employee',
+                    employee_completion_date: new Date().toISOString()
+                })
+                .eq('requestId', requestId);
+                
+            if (updateError) {
+                console.error('Error updating request status:', updateError);
+                return res.status(500).json({ 
+                    success: false, 
+                    error: 'Failed to update request status.' 
+                });
+            }
+            
+            console.log('Request status updated successfully');
+        } catch (err) {
+            console.error('Exception updating request status:', err);
+            return res.status(500).json({
+                success: false,
+                error: 'Exception occurred while updating request status.'
+            });
+        }
+        
+        return res.json({ 
+            success: true, 
+            message: 'Clearance submitted successfully.' 
+        });
+    } catch (err) {
+        console.error('Error in submitEmployeeClearance controller:', err);
+        return res.status(500).json({ 
+            success: false, 
+            error: 'An error occurred while processing the request.' 
+        });
+    }
+},
+
 
 getLeaveRequestForm: async function(req, res) {
     console.log('Session User:', req.session.user);
