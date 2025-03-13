@@ -245,6 +245,40 @@
     </div>
 
     <script>
+
+document.querySelectorAll('.action-required-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const mrfId = this.getAttribute('data-mrfid');
+                    window.location.href = `/hr/view-mrf/${mrfId}`;  // Redirect to the MRF page
+                });
+            });
+
+            // Toggle active class for sidebar links
+            document.querySelectorAll('.sidebar ul li a').forEach(link => {
+                link.addEventListener('click', function() {
+                    document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Toggle collapsible content
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    var content = this.nextElementSibling;
+                    if (content.style.display === 'block') {
+                        content.style.display = 'none';
+                    } else {
+                        // Hide all other collapsible contents
+                        document.querySelectorAll('.collapsible-content').forEach(item => {
+                            if (item !== content) {
+                                item.style.display = 'none';
+                            }
+                        });
+                        content.style.display = 'block';
+                    }
+                });
+            });
+            
         // Redirect to Calendly
         function setInterviewAvailabilities() {
             window.open('https://calendly.com/users/40706100/event_types/new/solo?return_to=%2Fevent_types%2Fnew', '_blank');
