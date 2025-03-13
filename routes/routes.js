@@ -84,6 +84,7 @@ router.post('/hr/view-mrf/:id', hrController.submitMRF);
 // router.post('/notify-line-manager', hrController.postNotifyLineManager);
 // Backend route to handle evaluation form page
 router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
+router.get('/api/hr/notifications', hrController.getHRNotifications);
 
 
 router.get('/hr/onboarding-view', hrController.getHROnboarding);
