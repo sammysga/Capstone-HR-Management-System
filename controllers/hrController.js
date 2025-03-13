@@ -267,6 +267,116 @@ const hrController = {
             return res.redirect('/hr/dashboard');
         }
     },
+
+    getHRNotifications: async function(req, res) {
+        // Check for authentication
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+    
+        try {
+            // Fetch HR applicants
+            const { data: hrApplicants, error: hrApplicantsError } = await supabase
+            .from('applicantaccounts')
+            .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId') // Added jobId to the select
+            .eq('applicantStatus', 'P1 - Awaiting for HR Action')
+            .order('created_at', { ascending: false });
+    
+            if (hrApplicantsError) throw hrApplicantsError;
+    
+            // Format the HR applicants data - include jobId for redirect
+            const formattedHRApplicants = hrApplicants.map(applicant => ({
+                id: applicant.applicantId,
+                firstName: applicant.firstName || 'N/A',
+                lastName: applicant.lastName || 'N/A',
+                status: applicant.applicantStatus || 'N/A',
+                jobId: applicant.jobId, // Added jobId for the redirect
+                createdAt: applicant.created_at,
+                formattedDate: new Date(applicant.created_at).toLocaleString('en-US', {
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                })
+            }));
+    
+            // Fetch pending MRF data that needs action
+            const { data: pendingMRFs, error: mrfError } = await supabase
+                .from('mrf')
+                .select('mrfId, positionTitle, requisitionDate, departmentId')
+                .eq('status', 'Pending');
+    
+            if (mrfError) throw mrfError;
+    
+            // Fetch departments for pending MRFs
+            const { data: departments, error: deptError } = await supabase
+                .from('departments')
+                .select('departmentId, deptName');
+            
+            if (deptError) throw deptError;
+    
+            // Format pending MRF data
+            const formattedPendingMRFs = pendingMRFs.map(mrf => {
+                const department = departments.find(d => d.departmentId === mrf.departmentId)?.deptName || 'N/A';
+                
+                return {
+                    id: mrf.mrfId,
+                    position: mrf.positionTitle,
+                    department: department,
+                    requestDate: new Date(mrf.requisitionDate).toLocaleString('en-US', {
+                        weekday: 'short', 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric'
+                    })
+                };
+            });
+    
+            // Improved API request detection - checking multiple conditions
+            const isApiRequest = req.xhr || 
+                                req.headers.accept?.includes('application/json') || 
+                                req.path.includes('/api/');
+    
+            // If it's an API request, return JSON with explicit content type
+            if (isApiRequest) {
+                return res
+                    .header('Content-Type', 'application/json')
+                    .json({
+                        hrApplicants: formattedHRApplicants,
+                        pendingMRFs: formattedPendingMRFs,
+                        notificationCount: formattedHRApplicants.length + formattedPendingMRFs.length
+                    });
+            }
+    
+            // Otherwise, return the rendered partial template
+            return res.render('partials/hr_partials', {
+                hrApplicants: formattedHRApplicants,
+                pendingMRFs: formattedPendingMRFs,
+                notificationCount: formattedHRApplicants.length + formattedPendingMRFs.length
+            });
+        } catch (err) {
+            console.error('Error fetching notification data:', err);
+            
+            // Better error handling for API requests
+            const isApiRequest = req.xhr || 
+                               req.headers.accept?.includes('application/json') || 
+                               req.path.includes('/api/');
+            
+            if (isApiRequest) {
+                return res
+                    .status(500)
+                    .header('Content-Type', 'application/json')
+                    .json({ 
+                        error: 'An error occurred while loading notifications.',
+                        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+                    });
+            }
+            
+            return res.status(500).send('Error loading notifications');
+        }
+    },
     
 
 

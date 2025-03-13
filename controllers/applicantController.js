@@ -513,44 +513,6 @@ res.render('applicant_pages/chatbot', {
         }
     },
     
-    // findMatchingPosition: function (userMessage, positions) {
-    //     if (!userMessage || typeof userMessage !== 'string') {
-    //         console.log('❌ [Chatbot] Invalid user message');
-    //         return null;
-    //     }
-    
-    //     if (!Array.isArray(positions) || positions.length === 0) {
-    //         console.log('❌ [Chatbot] No positions to match against');
-    //         return null;
-    //     }
-    
-    //     console.log('✅ [Chatbot] Available positions:', positions);
-    
-    //     const userMsg = userMessage.toLowerCase().trim();
-    //     console.log(`✅ [Chatbot] Looking for match for: "${userMsg}"`);
-    
-    //     for (const position of positions) {
-    //         if (!position) continue;
-    
-    //         const positionStr = (typeof position === 'string' ? position 
-    //                           : position.jobTitle ? position.jobTitle 
-    //                           : '').toLowerCase().trim();
-    
-    //         if (!positionStr) continue;
-    
-    //         console.log(`✅ [Chatbot] Comparing with: "${positionStr}"`);
-    
-    //         // Use exact match first, then partial match
-    //         if (userMsg === positionStr || userMsg.includes(positionStr) || positionStr.includes(userMsg)) {
-    //             console.log(`✅ [Chatbot] Match found: ${positionStr}`);
-    //             return typeof position === 'string' ? position : position.jobTitle;
-    //         }
-    //     }
-    
-    //     console.log('❌ [Chatbot] No matching position found');
-    //     return null;
-    // },
-    
     handleChatbotMessage: async function (req, res) {
         try {
             console.log('✅ [Chatbot] Start processing chatbot message');
@@ -581,6 +543,42 @@ res.render('applicant_pages/chatbot', {
                 .from('chatbot_history')
                 .insert([{ userId, message: userMessage, sender: 'user', timestamp, applicantStage: req.session.applicantStage }]);
     
+                console.log('📂 [Chatbot] Checking applicant status...');
+// Check if applicant status has been updated to "P1 - PASSED"
+const { data: applicantData, error: applicantError } = await supabase
+    .from('applicantaccounts')
+    .select('applicantStatus')
+    .eq('userId', userId)
+    .single();
+
+if (applicantError) {
+    console.error('❌ [Chatbot] Error fetching applicant status:', applicantError);
+} else if (applicantData && applicantData.applicantStatus === 'P1 - PASSED') {
+    console.log('✅ [Chatbot] Applicant status is P1 - PASSED. Sending congratulations message.');
+    
+    const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage once the HR team sets availability via Calendly.";
+    
+    // Save congratulations message to chat history
+    await supabase
+        .from('chatbot_history')
+        .insert([{
+            userId,
+            message: JSON.stringify({ text: congratsMessage }),
+            sender: 'bot',
+            timestamp: new Date().toISOString(),
+            applicantStage: 'P1 - PASSED'
+        }]);
+        
+    req.session.applicantStage = 'P1 - PASSED';
+    
+    return res.status(200).json({ response: { text: congratsMessage } });
+}
+else {
+    console.log(`✅ [Chatbot] Applicant status is: ${applicantData.applicantStatus}`);
+}
+
+// Continue with the rest of your logic...
+    
             let botResponse;
             let applicantStage = req.session.applicantStage || 'initial';
             console.log(`Initial Applicant Stage: ${applicantStage}`);
@@ -599,20 +597,19 @@ res.render('applicant_pages/chatbot', {
                 const jobDetails = await applicantController.getJobDetails(selectedPosition);
     
                 if (jobDetails) {
-
-// Update applicantaccounts with jobId and departmentId
-const updateJobResult = await applicantController.updateApplicantJobAndDepartmentOnATS(
-    userId,
-    jobDetails.jobId,
-    jobDetails.departmentId  // departmentId fetched from jobDetails
-);
-if (!updateJobResult.success) {
-    console.error(updateJobResult.message);
-    botResponse = "Error updating your application details. Please try again later.";
-    res.status(500).json({ response: botResponse });
-    return;
-}
-
+                    // Update applicantaccounts with jobId and departmentId
+                    const updateJobResult = await applicantController.updateApplicantJobAndDepartmentOnATS(
+                        userId,
+                        jobDetails.jobId,
+                        jobDetails.departmentId  // departmentId fetched from jobDetails
+                    );
+                    if (!updateJobResult.success) {
+                        console.error(updateJobResult.message);
+                        botResponse = "Error updating your application details. Please try again later.";
+                        res.status(500).json({ response: botResponse });
+                        return;
+                    }
+    
                     const degrees = jobDetails.jobreqdegrees && jobDetails.jobreqdegrees.length > 0
                         ? jobDetails.jobreqdegrees.map(degree => `${degree.jobReqDegreeType}: ${degree.jobReqDegreeDescrpt}`).join(', ')
                         : 'None';   
@@ -629,8 +626,8 @@ if (!updateJobResult.success) {
                         ? jobDetails.jobreqskills.filter(skill => skill.jobReqSkillType === 'Soft').map(skill => skill.jobReqSkillName).join(', ')
                         : 'None';
     
-                      // Proceed to screening questions
-                      botResponse = {
+                    // Proceed to screening questions
+                    botResponse = {
                         text: `You have chosen *${selectedPosition}*. Here are the details:\n` +
                             `**Job Title:** ${jobDetails.jobTitle}\n` +
                             `**Description:** ${jobDetails.jobDescrpt}\n\n` +
@@ -914,6 +911,88 @@ if (!updateJobResult.success) {
                     console.log(`⚠️ [Chatbot] No pending file upload detected!`);
                 }
             }
+
+
+            else if (applicantStage === 'resume_upload' || (applicantStage === 'file_upload' && req.session.awaitingFileUpload === 'resume')) {
+                console.log('📂 [Chatbot] Resume Upload Detected');
+                
+                // Assuming fileUpload function is already implemented and working
+                const resumeUrl = await fileUpload(req, 'resume');
+                
+                if (resumeUrl) {
+                    console.log(`✅ [Chatbot] Resume Uploaded: ${resumeUrl}`);
+                    req.session.resumeUrl = resumeUrl;
+                    
+                    // Update the resume URL in the assessment table
+                    await supabase
+                        .from('applicant_initialscreening_assessment')
+                        .update({ resume_url: resumeUrl })
+                        .eq('userId', userId);
+                    
+                    // Now update the applicant status to 'P1 - Awaiting for HR Action'
+                    const { data: updateStatusData, error: updateStatusError } = await supabase
+                        .from('applicantaccounts')
+                        .update({ applicantStatus: 'P1 - Awaiting for HR Action' })
+                        .eq('userId', userId);
+                    
+                    if (updateStatusError) {
+                        console.error('❌ [Chatbot] Error updating applicant status:', updateStatusError);
+                        botResponse = { text: "Your resume was uploaded, but there was an error updating your application status. Please contact support." };
+                    } else {
+                        console.log('✅ [Chatbot] Applicant status updated to P1 - Awaiting for HR Action');
+                        
+                        // Update session applicant stage
+                        req.session.applicantStage = 'P1 - Awaiting for HR Action';
+                        
+                        // Reset file upload flag
+                        delete req.session.awaitingFileUpload;
+                        
+                        botResponse = { 
+                            text: "Thank you for uploading your resume. Your application has been submitted and is now awaiting review by our HR team. You will be notified once a decision has been made." 
+                        };
+                    }
+                    
+                    // Save the bot response to chat history
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify(botResponse),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString(),
+                            applicantStage: req.session.applicantStage
+                        }]);
+                    
+                    return res.status(200).json({ response: botResponse });
+                } else {
+                    botResponse = { text: "There was an error uploading your resume. Please try again." };
+                }
+            }
+            
+            // Add new case to check for status change after resume upload
+            else if (applicantStage === 'P1 - Awaiting for HR Action') {
+                // Check if the status has been updated to P1 - PASSED
+                const { data: applicantData, error: applicantError } = await supabase
+                    .from('applicantaccounts')
+                    .select('applicantStatus')
+                    .eq('userId', userId)
+                    .single();
+    
+                if (applicantError) {
+                    console.error('❌ [Chatbot] Error checking applicant status:', applicantError);
+                    botResponse = { text: "I'm waiting for an update from the HR team regarding your application." };
+                } else if (applicantData && applicantData.applicantStatus === 'P1 - PASSED') {
+                    // Status has changed to P1 - PASSED, send congratulations message
+                    const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage once the HR team sets availability via Calendly.";
+                    
+                    botResponse = { text: congratsMessage };
+                    req.session.applicantStage = 'P1 - PASSED';
+                } else {
+                    botResponse = { 
+                        text: "Your application is currently being reviewed by our HR team. You will be notified once a decision has been made. Thank you for your patience."
+                    };
+                }
+            }
             
             // ✅ Save bot response to chatbot history
             await supabase
@@ -933,6 +1012,7 @@ if (!updateJobResult.success) {
             res.status(500).send('Internal Server Error');
         }
     },
+    
     
 // Function to fetch and structure all screening questions
 getInitialScreeningQuestions: async function (jobId) {
@@ -1178,8 +1258,8 @@ getJobPositionsList: async function() {
             let certificationScore = 0;
             let hardSkillsScore = 0;
             let softSkillsScore = 0;
-            let workSetupScore = 0;
-            let availabilityScore = 0;
+            let workSetupScore = false; // Changed variable name to match what's used later
+            let availabilityScore = false; // Changed variable name to match what's used later
     
             // Count scores from responses
             if (responses && Array.isArray(responses)) {
@@ -1188,10 +1268,10 @@ getJobPositionsList: async function() {
                         case 'degree': degreeScore += response.answer; break;
                         case 'experience': experienceScore += response.answer; break;
                         case 'certification': certificationScore += response.answer; break;
-                        case 'hardSkill': hardSkillsScore += response.answer; break; // Fixed type name
-                        case 'softSkill': softSkillsScore += response.answer; break; // Fixed type name
-                        case 'work_setup': workSetupScore += response.answer; break;
-                        case 'availability': availabilityScore += response.answer; break;
+                        case 'hardSkill': hardSkillsScore += response.answer; break; 
+                        case 'softSkill': softSkillsScore += response.answer; break;
+                        case 'work_setup': workSetupScore = response.answer > 0; break; // Store as boolean
+                        case 'availability': availabilityScore = response.answer > 0; break; // Store as boolean
                     }
                 });
             }
@@ -1206,6 +1286,9 @@ getJobPositionsList: async function() {
     
             let result;
             
+            // Calculate total score by adding only the numeric scores
+            const totalScore = degreeScore + experienceScore + certificationScore + hardSkillsScore + softSkillsScore;
+    
             if (existingRecord) {
                 // Update existing record
                 const updateData = {
@@ -1214,33 +1297,17 @@ getJobPositionsList: async function() {
                     certificationScore,
                     hardSkillsScore,
                     softSkillsScore,
-                    workSetupScore,
-                    availabilityScore
+                    workSetupScore, // Boolean
+                    availabilityScore, // Boolean
+                    totalScore,
+                    totalScoreCalculatedAt: new Date(),
                 };
-                
+    
                 // Only update URLs if they are provided
                 if (resumeUrl) updateData.resume_url = resumeUrl;
                 if (degreeUrl) updateData.degree_url = degreeUrl;
                 if (certificationUrl) updateData.cert_url = certificationUrl;
-                
-                // Calculate total score if all screening is complete
-                if (responses && 
-                    workSetupScore > 0 && 
-                    availabilityScore > 0 && 
-                    resumeUrl) {
-                    
-                    updateData.totalScore = 
-                        degreeScore + 
-                        experienceScore + 
-                        certificationScore + 
-                        hardSkillsScore + 
-                        softSkillsScore + 
-                        workSetupScore + 
-                        availabilityScore;
-                    
-                    updateData.totalScoreCalculatedAt = new Date();
-                }
-                
+    
                 result = await supabase
                     .from('applicant_initialscreening_assessment')
                     .update(updateData)
@@ -1256,13 +1323,15 @@ getJobPositionsList: async function() {
                     certificationScore,
                     hardSkillsScore,
                     softSkillsScore,
-                    workSetupScore,
-                    availabilityScore,
+                    workSetupScore, // Boolean
+                    availabilityScore, // Boolean
+                    totalScore,
                     resume_url: resumeUrl,
                     degree_url: degreeUrl,
-                    cert_url: certificationUrl
+                    cert_url: certificationUrl,
+                    totalScoreCalculatedAt: new Date(),
                 };
-                
+    
                 result = await supabase
                     .from('applicant_initialscreening_assessment')
                     .insert([insertData]);
@@ -1277,18 +1346,30 @@ getJobPositionsList: async function() {
             
             // Define the response message based on screening status
             let message = 'Screening scores saved.';
-            
-            // Automatic rejection for work setup or availability being 'No'
-            if (workSetupScore === 0 || availabilityScore === 0) {
+    
+            // Automatic rejection if workSetupScore or availabilityScore is false
+            if (!workSetupScore || !availabilityScore) {
                 message = "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.";
                 return { success: true, message };
             }
-            
+    
             // If resume is uploaded and all screening is complete
             if (resumeUrl && responses && responses.length > 0) {
+                // Update applicant status to "P1 - Awaiting for HR Action"
+                const { data: statusData, error: statusError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'P1 - Awaiting for HR Action' })
+                    .eq('userId', userId);
+                
+                if (statusError) {
+                    console.error('Error updating applicant status:', statusError);
+                } else {
+                    console.log('Applicant status updated to: P1 - Awaiting for HR Action');
+                }
+                
                 message = "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.";
             }
-    
+            
             return { success: true, message };
     
         } catch (error) {
@@ -1296,6 +1377,7 @@ getJobPositionsList: async function() {
             return { success: false, message: 'Internal error occurred.' };
         }
     },
+    
     
     handleFileUpload: async function (req, res) {
         console.log('📂 [File Upload] Initiating file upload process...');
@@ -1397,7 +1479,20 @@ getJobPositionsList: async function() {
                 req.session.resumeUrl = fileUrl;
                 updateField = { resume_url: fileUrl };
                 successMessage = "✅ Resume uploaded successfully. Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.";
-                req.session.applicantStage = 'P1 - Awaiting for HR Action';
+                
+                // Update applicant status to 'P1 - Awaiting for HR Action'
+                console.log('📂 [File Upload] Updating applicant status to P1 - Awaiting for HR Action...');
+                const { error: statusError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'P1 - Awaiting for HR Action' })
+                    .eq('userId', userId);
+                
+                if (statusError) {
+                    console.error('❌ [File Upload] Error updating applicant status:', statusError);
+                    return res.status(500).send('Error updating applicant status.');
+                } else {
+                    console.log('✅ [File Upload] Applicant status updated to P1 - Awaiting for HR Action');
+                }
                 
                 // Calculate and update total score
                 const { data: assessmentData } = await supabase
@@ -1412,9 +1507,7 @@ getJobPositionsList: async function() {
                         (assessmentData.experienceScore || 0) + 
                         (assessmentData.certificationScore || 0) + 
                         (assessmentData.hardSkillsScore || 0) + 
-                        (assessmentData.softSkillsScore || 0) + 
-                        (assessmentData.workSetupScore || 0) + 
-                        (assessmentData.availabilityScore || 0)
+                        (assessmentData.softSkillsScore || 0)
                     );
                     
                     updateField = { 
