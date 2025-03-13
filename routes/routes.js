@@ -89,7 +89,7 @@ router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
 router.get('/hr/onboarding-view', hrController.getHROnboarding);
 router.get('/hr/offboarding-request', hrController.getOffboardingRequestsDash);
 router.get('/hr/view-offboarding-request/:userId', hrController.getViewOffboardingRequest);
-router.post('/save-checklist', hrController.saveChecklist);
+router.post('/save-clearance', hrController.saveChecklist);
 router.post('/send-clearance', hrController.sendClearanceToEmployee);
 router.get('/hr/retirement-tracker', hrController.getRetirementTracker);
 

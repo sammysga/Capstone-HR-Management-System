@@ -6,6 +6,7 @@ const { parse } = require('dotenv');
 const flash = require('connect-flash/lib/flash');
 const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
 const applicantController = require('../controllers/applicantController');
+const { check } = require('express-validator');
 
 
 const hrController = {
@@ -2470,7 +2471,7 @@ updateJobOffer: async function(req, res) {
             // Fetch offboarding request
             const { data: requests, error: requestError } = await supabase
                 .from('offboarding_requests')
-                .select('requestId, userId, offboardingType, reason, message, last_day, status, created_at')
+                .select('requestId, userId, offboardingType, reason, message, last_day, status, created_at, line_manager_notes, line_manager_decision')
                 .eq('userId', userId)
                 .order('created_at', { ascending: false })
                 .limit(1);
@@ -2523,6 +2524,7 @@ updateJobOffer: async function(req, res) {
     saveChecklist: async function (req, res) {
         try {
             const { requestId, checklist } = req.body;
+            console.log("Received for saving:", { requestId, checklist });
     
             if (!requestId || !Array.isArray(checklist)) {
                 return res.status(400).json({ error: "Invalid request data." });
@@ -2540,18 +2542,32 @@ updateJobOffer: async function(req, res) {
                 return res.status(500).json({ error: "Failed to fetch existing checklist." });
             }
     
-            // Insert or update the checklist
-            const { error } = await supabase
-                .from("offboarding_checklist")
-                .upsert([
-                    {
-                        checklistId: existingChecklist ? existingChecklist.checklistId : undefined, // Update if exists
+
+            let error;
+
+            if (existingChecklist) {
+                const { error: updateError } = await supabase
+                    .from("offboarding_checklist")
+                    .update({
+                        checklist_items: checklist,
+                        created_at: new Date().toISOString()
+                    })
+                    .eq("checklistId", existingChecklist.checklistId);
+
+                error = updateError;
+            } else {
+                const { error: insertError } = await supabase
+                    .from("offboarding_checklist")
+                    .insert({
                         requestId: requestId,
-                        checklist_items: checklist, // Save the checklist items as JSON
-                        created_at: new Date().toISOString(), // Update the timestamp
-                    },
-                ]);
-    
+                        checklist_items: checklist,
+                        created_at: new Date().toISOString()
+                    });
+
+                    error = insertError;
+
+            }
+                
             if (error) {
                 console.error("Error saving checklist:", error);
                 return res.status(500).json({ error: "Failed to save checklist." });

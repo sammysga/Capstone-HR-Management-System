@@ -9,7 +9,7 @@
     <style>
         /* Main Content Styling */
         .main-content {
-            margin-left: 300px;
+            margin-left: 285px;
             padding: 20px;
             background-color: #f9f9f9;
         }
@@ -75,7 +75,6 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
             justify-content: center;
             align-items: center;
         }
@@ -219,6 +218,18 @@
                 </div>
             </div>
 
+            <div class="form-section">
+                <h2>Line Manager Review</h2>
+                <div class="form-group">
+                    <label for="lineManagerNotes">Line Manager's Notes</label>
+                    <textarea id="lineManagerNotes" name="lineManagerNotes" disabled><%= request.line_manager_notes || 'No notes provided' %></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="lineManagerDecision">Decision</label>
+                    <input type="text" id="lineManagerDecision" name="lineManagerDecision" value="<%= request.line_manager_decision || 'Pending' %>" disabled>
+                </div>
+            </div>
+
             <!-- Dates Section -->
             <div class="form-section">
                 <h2>Dates</h2>
@@ -246,8 +257,8 @@
                     <% checklist.forEach((item, index) => { %>
                         <li>
                             <div class="checklist-item">
-                                <span><%= item.task %></span>
-                                <span class="contact-person">Contact: <%= item.contactPerson %></span>
+                                <span data-task><%= item.task %></span>
+                                <span class="contact-person" data-contact>Contact: <%= item.contactPerson %></span>
                                 <button class="delete-item" onclick="deleteChecklistItem(this)">✖</button>
                             </div>
                         </li>
@@ -294,7 +305,9 @@
         });
         // Open Modal
         document.getElementById("openClearanceModal").addEventListener("click", function () {
-            document.getElementById("clearanceModal").style.display = "flex";
+            const modal = document.getElementById("clearanceModal");
+            modal.style.display = "flex";
+            
         });
 
         // Close Modal
@@ -320,8 +333,8 @@
             const li = document.createElement("li");
             li.innerHTML = `
                 <div class="checklist-item">
-                    <span>${newTask}</span>
-                    <span class="contact-person">Contact: ${newContact}</span>
+                    <span data-task>${newTask}</span>
+                    <span class="contact-person" data-contact>Contact: ${newContact}</span>
                     <button class="delete-item" onclick="deleteChecklistItem(this)">✖</button>
                 </div>
             `;
@@ -340,17 +353,24 @@
         document.getElementById("saveClearance").addEventListener("click", function () {
             const checklistItems = [];
             document.querySelectorAll("#clearanceChecklist li").forEach((item) => {
-                const task = item.querySelector("span").innerText;
-                const contactPerson = item.querySelector(".contact-person").innerText.replace("Contact: ", "");
-                checklistItems.push({ task, contactPerson });
+                const taskElement = item.querySelector("[data-task]");
+                const contactElement = item.querySelector("[data-contact]");
+                
+                if (taskElement && contactElement) {
+                    const task = taskElement.textContent.trim();
+                    const contactPerson = contactElement.textContent.replace("Contact: ", "").trim();
+                    checklistItems.push({ task, contactPerson });
+                }
             });
-
+            
+            console.log("Items to save:", checklistItems); 
+            
             fetch("/save-clearance", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    requestId: "<%= request.id %>",
-                    clearance: checklistItems
+                    requestId: "<%= request.requestId %>",
+                    checklist: checklistItems
                 })
             })
             .then(response => response.json())
