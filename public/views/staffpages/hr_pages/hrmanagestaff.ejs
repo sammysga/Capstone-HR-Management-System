@@ -6,232 +6,1016 @@
     <title>HR Manage Staff</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/hr_pages.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
-
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Existing CSS */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            font-size: 16;
+        }
+        
+        /* Main content area */
+        .main-content {
+            padding: 20px;
+        }
+        
+        /* Section header */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .section-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2385B0;
+            margin: 0;
+        }
+        
+        .section-header p {
+            color: #6c757d;
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+        
+        /* Department cards */
+        .department-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .department-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .department-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #f5f8fa;
+            border-bottom: 1px solid #eef0f3;
+            cursor: pointer;
+        }
+
+        .department-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between badge and arrow */
+        }
+        
+        .department-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .department-header .badge {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 8px;
+            margin-right: 0; 
+        }
+
+        .department-header .toggle-icon {
+            color: #2385B0;
+            transition: transform 0.3s ease;
+        }
+        
+        .department-header.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .department-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        
+        .department-content.expanded {
+            max-height: 2000px;
+            padding: 15px;
+        }
+        
+        /* Staff table */
+        .staff-table-wrapper {
+            overflow-x: auto;
+        }
+        
         .staff-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 0;
         }
+        
         .staff-table th, .staff-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px 15px;
             text-align: left;
+            border: none;
+            border-bottom: 1px solid #eee;
         }
+        
         .staff-table th {
-            background-color: #f4f4f4;
-            font-weight: bold;
+            background-color: #f8f9fa;
+            font-weight: 600;
+            font-size: 14px;
+            color: #495057;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
-        .staff-table tr:nth-child(even) {
-            background-color: #f9f9f9;
+        
+        .staff-table tbody tr {
+            transition: background-color 0.2s ease;
         }
-        .staff-table tr:hover {
-            background-color: #f1f1f1;
+        
+        .staff-table tbody tr:hover {
+            background-color: #f7fafd;
         }
-        .staff-table input[type="text"] {
+        
+        .staff-table td {
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        
+        /* Password field styling */
+        .password-field {
+            display: flex;
+            align-items: center;
+        }
+        
+        .password-field input {
+            flex: 1;
             border: none;
             background: none;
-            width: 100%;
+            padding: 5px;
+            font-family: monospace;
+            letter-spacing: 1px;
         }
-        .staff-table button {
-            background-color: #4CAF50;
+        
+        .copy-button {
+            background-color: #2385B0;
             color: white;
             border: none;
-            padding: 5px 10px;
-            text-align: center;
-            text-decoration: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-left: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .copy-button:hover {
+            background-color: #1a6f8f;
+        }
+        
+        /* Status badges */
+        .status-badge {
             display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .status-inactive {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        /* Add staff button */
+        .add-staff-button {
+            background-color: #2385B0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
             font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            margin-right: 70px;
+            align-items: center;
             cursor: pointer;
+            transition: background-color 0.2s ease;
         }
-        .staff-table button:hover {
-            background-color: #45a049;
+        
+        .add-staff-button i {
+            margin-right: 8px;
         }
-        .staff-table th, .staff-table td {
-            width: 14.28%; /* 100% / 7 columns */
+        
+        .add-staff-button:hover {
+            background-color: #1a6f8f;
         }
-        .float-right {
-        float: right;
-        margin-top: 10px;
-        }
-        .about-us {
-            padding: 20px;
-        }
-        button.add-new-staff {
-            margin-top: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button.add-new-staff:hover {
-            background-color: #0056b3;
-        }
-
-        /* Updated CSS for modal */
+        
+        /* Modal styling */
         .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1; 
-            left: 0; 
-            top: 0; 
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.4); 
-            padding-top: 60px; 
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
         }
+        
         .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto; /* Center horizontally */
-            padding: 20px;
-            border: 1px solid #888;
-            width: 50%; /* Adjust width as needed */
-            max-width: 600px; /* Ensure it doesn't get too wide on large screens */
+            background-color: white;
+            margin: 5% auto;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 550px;
+            animation: slideIn 0.3s ease;
         }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eef0f3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
         .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
+            font-size: 24px;
+            color: #97a4af;
             cursor: pointer;
+            transition: color 0.2s ease;
         }
-
-        /* Custom styles for the select picker */
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        /* Form styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #2385B0;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(35, 133, 176, 0.2);
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 15px;
+            border-top: 1px solid #eef0f3;
+        }
+        
+        .btn {
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #2385B0;
+            border-color: #2385B0;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1a6f8f;
+            border-color: #1a6f8f;
+        }
+        
+        .btn-secondary {
+            background-color: #eef0f3;
+            border-color: #eef0f3;
+            color: #495057;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e2e6ea;
+            border-color: #e2e6ea;
+        }
+        
+        /* Password generation section */
+        .password-generation {
+            border: 1px solid #eef0f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .password-generation .form-control {
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        
+        .password-actions {
+            display: flex;
+            margin-top: 10px;
+            gap: 10px;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #97a4af;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+            
+            .section-header {
+                position: relative;
+                padding-right: 60px;
+            }
+            
+            .add-staff-button {
+                position: relative;
+                z-index: 5;
+                margin-top: 10px;
+            }
+        }
+        
+        /* For smaller phone screens */
+        @media (max-width: 480px) {
+            .staff-table th, .staff-table td {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            
+            .copy-button {
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+        }
+        
+        /* Style for bootstrap-select */
+        .bootstrap-select .dropdown-toggle {
+            background-color: white;
+            border: 1px solid #ced4da;
+            color: #495057;
+        }
+        
+        .bootstrap-select .dropdown-toggle:focus,
+        .bootstrap-select .dropdown-toggle:active {
+            border-color: #2385B0 !important;
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(35, 133, 176, 0.2) !important;
+        }
+        
         .bootstrap-select .dropdown-menu {
-            z-index: 1050; /* Ensure it stays above other elements */
+            padding: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .bootstrap-select .dropdown-item.active, 
+        .bootstrap-select .dropdown-item:active {
+            background-color: #2385B0;
+        }
+        
+        /* No results message */
+        .no-results-message {
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
         }
     </style>
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
     <div class="main-content">
-        <section class="about-us">
-            <div class="purpose-mission">
-                <div class="purpose">
-                    <h2>Manage Staff</h2>
-                    <p>View staff details categorized by departments.</p>
-                    <!-- Add the button here -->
-                    <button class="add-new-staff float-right" onclick="openModal()">Add New Staff</button>
-                    <div id="staffTableContainer">
-                        <% if (departments && departments.length > 0) { %>
-                            <% departments.forEach(function(department) { %>
-                                <h3><%= department.deptName %></h3>
-                                <table class="staff-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Job Title</th>
-                                            <th>Last Name</th>
-                                            <th>First Name</th>
-                                            <th>Email</th>
-                                            <th>Role</th>
-                                            <th>Original Default Password</th>
-                                            <th>Active Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <% if (department.staff && department.staff.length > 0) { %>
+        <div class="section-header">
+            <div>
+                <h2>Manage Staff</h2>
+                <p>View and manage staff members by department</p>
+            </div>
+            <button class="add-staff-button" onclick="openModal()">
+                <i class="fas fa-plus"></i> Add New Staff
+            </button>
+        </div>
+        
+        <div id="staffTableContainer">
+            <% if (departments && departments.length > 0) { %>
+                <% departments.forEach(function(department, index) { %>
+                    <div class="department-card">
+                        <div class="department-header" onclick="toggleDepartment(this)">
+                            <h3><%= department.deptName %></h3>
+                            <div class="department-header-right">
+                                <span class="badge badge-primary"><%= department.staff ? department.staff.length : 0 %> members</span>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </div>
+                        </div>
+                        <div class="department-content <%= index === 0 ? 'expanded' : '' %>">
+                            <% if (department.staff && department.staff.length > 0) { %>
+                                <div class="staff-table-wrapper">
+                                    <table class="staff-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Job Title</th>
+                                                <th>Email</th>
+                                                <th>Role</th>
+                                                <th>Default Password</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
                                             <% department.staff.forEach(function(staff) { %>
                                                 <tr>
+                                                    <td><strong><%= staff.lastName %>, <%= staff.firstName %></strong></td>
                                                     <td><%= staff.jobTitle %></td>
-                                                    <td><%= staff.lastName %></td>
-                                                    <td><%= staff.firstName %></td>
                                                     <td><%= staff.userEmail %></td>
-                                                    <td><%= staff.userRole %></td>
+                                                    <td><span class="badge badge-info"><%= staff.userRole %></span></td>
                                                     <td>
-                                                        <input type="password" value="<%= staff.userStaffOgPass ? staff.userStaffOgPass : '' %>" readonly>
-                                                        <button onclick="copyPassword(this)" data-password="<%= staff.userStaffOgPass %>">Copy</button>
+                                                        <div class="password-field">
+                                                            <input type="password" value="<%= staff.userStaffOgPass ? staff.userStaffOgPass : '' %>" readonly>
+                                                            <button class="copy-button" onclick="copyPassword(this)" data-password="<%= staff.userStaffOgPass %>">
+                                                                <i class="fas fa-copy"></i> Copy
+                                                            </button>
+                                                        </div>
                                                     </td>
-                                                    <td><%= staff.activeStatus %></td>
+                                                    <td>
+                                                        <span class="status-badge <%= staff.activeStatus === 'Active' ? 'status-active' : 'status-inactive' %>">
+                                                            <%= staff.activeStatus %>
+                                                        </span>
+                                                    </td>
                                                 </tr>
                                             <% }); %>
-                                        <% } else { %>
-                                            <tr><td colspan="7">No staff members available</td></tr>
-                                        <% } %>
-                                    </tbody>
-                                </table>
-                            <% }); %>
-                        <% } else { %>
-                            <p>No departments available</p>
-                        <% } %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } else { %>
+                                <div class="no-results-message">
+                                    <i class="fas fa-user-slash"></i>
+                                    <p>No staff members available in this department</p>
+                                </div>
+                            <% } %>
+                        </div>
                     </div>
+                <% }); %>
+            <% } else { %>
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>No departments available</h3>
+                    <p>Start by creating departments and adding staff members</p>
                 </div>
-            </div>
-        </section>
+            <% } %>
+        </div>
     </div>
-<!-- Modal for adding new staff -->
-<div id="staffModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h2>Add New Staff</h2>
-        <form id="newStaffForm">
-            <!-- Form fields here -->
-            <label for="lastName">Last Name:</label>
-            <input type="text" id="lastName" name="lastName" required><br>
-            <label for="firstName">First Name:</label>
-            <input type="text" id="firstName" name="firstName" required><br>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required><br>
-            <label for="department">Department: </label>
-            <select id="department" name="department" class="selectpicker" data-live-search="true" required>
-                <option value="">Select Department</option>
-            </select><br>
-            <label for="jobTitle">Job Title:</label>
-            <select id="jobTitle"  name="jobTitle" class="selectpicker" data-live-search="true" required>
-                <option value="">Select Job Title</option>
-            </select><br>
-            <label for="role">Role:</label>
-            <select id="role" name="role" required>
-                <option value="">Select Role</option>
-                <option value="HR">HR</option>
-                <option value="Employee">Employee</option>
-                <option value="Line Manager">Line Manager</option>
-            </select><br>
 
-            <label for="passwordOption">Set Password:</label>
-            <select id="passwordOption" name="passwordOption" required onchange="togglePasswordFields()">
-                <option value="custom">Custom Password</option>
-                <option value="random">Randomly Generated Password</option>
-            </select><br>
-            <div id="passwordFields">
-                <label for="customPassword">Custom Password:</label>
-                <input type="password" id="customPassword" name="customPassword" style="display: block;"><br>
-                <label for="generatedPassword">Generated Password:</label>
-                <input type="text" id="generatedPassword" name="generatedPassword" readonly>
-                <button type="button" onclick="generateRandomPassword()">Generate</button>
-                <button type="button" onclick="copyGeneratedPassword()">Copy</button><br>
+    <!-- Modal for adding new staff -->
+    <div id="staffModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-plus"></i> Add New Staff</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
             </div>
-
-            <button type="submit" style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Record New Staff</button>
-        </form>
+            <div class="modal-body">
+                <form id="newStaffForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" name="lastName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <select id="department" name="department" class="form-control selectpicker" data-live-search="true" required>
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobTitle">Job Title</label>
+                        <select id="jobTitle" name="jobTitle" class="form-control selectpicker" data-live-search="true" required>
+                            <option value="">Select Job Title</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role" class="form-control" required>
+                            <option value="">Select Role</option>
+                            <option value="HR">HR</option>
+                            <option value="Employee">Employee</option>
+                            <option value="Line Manager">Line Manager</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="passwordOption">Password Option</label>
+                        <select id="passwordOption" name="passwordOption" class="form-control" required onchange="togglePasswordFields()">
+                            <option value="custom">Custom Password</option>
+                            <option value="random">Randomly Generated Password</option>
+                        </select>
+                    </div>
+                    
+                    <div id="passwordFields">
+                        <div id="customPasswordField" class="form-group">
+                            <label for="customPassword">Custom Password</label>
+                            <input type="password" class="form-control" id="customPassword" name="customPassword">
+                        </div>
+                        
+                        <div id="generatedPasswordField" class="form-group" style="display: none;">
+                            <label for="generatedPassword">Generated Password</label>
+                            <div class="password-generation">
+                                <input type="text" class="form-control" id="generatedPassword" name="generatedPassword" readonly>
+                                <div class="password-actions">
+                                    <button type="button" class="btn btn-secondary" onclick="generateRandomPassword()">
+                                        <i class="fas fa-sync-alt"></i> Generate
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="copyGeneratedPassword()">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary mr-2" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Staff
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-</div>
-
-
 
     <!-- jQuery and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
-
+    
     <script>
+        // Toggle department content visibility
+        function toggleDepartment(header) {
+            const content = header.nextElementSibling;
+            header.classList.toggle('collapsed');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+            }
+        }
+        
+        // Open the modal and fetch departments
+        function openModal() {
+            document.getElementById('staffModal').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling background
+            populateDepartments();
+        }
+        
+        // Close the modal
+        function closeModal() {
+            document.getElementById('staffModal').style.display = 'none';
+            document.body.style.overflow = ''; // Restore scrolling
+            document.getElementById('newStaffForm').reset();
+        }
+        
+        // Copy password to clipboard
+        function copyPassword(button) {
+            const password = button.getAttribute('data-password');
+            navigator.clipboard.writeText(password).then(() => {
+                // Show temporary success message
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied';
+                button.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = '';
+                }, 2000);
+            }).catch(err => console.error('Failed to copy password:', err));
+        }
+        
+        // Generate a random password
+        function generateRandomPassword() {
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+            let password = "";
+            for (let i = 0; i < 12; i++) {
+                const randomIndex = Math.floor(Math.random() * charset.length);
+                password += charset[randomIndex];
+            }
+            document.getElementById('generatedPassword').value = password;
+        }
+        
+        // Copy the generated password to clipboard
+        function copyGeneratedPassword() {
+            const password = document.getElementById('generatedPassword').value;
+            navigator.clipboard.writeText(password).then(() => {
+                // Show temporary success message
+                const copyBtn = document.querySelector('.password-actions .btn:last-child');
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+                copyBtn.classList.remove('btn-secondary');
+                copyBtn.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.classList.remove('btn-success');
+                    copyBtn.classList.add('btn-secondary');
+                }, 2000);
+            }).catch(err => console.error('Failed to copy generated password:', err));
+        }
+        
+        // Toggle password fields based on selection
+        function togglePasswordFields() {
+            const passwordOption = document.getElementById('passwordOption').value;
+            const customPasswordField = document.getElementById('customPasswordField');
+            const generatedPasswordField = document.getElementById('generatedPasswordField');
+            
+            if (passwordOption === 'custom') {
+                customPasswordField.style.display = 'block';
+                generatedPasswordField.style.display = 'none';
+            } else if (passwordOption === 'random') {
+                customPasswordField.style.display = 'none';
+                generatedPasswordField.style.display = 'block';
+                // Generate a password initially
+                if (!document.getElementById('generatedPassword').value) {
+                    generateRandomPassword();
+                }
+            }
+        }
+        
+        // Populate departments dropdown
+        async function populateDepartments() {
+            try {
+                console.log('Fetching departments...');
+                const response = await fetch('/hr/api/departments');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const departments = await response.json();
+                console.log('Departments fetched:', departments);
+                
+                const departmentSelect = document.getElementById('department');
+                departmentSelect.innerHTML = ''; // Clear existing options
+                
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.text = 'Select Department';
+                departmentSelect.appendChild(defaultOption);
+                
+                departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.departmentId;
+                    option.text = dept.deptName;
+                    departmentSelect.appendChild(option);
+                });
+                
+                // Add "Add New" option
+                const addNewOption = document.createElement('option');
+                addNewOption.value = 'add-new';
+                addNewOption.text = '+ Add New Department';
+                departmentSelect.appendChild(addNewOption);
+                
+                $(departmentSelect).selectpicker('refresh');
+            } catch (error) {
+                console.error('Error fetching departments:', error);
+                alert('Failed to load departments. Please try again.');
+            }
+        }
+        
+        // Populate job titles dropdown based on selected department
+        async function populateJobTitles(departmentId) {
+            try {
+                console.log('Fetching job titles for department ID:', departmentId);
+                const response = await fetch(`/hr/api/job-titles?departmentId=${departmentId}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Network response was not ok: ${response.status} ${errorText}`);
+                }
+                
+                const jobTitles = await response.json();
+                console.log('Job titles fetched:', jobTitles);
+                
+                const jobTitleSelect = document.getElementById('jobTitle');
+                jobTitleSelect.innerHTML = ''; // Clear existing options
+                
+                if (jobTitles.length === 0) {
+                    const noJobTitleOption = document.createElement('option');
+                    noJobTitleOption.value = '';
+                    noJobTitleOption.text = 'No Job Titles Available';
+                    jobTitleSelect.appendChild(noJobTitleOption);
+                } else {
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.text = 'Select Job Title';
+                    jobTitleSelect.appendChild(defaultOption);
+                    
+                    jobTitles.forEach(job => {
+                        const option = document.createElement('option');
+                        option.value = job.jobId;
+                        option.text = job.jobTitle;
+                        jobTitleSelect.appendChild(option);
+                    });
+                }
+                
+                // Add "Add New" option
+                const addNewOption = document.createElement('option');
+                addNewOption.value = 'add-new';
+                addNewOption.text = '+ Add New Job Title';
+                jobTitleSelect.appendChild(addNewOption);
+                
+                $(jobTitleSelect).selectpicker('refresh');
+            } catch (error) {
+                console.error('Error fetching job titles:', error);
+                alert('Failed to load job titles. Please try again.');
+            }
+        }
+        
+        // Event listener for department dropdown change
+        document.getElementById('department').addEventListener('change', async function() {
+            const departmentId = this.value;
+            console.log('Selected department ID:', departmentId);
+            
+            const jobTitleSelect = document.getElementById('jobTitle');
+            jobTitleSelect.innerHTML = ''; // Clear existing options
+            
+            if (departmentId === 'add-new') {
+                // Prompt user to add a new department
+                const newDepartmentName = prompt('Enter the new department name:');
+                if (newDepartmentName) {
+                    try {
+                        const response = await fetch('/hr/api/departments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ deptName: newDepartmentName })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        
+                        const newDepartment = await response.json();
+                        console.log('New department added:', newDepartment);
+                        
+                        // Show success message
+                        alert(`Department "${newDepartmentName}" added successfully!`);
+                        
+                        // Refresh departments dropdown
+                        populateDepartments();
+                    } catch (error) {
+                        console.error('Error adding new department:', error);
+                        alert('Failed to add new department. Please try again.');
+                    }
+                }
+                return;
+            }
+            
+            if (!departmentId) {
+                // Add a default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.text = 'Select Job Title';
+                jobTitleSelect.appendChild(defaultOption);
+                $(jobTitleSelect).selectpicker('refresh');
+                return;
+            }
+            
+            await populateJobTitles(departmentId);
+        });
+        
+        // Event listener for job title dropdown change
+        document.getElementById('jobTitle').addEventListener('change', async function() {
+            const jobId = this.value;
+            console.log('Selected job ID:', jobId);
+            
+            if (jobId === 'add-new') {
+                    // Prompt user to add a new job title
+                    const newJobTitle = prompt('Enter the new job title:');
+                    if (newJobTitle) {
+                        try {
+                            const departmentId = document.getElementById('department').value; // Get current departmentId
+                            const response = await fetch('/hr/api/job-titles', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ departmentId, jobTitle: newJobTitle })
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            
+                            const newJob = await response.json();
+                            console.log('New job title added:', newJob);
+                            
+                            // Show success message
+                            alert(`Job title "${newJobTitle}" added successfully!`);
+                            
+                            // Refresh job titles dropdown
+                            populateJobTitles(departmentId);
+                        } catch (error) {
+                            console.error('Error adding new job title:', error);
+                            alert('Failed to add new job title. Please try again.');
+                        }
+                    }
+                    return;
+                }
+            });
+        
+        // Handle form submission
+        document.getElementById('newStaffForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+            
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            submitButton.disabled = true;
+            
+            const formData = new FormData(this);
+            
+            // Get departmentId and check if it's selected
+            const departmentId = formData.get('department');
+            if (!departmentId) {
+                alert('Please select a department');
+                submitButton.innerHTML = originalButtonText;
+                submitButton.disabled = false;
+                return;
+            }
+            
+            // Get jobId and check if it's selected correctly
+            const jobId = document.getElementById('jobTitle').value;
+            if (!jobId || jobId === 'undefined' || jobId === '') {
+                alert('Please select a valid job title.');
+                submitButton.innerHTML = originalButtonText;
+                submitButton.disabled = false;
+                return;
+            }
+            
+            // Validate password option
+            const passwordOption = formData.get('passwordOption');
+            if (passwordOption === 'custom' && !formData.get('customPassword')) {
+                alert('Please enter a custom password');
+                submitButton.innerHTML = originalButtonText;
+                submitButton.disabled = false;
+                return;
+            }
+            
+            if (passwordOption === 'random' && !formData.get('generatedPassword')) {
+                alert('Please generate a random password');
+                submitButton.innerHTML = originalButtonText;
+                submitButton.disabled = false;
+                return;
+            }
+            
+            // Log data for debugging
+            console.log('Form data before submission:', {
+                departmentId,
+                jobId,
+                lastName: formData.get('lastName'),
+                firstName: formData.get('firstName'),
+                email: formData.get('email'),
+                role: formData.get('role'),
+                passwordOption: formData.get('passwordOption'),
+                customPassword: formData.get('customPassword'),
+                generatedPassword: formData.get('generatedPassword')
+            });
+            
+            try {
+                const response = await fetch('/hr/api/add-staff', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lastName: formData.get('lastName'),
+                        firstName: formData.get('firstName'),
+                        email: formData.get('email'),
+                        departmentId,
+                        jobId,  // Ensure jobId is passed here
+                        role: formData.get('role'),
+                        passwordOption: formData.get('passwordOption'),
+                        customPassword: formData.get('customPassword'),
+                        generatedPassword: formData.get('generatedPassword')
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const result = await response.json();
+                console.log('Staff added successfully:', result);
+                
+                // Show success message and reload page
+                alert('Staff member added successfully!');
+                window.location.reload();
+                
+                // Close modal and reset the form
+                closeModal();
+                document.getElementById('newStaffForm').reset();
+            } catch (error) {
+                console.error('Error adding new staff:', error);
+                alert('Failed to add new staff member. Please try again.');
+                
+                // Reset button state
+                submitButton.innerHTML = originalButtonText;
+                submitButton.disabled = false;
+            }
+        });
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('staffModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+        
         // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
@@ -239,8 +1023,8 @@
                 this.classList.add('active');
             });
         });
-
-        // Toggle collapsible content
+        
+        // Toggle collapsible content in sidebar
         document.querySelectorAll('.collapsible-header').forEach(header => {
             header.addEventListener('click', function() {
                 var content = this.nextElementSibling;
@@ -258,296 +1042,24 @@
             });
         });
         
-        // Open the modal and fetch departments
-        function openModal() {
-            document.getElementById('staffModal').style.display = 'block';
-            populateDepartments();
-        }
-    
-        // Close the modal
-        function closeModal() {
-            document.getElementById('staffModal').style.display = 'none';
-        }
-    
-        // Copy password to clipboard
-        function copyPassword(button) {
-            const password = button.getAttribute('data-password');
-            navigator.clipboard.writeText(password).then(() => {
-                alert('Password copied to clipboard');
-            }).catch(err => console.error('Failed to copy password:', err));
-        }
-    
-        // Generate a random password
-        function generateRandomPassword() {
-            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
-            let password = "";
-            for (let i = 0; i < 12; i++) {
-                const randomIndex = Math.floor(Math.random() * charset.length);
-                password += charset[randomIndex];
+        // Initialize Bootstrap Select
+        $(document).ready(function() {
+            $('.selectpicker').selectpicker();
+            
+            // Open first department by default (if exists)
+            const firstDepartment = document.querySelector('.department-header');
+            if (firstDepartment) {
+                firstDepartment.classList.add('active');
+                firstDepartment.nextElementSibling.classList.add('expanded');
             }
-            document.getElementById('generatedPassword').value = password;
-        }
-    
-        // Copy the generated password to clipboard
-        function copyGeneratedPassword() {
-            const password = document.getElementById('generatedPassword').value;
-            navigator.clipboard.writeText(password).then(() => {
-                alert('Generated password copied to clipboard');
-            }).catch(err => console.error('Failed to copy generated password:', err));
-        }
-    
-        // Toggle password fields based on selection
-        function togglePasswordFields() {
-            const passwordOption = document.getElementById('passwordOption').value;
-            const customPasswordField = document.getElementById('customPassword');
-            const generatedPasswordField = document.getElementById('generatedPassword').parentNode;
-    
-            if (passwordOption === 'custom') {
-                customPasswordField.style.display = 'block';
-                generatedPasswordField.style.display = 'none';
-            } else if (passwordOption === 'random') {
-                customPasswordField.style.display = 'none';
-                generatedPasswordField.style.display = 'block';
-            }
-        }
-    
-      
-    // Populate departments dropdown
-    async function populateDepartments() {
-        try {
-            console.log('Fetching departments...');
-            const response = await fetch('/hr/api/departments');
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const departments = await response.json();
-            console.log('Departments fetched:', departments);
-
-            const departmentSelect = document.getElementById('department');
-            departmentSelect.innerHTML = ''; // Clear existing options
-
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.text = 'Select Department';
-            departmentSelect.appendChild(defaultOption);
-
-            departments.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept.departmentId;
-                option.text = dept.deptName;
-                departmentSelect.appendChild(option);
-            });
-
-            // Add "Add New" option
-            const addNewOption = document.createElement('option');
-            addNewOption.value = 'add-new';
-            addNewOption.text = 'Add New Department';
-            departmentSelect.appendChild(addNewOption);
-
-            $('#department').selectpicker('refresh');
-        } catch (error) {
-            console.error('Error fetching departments:', error);
-        }
-    }
-
-// Populate job titles dropdown based on selected department
-async function populateJobTitles(departmentId) {
-    try {
-        console.log('Fetching job titles for department ID:', departmentId);
-        const response = await fetch(`/hr/api/job-titles?departmentId=${departmentId}`);
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Network response was not ok: ${response.status} ${errorText}`);
-        }
-        const jobTitles = await response.json();
-        console.log('Job titles fetched:', jobTitles);
-
-        const jobTitleSelect = document.getElementById('jobTitle');
-        jobTitleSelect.innerHTML = ''; // Clear existing options
-
-        if (jobTitles.length === 0) {
-            const noJobTitleOption = document.createElement('option');
-            noJobTitleOption.value = '';
-            noJobTitleOption.text = 'No Job Titles Available';
-            jobTitleSelect.appendChild(noJobTitleOption);
-        } else {
-            jobTitles.forEach(job => {
-                const option = document.createElement('option');
-                option.value = job.jobId;
-                option.text = job.jobTitle;
-                jobTitleSelect.appendChild(option);
-            });
-        }
-
-        // Add "Add New" option
-        const addNewOption = document.createElement('option');
-        addNewOption.value = 'add-new';
-        addNewOption.text = 'Add New Job Title';
-        jobTitleSelect.appendChild(addNewOption);
-
-        $('#jobTitle').selectpicker('refresh');
-    } catch (error) {
-        console.error('Error fetching job titles:', error);
-    }
-}
-
-
-    // Event listener for department dropdown change
-    document.getElementById('department').addEventListener('change', async function() {
-        const departmentId = this.value;
-        console.log('Selected department ID:', departmentId); // Log selected departmentId
-        const jobTitleSelect = document.getElementById('jobTitle');
-        jobTitleSelect.innerHTML = ''; // Clear existing options
-
-        if (departmentId === 'add-new') {
-            // Prompt user to add a new department
-            const newDepartmentName = prompt('Enter the new department name:');
-            if (newDepartmentName) {
-                try {
-                    const response = await fetch('/hr/api/departments', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ deptName: newDepartmentName })
-                    });
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    const newDepartment = await response.json();
-                    console.log('New department added:', newDepartment);
-                    populateDepartments(); // Refresh departments dropdown
-                } catch (error) {
-                    console.error('Error adding new department:', error);
-                }
-            }
-            return;
-        }
-
-        if (!departmentId) {
-            // Add a default option
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.text = 'Select Job Title';
-            jobTitleSelect.appendChild(defaultOption);
-            return;
-        }
-
-        await populateJobTitles(departmentId);
-    });
-
-    // Event listener for job title dropdown change
-document.getElementById('jobTitle').addEventListener('change', async function() {
-    const jobId = this.value;
-    console.log('Selected job ID:', jobId);  // Log the correct jobId
-
-    if (jobId === 'add-new') {
-        // Prompt user to add a new job title
-        const newJobTitle = prompt('Enter the new job title:');
-        if (newJobTitle) {
-            try {
-                const departmentId = document.getElementById('department').value; // Get current departmentId
-                const response = await fetch('/hr/api/job-titles', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ departmentId, jobTitle: newJobTitle })
-                });
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const newJob = await response.json();
-                console.log('New job title added:', newJob);
-                populateJobTitles(departmentId); // Refresh job titles dropdown
-            } catch (error) {
-                console.error('Error adding new job title:', error);
-            }
-        }
-        return;
-    }
-
-    // Clear and repopulate job titles if a new option is selected
-    if (!jobId) {
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.text = 'Select Job Title';
-        this.appendChild(defaultOption);
-        return;
-    }
-});
-// Handle form submission
-document.getElementById('newStaffForm').addEventListener('submit', async function(event) {
-    event.preventDefault(); // Prevent default form submission
-
-    const formData = new FormData(this);
-
-    // Get departmentId and check if it's selected
-    const departmentId = formData.get('department');
-    if (!departmentId) {
-        alert('Please select a department');
-        return;
-    }
-
-    // Get jobId and check if it's selected correctly
-    const jobId = document.getElementById('jobTitle').value;
-    if (!jobId || jobId === 'undefined' || jobId === '') {
-        alert('Please select a valid job title.');
-        return;
-    }
-
-    // Log data for debugging
-    console.log('Form data before submission:', {
-        departmentId,
-        jobId,
-        lastName: formData.get('lastName'),
-        firstName: formData.get('firstName'),
-        email: formData.get('email'),
-        role: formData.get('role'),
-        passwordOption: formData.get('passwordOption'),
-        customPassword: formData.get('customPassword'),
-        generatedPassword: formData.get('generatedPassword')
-    });
-
-    try {
-        const response = await fetch('/hr/api/add-staff', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                lastName: formData.get('lastName'),
-                firstName: formData.get('firstName'),
-                email: formData.get('email'),
-                departmentId,
-                jobId,  // Ensure jobId is passed here
-                role: formData.get('role'),
-                passwordOption: formData.get('passwordOption') === 'random' ? 'random' : 'custom',  // Corrected this line
-                customPassword: formData.get('customPassword'),
-                generatedPassword: formData.get('generatedPassword')
-            })
         });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const result = await response.json();
- console.log('Staff added successfully:', result);
-
-        // Close modal and reset the form
-        closeModal();
-        document.getElementById('newStaffForm').reset();
-
-    } catch (error) {
-        console.error('Error adding new staff:', error);
-    }
-});
-</script>
-    
-    
-    
+        
+        // Add escape key listener to close modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
 </body>
 </html>
-
-
