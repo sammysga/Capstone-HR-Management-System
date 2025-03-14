@@ -559,20 +559,57 @@
                     <td><%= applicant.deptName %></td> <!-- Display department name -->
                     <td><%= applicant.jobTitle %></td> <!-- Display job title -->
                     <td>
-                        <!-- Display Applicant Status -->
-                        <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
-                        <div style="margin-top: 10px;">
-                            <% if (applicant.applicantStatus === 'P1 - Awaiting for HR Action') { %>
-                                <button 
-                                    class="btn-review" 
-                                    onclick="openReviewModal(
-                                        '<%= applicant.lastName %>', 
-                                        '<%= applicant.firstName %>', 
-                                        '<%= applicant.userEmail %>', 
-                                        '<%= applicant.phoneNo %>'
-                                    )">
-                                    For Review
-                                </button>
+<!-- Display Applicant Status -->
+<span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
+
+<div style="margin-top: 10px;">
+    <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for HR Action')) { %>
+        <!-- For Review Button -->
+        <button 
+        class="btn-review" 
+        onclick="
+            console.log('Opening Modal with:', {
+                lastName: '<%= applicant.lastName %>',
+                firstName: '<%= applicant.firstName %>',
+                birthDate: '<%= applicant.birthDate %>',
+                email: '<%= applicant.userEmail %>',
+                phoneNo: '<%= applicant.phoneNo %>',
+                scores: {
+                    degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
+                    experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
+                    certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
+                    hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
+                    softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
+                    workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
+                    availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
+                },
+                totalScore: '<%= applicant.initialScreeningAssessment.totalScore %>',
+                resumeURL: '<%= applicant.initialScreeningAssessment.resume_url %>'
+            });
+
+            hrInitialScreeningModal(
+                '<%= applicant.userId %>', 
+                '<%= applicant.lastName %>', 
+                '<%= applicant.firstName %>', 
+                '<%= applicant.birthDate %>', 
+                '<%= applicant.userEmail %>', 
+                '<%= applicant.phoneNo %>', 
+                {
+                    degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
+                    experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
+                    certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
+                    hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
+                    softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
+                    workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
+                    availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
+                }, 
+                '<%= applicant.initialScreeningAssessment.totalScore %>', 
+                '<%= applicant.initialScreeningAssessment.resume_url %>'
+            )
+        ">
+        For Review
+        </button>
+    
                             <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
                                 <button 
                                 class="btn-evaluation" 
@@ -755,6 +792,7 @@
     </div>
 </div>
 
+
 <!-- P1 - HR Choosing Modal -->
 <div id="hrInitialScreeningModalHtml" class="review-modal">
     <div class="review-modal-content">
@@ -917,9 +955,9 @@ function notifyLineManager(applicantId) {
 
 
 
-        function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink, jobId) {
-    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
-    
+        function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink) {
+    console.log('Opening Modal with Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
+
     // If userId is missing or "undefined", log an error and stop further processing.
     if (!userId || userId === "undefined") {
         console.error("Invalid userId passed to modal:", userId);
@@ -930,14 +968,12 @@ function notifyLineManager(applicantId) {
     // Set the hidden input value for userId
     document.getElementById('userId').value = userId;
 
-    // Set the hidden input value for jobId
-    document.getElementById('jobId').value = jobId; // Ensure jobId is passed to this function
-
     // Optionally hide the applicantId container if not needed
     let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
     if (applicantIdContainer) {
         applicantIdContainer.style.display = "none";
     }
+    
 
 
     // Populate visible applicant details
@@ -1345,7 +1381,7 @@ function openModal(name, age, email, contact) {
     document.getElementById("applicant-birthday").value = age;
     document.getElementById("applicant-email").value = email;
     document.getElementById("applicant-contact").value = contact;
-    document.getElementById("hrInitialScreeningModalHtml").style.display = "block";
+    // document.getElementById("hrInitialScreeningModalHtml").style.display = "block";
 }
 
 // Add event listeners to all "For Review" buttons
