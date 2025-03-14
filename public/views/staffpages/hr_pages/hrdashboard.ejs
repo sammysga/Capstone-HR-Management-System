@@ -24,7 +24,7 @@
         table {
             width: 80%; /* Full width for the table */
             border-collapse: collapse; /* Collapse borders */
-            margin: 20px auto 80px; /* Center table and add space above and below */
+            margin: 10px auto 30px; /* Center table and add space above and below */
         }
         th, td {
             border: 1px solid #ddd; /* Border for table cells */
@@ -54,40 +54,207 @@
             border-radius: 5px;
             text-decoration: none;
             transition: background-color 0.3s;
+            padding: 5px 10px;
+            cursor: pointer;
+            border: none;
         }
         .action-required-btn:hover {
             background-color: #1a5f78;
         }
+        
+        /* Enhanced Dashboard Styles */
+        .kpi-cards {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 20px;
+            margin: 20px auto;
+            width: 90%;
+            max-width: 1400px;
+        }
+        
+        @media (min-width: 768px) {
+            .kpi-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .kpi-cards {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .kpi-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kpi-card-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .kpi-card-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .kpi-card-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
         .chart-container {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            flex-direction: column;
+            gap: 20px;
             margin: 20px auto;
-            padding: 19px;
+            padding: 15px;
             background-color: #f9f9f9; 
             border: 1px solid #ddd; 
             border-radius: 8px;
             width: 90%;
-            max-width: 1500px; 
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); 
-        }
-        .chart-box {
-            flex: 1; 
-            margin: 10px;
-            text-align: center; 
-            background-color: #fff; 
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
+            max-width: 1400px; 
             box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); 
         }
+        
+        @media (min-width: 1024px) {
+            .chart-container {
+                flex-direction: row;
+            }
+        }
+        
+        .chart-box {
+            flex: 1; 
+            margin: 8px;
+            text-align: center; 
+            background-color: #fff; 
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); 
+        }
+        
         .chart-box canvas {
             max-width: 100%;
-            height: 230px;
+            height: 200px; /* Reduced chart height */
         }
-        h3 {
-            margin-bottom: 15px;
-            font-size: 18px;
+
+        .chart-box canvas, .chart-card canvas {
+            max-height: 180px !important; /* Make charts even smaller */
+        }
+        
+        .chart-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .chart-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            background-color: #2385B0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+        }
+        
+        .tab-navigation {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin: 0 auto 15px;
+            width: 90%;
+            max-width: 1400px;
+            background-color: #fff;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .tab-button {
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            position: relative;
+        }
+        
+        .tab-button.active {
+            color: #2385B0;
+        }
+        
+        .tab-button.active:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #2385B0;
+        }
+        
+        .tab-button:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .tab-content {
+            display: none;
+            width: 90%;
+            max-width: 1400px;
+            margin: 0 auto;
+            margin-bottom: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .dual-chart-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        @media (min-width: 1024px) {
+            .dual-chart-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .chart-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+
+        .chart-card h3 {
+            margin-left: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
             color: #333;
         }
     </style>
@@ -97,301 +264,838 @@
     <!-- Main content -->
     <div class="main-content">
         <h2>HR Dashboard</h2>
-
-        <div class="chart-container">
-            <div class="chart-box">
-                <h3>Attendance Logs</h3>
-                <canvas id="attendanceLogsChart"></canvas>
+        
+        <!-- KPI Summary Cards -->
+        <div class="kpi-cards">
+            <div class="kpi-card">
+                <div class="kpi-card-icon" style="background-color: rgba(35, 133, 176, 0.1); color: #2385B0;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="kpi-card-title">Attendance Rate</div>
+                <div class="kpi-card-value" id="attendance-rate">--</div>
             </div>
-            <div class="chart-box">
-                <h3>Manpower Requisitions</h3>
+            
+            <div class="kpi-card">
+                <div class="kpi-card-icon" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745;">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="kpi-card-title">Avg Working Hours</div>
+                <div class="kpi-card-value" id="avg-working-hours">--</div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-card-icon" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107;">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <div class="kpi-card-title">Pending Leave Requests</div>
+                <div class="kpi-card-value" id="pending-leaves">--</div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-card-icon" style="background-color: rgba(111, 66, 193, 0.1); color: #6f42c1;">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="kpi-card-title">Pending Requisitions</div>
+                <div class="kpi-card-value" id="pending-requisitions">--</div>
+            </div>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" data-tab="attendance">Attendance Analytics</button>
+            <button class="tab-button" data-tab="leaves">Leave Management</button>
+            <button class="tab-button" data-tab="requisitions">Requisitions</button>
+            <button class="tab-button" data-tab="departments">Department Analytics</button>
+        </div>
+        
+        <!-- Attendance Tab Content -->
+        <div class="tab-content active" id="attendance-tab">
+            <div class="dual-chart-container">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Daily Attendance Trend</h3>
+                    </div>
+                    <canvas id="attendanceTrendChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-icon">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <h3>Department Attendance Breakdown</h3>
+                    </div>
+                    <canvas id="deptAttendanceBreakdownChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Attendance Logs Section -->
+            <section class="attendance-logs">
+                <h2>Attendance Logs</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Last Name</th>
+                            <th>First Name</th>
+                            <th>Date</th>
+                            <th>Department</th>
+                            <th>Job Position</th>
+                            <th>Time In</th>
+                            <th>Time Out</th>
+                            <th>Location</th>
+                            <th>Active Working Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (attendanceLogs && attendanceLogs.length) { %>
+                            <% attendanceLogs.forEach(log => { %>
+                                <tr>
+                                    <td><%= log.lastName %></td>
+                                    <td><%= log.firstName %></td>
+                                    <td><%= log.date %></td>
+                                    <td><%= log.department %></td>
+                                    <td><%= log.jobTitle %></td>
+                                    <td><%= log.timeIn %></td>
+                                    <td><%= log.timeOut %></td>
+                                    <td><%= log.city || 'Unknown' %></td>
+                                    <td><%= log.activeWorkingHours %></td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="9">No attendance logs available.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+        
+        <!-- Leaves Tab Content -->
+        <div class="tab-content" id="leaves-tab">
+            <div class="dual-chart-container">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h3>Leave Types Distribution</h3>
+                    </div>
+                    <canvas id="leaveTypesChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h3>Leave Status</h3>
+                    </div>
+                    <canvas id="leaveStatusChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Approved Leave Requests Table -->
+            <div class="approvedLeaves">
+                <h3>Approved Leave Requests</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Filed Date</th>
+                            <th>Department</th>
+                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (approvedLeaves && approvedLeaves.length > 0) { %>
+                            <% approvedLeaves.forEach(leave => { %>
+                                <tr>
+                                    <td><%= leave.lastName %>, <%= leave.firstName %></td>
+                                    <td><%= leave.filedDate %></td>
+                                    <td><%= leave.department %></td>
+                                    <td><%= leave.type %></td>
+                                    <td><%= leave.startDate %></td>
+                                    <td><%= leave.endDate %></td>
+                                    <td><%= leave.status %></td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7">No approved leave requests found.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- All Leave Requests Table -->
+            <div class="allLeaves">
+                <div style="display: flex; align-items: center;">
+                    <h3 style="margin-right: 10px;">All Leave Requests</h3>
+                    <!-- Manage Leaves Button -->
+                    <a href="/hr/manageleavetypes" class="manage-leaves-button">Manage Leave Types</a>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Filed Date</th>
+                            <th>Department</th>
+                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (allLeaves && allLeaves.length > 0) { %>
+                            <% allLeaves.forEach(leave => { %>
+                                <tr>
+                                    <td><%= leave.lastName %>, <%= leave.firstName %></td>
+                                    <td><%= leave.filedDate %></td>
+                                    <td><%= leave.department %></td>
+                                    <td><%= leave.type %></td>
+                                    <td><%= leave.startDate %></td>
+                                    <td><%= leave.endDate %></td>
+                                    <td><%= leave.status %></td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7">No leave requests found.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Requisitions Tab Content -->
+        <div class="tab-content" id="requisitions-tab">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3>Manpower Requisition Status</h3>
+                </div>
                 <canvas id="manpowerRequisitionChart"></canvas>
             </div>
-            <div class="chart-box">
-                <h3>Leave Requests</h3>
-                <canvas id="leaveRequestsChart"></canvas>
+            
+            <!-- Manpower Requisition Forms Section -->
+            <div class="manpower-requisition">
+                <h3>Manpower Requisition Forms</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Requisitioner</th>
+                            <th>Department</th>
+                            <th>Job Position</th>
+                            <th>Request Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (manpowerRequisitions && manpowerRequisitions.length > 0) { %>
+                            <% manpowerRequisitions.forEach(req => { %>
+                                <tr>
+                                    <td><%= req.requisitioner %></td>
+                                    <td><%= req.department %></td>
+                                    <td><%= req.jobPosition %></td>
+                                    <td><%= req.requestDate %></td>
+                                    <td>
+                                        <!-- Show button for pending requisitions -->
+                                        <% if (req.status === 'Pending') { %>
+                                            <!-- Button for pending requisition -->
+                                            <button class="action-required-btn" data-mrfid="<%= req.mrfId %>"><%= req.actionButtonText %></button>
+                                        <% } else { %>
+                                            <!-- Display status for approved/disapproved requisition -->
+                                            <%= req.status %>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5">No manpower requisition forms available.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>                
+                </table>
             </div>
-        </div>        
+        </div>
         
-        <!-- Attendance Logs Section -->
-        <section class="attendance-logs">
-            <h2>Attendance Logs</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Last Name</th>
-                        <th>First Name</th>
-                        <th>Date</th>
-                        <th>Department</th>
-                        <th>Job Position</th>
-                        <th>Time In</th>
-                        <th>Time Out</th>
-                        <th>Location</th>
-                        <th>Active Working Hours</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (attendanceLogs && attendanceLogs.length) { %>
-                        <% attendanceLogs.forEach(log => { %>
-                            <tr>
-                                <td><%= log.lastName %></td>
-                                <td><%= log.firstName %></td>
-                                <td><%= log.date %></td>
-                                <td><%= log.department %></td>
-                                <td><%= log.jobTitle %></td>
-                                <td><%= log.timeIn %></td>
-                                <td><%= log.timeOut %></td>
-                                <td><%= log.city || 'Unknown' %></td>
-                                <td><%= log.activeWorkingHours %></td>
-                            </tr>
-                        <% }); %>
-                    <% } else { %>
-                        <tr>
-                            <td colspan="8">No attendance logs available.</td>
-                        </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </section>
-
-        <!-- Approved Leave Requests Table -->
-        <div class="approvedLeaves">
-            <h3>Approved Leave Requests</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Full Name</th>
-                        <th>Filed Date</th>
-                        <th>Department</th>
-                        <th>Leave Type</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (approvedLeaves && approvedLeaves.length > 0) { %>
-                        <% approvedLeaves.forEach(leave => { %>
-                            <tr>
-                                <td><%= leave.lastName %>, <%= leave.firstName %></td>
-                                <td><%= leave.filedDate %></td>
-                                <td><%= leave.department %></td>
-                                <td><%= leave.type %></td>
-                                <td><%= leave.startDate %></td>
-                                <td><%= leave.endDate %></td>
-                                <td><%= leave.status %></td>
-                            </tr>
-                        <% }); %>
-                    <% } else { %>
-                        <tr>
-                            <td colspan="7">No approved leave requests found.</td>
-                        </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Manpower Requisition Forms Section -->
-        <div class="manpower-requisition">
-            <h3>Manpower Requisition Forms</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Requisitioner</th>
-                        <th>Department</th>
-                        <th>Job Position</th>
-                        <th>Request Date</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (manpowerRequisitions && manpowerRequisitions.length > 0) { %>
-                        <% manpowerRequisitions.forEach(req => { %>
-                            <tr>
-                                <td><%= req.requisitioner %></td>
-                                <td><%= req.department %></td>
-                                <td><%= req.jobPosition %></td>
-                                <td><%= req.requestDate %></td>
-                                <td>
-                                    <!-- Show button for pending requisitions -->
-                                    <% if (req.status === 'Pending') { %>
-                                        <!-- Button for pending requisition -->
-                                        <button class="action-required-btn" data-mrfid="<%= req.mrfId %>"><%= req.actionButtonText %></button>
-                                    <% } else { %>
-                                        <!-- Display status for approved/disapproved requisition -->
-                                        <%= req.status %>
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    <% } else { %>
-                        <tr>
-                            <td colspan="5">No manpower requisition forms available.</td>
-                        </tr>
-                    <% } %>
-                </tbody>                
-            </table>
-        </div>
-
-        <!-- All Leave Requests Table -->
-        <div class="allLeaves">
-            <div style="display: flex; align-items: center;">
-                <h3 style="margin-right: 10px;">All Leave Requests</h3>
-                <!-- Manage Leaves Button -->
-                <a href="/hr/manageleavetypes" class="manage-leaves-button">Manage Leave Types</a>
+        <!-- Departments Tab Content -->
+        <div class="tab-content" id="departments-tab">
+            <div class="dual-chart-container">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>Department Attendance Rate</h3>
+                    </div>
+                    <canvas id="departmentAttendanceChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3>Average Working Hours by Department</h3>
+                    </div>
+                    <canvas id="departmentHoursChart"></canvas>
+                </div>
             </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Full Name</th>
-                        <th>Filed Date</th>
-                        <th>Department</th>
-                        <th>Leave Type</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (allLeaves && allLeaves.length > 0) { %>
-                        <% allLeaves.forEach(leave => { %>
-                            <tr>
-                                <td><%= leave.lastName %>, <%= leave.firstName %></td>
-                                <td><%= leave.filedDate %></td>
-                                <td><%= leave.department %></td>
-                                <td><%= leave.type %></td>
-                                <td><%= leave.startDate %></td>
-                                <td><%= leave.endDate %></td>
-                                <td><%= leave.status %></td>
-                            </tr>
-                        <% }); %>
-                    <% } else { %>
+            
+            <!-- Offboarding Requests -->
+            <div class="offboarding-requests">
+                <h3>Offboarding Requests</h3>
+                <table>
+                    <thead>
                         <tr>
-                            <td colspan="7">No leave requests found.</td>
+                            <th>Employee Name</th>
+                            <th>Department</th>
+                            <th>Request Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
                         </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Offboarding Requests -->
-        <div class="offboarding-requests">
-            <h3>Offboarding Requests</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Employee Name</th>
-                        <th>Department</th>
-                        <th>Request Date</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>nadine lustre</td>
-                        <td>Marketing</td>
-                        <td>12-06-2024</td>
-                        <td>Pending</td>
-                        <td><a href="/hr/offboarding-request">View Request</a></td>
-                    </tr>
-                </tbody>                
-            </table>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>nadine lustre</td>
+                            <td>Marketing</td>
+                            <td>12-06-2024</td>
+                            <td>Pending</td>
+                            <td><a href="/hr/offboarding-request">View Request</a></td>
+                        </tr>
+                    </tbody>                
+                </table>
+            </div>
         </div>
 
         <!--Script for the Chart.js-->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!-- Font Awesome for icons -->
+        <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
         <script>
-            // Line Graph: Attendance Logs
-            const attendanceLogsData = <%- JSON.stringify(attendanceLogs) %>;
-            const attendanceDates = attendanceLogsData.map(log => log.date);
-            const attendanceCounts = attendanceDates.reduce((acc, date) => {
-                acc[date] = (acc[date] || 0) + 1;
-                return acc;
-            }, {});
-            
-            new Chart(document.getElementById('attendanceLogsChart'), {
-                type: 'line',
-                data: {
-                    labels: Object.keys(attendanceCounts),
-                    datasets: [{
-                        label: 'Attendance Logs',
-                        data: Object.values(attendanceCounts),
-                        borderColor: '#2385B0',
-                        tension: 0.3,
-                        fill: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: true } },
-                    scales: { x: { title: { display: true, text: 'Dates' } }, y: { title: { display: true, text: 'Count' } } }
+            // Add this to your JavaScript
+            const MAX_ROWS = 5; // Show only 5 rows by default
+
+            document.querySelectorAll('table tbody').forEach(tbody => {
+                const rows = tbody.querySelectorAll('tr');
+                if (rows.length > MAX_ROWS) {
+                    // Hide extra rows
+                    for (let i = MAX_ROWS; i < rows.length; i++) {
+                        rows[i].style.display = 'none';
+                    }
+                    
+                    // Add "Show More" link
+                    const tfoot = document.createElement('tfoot');
+                    const footerRow = document.createElement('tr');
+                    const cell = document.createElement('td');
+                    cell.colSpan = tbody.parentElement.querySelectorAll('th').length;
+                    cell.innerHTML = '<a href="#" class="show-more-link">Show More...</a>';
+                    cell.style.textAlign = 'center';
+                    
+                    footerRow.appendChild(cell);
+                    tfoot.appendChild(footerRow);
+                    tbody.parentElement.appendChild(tfoot);
+                    
+                    // Add click handler
+                    cell.querySelector('.show-more-link').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        for (let i = 0; i < rows.length; i++) {
+                            rows[i].style.display = '';
+                        }
+                        this.parentElement.parentElement.style.display = 'none';
+                    });
                 }
             });
-        
-            // Pie Chart: Manpower Requisition Forms
-            const manpowerData = <%- JSON.stringify(manpowerRequisitions) %>;
-            const statusCounts = manpowerData.reduce((acc, req) => {
-                acc[req.status] = (acc[req.status] || 0) + 1;
-                return acc;
-            }, {});
-        
-            new Chart(document.getElementById('manpowerRequisitionChart'), {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(statusCounts),
-                    datasets: [{
-                        data: Object.values(statusCounts),
-                        backgroundColor: ['#2385B0', '#FF6384', '#FFCE56'],
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: true } }
-                }
-            });
-        
-            // Line Chart: All Leave Request
-            const leaveData = <%- JSON.stringify(allLeaves) %>;
-            const leaveWeeklyCounts = leaveData.reduce((acc, leave) => {
-                // Convert date to week number
-                const leaveDate = new Date(leave.filedDate);
-                const startOfYear = new Date(leaveDate.getFullYear(), 0, 1);
-                const weekNumber = Math.ceil(((leaveDate - startOfYear) / (24 * 60 * 60 * 1000) + startOfYear.getDay() + 1) / 7);
-
-                const weekKey = `Week ${weekNumber}, ${leaveDate.getFullYear()}`;
-                acc[weekKey] = (acc[weekKey] || 0) + 1;
-                return acc;
-            }, {});
-
-            new Chart(document.getElementById('leaveRequestsChart'), {
-                type: 'line',
-                data: {
-                    labels: Object.keys(leaveWeeklyCounts),
-                    datasets: [{
-                        label: 'Weekly Leave Requests',
-                        data: Object.values(leaveWeeklyCounts),
-                        borderColor: '#FF6384',
-                        tension: 0.3,
-                        fill: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: true } },
-                    scales: { 
-                        x: { title: { display: true, text: 'Weeks' } },
-                        y: { title: { display: true, text: 'Count' } }
+            // Enhanced Dashboard JavaScript
+            document.addEventListener('DOMContentLoaded', function() {
+                // Get data from backend
+                const attendanceLogs = <%- JSON.stringify(attendanceLogs || []) %>;
+                const allLeaves = <%- JSON.stringify(allLeaves || []) %>;
+                const approvedLeaves = <%- JSON.stringify(approvedLeaves || []) %>;
+                const manpowerRequisitions = <%- JSON.stringify(manpowerRequisitions || []) %>;
+                
+                // Department list
+                const departments = [
+                    'HR', 
+                    'IT', 
+                    'Marketing', 
+                    'Partnerships', 
+                    'Investor Relations', 
+                    'Finance'
+                ];
+                
+                // Calculate KPI values
+                function calculateKPIs() {
+                    // Calculate attendance rate based on actual data
+                    if (attendanceLogs && attendanceLogs.length) {
+                        // Group attendance logs by department to calculate rates
+                        const deptAttendance = {};
+                        departments.forEach(dept => {
+                            deptAttendance[dept] = { total: 0, present: 0 };
+                        });
+                        
+                        // Simple calculation - count all logs as present employees
+                        // In a real app, you would compare against total expected employees
+                        const totalEmployees = 50; // Placeholder - would be calculated from staff data
+                        const presentEmployees = new Set(attendanceLogs.map(log => `${log.firstName} ${log.lastName}`)).size;
+                        
+                        const attendanceRate = ((presentEmployees / totalEmployees) * 100).toFixed(1);
+                        document.getElementById('attendance-rate').textContent = `${attendanceRate}%`;
+                    } else {
+                        document.getElementById('attendance-rate').textContent = 'N/A';
+                    }
+                    
+                    // Calculate average working hours from real data
+                    if (attendanceLogs && attendanceLogs.length) {
+                        let totalHours = 0;
+                        let validLogs = 0;
+                        
+                        attendanceLogs.forEach(log => {
+                            if (log.activeWorkingHours && !isNaN(parseFloat(log.activeWorkingHours))) {
+                                totalHours += parseFloat(log.activeWorkingHours);
+                                validLogs++;
+                            }
+                        });
+                        
+                        if (validLogs > 0) {
+                            const avgHours = (totalHours / validLogs).toFixed(1);
+                            document.getElementById('avg-working-hours').textContent = `${avgHours} hrs`;
+                        } else {
+                            document.getElementById('avg-working-hours').textContent = 'N/A';
+                        }
+                    } else {
+                        document.getElementById('avg-working-hours').textContent = 'N/A';
+                    }
+                    
+                    // Count pending leave requests from real data
+                    if (allLeaves && allLeaves.length) {
+                        const pendingLeaves = allLeaves.filter(leave => leave.status === 'Pending').length;
+                        document.getElementById('pending-leaves').textContent = pendingLeaves;
+                    } else {
+                        document.getElementById('pending-leaves').textContent = '0';
+                    }
+                    
+                    // Count pending requisitions from real data
+                    if (manpowerRequisitions && manpowerRequisitions.length) {
+                        const pendingReqs = manpowerRequisitions.filter(req => req.status === 'Pending').length;
+                        document.getElementById('pending-requisitions').textContent = pendingReqs;
+                    } else {
+                        document.getElementById('pending-requisitions').textContent = '0';
                     }
                 }
+                
+                // Tab Navigation
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabContents = document.querySelectorAll('.tab-content');
+                
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        // Remove active class from all buttons and contents
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        tabContents.forEach(content => content.classList.remove('active'));
+                        
+                        // Add active class to clicked button and corresponding content
+                        button.classList.add('active');
+                        const tabId = `${button.dataset.tab}-tab`;
+                        document.getElementById(tabId).classList.add('active');
+                    });
+                });
+                
+                // Call KPI calculations
+                calculateKPIs();
+                
+                // Process attendance data for visualizations
+                function processAttendanceData() {
+                    // Group by date
+                    const dateAttendance = {};
+                    
+                    attendanceLogs.forEach(log => {
+                        if (log.date && log.date !== 'N/A') {
+                            dateAttendance[log.date] = (dateAttendance[log.date] || 0) + 1;
+                        }
+                    });
+                    
+                    // Group by department 
+                    const deptAttendance = {};
+                    departments.forEach(dept => {
+                        deptAttendance[dept] = 0;
+                    });
+                    
+                    attendanceLogs.forEach(log => {
+                        if (log.department && departments.includes(log.department)) {
+                            deptAttendance[log.department] = (deptAttendance[log.department] || 0) + 1;
+                        }
+                    });
+                    
+                    return { dateAttendance, deptAttendance };
+                }
+                
+                // Process leave data for visualizations
+                function processLeaveData() {
+                    // Group by leave type
+                    const leaveTypes = {};
+                    
+                    if (allLeaves && allLeaves.length) {
+                        allLeaves.forEach(leave => {
+                            if (leave.type) {
+                                leaveTypes[leave.type] = (leaveTypes[leave.type] || 0) + 1;
+                            }
+                        });
+                    }
+                    
+                    // Group by status
+                    const leaveStatus = {
+                        'Pending': 0,
+                        'Approved': 0,
+                        'Rejected': 0
+                    };
+                    
+                    if (allLeaves && allLeaves.length) {
+                        allLeaves.forEach(leave => {
+                            if (leave.status && leaveStatus.hasOwnProperty(leave.status)) {
+                                leaveStatus[leave.status]++;
+                            }
+                        });
+                    }
+                    
+                    return { leaveTypes, leaveStatus };
+                }
+                
+                // Process department data for visualizations
+                function processDepartmentData() {
+                    // Initialize departmental metrics
+                    const deptMetrics = {};
+                    departments.forEach(dept => {
+                        deptMetrics[dept] = {
+                            attendanceRate: 0,
+                            averageHours: 0,
+                            employeeCount: 0,
+                            totalHours: 0
+                        };
+                    });
+                    
+                    // Calculate metrics from attendance logs
+                    if (attendanceLogs && attendanceLogs.length) {
+                        // Track employees per department
+                        const deptEmployees = {};
+                        departments.forEach(dept => {
+                            deptEmployees[dept] = new Set();
+                        });
+                        
+                        attendanceLogs.forEach(log => {
+                            if (log.department && departments.includes(log.department)) {
+                                // Add employee to department set
+                                const empKey = `${log.firstName} ${log.lastName}`;
+                                deptEmployees[log.department].add(empKey);
+                                
+                                // Add hours to department total
+                                if (log.activeWorkingHours && !isNaN(parseFloat(log.activeWorkingHours))) {
+                                    deptMetrics[log.department].totalHours += parseFloat(log.activeWorkingHours);
+                                }
+                            }
+                        });
+                        
+                        // Calculate average hours and set employee count
+                        departments.forEach(dept => {
+                            deptMetrics[dept].employeeCount = deptEmployees[dept].size;
+                            
+                            if (deptMetrics[dept].employeeCount > 0) {
+                                deptMetrics[dept].averageHours = (
+                                    deptMetrics[dept].totalHours / deptMetrics[dept].employeeCount
+                                ).toFixed(1);
+                            }
+                            
+                            // Simplified attendance rate - using placeholder logic
+                            // In a real app, you would compare against expected attendance
+                            const expectedAttendance = 10; // Placeholder
+                            deptMetrics[dept].attendanceRate = Math.min(100, 
+                                Math.round((deptMetrics[dept].employeeCount / expectedAttendance) * 100)
+                            );
+                        });
+                    }
+                    
+                    return deptMetrics;
+                }
+                
+                // Get processed data for charts
+                const attendanceData = processAttendanceData();
+                const leaveData = processLeaveData();
+                const departmentData = processDepartmentData();
+                
+                // Create Attendance Trend Chart
+                const trendCtx = document.getElementById('attendanceTrendChart').getContext('2d');
+                new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: Object.keys(attendanceData.dateAttendance).slice(-7),
+                        datasets: [{
+                            label: 'Daily Attendance',
+                            data: Object.values(attendanceData.dateAttendance).slice(-7),
+                            borderColor: '#2385B0',
+                            backgroundColor: 'rgba(35, 133, 176, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: true, position: 'top' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Attendance: ${context.raw} employees`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: { 
+                            x: { 
+                                title: { display: true, text: 'Date' },
+                                ticks: { maxRotation: 45, minRotation: 45 }
+                            }, 
+                            y: { 
+                                title: { display: true, text: 'Employee Count' },
+                                beginAtZero: true
+                            } 
+                        }
+                    }
+                });
+                
+                // Department Attendance Breakdown Chart
+                const deptBreakdownCtx = document.getElementById('deptAttendanceBreakdownChart').getContext('2d');
+                new Chart(deptBreakdownCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: departments,
+                        datasets: [{
+                            label: 'Attendance by Department',
+                            data: departments.map(dept => attendanceData.deptAttendance[dept] || 0),
+                            backgroundColor: '#4CAF50',
+                            borderColor: '#4CAF50',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: true, position: 'top' }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Employee Count' }
+                            }
+                        }
+                    }
+                });
+                
+                // Leave Types Chart (Pie Chart)
+                const leaveTypeCtx = document.getElementById('leaveTypesChart').getContext('2d');
+                new Chart(leaveTypeCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(leaveData.leaveTypes),
+                        datasets: [{
+                            data: Object.values(leaveData.leaveTypes),
+                            backgroundColor: [
+                                '#8884d8',
+                                '#82ca9d',
+                                '#ffc658',
+                                '#ff8042',
+                                '#0088FE',
+                                '#00C49F'
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Leave Status Chart (Pie Chart)
+                const leaveStatusCtx = document.getElementById('leaveStatusChart').getContext('2d');
+                new Chart(leaveStatusCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(leaveData.leaveStatus),
+                        datasets: [{
+                            data: Object.values(leaveData.leaveStatus),
+                            backgroundColor: [
+                                '#FFCE56', // Pending
+                                '#2385B0', // Approved
+                                '#FF6384'  // Rejected
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Manpower Requisition Chart
+                const manpowerStatusCounts = {
+                    'Pending': 0,
+                    'Approved': 0,
+                    'Rejected': 0
+                };
+                
+                if (manpowerRequisitions && manpowerRequisitions.length) {
+                    manpowerRequisitions.forEach(req => {
+                        if (req.status && manpowerStatusCounts.hasOwnProperty(req.status)) {
+                            manpowerStatusCounts[req.status]++;
+                        }
+                    });
+                }
+                
+                const requisitionCtx = document.getElementById('manpowerRequisitionChart').getContext('2d');
+                new Chart(requisitionCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(manpowerStatusCounts),
+                        datasets: [{
+                            data: Object.values(manpowerStatusCounts),
+                            backgroundColor: [
+                                '#FFCE56', // Pending
+                                '#2385B0', // Approved
+                                '#FF6384'  // Rejected
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Department Attendance Rate Chart
+                const deptAttendanceCtx = document.getElementById('departmentAttendanceChart').getContext('2d');
+                new Chart(deptAttendanceCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: departments,
+                        datasets: [{
+                            label: 'Attendance Rate (%)',
+                            data: departments.map(dept => departmentData[dept].attendanceRate || 0),
+                            backgroundColor: '#2385B0',
+                            borderColor: '#2385B0',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: true, position: 'top' }
+                        },
+                        scales: {
+                            y: {
+                                min: 0,
+                                max: 100,
+                                title: { display: true, text: 'Attendance Rate (%)' }
+                            }
+                        }
+                    }
+                });
+                
+                // Department Working Hours Chart
+                const deptHoursCtx = document.getElementById('departmentHoursChart').getContext('2d');
+                new Chart(deptHoursCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: departments,
+                        datasets: [{
+                            label: 'Average Working Hours',
+                            data: departments.map(dept => parseFloat(departmentData[dept].averageHours) || 0),
+                            backgroundColor: '#82ca9d',
+                            borderColor: '#82ca9d',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: true, position: 'top' }
+                        },
+                        scales: {
+                            y: {
+                                min: 0,
+                                max: 10,
+                                title: { display: true, text: 'Hours' }
+                            }
+                        }
+                    }
+                });
             });
-        </script>        
 
-        <!-- JavaScript for sidebar functionality -->
-        <script>
-
+            // Original functionality from your template
             document.querySelectorAll('.action-required-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const mrfId = this.getAttribute('data-mrfid');
