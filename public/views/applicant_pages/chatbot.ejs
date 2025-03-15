@@ -3,31 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
-    <link
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-  rel="stylesheet"
-/>
+    <title>Chatbot - Online Applicant Screening</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f7;
             margin: 0;
             height: 100vh;
             display: flex;
-            flex-direction: column;
         }
+        
+        /* Left sidebar with logo and stepper */
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            z-index: 2;
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            max-width: 85%;
+            height: auto;
+        }
+        
+        .stepper {
+            margin-top: 20px;
+        }
+        
+        .stepper-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .stepper-step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 12px;
+            height: 25px;
+            width: 2px;
+            background-color: #ccc;
+        }
+        
+        .stepper-step.active:not(:last-child):after {
+            background-color: #07ACB9;
+        }
+        
+        .step-number {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #D8D8D8;
+            color: #09191F;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .stepper-step.active .step-number {
+            background-color: #07ACB9;
+            color: white;
+        }
+        
+        .step-label {
+            font-weight: 500;
+            color: #09191F;
+        }
+        
+        .stepper-step.active .step-label {
+            color: #07ACB9;
+            font-weight: bold;
+        }
+        
+        .logout-container {
+            margin-top: auto;
+            text-align: center;
+            margin-right: 0;
+            margin-bottom: 20px;
+        }
+        
+        .logout-button {
+            text-decoration: none;
+            color: #2385B0;
+            font-weight: bold;
+            background-color: #D8D8D8;
+            padding: 15px 15px;
+            border-radius: 5px;
+            display: block;
+            transition: background-color 0.3s;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .logout-button:hover {
+            background-color: #2385B0; 
+            color: #D8D8D8;
+            font-weight: bold;
+        }
+        
+        /* Main chat container */
         .chat-container {
             flex: 1;
             display: flex;
             flex-direction: column;
+            max-width: 100%;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin: 20px;
+            overflow: hidden;
         }
+        
         .chat-header {
-            background-color: #007BFF;
+            background-color: #07ACB9;
             color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 1.5em;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+        
+        .chat-header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .chat-header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .back-button {
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
         .chat-messages {
             flex: 1;
             padding: 20px;
@@ -36,613 +176,674 @@
             display: flex;
             flex-direction: column;
         }
+        
         .message {
             max-width: 70%;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 10px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 12px;
             position: relative;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .user-message {
-            background-color: white;
+            background-color: #B4E3E3;
             align-self: flex-end;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-bottom-right-radius: 4px;
+            color: #09191F;
         }
+        
         .bot-message {
-            background-color: #007BFF;
-            color: white;
+            background-color: white;
             align-self: flex-start;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-bottom-left-radius: 4px;
+            color: #09191F;
+            border-left: 4px solid #07ACB9;
         }
+        
+        .message-timestamp {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
         .chat-input {
             display: flex;
-            border-top: 1px solid #ccc;
-            padding: 10px;
+            background-color: white;
+            border-top: 1px solid #eee;
+            padding: 15px;
+            position: relative;
         }
+        
+        .chat-input-wrapper {
+            display: flex;
+            width: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-input-wrapper:focus-within {
+            box-shadow: 0 0 0 2px #B4E3E3;
+            border-color: #07ACB9;
+        }
+        
         .chat-input input {
             flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px 0 0 5px;
-        }
-        .chat-input button {
-            padding: 10px;
+            padding: 12px 16px;
             border: none;
-            background-color: #007BFF;
-            color: white;
-            cursor: pointer;
-            border-radius: 0 5px 5px 0;
+            outline: none;
+            font-size: 1rem;
         }
+        
+        .chat-input button {
+            padding: 10px 20px;
+            background-color: #07ACB9;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        .chat-input button:hover {
+            background-color: #059DAF;
+        }
+        
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-start;
+            width: 100%;
+        }
+        
         .job-button {
             margin: 5px 0;
-            background-color: #e0e0e0;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
+            background-color: white;
+            border: 1px solid #07ACB9;
+            color: #07ACB9;
+            padding: 10px 15px;
+            border-radius: 20px;
             cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
-        #logout-button {
-            background-color: #D8D8D8; /* Bootstrap's danger color for logout */
-            color: #2385B0; /* Text color */
-    border: none; /* No border */
-    border-radius: 5px; /* Rounded corners */
-    padding: 5px 10px; /* Padding for size */
-    cursor: pointer; /* Pointer cursor on hover */
-    transition: background-color 0.3s; /* Smooth transition */
-}
-
-#logout-button:hover {
-    background-color: #2385B0; 
-    color: #D8D8D8;
-    font-weight: bold;
-}
+        
+        .job-button:hover {
+            background-color: #B4E3E3;
+            transform: scale(1.05);
+        }
+        
+        /* File upload styling */
+        .file-upload-button {
+            background-color: #07ACB9;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+        
+        .file-upload-button:hover {
+            background-color: #059DAF;
+            transform: scale(1.05);
+        }
+        
+        /* Loading indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: #07ACB9;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            opacity: 0.6;
+            animation: typingAnimation 1s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+            margin-right: 0;
+        }
+        
+        @keyframes typingAnimation {
+            0% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0.6; transform: scale(1); }
+        }
+        
+        .upload-progress {
+            height: 5px;
+            background-color: #B4E3E3;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .upload-progress-bar {
+            height: 100%;
+            background-color: #07ACB9;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 10px;
+            }
+            
+            .stepper {
+                display: flex;
+                justify-content: space-around;
+                margin-bottom: 10px;
+            }
+            
+            .stepper-step {
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 0;
+            }
+            
+            .stepper-step:not(:last-child):after {
+                display: none;
+            }
+            
+            .step-label {
+                font-size: 0.8rem;
+            }
+            
+            .logout-container {
+                display: none;
+            }
+            
+            .chat-container {
+                margin: 10px;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Left sidebar with logo and stepper -->
+    <div class="sidebar">
+        <div class="logo-container">
+            <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Prime Infrastructure" class="logo">
+        </div>
+        
+        <div class="stepper">
+            <div class="stepper-step active" id="step-job-selection">
+                <div class="step-number">1</div>
+                <div class="step-label">Job Selection</div>
+            </div>
+            <div class="stepper-step" id="step-screening">
+                <div class="step-number">2</div>
+                <div class="step-label">Screening Questions</div>
+            </div>
+            <div class="stepper-step" id="step-resume">
+                <div class="step-number">3</div>
+                <div class="step-label">Resume Upload</div>
+            </div>
+        </div>
+        
+        <div class="logout-container">
+            <button id="logout-button" class="logout-button">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main chat container -->
     <div class="chat-container">
         <div class="chat-header">
-            Online Applicant Screening
-            <button id="logout-button" style="float: right; background-color: #dc3545; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer;">Logout</button>
+            <h1>Online Applicant Screening</h1>
+            <div class="chat-header-buttons">
+                <button id="back-button" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </div>
         </div>
-        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- Messages will be added here dynamically -->
+            <div class="typing-indicator" id="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
         <div class="chat-input">
-            <input type="text" id="user-input" placeholder="Type your message..." />
-            <button id="send-button">Send</button>
+            <div class="chat-input-wrapper">
+                <input type="text" id="user-input" placeholder="Type your message..." />
+                <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+            </div>
         </div>
 
         <!-- Hidden file upload input -->
         <input
             type="file"
             id="fileUpload"
-            accept=".pdf, .png, .jpeg, .jpg"
+            accept=".pdf, .doc, .docx, .png, .jpeg, .jpg"
             style="display:none"
             onchange="uploadFile(event)"
-        />\
+        />
         <div id="chat-data" style="display: none;"><%= chatData %></div>
-
-
-        <!-- <button
-        id="upload-button"
-        onclick="document.getElementById('fileUpload').click()"
-      >
-        <i class="fa-duotone fa-solid fa-file"></i> Upload a File
-      </button> -->
-      
-
     </div>
     <script>
-let screeningQuestions = [];
-let currentQuestionIndex = 0;
-let initialResponse = {}; // ✅ Declare initialResponse globally
+    let screeningQuestions = [];
+    let currentQuestionIndex = 0;
+    let initialResponse = {}; // Declare initialResponse globally
+    let currentStage = 'job_selection'; // To track the current stage for stepper
 
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("✅ [Chatbot] Page loaded. Initializing chat...");
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("✅ [Chatbot] Page loaded. Initializing chat...");
 
-    loadChatHistory();
+        loadChatHistory();
 
-    // ✅ Event listeners for input
-    document.getElementById("send-button").addEventListener("click", handleUserInput);
-    document.getElementById("user-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            handleUserInput();
-        }
+        // Event listeners for input
+        document.getElementById("send-button").addEventListener("click", handleUserInput);
+        document.getElementById("user-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                handleUserInput();
+            }
+        });
+
+        // Back button functionality
+        document.getElementById("back-button").addEventListener("click", function() {
+            window.location.href = '/'; // Redirect to the about page route
+        });
+
+        // Logout button functionality
+        document.getElementById("logout-button").addEventListener("click", function() {
+            fetch("/logout", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = "/login";
+                } else {
+                    console.error("Logout failed");
+                }
+            })
+            .catch(error => {
+                console.error("Error during logout:", error);
+            });
+        });
     });
-});
 
-
+    // Update stepper function
+    function updateStepper(stage) {
+        // Reset all steps
+        document.querySelectorAll('.stepper-step').forEach(step => {
+            step.classList.remove('active');
+        });
+        
+        // Set active step based on stage
+        if (stage === 'job_selection') {
+            document.getElementById('step-job-selection').classList.add('active');
+        } else if (stage === 'screening_questions' || stage === 'file_upload') {
+            document.getElementById('step-screening').classList.add('active');
+        } else if (stage === 'resume_upload' || stage.includes('P1')) {
+            document.getElementById('step-resume').classList.add('active');
+        }
+        
+        currentStage = stage;
+    }
 
     // Function to display the initial message with buttons
     function displayInitialMessage(response) {
-    const chatMessages = document.getElementById('chat-messages');
+        const chatMessages = document.getElementById('chat-messages');
 
-    // Prevent duplicate initial messages
-    if (document.querySelector('.bot-message')) return;
+        // Prevent duplicate initial messages
+        if (document.querySelector('.bot-message')) return;
 
-    // Append bot message text
-    const botMessageDiv = document.createElement('div');
-    botMessageDiv.classList.add('message', 'bot-message');
-    botMessageDiv.innerText = response.text;
-    chatMessages.appendChild(botMessageDiv);
+        // Append bot message text
+        const botMessageDiv = document.createElement('div');
+        botMessageDiv.classList.add('message', 'bot-message');
+        botMessageDiv.innerText = response.text;
+        
+        // Add timestamp
+        const timestamp = document.createElement('div');
+        timestamp.classList.add('message-timestamp');
+        timestamp.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        botMessageDiv.appendChild(timestamp);
+        
+        chatMessages.appendChild(botMessageDiv);
 
-    // Append buttons for job positions
-    response.buttons.forEach(button => {
-        const jobButton = document.createElement('button');
-        jobButton.innerText = button.text;
-        jobButton.onclick = () => {
-            console.log('✅ [Chatbot] Button clicked:', button.text);
-            addMessage('You', button.text);
-            sendMessage(button.text);
-        };
-        jobButton.classList.add('job-button');
-        chatMessages.appendChild(jobButton);
-    });
-
-    // Auto-scroll to bottom
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-
-        document.getElementById("logout-button").addEventListener("click", function() {
-    fetch("/logout", {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json"
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            window.location.href = "/login";
-        } else {
-            console.error("Logout failed");
-        }
-    })
-    .catch(error => {
-        console.error("Error during logout:", error);
-    });
-});
-
-
-        function handleUserInput() {
-            const inputField = document.getElementById("user-input");
-            const userInput = inputField.value.trim();
-
-            if (!userInput) {
-                console.log("Input is empty.");
-                return;
-            }
-
-            console.log("User  input:", userInput);
-            addMessage("You", userInput);
-            inputField.value = "";
-
-            sendMessage(userInput);
-        }
-
-        async function sendMessage(message) {
-            try {
-                const response = await fetch("/chatbothome", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message }),
-                });
-
-                if (!response.ok) throw new Error("Failed to send message");
-
-                const data = await response.json();
-                console.log("Response from server:", data);
-
-                // Display the entire chat history
-                if (data.chatHistory) {
-                    data.chatHistory.forEach(chat => {
-                        if (chat.sender === 'user') {
-                            addMessage("You", chat.message);
-                        } else if (chat.sender === 'bot') {
-                            try {
-                                const botMessage = JSON.parse(chat.message);
-                                displayBotResponse(botMessage);
-                            } catch (error) {
-                                addMessage("Bot", chat.message);
-                            }
-                        }
-                    });
-                }
-
-                // Handle the latest bot response
-                if (data.response) {
-                    displayBotResponse(data.response);
-                }
-            } catch (error) {
-                console.error("Error sending message:", error);
-                addMessage("Bot", "There was an error sending your message. Please try again.");
-            }
-        }
-
-        function addMessage(sender, message) {
-            console.log(`Adding message from ${sender}:`, message);
-            const chatMessages = document.getElementById("chat-messages");
-            const messageDiv = document.createElement("div");
-            messageDiv.classList.add("message", sender === "You" ? "user-message" : "bot-message");
-            messageDiv.textContent = message;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            saveChatHistory(sender, message);
-        }
-
-        function saveChatHistory(sender, message) {
-            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
-            chatHistory.push({ sender, message });
-            localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
-        }
-
-        function loadChatHistory() {
-    const chatMessages = document.getElementById("chat-messages");
-    // Parse the chatData directly from the rendered JSON string
-    let chatHistory = JSON.parse(document.getElementById("chat-data").textContent) || []; // Assuming you have an element with id "chat-data"
-
-    console.log("✅ [Chatbot] Loading chat history from Supabase:", chatHistory);
-
-    if (chatHistory.length > 0) {
-        chatHistory.forEach((chat) => {
-            if (chat.sender === 'user') {
-                addMessage("You", chat.message);
-            } else if (chat.sender === 'bot') {
-                try {
-                    const botMessage = JSON.parse(chat.message);
-                    displayBotResponse(botMessage);
-                } catch (error) {
-                    addMessage("Bot", chat.message);
-                }
-            }
-        });
-
-        console.log("✅ [Chatbot] Chat history successfully rendered.");
-    } else {
-        console.log("✅ [Chatbot] No chat history. Displaying initial message.");
-        displayInitialMessage(initialResponse);
-    }
-
-    // Auto-scroll to bottom
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-
-async function uploadFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    console.log("Uploading file:", file.name);
-    
-    // Create loading message
-    addMessage("Bot", "Uploading file... Please wait.");
-    
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-        const response = await fetch("/handleFileUpload", {
-            method: "POST",
-            body: formData,
-        });
-
-        if (!response.ok) throw new Error("Failed to upload file");
-
-        const result = await response.json();
-
-        // Remove loading message
-        const chatMessages = document.getElementById("chat-messages");
-        if (chatMessages.lastChild && chatMessages.lastChild.textContent === "Uploading file... Please wait.") {
-            chatMessages.removeChild(chatMessages.lastChild);
-        }
-
-        // Display success message
-        if (result.response && result.response.text) {
-            addMessage("Bot", result.response.text);
-            
-            // Handle next question if it exists
-            if (result.response.nextQuestion) {
-                // Small delay to make it feel more natural
-                setTimeout(() => {
-                    displayBotResponse(result.response.nextQuestion);
-                }, 1000);
-            }
-        } else {
-            addMessage("Bot", "File uploaded successfully!");
-        }
-    } catch (error) {
-        console.error("Error uploading file:", error);
-        addMessage("Bot", "Error uploading file. Please try again.");
-    }
-}
-
-function displayBotResponse(response) {
-    console.log("Bot response:", response);
-    const chatMessages = document.getElementById("chat-messages");
-
-    if (typeof response === "object" && response.text) {
-        addMessage("Bot", response.text);
-
+        // Create button container
         if (response.buttons && response.buttons.length) {
-            response.buttons.forEach((button) => {
-                const btn = document.createElement("button");
-                btn.innerText = button.text;
-                btn.classList.add("job-button");
-
-                if (button.type === "file_upload") {
-                    btn.onclick = () => document.getElementById("fileUpload").click();
-                } else {
-                    btn.onclick = async () => {
-                        console.log("Button clicked:", button.text);
-                        addMessage("You", button.text);
-                        await sendMessage(button.text);
-                    };
-                }
-
-                chatMessages.appendChild(btn);
+            const buttonContainer = document.createElement('div');
+            buttonContainer.classList.add('button-container');
+            
+            // Append buttons for job positions
+            response.buttons.forEach(button => {
+                const jobButton = document.createElement('button');
+                jobButton.innerText = button.text;
+                jobButton.onclick = () => {
+                    console.log('✅ [Chatbot] Button clicked:', button.text);
+                    addMessage('You', button.text);
+                    sendMessage(button.text);
+                };
+                jobButton.classList.add('job-button');
+                buttonContainer.appendChild(jobButton);
             });
+            
+            chatMessages.appendChild(buttonContainer);
         }
-    } else {
-        addMessage("Bot", response);
+
+        // Auto-scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Update stepper
+        updateStepper('job_selection');
     }
 
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
+    function handleUserInput() {
+        const inputField = document.getElementById("user-input");
+        const userInput = inputField.value.trim();
 
-//         async function fetchInitialResponse() {
-//     console.log("Fetching initial response...");
-//     try {
-//         const response = await fetch("/chatbothome", {
-//             method: "POST",
-//             headers: { "Content-Type": "application/json" },
-//             body: JSON.strinsfy({ message: "retrieve_history" }), // This will fetch chat history
-//         });
+        if (!userInput) {
+            console.log("Input is empty.");
+            return;
+        }
 
-//         if (!response.ok) throw new Error("Failed to fetch initial response");
+        console.log("User input:", userInput);
+        addMessage("You", userInput);
+        inputField.value = "";
+        
+        // Show typing indicator
+        showTypingIndicator(true);
+        
+        sendMessage(userInput);
+    }
 
-//         const data = await response.json();
-//         console.log("Initial response:", data);
+    async function sendMessage(message) {
+        try {
+            const response = await fetch("/chatbothome", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message }),
+            });
 
-//         // Check if there is chat history
-//         if (data.chatHistory && data.chatHistory.length > 0) {
-//             // Display existing chat history
-//             data.chatHistory.forEach(chat => {
-//                 if (chat.sender === 'user') {
-//                     addMessage("You", chat.message);
-//                 } else if (chat.sender === 'bot') {
-//                     try {
-//                          const botMessage = JSON.parse(chat.message);
-//                         displayBotResponse(botMessage);
-//                     } catch (error) {
-//                         addMessage("Bot", chat.message);
-//                     }
-//                 }
-//             });
-//         } else {
-//             // Use the initial message from the session
-//             const initialMessage = sessionStorage.getItem('initialMessage'); // Assuming you store it in session storage
-//             if (initialMessage) {
-//                 displayBotResponse(initialMessage);
-//             } else {
-//                 addMessage("Bot", "Welcome! How can I assist you today?");
-//             }
-//         }
+            if (!response.ok) throw new Error("Failed to send message");
 
-//     } catch (error) {
-//         console.error("Error fetching initial response:", error);
-//         addMessage("Bot", "Welcome! How can I assist you today?");
-//     }
-// }
+            const data = await response.json();
+            console.log("Response from server:", data);
+            
+            // Hide typing indicator
+            showTypingIndicator(false);
+
+            // Handle the latest bot response
+            if (data.response) {
+                // Check if response contains applicantStage for stepper update
+                if (data.response && data.response.applicantStage) {
+                    updateStepper(data.response.applicantStage);
+                }
+                displayBotResponse(data.response);
+            }
+        } catch (error) {
+            console.error("Error sending message:", error);
+            showTypingIndicator(false);
+            addMessage("Bot", "There was an error sending your message. Please try again.");
+        }
+    }
+
+    function addMessage(sender, message) {
+        console.log(`Adding message from ${sender}:`, message);
+        const chatMessages = document.getElementById("chat-messages");
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", sender === "You" ? "user-message" : "bot-message");
+        messageDiv.textContent = message;
+        
+        // Add timestamp
+        const timestamp = document.createElement('div');
+        timestamp.classList.add('message-timestamp');
+        timestamp.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        messageDiv.appendChild(timestamp);
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        saveChatHistory(sender, message);
+    }
+
+    function saveChatHistory(sender, message) {
+        let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+        chatHistory.push({ sender, message });
+        localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+    }
+
+    function loadChatHistory() {
+        const chatMessages = document.getElementById("chat-messages");
+        // Parse the chatData directly from the rendered JSON string
+        let chatHistory = [];
+        try {
+            chatHistory = JSON.parse(document.getElementById("chat-data").textContent) || [];
+        } catch (e) {
+            console.error("Error parsing chat history:", e);
+            chatHistory = [];
+        }
+
+        console.log("✅ [Chatbot] Loading chat history from Supabase:", chatHistory);
+
+        if (chatHistory.length > 0) {
+            // Find the last applicantStage to update the stepper
+            let lastStage = 'job_selection';
+            
+            chatHistory.forEach((chat) => {
+                if (chat.applicantStage) {
+                    lastStage = chat.applicantStage;
+                }
+                
+                if (chat.sender === 'user') {
+                    addMessage("You", chat.message);
+                } else if (chat.sender === 'bot') {
+                    try {
+                        const botMessage = JSON.parse(chat.message);
+                        displayBotResponse(botMessage);
+                    } catch (error) {
+                        addMessage("Bot", chat.message);
+                    }
+                }
+            });
+
+            // Update stepper based on last stage
+            updateStepper(lastStage);
+            console.log("✅ [Chatbot] Chat history successfully rendered.");
+        } else {
+            console.log("✅ [Chatbot] No chat history. Displaying initial message.");
+            displayInitialMessage(initialResponse);
+        }
+
+        // Auto-scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function uploadFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        console.log("Uploading file:", file.name);
+        
+        // Create loading message
+        addMessage("Bot", "Uploading file... Please wait.");
+        
+        // Show upload progress
+        const uploadProgressDiv = document.createElement('div');
+        uploadProgressDiv.classList.add('upload-progress');
+        uploadProgressDiv.style.display = 'block';
+        
+        const progressBar = document.createElement('div');
+        progressBar.classList.add('upload-progress-bar');
+        uploadProgressDiv.appendChild(progressBar);
+        
+        const chatMessages = document.getElementById("chat-messages");
+        chatMessages.appendChild(uploadProgressDiv);
+        
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 5;
+            progressBar.style.width = `${Math.min(progress, 95)}%`;
+            if (progress >= 95) clearInterval(progressInterval);
+        }, 200);
+        
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch("/handleFileUpload", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) throw new Error("Failed to upload file");
+
+            const result = await response.json();
+            
+            // Complete progress and remove
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            setTimeout(() => {
+                uploadProgressDiv.remove();
+            }, 500);
+
+            // Remove loading message
+            if (chatMessages.lastChild && chatMessages.lastChild.textContent === "Uploading file... Please wait.") {
+                chatMessages.removeChild(chatMessages.lastChild);
+            }
+
+            // Display success message
+            if (result.response && result.response.text) {
+                addMessage("Bot", result.response.text);
+                
+                // Update stepper if we're uploading resume
+                if (currentStage === 'resume_upload') {
+                    updateStepper('P1 - Awaiting for HR Action');
+                }
+                
+                // Handle next question if it exists
+                if (result.response.nextQuestion) {
+                    // Small delay to make it feel more natural
+                    setTimeout(() => {
+                        displayBotResponse(result.response.nextQuestion);
+                    }, 1000);
+                }
+            } else {
+                addMessage("Bot", "File uploaded successfully!");
+            }
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            clearInterval(progressInterval);
+            uploadProgressDiv.remove();
+            addMessage("Bot", "Error uploading file. Please try again.");
+        }
+    }
+
+    function displayBotResponse(response) {
+        console.log("Bot response:", response);
+        const chatMessages = document.getElementById("chat-messages");
+
+        if (typeof response === "object" && response.text) {
+            addMessage("Bot", response.text);
+            
+            // If this is the first screening question, update stepper
+            if (response.text.includes("would you like to proceed") || 
+                response.text.includes("Do you have a degree") ||
+                response.text.includes("Do you have experience")) {
+                updateStepper('screening_questions');
+            }
+            
+            // If this involves resume upload, update stepper
+            if (response.text.includes("upload your resume") || 
+                response.text.includes("marks the end of the initial screening")) {
+                updateStepper('resume_upload');
+            }
+
+            if (response.buttons && response.buttons.length) {
+                const buttonContainer = document.createElement('div');
+                buttonContainer.classList.add('button-container');
+                
+                response.buttons.forEach((button) => {
+                    const btn = document.createElement("button");
+                    btn.innerText = button.text;
+                    
+                    if (button.type === "file_upload") {
+                        btn.classList.add("file-upload-button");
+                        btn.innerHTML = `<i class="fas fa-file-upload"></i> ${button.text}`;
+                        btn.onclick = () => document.getElementById("fileUpload").click();
+                    } else {
+                        btn.classList.add("job-button");
+                        btn.onclick = async () => {
+                            console.log("Button clicked:", button.text);
+                            addMessage("You", button.text);
+                            showTypingIndicator(true);
+                            await sendMessage(button.text);
+                        };
+                    }
+
+                    buttonContainer.appendChild(btn);
+                });
+                
+                chatMessages.appendChild(buttonContainer);
+            }
+        } else {
+            addMessage("Bot", response);
+        }
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function showTypingIndicator(show) {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (show) {
+            typingIndicator.style.display = 'flex';
+        } else {
+            typingIndicator.style.display = 'none';
+        }
+        const chatMessages = document.getElementById("chat-messages");
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
     </script>
 </body>
 </html>
-
-
-    <!-- ARCHIVED UNFINISHED SESSIONS -->
-    <!-- <script>
-        let screeningQuestions = [];
-        let currentQuestionIndex = 0;
-
-        document.addEventListener("DOMContentLoaded", function () {
-            console.log("Page loaded. Initializing chat...");
-            loadChatHistory();
-
-            document.getElementById("send-button").addEventListener("click", handleUserInput);
-            document.getElementById("user-input").addEventListener("keypress", function (event) {
-                if (event.key === "Enter") {
-                    handleUserInput();
-                }
-            });
-
-            fetchInitialResponse();
-        });
-
-
-        function handleUserInput() {
-            const inputField = document.getElementById("user-input");
-            const userInput = inputField.value.trim();
-
-            if (!userInput) {
-                console.log("Input is empty.");
-                return;
-            }
-
-            console.log("User  input:", userInput);
-            addMessage("You", userInput);
-            inputField.value = "";
-
-            sendMessage(userInput);
-        }
-
-
-        async function sendMessage(message) {
-            try {
-                const response = await fetch("/chatbothome", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message }),
-                });
-
-                if (!response.ok) throw new Error("Failed to send message");
-
-                const data = await response.json();
-                console.log("Response from server:", data);
-
-                // Display the entire chat history
-                if (data.chatHistory) {
-                    data.chatHistory.forEach(chat => {
-                        if (chat.sender === 'user') {
-                            addMessage("You", chat.message);
-                        } else if (chat.sender === 'bot') {
-                            try {
-                                const botMessage = JSON.parse(chat.message);
-                                displayBotResponse(botMessage);
-                            } catch (error) {
-                                addMessage("Bot", chat.message);
-                            }
-                        }
-                    });
-                }
-
-                // Handle the latest bot response
-                if (data.response) {
-                    displayBotResponse(data.response);
-                }
-            } catch (error) {
-                console.error("Error sending message:", error);
-                addMessage("Bot", "There was an error sending your message. Please try again.");
-            }
-        }
-
-        function addMessage(sender, message) {
-            console.log(`Adding message from ${sender}:`, message);
-            const chatMessages = document.getElementById("chat-messages");
-            const messageDiv = document.createElement("div");
-            messageDiv.classList.add("message", sender === "You" ? "user-message" : "bot-message");
-            messageDiv.textContent = message;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            saveChatHistory(sender, message);
-        }
-
-        function saveChatHistory(sender, message) {
-            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
-            chatHistory.push({ sender, message });
-            localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
-        }
-
-
-        function loadChatHistory() {
-            const chatMessages = document.getElementById("chat-messages");
-            let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
-
-            chatHistory.forEach((chat) => {
-                addMessage(chat.sender, chat.message);
-            });
-
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-
-        async function uploadFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            console.log("Uploading file:", file.name);
-            const formData = new FormData();
-            formData.append("file", file);
-
-            try {
-                const response = await fetch("/handleFileUpload", {
-                    method: "POST",
-                    body: formData,
-                });
-
-                if (!response.ok) throw new Error("Failed to upload file");
-
-                const fileUrl = await response.text();
-                addMessage(
-                    "Bot",
-                    "Thank you for answering. We have forwarded your resume to the department's Line Manager. We will notify you once a decision has been made."
-                );
-
-                console.log("File uploaded successfully. File URL:", fileUrl);
-            } catch (error) {
-                console.error("Error uploading file:", error);
-                addMessage("Bot", "Error uploading file. Please try again.");
-            }
-        }
-
-        function displayBotResponse(response) {
-    console.log("Bot response:", response);
-    const chatMessages = document.getElementById("chat-messages");
-
-    if (typeof response === "object" && response.text) {
-        addMessage("Bot", response.text);
-
-        if (response.buttons && response.buttons.length) {
-            response.buttons.forEach((button) => {
-                const btn = document.createElement("button");
-                btn.innerText = button.text;
-                btn.classList.add("job-button");
-
-                if (button.type === "file_upload") {
-                    btn.onclick = () => document.getElementById("fileUpload").click();
-                } else {
-                    btn.onclick = async () => {
-                        console.log("Button clicked:", button.text);
-                        addMessage("You", button.text);
-                        await sendMessage(button.text);
-                    };
-                }
-
-                chatMessages.appendChild(btn);
-            });
-        }
-    } else {
-        addMessage("Bot", response);
-    }
-
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-        async function handleNextQuestion() {
-            if (currentQuestionIndex + 1 < screeningQuestions.length) {
-                currentQuestionIndex++;
-                displayBotResponse({
-                    text: screeningQuestions[currentQuestionIndex].text,
-                    buttons: screeningQuestions[currentQuestionIndex].buttons,
-                });
-            } else {
-                addMessage("Bot", "Thank you for completing the screening process.");
-            }
-        }
-
-        async function fetchInitialResponse() {
-            console.log("Fetching initial response...");
-            try {
-                const response = await fetch("/chatbothome", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: "init" }),
-                });
-
-                if (!response.ok) throw new Error("Failed to fetch initial response");
-
-                const data = await response.json();
-                console.log("Initial response:", data);
-
-                // Check if data.response is an array
-                if (Array.isArray(data.response)) {
-                    data.response.forEach(chat => {
-                        addMessage(chat.sender === 'user' ? "You" : "Bot", chat.message);
-                    });
-                } else {
-                    // Handle the case where data.response is not an array
-                    addMessage("Bot", data.response || "Hi! Welcome to Prime Infrastructure's recruitment portal. What position are you going to apply for?");
-                }
-            } catch (error) {
-                console.error("Error fetching initial response:", error);
-                addMessage("Bot", "Welcome! How can I assist you today?");
-            }
-        }
-    </script> -->
