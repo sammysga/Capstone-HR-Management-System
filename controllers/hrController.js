@@ -518,6 +518,8 @@ const { data: screeningAssessments, error: screeningError } = await supabase
         availabilityScore,
         totalScore,
         totalScoreCalculatedAt,
+        degree_url,
+        cert_url,
         resume_url,
         isHRChosen,
         isLineManagerChosen
@@ -618,6 +620,8 @@ const { data: screeningAssessments, error: screeningError } = await supabase
         workSetupScore: screeningData.workSetupScore || 'N/A',
         availabilityScore: screeningData.availabilityScore || 'N/A',
         totalScore: screeningData.totalScore || 'N/A',
+        degree_url: screeningData.degree_url || '#',
+        cert_url: screeningData.cert_url || '#',
         resume_url: screeningData.resume_url || '#',
     };
 
