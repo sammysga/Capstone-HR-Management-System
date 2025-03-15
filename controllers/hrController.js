@@ -2720,7 +2720,6 @@ updateJobOffer: async function(req, res) {
         }
     },
     
-    // New getRetirementTracker function
     getRetirementTracker: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
@@ -2758,10 +2757,60 @@ updateJobOffer: async function(req, res) {
                 // Calculate years of service and categorize employees based on retirement eligibility
                 const departmentMap = staffData.reduce((acc, staff) => {
                     const deptName = staff.departments?.deptName || 'Unknown';
-                    const hireDate = new Date(staff.hireDate);
-                    const currentDate = new Date();
-                    const yearsOfService = currentDate.getFullYear() - hireDate.getFullYear();
+                    
+                    // Handle potential null/undefined values for dates
+                    let yearsOfService = null;
+                    let age = null;
+                    let birthDate = null;
 
+                    // Process hire date if available
+                    if (staff.hireDate) {
+                        const hireDate = new Date(staff.hireDate);
+                        const currentDate = new Date();
+                        
+                        // Only calculate if the date is valid
+                        if (!isNaN(hireDate.getTime())) {
+                            yearsOfService = currentDate.getFullYear() - hireDate.getFullYear();
+                            
+                            // Adjust for hire date not yet reached this year
+                            const hireMonth = hireDate.getMonth();
+                            const currentMonth = currentDate.getMonth();
+                            
+                            if (currentMonth < hireMonth || 
+                                (currentMonth === hireMonth && currentDate.getDate() < hireDate.getDate())) {
+                                yearsOfService--;
+                            }
+                        }
+                    }
+
+                    // Process birth date if available
+                    if (staff.dateOfBirth) {
+                        birthDate = new Date(staff.dateOfBirth);
+                        const today = new Date();
+                        
+                        // Only calculate if the date is valid
+                        if (!isNaN(birthDate.getTime())) {
+                            age = today.getFullYear() - birthDate.getFullYear();
+                            
+                            // Adjust for birthday not yet reached this year
+                            const birthMonth = birthDate.getMonth();
+                            const currentMonth = today.getMonth();
+                            
+                            if (currentMonth < birthMonth || 
+                                (currentMonth === birthMonth && today.getDate() < birthDate.getDate())) {
+                                age--;
+                            }
+                        }
+                    }
+
+                    // Determine retirement eligibility (combine age and years of service criteria)
+                    // Standard rule: Age 60+ with 5+ years of service, or 30+ years of service at any age
+                    let retirementEligibility = 'Not Eligible';
+                    if ((age !== null && age >= 60 && yearsOfService !== null && yearsOfService >= 5) || 
+                        (yearsOfService !== null && yearsOfService >= 30)) {
+                        retirementEligibility = 'Eligible for Retirement';
+                    }
+                    
                     if (!acc[deptName]) {
                         acc[deptName] = [];
                     }
@@ -2772,10 +2821,11 @@ updateJobOffer: async function(req, res) {
                         lastName: staff.lastName,
                         firstName: staff.firstName,
                         userEmail: staff.useraccounts?.userEmail || 'N/A',
-                        dateOfBirth: staff.dateOfBirth, 
+                        birthDate: birthDate, // Renamed to match template
                         hireDate: staff.hireDate,
+                        age: age, // Added calculated age
                         yearsOfService: yearsOfService,
-                        retirementEligibility: yearsOfService >= 30 ? 'Eligible for Retirement' : 'Not Eligible for Retirement'  // Assume 30 years of service for eligibility
+                        retirementEligibility: retirementEligibility
                     });
                     return acc;
                 }, {});
