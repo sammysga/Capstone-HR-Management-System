@@ -576,6 +576,8 @@
                     availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
                 }, 
                 '<%= applicant.initialScreeningAssessment.totalScore %>', 
+                '<%= applicant.initialScreeningAssessment.degree_url %>',
+                '<%= applicant.initialScreeningAssessment.cert_url %>',
                 '<%= applicant.initialScreeningAssessment.resume_url %>'
             )
         ">
@@ -788,6 +790,7 @@
             <p><strong>Email:</strong> <span id="applicant-email"></span></p>
             <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
         </div>
+
         <h4>HR Online Assessment Form Breakdown</h4>
         <h4>Initial Screening Scores</h4> 
 
@@ -834,17 +837,31 @@
             <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
         </div> 
 
-        <h4>Uploaded Documents</h4> 
+        <h4>Uploaded Documents</h4>
+        <p><strong>Degree:</strong> <a id="degree-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="degree-preview" style="margin-top: 10px;"></div>
+        
+        <p><strong>Certification:</strong> <a id="cert-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="cert-preview" style="margin-top: 10px;"></div>
+        
+        <p><strong>Resume:</strong> <a id="resume-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="resume-preview" style="margin-top: 10px;"></div>
+        
+        
+        <h4>Decision</h4>
         <p>
-            <a id="uploaded-doc" href="#" target="_blank">No document uploaded</a>
+            <strong>Would you like to pass or reject this applicant for the HR interview?</strong>
         </p>
-        <div id="doc-preview" style="margin-top: 10px;"></div> <!-- Preview area -->
-        
-        
-        <h4>Would you like to recommend this applicant to the Line Manager for shortlisting and proceeding to the HR interview?</h4>
+
+        <div class="decision-disclaimer">
+            <p>💡 <strong>Important:</strong> Pressing <strong>"Pass"</strong> will mark the applicant as likely to proceed to the HR interview stage, but this decision can still be changed before finalizing. Likewise, pressing <strong>"Reject"</strong> will mark the applicant as failed, but this can also be modified until the finalization step.</p>
+            <p>⚠️ <strong>Finalization Note:</strong> Once you press "Finalize," all passed and failed applicants will be officially informed of their status. Please double-check before proceeding.</p>
+        </div>
+
         <div class="review-modal-buttons">
             <button id="backButton" class="review-modal-back-button">Back</button>
-            <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmP1LineManagerPassed()">Confirm</button>
+            <button id="rejectButton" class="review-modal-reject-button" onclick="rejectApplicant()">Reject</button>
+            <button id="passButton" class="review-modal-pass-button" onclick="passApplicant()">Pass</button>
         </div>
     </div>
 </div>
@@ -932,8 +949,8 @@ function approveLineManager(applicantId) {
 
 
 
-function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink, jobId) {
-    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
+function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
+    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict,  degreeUrl, certUrl, resumeUrl });
     
     // If userId is missing or "undefined", log an error and stop further processing.
     if (!userId || userId === "undefined") {
@@ -972,17 +989,19 @@ function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday,
 
     document.getElementById('computation-verdict').textContent = verdict || 'N/A';
 
-    // Update the uploaded document section
-    displayUploadedDocument(documentLink);
+    // Display documents separately
+    displayUploadedDocument(degreeUrl, "degree-doc", "degree-preview");
+    displayUploadedDocument(certUrl, "cert-doc", "cert-preview");
+    displayUploadedDocument(resumeUrl, "resume-doc", "resume-preview");
 
     // Display the modal
     document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
 }
 
 
-function displayUploadedDocument(fileUrl) {
-    const docLink = document.getElementById("uploaded-doc");
-    const docPreview = document.getElementById("doc-preview");
+function displayUploadedDocument(fileUrl, linkId, previewId) {
+    const docLink = document.getElementById(linkId);
+    const docPreview = document.getElementById(previewId);
 
     if (!fileUrl) {
         docLink.href = "#";
@@ -994,21 +1013,17 @@ function displayUploadedDocument(fileUrl) {
     docLink.href = fileUrl;
     docLink.textContent = "View Uploaded Document";
 
-    // Determine file type based on extension
     const fileExtension = fileUrl.split('.').pop().toLowerCase();
 
     if (["jpg", "jpeg", "png"].includes(fileExtension)) {
-        // Display image preview
         docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
     } else if (fileExtension === "pdf") {
-        // Display embedded PDF viewer
-        docPreview.innerHTML = `
-            <iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>
-        `;
+        docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>`;
     } else {
         docPreview.innerHTML = ""; // No preview for other file types
     }
 }
+
 function confirmP1LineManagerPassed() {
     const userIdElement = document.getElementById("userId");
     if (!userIdElement) {
@@ -1180,7 +1195,7 @@ function confirmP1LineManagerPassed() {
         buttons.review.addEventListener("click", () => filterRowsByStatus("for-review"));
         buttons.evaluation.addEventListener("click", () => filterRowsByStatus("for-evaluation"));
         buttons.onboarding.addEventListener("click", () => filterRowsByStatus("for-onboarding"));
-s
+
         // Search functionality
         document.querySelector(".search-button").addEventListener("click", filterTable);
         document.getElementById("searchBar").addEventListener("keypress", function (e) {
