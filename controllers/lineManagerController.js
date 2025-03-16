@@ -246,53 +246,123 @@ const lineManagerController = {
     },
     
 
-    // Fetch notifications from Supabase for Line Manager Dashboard
-getLineManagerNotifications: async function (req, res) {
-    try {
-        const userId = req.session.user ? req.session.user.userId : null; // Ensure user is authenticated
-        if (!userId) {
-            req.flash('errors', { authError: 'User not logged in.' });
-            return res.redirect('/staff/login');
-        }
+    // Updated Line Manager Controller function to fetch applicant notifications
 
-        // Fetch notifications from 'applicantaccounts'
-        const { data: applicants, error } = await supabase
+getLineManagerNotifications: async function (req, res) {
+    // Check for authentication
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        // Fetch applicants awaiting Line Manager action
+        const { data: applicants, error: applicantsError } = await supabase
             .from('applicantaccounts')
-            .select('firstName, lastName, applicantStatus, created_at')
+            .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId')
+            .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED')
             .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error('Error fetching notifications:', error);
-            req.flash('errors', { dbError: 'Error retrieving notifications.' });
-            return res.redirect('/staff/managerdashboard');
-        }
+        if (applicantsError) throw applicantsError;
 
-        // Transform the data for the front-end
-        const notifications = applicants.map(applicant => ({
-            firstName: applicant.firstName,
-            lastName: applicant.lastName,
-            applicantStatus: applicant.applicantStatus,
-            date: applicant.created_at,
-            employeePhoto: "/images/profile.png", // Placeholder, update if actual image exists
-            headline: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
-                ? "Awaiting Your Approval"
-                : "New Application Received",
-            content: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
-                ? `Required Line Manager Action for ${applicant.firstName} ${applicant.lastName}`
-                : `${applicant.firstName} ${applicant.lastName} submitted an application.`
+        // Format the applicants data
+        const formattedApplicants = applicants.map(applicant => ({
+            id: applicant.applicantId,
+            firstName: applicant.firstName || 'N/A',
+            lastName: applicant.lastName || 'N/A',
+            status: applicant.applicantStatus || 'N/A',
+            jobId: applicant.jobId, // Include jobId for the redirect
+            createdAt: applicant.created_at,
+            formattedDate: new Date(applicant.created_at).toLocaleString('en-US', {
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit'
+            })
         }));
 
-        // Render the manager dashboard with notifications
-        res.render('staffpages/linemanager_pages/managerdashboard', { 
-            notifications,
-            successMessage: req.flash('success'),
-            errorMessage: req.flash('errors')
-        });
+        // Fetch pending leave requests
+        const { data: leaveRequests, error: leaveError } = await supabase
+            .from('leaverequests')
+            .select(`
+                leaveRequestId, 
+                userId, 
+                created_at, 
+                fromDate, 
+                untilDate, 
+                status,
+                useraccounts (
+                    userId, 
+                    userEmail,
+                    staffaccounts (
+                        departments (deptName), 
+                        lastName, 
+                        firstName
+                    )
+                ), 
+                leave_types (
+                    typeName
+                )
+            `)
+            .eq('status', 'Pending')
+            .order('created_at', { ascending: false });
 
+        if (leaveError) throw leaveError;
+
+        // Format leave requests
+        const formattedLeaveRequests = leaveRequests.map(leave => ({
+            userId: leave.userId,
+            lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+            firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+            department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+            filedDate: new Date(leave.created_at).toLocaleString('en-US', {
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric'
+            }),
+            type: leave.leave_types?.typeName || 'N/A',
+            startDate: leave.fromDate || 'N/A',
+            endDate: leave.untilDate || 'N/A',
+            status: leave.status || 'Pending'
+        }));
+
+        // Calculate total notification count
+        const notificationCount = formattedApplicants.length + formattedLeaveRequests.length;
+
+        // If it's an API request, return JSON
+        if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
+            return res
+                .header('Content-Type', 'application/json')
+                .json({
+                    applicants: formattedApplicants,
+                    leaveRequests: formattedLeaveRequests,
+                    notificationCount: notificationCount
+                });
+        }
+
+        // Otherwise, return the rendered partial template
+        return res.render('partials/linemanager_partials', {
+            applicants: formattedApplicants,
+            leaveRequests: formattedLeaveRequests,
+            notificationCount: notificationCount
+        });
     } catch (err) {
-        console.error('Error in getLineManagerNotifications controller:', err);
-        req.flash('errors', { dbError: 'An unexpected error occurred while loading notifications.' });
-        res.redirect('/staff/managerdashboard');
+        console.error('Error fetching notification data:', err);
+        
+        // Better error handling for API requests
+        if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
+            return res
+                .status(500)
+                .header('Content-Type', 'application/json')
+                .json({ 
+                    error: 'An error occurred while loading notifications.',
+                    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+                });
+        }
+        
+        return res.status(500).send('Error loading notifications');
     }
 },
 

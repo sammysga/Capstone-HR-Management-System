@@ -164,6 +164,7 @@ router.post('/linemanager/approve-line-manager', lineManagerController.postAppro
 
 // New route to notify Line Manager
 //router.post('/linemanager/notify', lineManagerController.notifyLineManager);
+router.get('/api/linemanager/notifications', lineManagerController.getLineManagerNotifications);
 
 router.get('/linemanager/useraccount', lineManagerController.getUserAccount);
 router.post('/linemanager/update-info', lineManagerController.updateUserInfo);
