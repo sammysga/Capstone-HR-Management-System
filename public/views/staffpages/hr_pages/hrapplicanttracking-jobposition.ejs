@@ -604,6 +604,8 @@
                     availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
                 }, 
                 '<%= applicant.initialScreeningAssessment.totalScore %>', 
+                '<%= applicant.initialScreeningAssessment.degree_url %>',
+                '<%= applicant.initialScreeningAssessment.cert_url %>',
                 '<%= applicant.initialScreeningAssessment.resume_url %>'
             )
         ">
@@ -855,11 +857,15 @@
             <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
         </div> 
 
-        <h4>Uploaded Documents</h4> 
-        <p>
-            <a id="uploaded-doc" href="#" target="_blank">No document uploaded</a>
-        </p>
-        <div id="doc-preview" style="margin-top: 10px;"></div> <!-- Preview area -->
+        <h4>Uploaded Documents</h4>
+        <p><strong>Degree:</strong> <a id="degree-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="degree-preview" style="margin-top: 10px;"></div>
+        
+        <p><strong>Certification:</strong> <a id="cert-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="cert-preview" style="margin-top: 10px;"></div>
+        
+        <p><strong>Resume:</strong> <a id="resume-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="resume-preview" style="margin-top: 10px;"></div>
         
         
         <h4>Would you like to recommend this applicant to the Line Manager for shortlisting and proceeding to the HR interview?</h4>
@@ -954,35 +960,22 @@ function notifyLineManager(applicantId) {
 
 
 
+        function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
+    console.log('Opening Modal with Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrL });
 
-        function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink) {
-    console.log('Opening Modal with Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, documentLink });
-
-    // If userId is missing or "undefined", log an error and stop further processing.
     if (!userId || userId === "undefined") {
         console.error("Invalid userId passed to modal:", userId);
         alert("Error: Invalid User ID. Cannot display applicant details.");
         return;
     }
     
-    // Set the hidden input value for userId
     document.getElementById('userId').value = userId;
 
-    // Optionally hide the applicantId container if not needed
-    let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
-    if (applicantIdContainer) {
-        applicantIdContainer.style.display = "none";
-    }
-    
-
-
-    // Populate visible applicant details
     document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
     document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
     document.getElementById('applicant-email').textContent = email || 'N/A';
     document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
 
-    // Populate score details
     document.getElementById('score-degree').textContent = scores.degree || 'N/A';
     document.getElementById('score-experience').textContent = scores.experience || 'N/A';
     document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
@@ -993,17 +986,17 @@ function notifyLineManager(applicantId) {
 
     document.getElementById('computation-verdict').textContent = verdict || 'N/A';
 
-    // Update the uploaded document section
-    displayUploadedDocument(documentLink);
+    // Display documents separately
+    displayUploadedDocument(degreeUrl, "degree-doc", "degree-preview");
+    displayUploadedDocument(certUrl, "cert-doc", "cert-preview");
+    displayUploadedDocument(resumeUrl, "resume-doc", "resume-preview");
 
-    // Display the modal
     document.getElementById('hrInitialScreeningModalHtml').style.display = 'block';
 }
 
-
-function displayUploadedDocument(fileUrl) {
-    const docLink = document.getElementById("uploaded-doc");
-    const docPreview = document.getElementById("doc-preview");
+function displayUploadedDocument(fileUrl, linkId, previewId) {
+    const docLink = document.getElementById(linkId);
+    const docPreview = document.getElementById(previewId);
 
     if (!fileUrl) {
         docLink.href = "#";
@@ -1015,21 +1008,19 @@ function displayUploadedDocument(fileUrl) {
     docLink.href = fileUrl;
     docLink.textContent = "View Uploaded Document";
 
-    // Determine file type based on extension
     const fileExtension = fileUrl.split('.').pop().toLowerCase();
 
     if (["jpg", "jpeg", "png"].includes(fileExtension)) {
-        // Display image preview
         docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
     } else if (fileExtension === "pdf") {
-        // Display embedded PDF viewer
-        docPreview.innerHTML = `
-            <iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>
-        `;
+        docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>`;
     } else {
         docPreview.innerHTML = ""; // No preview for other file types
     }
 }
+
+
+
 function confirmHRInitialScreeningModal() {
     const userIdElement = document.getElementById("userId");
     if (!userIdElement) {

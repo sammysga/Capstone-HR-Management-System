@@ -524,8 +524,8 @@
                 <p>Please complete all items below before your last working day</p>
             </div>
 
-            <form id="employeeClearanceForm">
-                <input type="hidden" id="requestId" name="requestId" value="">
+            <form id="modalClearanceForm">
+                <input type="hidden" id="modalRequestId" name="requestId" value="">
                 
                 <div class="clearance-list" id="clearanceChecklist">
                     <!-- Clearance items will be loaded dynamically here -->
@@ -573,7 +573,7 @@
             <p id="lastDayDisplay"></p>
         </div>
         
-        <form id="employeeClearanceForm">
+        <form id="modalClearanceForm">
             <input type="hidden" id="requestId" name="requestId" value="">
             
             <table class="clearance-table">
@@ -602,7 +602,44 @@
     </div>
 </div>
 
-    <script>
+<script>
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+
+    // Handle navigation for Performance Management links
+    document.querySelectorAll('.collapsible-content a').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default link behavior
+            
+            // Perform the desired action or navigation
+            const targetUrl = this.getAttribute('href');
+            window.location.href = targetUrl; // Navigate to the target URL
+        });
+    });
+    
     document.addEventListener("DOMContentLoaded", function() {
         // Toggle editing for user info
         const editBtn = document.getElementById('edit-info-btn');
@@ -692,7 +729,7 @@
             button.addEventListener('click', async function() {
                 const requestId = this.getAttribute('data-request-id');
                 console.log("Clearance button clicked for request ID:", requestId);
-                document.getElementById('requestId').value = requestId;
+                document.getElementById('modalRequestId').value = requestId;
                 
                 try {
                     const response = await fetch(`/employee/get-clearance-items/${requestId}`);
@@ -829,12 +866,16 @@
         });
 
         // Submit clearance form
-        document.getElementById('employeeClearanceForm').addEventListener('submit', function(e) {
+        document.getElementById('modalClearanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            console.log("Form submit triggered");
             
             // Validate: check if all items are checked
             const checkboxes = document.querySelectorAll('.table-checkbox');
+            console.log("Found checkboxes:", checkboxes.length);
+            
             const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+            console.log("All items checked:", allChecked);
             
             if (!allChecked) {
                 alert('Please check all clearance items before submitting.');
@@ -843,7 +884,14 @@
             
             // Validate: check if all signature previews have content
             const signaturePreviews = document.querySelectorAll('.signature-preview');
-            const allSigned = Array.from(signaturePreviews).every(preview => preview.innerHTML.trim() !== '');
+            console.log("Found signature previews:", signaturePreviews.length);
+
+            const allSigned = Array.from(signaturePreviews).every(preview => {
+                const hasSig = preview.innerHTML.trim() !== '';
+                console.log("Preview content:", preview.innerHTML.trim() ? "Has content" : "Empty");
+                return hasSig;
+            });
+            console.log("All items signed:", allSigned);
             
             if (!allSigned) {
                 alert('Please provide all required signatures before submitting.');
@@ -851,7 +899,10 @@
             }
             
             // Validate: check if employee verified checkbox is checked
-            if (!document.getElementById('employeeVerifyCheckbox').checked) {
+            const verifyChecked = document.getElementById('employeeVerifyCheckbox').checked;
+            console.log("Verification checkbox checked:", verifyChecked);
+            
+            if (!verifyChecked) {
                 alert('Please verify that you have completed all clearance items.');
                 return;
             }
@@ -862,11 +913,24 @@
                 if (!signaturePads[canvasId].isEmpty()) {
                     const index = canvasId.split('-')[2];
                     allSignatures[index] = signaturePads[canvasId].toDataURL();
+                    console.log(`Added signature for index ${index}`);
+                } else {
+                    console.log(`Signature pad ${canvasId} is empty`);
                 }
             });
+
+            console.log("Total signatures collected:", Object.keys(allSignatures).length);
             
             // Get the request ID
             const requestId = document.getElementById('requestId').value;
+            console.log("Request ID:", requestId);
+
+            // Send data to server
+            console.log("Sending data to server:", {
+                requestId,
+                signaturesCount: Object.keys(allSignatures).length,
+                completed: true
+            });
             
             // Send data to server
             fetch('/employee/submit-clearance', {
@@ -896,6 +960,7 @@
             });
         });
     });
+        
     </script>
 </body>
 </html>
