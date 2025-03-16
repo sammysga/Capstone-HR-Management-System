@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
 <style>
 .logout-container {
     margin-top: 370px; /* Push the logout button to the bottom */
@@ -182,14 +185,33 @@
     background-color: #B4E3E3;
 }
 
+/* Loading indicator styles */
+.loading-indicator {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.loading-indicator .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #07ACB9;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 </style>
+
 <div class="sidebar">
     <div class="logo-container">
         <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Logo" class="logo">
     </div>
     <ul>
-
-
         <li class="collapsible">
             <a href="#" class="collapsible-header">Staff Information</a>
             <ul class="collapsible-content">
@@ -197,8 +219,6 @@
                 <li><a href="/linemanager/persinfocareerprog">Personal Information & Career Progression</a></li>
             </ul>
         </li>
-
-
         <li class="collapsible">
             <a href="#" class="collapsible-header">Manage Recruitment</a>
             <ul class="collapsible-content">
@@ -219,3 +239,309 @@
         <a href="/logout" class="logout-button">Logout</a>
     </div>
 </div>
+
+<!-- Notification Bell with Counter -->
+<button id="notification-bell">
+    <i class="fas fa-bell"></i>
+    <span id="notification-count">0</span>
+</button>
+
+<!-- Notification Panel -->
+<div id="notification-panel">
+    <h3>Notifications</h3>
+    <div id="recent-notifications">
+        <div class="notification-section" id="section-1">
+            <h4>REQUIRED 360 Degree Feedback Submission</h4>
+            <!-- Sample 360 Feedback notifications -->
+            <div class="notification-item">
+                <div class="headline">360 Feedback Answers Required</div>
+                <div class="content">Your participation is required from March 15, 2025 to March 30, 2025.</div>
+                <div class="date">Wed, Mar 12, 2025, 09:15 AM</div>
+                <button class="action-btn">Required Action</button>
+            </div>
+        </div>
+        <div class="notification-section" id="section-2">
+            <h4>Applicants Awaiting Review</h4>
+            <!-- Applicants awaiting review will be loaded here -->
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+            </div>
+        </div>
+        <div class="notification-section" id="section-3">
+            <h4>Leave Requests</h4>
+            <!-- Leave requests notifications will be loaded here -->
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+            </div>
+        </div>
+        <div class="notification-section" id="section-4">
+            <h4>Recent Notifications</h4>
+            <!-- Sample recent notifications - only showing 3 initially -->
+            <div class="notification-item">
+                <div class="headline">Team Meeting Scheduled</div>
+                <div class="date">Wed, Mar 12, 2025, 08:30 AM</div>
+            </div>
+            <div class="notification-item">
+                <div class="headline">Project Deadline Updated</div>
+                <div class="date">Tue, Mar 11, 2025, 04:45 PM</div>
+            </div>
+            <div class="notification-item">
+                <div class="headline">New Training Available</div>
+                <div class="date">Mon, Mar 10, 2025, 11:20 AM</div>
+            </div>
+        </div>
+    </div>
+    <button id="see-previous-notifications">See Previous Notifications</button>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fab" id="fab">
+    <i class="fas fa-arrow-right"></i>
+</div>
+
+<script>
+    // Notification bell functionality
+    const notificationBell = document.getElementById('notification-bell');
+    const notificationPanel = document.getElementById('notification-panel');
+    const notificationCount = document.getElementById('notification-count');
+    const fab = document.getElementById('fab');
+    const seePreviousButton = document.getElementById('see-previous-notifications');
+    
+    // API endpoint for fetching notifications
+    const notificationsAPI = '/api/linemanager/notifications';
+
+    // Function to fetch notifications from the server
+    async function fetchNotifications() {
+        try {
+            const response = await fetch(notificationsAPI, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+            return { 
+                applicants: [], 
+                leaveRequests: [], 
+                notificationCount: 0 
+            };
+        }
+    }
+    
+    // Function to update the notification panel with applicants awaiting review
+    function updateApplicantsSection(applicants) {
+        const applicantsSection = document.getElementById('section-2');
+        applicantsSection.innerHTML = '<h4>Applicants Awaiting Review</h4>';
+
+        if (applicants.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.classList.add('notification-item');
+            emptyMessage.innerHTML = `
+                <div class="headline">No applicants awaiting review</div>
+                <div class="content">There are currently no applicants awaiting your review.</div>
+            `;
+            applicantsSection.appendChild(emptyMessage);
+        } else {
+            // Add applicants to notification panel
+            applicants.forEach(applicant => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <div class="headline">Applicant Review: ${applicant.firstName} ${applicant.lastName}</div>
+                    <div class="content">Status: ${applicant.status}</div>
+                    <div class="date">${applicant.formattedDate}</div>
+                    <button class="view-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Review Applicant</button>
+                `;
+                applicantsSection.appendChild(notificationItem);
+            });
+
+            // Add event listeners to the view applicant buttons
+            document.querySelectorAll('.view-applicant-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const applicantId = this.getAttribute('data-id');
+                    const jobId = this.getAttribute('data-jobid');
+                    console.log('Review applicant clicked:', applicantId, 'Job ID:', jobId);
+                    window.location.href = `/linemanager/applicant-tracker-jobposition?jobId=${jobId}`;
+                });
+            });
+        }
+    }
+    
+    // Function to update the notification panel with leave requests
+    function updateLeaveRequestsSection(leaveRequests) {
+        const leaveSection = document.getElementById('section-3');
+        leaveSection.innerHTML = '<h4>Leave Requests</h4>';
+
+        if (leaveRequests.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.classList.add('notification-item');
+            emptyMessage.innerHTML = `
+                <div class="headline">No pending leave requests</div>
+                <div class="content">There are currently no leave requests pending approval.</div>
+            `;
+            leaveSection.appendChild(emptyMessage);
+        } else {
+            // Add leave requests to notification panel
+            leaveRequests.forEach(leave => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <div class="headline">Leave Request: ${leave.firstName} ${leave.lastName}</div>
+                    <div class="content">Type: ${leave.type}, From: ${leave.startDate} To: ${leave.endDate}</div>
+                    <div class="date">${leave.filedDate}</div>
+                    <button class="view-leave-btn" data-id="${leave.userId}">Review Request</button>
+                `;
+                leaveSection.appendChild(notificationItem);
+            });
+
+            // Add event listeners to the view leave request buttons
+            document.querySelectorAll('.view-leave-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    console.log('Review leave request clicked:', userId);
+                    window.location.href = `/linemanager/leaverequest?userId=${userId}`;
+                });
+            });
+        }
+    }
+
+    // Sample older notifications data
+    const olderNotifications = [
+        { message: "Team Meeting Scheduled", timestamp: "2025-03-12T08:30:00" },
+        { message: "Project Deadline Updated", timestamp: "2025-03-11T16:45:00" },
+        { message: "New Training Available", timestamp: "2025-03-10T11:20:00" },
+        { message: "Performance Review Reminder", timestamp: "2025-03-09T10:15:00" },
+        { message: "System Maintenance Scheduled", timestamp: "2025-03-08T14:30:00" },
+        { message: "Holiday Schedule Updated", timestamp: "2025-03-07T09:45:00" },
+        { message: "New Company Policy", timestamp: "2025-03-06T13:20:00" },
+        { message: "Team Building Event", timestamp: "2025-03-05T15:10:00" },
+        { message: "Quarterly Report Due", timestamp: "2025-03-04T11:00:00" }
+    ];
+
+    // Format date function
+    function formatDate(date) {
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return new Intl.DateTimeFormat('en-US', options).format(date);
+    }
+
+    // Notification bell click event
+    notificationBell.addEventListener('click', async function() {
+        console.log('Notification bell clicked');
+        notificationPanel.classList.toggle('open');
+        
+        // Load notification data when panel is opened
+        if (notificationPanel.classList.contains('open')) {
+            try {
+                // Show loading indicators
+                document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+                document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+                
+                // Fetch notifications
+                const notificationData = await fetchNotifications();
+                
+                // Update notification count
+                notificationCount.textContent = notificationData.notificationCount;
+                
+                // Update applicants section
+                updateApplicantsSection(notificationData.applicants);
+                
+                // Update leave requests section
+                updateLeaveRequestsSection(notificationData.leaveRequests);
+            } catch (error) {
+                console.error('Error updating notifications:', error);
+                
+                // Show error message in sections
+                document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load applicant data. Please try again later.</div></div>';
+                
+                document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load leave request data. Please try again later.</div></div>';
+            }
+        }
+    });
+
+    // Close notification panel when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!notificationPanel.contains(event.target) && !notificationBell.contains(event.target)) {
+            notificationPanel.classList.remove('open');
+        }
+    });
+
+    // See previous notifications button functionality
+    seePreviousButton.addEventListener('click', function() {
+        console.log('See Previous Notifications clicked');
+        // Clear section-4 before adding all notifications
+        document.getElementById('section-4').innerHTML = '<h4>All Notifications</h4>';
+        
+        // Add all notifications to section-4
+        olderNotifications.forEach(notification => {
+            const notificationItem = document.createElement('div');
+            notificationItem.classList.add('notification-item');
+            notificationItem.innerHTML = `
+                <div class="headline">${notification.message}</div>
+                <div class="date">${formatDate(new Date(notification.timestamp))}</div>
+            `;
+            document.getElementById('section-4').appendChild(notificationItem);
+        });
+        
+        // Hide the button after showing all notifications
+        seePreviousButton.style.display = 'none';
+        
+        // Add a "Show Less" button
+        const showLessButton = document.createElement('button');
+        showLessButton.id = 'show-less-notifications';
+        showLessButton.textContent = 'Show Less';
+        showLessButton.style = seePreviousButton.style.cssText;
+        document.getElementById('recent-notifications').appendChild(showLessButton);
+        
+        showLessButton.addEventListener('click', function() {
+            // Reset to initial state
+            document.getElementById('section-4').innerHTML = '<h4>Recent Notifications</h4>';
+            olderNotifications.slice(0, 3).forEach(notification => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <div class="headline">${notification.message}</div>
+                    <div class="date">${formatDate(new Date(notification.timestamp))}</div>
+                `;
+                document.getElementById('section-4').appendChild(notificationItem);
+            });
+            
+            // Show the "See Previous" button again
+            seePreviousButton.style.display = 'block';
+            
+            // Remove the "Show Less" button
+            this.remove();
+        });
+    });
+
+    // Initialize button click handlers for sample notifications
+    document.querySelectorAll('.action-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            console.log('Action button clicked');
+            window.location.href = '/linemanager/staffFeedbackList';
+        });
+    });
+
+    // Floating action button functionality
+    fab.addEventListener('click', () => {
+        console.log('Floating Action Button clicked');
+        window.location.href = '/linemanager/staffFeedbackList';
+    });
+
+    // Initialize the page - fetch data when the page loads to update the notification count badge
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            // Fetch initial notification count
+            const notificationData = await fetchNotifications();
+            notificationCount.textContent = notificationData.notificationCount;
+        } catch (error) {
+            console.error('Error loading initial notification count:', error);
+            notificationCount.textContent = '0';
+        }
+    });
+</script>
