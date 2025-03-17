@@ -275,17 +275,29 @@ const hrController = {
         }
     
         try {
-            // Fetch HR applicants
-            const { data: hrApplicants, error: hrApplicantsError } = await supabase
-            .from('applicantaccounts')
-            .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId') // Added jobId to the select
-            .eq('applicantStatus', 'P1 - Awaiting for HR Action')
-            .order('created_at', { ascending: false });
+            // Fetch HR applicants with P1 status
+            const { data: p1Applicants, error: p1ApplicantsError } = await supabase
+                .from('applicantaccounts')
+                .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId')
+                .eq('applicantStatus', 'P1 - Awaiting for HR Action')
+                .order('created_at', { ascending: false });
     
-            if (hrApplicantsError) throw hrApplicantsError;
+            if (p1ApplicantsError) throw p1ApplicantsError;
+    
+            // Fetch HR applicants with P2 evaluation status
+            const { data: p2Applicants, error: p2ApplicantsError } = await supabase
+                .from('applicantaccounts')
+                .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId')
+                .eq('applicantStatus', 'P2 - Awaiting for HR Evaluation')
+                .order('created_at', { ascending: false });
+    
+            if (p2ApplicantsError) throw p2ApplicantsError;
+    
+            // Combine all HR applicants
+            const allHRApplicants = [...p1Applicants, ...p2Applicants];
     
             // Format the HR applicants data - include jobId for redirect
-            const formattedHRApplicants = hrApplicants.map(applicant => ({
+            const formattedHRApplicants = allHRApplicants.map(applicant => ({
                 id: applicant.applicantId,
                 firstName: applicant.firstName || 'N/A',
                 lastName: applicant.lastName || 'N/A',
