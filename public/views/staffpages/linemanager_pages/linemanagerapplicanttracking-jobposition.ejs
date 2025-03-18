@@ -10,419 +10,271 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        .main-content {
-            margin-left: 350px;
-            padding: 20px;
-            width: calc(100% - 350px);
-            background-color: #FFFFFF;
-        }
-
-        .header-section {
-            margin-bottom: 10px;
-            margin-left: 5px;
-            font-size: 24px;
-            text-align: left;
-        }
-
-        .subheader {
-            font-size: 20px;
-            margin-left: 5px;
-            margin-bottom: 20px;
-            color: #555;
-        }
-
-        .tracking-section {
-            background-color: #FFFFFF;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin: 10px 5px;
-        }
-
-        .search-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-
-        .search-bar {
-            padding: 8px;
-            width: 370px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-        }
-
-        .search-button {
-            margin-left: 10px;
-            background-color: #124A5C;
-            color: white;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .right-section {
-            display: flex;
-            gap: 10px;
-        }
-
-        .right-section button {
-            padding: 10px 15px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            background-color:#124A5C;
-            color: white;
-            transition: background-color 0.3s ease;
-        }
-
-        .right-section button:hover {
-            background-color: #B4E3E3       ;
-            color: white;
-        }
-
-        .tracking-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .tracking-table th, 
-        .tracking-table td {
-            padding: 10px 10px;
-            border: 1px solid #ddd;
-        }
-
-        .tracking-table th,
-        .tracking-table td {
-            text-align: left;
-        }
-
-        .tracking-table th:nth-child(1),
-        .tracking-table td:nth-child(1) {
-            width: 10%; 
-        }
-
-        .tracking-table th:nth-child(2),
-        .tracking-table td:nth-child(2) {
-            width: 20%;
-        }
-
-        .tracking-table th:nth-child(3),
-        .tracking-table td:nth-child(3) {
-            width: 15%; 
-        }
-
-        .tracking-table th:nth-child(4),
-        .tracking-table td:nth-child(4) {
-            width: 15%; 
-        }
-
-        .tracking-table td:last-child {
-            display: flex;
-            justify-content: space-between; 
-            align-items: center;
-        }
-
-        .tracking-table td:last-child span {
-            text-align: left; 
-            flex-grow: 1;
-        }
-
-        .tracking-table th,
-        .tracking-table td {
-            text-align: left;
-        }
-
-        .tracking-table td:last-child button {
-            margin-left: 10px; 
-        }
-        .tracking-table tr:hover {
-            background-color: #f1f1f1;
-        }
-       
-        .job-title-container {
-            display: flex;
-            align-items: center;
-        }
-
-        /* Style for status circle */
-        .status-circle {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px; 
-        }
-
-        /* Green status circle */
-        .status-circle.green {
-            background-color: green;
-        }
-
-        /* Gray status circle */
-        .status-circle.gray {
-            background-color: gray;
-        }
-
-        /* Button styling for status actions */
-        .status-button {
-            background-color: white; 
-            color: black; 
-            border: 1px solid #124A5C; 
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
-            text-align: center;
-            width: auto;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .status-button:hover {
-            background-color: #124A5C; 
-            color: white; 
-        }
-
-        .btn-review, .btn-evaluation, .btn-onboarding {
-            background-color: white;
-            color: black;
-            border: 1px solid #124A5C;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            width: 150px;
-            text-align: center; 
-        }
-
-        .btn-review:hover, .btn-evaluation:hover, .btn-onboarding:hover {
-            background-color: #124A5C;
-            color: white;
-        }
-        .set-interview-button {
-                    padding: 10px 20px;
-                    background-color: #124A5C;
-                    color: white;
-                    border: none;
-                    cursor: pointer;
-                    font-size: 16px;
-                    margin-top: 20px;
-                    display: block;
-                    width: 20%;
-                    text-align: center;
-                }
-                .set-interview-button:hover {
-                    background-color: #B4E3E3       ;
-                    color: white;
-                }
-
-
-        .set-finalize-review-button {
-            position: relative; 
-            margin: 5px 10px;
-            background-color: #124A5C;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            width: auto; 
-            min-width: 200px; 
-            white-space: nowrap;
-            text-align: center; 
-            font-size: 16px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-            transition: background-color 0.3s ease;
-        }
-
-        .set-finalize-review-button:hover {
-            background-color: #B4E3E3;
-            color: #124A5C; 
-        }
-
-
-        .finalize-container {
-            position: fixed;
-            bottom: 20px; 
-            right: 20px;  
-            display: none;
-            background-color: rgba(255, 255, 255, 0.9); 
-            border: 1px solid #ccc; 
-            padding: 10px; 
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 1000; 
-        }
-
-        /* Styling for the Modals */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.4); 
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto; 
-            padding: 20px;
-            border: 1px solid #888;
-            border-radius: 8px; 
-            width: 80%; 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-        }
-
-        .modal-header, .modal-body, .modal-footer {
-            text-align: center;
-        }
-
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .modal-buttons button {
-            padding: 10px 20px;
-            margin: 0 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-        }
-
-        .modal-buttons button#backButton {
-            background-color: rgba(18, 74, 92, 0.5); 
-            color: white;
-        }
-
-        .modal-buttons button#confirmButton {
-            background-color: #124A5C; 
-            color: white;
-        }
-
-        .modal-buttons button:hover {
-            opacity: 0.8; 
-        }
-
-        .divider {
-            height: 2px; 
-            background-color: #124A5C; 
-            margin: 10px 0; 
-        }
-
-        .modal-question {
-            display: flex;
-            justify-content: center;  
-            align-items: center;
-            text-align: center;
-            margin-top: 20px;  
-            margin-bottom: 20px; 
-            font-size: 16px;
-        }
-
-        /* Modal Styling */
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    overflow: auto;
+/* Main Layout Styles */
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto;
+.main-content {
+    margin-left: 350px;
     padding: 20px;
-    border-radius: 8px;
-    width: 60%; /* Adjust as necessary */
-    text-align: center; /* Center content inside modal */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: calc(100% - 350px);
+    background-color: #FFFFFF;
 }
 
-.modal-content h2, .modal-content p {
-    color: #124A5C;
+/* Header Styles */
+.header-section {
+    margin-bottom: 10px;
+    margin-left: 5px;
+    font-size: 24px;
+    text-align: left;
+}
+
+.subheader {
+    font-size: 20px;
+    margin-left: 5px;
+    margin-bottom: 20px;
+    color: #555;
+}
+
+/* Filter Section Styles */
+.filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
 }
 
-.modal-buttons {
+.right-section {
     display: flex;
-    justify-content: center;
-    gap: 20px; /* Space between buttons */
+    gap: 10px;
+    margin-bottom: 15px;
 }
 
-.modal-buttons button {
-    padding: 10px 20px;
+.right-section button, 
+.filter-button {
+    padding: 10px 15px;
     font-size: 16px;
     font-weight: bold;
     border: none;
-    border-radius: 5px;
+    background-color: #124A5C;
+    color: white;
+    border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-.back-button {
-    background-color: rgba(18, 74, 92, 0.5); /* Transparent background */
+.right-section button:hover, 
+.filter-button:hover {
+    background-color: #B4E3E3;
+    color: #124A5C;
+}
+
+.filter-button.active {
+    background-color: #07ACB9;
     color: white;
 }
 
-.confirm-button {
+/* Search Container Styles */
+.search-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.search-bar {
+    padding: 8px;
+    width: 370px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.search-button {
+    margin-left: 10px;
+    background-color: #124A5C;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+}
+
+.search-button:hover {
+    background-color: #B4E3E3;
+    color: #124A5C;
+}
+
+/* Divider Style */
+.divider {
+    height: 2px;
+    background-color: #124A5C;
+    margin: 10px 0;
+}
+
+/* Sort Section Styles */
+.sort-section {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.sort-section label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.sort-section select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+/* Table Styles */
+.tracking-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.tracking-table th, 
+.tracking-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.tracking-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.tracking-table th:nth-child(1),
+.tracking-table td:nth-child(1) {
+    width: 10%;
+}
+
+.tracking-table th:nth-child(2),
+.tracking-table td:nth-child(2) {
+    width: 20%;
+}
+
+.tracking-table th:nth-child(3),
+.tracking-table td:nth-child(3),
+.tracking-table th:nth-child(4),
+.tracking-table td:nth-child(4) {
+    width: 15%;
+}
+
+.tracking-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Status Circle Styles */
+.status-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.status-circle.green {
+    background-color: green;
+}
+
+.status-circle.gray {
+    background-color: gray;
+}
+
+/* Button Styles */
+.btn-review, 
+.btn-evaluation, 
+.btn-onboarding, 
+.btn-approve {
+    background-color: white;
+    color: black;
+    border: 1px solid #124A5C;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-width: 150px;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.btn-review:hover, 
+.btn-evaluation:hover, 
+.btn-onboarding:hover, 
+.btn-approve:hover {
     background-color: #124A5C;
     color: white;
 }
 
-.modal-buttons button:hover {
-    opacity: 0.8;
-}
-
-/* Close Button (X) */
-.close-button {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    float: right;
+.set-interview-button {
+    padding: 10px 20px;
+    background-color: #124A5C;
+    color: white;
+    border: none;
     cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+    display: block;
+    width: 20%;
+    text-align: center;
+    border-radius: 5px;
 }
 
-.close-button:hover {
-    color: black;
+.set-interview-button:hover {
+    background-color: #B4E3E3;
+    color: #124A5C;
 }
 
-.review-modal {
+.set-finalize-review-button {
+    margin: 5px 10px;
+    background-color: #124A5C;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    width: auto;
+    min-width: 200px;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+.set-finalize-review-button:hover {
+    background-color: #B4E3E3;
+    color: #124A5C;
+}
+
+.finalize-container {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+/* Modal Styles */
+.modal, .review-modal {
     display: none;
     position: fixed;
     z-index: 1000;
@@ -434,7 +286,7 @@
     background-color: rgba(0, 0, 0, 0.4);
 }
 
-.review-modal-content {
+.modal-content, .review-modal-content {
     background-color: #fefefe;
     margin: 10% auto;
     padding: 20px;
@@ -445,29 +297,38 @@
     text-align: center;
 }
 
-.review-close-button {
+.close-button, .review-close-button {
     color: #aaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
+    cursor: pointer;
 }
 
+.close-button:hover,
+.close-button:focus,
 .review-close-button:hover,
 .review-close-button:focus {
     color: black;
     text-decoration: none;
-    cursor: pointer;
 }
 
-.review-modal-buttons {
+.modal-header, 
+.modal-body, 
+.modal-footer {
+    text-align: center;
+}
+
+.modal-buttons, .review-modal-buttons {
     display: flex;
     justify-content: center;
     margin-top: 20px;
+    gap: 10px;
 }
 
+.modal-buttons button, 
 .review-modal-buttons button {
     padding: 10px 20px;
-    margin: 0 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -475,20 +336,305 @@
     transition: background-color 0.3s ease;
 }
 
-.review-modal-back-button {
+.back-button, .review-modal-back-button {
     background-color: rgba(18, 74, 92, 0.5);
     color: white;
 }
 
-.review-modal-confirm-button {
+.confirm-button, .review-modal-pass-button {
     background-color: #124A5C;
     color: white;
 }
 
+.review-modal-reject-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.modal-buttons button:hover, 
 .review-modal-buttons button:hover {
     opacity: 0.8;
 }
 
+.modal-question {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 16px;
+}
+
+/* Decision Disclaimer */
+.decision-disclaimer {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 15px 0;
+    text-align: left;
+    font-size: 14px;
+}
+
+/* Scores Table Styles */
+.scores-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.scores-table th, 
+.scores-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.scores-table th {
+    background-color: #f5f5f5;
+}
+
+.computation-verdict {
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #e9f7fe;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 16px;
+}
+
+/* Styling for applicant status section */
+.applicant-status-section {
+    background-color: #FFFFFF;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin: 10px 5px 20px;
+    display: none; /* Hidden by default */
+}
+
+/* Improved heading visibility */
+.applicant-status-section h3.subheader {
+    color: #124A5C;
+    margin-bottom: 15px;
+    font-size: 20px;
+    font-weight: bold;
+}
+/* CSS to fix the header layout */
+/* Enhanced CSS for section header and divider */
+.applicant-status-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0; /* Remove bottom margin to place divider closer */
+    width: 100%;
+}
+
+.applicant-status-section .section-header h3.subheader {
+    margin: 0;
+    color: #124A5C;
+    font-weight: bold;
+}
+
+.applicant-status-section .right-section {
+    display: flex;
+    gap: 10px;
+}
+
+.applicant-status-section .right-section button {
+    padding: 10px 15px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    background-color: #124A5C;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.applicant-status-section .right-section button:hover {
+    background-color: #B4E3E3;
+    color: #124A5C;
+}
+
+/* Improved divider styles */
+.applicant-status-section .divider {
+    height: 2px;
+    background-color: #124A5C;
+    margin: 15px 0;
+    width: 100%;
+    display: block;
+    clear: both;
+}
+/* Filter button styling */
+.filter-button {
+    padding: 10px 15px;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    background-color: #124A5C;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    min-width: 130px;
+}
+
+.filter-button:hover {
+    background-color: #0d3a47;
+}
+
+.filter-button.active {
+    background-color: #07ACB9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Make buttons in last column more prominent */
+.btn-review, 
+.btn-evaluation, 
+.btn-onboarding, 
+.btn-approve {
+    background-color: white;
+    color: #124A5C;
+    border: 1px solid #124A5C;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-width: 120px;
+    display: inline-block;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.btn-review:hover, 
+.btn-evaluation:hover, 
+.btn-onboarding:hover, 
+.btn-approve:hover {
+    background-color: #124A5C;
+    color: white;
+}
+
+/* Better styling for no data message */
+.no-data-message {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #07ACB9;
+    border-radius: 5px;
+    margin: 20px 0;
+    color: #555;
+    font-size: 16px;
+}
+
+.no-data-message p {
+    margin: 0;
+}
+
+/* Improved table styles */
+.tracking-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.tracking-table th {
+    background-color: #f5f5f5;
+    color: #124A5C;
+    font-weight: bold;
+    padding: 12px 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.tracking-table td {
+    padding: 12px 10px;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+}
+
+/* Better positioning of buttons in the last column */
+.tracking-table td:last-child {
+    position: relative;
+}
+
+.tracking-table td:last-child span {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.tracking-table td:last-child div {
+    text-align: right;
+}
+
+/* Sort section styling */
+.sort-section {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.sort-section label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.sort-section select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    min-width: 180px;
+}
+
+/* Additional Helper Classes */
+.text-center {
+    text-align: center;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .main-content {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+    }
+    
+    .set-interview-button {
+        width: 30%;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .filter-section {
+        flex-direction: column;
+    }
+    
+    .search-bar {
+        width: 100%;
+    }
+    
+    .modal-content, .review-modal-content {
+        width: 90%;
+    }
+    
+    .set-interview-button {
+        width: 100%;
+    }
+}
     </style>
 </head>
 <body>
@@ -508,369 +654,2353 @@
         <% } else { %>
           <p>No applicant found.</p>
         <% } %>
-      </div>
+    </div>
       
-
-  <!-- Applicant Tracking Section -->
-    <div class="tracking-section">
+    <!-- Filter Buttons Section -->
+    <div class="filter-section">
+        <div class="right-section">
+            <button id="filter-all" class="filter-button active">All</button>
+            <button id="filter-forreview" class="filter-button">For Review</button>
+            <button id="filter-forevaluation" class="filter-button">For Evaluation</button>
+            <button id="filter-foronboarding" class="filter-button">For Onboarding</button>
+        </div>
         <div class="search-container">
-            <div class="left-section">
-                <input type="text" class="search-bar" id="searchBar" placeholder="Search by Application No., Name, Email, or Status">
-                <button class="search-button"><i class="fas fa-search"></i> Search</button>
-            </div>
-            <div class="right-section">
-                <button id="filter-all">All</button>
-                <button id="filter-review">For Review</button>
-                <button id="filter-evaluation">For Evaluation</button>
-                <button id="filter-onboarding">For Onboarding</button>
-            </div>            
+            <input type="text" id="searchBar" class="search-bar" placeholder="Search...">
+            <button class="search-button">Search</button>
         </div>
-
-        
-<!-- Table for Applicant Data -->
-<table class="tracking-table" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
-    <thead>
-        <tr>
-            <th>Applicant No.</th>
-            <th>Last Name, First Name</th>
-            <th>Department</th>
-            <th>Position Applied</th>
-            <th>Applicant Status & Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <% if (applicants && applicants.length) { %>
-            <% applicants.forEach((applicant, index) => { %>
-                <tr>
-                    <td><%= index + 1 %></td>
-                    <td>
-                        <%= applicant.lastName %>, <%= applicant.firstName %>
-                        <br>
-                        <small style="color: #555;"><%= applicant.userEmail || 'Email not available' %></small>
-                    </td>
-                    
-                    <td><%= applicant.deptName %></td> <!-- Display department name -->
-                    <td><%= applicant.jobTitle %></td> <!-- Display job title -->
-                    <td>
-<!-- Display Applicant Status -->
-<span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
-<div style="margin-top: 10px;">
-    <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action; HR PASSED')) { %>
-        <!-- For Review Button -->
-        <button 
-            class="btn-review" 
-            onclick="lineManagerInitialScreeningModal(
-                  '<%= applicant.userId %>', 
-                '<%= applicant.lastName %>', 
-                '<%= applicant.firstName %>', 
-                '<%= applicant.birthDate %>', 
-                '<%= applicant.userEmail %>', 
-                '<%= applicant.phoneNo %>', 
-                {
-                    degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
-                    experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
-                    certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
-                    hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
-                    softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
-                    workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
-                    availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
-                }, 
-                '<%= applicant.initialScreeningAssessment.totalScore %>', 
-                '<%= applicant.initialScreeningAssessment.degree_url %>',
-                '<%= applicant.initialScreeningAssessment.cert_url %>',
-                '<%= applicant.initialScreeningAssessment.resume_url %>'
-            )
-        ">
-        For Review
-        </button>
-
-    <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
-        <!-- For Evaluation Button -->
-        <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
-            <button class="btn-evaluation">For Evaluation</button>
-        </a>
-    <% } else if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
-        <!-- Approve Button for Line Manager Action -->
-        <button 
-            class="btn-approve" 
-            onclick="approveLineManager('<%= applicant.applicantId %>')">
-            Approve
-        </button>
-    <% } %>
-</div>
+    </div>
 
 
-                    </td>   
-                </tr>
-            <% }); %>
-        <% } else { %>
+    <!-- Updated Applicant Status Section with fixed header layout and divider -->
+<div class="applicant-status-section" id="applicantStatusSection">
+    <!-- Header section with flexbox -->
+    <div class="section-header">
+        <h3 class="subheader">List of Applicants on <span id="currentPhase">Review</span></h3>
+        <div class="right-section">
+            <button id="notifyAllApplicants">Notify All Applicants</button>
+        </div>
+    </div>
+    <!-- Divider placed immediately after the section-header -->
+    <div class="divider"></div>
+    
+    <h4>Awaiting for Action</h4>
+    <table class="tracking-table" id="awaitingActionTable">
+        <thead>
             <tr>
-                <td colspan="5">No applicants found.</td>
+                <th>Applicant No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Total Score</th>
+                <th>Applicant Status</th>
             </tr>
-        <% } %>
-    </tbody>
-    
-    
-    
-</table>
+        </thead>
+        <tbody>
+            <!-- Will be populated dynamically -->
+        </tbody>
+    </table>
 
+    <h4>Applicants on <span id="currentPhase">Review</span> Declared Results</h4>
+    <div class="sort-section">
+        <label for="sortOptions">Sort By:</label>
+        <select id="sortOptions">
+            <option value="ascending">Ranking - Ascending</option>
+            <option value="descending">Ranking - Descending</option>
+            <option value="alphabetical">Alphabetically</option>
+        </select>
+    </div>
+    <table class="tracking-table" id="declaredResultsTable">
+        <thead>
+            <tr>
+                <th>Applicant No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Total Score</th>
+                <th>Applicant Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Will be populated dynamically -->
+        </tbody>
+    </table>
+    <!-- Job Offer Sent section will be created dynamically when needed -->
+</div>
 
-<h2 class="header-section" style="margin-top: 30px; margin-bottom: 10px;">Onboarding</h2>
+    <!-- Table for Applicant Data (shown by default) -->
+    <table class="tracking-table" id="mainApplicantTable" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Applicant No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Applicant Status & Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (applicants && applicants.length) { %>
+                <% applicants.forEach((applicant, index) => { %>
+                    <tr class="applicant-row" data-phase="<%= applicant.applicantStatus.startsWith('P1') ? 'P1' : applicant.applicantStatus.startsWith('P2') ? 'P2' : applicant.applicantStatus.startsWith('P3') ? 'P3' : 'other' %>" data-status="<%= applicant.applicantStatus %>">
+                        <td><%= index + 1 %></td>
+                        <td>
+                            <%= applicant.lastName %>, <%= applicant.firstName %>
+                            <br>
+                            <small style="color: #555;"><%= applicant.userEmail || 'Email not available' %></small>
+                        </td>
+                        
+                        <td><%= applicant.deptName %></td> <!-- Display department name -->
+                        <td><%= applicant.jobTitle %></td> <!-- Display job title -->
+                        <td>
+                            <!-- Display Applicant Status -->
+                            <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
+                            <div style="margin-top: 10px;">
+                                <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action; HR PASSED')) { %>
+                                    <!-- For Review Button -->
+                                    <button 
+                                        class="btn-review" 
+                                        onclick="lineManagerInitialScreeningModal(
+                                              '<%= applicant.userId %>', 
+                                            '<%= applicant.lastName %>', 
+                                            '<%= applicant.firstName %>', 
+                                            '<%= applicant.birthDate %>', 
+                                            '<%= applicant.userEmail %>', 
+                                            '<%= applicant.phoneNo %>', 
+                                            {
+                                                degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
+                                                experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
+                                                certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
+                                                hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
+                                                softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
+                                                workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
+                                                availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
+                                            }, 
+                                            '<%= applicant.initialScreeningAssessment.totalScore %>', 
+                                            '<%= applicant.initialScreeningAssessment.degree_url %>',
+                                            '<%= applicant.initialScreeningAssessment.cert_url %>',
+                                            '<%= applicant.initialScreeningAssessment.resume_url %>'
+                                        )
+                                    ">
+                                    For Review
+                                    </button>
+                                <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
+                                    <!-- For Evaluation Button -->
+                                    <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
+                                        <button class="btn-evaluation">For Evaluation</button>
+                                    </a>
+                                <% } else if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
+                                    <!-- Approve Button for Line Manager Action -->
+                                    <button 
+                                        class="btn-approve" 
+                                        onclick="approveLineManager('<%= applicant.applicantId %>')">
+                                        Approve
+                                    </button>
+                                <% } else if (applicant.applicantStatus === 'P3 - Awaiting for Line Manager Evaluation') { %>
+                                    <!-- For Evaluation Button -->
+                                    <a href="/linemanager/evaluation-form/<%= applicant.applicantId %>">
+                                        <button class="btn-evaluation">For Evaluation</button>
+                                    </a>
+                                <% } else if (applicant.applicantStatus === 'P3 - Line Manager Evaluation Accomplished') { %>
+                                    <!-- For Review Button -->
+                                    <button 
+                                        class="btn-review" 
+                                        onclick="openModal('releaseJobOfferModal', '<%= applicant.lastName %>, <%= applicant.firstName %>')">
+                                        For Review
+                                    </button>
+                                <% } %>
+                            </div>
+                        </td>   
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="5">No applicants found.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
 
-<table class="tracking-table" style="width: 100%; border-collapse: collapse;">
-    <thead>
-        <tr>
-            <th>Application No.</th>
-            <th>Last Name, First Name</th>
-            <th>Department</th>
-            <th>Position Applied</th>
-            <th>Application Status & Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>APP00018</td>
-            <td>William Scott<br>williamscott@gmail.com</td>
-            <td>IT</td>
-            <td>Data Analyst</td>
-            <td>First Day Checklist Sent</td>
-        </tr>
-        <tr class="status-for-onboarding">
-            <td>APP00019</td>
-            <td>Grace Taylor<br>gracetaylor@gmail.com</td>
-            <td>IT</td>
-            <td>Data Analyst</td>
-            <td>Checklist Accomplished <button class="btn-onboarding" onclick="openModal('accountSetupReminderModal')">For Onboarding</button></td>
-        </tr>
-        <tr>
-            <td>APP00020</td>
-            <td>Ella Martinez<br>ellamartinez@gmail.com</td>
-            <td>IT</td>
-            <td>Data Analyst</td>
-            <td>Account Created</td>
-        </tr>
-    </tbody>
-</table>
+    <h2 class="header-section" id="onboardingHeader" style="margin-top: 30px; margin-bottom: 10px;">Onboarding</h2>
 
-<!--Frontend Modals-->
+    <table class="tracking-table" id="onboardingTable" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Application No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Application Status & Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>APP00018</td>
+                <td>William Scott<br>williamscott@gmail.com</td>
+                <td>IT</td>
+                <td>Data Analyst</td>
+                <td>First Day Checklist Sent</td>
+            </tr>
+            <tr class="status-for-onboarding">
+                <td>APP00019</td>
+                <td>Grace Taylor<br>gracetaylor@gmail.com</td>
+                <td>IT</td>
+                <td>Data Analyst</td>
+                <td>Checklist Accomplished <button class="btn-onboarding" onclick="openModal('accountSetupReminderModal')">For Onboarding</button></td>
+            </tr>
+            <tr>
+                <td>APP00020</td>
+                <td>Ella Martinez<br>ellamartinez@gmail.com</td>
+                <td>IT</td>
+                <td>Data Analyst</td>
+                <td>Account Created</td>
+            </tr>
+        </tbody>
+    </table>
 
-<!-- Modal for Confirm Release of Job Offer -->
-<div id="releaseJobOfferModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeModal('releaseJobOfferModal')">&times;</span>
-        <h2 style="color: #07ACB9;">Name</h2>
-        <p><strong>Age:</strong> Text</p>
-        <p><strong>Email:</strong> Text</p>
-        <p><strong>Contact No:</strong> Text</p>
-        
-        <div class="divider"></div>
-        
-        <h3>Panel Assessment Form Breakdown</h3>
-        <p>[INSERT SUBMITTED FORM HERE]</p>
-        
-        <div class="modal-question">
-            <p><strong>Would you like to release the job offer and notify the applicant they are being considered for hiring?</strong></p>
-        </div>
-        
-        <div class="modal-buttons">
-            <button id="backButton" onclick="closeModal('releaseJobOfferModal')">Back</button>
-            <button id="confirmButton" onclick="sendNotification()">Notify Applicant</button>
+    <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
+
+    <!-- Modal for notifying applicants -->
+    <div id="notifyApplicantsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('notifyApplicantsModal')">&times;</span>
+            <h2>Confirm Notification</h2>
+            <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+            <div class="modal-buttons">
+                <button id="backButton" class="back-button" onclick="closeModal('notifyApplicantsModal')">Back</button>
+                <button id="confirmButton" class="confirm-button" onclick="finalizeNotification()">Confirm</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Modal for Moving Applicant for Onboarding -->
-<div id="moveToOnboardingModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeModal('moveToOnboardingModal')">&times;</span>
-        <h1>Job Offer Confirmation</h1>
-        
-        <h2><strong>Applicant Personal Information</strong></h2>
-        <h3><strong>Name</strong></h3>
-        <p><strong>Age:</strong> Text</p>
-        <p><strong>Email:</strong> Text</p>
-        <p><strong>Contact No:</strong> Text</p>
-        
-        <div class="modal-question">
-            <p><strong>Would you like to move this applicant for onboarding?</strong></p>
-        </div>
-        
-        <div class="modal-buttons">
-            <button id="backButton" onclick="closeModal('moveToOnboardingModal')">Back</button>
-            <button id="confirmButton" onclick="confirmOnboarding()">Confirm</button>
+    <!-- Modal for P1: Finalize Review and Notify Applicants -->
+    <div id="finalizeModalP1" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Confirm Final Review and Notify Applicants</h2>
+            <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+            <div class="modal-buttons">
+                <button id="backButtonP1" class="back-button">Back</button>
+                <button id="confirmButtonP1" class="confirm-button">Confirm</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Modal for Account Setup Creation Reminder -->
-<div id="accountSetupReminderModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeModal('accountSetupReminderModal')">&times;</span>
-        <h1>Account Setup Creation Reminder</h1>
-        
-        <h2><strong>Applicant Personal Information</strong></h2>
-        <h3><strong>Name</strong></h3>
-        <p><strong>Age:</strong> Text</p>
-        <p><strong>Email:</strong> Text</p>
-        <p><strong>Contact No:</strong> Text</p>
-        
-        <div class="modal-question">
-            <p><strong>Have you created an account for the employee through the Manage Employees page and emailed them the account details?</strong></p>
-        </div>
-        
-        <div class="modal-buttons">
-            <button id="backButton" onclick="closeModal('accountSetupReminderModal')">Back</button>
-            <button id="confirmButton" onclick="confirmAccountSetup()">Confirm</button>
-        </div>
-    </div>
-</div>
+    <!-- P1 - Line Manager Review Modal -->
+    <div id="lineManagerInitialScreeningModalHtml" class="review-modal">
+        <div class="review-modal-content">
+            <span class="review-close-button">&times;</span>
+            <h2>P1: Initial Screening Score Breakdown</h2> 
+            <div class="divider"></div>
+            <div class="applicant-details">
+                <input type="hidden" id="userId">
+                <input type="hidden" id="jobId">            
+                <input type="hidden" id="applicantId">
 
+                <p><strong>Name:</strong> <span id="applicant-name"></span></p>
+                <p><strong>Birthday:</strong> <span id="applicant-birthday"></span></p>
+                <p><strong>Email:</strong> <span id="applicant-email"></span></p>
+                <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
+            </div>
 
-<button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
+            <h4>HR Online Assessment Form Breakdown</h4>
+            <h4>Initial Screening Scores</h4> 
 
-<!-- Finalize button for review -->
-<div class="finalize-container">
-    <button class="set-finalize-review-button" id="finalize-p1">P1: Finalize Review and Notify Applicants</button>
-    <button class="set-finalize-review-button" id="finalize-p2">P2: Finalize Review and Notify Applicants</button>
-    <button class="set-finalize-review-button" id="finalize-p3">P3: Finalize Review and Notify Applicants</button>
-</div>
+            <table class="scores-table"> 
+                <thead> 
+                    <tr> 
+                        <th>Criteria</th> 
+                        <th>Score</th> 
+                    </tr> 
+                </thead> 
+                <tbody> 
+                    <tr> 
+                        <td>Industry Specific Degree</td> 
+                        <td id="score-degree"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Experiences</td> 
+                        <td id="score-experience"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Certifications</td> 
+                        <td id="score-certifications"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Hard Skills</td> 
+                        <td id="score-hard-skills"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Soft Skills</td> 
+                        <td id="score-soft-skills"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Work Setup</td> 
+                        <td id="score-work-setup"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Availability</td> 
+                        <td id="score-availability"></td> 
+                    </tr> 
+                </tbody> 
+            </table> 
 
-<!-- Modal for P1: Finalize Review and Notify Applicants -->
-<div id="finalizeModalP1" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h2>Confirm Final Review and Notify Applicants</h2>
-        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
-        <div class="modal-buttons">
-            <button id="backButtonP1" class="back-button">Back</button>
-            <button id="confirmButtonP1" class="confirm-button">Confirm</button>
-        </div>
-    </div>
-</div>
+            <div class="computation-verdict"> 
+                <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
+            </div> 
 
-<!-- Modal for P2: Finalize Review and Notify Applicants -->
-<div id="finalizeModalP2" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h2>Confirm Final Review and Notify Applicants</h2>
-        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
-        <div class="modal-buttons">
-            <button id="backButtonP2" class="back-button">Back</button>
-            <button id="confirmButtonP2" class="confirm-button">Confirm</button>
-        </div>
-    </div>
-</div>
+            <h4>Uploaded Documents</h4>
+            <p><strong>Degree:</strong> <a id="degree-doc" href="#" target="_blank">No document uploaded</a></p>
+            <div id="degree-preview" style="margin-top: 10px;"></div>
+            
+            <p><strong>Certification:</strong> <a id="cert-doc" href="#" target="_blank">No document uploaded</a></p>
+            <div id="cert-preview" style="margin-top: 10px;"></div>
+            
+            <p><strong>Resume:</strong> <a id="resume-doc" href="#" target="_blank">No document uploaded</a></p>
+            <div id="resume-preview" style="margin-top: 10px;"></div>
+            
+            
+            <h4>Decision</h4>
+            <p>
+                <strong>Would you like to pass or reject this applicant for the HR interview?</strong>
+            </p>
 
-<!-- Modal for P3: Finalize Review and Notify Applicants -->
-<div id="finalizeModalP3" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h2>Confirm Final Review and Notify Applicants</h2>
-        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
-        <div class="modal-buttons">
-            <button id="backButtonP3" class="back-button">Back</button>
-            <button id="confirmButtonP3" class="confirm-button">Confirm</button>
-        </div>
-    </div>
-</div>
+            <div class="decision-disclaimer">
+                <p>💡 <strong>Important:</strong> Pressing <strong>"Pass"</strong> will mark the applicant as likely to proceed to the HR interview stage, but this decision can still be changed before finalizing. Likewise, pressing <strong>"Reject"</strong> will mark the applicant as failed, but this can also be modified until the finalization step.</p>
+                <p>⚠️ <strong>Finalization Note:</strong> Once you press "Finalize," all passed and failed applicants will be officially informed of their status. Please double-check before proceeding.</p>
+            </div>
 
-<!-- P1 - HR Choosing Modal -->
-<div id="lineManagerInitialScreeningModalHtml" class="review-modal">
-    <div class="review-modal-content">
-        <span class="review-close-button">&times;</span>
-        <h2>P1: Initial Screening Score Breakdown</h2> 
-        <div class="divider"></div>
-        <div class="applicant-details">
-            <input type="hidden" id="userId">
-            <input type="hidden" id="jobId">            
-            <input type="hidden" id="applicantId">
-
-            <p><strong>Name:</strong> <span id="applicant-name"></span></p>
-            <p><strong>Birthday:</strong> <span id="applicant-birthday"></span></p>
-            <p><strong>Email:</strong> <span id="applicant-email"></span></p>
-            <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
-        </div>
-
-        <h4>HR Online Assessment Form Breakdown</h4>
-        <h4>Initial Screening Scores</h4> 
-
-        <table class="scores-table"> 
-            <thead> 
-                <tr> 
-                    <th>Criteria</th> 
-                    <th>Score</th> 
-                </tr> 
-            </thead> 
-            <tbody> 
-                <tr> 
-                    <td>Industry Specific Degree</td> 
-                    <td id="score-degree"></td> 
-                </tr> 
-                <tr> 
-                    <td>Experiences</td> 
-                    <td id="score-experience"></td> 
-                </tr> 
-                <tr> 
-                    <td>Certifications</td> 
-                    <td id="score-certifications"></td> 
-                </tr> 
-                <tr> 
-                    <td>Hard Skills</td> 
-                    <td id="score-hard-skills"></td> 
-                </tr> 
-                <tr> 
-                    <td>Soft Skills</td> 
-                    <td id="score-soft-skills"></td> 
-                </tr> 
-                <tr> 
-                    <td>Work Setup</td> 
-                    <td id="score-work-setup"></td> 
-                </tr> 
-                <tr> 
-                    <td>Availability</td> 
-                    <td id="score-availability"></td> 
-                </tr> 
-            </tbody> 
-        </table> 
-
-        <div class="computation-verdict"> 
-            <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
-        </div> 
-
-        <h4>Uploaded Documents</h4>
-        <p><strong>Degree:</strong> <a id="degree-doc" href="#" target="_blank">No document uploaded</a></p>
-        <div id="degree-preview" style="margin-top: 10px;"></div>
-        
-        <p><strong>Certification:</strong> <a id="cert-doc" href="#" target="_blank">No document uploaded</a></p>
-        <div id="cert-preview" style="margin-top: 10px;"></div>
-        
-        <p><strong>Resume:</strong> <a id="resume-doc" href="#" target="_blank">No document uploaded</a></p>
-        <div id="resume-preview" style="margin-top: 10px;"></div>
-        
-        
-        <h4>Decision</h4>
-        <p>
-            <strong>Would you like to pass or reject this applicant for the HR interview?</strong>
-        </p>
-
-        <div class="decision-disclaimer">
-            <p>💡 <strong>Important:</strong> Pressing <strong>"Pass"</strong> will mark the applicant as likely to proceed to the HR interview stage, but this decision can still be changed before finalizing. Likewise, pressing <strong>"Reject"</strong> will mark the applicant as failed, but this can also be modified until the finalization step.</p>
-            <p>⚠️ <strong>Finalization Note:</strong> Once you press "Finalize," all passed and failed applicants will be officially informed of their status. Please double-check before proceeding.</p>
-        </div>
-
-        <div class="review-modal-buttons">
-            <button id="backButton" class="review-modal-back-button">Back</button>
-            <button id="rejectButton" class="review-modal-reject-button" onclick="rejectApplicant()">Reject</button>
-            <button id="passButton" class="review-modal-pass-button" onclick="passApplicant()">Pass</button>
+            <div class="review-modal-buttons">
+                <button id="backButton" class="review-modal-back-button">Back</button>
+                <button id="rejectButton" class="review-modal-reject-button" onclick="rejectApplicant()">Reject</button>
+                <button id="passButton" class="review-modal-pass-button" onclick="passApplicant()">Pass</button>
+            </div>
         </div>
     </div>
-</div>
 
+    <!-- Modal for P2: Finalize Review and Notify Applicants -->
+    <div id="finalizeModalP2" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Confirm Final Review and Notify Applicants</h2>
+            <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+            <div class="modal-buttons">
+                <button id="backButtonP2" class="back-button">Back</button>
+                <button id="confirmButtonP2" class="confirm-button">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for P3: Finalize Review and Notify Applicants -->
+    <div id="finalizeModalP3" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Confirm Final Review and Notify Applicants</h2>
+            <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+            <div class="modal-buttons">
+                <button id="backButtonP3" class="back-button">Back</button>
+                <button id="confirmButtonP3" class="confirm-button">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other modals for account setup, job offers, etc. -->
+    <div id="releaseJobOfferModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('releaseJobOfferModal')">&times;</span>
+            <h2 style="color: #07ACB9;" id="applicant-name-job-offer">Name</h2>
+            <p><strong>Age:</strong> <span id="applicant-age-job-offer">Text</span></p>
+            <p><strong>Email:</strong> <span id="applicant-email-job-offer">Text</span></p>
+            <p><strong>Contact No:</strong> <span id="applicant-contact-job-offer">Text</span></p>
+            
+            <div class="divider"></div>
+            
+            <h3>Panel Assessment Form Breakdown</h3>
+            <p>[INSERT SUBMITTED FORM HERE]</p>
+            
+            <div class="modal-question">
+                <p><strong>Would you like to release the job offer and notify the applicant they are being considered for hiring?</strong></p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="backButton" onclick="closeModal('releaseJobOfferModal')">Back</button>
+                <button id="confirmButton" onclick="sendNotification()">Notify Applicant</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Moving Applicant for Onboarding -->
+    <div id="moveToOnboardingModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('moveToOnboardingModal')">&times;</span>
+            <h1>Job Offer Confirmation</h1>
+            
+            <h2><strong>Applicant Personal Information</strong></h2>
+            <h3><strong id="applicant-name-onboarding">Name</strong></h3>
+            <p><strong>Age:</strong> <span id="applicant-age-onboarding">Text</span></p>
+            <p><strong>Email:</strong> <span id="applicant-email-onboarding">Text</span></p>
+            <p><strong>Contact No:</strong> <span id="applicant-contact-onboarding">Text</span></p>
+            
+            <div class="modal-question">
+                <p><strong>Would you like to move this applicant for onboarding?</strong></p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="backButton" onclick="closeModal('moveToOnboardingModal')">Back</button>
+                <button id="confirmButton" onclick="confirmOnboarding()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Account Setup Creation Reminder -->
+    <div id="accountSetupReminderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('accountSetupReminderModal')">&times;</span>
+            <h1>Account Setup Creation Reminder</h1>
+            
+            <h2><strong>Applicant Personal Information</strong></h2>
+            <h3><strong id="applicant-name-account">Name</strong></h3>
+            <p><strong>Age:</strong> <span id="applicant-age-account">Text</span></p>
+            <p><strong>Email:</strong> <span id="applicant-email-account">Text</span></p>
+            <p><strong>Contact No:</strong> <span id="applicant-contact-account">Text</span></p>
+            
+            <div class="modal-question">
+                <p><strong>Have you created an account for the employee through the Manage Employees page and emailed them the account details?</strong></p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="backButton" onclick="closeModal('accountSetupReminderModal')">Back</button>
+                <button id="confirmButton" onclick="confirmAccountSetup()">Confirm</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Get references to filter buttons with new IDs
+    const filterAllButton = document.getElementById("filter-all");
+    const filterForReviewButton = document.getElementById("filter-forreview");
+    const filterForEvaluationButton = document.getElementById("filter-forevaluation");
+    const filterForOnboardingButton = document.getElementById("filter-foronboarding");
+    
+    // Get references to sections and tables
+    const applicantStatusSection = document.getElementById("applicantStatusSection");
+    const awaitingActionTable = document.getElementById("awaitingActionTable");
+    const declaredResultsTable = document.getElementById("declaredResultsTable");
+    const notifyAllButton = document.getElementById("notifyAllApplicants");
+    const sortOptions = document.getElementById("sortOptions");
+    
+    // Add event listeners for filter buttons with new parameter values
+    if (filterAllButton) filterAllButton.addEventListener("click", () => filterRowsByStatus("all"));
+    if (filterForReviewButton) filterForReviewButton.addEventListener("click", () => filterRowsByStatus("forreview"));
+    if (filterForEvaluationButton) filterForEvaluationButton.addEventListener("click", () => filterRowsByStatus("forevaluation"));
+    if (filterForOnboardingButton) filterForOnboardingButton.addEventListener("click", () => filterRowsByStatus("foronboarding"));
+    
+    // Notify all applicants button functionality
+    if (notifyAllButton) {
+        notifyAllButton.addEventListener("click", function() {
+            const currentPhase = document.querySelector("#currentPhase").textContent;
+            
+            if (checkAllApplicantsMarked()) {
+                openModal('notifyApplicantsModal');
+            } else {
+                alert(`Not all applicants in ${currentPhase} have been marked as passed or failed. Please make a decision first.`);
+            }
+        });
+    }
+    
+    // Sort options change event
+    if (sortOptions) {
+        sortOptions.addEventListener("change", function() {
+            sortDeclaredResults(this.value);
+        });
+    }
+    
+    // Setup the search functionality
+    const searchBar = document.getElementById("searchBar");
+    const searchButton = document.querySelector(".search-button");
+    
+    if (searchBar && searchButton) {
+        // Search button click event
+        searchButton.addEventListener("click", filterTable);
+        
+        // Enter key press in search bar
+        searchBar.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                filterTable();
+            }
+        });
+    }
+    
+    // Setup modal event listeners
+    setupModalEventListeners();
+    
+    
+    // Ensure all tables have proper headers
+    ensureTableHeaders();
+    
+    // Fix the header structure
+    fixHeaderStructure();
+    
+    // Start with "All" filter by default
+    filterRowsByStatus("all");
 
+    captureApplicantsData();
+
+
+    // Override the original functions with our improved versions
+    window.updateDeclaredResultsTable = updateDeclaredResultsTable;
+    window.getTotalScoreDirectly = getTotalScoreDirectly;
+    window.captureApplicantsData = captureApplicantsData;
+    window.fixScoresInDeclaredResults = fixScoresInDeclaredResults;
+    
+    // Create a function to fix all scores in all tables
+    window.fixAllTableScores = function() {
+        const tables = [
+            document.getElementById('awaitingActionTable'),
+            document.getElementById('declaredResultsTable'),
+            document.getElementById('jobOfferTable')
+        ].filter(table => table !== null);
+        
+        tables.forEach(table => {
+            const rows = table.querySelectorAll('tbody tr:not(.section-header-row)');
+            console.log(`Fixing scores for ${rows.length} rows in ${table.id}`);
+            
+            rows.forEach(row => {
+                const userId = row.getAttribute('data-userid');
+                if (userId) {
+                    getTotalScoreDirectly(userId, row);
+                }
+            });
+        });
+    };
+    
+    // Add a manual trigger for the filter buttons
+    document.querySelectorAll('.filter-button').forEach(button => {
+        const originalClick = button.onclick;
+        
+        button.onclick = function(e) {
+            if (originalClick) originalClick.call(this, e);
+            
+            // After the original filter function runs, fix all scores
+            setTimeout(window.fixAllTableScores, 300);
+        };
+    });
+    
+    // After everything is set up, run one initial fix
+    setTimeout(window.fixAllTableScores, 500);
+});
+
+
+// Manual function to run from console if needed
+function manuallyFixScores() {
+    console.log("Manually fixing scores");
+    captureApplicantsData();
+    
+    setTimeout(function() {
+        if (window.fixAllTableScores) {
+            window.fixAllTableScores();
+        } else {
+            console.log("fixAllTableScores function not available");
+        }
+    }, 200);
+}s
+
+// Helper function to extract userId from row
+function getUserIdFromRow(row) {
+    // Try to find userId from button
+    const reviewButton = row.querySelector('button.btn-review');
+    if (reviewButton) {
+        const onclickAttr = reviewButton.getAttribute('onclick');
+        if (onclickAttr) {
+            const match = onclickAttr.match(/'([0-9]+)'/);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+    }
+    return null;
+}
+
+// Function to filter table rows based on search input
+function filterTable() {
+    const searchBar = document.getElementById("searchBar");
+    if (!searchBar) return;
+    
+    const searchValue = searchBar.value.toLowerCase();
+    const rows = document.querySelectorAll('.tracking-table tbody tr');
+    
+    rows.forEach(row => {
+        // Skip header rows
+        if (row.classList.contains('section-header-row')) return;
+        
+        const rowText = Array.from(row.querySelectorAll('td'))
+            .map(cell => cell.textContent.toLowerCase())
+            .join(' ');
+            
+        row.style.display = rowText.includes(searchValue) ? '' : 'none';
+    });
+}
+
+// Function to check if all applicants in the current phase have been marked
+function checkAllApplicantsMarked() {
+    const awaitingActionTable = document.getElementById("awaitingActionTable");
+    if (!awaitingActionTable) return true;
+    
+    const rows = awaitingActionTable.querySelectorAll('tbody tr');
+    if (rows.length === 0) return true; // No rows to check
+    
+    // Check each row for PASSED/FAILED status
+    return Array.from(rows).every(row => {
+        // Skip section header rows or message rows
+        if (row.classList.contains('section-header-row') || row.querySelector('td[colspan="5"]') || row.querySelector('td[colspan="6"]')) {
+            return true;
+        }
+        
+        const statusCell = row.querySelector('td:last-child');
+        if (!statusCell) return true;
+        
+        const statusText = statusCell.textContent;
+        return statusText.indexOf('PASSED') !== -1 || statusText.indexOf('FAILED') !== -1;
+    });
+}
+// Function to ensure tables have proper headers with the new criteria column
+function ensureTableHeaders() {
+    // Get all tables that need headers
+    const tables = [
+        document.getElementById('awaitingActionTable'),
+        document.getElementById('declaredResultsTable'),
+        document.getElementById('jobOfferTable')
+    ].filter(table => table !== null);
+    
+    tables.forEach(table => {
+        // Check if table has header
+        const thead = table.querySelector('thead');
+        if (!thead || !thead.querySelector('tr th')) {
+            // Create header if it doesn't exist
+            const newThead = document.createElement('thead');
+            newThead.innerHTML = `
+                <tr>
+                    <th>Applicant No.</th>
+                    <th>Last Name, First Name</th>
+                    <th>Department</th>
+                    <th>Position Applied</th>
+                    <th>Total Score</th>
+                    <th>Work Setup/Availability</th>
+                    <th>Applicant Status</th>
+                </tr>
+            `;
+            
+            // Replace existing thead or add to beginning of table
+            if (thead) {
+                table.replaceChild(newThead, thead);
+            } else {
+                table.insertBefore(newThead, table.firstChild);
+            }
+        } else {
+            // Check if Work Setup/Availability column exists in the header
+            const headerRow = thead.querySelector('tr');
+            const headers = headerRow.querySelectorAll('th');
+            
+            // Add the Work Setup/Availability column if it doesn't exist
+            if (headers.length === 6 && !Array.from(headers).some(h => h.textContent.includes('Work Setup'))) {
+                const newTh = document.createElement('th');
+                newTh.textContent = 'Work Setup/Availability';
+                
+                // Insert before the last column (Applicant Status)
+                headerRow.insertBefore(newTh, headers[5]);
+            }
+        }
+    });
+}
+
+// Function to create a table row from row data
+function createTableRow(rowData) {
+    const newRow = document.createElement('tr');
+    
+    // Add data-userid attribute if available
+    if (rowData.userId) {
+        newRow.setAttribute('data-userid', rowData.userId);
+    }
+    
+    // Add criteria status data attribute
+    newRow.setAttribute('data-criteria', rowData.criteriaStatus || 'unknown');
+    
+    // For each cell in the stored data, create a new td element
+    rowData.cells.forEach(cellHTML => {
+        const cell = document.createElement('td');
+        cell.innerHTML = cellHTML;
+        newRow.appendChild(cell);
+    });
+    
+    return newRow;
+}
+
+// Function to filter rows by status
+function filterRowsByStatus(status) {
+    console.log("Filtering by status:", status);
+    
+    // Get references to elements
+    const mainTable = document.getElementById('mainApplicantTable');
+    const onboardingTable = document.getElementById('onboardingTable');
+    const onboardingHeader = document.getElementById('onboardingHeader');
+    const applicantStatusSection = document.getElementById('applicantStatusSection');
+    
+    // Get all rows
+    const allMainRows = mainTable ? Array.from(mainTable.querySelectorAll('tbody tr')) : [];
+    const allOnboardingRows = onboardingTable ? Array.from(onboardingTable.querySelectorAll('tbody tr')) : [];
+    
+    // Hide/show applicant status section based on filter
+    if (applicantStatusSection) {
+        applicantStatusSection.style.display = (status === 'all') ? 'none' : 'block';
+    }
+    
+    // "All" filter: Show everything in the main table
+    if (status === 'all') {
+        // Show all rows in main table
+        allMainRows.forEach(row => row.style.display = '');
+        
+        // Show all rows in onboarding table
+        allOnboardingRows.forEach(row => row.style.display = '');
+        
+        // Show onboarding section header
+        if (onboardingHeader) onboardingHeader.style.display = '';
+        
+        // Show onboarding table
+        if (onboardingTable) onboardingTable.style.display = '';
+        
+        // Highlight the active filter button
+        highlightActiveFilter(status);
+        return;
+    }
+    
+    // Hide all rows in the main table by default
+    allMainRows.forEach(row => row.style.display = 'none');
+    
+    // Hide onboarding section for non-onboarding filters
+    if (status !== 'foronboarding') {
+        if (onboardingHeader) onboardingHeader.style.display = 'none';
+        if (onboardingTable) onboardingTable.style.display = 'none';
+    }
+    
+    // Special handling for "For Review" button
+    if (status === 'forreview') {
+        // Update the current phase
+        const phaseSpans = document.querySelectorAll('#currentPhase');
+        phaseSpans.forEach(span => span.textContent = "Review");
+        
+        // Ensure the tables have proper headers
+        ensureTableHeaders();
+        
+        // Arrays to store rows from main table
+        const awaitingRowsP1 = [];
+        const declaredRowsP1 = [];
+        const awaitingRowsP3 = [];
+        const declaredRowsP3 = [];
+        const jobOfferRowsP3 = [];
+        
+        console.log("Total rows to filter:", allMainRows.length);
+        
+        // Process each row and categorize it
+        allMainRows.forEach((row, index) => {
+            const lastCell = row.querySelector('td:last-child');
+            if (!lastCell) return;
+            
+            // Get status text from the span element in the last cell
+            const statusSpan = lastCell.querySelector('span');
+            if (!statusSpan) return;
+            
+            const statusText = statusSpan.textContent.trim();
+            console.log(`Row ${index} status: "${statusText}"`);
+            
+            // Extract row data with proper score
+            const rowData = extractRowData(row, index);
+            
+            // Check for P1 - Awaiting for Line Manager Action; HR PASSED
+            if (statusText.indexOf("P1 - Awaiting for Line Manager Action; HR PASSED") !== -1) {
+                console.log(`Row ${index}: Adding to awaitingRowsP1`);
+                awaitingRowsP1.push(rowData);
+            }
+            // Check for P1 - PASSED or P1: PASSED
+            else if (statusText.indexOf("P1 - PASSED") !== -1 || statusText.indexOf("P1: PASSED") !== -1) {
+                console.log(`Row ${index}: Adding to declaredRowsP1`);
+                declaredRowsP1.push(rowData);
+            }
+            // Check for P1 - FAILED or P1: FAILED
+            else if (statusText.indexOf("P1 - FAILED") !== -1 || statusText.indexOf("P1: FAILED") !== -1) {
+                console.log(`Row ${index}: Adding to declaredRowsP1`);
+                declaredRowsP1.push(rowData);
+            }
+            // Check for P3 - Line Manager Evaluation Accomplished
+            else if (statusText.indexOf("P3 - Line Manager Evaluation Accomplished") !== -1) {
+                console.log(`Row ${index}: Adding to awaitingRowsP3`);
+                awaitingRowsP3.push(rowData);
+            }
+            // Check for P3 - PASSED or P3: PASSED (not Job Offer)
+            else if ((statusText.indexOf("P3 - PASSED") !== -1 || statusText.indexOf("P3: PASSED") !== -1) && 
+                     statusText.indexOf("Job Offer") === -1) {
+                console.log(`Row ${index}: Adding to declaredRowsP3`);
+                declaredRowsP3.push(rowData);
+            }
+            // Check for P3 - FAILED or P3: FAILED
+            else if (statusText.indexOf("P3 - FAILED") !== -1 || statusText.indexOf("P3: FAILED") !== -1) {
+                console.log(`Row ${index}: Adding to declaredRowsP3`);
+                declaredRowsP3.push(rowData);
+            }
+            // Check for P3 - PASSED - Job Offer Sent
+            else if (statusText.indexOf("P3 - PASSED - Job Offer Sent") !== -1) {
+                console.log(`Row ${index}: Adding to jobOfferRowsP3`);
+                jobOfferRowsP3.push(rowData);
+            }
+            // Check for "For Review" button as a fallback
+            else {
+                const hasReviewButton = Array.from(lastCell.querySelectorAll('button')).some(button => 
+                    button.textContent.trim() === 'For Review'
+                );
+                
+                if (hasReviewButton) {
+                    console.log(`Row ${index}: Found a 'For Review' button`);
+                    if (statusText.indexOf("P1") !== -1) {
+                        console.log(`Row ${index}: Adding to awaitingRowsP1 based on button`);
+                        awaitingRowsP1.push(rowData);
+                    } else if (statusText.indexOf("P3") !== -1) {
+                        console.log(`Row ${index}: Adding to awaitingRowsP3 based on button`);
+                        awaitingRowsP3.push(rowData);
+                    }
+                }
+            }
+        });
+        
+        console.log("Awaiting P1 rows:", awaitingRowsP1.length);
+        console.log("Declared P1 rows:", declaredRowsP1.length);
+        console.log("Awaiting P3 rows:", awaitingRowsP3.length);
+        console.log("Declared P3 rows:", declaredRowsP3.length);
+        console.log("Job Offer P3 rows:", jobOfferRowsP3.length);
+        
+        // Update Awaiting Action table
+        updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3);
+        
+        // Update Declared Results table
+        updateDeclaredResultsTable(declaredRowsP1, declaredRowsP3);
+        
+        // Handle Job Offer section
+        updateJobOfferSection(jobOfferRowsP3, applicantStatusSection);
+        
+        // Update section visibilities based on data presence
+        updateReviewSectionsVisibility(
+            awaitingRowsP1.length + awaitingRowsP3.length > 0,
+            declaredRowsP1.length + declaredRowsP3.length > 0,
+            jobOfferRowsP3.length > 0,
+            awaitingRowsP1.length > 0,  // Has P1 data flag
+            awaitingRowsP3.length > 0   // Has P3 data flag
+        );
+        
+        // Highlight the active filter button
+        highlightActiveFilter(status);
+        return;
+    }
+    
+    // For "For Evaluation" button
+    if (status === 'forevaluation') {
+        // Update the current phase display
+        const phaseSpans = document.querySelectorAll('#currentPhase');
+        phaseSpans.forEach(span => span.textContent = 'P2');
+        
+        // Clear previous rows in both tables
+        if (awaitingActionTable) {
+            const tbody = awaitingActionTable.querySelector('tbody');
+            if (tbody) tbody.innerHTML = '';
+        }
+        
+        if (declaredResultsTable) {
+            const tbody = declaredResultsTable.querySelector('tbody');
+            if (tbody) tbody.innerHTML = '';
+        }
+        
+        // Filter rows with "For Evaluation" button or specific status
+        const evaluationRows = [];
+        
+        allMainRows.forEach((row, index) => {
+            const lastCell = row.querySelector('td:last-child');
+            if (!lastCell) return;
+            
+            // Check status text
+            const statusSpan = lastCell.querySelector('span');
+            if (!statusSpan) return;
+            
+            const statusText = statusSpan.textContent.trim();
+            let matched = false;
+            
+            // Check for P2 and P3 evaluation statuses
+            if (statusText.indexOf("P2 - Awaiting for HR Evaluation") !== -1 || 
+                statusText.indexOf("P3 - Awaiting for Line Manager Evaluation") !== -1) {
+                matched = true;
+            }
+            
+            // If not matched by status, check for button
+            if (!matched) {
+                // Look for "For Evaluation" button
+                const hasEvaluationButton = Array.from(lastCell.querySelectorAll('button')).some(button => 
+                    button.textContent.trim() === 'For Evaluation'
+                );
+                
+                // Also check for buttons inside anchor tags
+                const hasEvaluationLinkButton = Array.from(lastCell.querySelectorAll('a')).some(a => {
+                    const button = a.querySelector('button');
+                    return button && button.textContent.trim() === 'For Evaluation';
+                });
+                
+                if (hasEvaluationButton || hasEvaluationLinkButton) {
+                    matched = true;
+                }
+            }
+            
+            if (matched) {
+                evaluationRows.push(extractRowData(row, index));
+            }
+        });
+        
+        // Ensure the tables have proper headers
+        ensureTableHeaders();
+        
+        // Add rows to awaiting action table
+        if (awaitingActionTable) {
+            const tbody = awaitingActionTable.querySelector('tbody');
+            if (tbody) {
+                // Empty the tbody first
+                tbody.innerHTML = '';
+                
+                if (evaluationRows.length > 0) {
+                    evaluationRows.forEach((rowData, idx) => {
+                        const newRow = createTableRow(rowData);
+                        tbody.appendChild(newRow);
+                        
+                        // Use actual score for this user
+                        updateScoreCell(newRow, rowData.totalScore);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center">No applicants awaiting evaluation.</td></tr>`;
+                }
+            }
+        }
+        
+        // Hide declared results section as it's not needed for "For Evaluation"
+        if (declaredResultsTable) {
+            declaredResultsTable.style.display = 'none';
+        }
+        
+        // Find declared heading with standard DOM methods
+        const declaredHeading = Array.from(document.querySelectorAll('h4')).find(el => 
+            el.textContent.includes("Applicants on"));
+            
+        if (declaredHeading) {
+            declaredHeading.style.display = 'none';
+        }
+        
+        const sortSection = document.querySelector('.sort-section');
+        if (sortSection) {
+            sortSection.style.display = 'none';
+        }
+        
+        // Highlight the active filter button
+        highlightActiveFilter(status);
+        return;
+    }
+    
+    // For "For Onboarding" filter, handle onboarding section
+    if (status === 'foronboarding') {
+        // Update the current phase display
+        const phaseSpans = document.querySelectorAll('#currentPhase');
+        phaseSpans.forEach(span => span.textContent = 'P3');
+        
+        // Clear previous rows in both tables
+        if (awaitingActionTable) {
+            const tbody = awaitingActionTable.querySelector('tbody');
+            if (tbody) tbody.innerHTML = '';
+        }
+        
+        if (declaredResultsTable) {
+            const tbody = declaredResultsTable.querySelector('tbody');
+            if (tbody) tbody.innerHTML = '';
+        }
+        
+        // Show onboarding section header
+        if (onboardingHeader) onboardingHeader.style.display = '';
+        
+        // Show onboarding table
+        if (onboardingTable) onboardingTable.style.display = '';
+        
+        // Show only relevant rows in onboarding table
+        const onboardingStatuses = ['First Day Checklist Sent', 'Checklist Accomplished', 'Account Created'];
+        
+        allOnboardingRows.forEach(row => {
+            const lastCell = row.querySelector('td:last-child');
+            const statusText = lastCell ? lastCell.textContent.trim() : '';
+            
+            let showRow = false;
+            
+            // Check if status matches any onboarding status
+            onboardingStatuses.forEach(status => {
+                if (statusText.indexOf(status) !== -1) {
+                    showRow = true;
+                }
+            });
+            
+            // Check for "For Onboarding" button
+            if (lastCell && lastCell.querySelector('.btn-onboarding')) {
+                showRow = true;
+            }
+            
+            row.style.display = showRow ? '' : 'none';
+        });
+        
+        // Hide the applicant status section (awaiting action and declared results)
+        // as we only want to show the onboarding section for this filter
+        if (applicantStatusSection) {
+            applicantStatusSection.style.display = 'none';
+        }
+        
+        // Highlight the active filter button
+        highlightActiveFilter(status);
+        return;
+    }
+    
+    // Highlight the active filter button
+    highlightActiveFilter(status);
+}
+
+
+
+
+function updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3) {
+    const awaitingActionTable = document.getElementById('awaitingActionTable');
+    if (!awaitingActionTable) return;
+    
+    const awaitingTbody = awaitingActionTable.querySelector('tbody');
+    if (!awaitingTbody) return;
+    
+    // Empty the tbody first
+    awaitingTbody.innerHTML = '';
+    
+    // Update section heading to "Awaiting for Action"
+    const awaitingHeader = document.querySelector('h4:nth-of-type(1)');
+    if (awaitingHeader) {
+        awaitingHeader.textContent = 'Awaiting for Action';
+    }
+    
+    // Add content depending on whether we have rows
+    if (awaitingRowsP1.length > 0 || awaitingRowsP3.length > 0) {
+        // Add P1 rows if we have any
+        if (awaitingRowsP1.length > 0) {
+            // Add the section header
+            const p1HeaderRow = document.createElement('tr');
+            p1HeaderRow.classList.add('section-header-row');
+            p1HeaderRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P1 Applicants on Review</td>`;
+            awaitingTbody.appendChild(p1HeaderRow);
+            
+            // Add each P1 row
+            awaitingRowsP1.forEach((rowData, idx) => {
+                const newRow = createTableRow(rowData);
+                awaitingTbody.appendChild(newRow);
+                
+                // IMPORTANT: Use the direct method to get the score
+                getTotalScoreDirectly(rowData.userId, newRow);
+                
+                console.log(`Added P1 awaiting row ${idx+1} with userId: ${rowData.userId}`);
+            });
+        }
+        
+        // Add P3 rows if we have any
+        if (awaitingRowsP3.length > 0) {
+            // Add the section header
+            const p3HeaderRow = document.createElement('tr');
+            p3HeaderRow.classList.add('section-header-row');
+            p3HeaderRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P3 Applicants on Review</td>`;
+            awaitingTbody.appendChild(p3HeaderRow);
+            
+            // Add each P3 row
+            awaitingRowsP3.forEach((rowData, idx) => {
+                const newRow = createTableRow(rowData);
+                awaitingTbody.appendChild(newRow);
+                
+                // IMPORTANT: Use the direct method to get the score
+                getTotalScoreDirectly(rowData.userId, newRow);
+                
+                console.log(`Added P3 awaiting row ${idx+1} with userId: ${rowData.userId}`);
+            });
+        }
+    } else {
+        // If no rows, display a message
+        awaitingTbody.innerHTML = `<tr><td colspan="7" class="text-center">No applicants awaiting review.</td></tr>`;
+    }
+}
+// Enhance the getTotalScoreDirectly function to handle more fallback options
+function getTotalScoreDirectly(userId, targetRow) {
+    if (!userId || !targetRow) return;
+    
+    console.log(`Looking for direct score for userId: ${userId}`);
+    
+    // Add data-userid attribute to the row for future reference
+    targetRow.setAttribute('data-userid', userId);
+    
+    // First try to get score from our global scores object
+    if (window.applicantsScores && window.applicantsScores[userId]) {
+        const totalScore = window.applicantsScores[userId];
+        updateScoreCellWithValue(targetRow, totalScore);
+        console.log(`Found totalScore in global data: ${totalScore}`);
+        return;
+    }
+    
+    // Find the original review button in the main table
+    const mainTable = document.getElementById('mainApplicantTable');
+    if (!mainTable) return;
+    
+    const mainTableRows = mainTable.querySelectorAll('tbody tr');
+    let totalScore = 'N/A';
+    let found = false;
+    
+    // Search through all rows to find the matching userId
+    for (const row of mainTableRows) {
+        const reviewButton = row.querySelector('.btn-review');
+        if (!reviewButton) continue;
+        
+        const onclickAttr = reviewButton.getAttribute('onclick') || '';
+        if (onclickAttr.includes(`'${userId}'`)) {
+            // Found the matching row, now extract the totalScore
+            console.log(`Found matching row for userId: ${userId}`);
+            found = true;
+            
+            // First try the exact pattern for totalScore (usually the 8th parameter)
+            const objectEndPos = onclickAttr.indexOf('}');
+            if (objectEndPos !== -1) {
+                const afterObject = onclickAttr.substring(objectEndPos);
+                const scoreMatches = afterObject.match(/,\s*['"]([^'"]*)['"]/);
+                
+                if (scoreMatches && scoreMatches[1]) {
+                    totalScore = scoreMatches[1];
+                    console.log(`Found totalScore: ${totalScore}`);
+                }
+            }
+            
+            break;
+        }
+    }
+    
+    // If we found a score, update the cell
+    if (found && totalScore !== 'N/A') {
+        updateScoreCellWithValue(targetRow, totalScore);
+    } else {
+        // Fallback method - try to extract from the row itself
+        extractScoreFromRowDirectly(targetRow);
+    }
+}
+
+// Updated score cell value update function for better formatting
+function updateScoreCellWithValue(row, score) {
+    const scoreCell = row.querySelector('td:nth-child(5)');
+    if (!scoreCell) return;
+    
+    // Format and display the score
+    let formattedScore;
+    if (score === 'N/A' || score === undefined || score === null || score === '') {
+        formattedScore = 'N/A';
+    } else {
+        const scoreValue = parseFloat(score);
+        formattedScore = isNaN(scoreValue) ? 'N/A' : scoreValue.toFixed(1);
+    }
+    
+    scoreCell.innerHTML = `<span class="score">${formattedScore}</span>`;
+    
+    // Add color based on score
+    if (formattedScore !== 'N/A') {
+        const scoreValue = parseFloat(formattedScore);
+        if (scoreValue >= 85) {
+            scoreCell.classList.add('high-score');
+            scoreCell.style.color = 'green';
+        } else if (scoreValue >= 75) {
+            scoreCell.classList.add('medium-score');
+            scoreCell.style.color = 'blue';
+        } else {
+            scoreCell.classList.add('low-score');
+            scoreCell.style.color = 'orange';
+        }
+    }
+}
+
+
+// Last resort: Try to extract the score from the row itself
+function extractScoreFromRowDirectly(row) {
+    const lastCell = row.querySelector('td:last-child');
+    if (!lastCell) return;
+    
+    const statusText = lastCell.textContent || '';
+    const scoreMatch = statusText.match(/Score: (\d+(\.\d+)?)/i);
+    
+    if (scoreMatch && scoreMatch[1]) {
+        updateScoreCellWithValue(row, scoreMatch[1]);
+    }
+}
+
+
+// Improved function to capture all scores
+function captureApplicantsData() {
+    console.log("Capturing applicants data");
+    
+    // Create a global object to store scores
+    window.applicantsScores = {};
+    
+    // Get all buttons with lineManagerInitialScreeningModal calls
+    const reviewButtons = document.querySelectorAll('.btn-review');
+    
+    reviewButtons.forEach(button => {
+        const onclickAttr = button.getAttribute('onclick') || '';
+        
+        if (onclickAttr.includes('lineManagerInitialScreeningModal')) {
+            try {
+                // Extract userId - more robust pattern matching
+                const userIdMatch = onclickAttr.match(/lineManagerInitialScreeningModal\s*\(\s*['"]([^'"]*)['"]/);
+                if (!userIdMatch || !userIdMatch[1]) return;
+                
+                const userId = userIdMatch[1];
+                
+                // Extract totalScore - more robust pattern
+                // Look for the score parameter which comes after the object (})
+                const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
+                if (!scoreMatch || !scoreMatch[1]) return;
+                
+                const totalScore = scoreMatch[1];
+                
+                // Store in our global object
+                window.applicantsScores[userId] = totalScore;
+                console.log(`✅ Stored score for userId ${userId}: ${totalScore}`);
+            } catch (error) {
+                console.error("Error parsing button data:", error);
+            }
+        }
+    });
+    
+    // Also try to get scores from the main table directly
+    const mainTable = document.getElementById('mainApplicantTable');
+    if (mainTable) {
+        const rows = mainTable.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            // Try to find a way to extract userId and score from the row
+            const userId = getUserIdFromRow(row);
+            if (userId && !window.applicantsScores[userId]) {
+                // Try to find score in the onclick attribute
+                const reviewButton = row.querySelector('.btn-review');
+                if (reviewButton) {
+                    const onclickAttr = reviewButton.getAttribute('onclick') || '';
+                    const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
+                    if (scoreMatch && scoreMatch[1]) {
+                        window.applicantsScores[userId] = scoreMatch[1];
+                        console.log(`📊 Found score for userId ${userId}: ${scoreMatch[1]}`);
+                    }
+                }
+            }
+        });
+    }
+    
+    // Log how many scores we captured
+    console.log(`Captured ${Object.keys(window.applicantsScores).length} applicant scores`);
+}
+
+
+function setupModalEventListeners() {
+    // Add event listeners for modal close buttons
+    document.querySelectorAll('.close-button').forEach(button => {
+        const modalId = button.closest('.modal')?.id;
+        if (modalId) {
+            button.addEventListener('click', () => closeModal(modalId));
+        }
+    });
+    
+    // Other modal event setup as needed
+    console.log("Modal event listeners set up");
+}
+
+// Add direct score extraction from statuses
+function extractScoreFromStatus(status) {
+    if (!status) return null;
+    
+    // First, look for score patterns like "Score: 9" or "9 points"
+    const scoreMatch = status.match(/score\s*[:]\s*(\d+\.?\d*)/i) || 
+                      status.match(/(\d+\.?\d*)\s*points/i) ||
+                      status.match(/total\s*[:]\s*(\d+\.?\d*)/i);
+    
+    if (scoreMatch && scoreMatch[1]) {
+        return scoreMatch[1];
+    }
+    
+    // Look for any numbers that could be scores (1-100 range)
+    const numberMatches = status.match(/\b(\d+\.?\d*)\b/g);
+    if (numberMatches && numberMatches.length > 0) {
+        // Find numbers in the score range
+        for (const num of numberMatches) {
+            const numValue = parseFloat(num);
+            if (numValue >= 0 && numValue <= 100) {
+                return num;
+            }
+        }
+    }
+    
+    return null;
+}
+// Also update the updateDeclaredResultsTable function
+function updateDeclaredResultsTable(declaredRowsP1, declaredRowsP3) {
+    const declaredResultsTable = document.getElementById('declaredResultsTable');
+    if (!declaredResultsTable) return;
+    
+    const declaredTbody = declaredResultsTable.querySelector('tbody');
+    if (!declaredTbody) return;
+    
+    // Empty the tbody first
+    declaredTbody.innerHTML = '';
+    
+    // Update section heading
+    const currentPhaseSpan = document.querySelector('#currentPhase');
+    if (currentPhaseSpan) {
+        currentPhaseSpan.textContent = "Review";
+    }
+    
+    const declaredHeader = document.querySelector('h4:nth-of-type(2)');
+    if (declaredHeader) {
+        declaredHeader.innerHTML = 'Applicants on <span id="currentPhase">Review</span> Declared Results';
+    }
+    
+    // Add content depending on whether we have rows
+    if (declaredRowsP1.length > 0 || declaredRowsP3.length > 0) {
+        [
+            { rows: declaredRowsP1, label: 'List of P1 Applicants on Review - Declared Results' },
+            { rows: declaredRowsP3, label: 'List of P3 Applicants on Review - Declared Results' }
+        ].forEach(({ rows, label }) => {
+            if (rows.length > 0) {
+                // Add the section header
+                const headerRow = document.createElement('tr');
+                headerRow.classList.add('section-header-row');
+                headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">${label}</td>`;
+                declaredTbody.appendChild(headerRow);
+                
+                // Add each row
+                rows.forEach((rowData, idx) => {
+                    console.log(`Processing declared row ${idx+1} - userId: ${rowData.userId}`);
+                    
+                    // Create the row
+                    const newRow = createTableRow(rowData);
+                    declaredTbody.appendChild(newRow);
+                    
+                    // Set appropriate attributes for reference
+                    newRow.setAttribute('data-row-index', idx);
+                    if (rowData.userId) {
+                        newRow.setAttribute('data-userid', rowData.userId);
+                    }
+                    
+                    // FIXED: Always get the score directly regardless of rowData.totalScore
+                    getTotalScoreDirectly(rowData.userId, newRow);
+                });
+            }
+        });
+    } else {
+        // If no rows, display a message
+        declaredTbody.innerHTML = `<tr><td colspan="7" class="text-center">No applicants with declared review results.</td></tr>`;
+    }
+    
+    // Call an additional function to ensure all scores are displayed correctly
+    setTimeout(function() {
+        fixScoresInDeclaredResults();
+    }, 200);
+}
+
+
+function fixScoresInDeclaredResults() {
+    const declaredResultsTable = document.getElementById('declaredResultsTable');
+    if (!declaredResultsTable) return;
+    
+    const rows = declaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
+    console.log("Fixing scores for " + rows.length + " rows in declared results table");
+    
+    rows.forEach((row, index) => {
+        const userId = row.getAttribute('data-userid');
+        if (userId) {
+            console.log(`Re-fetching score for row ${index+1}, userId: ${userId}`);
+            getTotalScoreDirectly(userId, row);
+        } else {
+            console.log(`No userId for row ${index+1}, cannot fetch score`);
+        }
+    });
+}
+
+
+// Helper function to specifically update all scores in a table
+function updateAllScoresInTable(table) {
+    if (!table) return;
+    
+    console.log(`Updating all scores in table: ${table.id}`);
+    
+    const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => 
+        !row.classList.contains('section-header-row') && 
+        !row.querySelector('td[colspan]')
+    );
+    
+    console.log(`Found ${rows.length} rows to process`);
+    
+    rows.forEach((row, idx) => {
+        const userId = row.getAttribute('data-userid');
+        if (userId) {
+            console.log(`Row ${idx+1}: Getting score for userId ${userId}`);
+            getTotalScoreDirectly(userId, row);
+        } else {
+            console.log(`Row ${idx+1}: No userId found, cannot update score`);
+        }
+    });
+}
+
+
+// Updated function to control visibility of sections based on presence of P1/P3 data
+function updateReviewSectionsVisibility(hasAwaitingData, hasDeclaredData, hasJobOfferData, hasP1Data, hasP3Data) {
+    // Get section headings
+    const awaitingHeading = Array.from(document.querySelectorAll('h4')).find(el => 
+        el.textContent.includes("Awaiting for Action"));
+        
+    const declaredHeading = Array.from(document.querySelectorAll('h4')).find(el => 
+        el.textContent.includes("Applicants on"));
+        
+    const jobOfferHeading = document.querySelector('h4.job-offer-heading');
+    
+    const applicantStatusSection = document.getElementById('applicantStatusSection');
+    const awaitingActionTable = document.getElementById('awaitingActionTable');
+    const declaredResultsTable = document.getElementById('declaredResultsTable');
+    const notifyAllButton = document.getElementById('notifyAllApplicants');
+    
+    // Get tables
+    const jobOfferTable = document.getElementById('jobOfferTable');
+    
+    // Show/hide P1 and P3 section headers based on data presence
+    const p1Headers = Array.from(document.querySelectorAll('tr.section-header-row')).filter(el => 
+        el.textContent.includes("P1"));
+        
+    const p3Headers = Array.from(document.querySelectorAll('tr.section-header-row')).filter(el => 
+        el.textContent.includes("P3"));
+    
+    // Show/hide P1 headers
+    p1Headers.forEach(header => {
+        header.style.display = hasP1Data ? '' : 'none';
+    });
+    
+    // Show/hide P3 headers
+    p3Headers.forEach(header => {
+        header.style.display = hasP3Data ? '' : 'none';
+    });
+    
+    // Show/hide awaiting action section
+    if (awaitingHeading) {
+        awaitingHeading.style.display = hasAwaitingData ? '' : 'none';
+    }
+    
+    if (awaitingActionTable) {
+        awaitingActionTable.style.display = hasAwaitingData ? '' : 'none';
+    }
+    
+    // Show/hide declared results section
+    if (declaredHeading) {
+        declaredHeading.style.display = hasDeclaredData ? '' : 'none';
+    }
+    
+    if (declaredResultsTable) {
+        declaredResultsTable.style.display = hasDeclaredData ? '' : 'none';
+    }
+    
+    // Show/hide sort options
+    const sortSection = document.querySelector('.sort-section');
+    if (sortSection) {
+        sortSection.style.display = hasDeclaredData ? '' : 'none';
+    }
+    
+    // Show/hide job offer section
+    if (jobOfferHeading) {
+        jobOfferHeading.style.display = hasJobOfferData ? '' : 'none';
+    }
+    
+    if (jobOfferTable) {
+        jobOfferTable.style.display = hasJobOfferData ? '' : 'none';
+    }
+    
+    // If no data at all, show a message
+    if (!hasAwaitingData && !hasDeclaredData && !hasJobOfferData) {
+        // Add a no-data message
+        const noDataMessage = document.createElement('div');
+        noDataMessage.className = 'no-data-message';
+        noDataMessage.innerHTML = `<p>No applicants currently for review.</p>`;
+        
+        // Remove any existing message
+        const existingMessage = document.querySelector('.no-data-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        // Add message to the section
+        const divider = document.querySelector('.divider');
+        if (divider && divider.nextElementSibling) {
+            applicantStatusSection.insertBefore(noDataMessage, divider.nextElementSibling);
+        } else {
+            applicantStatusSection.appendChild(noDataMessage);
+        }
+        
+        // Hide the notify button
+        if (notifyAllButton) {
+            notifyAllButton.style.display = 'none';
+        }
+    } else {
+        // Remove any no-data message
+        const existingMessage = document.querySelector('.no-data-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        // Show the notify button
+        if (notifyAllButton) {
+            notifyAllButton.style.display = '';
+        }
+    }
+    
+    // ADDITION: After updating visibility, ensure all rows have proper scores
+    setTimeout(() => {
+        updateAllScores();
+    }, 100);
+}
+
+// New function to update all scores in all tables
+function updateAllScores() {
+    console.log("Updating all scores in all tables");
+    
+    // Get all tables
+    const tables = [
+        document.getElementById('awaitingActionTable'),
+        document.getElementById('declaredResultsTable'),
+        document.getElementById('jobOfferTable')
+    ].filter(table => table !== null && table.style.display !== 'none');
+    
+    // For each visible table, update scores in all non-header rows
+    tables.forEach(table => {
+        const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => 
+            !row.classList.contains('section-header-row') && 
+            !row.querySelector('td[colspan]')
+        );
+        
+        rows.forEach(row => {
+            // Get userId from data attribute
+            const userId = row.getAttribute('data-userid');
+            if (userId) {
+                getTotalScoreDirectly(userId, row);
+            }
+        });
+    });
+}
+// Enhanced function to extract row data with better userId extraction from multiple sources
+function extractRowData(row, index) {
+    const cells = Array.from(row.querySelectorAll('td'));
+    const cellData = cells.map(cell => cell.innerHTML);
+    
+    let userId = null;
+    const reviewButton = row.querySelector('.btn-review');
+    if (reviewButton) {
+        const onclickAttr = reviewButton.getAttribute('onclick') || '';
+        const userIdMatch = onclickAttr.match(/lineManagerInitialScreeningModal\s*\(\s*['"]([^'"]*)['"]/);
+        if (userIdMatch && userIdMatch[1]) {
+            userId = userIdMatch[1];
+        }
+    }
+    
+    let totalScore = 'N/A';
+    let workSetup = '';
+    let availability = '';
+    
+    if (reviewButton) {
+        const onclickAttr = reviewButton.getAttribute('onclick') || '';
+        const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
+        if (scoreMatch && scoreMatch[1]) {
+            totalScore = scoreMatch[1];
+        }
+        
+        const objectRegex = /{([^}]+)}/;
+        const objectMatch = onclickAttr.match(objectRegex);
+        if (objectMatch && objectMatch[1]) {
+            const criteriaParams = objectMatch[1].split(',');
+            for (const param of criteriaParams) {
+                if (param.includes('workSetup')) {
+                    workSetup = param.split(':')[1].trim().replace(/'/g, '');
+                }
+                if (param.includes('availability')) {
+                    availability = param.split(':')[1].trim().replace(/'/g, '');
+                }
+            }
+        }
+    }
+    
+    if (totalScore === 'N/A') {
+        const lastCell = cells[cells.length - 1];
+        if (lastCell) {
+            const statusText = lastCell.textContent || '';
+            const scoreMatch = statusText.match(/score:?\s*(\d+\.?\d*)/i);
+            if (scoreMatch && scoreMatch[1]) {
+                totalScore = scoreMatch[1];
+            }
+        }
+    }
+    
+    if (totalScore === 'N/A' && userId && window.applicantsScores && window.applicantsScores[userId]) {
+        totalScore = window.applicantsScores[userId];
+    }
+    
+    let criteriaStatus = '';
+    const workSetupValue = (workSetup === 'true' || workSetup === '1' || workSetup === 'yes');
+    const availabilityValue = (availability === 'true' || availability === '1' || availability === 'yes' || !isNaN(parseFloat(availability)));
+    
+    if (workSetupValue && availabilityValue) {
+        criteriaStatus = '<span class="criteria-passed">Passed</span>';
+    } else {
+        criteriaStatus = '<span class="criteria-failed">Failed</span>';
+    }
+    
+    const result = [
+        ...cellData.slice(0, 4), 
+        totalScore, 
+        criteriaStatus,
+        cellData[4]
+    ];
+    
+    if (!userId) {
+        const nameCell = cells.length > 1 ? cells[1] : null;
+        if (nameCell) {
+            const emailMatch = nameCell.textContent.match(/([a-zA-Z0-9._%+-]+)@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+            if (emailMatch && emailMatch[1]) {
+                userId = `email:${emailMatch[1]}`;
+            }
+        }
+    }
+    
+    return {
+        index: index + 1,
+        cells: result,
+        userId: userId,
+        totalScore: totalScore,
+        criteriaStatus: (workSetupValue && availabilityValue) ? 'passed' : 'failed',
+        workSetup: workSetup,
+        availability: availability
+    };
+}
+
+// Add function to manually fix scores after table is rendered
+function fixSpecificScores() {
+    console.log("Updating row scores dynamically");
+
+    // Fix for tables
+    const tables = [
+        document.getElementById('awaitingActionTable'),
+        document.getElementById('declaredResultsTable'),
+        document.getElementById('jobOfferTable')
+    ].filter(table => table !== null);
+
+    tables.forEach(table => {
+        const rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            const userId = row.getAttribute('data-userid');
+            if (userId) {
+                console.log(`Fetching score for userId ${userId}`);
+                getTotalScoreDirectly(userId, row); // Ensure real-time fetching
+            }
+        });
+    });
+}
+
+
+// Call this function after filtering is done
+document.addEventListener("DOMContentLoaded", function() {
+    // Existing initialization code
+    
+    // Wait for tables to be populated, then fix specific scores
+    setTimeout(fixSpecificScores, 1000);
+    
+    // Also call it after any filter changes
+    document.querySelectorAll('.filter-button').forEach(button => {
+        button.addEventListener('click', function() {
+            // Wait for tables to be updated before fixing scores
+            setTimeout(fixSpecificScores, 500);
+        });
+    });
+});
+
+// Enhanced direct score lookup function
+
+// Enhanced version of getTotalScoreDirectly function
+function getTotalScoreDirectly(userId, targetRow) {
+    if (!userId || !targetRow) {
+        console.log("Missing userId or targetRow, cannot get score");
+        return;
+    }
+    
+    console.log(`Looking for direct score for userId: ${userId}`);
+    
+    // Add data-userid attribute to the row for future reference
+    targetRow.setAttribute('data-userid', userId);
+    
+    // First check our global cache of scores
+    if (window.applicantsScores && window.applicantsScores[userId]) {
+        const score = window.applicantsScores[userId];
+        updateScoreCellWithValue(targetRow, score);
+        console.log(`Found score in cache: ${score}`);
+        return;
+    }
+    
+    // Try to find score in the main table
+    const mainTable = document.getElementById('mainApplicantTable');
+    if (!mainTable) return;
+    
+    const mainTableRows = mainTable.querySelectorAll('tbody tr');
+    let totalScore = 'N/A';
+    let found = false;
+    
+    // Search through all rows to find the matching userId
+    for (const row of mainTableRows) {
+        const reviewButton = row.querySelector('.btn-review');
+        if (!reviewButton) continue;
+        
+        const onclickAttr = reviewButton.getAttribute('onclick') || '';
+        if (onclickAttr.includes(`'${userId}'`)) {
+            // Found the matching row, now extract the totalScore
+            console.log(`Found matching row for userId: ${userId}`);
+            found = true;
+            
+            // Extract the score - looking specifically after the object parameters
+            const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
+            if (scoreMatch && scoreMatch[1]) {
+                totalScore = scoreMatch[1];
+                console.log(`Found totalScore: ${totalScore}`);
+                
+                // Save to global cache for future use
+                if (!window.applicantsScores) window.applicantsScores = {};
+                window.applicantsScores[userId] = totalScore;
+            }
+            
+            break;
+        }
+    }
+    
+    // If we found a score, update the cell
+    if (found && totalScore !== 'N/A') {
+        updateScoreCellWithValue(targetRow, totalScore);
+    } else {
+        // Try one more fallback - extract from status text if possible
+        extractScoreFromRowDirectly(targetRow);
+    }
+}
+// Function to highlight active filter button
+function highlightActiveFilter(status) {
+    document.querySelectorAll(".filter-button").forEach(button => {
+        button.classList.remove("active");
+    });
+    
+    const buttonId = status === "all" ? "filter-all" : `filter-${status}`;
+    const activeButton = document.getElementById(buttonId);
+    
+    if (activeButton) {
+        activeButton.classList.add("active");
+    }
+}
+
+// Function to fix the header structure and ensure divider is in the right place
+function fixHeaderStructure() {
+    const applicantStatusSection = document.getElementById('applicantStatusSection');
+    if (!applicantStatusSection) return;
+    
+    // Check if we need to create the section-header container
+    let sectionHeader = applicantStatusSection.querySelector('.section-header');
+    if (!sectionHeader) {
+        // Get the elements we need to wrap
+        const subheader = applicantStatusSection.querySelector('h3.subheader');
+        const rightSection = applicantStatusSection.querySelector('.right-section');
+        
+        if (subheader && rightSection) {
+            console.log("Creating section header container");
+            
+            // Create section header container
+            sectionHeader = document.createElement('div');
+            sectionHeader.className = 'section-header';
+            
+            // Clone the elements to avoid moving them directly
+            const subheaderClone = subheader.cloneNode(true);
+            const rightSectionClone = rightSection.cloneNode(true);
+            
+            // Add the clones to section header
+            sectionHeader.appendChild(subheaderClone);
+            sectionHeader.appendChild(rightSectionClone);
+            
+            // Insert the new section header at the beginning of the applicantStatusSection
+            applicantStatusSection.insertBefore(sectionHeader, applicantStatusSection.firstChild);
+            
+            // Remove the original elements
+            subheader.remove();
+            rightSection.remove();
+            
+            // Reattach event listeners to the cloned button
+            const notifyButton = rightSectionClone.querySelector('#notifyAllApplicants');
+            if (notifyButton) {
+                notifyButton.addEventListener('click', function() {
+                    const currentPhase = document.querySelector("#currentPhase").textContent;
+                    
+                    if (checkAllApplicantsMarked()) {
+                        openModal('notifyApplicantsModal');
+                    } else {
+                        alert(`Not all applicants in ${currentPhase} have been marked as passed or failed. Please make a decision first.`);
+                    }
+                });
+            }
+        }
+    }
+    
+    // Ensure the divider is right after the section-header
+    let divider = applicantStatusSection.querySelector('.divider');
+    
+    // If divider doesn't exist, create it
+    if (!divider) {
+        console.log("Creating divider");
+        divider = document.createElement('div');
+        divider.className = 'divider';
+    }
+    
+    // Make sure it's in the right position (after section-header)
+    if (sectionHeader && sectionHeader.nextSibling !== divider) {
+        console.log("Moving divider to correct position");
+        // Remove from current position if it exists in the DOM
+        if (divider.parentNode) {
+            divider.remove();
+        }
+        
+        // Insert after section-header
+        sectionHeader.after(divider);
+    }
+    
+    // Add inline styles to ensure visibility
+    divider.style.display = 'block';
+    divider.style.height = '2px';
+    divider.style.backgroundColor = '#124A5C';
+    divider.style.margin = '15px 0';
+    divider.style.width = '100%';
+    divider.style.clear = 'both';
+}
+
+// Function to update the score cell with the actual score
+function updateScoreCell(row, score) {
+    const scoreCell = row.querySelector('td:nth-child(5)');
+    if (!scoreCell) return;
+    
+    // Format the score
+    const formattedScore = score !== 'N/A' ? parseFloat(score).toFixed(1) : 'N/A';
+    scoreCell.innerHTML = `<span class="score">${formattedScore}</span>`;
+    
+    // Add color based on score
+    if (formattedScore !== 'N/A') {
+        const scoreValue = parseFloat(formattedScore);
+        if (scoreValue >= 85) {
+            scoreCell.classList.add('high-score');
+            scoreCell.style.color = 'green';
+        } else if (scoreValue >= 75) {
+            scoreCell.classList.add('medium-score');
+            scoreCell.style.color = 'blue';
+        } else {
+            scoreCell.classList.add('low-score');
+            scoreCell.style.color = 'orange';
+        }
+    }
+}
+
+
+// Functions for sorting declared results
+function sortDeclaredResults(sortType) {
+    const declaredResultsTable = document.getElementById('declaredResultsTable');
+    if (!declaredResultsTable) return;
+    
+    const declaredTbody = declaredResultsTable.querySelector('tbody');
+    if (!declaredTbody) return;
+    
+    // Get all rows except header rows
+    const rows = Array.from(declaredTbody.querySelectorAll('tr')).filter(row => 
+        !row.classList.contains('section-header-row') && 
+        !row.querySelector('td[colspan="6"]') &&
+        !row.querySelector('td[colspan="7"]')
+    );
+    
+    if (rows.length === 0) return;
+    
+    // Sort the rows based on the selected sort type
+    rows.sort((a, b) => {
+        // Check criteria status first (passed rows always come before failed rows)
+        const criteriaA = a.getAttribute('data-criteria');
+        const criteriaB = b.getAttribute('data-criteria');
+        
+        if (criteriaA === 'passed' && criteriaB === 'failed') return -1;
+        if (criteriaA === 'failed' && criteriaB === 'passed') return 1;
+        
+        // If criteria status is the same, then sort by selected type
+        if (sortType === 'ascending') {
+            // Sort by score ascending
+            const scoreA = parseScoreFromRow(a);
+            const scoreB = parseScoreFromRow(b);
+            return scoreA - scoreB;
+        } else if (sortType === 'descending') {
+            // Sort by score descending
+            const scoreA = parseScoreFromRow(a);
+            const scoreB = parseScoreFromRow(b);
+            return scoreB - scoreA;
+        } else if (sortType === 'alphabetical') {
+            // Sort by name alphabetically
+            const nameA = parseNameFromRow(a).toLowerCase();
+            const nameB = parseNameFromRow(b).toLowerCase();
+            return nameA.localeCompare(nameB);
+        }
+        return 0;
+    });
+    
+    // Reinsert the rows in the sorted order, preserving section headers
+    const sectionHeaders = Array.from(declaredTbody.querySelectorAll('tr.section-header-row'));
+    
+    // Clear the tbody
+    declaredTbody.innerHTML = '';
+    
+    // If we have P1 data, add P1 header and rows
+    const p1Rows = rows.filter(row => {
+        const statusCell = row.querySelector('td:last-child');
+        return statusCell && statusCell.textContent.includes('P1');
+    });
+    
+    if (p1Rows.length > 0) {
+        // Add P1 header
+        const p1Header = document.createElement('tr');
+        p1Header.classList.add('section-header-row');
+        p1Header.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P1 Applicants on Review - Declared Results</td>`;
+        declaredTbody.appendChild(p1Header);
+        
+        // Add P1 rows
+        p1Rows.forEach(row => declaredTbody.appendChild(row));
+    }
+    
+    // If we have P3 data, add P3 header and rows
+    const p3Rows = rows.filter(row => {
+        const statusCell = row.querySelector('td:last-child');
+        return statusCell && statusCell.textContent.includes('P3');
+    });
+    
+    if (p3Rows.length > 0) {
+        // Add P3 header
+        const p3Header = document.createElement('tr');
+        p3Header.classList.add('section-header-row');
+        p3Header.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P3 Applicants on Review - Declared Results</td>`;
+        declaredTbody.appendChild(p3Header);
+        
+        // Add P3 rows
+        p3Rows.forEach(row => declaredTbody.appendChild(row));
+    }
+}
+
+
+// Helper function to parse score from row - improved to handle invalid scores
+function parseScoreFromRow(row) {
+    const scoreCell = row.querySelector('td:nth-child(5)');
+    if (!scoreCell) return 0;
+    
+    const scoreSpan = scoreCell.querySelector('.score');
+    if (!scoreSpan) return 0;
+    
+    const scoreText = scoreSpan.textContent;
+    if (scoreText === 'N/A' || scoreText === 'NaN' || scoreText === 'undefined' || scoreText === 'null' || isNaN(parseFloat(scoreText))) {
+        return 0;
+    }
+    
+    return parseFloat(scoreText);
+}
+
+// Helper function to parse name from row
+function parseNameFromRow(row) {
+    const nameCell = row.querySelector('td:nth-child(2)');
+    if (!nameCell) return '';
+    
+    return nameCell.textContent.trim();
+}
+
+
+
+// Functions for handling applicant actions
+function passApplicant() {
+    const userId = document.getElementById('userId').value;
+    
+    if (!userId) {
+        alert("Error: userId is missing. Please try again.");
+        return;
+    }
+    
+    fetch('/linemanager/pass-applicant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Applicant marked as PASSED!");
+            document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+            // Reload the page to reflect changes
+            location.reload();
+        } else {
+            alert("Error: " + (data.message || "Failed to update applicant status"));
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("An error occurred while updating the applicant status.");
+    });
+}
+
+function rejectApplicant() {
+    const userId = document.getElementById('userId').value;
+    
+    if (!userId) {
+        alert("Error: userId is missing. Please try again.");
+        return;
+    }
+    
+    fetch('/linemanager/reject-applicant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Applicant marked as FAILED!");
+            document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+            // Reload the page to reflect changes
+            location.reload();
+        } else {
+            alert("Error: " + (data.message || "Failed to update applicant status"));
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("An error occurred while updating the applicant status.");
+    });
+}
+
+// Function to handle Job Offer Sent section for P3
+function updateJobOfferSection(jobOfferRowsP3, applicantStatusSection) {
+    if (jobOfferRowsP3.length > 0) {
+        let jobOfferSection = document.querySelector('h4.job-offer-heading');
+        let jobOfferTable = document.getElementById('jobOfferTable');
+        
+        // Create the section if it doesn't exist
+        if (!jobOfferSection) {
+            jobOfferSection = document.createElement('h4');
+            jobOfferSection.className = 'job-offer-heading';
+            jobOfferSection.textContent = "Job Offer Sent";
+            
+            jobOfferTable = document.createElement('table');
+            jobOfferTable.className = 'tracking-table';
+            jobOfferTable.id = 'jobOfferTable';
+            
+            // Create table header
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th>Applicant No.</th>
+                    <th>Last Name, First Name</th>
+                    <th>Department</th>
+                    <th>Position Applied</th>
+                    <th>Total Score</th>
+                    <th>Work Setup/Availability</th>
+                    <th>Applicant Status</th>
+                </tr>
+            `;
+            
+            // Create table body
+            const tbody = document.createElement('tbody');
+            
+            // Add each row for job offers
+            jobOfferRowsP3.forEach((rowData, idx) => {
+                const newRow = createTableRow(rowData);
+                tbody.appendChild(newRow);
+                
+                // Update the score cell with actual score
+                updateScoreCell(newRow, rowData.totalScore);
+            });
+            
+            // Assemble the table
+            jobOfferTable.appendChild(thead);
+            jobOfferTable.appendChild(tbody);
+            
+            // Add to document in the right place
+            const declaredHeading = Array.from(document.querySelectorAll('h4')).find(el => 
+                el.textContent.includes("Applicants on"));
+                
+            if (declaredHeading && declaredResultsTable) {
+                applicantStatusSection.insertBefore(jobOfferSection, declaredHeading);
+                applicantStatusSection.insertBefore(jobOfferTable, declaredHeading);
+            } else {
+                applicantStatusSection.appendChild(jobOfferSection);
+                applicantStatusSection.appendChild(jobOfferTable);
+            }
+        } else {
+            // Update existing table
+            const tbody = jobOfferTable.querySelector('tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                
+                jobOfferRowsP3.forEach((rowData, idx) => {
+                    const newRow = createTableRow(rowData);
+                    tbody.appendChild(newRow);
+                    
+                    // Update the score cell with actual score
+                    updateScoreCell(newRow, rowData.totalScore);
+                });
+            }
+        }
+    } else {
+        // Remove any existing Job Offer section if there are no rows
+        const jobOfferSection = document.querySelector('h4.job-offer-heading');
+        if (jobOfferSection) {
+            const jobOfferTable = document.getElementById('jobOfferTable');
+            if (jobOfferTable) {
+                jobOfferTable.remove();
+            }
+            jobOfferSection.remove();
+        }
+    }
+}
+
+// Functions for line manager initial screening modal
+function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
+    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl });
+    
+    // If userId is missing or "undefined", log an error and stop further processing.
+    if (!userId || userId === "undefined") {
+        console.error("Invalid userId passed to modal:", userId);
+        alert("Error: Invalid User ID. Cannot display applicant details.");
+        return;
+    }
+    
+    // Set the hidden input value for userId
+    document.getElementById('userId').value = userId;
+    
+    // Set jobId if it exists
+    const jobIdElement = document.getElementById('jobId');
+    if (jobIdElement && typeof jobId !== 'undefined') {
+        jobIdElement.value = jobId;
+    }
+    
+    // Optionally hide the applicantId container if not needed
+    let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
+    if (applicantIdContainer) {
+        applicantIdContainer.style.display = "none";
+    }
+    
+    // Populate visible applicant details
+    document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
+    document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
+    document.getElementById('applicant-email').textContent = email || 'N/A';
+    document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
+    
+    // Populate score details - convert 'N/A' to '0' for display if needed
+    document.getElementById('score-degree').textContent = scores.degree || '0';
+    document.getElementById('score-experience').textContent = scores.experience || '0';
+    document.getElementById('score-certifications').textContent = scores.certifications || '0';
+    document.getElementById('score-hard-skills').textContent = scores.hardSkills || '0';
+    document.getElementById('score-soft-skills').textContent = scores.softSkills || '0';
+    document.getElementById('score-work-setup').textContent = scores.workSetup || '0';
+    document.getElementById('score-availability').textContent = scores.availability || '0';
+    
+    document.getElementById('computation-verdict').textContent = verdict || 'N/A';
+    
+    // Display documents
+    displayUploadedDocument(degreeUrl, "degree-doc", "degree-preview");
+    displayUploadedDocument(certUrl, "cert-doc", "cert-preview");
+    displayUploadedDocument(resumeUrl, "resume-doc", "resume-preview");
+    
+    // Display the modal
+    document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
+}
+
+
+function displayUploadedDocument(fileUrl, linkId, previewId) {
+    const docLink = document.getElementById(linkId);
+    const docPreview = document.getElementById(previewId);
+    
+    if (!fileUrl || fileUrl === "undefined") {
+        docLink.href = "#";
+        docLink.textContent = "No document uploaded";
+        docPreview.innerHTML = ""; // Clear preview
+        return;
+    }
+    
+    docLink.href = fileUrl;
+    docLink.textContent = "View Uploaded Document";
+    
+    const fileExtension = fileUrl.split('.').pop().toLowerCase();
+    
+    if (["jpg", "jpeg", "png", "gif"].includes(fileExtension)) {
+        docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
+    } else if (fileExtension === "pdf") {
+        docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>`;
+    } else {
+        docPreview.innerHTML = ""; // No preview for other file types
+    }
+}
+
+function confirmP1LineManagerPassed() {
+    const userIdElement = document.getElementById("userId");
+    if (!userIdElement) {
+        alert("Error: userId is missing. Please try again.");
+        return;
+    }
+
+    const userIdRaw = userIdElement.value.trim();
+    console.log("User ID (raw):", userIdRaw);
+
+    const userId = parseInt(userIdRaw, 10);
+    console.log("User ID (parsed):", userId);
+
+    if (isNaN(userId)) {
+        alert("Error: User ID is invalid. Please try again.");
+        return;
+    }
+
+    fetch('/linemanager/applicant-tracker-jobposition/P1LineManagerPassed', {
+        method: 'POST', 
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }), // Only send userId
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Server Response:", data);
+
+        if (data.success) {
+            const modal = document.getElementById('lineManagerInitialScreeningModalHtml');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            alert("Successfully updated applicant status!");
+            location.reload(); // Refresh the page to show updated status
+        } else {
+            alert("Error updating applicant status: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("Fetch Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
+// Utility functions for modals
+function setInterviewAvailabilities() {
+    // Redirect to Calendly or open modal with Calendly integration
+    window.open('https://calendly.com', '_blank');
+}
+
+function sendNotification() {
+    alert("Sent notification to applicant");
+    closeModal('releaseJobOfferModal');
+}
+
+function confirmOnboarding() {
+    alert("Applicant moved to onboarding");
+    closeModal('moveToOnboardingModal');
+}
+
+function confirmAccountSetup() {
+    alert("Account setup confirmed");
+    closeModal('accountSetupReminderModal');
+}
+
+// Function to finalize notification (after confirming in modal)
+function finalizeNotification() {
+    const currentPhase = document.querySelector("#currentPhase").textContent;
+    alert(`All applicants in ${currentPhase} have been notified.`);
+    closeModal('notifyApplicantsModal');
+}
+
+// Function to open generic modals with applicant data
+function openModal(modalId, name, age, email, contact) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    
+    // If applicant data is provided, populate the modal
+    if (name) {
+        // Check if the modal has input fields or spans for data
+        const nameElement = modal.querySelector("#applicant-name-job-offer") || 
+                           modal.querySelector("#applicant-name-onboarding") || 
+                           modal.querySelector("#applicant-name-account") ||
+                           modal.querySelector("h2") || 
+                           modal.querySelector("h3");
+                           
+        const ageElement = modal.querySelector("#applicant-age-job-offer") || 
+                          modal.querySelector("#applicant-age-onboarding") || 
+                          modal.querySelector("#applicant-age-account") ||
+                          modal.querySelector("p:contains('Age')");
+                          
+        const emailElement = modal.querySelector("#applicant-email-job-offer") || 
+                            modal.querySelector("#applicant-email-onboarding") || 
+                            modal.querySelector("#applicant-email-account") ||
+                            modal.querySelector("p:contains('Email')");
+                            
+        const contactElement = modal.querySelector("#applicant-contact-job-offer") || 
+                              modal.querySelector("#applicant-contact-onboarding") || 
+                              modal.querySelector("#applicant-contact-account") ||
+                              modal.querySelector("p:contains('Contact')");
+        
+        // Update elements if they exist
+        if (nameElement) {
+            nameElement.textContent = name;
+        }
+        
+        if (ageElement) {
+            ageElement.textContent = age || 'N/A';
+        }
+        
+        if (emailElement) {
+            emailElement.textContent = email || 'N/A';
+        }
+        
+        if (contactElement) {
+            contactElement.textContent = contact || 'N/A';
+        }
+    }
+    
+    // Display the modal
+    modal.style.display = "block";
+}
+
+// Function to close any modal
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+// Function to extract applicantId from URL
+function getApplicantIdFromURL() {
+    const path = window.location.pathname;
+    const parts = path.split('/'); // Split the URL into parts
+    const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
+    return applicantId;
+}
+
+// Function to approve line manager
 function approveLineManager(applicantId) {
     fetch('/linemanager/approve-line-manager', {
         method: 'POST',
@@ -895,550 +3025,667 @@ function approveLineManager(applicantId) {
 }
 
 
-     // Function to extract applicantId from URL
-     function getApplicantIdFromURL() {
-            const path = window.location.pathname;
-            const parts = path.split('/'); // Split the URL into parts
-            const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
-            return applicantId;
+// Function to fix the header structure and ensure divider is in the right place
+function fixHeaderStructure() {
+    const applicantStatusSection = document.getElementById('applicantStatusSection');
+    if (!applicantStatusSection) return;
+    
+    // Check if we need to create the section-header container
+    let sectionHeader = applicantStatusSection.querySelector('.section-header');
+    if (!sectionHeader) {
+        // Get the elements we need to wrap
+        const subheader = applicantStatusSection.querySelector('h3.subheader');
+        const rightSection = applicantStatusSection.querySelector('.right-section');
+        
+        if (subheader && rightSection) {
+            console.log("Creating section header container");
+            
+            // Create section header container
+            sectionHeader = document.createElement('div');
+            sectionHeader.className = 'section-header';
+            
+            // Clone the elements to avoid moving them directly
+            const subheaderClone = subheader.cloneNode(true);
+            const rightSectionClone = rightSection.cloneNode(true);
+            
+            // Add the clones to section header
+            sectionHeader.appendChild(subheaderClone);
+            sectionHeader.appendChild(rightSectionClone);
+            
+            // Insert the new section header at the beginning of the applicantStatusSection
+            applicantStatusSection.insertBefore(sectionHeader, applicantStatusSection.firstChild);
+            
+            // Remove the original elements
+            subheader.remove();
+            rightSection.remove();
+            
+            // Reattach event listeners to the cloned button
+            const notifyButton = rightSectionClone.querySelector('#notifyAllApplicants');
+            if (notifyButton) {
+                notifyButton.addEventListener('click', function() {
+                    const currentPhase = document.querySelector("#currentPhase").textContent;
+                    
+                    if (checkAllApplicantsMarked()) {
+                        openModal('notifyApplicantsModal');
+                    } else {
+                        alert(`Not all applicants in ${currentPhase} have been marked as passed or failed. Please make a decision first.`);
+                    }
+                });
+            }
         }
-
-       
-
-        // Display the applicantId from the URL (if any) when the page is loaded
-        document.addEventListener('DOMContentLoaded', function () {
-            const applicantId = getApplicantIdFromURL(); // Extract applicantId from the URL
-            if (applicantId) {
-                document.getElementById('applicantIdDisplay').textContent = `Applicant ID from URL: ${applicantId}`;
-            } else {
-                document.getElementById('applicantIdDisplay').textContent = 'No Applicant ID found in URL.';
-            }
-        });
-
-    
-
-// confirm button for modal for review
-        // Handle Confirm button click in the modal
-        function confirmSelection() {
-    const applicantName = document.getElementById("applicant-name").textContent.split(", ");
-    const lastName = applicantName[0];
-    const firstName = applicantName[1];
-
-    fetch("/update-applicant", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ lastName, firstName }),
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert(result.message);
-                location.reload(); // Refresh the page
-            } else {
-                alert("Failed to update applicant status. Please try again.");
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("An error occurred while updating the applicant status.");
-        });
-}
-
-
-
-
-function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
-    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict,  degreeUrl, certUrl, resumeUrl });
-    
-    // If userId is missing or "undefined", log an error and stop further processing.
-    if (!userId || userId === "undefined") {
-        console.error("Invalid userId passed to modal:", userId);
-        alert("Error: Invalid User ID. Cannot display applicant details.");
-        return;
     }
     
-    // Set the hidden input value for userId
-    document.getElementById('userId').value = userId;
-
-    // Set the hidden input value for jobId
-    document.getElementById('jobId').value = jobId; // Ensure jobId is passed to this function
-
-    // Optionally hide the applicantId container if not needed
-    let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
-    if (applicantIdContainer) {
-        applicantIdContainer.style.display = "none";
+    // Ensure the divider is right after the section-header
+    let divider = applicantStatusSection.querySelector('.divider');
+    
+    // If divider doesn't exist, create it
+    if (!divider) {
+        console.log("Creating divider");
+        divider = document.createElement('div');
+        divider.className = 'divider';
     }
-
-
-    // Populate visible applicant details
-    document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
-    document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
-    document.getElementById('applicant-email').textContent = email || 'N/A';
-    document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
-
-    // Populate score details
-    document.getElementById('score-degree').textContent = scores.degree || 'N/A';
-    document.getElementById('score-experience').textContent = scores.experience || 'N/A';
-    document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
-    document.getElementById('score-hard-skills').textContent = scores.hardSkills || 'N/A';
-    document.getElementById('score-soft-skills').textContent = scores.softSkills || 'N/A';
-    document.getElementById('score-work-setup').textContent = scores.workSetup || 'N/A';
-    document.getElementById('score-availability').textContent = scores.availability || 'N/A';
-
-    document.getElementById('computation-verdict').textContent = verdict || 'N/A';
-
-    // Display documents separately
-    displayUploadedDocument(degreeUrl, "degree-doc", "degree-preview");
-    displayUploadedDocument(certUrl, "cert-doc", "cert-preview");
-    displayUploadedDocument(resumeUrl, "resume-doc", "resume-preview");
-
-    // Display the modal
-    document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
-}
-
-
-function displayUploadedDocument(fileUrl, linkId, previewId) {
-    const docLink = document.getElementById(linkId);
-    const docPreview = document.getElementById(previewId);
-
-    if (!fileUrl) {
-        docLink.href = "#";
-        docLink.textContent = "No document uploaded";
-        docPreview.innerHTML = ""; // Clear preview
-        return;
-    }
-
-    docLink.href = fileUrl;
-    docLink.textContent = "View Uploaded Document";
-
-    const fileExtension = fileUrl.split('.').pop().toLowerCase();
-
-    if (["jpg", "jpeg", "png"].includes(fileExtension)) {
-        docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
-    } else if (fileExtension === "pdf") {
-        docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>`;
-    } else {
-        docPreview.innerHTML = ""; // No preview for other file types
-    }
-}
-
-function confirmP1LineManagerPassed() {
-    const userIdElement = document.getElementById("userId");
-    if (!userIdElement) {
-        alert("Error: userId is missing. Please try again.");
-        return;
-    }
-
-    const userIdRaw = userIdElement.value.trim();
-    console.log("User  ID (raw):", userIdRaw);
-
-    const userId = parseInt(userIdRaw, 10);
-    console.log("User  ID (parsed):", userId);
-
-    if (isNaN(userId)) {
-        alert("Error: User ID is invalid. Please try again.");
-        return;
-    }
-
-    fetch('/linemanager/applicant-tracker-jobposition/P1LineManagerPassed', {
-        method: 'POST', 
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId }), // Only send userId
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Server Response:", data);
-
-        if (data.success) {
-            const modal = document.getElementById('hrInitialScreeningModalHtml');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-            alert("Successfully updated applicant status!");
-        } else {
-            alert("Error updating applicant status: " + data.message);
+    
+    // Make sure it's in the right position (after section-header)
+    if (sectionHeader && sectionHeader.nextSibling !== divider) {
+        console.log("Moving divider to correct position");
+        // Remove from current position if it exists in the DOM
+        if (divider.parentNode) {
+            divider.remove();
         }
-    })
-    .catch(error => {
-        console.error("Fetch Error:", error);
-        alert("Failed to update applicant status.");
-    });
+        
+        // Insert after section-header
+        sectionHeader.after(divider);
+    }
+    
+    // Add inline styles to ensure visibility
+    divider.style.display = 'block';
+    divider.style.height = '2px';
+    divider.style.backgroundColor = '#124A5C';
+    divider.style.margin = '15px 0';
+    divider.style.width = '100%';
+    divider.style.clear = 'both';
 }
+
+// Call this function when the DOM is ready
+document.addEventListener("DOMContentLoaded", function() {
+    // Fix the header structure
+    fixHeaderStructure();
+    
+    // Rest of your initialization code...
+});
+
+// Call it again after a short delay to ensure it runs after any other scripts
+setTimeout(fixHeaderStructure, 500);
 
     // Close the modal
     document.querySelector('.review-close-button').addEventListener('click', function () {
         document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
     });
 
-    // Close modal if clicked outside the modal content
-    window.addEventListener('click', function (event) {
-        const modal = document.getElementById('lineManagerInitialScreeningModalHtml');
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+
+
+
+// document.addEventListener("DOMContentLoaded", function () {
+//     // Function to filter rows based on status and phase
+//     function filterRowsByStatus(status) {
+//         const rows = document.querySelectorAll('.tracking-table tbody tr');
+//         const applicantStatusSection = document.getElementById('applicantStatusSection');
+//         applicantStatusSection.style.display = (status === 'all') ? 'none' : 'block';
+        
+//         if (status !== 'all') {
+//             // Update the current phase display
+//             const phaseMatch = status.match(/(p\d+)/i);
+//             const phase = phaseMatch ? phaseMatch[0].toUpperCase() : '';
+//             const phaseSpans = document.querySelectorAll('#currentPhase');
+//             phaseSpans.forEach(span => span.textContent = phase);
+            
+//             // Clear previous rows
+//             document.querySelector('#awaitingActionTable tbody').innerHTML = '';
+//             document.querySelector('#declaredResultsTable tbody').innerHTML = '';
+            
+//             // Filter and populate the specific tables
+//             rows.forEach(row => {
+//                 const statusCell = row.querySelector('td:last-child');
+//                 const statusText = statusCell.querySelector('span').textContent;
+//                 const hasActionButton = statusCell.querySelector('button') !== null;
+                
+//                 // Check if row matches the current filter
+//                 if (row.classList.contains(`status-${status}`) || 
+//                     (status.startsWith('for-') && row.classList[0] && row.classList[0].includes(status))) {
+                    
+//                     const rowClone = row.cloneNode(true);
+                    
+//                     // Determine which table to add the row to
+//                     if (hasActionButton && statusText.includes('Awaiting')) {
+//                         document.querySelector('#awaitingActionTable tbody').appendChild(rowClone);
+//                     } else if (statusText.includes('PASSED') || statusText.includes('FAILED')) {
+//                         document.querySelector('#declaredResultsTable tbody').appendChild(rowClone);
+//                     }
+//                 }
+                
+//                 // Show/hide original rows
+//                 if (status === 'all' || 
+//                     row.classList.contains(`status-${status}`) || 
+//                     (status.startsWith('for-') && row.classList[0] && row.classList[0].includes(status))) {
+//                     row.style.display = '';
+//                 } else {
+//                     row.style.display = 'none';
+//                 }
+//             });
+//         } else {
+//             // Show all rows when "All" is selected
+//             rows.forEach(row => row.style.display = '');
+//         }
+        
+//         // Highlight the active filter button
+//         highlightActiveFilter(status);
+//     }
     
-    document.addEventListener("DOMContentLoaded", function () {
-        // Function to filter rows based on status
-        function filterRowsByStatus(status) {
-        const rows = document.querySelectorAll('.tracking-table tbody tr');
-        const rowsForReview = [];
-        const rowsOtherStatus = [];
+//     // Function to highlight the active filter button
+//     function highlightActiveFilter(status) {
+//         const buttons = document.querySelectorAll(".right-section button");
+//         buttons.forEach(button => {
+//             button.classList.toggle("active", button.id === `filter-${status}`);
+//         });
+//     }
+    
+//     // Function to check if all applicants in the current phase have been marked
+//     function checkAllApplicantsMarked() {
+//         const rows = document.querySelectorAll('#awaitingActionTable tbody tr');
+//         return Array.from(rows).every(row => {
+//             const statusText = row.querySelector('td:last-child span').textContent;
+//             return statusText.includes('PASSED') || statusText.includes('FAILED');
+//         });
+//     }
+    
+//     // Notify all applicants button functionality
+//     document.getElementById('notifyAllApplicants').addEventListener('click', function() {
+//         if (checkAllApplicantsMarked()) {
+//             openModal('notifyApplicantsModal');
+//         } else {
+//             alert("Not all applicants have been marked as passed or failed. Please make a decision first.");
+//         }
+//     });
+    
+//     // Function to sort the declared results table
+//     function sortDeclaredResults(sortOption) {
+//         const resultsTable = document.querySelector('#declaredResultsTable tbody');
+//         const rows = Array.from(resultsTable.querySelectorAll('tr'));
+        
+//         rows.sort((a, b) => {
+//             if (sortOption === 'ascending') {
+//                 const scoreA = parseFloat(a.querySelector('td:last-child').textContent.match(/\d+(\.\d+)?/)) || 0;
+//                 const scoreB = parseFloat(b.querySelector('td:last-child').textContent.match(/\d+(\.\d+)?/)) || 0;
+//                 return scoreA - scoreB;
+//             } else if (sortOption === 'descending') {
+//                 const scoreA = parseFloat(a.querySelector('td:last-child').textContent.match(/\d+(\.\d+)?/)) || 0;
+//                 const scoreB = parseFloat(b.querySelector('td:last-child').textContent.match(/\d+(\.\d+)?/)) || 0;
+//                 return scoreB - scoreA;
+//             } else if (sortOption === 'alphabetical') {
+//                 const nameA = a.querySelector('td:nth-child(2)').textContent.toLowerCase();
+//                 const nameB = b.querySelector('td:nth-child(2)').textContent.toLowerCase();
+//                 return nameA.localeCompare(nameB);
+//             }
+//             return 0;
+//         });
+        
+//         // Clear the table and append sorted rows
+//         resultsTable.innerHTML = '';
+//         rows.forEach(row => resultsTable.appendChild(row));
+//     }
+    
+//     // Sort options change event
+//     document.getElementById('sortOptions').addEventListener('change', function() {
+//         sortDeclaredResults(this.value);
+//     });
+    
+//     // Event listeners for filter buttons
+//     document.getElementById("filter-all").addEventListener("click", () => filterRowsByStatus("all"));
+//     document.getElementById("filter-review").addEventListener("click", () => filterRowsByStatus("for-review"));
+//     document.getElementById("filter-evaluation").addEventListener("click", () => filterRowsByStatus("for-evaluation"));
+//     document.getElementById("filter-onboarding").addEventListener("click", () => filterRowsByStatus("for-onboarding"));
+    
+//     // Function to finalize notification
+//     window.finalizeNotification = function() {
+//         alert("All applicants have been notified.");
+//         closeModal('notifyApplicantsModal');
+//     };
+    
+//     // Function to open a modal
+//     window.openModal = function(modalId) {
+//         document.getElementById(modalId).style.display = 'block';
+//     };
+    
+//     // Function to close a modal
+//     window.closeModal = function(modalId) {
+//         document.getElementById(modalId).style.display = 'none';
+//     };
+    
+//     // Search functionality
+//     function filterTable() {
+//         const searchValue = document.getElementById("searchBar").value.toLowerCase();
+//         const rows = document.querySelectorAll('.tracking-table tbody tr');
+        
+//         rows.forEach(row => {
+//             const rowText = Array.from(row.querySelectorAll('td'))
+//                 .map(cell => cell.textContent.toLowerCase())
+//                 .join(' ');
+                
+//             row.style.display = rowText.includes(searchValue) ? '' : 'none';
+//         });
+//     }
+    
+//     // Add search button event listener
+//     document.querySelector(".search-button").addEventListener("click", filterTable);
+    
+//     // Add search bar enter key event listener
+//     document.getElementById("searchBar").addEventListener("keypress", function(e) {
+//         if (e.key === "Enter") {
+//             e.preventDefault();
+//             filterTable();
+//         }
+//     });
+    
+//     // Initialize with "All" filter
+//     filterRowsByStatus("all");
+    
+//     // Close modal listeners for the applicant notification modal
+//     document.querySelectorAll(".modal .close-button").forEach(button => {
+//         button.addEventListener("click", function() {
+//             this.closest(".modal").style.display = "none";
+//         });
+//     });
+    
+//     // Close modal when clicking outside
+//     window.addEventListener("click", function(event) {
+//         document.querySelectorAll(".modal").forEach(modal => {
+//             if (event.target === modal) {
+//                 modal.style.display = "none";
+//             }
+//         });
+//     });
+// });
 
-        rows.forEach(row => {
-            // Show rows matching the status or all rows if status is "all"
-            if (status === "all" || row.classList.contains(`status-${status}`)) {
-                if (status === "for-review") {
-                    // Separate rows with the "For Review" status
-                    const mailIconButton = row.querySelector("button.btn-review i.fas.fa-envelope"); // Look for the mail icon inside the button
-                    if (mailIconButton) {
-                        rowsForReview.push(row); // Rows with mail icon
-                    } else {
-                        rowsOtherStatus.push(row); // Rows without mail icon
-                    }
-                } else {
-                    rowsOtherStatus.push(row); // All other statuses
-                }
-                row.style.display = ""; // Show
-            } else {
-                row.style.display = "none"; // Hide
-            }
-        });
-
-        // Rearrange "For Review" rows with mail icon last
-        if (status === "for-review") {
-            const sortedRows = [...rowsOtherStatus, ...rowsForReview]; // Move rows with mail icon to the end
-            sortedRows.forEach(row => row.parentElement.appendChild(row)); // Reorder rows in the DOM
-            document.querySelector(".finalize-container").style.display = "block"; // Show the finalize button
-
-        } else {
-            // For other statuses, just display them in the order they appear
-            rowsOtherStatus.forEach(row => row.style.display = "");
-            document.querySelector(".finalize-container").style.display = "none"; // Hide the finalize button
-        }
-
-        // Highlight the active filter button
-        highlightActiveFilter(status);
-    }
+// function approveLineManager(applicantId) {
+//     fetch('/linemanager/approve-line-manager', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({ applicantId })
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         if (data.success) {
+//             alert('Line Manager Approved!');
+//             location.reload(); // Reload page to reflect the changes
+//         } else {
+//             alert('Failed to approve line manager.');
+//         }
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//         alert('An error occurred.');
+//     });
+// }
 
 
-    // Event listeners for finalize buttons
-    document.getElementById("finalize-p1").addEventListener("click", function () {
-        finalizeReview("P1");
-    });
+//      // Function to extract applicantId from URL
+//      function getApplicantIdFromURL() {
+//             const path = window.location.pathname;
+//             const parts = path.split('/'); // Split the URL into parts
+//             const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
+//             return applicantId;
+//         }
 
-    document.getElementById("finalize-p2").addEventListener("click", function () {
-        finalizeReview("P2");
-    });
+       
 
-    document.getElementById("finalize-p3").addEventListener("click", function () {
-        finalizeReview("P3");
-    });
+//         // Display the applicantId from the URL (if any) when the page is loaded
+//         document.addEventListener('DOMContentLoaded', function () {
+//             const applicantId = getApplicantIdFromURL(); // Extract applicantId from the URL
+//             if (applicantId) {
+//                 document.getElementById('applicantIdDisplay').textContent = `Applicant ID from URL: ${applicantId}`;
+//             } else {
+//                 document.getElementById('applicantIdDisplay').textContent = 'No Applicant ID found in URL.';
+//             }
+//         });
 
-    // Finalize review function
-    function finalizeReview(phase) {
-        alert(`${phase}: Finalizing review and notifying applicants.`);
-        // Add logic to handle finalization for the specified phase
-        // Example: Update database, send notifications, etc.
-        console.log(`${phase}: Review finalized. Notifications sent.`);
-    }
+    
+
+// // confirm button for modal for review
+//         // Handle Confirm button click in the modal
+//         function confirmSelection() {
+//     const applicantName = document.getElementById("applicant-name").textContent.split(", ");
+//     const lastName = applicantName[0];
+//     const firstName = applicantName[1];
+
+//     fetch("/update-applicant", {
+//         method: "POST",
+//         headers: {
+//             "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({ lastName, firstName }),
+//     })
+//         .then(response => response.json())
+//         .then(result => {
+//             if (result.success) {
+//                 alert(result.message);
+//                 location.reload(); // Refresh the page
+//             } else {
+//                 alert("Failed to update applicant status. Please try again.");
+//             }
+//         })
+//         .catch(error => {
+//             console.error("Error:", error);
+//             alert("An error occurred while updating the applicant status.");
+//         });
+// }
 
 
-        // Function to filter rows based on the search input
-        function filterTable() {
-            const searchValue = document.getElementById("searchBar").value.toLowerCase();
-            const rows = document.querySelectorAll('.tracking-table tbody tr');
 
-            rows.forEach(row => {
-                const cells = row.querySelectorAll("td");
-                const rowText = Array.from(cells)
-                    .map(cell => {
-                        const button = cell.querySelector("button");
-                        // Include button text in the searchable content
-                        return button ? cell.textContent.toLowerCase() + " " + button.textContent.toLowerCase() : cell.textContent.toLowerCase();
-                    })
-                    .join(" ");
-                if (rowText.includes(searchValue)) {
-                    row.style.display = ""; // Show if search term matches
-                } else {
-                    row.style.display = "none"; // Hide otherwise
-                }
-            });
-        }
 
-        // Function to highlight the active filter button
-        function highlightActiveFilter(status) {
-            const buttons = document.querySelectorAll(".right-section button");
-            buttons.forEach(button => {
-                if (button.id === `filter-${status}`) {
-                    button.classList.add("active"); // Add active class
-                } else {
-                    button.classList.remove("active"); // Remove active class
-                }
-            });
-        }
+// function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
+//     console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict,  degreeUrl, certUrl, resumeUrl });
+    
+//     // If userId is missing or "undefined", log an error and stop further processing.
+//     if (!userId || userId === "undefined") {
+//         console.error("Invalid userId passed to modal:", userId);
+//         alert("Error: Invalid User ID. Cannot display applicant details.");
+//         return;
+//     }
+    
+//     // Set the hidden input value for userId
+//     document.getElementById('userId').value = userId;
 
-        // Initialize buttons for filtering by status
-        const buttons = {
-            all: document.getElementById("filter-all"),
-            review: document.getElementById("filter-review"),
-            evaluation: document.getElementById("filter-evaluation"),
-            onboarding: document.getElementById("filter-onboarding"),
-        };
+//     // Set the hidden input value for jobId
+//     document.getElementById('jobId').value = jobId; // Ensure jobId is passed to this function
 
-        // Add event listeners to filter buttons
-        buttons.all.addEventListener("click", () => filterRowsByStatus("all"));
-        buttons.review.addEventListener("click", () => filterRowsByStatus("for-review"));
-        buttons.evaluation.addEventListener("click", () => filterRowsByStatus("for-evaluation"));
-        buttons.onboarding.addEventListener("click", () => filterRowsByStatus("for-onboarding"));
+//     // Optionally hide the applicantId container if not needed
+//     let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
+//     if (applicantIdContainer) {
+//         applicantIdContainer.style.display = "none";
+//     }
 
-        // Search functionality
-        document.querySelector(".search-button").addEventListener("click", filterTable);
-        document.getElementById("searchBar").addEventListener("keypress", function (e) {
-            if (e.key === "Enter") {
-                e.preventDefault(); // Prevent form submission if inside a form
-                filterTable();
-            }
-        });
 
-        // Set button text dynamically based on row class
-        const rows = document.querySelectorAll('.tracking-table tbody tr');
-        rows.forEach(row => {
-            const statusCell = row.querySelector('td:last-child');
-            const button = statusCell.querySelector('button');
-            if (row.classList.contains('status-for-review')) {
-                button.textContent = "For Review";
-            } else if (row.classList.contains('status-for-onboarding')) {
-                button.textContent = "For Onboarding";
-            } else if (row.classList.contains('status-for-evaluation')) {
-                button.textContent = "For Evaluation";
-            }
-        });
+//     // Populate visible applicant details
+//     document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
+//     document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
+//     document.getElementById('applicant-email').textContent = email || 'N/A';
+//     document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
 
-        // Display all rows initially
-        filterRowsByStatus("all");
-    });
+//     // Populate score details
+//     document.getElementById('score-degree').textContent = scores.degree || 'N/A';
+//     document.getElementById('score-experience').textContent = scores.experience || 'N/A';
+//     document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
+//     document.getElementById('score-hard-skills').textContent = scores.hardSkills || 'N/A';
+//     document.getElementById('score-soft-skills').textContent = scores.softSkills || 'N/A';
+//     document.getElementById('score-work-setup').textContent = scores.workSetup || 'N/A';
+//     document.getElementById('score-availability').textContent = scores.availability || 'N/A';
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const evaluationButtons = document.querySelectorAll(".btn-evaluation");
+//     document.getElementById('computation-verdict').textContent = verdict || 'N/A';
 
-        evaluationButtons.forEach(button => {
-            button.addEventListener("click", function () {
-                window.location.href = "/hr/evaluation-form";
-            });
-        });
-    });
+//     // Display documents separately
+//     displayUploadedDocument(degreeUrl, "degree-doc", "degree-preview");
+//     displayUploadedDocument(certUrl, "cert-doc", "cert-preview");
+//     displayUploadedDocument(resumeUrl, "resume-doc", "resume-preview");
 
-    // Function to open the modal
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = "block";
-    }
+//     // Display the modal
+//     document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
+// }
 
-    // Function to close the modal
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = "none";
-    }
 
-    // Function for sending notification to the applicant
-    function sendNotification() {
-        alert("Sent notification to applicant");
-        closeModal('releaseJobOfferModal');
-    }
+// function displayUploadedDocument(fileUrl, linkId, previewId) {
+//     const docLink = document.getElementById(linkId);
+//     const docPreview = document.getElementById(previewId);
 
-    // Function for confirming onboarding
-    function confirmOnboarding() {
-        alert("Applicant moved to onboarding");
-        closeModal('moveToOnboardingModal');
-    }
+//     if (!fileUrl) {
+//         docLink.href = "#";
+//         docLink.textContent = "No document uploaded";
+//         docPreview.innerHTML = ""; // Clear preview
+//         return;
+//     }
 
-    // Function for confirming account setup
-    function confirmAccountSetup() {
-        alert("Account setup confirmed");
-        closeModal('accountSetupReminderModal');
-    }
+//     docLink.href = fileUrl;
+//     docLink.textContent = "View Uploaded Document";
 
-    document.addEventListener("DOMContentLoaded", function() {
-    const finalizeP1Button = document.getElementById("finalize-p1");
-    const finalizeP2Button = document.getElementById("finalize-p2");
-    const finalizeP3Button = document.getElementById("finalize-p3");
+//     const fileExtension = fileUrl.split('.').pop().toLowerCase();
 
-    const modalP1 = document.getElementById("finalizeModalP1");
-    const modalP2 = document.getElementById("finalizeModalP2");
-    const modalP3 = document.getElementById("finalizeModalP3");
+//     if (["jpg", "jpeg", "png"].includes(fileExtension)) {
+//         docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
+//     } else if (fileExtension === "pdf") {
+//         docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>`;
+//     } else {
+//         docPreview.innerHTML = ""; // No preview for other file types
+//     }
+// }
 
-    const closeButtonP1 = modalP1.querySelector(".close-button");
-    const backButtonP1 = modalP1.querySelector("#backButtonP1");
-    const confirmButtonP1 = modalP1.querySelector("#confirmButtonP1");
+// function confirmP1LineManagerPassed() {
+//     const userIdElement = document.getElementById("userId");
+//     if (!userIdElement) {
+//         alert("Error: userId is missing. Please try again.");
+//         return;
+//     }
 
-    const closeButtonP2 = modalP2.querySelector(".close-button");
-    const backButtonP2 = modalP2.querySelector("#backButtonP2");
-    const confirmButtonP2 = modalP2.querySelector("#confirmButtonP2");
+//     const userIdRaw = userIdElement.value.trim();
+//     console.log("User  ID (raw):", userIdRaw);
 
-    const closeButtonP3 = modalP3.querySelector(".close-button");
-    const backButtonP3 = modalP3.querySelector("#backButtonP3");
-    const confirmButtonP3 = modalP3.querySelector("#confirmButtonP3");
+//     const userId = parseInt(userIdRaw, 10);
+//     console.log("User  ID (parsed):", userId);
 
-    // Show the modal for P1 when the "P1: Finalize Review and Notify Applicants" button is clicked
-    finalizeP1Button.addEventListener("click", function() {
-        modalP1.style.display = "block";
-    });
+//     if (isNaN(userId)) {
+//         alert("Error: User ID is invalid. Please try again.");
+//         return;
+//     }
 
-    // Show the modal for P2 when the "P2: Finalize Review and Notify Applicants" button is clicked
-    finalizeP2Button.addEventListener("click", function() {
-        modalP2.style.display = "block";
-    });
+//     fetch('/linemanager/applicant-tracker-jobposition/P1LineManagerPassed', {
+//         method: 'POST', 
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({ userId }), // Only send userId
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         console.log("Server Response:", data);
 
-    // Show the modal for P3 when the "P3: Finalize Review and Notify Applicants" button is clicked
-    finalizeP3Button.addEventListener("click", function() {
-        modalP3.style.display = "block";
-    });
+//         if (data.success) {
+//             const modal = document.getElementById('hrInitialScreeningModalHtml');
+//             if (modal) {
+//                 modal.style.display = 'none';
+//             }
+//             alert("Successfully updated applicant status!");
+//         } else {
+//             alert("Error updating applicant status: " + data.message);
+//         }
+//     })
+//     .catch(error => {
+//         console.error("Fetch Error:", error);
+//         alert("Failed to update applicant status.");
+//     });
+// }
 
-    // Close the modal for P1 when the close button (X) is clicked
-    closeButtonP1.addEventListener("click", function() {
-        modalP1.style.display = "none";
-    });
+//     // Close the modal
+//     document.querySelector('.review-close-button').addEventListener('click', function () {
+//         document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+//     });
 
-    // Close the modal for P2 when the close button (X) is clicked
-    closeButtonP2.addEventListener("click", function() {
-        modalP2.style.display = "none";
-    });
+//     // Close modal if clicked outside the modal content
+//     window.addEventListener('click', function (event) {
+//         const modal = document.getElementById('lineManagerInitialScreeningModalHtml');
+//         if (event.target === modal) {
+//             modal.style.display = 'none';
+//         }
+//     });
+    
+//     function sendNotification() {
+//         alert("Sent notification to applicant");
+//         closeModal('releaseJobOfferModal');
+//     }
 
-    // Close the modal for P3 when the close button (X) is clicked
-    closeButtonP3.addEventListener("click", function() {
-        modalP3.style.display = "none";
-    });
+//     // Function for confirming onboarding
+//     function confirmOnboarding() {
+//         alert("Applicant moved to onboarding");
+//         closeModal('moveToOnboardingModal');
+//     }
 
-    // Close the modal for P1 when the back button is clicked
-    backButtonP1.addEventListener("click", function() {
-        modalP1.style.display = "none";
-    });
+//     // Function for confirming account setup
+//     function confirmAccountSetup() {
+//         alert("Account setup confirmed");
+//         closeModal('accountSetupReminderModal');
+//     }
 
-    // Close the modal for P2 when the back button is clicked
-    backButtonP2.addEventListener("click", function() {
-        modalP2.style.display = "none";
-    });
+//     document.addEventListener("DOMContentLoaded", function() {
+//     const finalizeP1Button = document.getElementById("finalize-p1");
+//     const finalizeP2Button = document.getElementById("finalize-p2");
+//     const finalizeP3Button = document.getElementById("finalize-p3");
 
-    // Close the modal for P3 when the back button is clicked
-    backButtonP3.addEventListener("click", function() {
-        modalP3.style.display = "none";
-    });
+//     const modalP1 = document.getElementById("finalizeModalP1");
+//     const modalP2 = document.getElementById("finalizeModalP2");
+//     const modalP3 = document.getElementById("finalizeModalP3");
 
-    // Handle the confirm action for P1 (you can add your own confirmation logic here)
-    confirmButtonP1.addEventListener("click", function() {
-        // Add your confirmation action here (e.g., notify applicants)
-        alert("P1 Review finalized and applicants notified.");
-        modalP1.style.display = "none"; // Close the modal after confirming
-    });
+//     const closeButtonP1 = modalP1.querySelector(".close-button");
+//     const backButtonP1 = modalP1.querySelector("#backButtonP1");
+//     const confirmButtonP1 = modalP1.querySelector("#confirmButtonP1");
 
-    // Handle the confirm action for P2 (you can add your own confirmation logic here)
-    confirmButtonP2.addEventListener("click", function() {
-        // Add your confirmation action here (e.g., notify applicants)
-        alert("P2 Review finalized and applicants notified.");
-        modalP2.style.display = "none"; // Close the modal after confirming
-    });
+//     const closeButtonP2 = modalP2.querySelector(".close-button");
+//     const backButtonP2 = modalP2.querySelector("#backButtonP2");
+//     const confirmButtonP2 = modalP2.querySelector("#confirmButtonP2");
 
-    // Handle the confirm action for P3 (you can add your own confirmation logic here)
-    confirmButtonP3.addEventListener("click", function() {
-        // Add your confirmation action here (e.g., notify applicants)
-        alert("P3 Review finalized and applicants notified.");
-        modalP3.style.display = "none"; // Close the modal after confirming
-    });
+//     const closeButtonP3 = modalP3.querySelector(".close-button");
+//     const backButtonP3 = modalP3.querySelector("#backButtonP3");
+//     const confirmButtonP3 = modalP3.querySelector("#confirmButtonP3");
 
-    // Close the modal if the user clicks outside of it (for P1)
-    window.addEventListener("click", function(event) {
-        if (event.target == modalP1) {
-            modalP1.style.display = "none";
-        }
-    });
+//     // Show the modal for P1 when the "P1: Finalize Review and Notify Applicants" button is clicked
+//     finalizeP1Button.addEventListener("click", function() {
+//         modalP1.style.display = "block";
+//     });
 
-    // Close the modal if the user clicks outside of it (for P2)
-    window.addEventListener("click", function(event) {
-        if (event.target == modalP2) {
-            modalP2.style.display = "none";
-        }
-    });
+//     // Show the modal for P2 when the "P2: Finalize Review and Notify Applicants" button is clicked
+//     finalizeP2Button.addEventListener("click", function() {
+//         modalP2.style.display = "block";
+//     });
 
-    // Close the modal if the user clicks outside of it (for P3)
-    window.addEventListener("click", function(event) {
-        if (event.target == modalP3) {
-            modalP3.style.display = "none";
-        }
-    });
-});
+//     // Show the modal for P3 when the "P3: Finalize Review and Notify Applicants" button is clicked
+//     finalizeP3Button.addEventListener("click", function() {
+//         modalP3.style.display = "block";
+//     });
 
-// Function to open the modal
-function openModal(name, age, email, contact) {
-    document.getElementById("applicant-name").value = name;
-    document.getElementById("applicant-age").value = age;
-    document.getElementById("applicant-email").value = email;
-    document.getElementById("applicant-contact").value = contact;
-    document.getElementById("reviewModal").style.display = "block";
-}
+//     // Close the modal for P1 when the close button (X) is clicked
+//     closeButtonP1.addEventListener("click", function() {
+//         modalP1.style.display = "none";
+//     });
 
-// Add event listeners to all "For Review" buttons
-document.querySelectorAll(".btn-review").forEach(button => {
-    button.addEventListener("click", function() {
-        const parentRow = button.closest("tr");
-        const name = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[0];
-        const email = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[1];
-        const age = "N/A";  // Placeholder for age
-        const contact = "N/A";  // Placeholder for contact
-        openModal(name, age, email, contact);
-    });
-});
+//     // Close the modal for P2 when the close button (X) is clicked
+//     closeButtonP2.addEventListener("click", function() {
+//         modalP2.style.display = "none";
+//     });
 
-// Function to close the modal
-document.querySelector(".review-close-button").addEventListener("click", function() {
-    document.getElementById("reviewModal").style.display = "none";
-});
+//     // Close the modal for P3 when the close button (X) is clicked
+//     closeButtonP3.addEventListener("click", function() {
+//         modalP3.style.display = "none";
+//     });
 
-// Close modal when clicking outside of the modal content
-window.addEventListener("click", function(event) {
-    if (event.target == document.getElementById("reviewModal")) {
-        document.getElementById("reviewModal").style.display = "none";
-    }
-});
+//     // Close the modal for P1 when the back button is clicked
+//     backButtonP1.addEventListener("click", function() {
+//         modalP1.style.display = "none";
+//     });
 
-// Back button functionality
-document.getElementById("backButton").addEventListener("click", function() {
-    document.getElementById("reviewModal").style.display = "none";
-});
+//     // Close the modal for P2 when the back button is clicked
+//     backButtonP2.addEventListener("click", function() {
+//         modalP2.style.display = "none";
+//     });
 
-// Confirm button functionality
-document.getElementById("confirmButton").addEventListener("click", function() {
-    alert("Applicant has been selected and recommended for panel interview.");
-    document.getElementById("reviewModal").style.display = "none";
-});
+//     // Close the modal for P3 when the back button is clicked
+//     backButtonP3.addEventListener("click", function() {
+//         modalP3.style.display = "none";
+//     });
 
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
+//     // Handle the confirm action for P1 (you can add your own confirmation logic here)
+//     confirmButtonP1.addEventListener("click", function() {
+//         // Add your confirmation action here (e.g., notify applicants)
+//         alert("P1 Review finalized and applicants notified.");
+//         modalP1.style.display = "none"; // Close the modal after confirming
+//     });
 
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
-        });
+//     // Handle the confirm action for P2 (you can add your own confirmation logic here)
+//     confirmButtonP2.addEventListener("click", function() {
+//         // Add your confirmation action here (e.g., notify applicants)
+//         alert("P2 Review finalized and applicants notified.");
+//         modalP2.style.display = "none"; // Close the modal after confirming
+//     });
+
+//     // Handle the confirm action for P3 (you can add your own confirmation logic here)
+//     confirmButtonP3.addEventListener("click", function() {
+//         // Add your confirmation action here (e.g., notify applicants)
+//         alert("P3 Review finalized and applicants notified.");
+//         modalP3.style.display = "none"; // Close the modal after confirming
+//     });
+
+//     // Close the modal if the user clicks outside of it (for P1)
+//     window.addEventListener("click", function(event) {
+//         if (event.target == modalP1) {
+//             modalP1.style.display = "none";
+//         }
+//     });
+
+//     // Close the modal if the user clicks outside of it (for P2)
+//     window.addEventListener("click", function(event) {
+//         if (event.target == modalP2) {
+//             modalP2.style.display = "none";
+//         }
+//     });
+
+//     // Close the modal if the user clicks outside of it (for P3)
+//     window.addEventListener("click", function(event) {
+//         if (event.target == modalP3) {
+//             modalP3.style.display = "none";
+//         }
+//     });
+// });
+
+// // Function to open the modal
+// function openModal(name, age, email, contact) {
+//     document.getElementById("applicant-name").value = name;
+//     document.getElementById("applicant-age").value = age;
+//     document.getElementById("applicant-email").value = email;
+//     document.getElementById("applicant-contact").value = contact;
+//     document.getElementById("reviewModal").style.display = "block";
+// }
+
+// // Add event listeners to all "For Review" buttons
+// document.querySelectorAll(".btn-review").forEach(button => {
+//     button.addEventListener("click", function() {
+//         const parentRow = button.closest("tr");
+//         const name = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[0];
+//         const email = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[1];
+//         const age = "N/A";  // Placeholder for age
+//         const contact = "N/A";  // Placeholder for contact
+//         openModal(name, age, email, contact);
+//     });
+// });
+
+// // Function to close the modal
+// document.querySelector(".review-close-button").addEventListener("click", function() {
+//     document.getElementById("reviewModal").style.display = "none";
+// });
+
+// // Close modal when clicking outside of the modal content
+// window.addEventListener("click", function(event) {
+//     if (event.target == document.getElementById("reviewModal")) {
+//         document.getElementById("reviewModal").style.display = "none";
+//     }
+// });
+
+// // Back button functionality
+// document.getElementById("backButton").addEventListener("click", function() {
+//     document.getElementById("reviewModal").style.display = "none";
+// });
+
+// // Confirm button functionality
+// document.getElementById("confirmButton").addEventListener("click", function() {
+//     alert("Applicant has been selected and recommended for panel interview.");
+//     document.getElementById("reviewModal").style.display = "none";
+// });
 
 </script>
 
