@@ -404,7 +404,7 @@ const applicantController = {
                         return res.redirect('/chatbothome');
                     } else {
                         console.log('Redirecting to employee chatbot...');
-                        return res.redirect('/employeechatbothome'); // Redirect to employee chatbot
+                        return res.redirect('/chatbothome'); // Redirect to employee chatbot
                     }
                 } else {
                     console.log('Password mismatch for user:', email);
