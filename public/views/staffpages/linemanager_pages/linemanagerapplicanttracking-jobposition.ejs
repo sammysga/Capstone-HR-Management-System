@@ -2839,6 +2839,500 @@ function fixScoresInDeclaredResults() {
     });
 }
 
+
+function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
+    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict,  degreeUrl, certUrl, resumeUrl });
+    
+    // If userId is missing or "undefined", log an error and stop further processing.
+    if (!userId || userId === "undefined") {
+        console.error("Invalid userId passed to modal:", userId);
+        alert("Error: Invalid User ID. Cannot display applicant details.");
+        return;
+    }
+    
+    // Set the hidden input value for userId
+    document.getElementById('userId').value = userId;
+
+    // Set the hidden input value for jobId
+    document.getElementById('jobId').value = jobId; // Ensure jobId is passed to this function
+
+    // Optionally hide the applicantId container if not needed
+    let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
+    if (applicantIdContainer) {
+        applicantIdContainer.style.display = "none";
+    }
+
+
+    // Populate visible applicant details
+    document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
+    document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
+    document.getElementById('applicant-email').textContent = email || 'N/A';
+    document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
+
+    // Populate score details
+    document.getElementById('score-degree').textContent = scores.degree || 'N/A';
+    document.getElementById('score-experience').textContent = scores.experience || 'N/A';
+    document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
+    document.getElementById('score-hard-skills').textContent = scores.hardSkills || 'N/A';
+    document.getElementById('score-soft-skills').textContent = scores.softSkills || 'N/A';
+    document.getElementById('score-work-setup').textContent = scores.workSetup || 'N/A';
+    document.getElementById('score-availability').textContent = scores.availability || 'N/A';
+
+    document.getElementById('computation-verdict').textContent = verdict || 'N/A';
+
+    // Display documents separately
+    displayUploadedDocument(degreeUrl, "degree-doc", "degree-preview");
+    displayUploadedDocument(certUrl, "cert-doc", "cert-preview");
+    displayUploadedDocument(resumeUrl, "resume-doc", "resume-preview");
+
+    // Display the modal
+    document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
+}
+
+
+function displayUploadedDocument(fileUrl, linkId, previewId) {
+    const docLink = document.getElementById(linkId);
+    const docPreview = document.getElementById(previewId);
+
+    if (!fileUrl) {
+        docLink.href = "#";
+        docLink.textContent = "No document uploaded";
+        docPreview.innerHTML = ""; // Clear preview
+        return;
+    }
+
+    docLink.href = fileUrl;
+    docLink.textContent = "View Uploaded Document";
+
+    const fileExtension = fileUrl.split('.').pop().toLowerCase();
+
+    if (["jpg", "jpeg", "png"].includes(fileExtension)) {
+        docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
+    } else if (fileExtension === "pdf") {
+        docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>`;
+    } else {
+        docPreview.innerHTML = ""; // No preview for other file types
+    }
+}
+
+function confirmP1LineManagerPassed() {
+    const userIdElement = document.getElementById("userId");
+    if (!userIdElement) {
+        alert("Error: userId is missing. Please try again.");
+        return;
+    }
+
+    const userIdRaw = userIdElement.value.trim();
+    console.log("User  ID (raw):", userIdRaw);
+
+    const userId = parseInt(userIdRaw, 10);
+    console.log("User  ID (parsed):", userId);
+
+    if (isNaN(userId)) {
+        alert("Error: User ID is invalid. Please try again.");
+        return;
+    }
+
+    fetch('/linemanager/applicant-tracker-jobposition/P1LineManagerPassed', {
+        method: 'POST', 
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }), // Only send userId
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Server Response:", data);
+
+        if (data.success) {
+            const modal = document.getElementById('hrInitialScreeningModalHtml');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            alert("Successfully updated applicant status!");
+        } else {
+            alert("Error updating applicant status: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Fetch Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
+    // Close the modal
+    document.querySelector('.review-close-button').addEventListener('click', function () {
+        document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+    });
+
+    // Close modal if clicked outside the modal content
+    window.addEventListener('click', function (event) {
+        const modal = document.getElementById('lineManagerInitialScreeningModalHtml');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
+    document.addEventListener("DOMContentLoaded", function () {
+        // Function to filter rows based on status
+        function filterRowsByStatus(status) {
+        const rows = document.querySelectorAll('.tracking-table tbody tr');
+        const rowsForReview = [];
+        const rowsOtherStatus = [];
+
+        rows.forEach(row => {
+            // Show rows matching the status or all rows if status is "all"
+            if (status === "all" || row.classList.contains(`status-${status}`)) {
+                if (status === "for-review") {
+                    // Separate rows with the "For Review" status
+                    const mailIconButton = row.querySelector("button.btn-review i.fas.fa-envelope"); // Look for the mail icon inside the button
+                    if (mailIconButton) {
+                        rowsForReview.push(row); // Rows with mail icon
+                    } else {
+                        rowsOtherStatus.push(row); // Rows without mail icon
+                    }
+                } else {
+                    rowsOtherStatus.push(row); // All other statuses
+                }
+                row.style.display = ""; // Show
+            } else {
+                row.style.display = "none"; // Hide
+            }
+        });
+
+        // Rearrange "For Review" rows with mail icon last
+        if (status === "for-review") {
+            const sortedRows = [...rowsOtherStatus, ...rowsForReview]; // Move rows with mail icon to the end
+            sortedRows.forEach(row => row.parentElement.appendChild(row)); // Reorder rows in the DOM
+            document.querySelector(".finalize-container").style.display = "block"; // Show the finalize button
+
+        } else {
+            // For other statuses, just display them in the order they appear
+            rowsOtherStatus.forEach(row => row.style.display = "");
+            document.querySelector(".finalize-container").style.display = "none"; // Hide the finalize button
+        }
+
+        // Highlight the active filter button
+        highlightActiveFilter(status);
+    }
+
+
+    // Event listeners for finalize buttons
+    document.getElementById("finalize-p1").addEventListener("click", function () {
+        finalizeReview("P1");
+    });
+
+    document.getElementById("finalize-p2").addEventListener("click", function () {
+        finalizeReview("P2");
+    });
+
+    document.getElementById("finalize-p3").addEventListener("click", function () {
+        finalizeReview("P3");
+    });
+
+    // Finalize review function
+    function finalizeReview(phase) {
+        alert(`${phase}: Finalizing review and notifying applicants.`);
+        // Add logic to handle finalization for the specified phase
+        // Example: Update database, send notifications, etc.
+        console.log(`${phase}: Review finalized. Notifications sent.`);
+    }
+
+
+        // Function to filter rows based on the search input
+        function filterTable() {
+            const searchValue = document.getElementById("searchBar").value.toLowerCase();
+            const rows = document.querySelectorAll('.tracking-table tbody tr');
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
+                const rowText = Array.from(cells)
+                    .map(cell => {
+                        const button = cell.querySelector("button");
+                        // Include button text in the searchable content
+                        return button ? cell.textContent.toLowerCase() + " " + button.textContent.toLowerCase() : cell.textContent.toLowerCase();
+                    })
+                    .join(" ");
+                if (rowText.includes(searchValue)) {
+                    row.style.display = ""; // Show if search term matches
+                } else {
+                    row.style.display = "none"; // Hide otherwise
+                }
+            });
+        }
+
+        // Function to highlight the active filter button
+        function highlightActiveFilter(status) {
+            const buttons = document.querySelectorAll(".right-section button");
+            buttons.forEach(button => {
+                if (button.id === `filter-${status}`) {
+                    button.classList.add("active"); // Add active class
+                } else {
+                    button.classList.remove("active"); // Remove active class
+                }
+            });
+        }
+
+        // Initialize buttons for filtering by status
+        const buttons = {
+            all: document.getElementById("filter-all"),
+            review: document.getElementById("filter-review"),
+            evaluation: document.getElementById("filter-evaluation"),
+            onboarding: document.getElementById("filter-onboarding"),
+        };
+
+        // Add event listeners to filter buttons
+        buttons.all.addEventListener("click", () => filterRowsByStatus("all"));
+        buttons.review.addEventListener("click", () => filterRowsByStatus("for-review"));
+        buttons.evaluation.addEventListener("click", () => filterRowsByStatus("for-evaluation"));
+        buttons.onboarding.addEventListener("click", () => filterRowsByStatus("for-onboarding"));
+
+        // Search functionality
+        document.querySelector(".search-button").addEventListener("click", filterTable);
+        document.getElementById("searchBar").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // Prevent form submission if inside a form
+                filterTable();
+            }
+        });
+
+        // Set button text dynamically based on row class
+        const rows = document.querySelectorAll('.tracking-table tbody tr');
+        rows.forEach(row => {
+            const statusCell = row.querySelector('td:last-child');
+            const button = statusCell.querySelector('button');
+            if (row.classList.contains('status-for-review')) {
+                button.textContent = "For Review";
+            } else if (row.classList.contains('status-for-onboarding')) {
+                button.textContent = "For Onboarding";
+            } else if (row.classList.contains('status-for-evaluation')) {
+                button.textContent = "For Evaluation";
+            }
+        });
+
+        // Display all rows initially
+        filterRowsByStatus("all");
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const evaluationButtons = document.querySelectorAll(".btn-evaluation");
+
+        evaluationButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                window.location.href = "/hr/evaluation-form";
+            });
+        });
+    });
+
+    // Function to open the modal
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = "block";
+    }
+
+    // Function to close the modal
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    // Function for sending notification to the applicant
+    function sendNotification() {
+        alert("Sent notification to applicant");
+        closeModal('releaseJobOfferModal');
+    }
+
+    // Function for confirming onboarding
+    function confirmOnboarding() {
+        alert("Applicant moved to onboarding");
+        closeModal('moveToOnboardingModal');
+    }
+
+    // Function for confirming account setup
+    function confirmAccountSetup() {
+        alert("Account setup confirmed");
+        closeModal('accountSetupReminderModal');
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+    const finalizeP1Button = document.getElementById("finalize-p1");
+    const finalizeP2Button = document.getElementById("finalize-p2");
+    const finalizeP3Button = document.getElementById("finalize-p3");
+
+    const modalP1 = document.getElementById("finalizeModalP1");
+    const modalP2 = document.getElementById("finalizeModalP2");
+    const modalP3 = document.getElementById("finalizeModalP3");
+
+    const closeButtonP1 = modalP1.querySelector(".close-button");
+    const backButtonP1 = modalP1.querySelector("#backButtonP1");
+    const confirmButtonP1 = modalP1.querySelector("#confirmButtonP1");
+
+    const closeButtonP2 = modalP2.querySelector(".close-button");
+    const backButtonP2 = modalP2.querySelector("#backButtonP2");
+    const confirmButtonP2 = modalP2.querySelector("#confirmButtonP2");
+
+    const closeButtonP3 = modalP3.querySelector(".close-button");
+    const backButtonP3 = modalP3.querySelector("#backButtonP3");
+    const confirmButtonP3 = modalP3.querySelector("#confirmButtonP3");
+
+    // Show the modal for P1 when the "P1: Finalize Review and Notify Applicants" button is clicked
+    finalizeP1Button.addEventListener("click", function() {
+        modalP1.style.display = "block";
+    });
+
+    // Show the modal for P2 when the "P2: Finalize Review and Notify Applicants" button is clicked
+    finalizeP2Button.addEventListener("click", function() {
+        modalP2.style.display = "block";
+    });
+
+    // Show the modal for P3 when the "P3: Finalize Review and Notify Applicants" button is clicked
+    finalizeP3Button.addEventListener("click", function() {
+        modalP3.style.display = "block";
+    });
+
+    // Close the modal for P1 when the close button (X) is clicked
+    closeButtonP1.addEventListener("click", function() {
+        modalP1.style.display = "none";
+    });
+
+    // Close the modal for P2 when the close button (X) is clicked
+    closeButtonP2.addEventListener("click", function() {
+        modalP2.style.display = "none";
+    });
+
+    // Close the modal for P3 when the close button (X) is clicked
+    closeButtonP3.addEventListener("click", function() {
+        modalP3.style.display = "none";
+    });
+
+    // Close the modal for P1 when the back button is clicked
+    backButtonP1.addEventListener("click", function() {
+        modalP1.style.display = "none";
+    });
+
+    // Close the modal for P2 when the back button is clicked
+    backButtonP2.addEventListener("click", function() {
+        modalP2.style.display = "none";
+    });
+
+    // Close the modal for P3 when the back button is clicked
+    backButtonP3.addEventListener("click", function() {
+        modalP3.style.display = "none";
+    });
+
+    // Handle the confirm action for P1 (you can add your own confirmation logic here)
+    confirmButtonP1.addEventListener("click", function() {
+        // Add your confirmation action here (e.g., notify applicants)
+        alert("P1 Review finalized and applicants notified.");
+        modalP1.style.display = "none"; // Close the modal after confirming
+    });
+
+    // Handle the confirm action for P2 (you can add your own confirmation logic here)
+    confirmButtonP2.addEventListener("click", function() {
+        // Add your confirmation action here (e.g., notify applicants)
+        alert("P2 Review finalized and applicants notified.");
+        modalP2.style.display = "none"; // Close the modal after confirming
+    });
+
+    // Handle the confirm action for P3 (you can add your own confirmation logic here)
+    confirmButtonP3.addEventListener("click", function() {
+        // Add your confirmation action here (e.g., notify applicants)
+        alert("P3 Review finalized and applicants notified.");
+        modalP3.style.display = "none"; // Close the modal after confirming
+    });
+
+    // Close the modal if the user clicks outside of it (for P1)
+    window.addEventListener("click", function(event) {
+        if (event.target == modalP1) {
+            modalP1.style.display = "none";
+        }
+    });
+
+    // Close the modal if the user clicks outside of it (for P2)
+    window.addEventListener("click", function(event) {
+        if (event.target == modalP2) {
+            modalP2.style.display = "none";
+        }
+    });
+
+    // Close the modal if the user clicks outside of it (for P3)
+    window.addEventListener("click", function(event) {
+        if (event.target == modalP3) {
+            modalP3.style.display = "none";
+        }
+    });
+});
+
+// Function to open the modal
+function openModal(name, age, email, contact) {
+    document.getElementById("applicant-name").value = name;
+    document.getElementById("applicant-age").value = age;
+    document.getElementById("applicant-email").value = email;
+    document.getElementById("applicant-contact").value = contact;
+    document.getElementById("reviewModal").style.display = "block";
+}
+
+// Add event listeners to all "For Review" buttons
+document.querySelectorAll(".btn-review").forEach(button => {
+    button.addEventListener("click", function() {
+        const parentRow = button.closest("tr");
+        const name = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[0];
+        const email = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[1];
+        const age = "N/A";  // Placeholder for age
+        const contact = "N/A";  // Placeholder for contact
+        openModal(name, age, email, contact);
+    });
+});
+
+// Function to close the modal
+document.querySelector(".review-close-button").addEventListener("click", function() {
+    document.getElementById("reviewModal").style.display = "none";
+});
+
+// Close modal when clicking outside of the modal content
+window.addEventListener("click", function(event) {
+    if (event.target == document.getElementById("reviewModal")) {
+        document.getElementById("reviewModal").style.display = "none";
+    }
+});
+
+// Back button functionality
+document.getElementById("backButton").addEventListener("click", function() {
+    document.getElementById("reviewModal").style.display = "none";
+});
+
+// Confirm button functionality
+document.getElementById("confirmButton").addEventListener("click", function() {
+    alert("Applicant has been selected and recommended for panel interview.");
+    document.getElementById("reviewModal").style.display = "none";
+});
+
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+
+
+
 // document.addEventListener("DOMContentLoaded", function () {
 //     // Function to filter rows based on status and phase
 //     function filterRowsByStatus(status) {
