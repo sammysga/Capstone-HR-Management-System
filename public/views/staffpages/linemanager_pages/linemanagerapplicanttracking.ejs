@@ -87,7 +87,7 @@
         }
 
         .right-section button:hover {
-            background-color: #B4E3E3       ;
+            background-color: #B4E3E3;
             color: white;
         }
 
@@ -142,6 +142,13 @@
 
         .status-circle.gray {
             background-color: gray;
+        }
+
+        /* New styles for P1 column highlighting */
+        .active-p1 {
+            background-color: rgba(0, 128, 0, 0.2); /* Light green background */
+            font-weight: bold;
+            color: green;
         }
 
 
@@ -220,7 +227,12 @@
                         jobPositions.sort((a, b) => a.jobTitle.localeCompare(b.jobTitle));
                         jobPositions.forEach((job, index) => { 
                     %>
-                    <tr class="jobRow" data-department="<%= job.departmentId %>" onclick="redirectToJobPage('<%= job.jobId %>')">
+                    <tr class="jobRow" 
+                        data-department="<%= job.departmentId %>" 
+                        data-hiring-start="<%= job.hiringStartDate %>" 
+                        data-hiring-end="<%= job.hiringEndDate %>" 
+                        data-has-applicants-in-range="<%= job.hasApplicantsInDateRange %>"
+                        onclick="redirectToJobPage('<%= job.jobId %>')">
                         <td class="jobTitleCell">
                             <div class="job-title-container">
                                 <div class="status-circle"></div>
@@ -230,7 +242,7 @@
                         <td><%= job.departmentName %></td>
                         <td><%= job.hiringStartDate %></td>
                         <td><%= job.hiringEndDate %></td>
-                        <td class="fixed-width"><%= job.counts.P1 %></td>
+                        <td class="fixed-width p1-column"><%= job.counts.P1 %></td>
                         <td class="fixed-width"><%= job.counts.P2 %></td>
                         <td class="fixed-width"><%= job.counts.P3 %></td>
                         <td class="fixed-width"><%= job.counts.Offered %></td>
@@ -249,13 +261,10 @@
         function setInterviewAvailabilities() {
             window.open('https://calendly.com/users/40706100/event_types/new/solo?return_to=%2Fevent_types%2Fnew', '_blank');
         }
+        
         // Redirect to job position page when a row is clicked
         function redirectToJobPage(jobId) {
             window.location.href = `/linemanager/applicant-tracker-jobposition?jobId=${jobId}`;
-            //window.location.href = `/hr/applicant-tracker-jobposition`;
-            
-            //TODO: Use this when all applicants could be fetched already with their corresponding statuses.
-            // window.location.href = `/hr/applicant-tracker-jobposition/${jobId}`;
         }
 
         // Filter table based on the department selected from dropdown
@@ -301,26 +310,35 @@
             return today >= start && today <= end;
         }
 
-        // Adding the color-coded circle next to job titles based on hiring date range
+        // Adding the color-coded circle next to job titles and highlight P1 column based on hiring date range
         document.addEventListener('DOMContentLoaded', () => {
             const jobRows = document.querySelectorAll('.jobRow');
 
             jobRows.forEach((row) => {
                 const statusCircle = row.querySelector('.status-circle');
-                const hiringStartDate = row.cells[2].innerText.trim(); // Hiring start date
-                const hiringEndDate = row.cells[3].innerText.trim(); // Hiring end date
+                const hiringStartDate = row.getAttribute('data-hiring-start');
+                const hiringEndDate = row.getAttribute('data-hiring-end');
+                const hasApplicantsInRange = row.getAttribute('data-has-applicants-in-range') === 'true';
+                const p1Cell = row.querySelector('.p1-column');
 
-                // Ensure we are dealing with valid date strings
+                // Current date check for status circle
                 if (isWithinHiringDates(hiringStartDate, hiringEndDate)) {
-                    statusCircle.classList.add('green'); // Apply green color if within range
+                    statusCircle.classList.add('green');
                 } else {
-                    statusCircle.classList.add('gray'); // Apply gray color if not within range
+                    statusCircle.classList.add('gray');
+                }
+                
+                // Check if there are applicants within hiring date range for P1 column
+                if (hasApplicantsInRange) {
+                    if (p1Cell) {
+                        p1Cell.classList.add('active-p1');
+                    }
                 }
             });
         });
 
-                // Toggle active class for sidebar links
-                document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
                 this.classList.add('active');
