@@ -255,20 +255,44 @@ const lineManagerController = {
         }
     
         try {
-            // Fetch applicants awaiting Line Manager action (P1 status)
+            // Get the line manager's department ID first
+            const lineManagerId = req.session.user.userId;
+            const { data: lineManagerData, error: lineManagerError } = await supabase
+                .from('staffaccounts')
+                .select('departmentId')
+                .eq('userId', lineManagerId)
+                .single();
+    
+            if (lineManagerError) {
+                console.error('Error fetching line manager department:', lineManagerError);
+                throw lineManagerError;
+            }
+    
+            const lineManagerDepartmentId = lineManagerData?.departmentId;
+    
+            if (!lineManagerDepartmentId) {
+                console.error('Line manager has no department assigned');
+                return res.status(400).json({ error: 'Department not assigned to your account' });
+            }
+    
+            // Fetch applicants awaiting Line Manager action (P1 status) 
+            // Filter applicants by the line manager's department
             const { data: p1Applicants, error: p1ApplicantsError } = await supabase
                 .from('applicantaccounts')
-                .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId')
+                .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
                 .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED')
+                .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
                 .order('created_at', { ascending: false });
     
             if (p1ApplicantsError) throw p1ApplicantsError;
     
-            // Fetch applicants awaiting Line Manager evaluation (P3 status)
+            // Fetch applicants awaiting Line Manager evaluation (P3 status) 
+            // Filter applicants by the line manager's department
             const { data: p3Applicants, error: p3ApplicantsError } = await supabase
                 .from('applicantaccounts')
-                .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId')
+                .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
                 .eq('applicantStatus', 'P3 - Awaiting for Line Manager Evaluation')
+                .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
                 .order('created_at', { ascending: false });
     
             if (p3ApplicantsError) throw p3ApplicantsError;
@@ -294,7 +318,7 @@ const lineManagerController = {
                 })
             }));
     
-            // Fetch pending leave requests
+            // Fetch pending leave requests for staff in the line manager's department
             const { data: leaveRequests, error: leaveError } = await supabase
                 .from('leaverequests')
                 .select(`
@@ -308,6 +332,7 @@ const lineManagerController = {
                         userId, 
                         userEmail,
                         staffaccounts (
+                            departmentId,
                             departments (deptName), 
                             lastName, 
                             firstName
@@ -322,8 +347,13 @@ const lineManagerController = {
     
             if (leaveError) throw leaveError;
     
+            // Filter leave requests to only include those from the line manager's department
+            const filteredLeaveRequests = leaveRequests.filter(leave => 
+                leave.useraccounts?.staffaccounts[0]?.departmentId === lineManagerDepartmentId
+            );
+    
             // Format leave requests
-            const formattedLeaveRequests = leaveRequests.map(leave => ({
+            const formattedLeaveRequests = filteredLeaveRequests.map(leave => ({
                 userId: leave.userId,
                 lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
                 firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
@@ -809,37 +839,69 @@ const lineManagerController = {
     getApplicantTracker: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
             try {
-                // Fetch job positions and departments
+                // First, get the line manager's department ID
+                const userId = req.session.user.userId;
+                const { data: lineManagerData, error: lineManagerError } = await supabase
+                    .from('staffaccounts')
+                    .select('departmentId')
+                    .eq('userId', userId)
+                    .single();
+    
+                if (lineManagerError) {
+                    console.error('Error fetching line manager department:', lineManagerError);
+                    throw lineManagerError;
+                }
+    
+                const lineManagerDepartmentId = lineManagerData?.departmentId;
+    
+                if (!lineManagerDepartmentId) {
+                    console.error('Line manager has no department assigned');
+                    req.flash('errors', { authError: 'Department not assigned to your account. Please contact HR.' });
+                    return res.redirect('/staff/login');
+                }
+    
+                // Fetch job positions filtered by the line manager's department
                 const { data: jobpositions, error: jobpositionsError } = await supabase
                     .from('jobpositions')
                     .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
+                    .eq('departmentId', lineManagerDepartmentId) // Filter by the line manager's department
                     .order('hiringStartDate', { ascending: true });
     
                 if (jobpositionsError) throw jobpositionsError;
     
+                // Fetch all departments for dropdown
                 const { data: departments, error: departmentsError } = await supabase
                     .from('departments')
                     .select('deptName, departmentId');
     
                 if (departmentsError) throw departmentsError;
     
-                // Fetch all applicant accounts
+                // Fetch all applicant accounts with created_at date
                 const { data: applicantaccounts, error: applicantaccountsError } = await supabase
                     .from('applicantaccounts')
-                    .select('jobId, applicantStatus');
+                    .select('jobId, applicantStatus, created_at');
     
                 if (applicantaccountsError) throw applicantaccountsError;
     
-                // Log raw applicant accounts data
                 console.log('Applicant Accounts:', applicantaccounts);
     
                 // Group and count statuses by jobId
                 const statusCountsMap = {};
-                applicantaccounts.forEach(({ jobId, applicantStatus }) => {
+                const applicantDatesMap = {}; // To track application dates for each job
+    
+                applicantaccounts.forEach(({ jobId, applicantStatus, created_at }) => {
+                    // Initialize if first time seeing this jobId
                     if (!statusCountsMap[jobId]) {
                         statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 };
+                        applicantDatesMap[jobId] = []; // Initialize array to store application dates
                     }
                     
+                    // Add application date to the array for this job
+                    if (created_at) {
+                        applicantDatesMap[jobId].push(new Date(created_at));
+                    }
+                    
+                    // Count applicants by status
                     if (applicantStatus.includes('P1')) {
                         statusCountsMap[jobId].P1++;
                     } else if (applicantStatus.includes('P2')) {
@@ -853,15 +915,34 @@ const lineManagerController = {
                     }
                 });
     
-                // Log final counts for each jobId
                 console.log('Status Counts Map:', statusCountsMap);
+                console.log('Applicant Dates Map:', applicantDatesMap);
     
-                // Merge counts into job positions
-                const jobPositionsWithCounts = jobpositions.map((job) => ({
-                    ...job,
-                    departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
-                    counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 },
-                }));
+                // Function to check if any application date falls within hiring date range
+                const hasApplicantsInDateRange = (jobId, hiringStart, hiringEnd) => {
+                    const applicantDates = applicantDatesMap[jobId] || [];
+                    const start = new Date(hiringStart);
+                    const end = new Date(hiringEnd);
+                    
+                    // Check if any application date falls within the hiring range
+                    return applicantDates.some(date => date >= start && date <= end);
+                };
+    
+                // Merge counts into job positions with date check
+                const jobPositionsWithCounts = jobpositions.map((job) => {
+                    const withinHiringRange = hasApplicantsInDateRange(
+                        job.jobId, 
+                        job.hiringStartDate, 
+                        job.hiringEndDate
+                    );
+                    
+                    return {
+                        ...job,
+                        departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
+                        counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 },
+                        hasApplicantsInDateRange: withinHiringRange // Add flag for highlighting in frontend
+                    };
+                });
     
                 // Render the page
                 res.render('staffpages/linemanager_pages/linemanagerapplicanttracking', {
