@@ -65,6 +65,7 @@ router.post('/employee/update-persinfo', hrController.updatePersUserInfo);
 router.get('/hr/leaverequest', hrController.getLeaveRequestForm);
 router.post('/hr/leaverequest', hrController.submitLeaveRequest);
 
+
 router.get('/hr/managehome', hrController.getHRManageHome); 
 router.get('/hr/addannouncement', hrController.getAddAnnouncement);
 router.post('/hr/addannouncement', hrController.postAddAnnouncement);
