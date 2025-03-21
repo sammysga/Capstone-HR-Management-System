@@ -51,110 +51,156 @@ const applicantController = {
         }
     },
 
-    getJobDetails: async function(req, res) {
-        try {
-            const jobId = req.params.jobId;
-    
-            // Fetch job details
-            const { data: job, error: jobError } = await supabase
-                .from('jobpositions')
-                .select('*')
-                .eq('jobId', jobId)
-                .single();
-            
-            if (jobError) {
-                console.error('Error fetching job details:', jobError);
-                return res.status(500).send('Error fetching job details');
-            }
-    
-            // Fetch job skills
-            const { data: jobSkills, error: jobSkillsError } = await supabase
-                .from('jobreqskills') // updated to the new table name
-                .select('*')
-                .eq('jobId', jobId);
-            
-            if (jobSkillsError) {
-                console.error('Error fetching job skills:', jobSkillsError);
-                return res.status(500).send('Error fetching job skills');
-            }
-    
-            // Separate hard and soft skills
-            const hardSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Hard");
-            const softSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Soft");
-    
-            // Fetch job certifications from jobreqcertifications
-            const { data: certifications, error: certificationsError } = await supabase
-                .from('jobreqcertifications')
-                .select('jobReqCertificateType, jobReqCertificateDescrpt')
-                .eq('jobId', jobId);
-            
-            if (certificationsError) {
-                console.error('Error fetching job certifications:', certificationsError);
-                return res.status(500).send('Error fetching job certifications');
-            }
-    
-            // Fetch job degrees from jobreqdegrees
-            const { data: degrees, error: degreesError } = await supabase
-                .from('jobreqdegrees')
-                .select('jobReqDegreeType, jobReqDegreeDescrpt')
-                .eq('jobId', jobId);
-            
-            if (degreesError) {
-                console.error('Error fetching job degrees:', degreesError);
-                return res.status(500).send('Error fetching job degrees');
-            }
-    
-            // Fetch job experiences from jobreqexperiences
-            const { data: experiences, error: experiencesError } = await supabase
-                .from('jobreqexperiences')
-                .select('jobReqExperienceType, jobReqExperienceDescrpt')
-                .eq('jobId', jobId);
-            
-            if (experiencesError) {
-                console.error('Error fetching job experiences:', experiencesError);
-                return res.status(500).send('Error fetching job experiences');
-            }
-    
-            // Render the job-details page with all fetched data
-            res.render('applicant_pages/job-details', { job, hardSkills, softSkills, certifications, degrees, experiences });
-        } catch (err) {
-            console.error('Server error:', err);
-            res.status(500).send('Server error');
+// Fixed version of getJobDetails method with better error handling
+getJobDetails: async function(req, res) {
+    try {
+        const jobId = req.params.jobId;
+        
+        if (!jobId) {
+            console.error('No job ID provided');
+            return res.status(400).send('Job ID is required');
         }
-    },
+
+        console.log(`Fetching job details for jobId: ${jobId}`);
+
+        // Fetch job details
+        let { data: job, error: jobError } = await supabase
+            .from('jobpositions')
+            .select('*')
+            .eq('jobId', jobId);
+        
+        if (jobError) {
+            console.error('Error fetching job details:', jobError);
+            return res.status(500).send('Error fetching job details');
+        }
+
+        // Check if any job was found
+        if (!job || job.length === 0) {
+            console.error('Job not found for ID:', jobId);
+            return res.status(404).send('Job not found');
+        }
+
+        // Since we're not using .single(), we need to take the first result
+        job = job[0];
+        console.log('Job data retrieved:', job);
+
+        // Fetch job skills
+        const { data: jobSkills, error: jobSkillsError } = await supabase
+            .from('jobreqskills')
+            .select('*')
+            .eq('jobId', jobId);
+        
+        if (jobSkillsError) {
+            console.error('Error fetching job skills:', jobSkillsError);
+            return res.status(500).send('Error fetching job skills');
+        }
+
+        // Separate hard and soft skills
+        const hardSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Hard");
+        const softSkills = jobSkills.filter(skill => skill.jobReqSkillType === "Soft");
+
+        console.log(`Found ${hardSkills.length} hard skills and ${softSkills.length} soft skills`);
+
+        // Fetch job certifications
+        const { data: certifications, error: certificationsError } = await supabase
+            .from('jobreqcertifications')
+            .select('jobReqCertificateType, jobReqCertificateDescrpt')
+            .eq('jobId', jobId);
+        
+        if (certificationsError) {
+            console.error('Error fetching job certifications:', certificationsError);
+            return res.status(500).send('Error fetching job certifications');
+        }
+
+        // Fetch job degrees
+        const { data: degrees, error: degreesError } = await supabase
+            .from('jobreqdegrees')
+            .select('jobReqDegreeType, jobReqDegreeDescrpt')
+            .eq('jobId', jobId);
+        
+        if (degreesError) {
+            console.error('Error fetching job degrees:', degreesError);
+            return res.status(500).send('Error fetching job degrees');
+        }
+
+        // Fetch job experiences
+        const { data: experiences, error: experiencesError } = await supabase
+            .from('jobreqexperiences')
+            .select('jobReqExperienceType, jobReqExperienceDescrpt')
+            .eq('jobId', jobId);
+        
+        if (experiencesError) {
+            console.error('Error fetching job experiences:', experiencesError);
+            return res.status(500).send('Error fetching job experiences');
+        }
+
+        // Standardize property names to match the template
+        // This handles potential mismatches between database fields and what the template expects
+        if (job.isActiveHiring !== undefined && job.isActiveJob === undefined) {
+            job.isActiveJob = job.isActiveHiring;
+        } else if (job.isActiveJob === undefined) {
+            job.isActiveJob = false; // Default value
+        }
+
+        // Log the data being sent to the template (for debugging)
+        console.log('Rendering job details with data for job:', job.jobTitle);
+
+        // Render the job-details page with all fetched data
+        res.render('applicant_pages/job-details', { 
+            job, 
+            hardSkills, 
+            softSkills, 
+            certifications, 
+            degrees, 
+            experiences 
+        });
+    } catch (err) {
+        console.error('Server error in getJobDetails:', err);
+        res.status(500).send('Server error occurred while retrieving job details');
+    }
+},
     
-    getJobDetails: async function(jobTitle) {
-        try {
-            const { data: jobDetails, error } = await supabase
-                .from('jobpositions')
-                .select(`
-                    jobId, jobTitle, jobDescrpt,  departmentId,
-                    jobreqcertifications(jobReqCertificateType, jobReqCertificateDescrpt),
-                    jobreqdegrees(jobReqDegreeType, jobReqDegreeDescrpt),
-                    jobreqexperiences(jobReqExperienceType, jobReqExperienceDescrpt),
-                    jobreqskills(jobReqSkillType, jobReqSkillName)
-                `)
-                .eq('jobTitle', jobTitle)
-                .single();
-    
-            if (error) {
-                console.error('Error fetching job details:', error);
-                return null;
-            }
-            
-            // Ensure all arrays exist even if they're empty
-            return {
-                ...jobDetails,
-                jobreqcertifications: jobDetails.jobreqcertifications || [],
-                jobreqdegrees: jobDetails.jobreqdegrees || [],
-                jobreqexperiences: jobDetails.jobreqexperiences || [],
-                jobreqskills: jobDetails.jobreqskills || []
-            };
-        } catch (error) {
-            console.error('Server error:', error);
+    // Fixed version of the getJobDetails method that takes a jobTitle parameter
+getJobDetailsById: async function(jobTitle) {
+    try {
+        const { data: jobDetails, error } = await supabase
+            .from('jobpositions')
+            .select(`
+                jobId, jobTitle, jobDescrpt, departmentId,
+                jobreqcertifications(jobReqCertificateType, jobReqCertificateDescrpt),
+                jobreqdegrees(jobReqDegreeType, jobReqDegreeDescrpt),
+                jobreqexperiences(jobReqExperienceType, jobReqExperienceDescrpt),
+                jobreqskills(jobReqSkillType, jobReqSkillName)
+            `)
+            .eq('jobTitle', jobTitle);
+
+        if (error) {
+            console.error('Error fetching job details by title:', error);
             return null;
         }
-    },
+        
+        // Check if any jobs were found
+        if (!jobDetails || jobDetails.length === 0) {
+            console.error('No job found with title:', jobTitle);
+            return null;
+        }
+        
+        // Take the first matching job
+        const job = jobDetails[0];
+        
+        // Ensure all arrays exist even if they're empty
+        return {
+            ...job,
+            jobreqcertifications: job.jobreqcertifications || [],
+            jobreqdegrees: job.jobreqdegrees || [],
+            jobreqexperiences: job.jobreqexperiences || [],
+            jobreqskills: job.jobreqskills || []
+        };
+    } catch (error) {
+        console.error('Server error in getJobDetailsById:', error);
+        return null;
+    }
+},
 
     // Function to fetch job positions and format them for chatbot response
     getJobPositionsList: async function() {

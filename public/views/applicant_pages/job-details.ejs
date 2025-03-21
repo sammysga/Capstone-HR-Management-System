@@ -6,149 +6,495 @@
     <title><%= job.jobTitle %> - Job Details</title>
     
     <!-- Link to Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="/css/publicapplicant.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f9f9f9;
-        }
-
-        .job-details {
-            max-width: 800px;
-            margin: 20px auto;  /* Add margin for spacing */
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .job-details h1 {
-            font-size: 2em;
-            margin-bottom: 20px;
+            background-color: #f8fafc;
             color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
         }
 
-        .job-details .description {
+        .job-header {
+            background: linear-gradient(135deg, #07ACB9, #056770);
+            color: white;
+            padding: 60px 0 80px;
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .back-to-jobs {
+            display: inline-flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .back-to-jobs i {
+            margin-right: 6px;
+        }
+
+        .back-to-jobs:hover {
+            color: white;
+        }
+
+        .job-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 15px;
+            line-height: 1.2;
+        }
+
+        .job-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+        }
+
+        .meta-item i {
+            margin-right: 8px;
+        }
+
+        .job-details-container {
+            max-width: 1000px;
+            margin: -50px auto 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .job-details-content {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            margin: 0 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .share-button {
+            display: flex;
+            align-items: center;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .share-button i {
+            margin-right: 8px;
+        }
+
+        .share-button:hover {
+            background-color: #e2e8f0;
+        }
+
+        .bookmark-button {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: none;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 10px;
+        }
+
+        .bookmark-button:hover {
+            background-color: #e2e8f0;
+        }
+
+        .job-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
             margin-bottom: 20px;
-            color: #666;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .job-description {
+            color: #475569;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .job-status {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background-color: #4CAF50;
+        }
+
+        .status-inactive {
+            background-color: #f44336;
+        }
+
+        .requirements-grid, .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .requirement-card, .skill-card {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #07ACB9;
+        }
+
+        .requirement-card h3, .skill-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .skill-tag {
+            display: inline-block;
+            background-color: rgba(7, 172, 185, 0.1);
+            color: #07ACB9;
+            font-size: 0.9rem;
+            padding: 5px 12px;
+            border-radius: 50px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .apply-section {
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .apply-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .apply-description {
+            color: #64748b;
+            margin-bottom: 25px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .apply-button {
             display: inline-block;
-            padding: 10px 20px;
-            background-color: #4CAF50;
+            padding: 12px 30px;
+            background-color: #07ACB9;
             color: white;
             text-align: center;
-            border-radius: 5px;
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
             text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            font-size: 1rem;
         }
 
         .apply-button:hover {
-            background-color: #45a049;
+            background-color: #056770;
+            transform: translateY(-2px);
         }
 
-        .requirements, .skills {
-            margin-top: 20px;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 6px;
+        .apply-button i {
+            margin-left: 8px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .job-header {
+                padding: 40px 0 60px;
+            }
+            
+            .job-title {
+                font-size: 2rem;
+            }
+            
+            .job-meta {
+                gap: 10px;
+            }
+            
+            .job-details-content {
+                padding: 25px;
+            }
+            
+            .requirements-grid, .skills-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .bookmark-button {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
 <body>
     <%- include('../partials/publicheader') %>
 
-    <div class="job-details">
-        <!-- Display the Job Title as Title -->
-        <h1><%= job.jobTitle %></h1>
-        
-        
-        <!-- Display the Full Job Description -->
-        <p class="description"><%= job.jobDescrpt %></p>
-        
-        <!-- Simple Job Status Display -->
-        <p><strong>Status:</strong> <%= job.isActiveJob ? "Active" : "Inactive" %></p>
+    <!-- Job Header Section -->
+    <section class="job-header">
+        <div class="header-content">
+            <a href="/job-recruitment" class="back-to-jobs">
+                <i class="fas fa-arrow-left"></i> Back to All Jobs
+            </a>
+            <h1 class="job-title"><%= job.jobTitle %></h1>
+            <div class="job-meta">
+                <div class="meta-item">
+                    <i class="fas fa-building"></i>
+                    <%= job.department || 'Prime Infrastructure' %>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <%= job.location || 'Remote' %>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-briefcase"></i>
+                    <%= job.jobType || 'Full-time' %>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-clock"></i>
+                    Posted <%= job.postedDate || 'Recently' %>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<!-- Job Requirements Section -->
-<div class="requirements">
-    <h2>Job Requirements</h2>
+    <!-- Job Details Container -->
+    <div class="job-details-container">
+        <div class="job-details-content">
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <div class="status-container">
+                    <div class="job-status">
+                        <span class="status-indicator <%= (job.isActiveJob || job.isActiveHiring) ? 'status-active' : 'status-inactive' %>"></span>
+                        <span><%= (job.isActiveJob || job.isActiveHiring) ? "Active" : "Inactive" %></span>
+                    </div>
+                </div>
+                <div style="display: flex;">
+                    <button class="share-button">
+                        <i class="fas fa-share-alt"></i> Share Job
+                    </button>
+                    <button class="bookmark-button">
+                        <i class="far fa-bookmark"></i>
+                    </button>
+                </div>
+            </div>
 
-    <!-- Certification Requirements Section -->
-    <% if (certifications && certifications.length > 0) { %>
-        <ul>
-            <% certifications.forEach(function(cert) { %>
-                <li><strong><%= cert.jobReqCertificateType %>:</strong> <%= cert.jobReqCertificateDescrpt %></li>
-            <% }) %>
-        </ul>
-    <% } else { %>
-        <p>No certification requirements listed for this job.</p>
-    <% } %>
+            <!-- Job Description Section -->
+            <div class="job-section">
+                <h2 class="section-title">Job Description</h2>
+                <div class="job-description">
+                    <%= job.jobDescrpt %>
+                </div>
+            </div>
 
-    <!-- Degree Requirements Section -->
-    <% if (degrees && degrees.length > 0) { %>
-        <ul>
-            <% degrees.forEach(function(degree) { %>
-                <li><strong><%= degree.jobReqDegreeType %>:</strong> <%= degree.jobReqDegreeDescrpt %></li>
-            <% }) %>
-        </ul>
-    <% } else { %>
-        <p>No degree requirements listed for this job.</p>
-    <% } %>
+            <!-- Job Requirements Section -->
+            <div class="job-section">
+                <h2 class="section-title">Requirements</h2>
+                
+                <!-- Requirements Grid -->
+                <div class="requirements-grid">
+                    <!-- Certification Requirements Card -->
+                    <div class="requirement-card">
+                        <h3><i class="fas fa-certificate"></i> Certifications</h3>
+                        <% if (certifications && certifications.length > 0) { %>
+                            <ul>
+                                <% certifications.forEach(function(cert) { %>
+                                    <li><strong><%= cert.jobReqCertificateType %>:</strong> <%= cert.jobReqCertificateDescrpt %></li>
+                                <% }) %>
+                            </ul>
+                        <% } else { %>
+                            <p>No certification requirements listed for this job.</p>
+                        <% } %>
+                    </div>
 
-    <!-- Experience Requirements Section -->
-        <% if (experiences && experiences.length > 0) { %>
-            <ul>
-                <% experiences.forEach(function(experience) { %>
-                    <li><%= experience.jobReqExperienceType %>: <%= experience.jobReqExperienceDescrpt %></li>
-                <% }) %>
-            </ul>
-        <% } else { %>
-            <p>No experience required.</p>
-        <% } %>
-    
-</div>
+                    <!-- Degree Requirements Card -->
+                    <div class="requirement-card">
+                        <h3><i class="fas fa-graduation-cap"></i> Education</h3>
+                        <% if (degrees && degrees.length > 0) { %>
+                            <ul>
+                                <% degrees.forEach(function(degree) { %>
+                                    <li><strong><%= degree.jobReqDegreeType %>:</strong> <%= degree.jobReqDegreeDescrpt %></li>
+                                <% }) %>
+                            </ul>
+                        <% } else { %>
+                            <p>No degree requirements listed for this job.</p>
+                        <% } %>
+                    </div>
 
+                    <!-- Experience Requirements Card -->
+                    <div class="requirement-card">
+                        <h3><i class="fas fa-briefcase"></i> Experience</h3>
+                        <% if (experiences && experiences.length > 0) { %>
+                            <ul>
+                                <% experiences.forEach(function(experience) { %>
+                                    <li><strong><%= experience.jobReqExperienceType %>:</strong> <%= experience.jobReqExperienceDescrpt %></li>
+                                <% }) %>
+                            </ul>
+                        <% } else { %>
+                            <p>No experience required for this position.</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Skills Section -->
+            <div class="job-section">
+                <h2 class="section-title">Skills</h2>
+                
+                <!-- Skills Grid -->
+                <div class="skills-grid">
+                    <!-- Hard Skills Card -->
+                    <div class="skill-card">
+                        <h3><i class="fas fa-cogs"></i> Hard Skills</h3>
+                        <% if (hardSkills && hardSkills.length > 0) { %>
+                            <div>
+                                <% hardSkills.forEach(function(skill) { %>
+                                    <span class="skill-tag"><%= skill.jobReqSkillName %></span>
+                                <% }) %>
+                            </div>
+                        <% } else { %>
+                            <p>No hard skills listed for this job.</p>
+                        <% } %>
+                    </div>
 
+                    <!-- Soft Skills Card -->
+                    <div class="skill-card">
+                        <h3><i class="fas fa-users"></i> Soft Skills</h3>
+                        <% if (softSkills && softSkills.length > 0) { %>
+                            <div>
+                                <% softSkills.forEach(function(skill) { %>
+                                    <span class="skill-tag"><%= skill.jobReqSkillName %></span>
+                                <% }) %>
+                            </div>
+                        <% } else { %>
+                            <p>No soft skills listed for this job.</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
 
-  <!-- Job Skills Section -->
-<div class="skills">
-    <h2>Skills</h2>
-
-    <!-- Hard Skills Section -->
-    <div class="hard-skills">
-        <h3>Hard Skills</h3>
-        <% if (hardSkills && hardSkills.length > 0) { %>
-            <ul>
-                <% hardSkills.forEach(function(skill) { %>
-                    <li><strong><%= skill.jobReqSkillName %></strong></li>
-                <% }) %>
-            </ul>
-        <% } else { %>
-            <p>No hard skills listed for this job.</p>
-        <% } %>
+            <!-- Apply Section -->
+            <div class="apply-section">
+                <h2 class="apply-title">Ready to Apply?</h2>
+                <p class="apply-description">If you believe you're a good match for this role, we'd love to hear from you. Click the button below to start your application process.</p>
+                <a href="/chatbothome" class="apply-button">
+                    Apply Now <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
     </div>
 
-    <!-- Soft Skills Section -->
-    <div class="soft-skills">
-        <h3>Soft Skills</h3>
-        <% if (softSkills && softSkills.length > 0) { %>
-            <ul>
-                <% softSkills.forEach(function(skill) { %>
-                    <li><strong><%= skill.jobReqSkillName %></strong></li>
-                <% }) %>
-            </ul>
-        <% } else { %>
-            <p>No soft skills listed for this job.</p>
-        <% } %>
-    </div>
-</div>
+    <script>
+        // Script for Share functionality
+        document.querySelector('.share-button').addEventListener('click', function() {
+            if (navigator.share) {
+                navigator.share({
+                    title: '<%= job.jobTitle %> - Job Opportunity',
+                    text: 'Check out this job opportunity: <%= job.jobTitle %>',
+                    url: window.location.href,
+                })
+                .catch((error) => console.log('Error sharing:', error));
+            } else {
+                // Fallback for browsers that don't support navigator.share
+                // Copy to clipboard instead
+                const dummy = document.createElement('input');
+                document.body.appendChild(dummy);
+                dummy.value = window.location.href;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                
+                alert('Link copied to clipboard!');
+            }
+        });
 
-        <!-- Apply Button -->
-        <a href="/chatbothome" class="apply-button">Apply Now</a>
-    </div>
+        // Bookmark functionality
+        document.querySelector('.bookmark-button').addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('far')) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                alert('Job saved to bookmarks!');
+            } else {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                alert('Job removed from bookmarks!');
+            }
+        });
+    </script>
 </body>
 </html>
