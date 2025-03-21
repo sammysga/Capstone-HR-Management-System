@@ -1,4 +1,5 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
 body {
@@ -39,17 +40,24 @@ body {
     background: none;
     border: none;
     cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #notification-bell i {
     font-size: 36px;
-    color: #07ACB9;
-    background-color: #07ACB9;
     color: white;
+    background-color: #07ACB9;
     border-radius: 50%;
     padding: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: background-color 0.3s, transform 0.3s;
+    display: inline-block;
+    text-align: center;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
 }
 
 #notification-bell i:hover {
@@ -109,6 +117,20 @@ body {
     color: #333;
 }
 
+/* Special styling for high priority section */
+#section-priority {
+    background-color: #FFF3E0;
+    border-radius: 5px;
+    padding: 10px;
+    border-left: 4px solid #FF9800;
+    margin-bottom: 15px;
+}
+
+#section-priority h4 {
+    color: #E65100;
+    font-weight: bold;
+}
+
 .notification-item {
     margin-bottom: 15px;
     padding-bottom: 15px;
@@ -150,6 +172,15 @@ body {
     background-color: #B4E3E3;
 }
 
+/* Special styling for priority buttons */
+.priority-btn {
+    background-color: #FF9800 !important;
+}
+
+.priority-btn:hover {
+    background-color: #FFC107 !important;
+}
+
 /* Floating Action Button Styling */
 .fab {
     position: fixed;
@@ -157,11 +188,15 @@ body {
     right: 20px;
     z-index: 1001;
     font-size: 24px;
+    width: 50px;
+    height: 50px;
     cursor: pointer;
     background-color: #07ACB9;
     color: white;
     border-radius: 50%;
-    padding: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: background-color 0.3s, transform 0.3s;
 }
@@ -169,6 +204,10 @@ body {
 .fab:hover {
     background-color: #B4E3E3;
     transform: scale(1.1);
+}
+
+.fab i {
+    display: inline-block;
 }
 
 #see-previous-notifications {
@@ -188,6 +227,37 @@ body {
     background-color: #B4E3E3;
 }
 
+/* Loading indicator styles */
+.loading-indicator {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.loading-indicator .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #07ACB9;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Animation for new notifications */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.pulse-animation {
+    animation: pulse 1s infinite;
+}
 </style>
 
 <div class="sidebar">
@@ -220,31 +290,36 @@ body {
     </ul>
 
     <div class="logout-container">
-        <a href="/applicant/login" class="logout-button">Logout</a>
+        <a href="/logout" class="logout-button">Logout</a>
     </div>
 </div>
 
 <!-- Notification Bell with Counter -->
 <button id="notification-bell">
     <i class="fas fa-bell"></i>
-    <span id="notification-count">6</span>
+    <span id="notification-count">0</span>
 </button>
 
-<!-- Notification Panel -->
+<!-- Notification Panel - Simplified for Employee -->
 <div id="notification-panel">
     <h3>Notifications</h3>
+    
     <div id="recent-notifications">
-        <div class="notification-section" id="section-1">
-            <h4>REQUIRED 360 Degree Feedback Submission</h4>
-            <!-- Sample 360 Feedback notifications -->
-            <div class="notification-item">
-                <div class="headline">360 Feedback Answers Required</div>
-                <div class="content">Your participation is required from March 15, 2025 to March 30, 2025.</div>
-                <div class="date">Wed, Mar 12, 2025, 09:15 AM</div>
-                <button class="action-btn">Required Action</button>
+        <div class="notification-section" id="section-2">
+            <h4>Leave Request Updates</h4>
+            <!-- Leave requests notifications will be loaded here -->
+            <div class="loading-indicator">
+                <div class="spinner"></div>
             </div>
         </div>
-        <div class="notification-section" id="section-2">
+        <div class="notification-section" id="section-3">
+            <h4>Performance Updates</h4>
+            <!-- Performance updates will be loaded here -->
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+            </div>
+        </div>
+        <div class="notification-section" id="section-4">
             <h4>Recent Notifications</h4>
             <!-- Sample recent notifications - only showing 3 initially -->
             <div class="notification-item">
@@ -276,23 +351,115 @@ body {
     const notificationCount = document.getElementById('notification-count');
     const fab = document.getElementById('fab');
     const seePreviousButton = document.getElementById('see-previous-notifications');
+    
+    // API endpoint for fetching notifications
+    const notificationsAPI = '/api/employee/notifications';
 
-    notificationBell.addEventListener('click', function() {
-        console.log('Notification bell clicked');
-        notificationPanel.classList.toggle('open');
-    });
-
-    // Close notification panel when clicking outside
-    document.addEventListener('click', function(event) {
-        if (!notificationPanel.contains(event.target) && !notificationBell.contains(event.target)) {
-            notificationPanel.classList.remove('open');
+    // Function to fetch notifications from the server
+    async function fetchNotifications() {
+        try {
+            const response = await fetch(notificationsAPI, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+            return { 
+                leaveRequests: [], 
+                performanceUpdates: [],
+                notificationCount: 0
+            };
         }
-    });
+    }
+    
+    // Function to update the notification panel with leave requests
+    function updateLeaveRequestsSection(leaveRequests) {
+        const leaveSection = document.getElementById('section-2');
+        leaveSection.innerHTML = '<h4>Leave Request Updates</h4>';
 
-    // Format date function
-    function formatDate(date) {
-        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        return new Intl.DateTimeFormat('en-US', options).format(date);
+        if (leaveRequests.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.classList.add('notification-item');
+            emptyMessage.innerHTML = `
+                <div class="headline">No leave requests</div>
+                <div class="content">You don't have any pending leave requests.</div>
+            `;
+            leaveSection.appendChild(emptyMessage);
+        } else {
+            // Add leave requests to notification panel
+            leaveRequests.forEach(leave => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <div class="headline">Leave Request: ${leave.status}</div>
+                    <div class="content">Type: ${leave.type} (${leave.from} to ${leave.until})</div>
+                    <div class="date">Updated: ${leave.updateDate}</div>
+                    <button class="view-leave-btn" data-id="${leave.id}">View Details</button>
+                `;
+                leaveSection.appendChild(notificationItem);
+            });
+
+            // Add event listeners to the view leave buttons
+            document.querySelectorAll('.view-leave-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const leaveId = this.getAttribute('data-id');
+                    console.log('View leave clicked:', leaveId);
+                    window.location.href = `/employee/leaverequest`;
+                });
+            });
+        }
+    }
+
+    // Function to update performance updates section
+    function updatePerformanceSection(performanceUpdates) {
+        const perfSection = document.getElementById('section-3');
+        perfSection.innerHTML = '<h4>Performance Updates</h4>';
+
+        if (performanceUpdates.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.classList.add('notification-item');
+            emptyMessage.innerHTML = `
+                <div class="headline">No performance updates</div>
+                <div class="content">You don't have any new performance updates.</div>
+            `;
+            perfSection.appendChild(emptyMessage);
+        } else {
+            performanceUpdates.forEach(update => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <div class="headline">${update.title}</div>
+                    <div class="content">${update.description}</div>
+                    <div class="date">${update.date}</div>
+                    <button class="view-perf-btn" data-id="${update.id}" data-type="${update.type}">View Update</button>
+                `;
+                perfSection.appendChild(notificationItem);
+            });
+
+            // Add event listeners to the performance buttons
+            document.querySelectorAll('.view-perf-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const perfId = this.getAttribute('data-id');
+                    const perfType = this.getAttribute('data-type');
+                    console.log('Performance update clicked:', perfId, 'Type:', perfType);
+                    
+                    if (perfType === 'objective') {
+                        window.location.href = `/employee/employeeobjectivebasedprog`;
+                    } else if (perfType === 'skill') {
+                        window.location.href = `/employee/employeeskillsproggapanal`;
+                    } else {
+                        window.location.href = `/employee/viewtimeline`;
+                    }
+                });
+            });
+        }
     }
 
     // Sample older notifications data
@@ -308,13 +475,77 @@ body {
         { message: "Quarterly Report Due", timestamp: "2025-03-04T11:00:00" }
     ];
 
+    // Format date function
+    function formatDate(date) {
+        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return new Intl.DateTimeFormat('en-US', options).format(date);
+    }
+
+    // Function to check for new notifications
+    let previousNotificationCount = 0;
+    
+    function checkForNewNotifications(currentCount) {
+        if (previousNotificationCount > 0 && currentCount > previousNotificationCount) {
+            // Add pulse animation to notification bell
+            notificationBell.classList.add('pulse-animation');
+            
+            setTimeout(() => {
+                notificationBell.classList.remove('pulse-animation');
+            }, 3000); // Remove animation after 3 seconds
+        }
+        
+        // Update the previous count
+        previousNotificationCount = currentCount;
+    }
+
+    // Notification bell click event
+    notificationBell.addEventListener('click', async function() {
+        console.log('Notification bell clicked');
+        notificationPanel.classList.toggle('open');
+        
+        // Load notification data when panel is opened
+        if (notificationPanel.classList.contains('open')) {
+            try {
+                // Show loading indicators
+                document.getElementById('section-2').innerHTML = '<h4>Leave Request Updates</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+                document.getElementById('section-3').innerHTML = '<h4>Performance Updates</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+                
+                // Fetch notifications
+                const notificationData = await fetchNotifications();
+                
+                // Update notification count
+                notificationCount.textContent = notificationData.notificationCount;
+                
+                // Update leave requests section
+                updateLeaveRequestsSection(notificationData.leaveRequests);
+                
+                // Update performance updates section
+                updatePerformanceSection(notificationData.performanceUpdates);
+            } catch (error) {
+                console.error('Error updating notifications:', error);
+                
+                // Show error message in sections
+                document.getElementById('section-2').innerHTML = '<h4>Leave Request Updates</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load leave request data. Please try again later.</div></div>';
+                
+                document.getElementById('section-3').innerHTML = '<h4>Performance Updates</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load performance data. Please try again later.</div></div>';
+            }
+        }
+    });
+
+    // Close notification panel when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!notificationPanel.contains(event.target) && !notificationBell.contains(event.target)) {
+            notificationPanel.classList.remove('open');
+        }
+    });
+
     // See previous notifications button functionality
     seePreviousButton.addEventListener('click', function() {
         console.log('See Previous Notifications clicked');
-        // Clear section-2 before adding all notifications
-        document.getElementById('section-2').innerHTML = '<h4>All Notifications</h4>';
+        // Clear section-4 before adding all notifications
+        document.getElementById('section-4').innerHTML = '<h4>All Notifications</h4>';
         
-        // Add all notifications to section-2
+        // Add all notifications to section-4
         olderNotifications.forEach(notification => {
             const notificationItem = document.createElement('div');
             notificationItem.classList.add('notification-item');
@@ -322,7 +553,7 @@ body {
                 <div class="headline">${notification.message}</div>
                 <div class="date">${formatDate(new Date(notification.timestamp))}</div>
             `;
-            document.getElementById('section-2').appendChild(notificationItem);
+            document.getElementById('section-4').appendChild(notificationItem);
         });
         
         // Hide the button after showing all notifications
@@ -337,7 +568,7 @@ body {
         
         showLessButton.addEventListener('click', function() {
             // Reset to initial state
-            document.getElementById('section-2').innerHTML = '<h4>Recent Notifications</h4>';
+            document.getElementById('section-4').innerHTML = '<h4>Recent Notifications</h4>';
             olderNotifications.slice(0, 3).forEach(notification => {
                 const notificationItem = document.createElement('div');
                 notificationItem.classList.add('notification-item');
@@ -345,7 +576,7 @@ body {
                     <div class="headline">${notification.message}</div>
                     <div class="date">${formatDate(new Date(notification.timestamp))}</div>
                 `;
-                document.getElementById('section-2').appendChild(notificationItem);
+                document.getElementById('section-4').appendChild(notificationItem);
             });
             
             // Show the "See Previous" button again
@@ -356,17 +587,63 @@ body {
         });
     });
 
-    // Initialize button click handlers for sample notifications
-    document.querySelectorAll('.action-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            console.log('Action button clicked');
-            window.location.href = '/employee/staffFeedbackList';
-        });
-    });
-
     // Floating action button functionality
     fab.addEventListener('click', () => {
         console.log('Floating Action Button clicked');
-        window.location.href = '/employee/staffFeedbackList';
+        // For employees, redirect to a different page
+        window.location.href = '/employee/leaverequest';
+    });
+
+    // Function to periodically check for new notifications
+    async function checkNotifications() {
+        try {
+            const notificationData = await fetchNotifications();
+            
+            // Check if there are new notifications
+            checkForNewNotifications(notificationData.notificationCount);
+            
+            // Update the notification count
+            notificationCount.textContent = notificationData.notificationCount;
+            
+        } catch (error) {
+            console.error('Error checking for notifications:', error);
+        }
+    }
+
+    // Initialize the page - fetch data when the page loads to update the notification count badge
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            // Verify that Font Awesome is loaded
+            const isFontAwesomeLoaded = (function() {
+                // Check for a common Font Awesome class
+                const testIcon = document.createElement('i');
+                testIcon.className = 'fas fa-bell';
+                document.body.appendChild(testIcon);
+                
+                // Check if the icon is displaying as expected
+                const styles = window.getComputedStyle(testIcon);
+                const fontFamily = styles.getPropertyValue('font-family');
+                
+                // Clean up
+                document.body.removeChild(testIcon);
+                
+                // If Font Awesome is loaded, the font-family should contain "Font Awesome"
+                return fontFamily.includes('Font Awesome') || fontFamily.includes('FontAwesome');
+            })();
+            
+            if (!isFontAwesomeLoaded) {
+                console.warn('Font Awesome may not be loaded correctly. Check the CDN link.');
+            }
+            
+            // Initial notification check
+            await checkNotifications();
+            
+            // Set up periodic notification checks (every 5 minutes)
+            setInterval(checkNotifications, 5 * 60 * 1000);
+            
+        } catch (error) {
+            console.error('Error loading initial notification count:', error);
+            notificationCount.textContent = '0';
+        }
     });
 </script>
