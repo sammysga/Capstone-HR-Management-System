@@ -359,89 +359,331 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 16px;
 }
 
 .edit-job-offer .heading {
-    font-size: 24px;
-    color: #07ACB9;
+    font-size: 28px;
+    color: #124A5C;
+    font-weight: 600;
 }
 
+/* Enhanced Edit Job Offer styling */
+.edit-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 28px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    background-color: #fff;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Form group styling */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 15px;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-group input, 
+.form-group textarea, 
+.form-group select {
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus, 
+.form-group textarea:focus, 
+.form-group select:focus {
+    border-color: #07ACB9;
+    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+    outline: none;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.5;
+}
+
+/* Status toggle switch styling */
+.status-toggle {
+    display: flex;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.status-toggle label {
+    font-size: 16px;
+    margin-right: 12px;
+    font-weight: 500;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #07ACB9;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #07ACB9;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.toggle-status {
+    margin-left: 10px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Section styling */
+.skills-section,
+.certifications-section,
+.degrees-section,
+.experience-section {
+    background-color: #f9fafb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 12px;
+}
+
+.skills-section h3,
+.certifications-section h3,
+.degrees-section h3,
+.experience-section h3 {
+    color: #124A5C;
+    font-size: 20px;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.skills-section h4 {
+    color: #555;
+    font-size: 16px;
+    margin: 16px 0 8px;
+}
+
+/* List styling for items */
+#hardSkillsList,
+#softSkillsList,
+#certificationsList,
+#degreesList,
+#experienceList {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#hardSkillsList li,
+#softSkillsList li,
+#certificationsList li,
+#degreesList li,
+#experienceList li {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Preserve existing button styles but enhance them */
 .save-btn, .cancel-btn {
     padding: 10px 20px;
     border: none;
-    border-radius: 20px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 15px;
+    font-weight: 500;
+    transition: all 0.2s ease;
     text-decoration: none;
 }
 
 .save-btn {
     background-color: #124A5C;
     color: white;
-}
-
-.cancel-btn {
-    background-color: rgba(101, 112, 129, 0.1);
-    color: #657081;
+    margin-top: 20px;
+    padding: 12px 24px;
 }
 
 .save-btn:hover {
+    background-color: #0d3c4a;
+    transform: translateY(-2px);
+}
+
+.cancel-btn {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.cancel-btn:hover {
+    background-color: #e9e9e9;
+}
+
+/* New button styles for add/remove */
+.add-btn {
+    background-color: #07ACB9;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    margin-top: 10px;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.add-btn:hover {
     background-color: #059ca4;
 }
 
-.edit-form-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border-radius: 15px;
-    background-color: #fff;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.form-group label {
-    font-size: 14px;
-    color: #555;
-}
-
-.form-group input, .form-group textarea, .form-group select {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.form-group textarea {
-    resize: vertical;
-    height: 100px;
-}
-
-.status-toggle {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.status-toggle label {
+.add-btn::before {
+    content: "+";
+    margin-right: 8px;
     font-size: 16px;
 }
 
-.status-toggle input[type="checkbox"] {
-    transform: scale(1.5);
+.remove-btn {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 6px 10px;
+    margin-left: auto;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
-/* Mobile styling */
+.remove-btn:hover {
+    background-color: #ff5252;
+}
+
+/* Icons styling */
+.fas {
+    margin-right: 6px;
+}
+
+/* Animation effects */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(10px); }
+}
+
+/* Style for the newly added fields */
+.new-field {
+    animation: fadeIn 0.3s ease-out;
+    border-left: 3px solid #07ACB9;
+}
+
+/* Read-only field styling */
+input[readonly] {
+    background-color: #f9f9f9;
+    cursor: not-allowed;
+    color: #666;
+}
+
+/* Placeholder styling */
+::placeholder {
+    color: #aab0b6;
+    opacity: 0.8;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+    outline: 2px solid #07ACB9;
+    outline-offset: 1px;
+}
+
+/* Mobile styling - preserve existing and add new */
 @media (max-width: 768px) {
     .edit-form-container {
-        padding: 15px;
+        padding: 20px 16px;
+    }
+    
+    .edit-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    #hardSkillsList li,
+    #softSkillsList li,
+    #certificationsList li,
+    #degreesList li,
+    #experienceList li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .remove-btn {
+        margin-left: 0;
+        margin-top: 8px;
     }
 }
-

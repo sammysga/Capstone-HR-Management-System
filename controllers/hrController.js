@@ -1501,25 +1501,270 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
     },
 
     // Controller function to handle job offer update
+// Enhanced controller function to handle job offer update with item removal
 updateJobOffer: async function(req, res) {
     if (req.session.user && req.session.user.userRole === 'HR') {
         try {
             const jobId = req.params.id;
-            const { jobTitle, jobDescrpt, departmentId, jobType, isActiveHiring } = req.body;
+            const { 
+                jobTitle, 
+                jobDescrpt, 
+                isActiveHiring,
+                remove_id // Array of IDs to remove
+            } = req.body;
 
-            // Update the job offer in the 'jobpositions' table
-            const { error } = await supabase
+            // Process isActiveHiring from checkbox
+            const isActive = isActiveHiring === 'on' || isActiveHiring === true;
+
+            // Update the main job offer in the 'jobpositions' table
+            const { error: jobUpdateError } = await supabase
                 .from('jobpositions')
                 .update({
                     jobTitle,
                     jobDescrpt,
-                    departmentId,
-                    jobType,
-                    isActiveHiring
+                    isActiveHiring: isActive
                 })
                 .eq('jobId', jobId);
 
-            if (error) throw error;
+            if (jobUpdateError) throw jobUpdateError;
+
+            // Handle removing items if any IDs were provided
+            if (remove_id) {
+                // Convert to array if it's a single value
+                const removeIds = Array.isArray(remove_id) ? remove_id : [remove_id];
+                
+                // Process each ID to determine which table it belongs to
+                for (const id of removeIds) {
+                    // Check each table to find and remove the item
+                    
+                    // Try to remove from skills
+                    const { error: skillRemoveError } = await supabase
+                        .from('jobreqskills')
+                        .delete()
+                        .eq('jobReqSkillId', id);
+                    
+                    if (!skillRemoveError) {
+                        console.log(`Successfully removed skill with ID: ${id}`);
+                        continue; // Move to next ID if this one was removed successfully
+                    }
+                    
+                    // Try to remove from certifications
+                    const { error: certRemoveError } = await supabase
+                        .from('jobreqcertifications')
+                        .delete()
+                        .eq('jobReqCertificateId', id);
+                    
+                    if (!certRemoveError) {
+                        console.log(`Successfully removed certification with ID: ${id}`);
+                        continue;
+                    }
+                    
+                    // Try to remove from degrees
+                    const { error: degreeRemoveError } = await supabase
+                        .from('jobreqdegrees')
+                        .delete()
+                        .eq('jobReqDegreeId', id);
+                    
+                    if (!degreeRemoveError) {
+                        console.log(`Successfully removed degree with ID: ${id}`);
+                        continue;
+                    }
+                    
+                    // Try to remove from experiences
+                    const { error: expRemoveError } = await supabase
+                        .from('jobreqexperiences')
+                        .delete()
+                        .eq('jobReqExperienceId', id);
+                    
+                    if (!expRemoveError) {
+                        console.log(`Successfully removed experience with ID: ${id}`);
+                        continue;
+                    }
+                    
+                    console.log(`Could not find item with ID: ${id} in any table`);
+                }
+            }
+
+            // Process existing skills
+            const skillUpdates = [];
+            for (const [key, value] of Object.entries(req.body)) {
+                if (key.startsWith('skill_')) {
+                    const skillId = key.replace('skill_', '');
+                    skillUpdates.push({
+                        jobReqSkillId: skillId,
+                        jobReqSkillName: value
+                    });
+                }
+            }
+
+            // Handle skill updates
+            for (const skill of skillUpdates) {
+                const { error: skillUpdateError } = await supabase
+                    .from('jobreqskills')
+                    .update({ jobReqSkillName: skill.jobReqSkillName })
+                    .eq('jobReqSkillId', skill.jobReqSkillId);
+                
+                if (skillUpdateError) throw skillUpdateError;
+            }
+
+            // Process new skills
+            const newSkillNames = Array.isArray(req.body.new_skill_name) 
+                ? req.body.new_skill_name 
+                : (req.body.new_skill_name ? [req.body.new_skill_name] : []);
+            
+            const newSkillTypes = Array.isArray(req.body.new_skill_type)
+                ? req.body.new_skill_type
+                : (req.body.new_skill_type ? [req.body.new_skill_type] : []);
+
+            if (newSkillNames.length > 0) {
+                const newSkills = newSkillNames.map((name, index) => ({
+                    jobId: jobId,
+                    jobReqSkillName: name,
+                    jobReqSkillType: newSkillTypes[index] || 'Hard' // Default to Hard if type not specified
+                }));
+
+                const { error: newSkillError } = await supabase
+                    .from('jobreqskills')
+                    .insert(newSkills);
+                
+                if (newSkillError) throw newSkillError;
+            }
+
+            // Process existing certifications
+            const certUpdates = [];
+            for (const [key, value] of Object.entries(req.body)) {
+                if (key.startsWith('cert_')) {
+                    const certType = key.replace('cert_', '');
+                    certUpdates.push({
+                        jobReqCertificateType: certType,
+                        jobReqCertificateDescrpt: value
+                    });
+                }
+            }
+
+            // Handle certification updates
+            for (const cert of certUpdates) {
+                const { error: certUpdateError } = await supabase
+                    .from('jobreqcertifications')
+                    .update({ jobReqCertificateDescrpt: cert.jobReqCertificateDescrpt })
+                    .eq('jobReqCertificateType', cert.jobReqCertificateType)
+                    .eq('jobId', jobId);
+                
+                if (certUpdateError) throw certUpdateError;
+            }
+
+            // Process new certifications
+            const newCertTypes = Array.isArray(req.body.new_cert_type) 
+                ? req.body.new_cert_type 
+                : (req.body.new_cert_type ? [req.body.new_cert_type] : []);
+            
+            const newCertDescs = Array.isArray(req.body.new_cert_desc)
+                ? req.body.new_cert_desc
+                : (req.body.new_cert_desc ? [req.body.new_cert_desc] : []);
+
+            if (newCertTypes.length > 0) {
+                const newCerts = newCertTypes.map((type, index) => ({
+                    jobId: jobId,
+                    jobReqCertificateType: type,
+                    jobReqCertificateDescrpt: newCertDescs[index] || ''
+                }));
+
+                const { error: newCertError } = await supabase
+                    .from('jobreqcertifications')
+                    .insert(newCerts);
+                
+                if (newCertError) throw newCertError;
+            }
+
+            // Similar processing for degrees
+            const degreeUpdates = [];
+            for (const [key, value] of Object.entries(req.body)) {
+                if (key.startsWith('degree_')) {
+                    const degreeType = key.replace('degree_', '');
+                    degreeUpdates.push({
+                        jobReqDegreeType: degreeType,
+                        jobReqDegreeDescrpt: value
+                    });
+                }
+            }
+
+            for (const degree of degreeUpdates) {
+                const { error: degreeUpdateError } = await supabase
+                    .from('jobreqdegrees')
+                    .update({ jobReqDegreeDescrpt: degree.jobReqDegreeDescrpt })
+                    .eq('jobReqDegreeType', degree.jobReqDegreeType)
+                    .eq('jobId', jobId);
+                
+                if (degreeUpdateError) throw degreeUpdateError;
+            }
+
+            // Process new degrees
+            const newDegreeTypes = Array.isArray(req.body.new_degree_type) 
+                ? req.body.new_degree_type 
+                : (req.body.new_degree_type ? [req.body.new_degree_type] : []);
+            
+            const newDegreeDescs = Array.isArray(req.body.new_degree_desc)
+                ? req.body.new_degree_desc
+                : (req.body.new_degree_desc ? [req.body.new_degree_desc] : []);
+
+            if (newDegreeTypes.length > 0) {
+                const newDegrees = newDegreeTypes.map((type, index) => ({
+                    jobId: jobId,
+                    jobReqDegreeType: type,
+                    jobReqDegreeDescrpt: newDegreeDescs[index] || ''
+                }));
+
+                const { error: newDegreeError } = await supabase
+                    .from('jobreqdegrees')
+                    .insert(newDegrees);
+                
+                if (newDegreeError) throw newDegreeError;
+            }
+
+            // Similar processing for experiences
+            const experienceUpdates = [];
+            for (const [key, value] of Object.entries(req.body)) {
+                if (key.startsWith('experience_')) {
+                    const expType = key.replace('experience_', '');
+                    experienceUpdates.push({
+                        jobReqExperienceType: expType,
+                        jobReqExperienceDescrpt: value
+                    });
+                }
+            }
+
+            for (const exp of experienceUpdates) {
+                const { error: expUpdateError } = await supabase
+                    .from('jobreqexperiences')
+                    .update({ jobReqExperienceDescrpt: exp.jobReqExperienceDescrpt })
+                    .eq('jobReqExperienceType', exp.jobReqExperienceType)
+                    .eq('jobId', jobId);
+                
+                if (expUpdateError) throw expUpdateError;
+            }
+
+            // Process new experiences
+            const newExpTypes = Array.isArray(req.body.new_experience_type) 
+                ? req.body.new_experience_type 
+                : (req.body.new_experience_type ? [req.body.new_experience_type] : []);
+            
+            const newExpDescs = Array.isArray(req.body.new_experience_desc)
+                ? req.body.new_experience_desc
+                : (req.body.new_experience_desc ? [req.body.new_experience_desc] : []);
+
+            if (newExpTypes.length > 0) {
+                const newExps = newExpTypes.map((type, index) => ({
+                    jobId: jobId,
+                    jobReqExperienceType: type,
+                    jobReqExperienceDescrpt: newExpDescs[index] || ''
+                }));
+
+                const { error: newExpError } = await supabase
+                    .from('jobreqexperiences')
+                    .insert(newExps);
+                
+                if (newExpError) throw newExpError;
+            }
 
             req.flash('success', { message: 'Job offer updated successfully!' });
             res.redirect('/hr/joboffers');

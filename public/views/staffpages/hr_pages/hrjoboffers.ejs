@@ -6,6 +6,49 @@
     <title>HR Manage Job Postings</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/hr_pages.css">
+    <style>
+        /* Filter dropdown styles */
+        .filter-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
+        
+        .show {
+            display: block;
+        }
+        
+        /* Active filter display */
+        .active-filter {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 14px;
+            color: #07ACB9;
+        }
+    </style>
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
@@ -15,14 +58,28 @@
             <div class="header">
                 <div class="header-title">
                     <h2 class="heading" style="color:#07ACB9;">Manage Job Posting</h2>
-                    <button class="filter-btn">Filter By</button>
+                    <div class="filter-dropdown">
+                        <button class="filter-btn">Filter By</button>
+                        <div id="filterDropdown" class="dropdown-content">
+                            <a onclick="filterJobs('all')">All Jobs</a>
+                            <a onclick="filterJobs('active')">Active Jobs</a>
+                            <a onclick="filterJobs('inactive')">Inactive Jobs</a>
+                            <a onclick="filterJobs('fulltime')">Full Time</a>
+                            <a onclick="filterJobs('parttime')">Part Time</a>
+                            <a onclick="filterJobs('department')">By Department</a>
+                        </div>
+                    </div>
+                    <span id="activeFilter" class="active-filter"></span>
                 </div>
                 <a href="/hr/addjoboffer" class="add-job-btn">Add a Job Posting</a>
             </div>
             <div class="job-offers-container">
                 <% if (jobPositions && jobPositions.length > 0) { %>
                     <% jobPositions.forEach(job => { %>
-                        <div class="job-offer-box">
+                        <div class="job-offer-box" 
+                             data-status="<%= job.isActiveHiring ? 'active' : 'inactive' %>" 
+                             data-type="<%= job.jobType ? job.jobType.toLowerCase().replace(/\s+/g, '') : 'unknown' %>"
+                             data-department="<%= job.department ? job.department.toLowerCase().replace(/\s+/g, '') : 'unknown' %>">
                             <div class="job-offer-header">
                                 <div class="job-role-status">
                                     <strong><%= job.jobTitle %></strong>
@@ -49,34 +106,133 @@
             </div>
         </section>
     </div>
-</body>
-</html>
 
-<!-- JavaScript for sidebar functionality -->
-<script>
-    // Toggle active class for sidebar links
-    document.querySelectorAll('.sidebar ul li a').forEach(link => {
-        link.addEventListener('click', function() {
-            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-            this.classList.add('active');
+    <!-- JavaScript for sidebar and filter functionality -->
+    <script>
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
         });
-    });
+        
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
 
-    // Toggle collapsible content
-    document.querySelectorAll('.collapsible-header').forEach(header => {
-        header.addEventListener('click', function() {
-            var content = this.nextElementSibling;
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                // Hide all other collapsible contents
-                document.querySelectorAll('.collapsible-content').forEach(item => {
-                    if (item !== content) {
-                        item.style.display = 'none';
+        // Filter dropdown toggle
+        document.querySelector('.filter-btn').addEventListener('click', function() {
+            document.getElementById('filterDropdown').classList.toggle('show');
+        });
+
+        // Close the dropdown if the user clicks outside of it
+        window.addEventListener('click', function(event) {
+            if (!event.target.matches('.filter-btn')) {
+                var dropdowns = document.getElementsByClassName('dropdown-content');
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
                     }
-                });
-                content.style.display = 'block';
+                }
             }
         });
-    });
-</script>
+
+        // Filter jobs function
+        function filterJobs(filterType) {
+            const jobBoxes = document.querySelectorAll('.job-offer-box');
+            const activeFilterDisplay = document.getElementById('activeFilter');
+            
+            // Set active filter text
+            switch(filterType) {
+                case 'all':
+                    activeFilterDisplay.textContent = 'Showing: All Jobs';
+                    break;
+                case 'active':
+                    activeFilterDisplay.textContent = 'Showing: Active Jobs';
+                    break;
+                case 'inactive':
+                    activeFilterDisplay.textContent = 'Showing: Inactive Jobs';
+                    break;
+                case 'fulltime':
+                    activeFilterDisplay.textContent = 'Showing: Full Time Jobs';
+                    break;
+                case 'parttime':
+                    activeFilterDisplay.textContent = 'Showing: Part Time Jobs';
+                    break;
+                case 'department':
+                    // Show department selector or dropdown
+                    const deptName = prompt("Enter department name:");
+                    if (deptName) {
+                        activeFilterDisplay.textContent = `Showing: ${deptName} Department`;
+                        filterByDepartment(deptName);
+                        return;
+                    } else {
+                        activeFilterDisplay.textContent = '';
+                        jobBoxes.forEach(box => box.style.display = 'block');
+                        return;
+                    }
+                    break;
+                default:
+                    activeFilterDisplay.textContent = '';
+            }
+            
+            // Apply filter
+            jobBoxes.forEach(box => {
+                const status = box.getAttribute('data-status');
+                const type = box.getAttribute('data-type');
+                
+                if (filterType === 'all') {
+                    box.style.display = 'block';
+                } else if (filterType === 'active' && status === 'active') {
+                    box.style.display = 'block';
+                } else if (filterType === 'inactive' && status === 'inactive') {
+                    box.style.display = 'block';
+                } else if (filterType === 'fulltime' && type.includes('fulltime')) {
+                    box.style.display = 'block';
+                } else if (filterType === 'parttime' && type.includes('parttime')) {
+                    box.style.display = 'block';
+                } else {
+                    box.style.display = 'none';
+                }
+            });
+            
+            // Close dropdown
+            document.getElementById('filterDropdown').classList.remove('show');
+        }
+        
+        // Filter by department function
+        function filterByDepartment(deptName) {
+            const jobBoxes = document.querySelectorAll('.job-offer-box');
+            const searchTerm = deptName.toLowerCase().replace(/\s+/g, '');
+            
+            jobBoxes.forEach(box => {
+                const department = box.getAttribute('data-department');
+                if (department.includes(searchTerm)) {
+                    box.style.display = 'block';
+                } else {
+                    box.style.display = 'none';
+                }
+            });
+            
+            // Close dropdown
+            document.getElementById('filterDropdown').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

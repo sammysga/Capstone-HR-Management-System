@@ -6,6 +6,11 @@
     <title>Edit Job Offer</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/hr_pages.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add your custom CSS file here -->
+    <style>
+        /* Include the CSS from the improved-job-edit-css artifact here */
+    </style>
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
@@ -14,7 +19,9 @@
             <div class="edit-header">
                 <h2 class="heading">Edit Job Offer</h2>
                 <div>
-                    <button class="cancel-btn" onclick="window.history.back()">Cancel</button>
+                    <button class="cancel-btn" onclick="window.history.back()">
+                        <i class="fas fa-times-circle"></i> Cancel
+                    </button>
                 </div>
             </div>
             <div class="edit-form-container">
@@ -23,31 +30,37 @@
                         <label for="jobTitle">Job Title</label>
                         <input type="text" id="jobTitle" name="jobTitle" value="<%= job.jobTitle %>" required>
                     </div>
+                    
                     <div class="form-group">
                         <label for="department">Department</label>
-                        <!-- Display department as read-only text -->
-                        <input type="text" id="department" name="department" value="<%= job.departments.deptName %>" readonly>
-                        <!-- Or use a span if it's for display only -->
-                        <!-- <span id="department"><%= job.departments.deptName %></span> -->
+                        <!-- Display department as read-only text with visual indication -->
+                        <input type="text" id="department" name="department" value="<%= job.departments.deptName %>" readonly style="background-color: #f9f9f9; cursor: not-allowed;">
                     </div>                    
+                    
                     <div class="form-group">
                         <label for="jobDescrpt">Job Description</label>
-                        <textarea id="jobDescrpt" name="jobDescrpt" required><%= job.jobDescrpt %></textarea>
+                        <textarea id="jobDescrpt" name="jobDescrpt" required placeholder="Describe the responsibilities, qualifications, and other details of this job"><%= job.jobDescrpt %></textarea>
                     </div>
+                    
                     <div class="status-toggle">
                         <label for="isActiveHiring">Active Hiring</label>
-                        <input type="checkbox" id="isActiveHiring" name="isActiveHiring" <%= job.isActiveHiring ? 'checked' : '' %>>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="isActiveHiring" name="isActiveHiring" <%= job.isActiveHiring ? 'checked' : '' %>>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="toggle-status" id="toggleStatus"><%= job.isActiveHiring ? 'Active' : 'Inactive' %></span>
                     </div>
 
                     <!-- Job Skills Section -->
                     <div class="skills-section">
-                        <h3>Job Skills</h3>
+                        <h3><i class="fas fa-cogs"></i> Job Skills</h3>
+                        
                         <h4>Hard Skills</h4>
                         <ul id="hardSkillsList">
                             <% hardSkills.forEach(skill => { %>
                                 <li>
-                                    <label for="skill_<%= skill.jobReqSkillId %>"><%= skill.jobReqSkillType %>:</label>
-                                    <input type="text" name="skill_<%= skill.jobReqSkillId %>" value="<%= skill.jobReqSkillName %>" required>
+                                    <label for="skill_<%= skill.jobReqSkillId %>"><i class="fas fa-wrench"></i> <%= skill.jobReqSkillType %>:</label>
+                                    <input type="text" id="skill_<%= skill.jobReqSkillId %>" name="skill_<%= skill.jobReqSkillId %>" value="<%= skill.jobReqSkillName %>" required>
                                 </li>
                             <% }); %>
                         </ul>
@@ -57,8 +70,8 @@
                         <ul id="softSkillsList">
                             <% softSkills.forEach(skill => { %>
                                 <li>
-                                    <label for="skill_<%= skill.jobReqSkillId %>"><%= skill.jobReqSkillType %>:</label>
-                                    <input type="text" name="skill_<%= skill.jobReqSkillId %>" value="<%= skill.jobReqSkillName %>" required>
+                                    <label for="skill_<%= skill.jobReqSkillId %>"><i class="fas fa-comments"></i> <%= skill.jobReqSkillType %>:</label>
+                                    <input type="text" id="skill_<%= skill.jobReqSkillId %>" name="skill_<%= skill.jobReqSkillId %>" value="<%= skill.jobReqSkillName %>" required>
                                 </li>
                             <% }); %>
                         </ul>
@@ -67,12 +80,12 @@
 
                     <!-- Certifications Section -->
                     <div class="certifications-section">
-                        <h3>Certifications</h3>
+                        <h3><i class="fas fa-certificate"></i> Certifications</h3>
                         <ul id="certificationsList">
                             <% certifications.forEach(cert => { %>
                                 <li>
-                                    <label for="cert_<%= cert.jobReqCertificateType %>"><%= cert.jobReqCertificateType %>:</label>
-                                    <input type="text" name="cert_<%= cert.jobReqCertificateType %>" value="<%= cert.jobReqCertificateDescrpt %>" required>
+                                    <label for="cert_<%= cert.jobReqCertificateType %>"><i class="fas fa-award"></i> <%= cert.jobReqCertificateType %>:</label>
+                                    <input type="text" id="cert_<%= cert.jobReqCertificateType %>" name="cert_<%= cert.jobReqCertificateType %>" value="<%= cert.jobReqCertificateDescrpt %>" required>
                                 </li>
                             <% }); %>
                         </ul>
@@ -81,12 +94,12 @@
 
                     <!-- Degrees Section -->
                     <div class="degrees-section">
-                        <h3>Degrees</h3>
+                        <h3><i class="fas fa-graduation-cap"></i> Degrees</h3>
                         <ul id="degreesList">
                             <% degrees.forEach(degree => { %>
                                 <li>
-                                    <label for="degree_<%= degree.jobReqDegreeType %>"><%= degree.jobReqDegreeType %>:</label>
-                                    <input type="text" name="degree_<%= degree.jobReqDegreeType %>" value="<%= degree.jobReqDegreeDescrpt %>" required>
+                                    <label for="degree_<%= degree.jobReqDegreeType %>"><i class="fas fa-user-graduate"></i> <%= degree.jobReqDegreeType %>:</label>
+                                    <input type="text" id="degree_<%= degree.jobReqDegreeType %>" name="degree_<%= degree.jobReqDegreeType %>" value="<%= degree.jobReqDegreeDescrpt %>" required>
                                 </li>
                             <% }); %>
                         </ul>
@@ -95,19 +108,19 @@
 
                     <!-- Experience Section -->
                     <div class="experience-section">
-                        <h3>Experience</h3>
+                        <h3><i class="fas fa-briefcase"></i> Experience</h3>
                         <ul id="experienceList">
                             <% experiences.forEach(exp => { %>
                                 <li>
-                                    <label for="experience_<%= exp.jobReqExperienceType %>"><%= exp.jobReqExperienceType %>:</label>
-                                    <input type="text" name="experience_<%= exp.jobReqExperienceType %>" value="<%= exp.jobReqExperienceDescrpt %>" required>
+                                    <label for="experience_<%= exp.jobReqExperienceType %>"><i class="fas fa-business-time"></i> <%= exp.jobReqExperienceType %>:</label>
+                                    <input type="text" id="experience_<%= exp.jobReqExperienceType %>" name="experience_<%= exp.jobReqExperienceType %>" value="<%= exp.jobReqExperienceDescrpt %>" required>
                                 </li>
                             <% }); %>
                         </ul>
                         <button type="button" class="add-btn" id="addExperience">Add More Experience</button>
                     </div>
 
-                    <button type="submit" class="save-btn">Save Changes</button>
+                    <button type="submit" class="save-btn"><i class="fas fa-save"></i> Save Changes</button>
                 </form>
             </div>
         </section>
@@ -116,56 +129,215 @@
 </html>
 
 <script>
-    // Function to add new fields dynamically
-    function addField(listId, type) {
-        const list = document.getElementById(listId);
-        const newItem = document.createElement('li');
-
-        // Create the new input field with an appropriate label
-        let newField;
-        if (type === 'skill') {
-            newField = `<label for="newSkill">Skill Name:</label><input type="text" name="newSkill" required>`;
-        } else if (type === 'certification') {
-            newField = `<label for="newCertification">Certification Name:</label><input type="text" name="newCertification" required>`;
-        } else if (type === 'degree') {
-            newField = `<label for="newDegree">Degree Name:</label><input type="text" name="newDegree" required>`;
-        } else if (type === 'experience') {
-            newField = `<label for="newExperience">Experience Description:</label><input type="text" name="newExperience" required>`;
-        }
-        newItem.innerHTML = newField;
-        list.appendChild(newItem);
+// Function to add new fields dynamically with unique identifiers
+function addField(listId, type) {
+    const list = document.getElementById(listId);
+    const newItem = document.createElement('li');
+    newItem.className = 'new-field'; // Add class for styling
+    
+    // Create a unique identifier for new fields
+    const timestamp = new Date().getTime();
+    const uniqueId = `new_${type}_${timestamp}`;
+    
+    // Create the new input field with an appropriate label and unique names
+    let newField;
+    if (type === 'skill') {
+        const skillType = listId === 'hardSkillsList' ? 'Hard' : 'Soft';
+        const icon = skillType === 'Hard' ? 'fas fa-wrench' : 'fas fa-comments';
+        newField = `
+            <input type="hidden" name="new_skill_type" value="${skillType}">
+            <label for="${uniqueId}"><i class="${icon}"></i> ${skillType} Skill:</label>
+            <input type="text" id="${uniqueId}" name="new_skill_name" required placeholder="Enter skill name">
+        `;
+    } else if (type === 'certification') {
+        newField = `
+            <label for="${uniqueId}_type"><i class="fas fa-certificate"></i> Certification Type:</label>
+            <input type="text" id="${uniqueId}_type" name="new_cert_type" required placeholder="E.g., Professional, Technical, etc.">
+            <label for="${uniqueId}_desc"><i class="fas fa-file-alt"></i> Description:</label>
+            <input type="text" id="${uniqueId}_desc" name="new_cert_desc" required placeholder="Certification details">
+        `;
+    } else if (type === 'degree') {
+        newField = `
+            <label for="${uniqueId}_type"><i class="fas fa-graduation-cap"></i> Degree Type:</label>
+            <input type="text" id="${uniqueId}_type" name="new_degree_type" required placeholder="E.g., Bachelor's, Master's, etc.">
+            <label for="${uniqueId}_desc"><i class="fas fa-file-alt"></i> Description:</label>
+            <input type="text" id="${uniqueId}_desc" name="new_degree_desc" required placeholder="Degree details">
+        `;
+    } else if (type === 'experience') {
+        newField = `
+            <label for="${uniqueId}_type"><i class="fas fa-briefcase"></i> Experience Type:</label>
+            <input type="text" id="${uniqueId}_type" name="new_experience_type" required placeholder="E.g., Industry, Role, etc.">
+            <label for="${uniqueId}_desc"><i class="fas fa-file-alt"></i> Description:</label>
+            <input type="text" id="${uniqueId}_desc" name="new_experience_desc" required placeholder="Experience requirements">
+        `;
     }
+    
+    newItem.innerHTML = newField;
+    list.appendChild(newItem);
+    
+    // Add a remove button for newly added fields
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'remove-btn';
+    removeButton.innerHTML = '<i class="fas fa-trash-alt"></i> Remove';
+    removeButton.onclick = function() {
+        newItem.style.animation = 'fadeOut 0.3s ease-out forwards';
+        setTimeout(() => {
+            list.removeChild(newItem);
+        }, 300);
+    };
+    newItem.appendChild(removeButton);
+    
+    // Focus on the first input field in the new item
+    const firstInput = newItem.querySelector('input[type="text"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+}
 
-    // Add event listeners for adding more fields
-    document.getElementById('addHardSkill').addEventListener('click', () => addField('hardSkillsList', 'skill'));
-    document.getElementById('addSoftSkill').addEventListener('click', () => addField('softSkillsList', 'skill'));
-    document.getElementById('addCertification').addEventListener('click', () => addField('certificationsList', 'certification'));
-    document.getElementById('addDegree').addEventListener('click', () => addField('degreesList', 'degree'));
-    document.getElementById('addExperience').addEventListener('click', () => addField('experienceList', 'experience'));
-
-     // Toggle active class for sidebar links
-     document.querySelectorAll('.sidebar ul li a').forEach(link => {
-        link.addEventListener('click', function() {
-            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-            this.classList.add('active');
+// Function to add remove buttons to existing list items
+function addRemoveButtonsToExisting() {
+    // Get all the lists
+    const lists = [
+        document.getElementById('hardSkillsList'),
+        document.getElementById('softSkillsList'),
+        document.getElementById('certificationsList'),
+        document.getElementById('degreesList'),
+        document.getElementById('experienceList')
+    ];
+    
+    // For each list, add remove buttons to all existing items
+    lists.forEach(list => {
+        if (!list) return;
+        
+        const items = list.querySelectorAll('li');
+        items.forEach(item => {
+            // Skip if the item already has a remove button
+            if (item.querySelector('.remove-btn')) return;
+            
+            // Create hidden input to mark this item for deletion if removed
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'remove_item';
+            hiddenInput.value = '0'; // Default is not removed
+            item.appendChild(hiddenInput);
+            
+            // Create the remove button
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'remove-btn';
+            removeButton.innerHTML = '<i class="fas fa-trash-alt"></i> Remove';
+            
+            // Add click handler
+            removeButton.onclick = function() {
+                // Animation for smooth removal
+                item.style.animation = 'fadeOut 0.3s ease-out forwards';
+                
+                // Mark this item for deletion
+                hiddenInput.value = '1';
+                
+                // Hide the item after animation completes
+                setTimeout(() => {
+                    item.style.display = 'none';
+                }, 300);
+            };
+            
+            item.appendChild(removeButton);
         });
     });
+}
 
-    // Toggle collapsible content
-    document.querySelectorAll('.collapsible-header').forEach(header => {
-        header.addEventListener('click', function() {
-            var content = this.nextElementSibling;
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                // Hide all other collapsible contents
-                document.querySelectorAll('.collapsible-content').forEach(item => {
-                    if (item !== content) {
-                        item.style.display = 'none';
-                    }
-                });
-                content.style.display = 'block';
+// Add event listeners for adding more fields
+document.getElementById('addHardSkill').addEventListener('click', () => addField('hardSkillsList', 'skill'));
+document.getElementById('addSoftSkill').addEventListener('click', () => addField('softSkillsList', 'skill'));
+document.getElementById('addCertification').addEventListener('click', () => addField('certificationsList', 'certification'));
+document.getElementById('addDegree').addEventListener('click', () => addField('degreesList', 'degree'));
+document.getElementById('addExperience').addEventListener('click', () => addField('experienceList', 'experience'));
+
+// Toggle active/inactive status text based on checkbox
+document.getElementById('isActiveHiring').addEventListener('change', function() {
+    document.getElementById('toggleStatus').textContent = this.checked ? 'Active' : 'Inactive';
+});
+
+// Toggle active class for sidebar links
+document.querySelectorAll('.sidebar ul li a').forEach(link => {
+    link.addEventListener('click', function() {
+        document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
+// Toggle collapsible content
+document.querySelectorAll('.collapsible-header').forEach(header => {
+    header.addEventListener('click', function() {
+        var content = this.nextElementSibling;
+        if (content.style.display === 'block') {
+            content.style.display = 'none';
+        } else {
+            // Hide all other collapsible contents
+            document.querySelectorAll('.collapsible-content').forEach(item => {
+                if (item !== content) {
+                    item.style.display = 'none';
+                }
+            });
+            content.style.display = 'block';
+        }
+    });
+});
+
+// Add keydown event listener for Enter key to prevent form submission when adding new fields
+document.querySelectorAll('.add-btn').forEach(button => {
+    button.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    });
+});
+
+// Add a function to handle the form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    // Get all hidden inputs for items marked for removal
+    const removedItems = document.querySelectorAll('input[name="remove_item"][value="1"]');
+    
+    // For each removed item, add its ID to an array of IDs to be removed on the server
+    removedItems.forEach(input => {
+        // Find the parent li element
+        const listItem = input.closest('li');
+        
+        // Find the input field which contains the ID in its name (skill_ID, cert_ID, etc.)
+        const inputFields = listItem.querySelectorAll('input[type="text"]');
+        inputFields.forEach(field => {
+            // Extract the ID from the field name
+            const name = field.getAttribute('name');
+            if (name && (name.startsWith('skill_') || name.startsWith('cert_') || 
+                         name.startsWith('degree_') || name.startsWith('experience_'))) {
+                
+                // Create a hidden input to send the ID to be removed
+                const removeIdInput = document.createElement('input');
+                removeIdInput.type = 'hidden';
+                removeIdInput.name = 'remove_id';
+                removeIdInput.value = name.split('_')[1]; // Get the ID part
+                
+                // Add to the form
+                this.appendChild(removeIdInput);
             }
         });
     });
+});
+
+// Initialize the page by adding remove buttons to existing items
+document.addEventListener('DOMContentLoaded', function() {
+    addRemoveButtonsToExisting();
+    
+    // Animate the form on page load
+    const formContainer = document.querySelector('.edit-form-container');
+    formContainer.style.opacity = '0';
+    formContainer.style.transform = 'translateY(10px)';
+    
+    setTimeout(() => {
+        formContainer.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+        formContainer.style.opacity = '1';
+        formContainer.style.transform = 'translateY(0)';
+    }, 100);
+});
 </script>
