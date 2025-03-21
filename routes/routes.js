@@ -214,7 +214,14 @@ router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
 
 router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
 router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.getApplicantTrackerByJobPositions);
-router.post('/linemanager/applicant-tracker-jobposition/P1LineManagerPassed', lineManagerController.updateP1LineManagerPassed);
+// Routes for P1 review management
+router.post('/linemanager/applicant-tracker-jobposition/finalizeP1Review', lineManagerController.finalizeP1Review);
+router.post('/linemanager/applicant-tracker-jobposition/markAsP1Passed', lineManagerController.markAsP1Passed);
+router.post('/linemanager/applicant-tracker-jobposition/markAsP1Failed',  lineManagerController.markAsP1Failed);
 
+// Routes for P3 review management
+router.post('/linemanager/applicant-tracker-jobposition/finalizeP3Review', lineManagerController.finalizeP3Review);
+router.post('/linemanager/applicant-tracker-jobposition/markAsP3Passed',  lineManagerController.markAsP3Passed);
+router.post('/linemanager/applicant-tracker-jobposition/markAsP3Failed', lineManagerController.markAsP3Failed);
 module.exports = router; 
 
