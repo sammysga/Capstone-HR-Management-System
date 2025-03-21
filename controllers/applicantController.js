@@ -202,6 +202,74 @@ getJobDetailsById: async function(jobTitle) {
     }
 },
 
+    
+    getActiveJobPositionsList: async function() {
+        try {
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in "YYYY-MM-DD" format
+    
+            const { data: jobpositions, error } = await supabase
+                .from('jobpositions')
+                .select('jobId, jobTitle, hiringStartDate, hiringEndDate')
+                .gte('hiringEndDate', today) // hiringEndDate should be today or later
+                .lte('hiringStartDate', today); // hiringStartDate should be today or earlier
+    
+            if (error) {
+                console.error('❌ [Database] Error fetching job positions:', error.message);
+                return []; // Return an empty array on error
+            }
+    
+            console.log('✅ [Database] Fetched job positions:', jobpositions);
+    
+            if (!jobpositions || !Array.isArray(jobpositions)) {
+                console.error('❌ [Database] Job positions data is invalid:', jobpositions);
+                return [];
+            }
+    
+            return jobpositions.map(position => ({
+                jobId: position.jobId,
+                jobTitle: position.jobTitle
+            }));
+            
+        } catch (error) {
+            console.error('❌ [Server] Unexpected error:', error);
+            return [];
+        }
+    },
+    
+
+    
+    getJobDetails: async function(jobTitle) {
+        try {
+            const { data: jobDetails, error } = await supabase
+                .from('jobpositions')
+                .select(`
+                    jobId, jobTitle, jobDescrpt,  departmentId,
+                    jobreqcertifications(jobReqCertificateType, jobReqCertificateDescrpt),
+                    jobreqdegrees(jobReqDegreeType, jobReqDegreeDescrpt),
+                    jobreqexperiences(jobReqExperienceType, jobReqExperienceDescrpt),
+                    jobreqskills(jobReqSkillType, jobReqSkillName)
+                `)
+                .eq('jobTitle', jobTitle)
+                .single();
+    
+            if (error) {
+                console.error('Error fetching job details:', error);
+                return null;
+            }
+            
+            // Ensure all arrays exist even if they're empty
+            return {
+                ...jobDetails,
+                jobreqcertifications: jobDetails.jobreqcertifications || [],
+                jobreqdegrees: jobDetails.jobreqdegrees || [],
+                jobreqexperiences: jobDetails.jobreqexperiences || [],
+                jobreqskills: jobDetails.jobreqskills || []
+            };
+        } catch (error) {
+            console.error('Server error:', error);
+            return null;
+        }
+    },
     // Function to fetch job positions and format them for chatbot response
     getJobPositionsList: async function() {
         try {
@@ -518,7 +586,7 @@ getJobDetailsById: async function(jobTitle) {
     
                     try {
                         // ✅ Fetch job positions from your controller
-                        const positions = await applicantController.getJobPositionsList();
+                        const positions = await applicantController.getActiveJobPositionsList();
                         console.log('✅ [getChatbotPage] Job positions fetched successfully:', positions);
     
                         // ✅ Prepare the initial response
@@ -599,25 +667,53 @@ const { data: applicantData, error: applicantError } = await supabase
 
 if (applicantError) {
     console.error('❌ [Chatbot] Error fetching applicant status:', applicantError);
-} else if (applicantData && applicantData.applicantStatus === 'P1 - PASSED') {
-    console.log('✅ [Chatbot] Applicant status is P1 - PASSED. Sending congratulations message.');
+} else if (applicantData) {
+    console.log(`✅ [Chatbot] Applicant status is: ${applicantData.applicantStatus}`);
     
-    const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage once the HR team sets availability via Calendly.";
-    
-    // Save congratulations message to chat history
-    await supabase
-        .from('chatbot_history')
-        .insert([{
-            userId,
-            message: JSON.stringify({ text: congratsMessage }),
-            sender: 'bot',
-            timestamp: new Date().toISOString(),
-            applicantStage: 'P1 - PASSED'
-        }]);
+    // Handle P1 - PASSED status
+    if (applicantData.applicantStatus === 'P1 - PASSED') {
+        console.log('✅ [Chatbot] Applicant status is P1 - PASSED. Sending congratulations message.');
         
-    req.session.applicantStage = 'P1 - PASSED';
+        const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage once the HR team sets availability via Calendly.";
+        
+        // Save congratulations message to chat history
+        await supabase
+            .from('chatbot_history')
+            .insert([{
+                userId,
+                message: JSON.stringify({ text: congratsMessage }),
+                sender: 'bot',
+                timestamp: new Date().toISOString(),
+                applicantStage: 'P1 - PASSED'
+            }]);
+            
+        req.session.applicantStage = 'P1 - PASSED';
+        
+        return res.status(200).json({ response: { text: congratsMessage } });
+    }
     
-    return res.status(200).json({ response: { text: congratsMessage } });
+    // Handle P1 - FAILED status
+    else if (applicantData.applicantStatus === 'P1 - FAILED') {
+        console.log('❌ [Chatbot] Applicant status is P1 - FAILED. Sending rejection message.');
+        
+        const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.";
+        
+        // Save rejection message to chat history
+        await supabase
+            .from('chatbot_history')
+            .insert([{
+                userId,
+                message: JSON.stringify({ text: rejectionMessage }),
+                sender: 'bot',
+                timestamp: new Date().toISOString(),
+                applicantStage: 'P1 - FAILED'
+            }]);
+            
+        req.session.applicantStage = 'P1 - FAILED';
+        
+        return res.status(200).json({ response: { text: rejectionMessage } });
+    }
+
 }
 else {
     console.log(`✅ [Chatbot] Applicant status is: ${applicantData.applicantStatus}`);
@@ -630,7 +726,7 @@ else {
             console.log(`Initial Applicant Stage: ${applicantStage}`);
     
             // Fetch job positions
-            const positions = await applicantController.getJobPositionsList();
+            const positions = await applicantController.getActiveJobPositionsList();
             const selectedPosition = positions.find(position => userMessage.includes(position.jobTitle.toLowerCase()))?.jobTitle;
     
             req.session.screeningCounters = req.session.screeningCounters || {
@@ -640,7 +736,7 @@ else {
     
             if (selectedPosition) {
                 req.session.selectedPosition = selectedPosition;
-                const jobDetails = await applicantController.getJobDetails(selectedPosition);
+                const jobDetails = await applicantController.getJobDetailsById(selectedPosition);
     
                 if (jobDetails) {
                     // Update applicantaccounts with jobId and departmentId
@@ -689,7 +785,7 @@ else {
                 }
             }
             else if (applicantStage === 'job_selection' && userMessage.includes('yes')) {
-                const jobDetails = await applicantController.getJobDetails(req.session.selectedPosition);
+                const jobDetails = await applicantController.getJobDetailsById(req.session.selectedPosition);
                 if (!jobDetails || isNaN(jobDetails.jobId)) {
                     console.error('❌ [Chatbot] Invalid jobId:', jobDetails.jobId);
                     return res.status(500).json({ response: 'Error identifying job details. Please try again later.' });
@@ -1712,6 +1808,55 @@ updateApplicantStatusToP1Initial: async function (userId) {
         return { success: false, message: "Unexpected error occurred." };
     }
 },
+
+updateApplicantStatusFinalizeP1Review: async function (userId) {
+    try {
+        const { passedUserIds, failedUserIds, phase } = req.body;
+        
+        if (!passedUserIds || !failedUserIds) {
+            return res.status(400).json({ success: false, message: "Missing required data" });
+        }
+        
+        console.log(`Finalizing ${phase} review for ${passedUserIds.length} passed and ${failedUserIds.length} failed applicants`);
+        
+        // Update passed applicants
+        if (passedUserIds.length > 0) {
+            const { data: passedData, error: passedError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: `${phase} - PASSED` })
+                .in('userId', passedUserIds);
+                
+            if (passedError) {
+                console.error(`Error updating passed applicants:`, passedError);
+                return res.status(500).json({ success: false, message: "Error updating passed applicants" });
+            }
+        }
+        
+        // Update failed applicants
+        if (failedUserIds.length > 0) {
+            const { data: failedData, error: failedError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: `${phase} - FAILED` })
+                .in('userId', failedUserIds);
+                
+            if (failedError) {
+                console.error(`Error updating failed applicants:`, failedError);
+                return res.status(500).json({ success: false, message: "Error updating failed applicants" });
+            }
+        }
+        
+        // Send success response
+        return res.status(200).json({ 
+            success: true, 
+            message: `Successfully finalized ${phase} review for ${passedUserIds.length + failedUserIds.length} applicants` 
+        });
+        
+    } catch (error) {
+        console.error("Error finalizing review:", error);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+},
+
 
 getOnboarding: async function(req, res) {
     res.render('applicant_pages/onboarding', { errors: {} });

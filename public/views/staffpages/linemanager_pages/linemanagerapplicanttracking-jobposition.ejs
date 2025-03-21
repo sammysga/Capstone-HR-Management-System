@@ -515,22 +515,6 @@ body {
     color: white;
 }
 
-/* Better styling for no data message */
-.no-data-message {
-    text-align: center;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-left: 4px solid #07ACB9;
-    border-radius: 5px;
-    margin: 20px 0;
-    color: #555;
-    font-size: 16px;
-}
-
-.no-data-message p {
-    margin: 0;
-}
-
 /* Improved table styles */
 .tracking-table {
     width: 100%;
@@ -634,6 +618,53 @@ body {
     .set-interview-button {
         width: 100%;
     }
+
+    .btn-toggle-status {
+        padding: 6px 12px;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-toggle-status:hover {
+        background-color: #5a6268;
+    }
+    
+    .btn-toggle-status.status-passed {
+        background-color: #28a745;
+    }
+    
+    .btn-toggle-status.status-failed {
+        background-color: #dc3545;
+    }
+
+
+/* Styling for no data message */
+.no-data-message {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #07ACB9;
+    color: #555;
+    font-size: 16px;
+    font-style: italic;
+}
+.no-data-message p {
+    margin: 0;
+}
+
+
+/* Improved table empty state */
+table.tracking-table tbody:empty::after {
+    content: "No data available";
+    display: block;
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
+}
 }
     </style>
 </head>
@@ -860,18 +891,18 @@ body {
     <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
 
     <!-- Modal for notifying applicants -->
-    <div id="notifyApplicantsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal('notifyApplicantsModal')">&times;</span>
-            <h2>Confirm Notification</h2>
-            <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
-            <div class="modal-buttons">
-                <button id="backButton" class="back-button" onclick="closeModal('notifyApplicantsModal')">Back</button>
-                <button id="confirmButton" class="confirm-button" onclick="finalizeNotification()">Confirm</button>
-            </div>
+<!-- Modal for finalizing review and notifying applicants -->
+<div id="notifyApplicantsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('notifyApplicantsModal')">&times;</span>
+        <h2>Confirm Finalization</h2>
+        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+            <button id="backButton" class="back-button" onclick="closeModal('notifyApplicantsModal')">Back</button>
+            <button id="confirmButton" class="confirm-button">Confirm</button>
         </div>
     </div>
-
+</div>
     <!-- Modal for P1: Finalize Review and Notify Applicants -->
     <div id="finalizeModalP1" class="modal">
         <div class="modal-content">
@@ -1076,8 +1107,15 @@ body {
 </div>
 
 <script>
+
 document.addEventListener("DOMContentLoaded", function() {
-    // Get references to filter buttons with new IDs
+    // Add styling for toggle status buttons - can skip this since you already have CSS
+    
+    // Initialize global caches for scores and name mappings
+    window.applicantsScores = {};
+    window.applicantNameMapping = {};
+    
+    // Get references to filter buttons
     const filterAllButton = document.getElementById("filter-all");
     const filterForReviewButton = document.getElementById("filter-forreview");
     const filterForEvaluationButton = document.getElementById("filter-forevaluation");
@@ -1090,11 +1128,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const notifyAllButton = document.getElementById("notifyAllApplicants");
     const sortOptions = document.getElementById("sortOptions");
     
-    // Initialize global caches for scores and name mappings
-    window.applicantsScores = {};
-    window.applicantNameMapping = {};
-    
-    // Add event listeners for filter buttons with new parameter values
+    // Add event listeners for filter buttons
     if (filterAllButton) filterAllButton.addEventListener("click", () => filterRowsByStatus("all"));
     if (filterForReviewButton) filterForReviewButton.addEventListener("click", () => filterRowsByStatus("forreview"));
     if (filterForEvaluationButton) filterForEvaluationButton.addEventListener("click", () => filterRowsByStatus("forevaluation"));
@@ -1149,59 +1183,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // Capture applicant data early to ensure we have scores ready
     captureApplicantsDataEnhanced();
     
-    // Start with "All" filter by default
-    filterRowsByStatus("all");
-
-    // Override the original functions with our improved versions
-    window.updateDeclaredResultsTable = updateDeclaredResultsTable;
-    window.getTotalScoreDirectly = getTotalScoreDirectly;
-    window.captureApplicantsData = captureApplicantsDataEnhanced;
-    window.fixScoresInDeclaredResults = fixScoresInDeclaredResults;
-    
-    // Create a function to fix all scores in all tables
-    window.fixAllTableScores = function() {
-        const tables = [
-            document.getElementById('awaitingActionTable'),
-            document.getElementById('declaredResultsTable'),
-            document.getElementById('jobOfferTable')
-        ].filter(table => table !== null);
-        
-        tables.forEach(table => {
-            const rows = table.querySelectorAll('tbody tr:not(.section-header-row)');
-            console.log(`Fixing scores for ${rows.length} rows in ${table.id}`);
-            
-            rows.forEach(row => {
-                const userId = row.getAttribute('data-userid');
-                if (userId) {
-                    getTotalScoreDirectly(userId, row);
-                } else {
-                    // Try to find userId by name
-                    const nameCell = row.querySelector('td:nth-child(2)');
-                    if (nameCell) {
-                        const name = nameCell.textContent.replace(/\s+/g, ' ').trim();
-                        const foundUserId = findUserIdByNameImproved(name);
-                        if (foundUserId) {
-                            row.setAttribute('data-userid', foundUserId);
-                            getTotalScoreDirectly(foundUserId, row);
-                        }
-                    }
-                }
-            });
-        });
-    };
-    
-    // Add a manual trigger for the filter buttons
-    document.querySelectorAll('.filter-button').forEach(button => {
-        const originalClick = button.onclick;
-        
-        button.onclick = function(e) {
-            if (originalClick) originalClick.call(this, e);
-            
-            // After the original filter function runs, fix all scores
-            setTimeout(window.fixAllTableScores, 300);
-        };
-    });
-    
     // Close modal when the close button is clicked
     const closeButton = document.querySelector('.review-close-button');
     if (closeButton) {
@@ -1210,29 +1191,78 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
     
-    // After everything is set up, run one initial fix
-    setTimeout(window.fixAllTableScores, 500);
+    // Close modal if clicked outside the modal content
+    window.addEventListener('click', function (event) {
+        const modal = document.getElementById('lineManagerInitialScreeningModalHtml');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
+    // Start with "All" filter by default
+    // Trigger the first filter to ensure correct data display
+    setTimeout(() => {
+        filterRowsByStatus("all");
+        
+        // After everything is set up, run one initial fix
+        setTimeout(fixAllTableScores, 500);
+        
+        // Setup toggle status buttons after tables are populated
+        setTimeout(setupToggleStatusButtons, 800);
+        
+        // Final fix for declared results table scores
+        setTimeout(fixScoresInDeclaredResults, 1000);
+    }, 200);
 });
 
-// Manual function to run from console if needed
-function manuallyFixScores() {
-    console.log("Manually fixing scores");
+// Function to fix all scores in all tables
+function fixAllTableScores() {
+    // First, make sure we've captured all available data
     captureApplicantsDataEnhanced();
     
-    setTimeout(function() {
-        if (window.fixAllTableScores) {
-            window.fixAllTableScores();
-        } else {
-            console.log("fixAllTableScores function not available");
-        }
-    }, 200);
+    const tables = [
+        document.getElementById('awaitingActionTable'),
+        document.getElementById('declaredResultsTable'),
+        document.getElementById('jobOfferTable')
+    ].filter(table => table !== null);
+    
+    tables.forEach(table => {
+        const rows = table.querySelectorAll('tbody tr:not(.section-header-row)');
+        console.log(`Fixing scores for ${rows.length} rows in ${table.id}`);
+        
+        rows.forEach((row, idx) => {
+            // Skip rows with no content or message rows
+            if (row.querySelector('td[colspan]')) return;
+            
+            // Try to get userId from the row attribute
+            let userId = row.getAttribute('data-userid');
+            
+            if (!userId) {
+                // Try to find userId by name
+                const nameCell = row.querySelector('td:nth-child(2)');
+                if (nameCell) {
+                    const name = nameCell.textContent.replace(/\s+/g, ' ').trim();
+                    const foundUserId = findUserIdByNameImproved(name);
+                    if (foundUserId) {
+                        row.setAttribute('data-userid', foundUserId);
+                        userId = foundUserId;
+                    }
+                }
+            }
+            
+            if (userId) {
+                // When we have a userId, use the aggressive score fetch method
+                forceDatabaseScoreFetch(userId, row);
+            }
+        });
+    });
+    
+    console.log("All table scores have been fixed");
 }
 
-
-
-// Enhanced version of captureApplicantsDataEnhanced - now also captures data from HTML attributes and stores them
+// CRITICAL FIX: More precise extraction of userId and score pairings
 function captureApplicantsDataEnhanced() {
-    console.log("Enhanced capture of all applicants data");
+    console.log("Enhanced capture of all applicants data with improved user-specific score tracking");
     
     // Initialize the global caches if they don't exist
     window.applicantsScores = window.applicantsScores || {};
@@ -1253,14 +1283,14 @@ function captureApplicantsDataEnhanced() {
         const nameCell = row.querySelector('td:nth-child(2)');
         const applicantName = nameCell ? nameCell.textContent.replace(/\s+/g, ' ').trim() : '';
         
-        // Extract userId from review buttons
+        // Extract userId and score from review buttons
         const reviewButton = row.querySelector('.btn-review');
         if (reviewButton) {
             const onclickAttr = reviewButton.getAttribute('onclick') || '';
             
             if (onclickAttr.includes('lineManagerInitialScreeningModal')) {
                 try {
-                    // Extract userId
+                    // Extract userId from the first parameter
                     const userIdMatch = onclickAttr.match(/lineManagerInitialScreeningModal\s*\(\s*['"]([^'"]*)['"]/);
                     if (userIdMatch && userIdMatch[1]) {
                         const userId = userIdMatch[1];
@@ -1268,28 +1298,19 @@ function captureApplicantsDataEnhanced() {
                         // Store name to userId mapping
                         if (applicantName) {
                             window.applicantNameMapping[applicantName] = userId;
-                            
-                            // Also store with simpler versions of the name for better matching
-                            if (applicantName.includes(',')) {
-                                const [lastName, firstName] = applicantName.split(',').map(part => part.trim());
-                                window.applicantNameMapping[lastName + ', ' + firstName] = userId;
-                                
-                                // Also try without email if present
-                                if (firstName.includes('@')) {
-                                    const nameWithoutEmail = lastName + ', ' + firstName.split('@')[0].trim();
-                                    window.applicantNameMapping[nameWithoutEmail] = userId;
-                                }
-                            }
                         }
                         
-                        // Extract totalScore
+                        // Extract totalScore - it's the parameter after the closing curly brace }
+                        // This is the applicant_initialscreening_assessment.totalScore value
                         const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
                         if (scoreMatch && scoreMatch[1]) {
                             const totalScore = scoreMatch[1];
                             
-                            // Store in score cache
+                            // Store in score cache with userId as key
                             window.applicantsScores[userId] = totalScore;
                             console.log(`Row ${idx+1}: Stored score ${totalScore} for userId ${userId}, name ${applicantName}`);
+                        } else {
+                            console.log(`Row ${idx+1}: No score found in onclick attribute for userId ${userId}`);
                         }
                     }
                 } catch (error) {
@@ -1297,127 +1318,9 @@ function captureApplicantsDataEnhanced() {
                 }
             }
         }
-        
-        // Extract from status text for P1-PASSED/FAILED rows
-        const statusCell = row.querySelector('td:last-child span');
-        if (statusCell) {
-            const statusText = statusCell.textContent.trim();
-            
-            // For passed/failed rows, try to extract userId and map to name
-            if (statusText.includes('PASSED') || statusText.includes('FAILED')) {
-                // Try to extract from the row's attributes
-                let rowUserId = row.getAttribute('data-userid') || row.getAttribute('data-applicantid');
-                
-                if (!rowUserId) {
-                    // Try to extract from buttons
-                    const buttons = row.querySelectorAll('button');
-                    for (const button of buttons) {
-                        const onclickAttr = button.getAttribute('onclick') || '';
-                        const idMatch = onclickAttr.match(/\(\s*['"](\d+)['"]/);
-                        if (idMatch && idMatch[1]) {
-                            rowUserId = idMatch[1];
-                            break;
-                        }
-                    }
-                }
-                
-                // SPECIAL HANDLING: If this is the failed applicant "jl, blond"
-                if (applicantName.includes('jl, blond') && statusText.includes('FAILED')) {
-                    // Get the userId from any other row that has one, for demo purposes
-                    const anyUserId = document.querySelector('[data-userid]')?.getAttribute('data-userid');
-                    if (anyUserId) {
-                        rowUserId = anyUserId;
-                        
-                        // Make sure we have a mapping for this problematic applicant
-                        window.applicantNameMapping['jl, blond'] = rowUserId;
-                        window.applicantNameMapping['jl, blond jl@gmail.com'] = rowUserId;
-                        
-                        console.log(`Special handling: Assigned userId ${rowUserId} to "jl, blond"`);
-                    }
-                }
-                
-                // If we found a userId and have a name, store the mapping
-                if (rowUserId && applicantName) {
-                    window.applicantNameMapping[applicantName] = rowUserId;
-                    console.log(`Row ${idx+1}: Mapped name ${applicantName} to userId ${rowUserId}`);
-                    
-                    // Try to find score in status text
-                    const scoreMatch = statusText.match(/score:?\s*(\d+\.?\d*)/i);
-                    if (scoreMatch && scoreMatch[1]) {
-                        window.applicantsScores[rowUserId] = scoreMatch[1];
-                        console.log(`Row ${idx+1}: Extracted score ${scoreMatch[1]} from status text for userId ${rowUserId}`);
-                    } else {
-                        // If no score in status text, assign a default score for demonstration
-                        // You would remove this in production, it's just to fix the N/A issue
-                        window.applicantsScores[rowUserId] = '75.5';
-                        console.log(`Row ${idx+1}: Assigned default score 75.5 for userId ${rowUserId}`);
-                    }
-                }
-            }
-        }
     });
     
-    // Also check all review buttons directly to extract scores and userId
-    const reviewButtons = mainTable.querySelectorAll('.btn-review');
-    reviewButtons.forEach((button, idx) => {
-        const onclickAttr = button.getAttribute('onclick') || '';
-        
-        if (onclickAttr.includes('lineManagerInitialScreeningModal')) {
-            // Extract userId
-            const userIdMatch = onclickAttr.match(/lineManagerInitialScreeningModal\s*\(\s*['"]([^'"]*)['"]/);
-            if (userIdMatch && userIdMatch[1]) {
-                const userId = userIdMatch[1];
-                
-                // Extract totalScore
-                const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
-                if (scoreMatch && scoreMatch[1]) {
-                    const totalScore = scoreMatch[1];
-                    
-                    // Store in cache
-                    window.applicantsScores[userId] = totalScore;
-                    console.log(`Button ${idx+1}: Stored score ${totalScore} for userId ${userId}`);
-                }
-            }
-        }
-    });
-    
-    // SPECIAL FIX FOR DEMO: If we have a failed applicant "jl, blond" but no mapping,
-    // take any userId we have and create a mapping
-    if (!window.applicantNameMapping['jl, blond'] && !window.applicantNameMapping['jl, blond jl@gmail.com']) {
-        // Find any userId
-        const anyUserId = Object.values(window.applicantNameMapping)[0] || 
-                         document.querySelector('[data-userid]')?.getAttribute('data-userid');
-        
-        if (anyUserId) {
-            window.applicantNameMapping['jl, blond'] = anyUserId;
-            window.applicantNameMapping['jl, blond jl@gmail.com'] = anyUserId;
-            
-            // If we don't have a score for this ID, assign one
-            if (!window.applicantsScores[anyUserId]) {
-                window.applicantsScores[anyUserId] = '75.5';
-            }
-            
-            console.log(`Special final fix: Assigned userId ${anyUserId} to "jl, blond" with score ${window.applicantsScores[anyUserId]}`);
-        }
-    }
-    
-    console.log(`Enhanced capture completed: ${Object.keys(window.applicantsScores).length} scores and ${Object.keys(window.applicantNameMapping).length} name mappings`);
-}
-
-// Helper function to extract userId from row
-function getUserIdFromRow(row) {
-    // Try to find userId from button
-    const reviewButton = row.querySelector('button.btn-review');
-    if (reviewButton) {
-        const onclickAttr = reviewButton.getAttribute('onclick');
-        if (onclickAttr) {
-            const match = onclickAttr.match(/'([0-9]+)'/);
-            if (match && match[1]) {
-                return match[1];
-            }
-        }
-    }
-    return null;
+    console.log(`Enhanced capture completed: Found ${Object.keys(window.applicantsScores).length} user-specific scores`);
 }
 
 // Function to filter table rows based on search input
@@ -1463,7 +1366,7 @@ function checkAllApplicantsMarked() {
     });
 }
 
-// Function to ensure tables have proper headers with the new criteria column
+// Function to ensure all tables have the right headers
 function ensureTableHeaders() {
     // Get all tables that need headers
     const tables = [
@@ -1478,17 +1381,36 @@ function ensureTableHeaders() {
         if (!thead || !thead.querySelector('tr th')) {
             // Create header if it doesn't exist
             const newThead = document.createElement('thead');
-            newThead.innerHTML = `
-                <tr>
-                    <th>Applicant No.</th>
-                    <th>Last Name, First Name</th>
-                    <th>Department</th>
-                    <th>Position Applied</th>
-                    <th>Total Score</th>
-                    <th>Work Setup/Availability</th>
-                    <th>Applicant Status</th>
-                </tr>
-            `;
+            
+            // Different headers based on table ID
+            if (table.id === 'declaredResultsTable') {
+                // Declared Results table gets Toggle Status column
+                newThead.innerHTML = `
+                    <tr>
+                        <th>Applicant No.</th>
+                        <th>Last Name, First Name</th>
+                        <th>Department</th>
+                        <th>Position Applied</th>
+                        <th>Total Score</th>
+                        <th>Work Setup/Availability</th>
+                        <th>Applicant Status</th>
+                        <th>Toggle Status</th>
+                    </tr>
+                `;
+            } else {
+                // Other tables (awaiting action, job offer) don't get Toggle Status
+                newThead.innerHTML = `
+                    <tr>
+                        <th>Applicant No.</th>
+                        <th>Last Name, First Name</th>
+                        <th>Department</th>
+                        <th>Position Applied</th>
+                        <th>Total Score</th>
+                        <th>Work Setup/Availability</th>
+                        <th>Applicant Status</th>
+                    </tr>
+                `;
+            }
             
             // Replace existing thead or add to beginning of table
             if (thead) {
@@ -1497,7 +1419,7 @@ function ensureTableHeaders() {
                 table.insertBefore(newThead, table.firstChild);
             }
         } else {
-            // Check if Work Setup/Availability column exists in the header
+            // Check and update existing headers
             const headerRow = thead.querySelector('tr');
             const headers = headerRow.querySelectorAll('th');
             
@@ -1509,12 +1431,21 @@ function ensureTableHeaders() {
                 // Insert before the last column (Applicant Status)
                 headerRow.insertBefore(newTh, headers[5]);
             }
+            
+            // Only add Toggle Status to declared results table
+            if (table.id === 'declaredResultsTable' && !Array.from(headers).some(h => h.textContent.includes('Toggle Status'))) {
+                const toggleTh = document.createElement('th');
+                toggleTh.textContent = 'Toggle Status';
+                
+                // Add as the last column
+                headerRow.appendChild(toggleTh);
+            }
         }
     });
 }
 
-// Function to create a table row from row data
-function createTableRow(rowData) {
+// Function to create a table row with proper structure
+function createTableRow(rowData, isForDeclaredResults = false) {
     const newRow = document.createElement('tr');
     
     // Add data-userid attribute if available
@@ -1532,34 +1463,33 @@ function createTableRow(rowData) {
         newRow.appendChild(cell);
     });
     
+    // Only add Toggle Status column if this is for the declared results table
+    if (isForDeclaredResults) {
+        const toggleCell = document.createElement('td');
+        toggleCell.innerHTML = `<button class="btn-toggle-status" onclick="toggleApplicantStatus(this)">Toggle Status</button>`;
+        
+        // If we have a userId, set it on the button for reference
+        if (rowData.userId) {
+            const toggleButton = toggleCell.querySelector('.btn-toggle-status');
+            if (toggleButton) toggleButton.setAttribute('data-userid', rowData.userId);
+        }
+        
+        newRow.appendChild(toggleCell);
+    }
+    
     return newRow;
 }
 
-// Improved function to find userId by name with better handling of whitespace and partial matches
+// Function to find userId by name
 function findUserIdByNameImproved(name) {
     if (!name) return null;
-    
-    console.log(`Looking for userId by name: "${name}"`);
     
     // Clean up the name (remove newlines, extra spaces)
     const cleanName = name.replace(/\s+/g, ' ').trim();
     
     // Check if we already have a mapping
     if (window.applicantNameMapping && window.applicantNameMapping[cleanName]) {
-        console.log(`Found userId in name mapping: ${window.applicantNameMapping[cleanName]}`);
         return window.applicantNameMapping[cleanName];
-    }
-    
-    // Extract just the last name and first name for more reliable matching
-    let lastName = '', firstName = '';
-    if (cleanName.includes(',')) {
-        const parts = cleanName.split(',');
-        lastName = parts[0].trim().toLowerCase();
-        firstName = parts.length > 1 ? parts[1].trim().toLowerCase() : '';
-    } else {
-        const parts = cleanName.split(' ');
-        lastName = parts.length > 0 ? parts[0].trim().toLowerCase() : '';
-        firstName = parts.length > 1 ? parts[parts.length - 1].trim().toLowerCase() : '';
     }
     
     // Get the main table
@@ -1586,51 +1516,15 @@ function findUserIdByNameImproved(name) {
                     if (!window.applicantNameMapping) window.applicantNameMapping = {};
                     window.applicantNameMapping[cleanName] = userIdMatch[1];
                     
-                    console.log(`Found exact match userId: ${userIdMatch[1]}`);
                     return userIdMatch[1];
                 }
             }
         }
-        
-        // If no exact match, try partial match on last name and first name
-        const cellNameLower = cellNameText.toLowerCase();
-        if ((lastName && cellNameLower.includes(lastName)) || 
-            (firstName && cellNameLower.includes(firstName))) {
-            
-            // Extract userId from any button with onclick
-            const buttons = row.querySelectorAll('button');
-            for (const button of buttons) {
-                const onclickAttr = button.getAttribute('onclick') || '';
-                
-                // Look for any pattern that might contain a userId
-                const idMatch = onclickAttr.match(/\(\s*['"](\d+)['"]/);
-                if (idMatch && idMatch[1]) {
-                    // Save to mapping for future lookups
-                    if (!window.applicantNameMapping) window.applicantNameMapping = {};
-                    window.applicantNameMapping[cleanName] = idMatch[1];
-                    
-                    console.log(`Found partial match userId: ${idMatch[1]}`);
-                    return idMatch[1];
-                }
-            }
-            
-            // Try row data attributes
-            const rowUserId = row.getAttribute('data-userid') || row.getAttribute('data-applicantid');
-            if (rowUserId) {
-                // Save to mapping for future lookups
-                if (!window.applicantNameMapping) window.applicantNameMapping = {};
-                window.applicantNameMapping[cleanName] = rowUserId;
-                
-                console.log(`Found userId from data attribute: ${rowUserId}`);
-                return rowUserId;
-            }
-        }
     }
     
-    console.log(`No userId found for name: ${cleanName}`);
     return null;
 }
-
+// Function to filter rows by status
 function filterRowsByStatus(status) {
     console.log("Filtering by status:", status);
     
@@ -1671,142 +1565,140 @@ function filterRowsByStatus(status) {
     // Hide all rows in the main table by default
     allMainRows.forEach(row => row.style.display = 'none');
     
-    // Hide onboarding section for non-onboarding filters
-    if (status !== 'foronboarding') {
-        if (onboardingHeader) onboardingHeader.style.display = 'none';
-        if (onboardingTable) onboardingTable.style.display = 'none';
-    }
-    
     // Special handling for "For Review" button
-    if (status === 'forreview') {
-        // Ensure we have the most up-to-date data
-        captureApplicantsDataEnhanced();
+if (status === 'forreview') {
+    // Hide onboarding section for review filter
+    if (onboardingHeader) onboardingHeader.style.display = 'none';
+    if (onboardingTable) onboardingTable.style.display = 'none';
+    
+    // Ensure we have the most up-to-date data
+    captureApplicantsDataEnhanced();
+    
+    // Update the current phase
+    const phaseSpans = document.querySelectorAll('#currentPhase');
+    phaseSpans.forEach(span => span.textContent = "Review");
+    
+    // Ensure the tables have proper headers
+    ensureTableHeaders();
+    
+    // Arrays to store rows from main table
+    const awaitingRowsP1 = [];
+    const declaredRowsP1 = [];
+    const awaitingRowsP3 = [];
+    const declaredRowsP3 = [];
+    const jobOfferRowsP3 = [];
+    
+    // Process each row and categorize it
+    allMainRows.forEach((row, index) => {
+        const lastCell = row.querySelector('td:last-child');
+        if (!lastCell) return;
         
-        // Update the current phase
-        const phaseSpans = document.querySelectorAll('#currentPhase');
-        phaseSpans.forEach(span => span.textContent = "Review");
+        // Get status text from the span element in the last cell
+        const statusSpan = lastCell.querySelector('span');
+        if (!statusSpan) return;
         
-        // Ensure the tables have proper headers
-        ensureTableHeaders();
+        const statusText = statusSpan.textContent.trim();
         
-        // Arrays to store rows from main table
-        const awaitingRowsP1 = [];
-        const declaredRowsP1 = [];
-        const awaitingRowsP3 = [];
-        const declaredRowsP3 = [];
-        const jobOfferRowsP3 = [];
+        // Extract row data with proper score - enhanced to better extract userId
+        const rowData = extractRowData(row, index);
         
-        console.log("Total rows to filter:", allMainRows.length);
-        
-        // Process each row and categorize it
-        allMainRows.forEach((row, index) => {
-            const lastCell = row.querySelector('td:last-child');
-            if (!lastCell) return;
+        // Check for P1 - Awaiting for Line Manager Action; HR PASSED
+        if (statusText.indexOf("P1 - Awaiting for Line Manager Action; HR PASSED") !== -1) {
+            awaitingRowsP1.push(rowData);
+        }
+        // Check for P1 - PASSED or P1: PASSED
+        else if (statusText.indexOf("P1 - PASSED") !== -1 || statusText.indexOf("P1: PASSED") !== -1) {
+            declaredRowsP1.push(rowData);
+        }
+        // Check for P1 - FAILED or P1: FAILED
+        else if (statusText.indexOf("P1 - FAILED") !== -1 || statusText.indexOf("P1: FAILED") !== -1) {
+            declaredRowsP1.push(rowData);
+        }
+        // Check for P3 - Line Manager Evaluation Accomplished
+        else if (statusText.indexOf("P3 - Line Manager Evaluation Accomplished") !== -1) {
+            awaitingRowsP3.push(rowData);
+        }
+        // Check for P3 - PASSED or P3: PASSED (not Job Offer)
+        else if ((statusText.indexOf("P3 - PASSED") !== -1 || statusText.indexOf("P3: PASSED") !== -1) && 
+                 statusText.indexOf("Job Offer") === -1) {
+            declaredRowsP3.push(rowData);
+        }
+        // Check for P3 - FAILED or P3: FAILED
+        else if (statusText.indexOf("P3 - FAILED") !== -1 || statusText.indexOf("P3: FAILED") !== -1) {
+            declaredRowsP3.push(rowData);
+        }
+        // Check for P3 - PASSED - Job Offer Sent
+        else if (statusText.indexOf("P3 - PASSED - Job Offer Sent") !== -1) {
+            jobOfferRowsP3.push(rowData);
+        }
+        // Check for "For Review" button as a fallback
+        else {
+            const hasReviewButton = Array.from(lastCell.querySelectorAll('button')).some(button => 
+                button.textContent.trim() === 'For Review'
+            );
             
-            // Get status text from the span element in the last cell
-            const statusSpan = lastCell.querySelector('span');
-            if (!statusSpan) return;
-            
-            const statusText = statusSpan.textContent.trim();
-            console.log(`Row ${index} status: "${statusText}"`);
-            
-            // Extract row data with proper score - enhanced to better extract userId
-            const rowData = extractRowData(row, index);
-            
-            // Check for P1 - Awaiting for Line Manager Action; HR PASSED
-            if (statusText.indexOf("P1 - Awaiting for Line Manager Action; HR PASSED") !== -1) {
-                console.log(`Row ${index}: Adding to awaitingRowsP1`);
-                awaitingRowsP1.push(rowData);
-            }
-            // Check for P1 - PASSED or P1: PASSED
-            else if (statusText.indexOf("P1 - PASSED") !== -1 || statusText.indexOf("P1: PASSED") !== -1) {
-                console.log(`Row ${index}: Adding to declaredRowsP1`);
-                declaredRowsP1.push(rowData);
-            }
-            // Check for P1 - FAILED or P1: FAILED
-            else if (statusText.indexOf("P1 - FAILED") !== -1 || statusText.indexOf("P1: FAILED") !== -1) {
-                console.log(`Row ${index}: Adding to declaredRowsP1`);
-                declaredRowsP1.push(rowData);
-            }
-            // Check for P3 - Line Manager Evaluation Accomplished
-            else if (statusText.indexOf("P3 - Line Manager Evaluation Accomplished") !== -1) {
-                console.log(`Row ${index}: Adding to awaitingRowsP3`);
-                awaitingRowsP3.push(rowData);
-            }
-            // Check for P3 - PASSED or P3: PASSED (not Job Offer)
-            else if ((statusText.indexOf("P3 - PASSED") !== -1 || statusText.indexOf("P3: PASSED") !== -1) && 
-                     statusText.indexOf("Job Offer") === -1) {
-                console.log(`Row ${index}: Adding to declaredRowsP3`);
-                declaredRowsP3.push(rowData);
-            }
-            // Check for P3 - FAILED or P3: FAILED
-            else if (statusText.indexOf("P3 - FAILED") !== -1 || statusText.indexOf("P3: FAILED") !== -1) {
-                console.log(`Row ${index}: Adding to declaredRowsP3`);
-                declaredRowsP3.push(rowData);
-            }
-            // Check for P3 - PASSED - Job Offer Sent
-            else if (statusText.indexOf("P3 - PASSED - Job Offer Sent") !== -1) {
-                console.log(`Row ${index}: Adding to jobOfferRowsP3`);
-                jobOfferRowsP3.push(rowData);
-            }
-            // Check for "For Review" button as a fallback
-            else {
-                const hasReviewButton = Array.from(lastCell.querySelectorAll('button')).some(button => 
-                    button.textContent.trim() === 'For Review'
-                );
-                
-                if (hasReviewButton) {
-                    console.log(`Row ${index}: Found a 'For Review' button`);
-                    if (statusText.indexOf("P1") !== -1) {
-                        console.log(`Row ${index}: Adding to awaitingRowsP1 based on button`);
-                        awaitingRowsP1.push(rowData);
-                    } else if (statusText.indexOf("P3") !== -1) {
-                        console.log(`Row ${index}: Adding to awaitingRowsP3 based on button`);
-                        awaitingRowsP3.push(rowData);
-                    }
+            if (hasReviewButton) {
+                if (statusText.indexOf("P1") !== -1) {
+                    awaitingRowsP1.push(rowData);
+                } else if (statusText.indexOf("P3") !== -1) {
+                    awaitingRowsP3.push(rowData);
                 }
             }
-        });
-        
-        console.log("Awaiting P1 rows:", awaitingRowsP1.length);
-        console.log("Declared P1 rows:", declaredRowsP1.length);
-        console.log("Awaiting P3 rows:", awaitingRowsP3.length);
-        console.log("Declared P3 rows:", declaredRowsP3.length);
-        console.log("Job Offer P3 rows:", jobOfferRowsP3.length);
-        
-        // Update Awaiting Action table
-        updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3);
-        
-        // Update Declared Results table
-        updateDeclaredResultsTable(declaredRowsP1, declaredRowsP3);
-        
-        // Handle Job Offer section
-        updateJobOfferSection(jobOfferRowsP3, applicantStatusSection);
-        
-        // Update section visibilities based on data presence
-        updateReviewSectionsVisibility(
-            awaitingRowsP1.length + awaitingRowsP3.length > 0,
-            declaredRowsP1.length + declaredRowsP3.length > 0,
-            jobOfferRowsP3.length > 0,
-            awaitingRowsP1.length > 0,  // Has P1 data flag
-            awaitingRowsP3.length > 0   // Has P3 data flag
-        );
-        
-        // Fix scores after a short delay to ensure tables have been populated
-        setTimeout(window.fixAllTableScores, 300);
-        
-        // Highlight the active filter button
-        highlightActiveFilter(status);
-        return;
-    }
+        }
+    });
+    
+    // Update Awaiting Action table
+    updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3);
+    
+    // Update Declared Results table
+    updateDeclaredResultsTable(declaredRowsP1, declaredRowsP3);
+    
+    // Handle Job Offer section
+    updateJobOfferSection(jobOfferRowsP3, applicantStatusSection);
+    
+    // Update section visibilities based on data presence
+    updateReviewSectionsVisibility(
+        awaitingRowsP1.length + awaitingRowsP3.length > 0,
+        declaredRowsP1.length + declaredRowsP3.length > 0,
+        jobOfferRowsP3.length > 0,
+        awaitingRowsP1.length > 0,  // Has P1 data flag
+        hasP3Data = awaitingRowsP3.length > 0   // Has P3 data flag
+    );
+    
+
+    
+    // Fix scores after a short delay to ensure tables have been populated
+    setTimeout(window.fixAllTableScores, 300);
+    
+    // Highlight the active filter button
+    highlightActiveFilter(status);
+
+        // Update the header buttons based on data
+        updateSectionHeaderButtons();
+
+    return;
+}
     
     // For "For Evaluation" button
     if (status === 'forevaluation') {
+        // Hide onboarding section for evaluation filter
+        if (onboardingHeader) onboardingHeader.style.display = 'none';
+        if (onboardingTable) onboardingTable.style.display = 'none';
+        
         // Update the current phase display
         const phaseSpans = document.querySelectorAll('#currentPhase');
-        phaseSpans.forEach(span => span.textContent = 'P2');
+        phaseSpans.forEach(span => span.textContent = 'Evaluation');
+        
+        // Show the applicant status section even if empty
+        if (applicantStatusSection) {
+            applicantStatusSection.style.display = 'block';
+        }
         
         // Clear previous rows in both tables
+        const awaitingActionTable = document.getElementById("awaitingActionTable");
+        const declaredResultsTable = document.getElementById("declaredResultsTable");
+        const declaredHeader = document.querySelector('h4:nth-of-type(2)');
+        
         if (awaitingActionTable) {
             const tbody = awaitingActionTable.querySelector('tbody');
             if (tbody) tbody.innerHTML = '';
@@ -1860,6 +1752,17 @@ function filterRowsByStatus(status) {
             }
         });
         
+        // Ensure the awaiting section and table are displayed
+        const awaitingHeader = document.querySelector('h4:nth-of-type(1)');
+        if (awaitingHeader) {
+            awaitingHeader.textContent = 'Applicants Awaiting Evaluation';
+            awaitingHeader.style.display = 'block';
+        }
+        
+        if (awaitingActionTable) {
+            awaitingActionTable.style.display = 'table';
+        }
+        
         // Ensure the tables have proper headers
         ensureTableHeaders();
         
@@ -1872,7 +1775,7 @@ function filterRowsByStatus(status) {
                 
                 if (evaluationRows.length > 0) {
                     evaluationRows.forEach((rowData, idx) => {
-                        const newRow = createTableRow(rowData);
+                        const newRow = createTableRow(rowData, false);  // No toggle for evaluation
                         tbody.appendChild(newRow);
                         
                         // Set userId attribute on the row for score lookup
@@ -1890,16 +1793,12 @@ function filterRowsByStatus(status) {
         }
         
         // Hide declared results section as it's not needed for "For Evaluation"
-        if (declaredResultsTable) {
-            declaredResultsTable.style.display = 'none';
+        if (declaredHeader) {
+            declaredHeader.style.display = 'none';
         }
         
-        // Find declared heading with standard DOM methods
-        const declaredHeading = Array.from(document.querySelectorAll('h4')).find(el => 
-            el.textContent.includes("Applicants on"));
-            
-        if (declaredHeading) {
-            declaredHeading.style.display = 'none';
+        if (declaredResultsTable) {
+            declaredResultsTable.style.display = 'none';
         }
         
         const sortSection = document.querySelector('.sort-section');
@@ -1915,32 +1814,38 @@ function filterRowsByStatus(status) {
         return;
     }
     
-    // For "For Onboarding" filter, handle onboarding section
+    // For "For Onboarding" filter - UPDATED VERSION
     if (status === 'foronboarding') {
-        // Update the current phase display
-        const phaseSpans = document.querySelectorAll('#currentPhase');
-        phaseSpans.forEach(span => span.textContent = 'P3');
-        
-        // Clear previous rows in both tables
-        if (awaitingActionTable) {
-            const tbody = awaitingActionTable.querySelector('tbody');
-            if (tbody) tbody.innerHTML = '';
-        }
-        
-        if (declaredResultsTable) {
-            const tbody = declaredResultsTable.querySelector('tbody');
-            if (tbody) tbody.innerHTML = '';
+        // Hide applicant status section for onboarding filter
+        if (applicantStatusSection) {
+            applicantStatusSection.style.display = 'none';
         }
         
         // Show onboarding section header
-        if (onboardingHeader) onboardingHeader.style.display = '';
+        if (onboardingHeader) {
+            onboardingHeader.style.display = 'block';
+            onboardingHeader.textContent = 'Onboarding';
+        }
         
         // Show onboarding table
-        if (onboardingTable) onboardingTable.style.display = '';
+        if (onboardingTable) {
+            onboardingTable.style.display = 'table';
+        }
         
-        // Show only relevant rows in onboarding table
-        const onboardingStatuses = ['First Day Checklist Sent', 'Checklist Accomplished', 'Account Created'];
+        // Define all possible onboarding statuses
+        const onboardingStatuses = [
+            'Onboarding - First Day Checklist Sent', 
+            'Onboarding - Checklist Accomplished', 
+            'Onboarding - Account Created',
+            'First Day Checklist Sent',
+            'Checklist Accomplished',
+            'Account Created'
+        ];
         
+        // Count visible rows to check if we have data
+        let visibleRowCount = 0;
+        
+        // Show rows with onboarding statuses and hide others
         allOnboardingRows.forEach(row => {
             const lastCell = row.querySelector('td:last-child');
             const statusText = lastCell ? lastCell.textContent.trim() : '';
@@ -1948,24 +1853,45 @@ function filterRowsByStatus(status) {
             let showRow = false;
             
             // Check if status matches any onboarding status
-            onboardingStatuses.forEach(status => {
-                if (statusText.indexOf(status) !== -1) {
+            for (const onboardingStatus of onboardingStatuses) {
+                if (statusText.includes(onboardingStatus)) {
                     showRow = true;
+                    break;
                 }
-            });
+            }
             
-            // Check for "For Onboarding" button
-            if (lastCell && lastCell.querySelector('.btn-onboarding')) {
+            // Also check for "For Onboarding" button
+            if (!showRow && lastCell && lastCell.querySelector('.btn-onboarding')) {
                 showRow = true;
             }
             
+            // Show or hide the row
             row.style.display = showRow ? '' : 'none';
+            
+            if (showRow) {
+                visibleRowCount++;
+            }
         });
         
-        // Hide the applicant status section (awaiting action and declared results)
-        // as we only want to show the onboarding section for this filter
-        if (applicantStatusSection) {
-            applicantStatusSection.style.display = 'none';
+        // If no rows are visible, display a message
+        if (onboardingTable && visibleRowCount === 0) {
+            const tbody = onboardingTable.querySelector('tbody');
+            
+            if (tbody) {
+                // Clear the table first
+                tbody.innerHTML = '';
+                
+                // Add a message row
+                const messageRow = document.createElement('tr');
+                const messageCell = document.createElement('td');
+                
+                messageCell.setAttribute('colspan', '5');
+                messageCell.className = 'text-center no-data-message';
+                messageCell.textContent = 'No applicants awaiting for onboarding.';
+                
+                messageRow.appendChild(messageCell);
+                tbody.appendChild(messageRow);
+            }
         }
         
         // Highlight the active filter button
@@ -1977,18 +1903,209 @@ function filterRowsByStatus(status) {
     highlightActiveFilter(status);
 }
 
-// Enhanced version of extractRowData function with better userId extraction for all row types
+// Helper function to display "no data" message in a table
+function displayNoDataMessage(table, message) {
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+    
+    // Check if we already have a message row
+    const existingMessage = tbody.querySelector('tr td[colspan].text-center');
+    
+    if (existingMessage) {
+        // Update existing message
+        existingMessage.textContent = message;
+    } else {
+        // Create message row
+        const messageRow = document.createElement('tr');
+        const messageCell = document.createElement('td');
+        
+        // Get the correct colspan from table headers
+        const headerCells = table.querySelectorAll('thead th');
+        const colspan = headerCells.length || 5;
+        
+        messageCell.setAttribute('colspan', colspan.toString());
+        messageCell.className = 'text-center no-data-message';
+        messageCell.textContent = message;
+        
+        messageRow.appendChild(messageCell);
+        
+        // Clear the tbody first
+        tbody.innerHTML = '';
+        
+        // Add the message row
+        tbody.appendChild(messageRow);
+    }
+}
+
+// Function to fix the header structure
+function fixHeaderStructure() {
+    // Fix the applicant status section headers
+    const awaitingHeader = document.querySelector('h4:nth-of-type(1)');
+    const declaredHeader = document.querySelector('h4:nth-of-type(2)');
+    
+    if (awaitingHeader) {
+        awaitingHeader.textContent = 'Awaiting for Action';
+    }
+    
+    if (declaredHeader) {
+        const currentPhaseSpan = declaredHeader.querySelector('#currentPhase') || 
+                                document.createElement('span');
+        currentPhaseSpan.id = 'currentPhase';
+        currentPhaseSpan.textContent = 'Review';
+        
+        // If the header doesn't have the span, add it
+        if (!declaredHeader.querySelector('#currentPhase')) {
+            declaredHeader.innerHTML = 'Applicants on ';
+            declaredHeader.appendChild(currentPhaseSpan);
+            declaredHeader.innerHTML += ' Declared Results';
+        }
+    }
+    
+    // Ensure all currentPhase spans have the same content
+    document.querySelectorAll('#currentPhase').forEach(span => {
+        span.textContent = 'Review';
+    });
+}
+// Function to update section header buttons based on data
+
+// Function to update section header buttons based on data
+function updateSectionHeaderButtons() {
+    const currentPhase = document.querySelector("#currentPhase")?.textContent || "Review";
+    const rightSection = document.querySelector('.section-header .right-section');
+    
+    if (!rightSection) return;
+    
+    // Clear existing buttons
+    rightSection.innerHTML = '';
+    
+    // Add the appropriate button based on current phase
+    if (currentPhase === "Review") {
+        // For P1 Reviews
+        const p1Rows = document.querySelectorAll('#declaredResultsTable tbody tr:not(.section-header-row)');
+        const hasP1Data = Array.from(p1Rows).some(row => {
+            const statusCell = row.querySelector('td:nth-child(7)');
+            return statusCell && statusCell.textContent.includes('P1');
+        });
+        
+        // For P3 Reviews
+        const hasP3Data = Array.from(p1Rows).some(row => {
+            const statusCell = row.querySelector('td:nth-child(7)');
+            return statusCell && statusCell.textContent.includes('P3');
+        });
+        
+        // Add P1 button if we have P1 data
+        if (hasP1Data) {
+            const p1Button = document.createElement('button');
+            p1Button.id = 'finalizeP1Button';
+            p1Button.textContent = 'Finalize P1 Review';
+            p1Button.addEventListener('click', function() {
+                if (checkAllApplicantsMarked('P1')) {
+                    document.getElementById('notifyApplicantsModal').style.display = 'block';
+                    
+                    // Update modal title and content
+                    const modalTitle = document.querySelector('#notifyApplicantsModal h2');
+                    if (modalTitle) {
+                        modalTitle.textContent = "Confirm P1 Review Finalization";
+                    }
+                    
+                    // Update confirm button
+                    const confirmButton = document.getElementById('confirmButton');
+                    if (confirmButton) {
+                        // Remove existing event listeners
+                        const newConfirmButton = confirmButton.cloneNode(true);
+                        confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+                        
+                        // Add new event listener
+                        newConfirmButton.addEventListener('click', finalizeP1Review);
+                    }
+                } else {
+                    alert("Not all P1 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+                }
+            });
+            rightSection.appendChild(p1Button);
+        }
+        
+        // Add P3 button if we have P3 data
+        if (hasP3Data) {
+            const p3Button = document.createElement('button');
+            p3Button.id = 'finalizeP3Button';
+            p3Button.textContent = 'Finalize P3 Review';
+            p3Button.addEventListener('click', function() {
+                if (checkAllApplicantsMarked('P3')) {
+                    document.getElementById('notifyApplicantsModal').style.display = 'block';
+                    
+                    // Update modal title and content
+                    const modalTitle = document.querySelector('#notifyApplicantsModal h2');
+                    if (modalTitle) {
+                        modalTitle.textContent = "Confirm P3 Review Finalization";
+                    }
+                    
+                    // Update confirm button
+                    const confirmButton = document.getElementById('confirmButton');
+                    if (confirmButton) {
+                        // Remove existing event listeners
+                        const newConfirmButton = confirmButton.cloneNode(true);
+                        confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+                        
+                        // Add new event listener
+                        newConfirmButton.addEventListener('click', finalizeP3Review);
+                    }
+                } else {
+                    alert("Not all P3 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+                }
+            });
+            rightSection.appendChild(p3Button);
+        }
+    }
+}
+// Enhanced version of checkAllApplicantsMarked that can filter by phase
+function checkAllApplicantsMarked(phase = null) {
+    const declaredResultsTable = document.getElementById("declaredResultsTable");
+    if (!declaredResultsTable) return true;
+    
+    const rows = declaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
+    if (rows.length === 0) return true; // No rows to check
+    
+    let relevantRows = Array.from(rows);
+    
+    // Filter rows by phase if specified
+    if (phase) {
+        relevantRows = relevantRows.filter(row => {
+            const statusCell = row.querySelector('td:nth-child(7)');
+            return statusCell && statusCell.textContent.includes(phase);
+        });
+        
+        if (relevantRows.length === 0) return true; // No relevant rows
+    }
+    
+    // Check each row for PASSED/FAILED status
+    return relevantRows.every(row => {
+        // Skip message rows
+        if (row.classList.contains('section-header-row') || 
+            row.querySelector('td[colspan="5"]') || 
+            row.querySelector('td[colspan="6"]') || 
+            row.querySelector('td[colspan="7"]') || 
+            row.querySelector('td[colspan="8"]')) {
+            return true;
+        }
+        
+        const statusCell = row.querySelector('td:nth-child(7)');
+        if (!statusCell) return true;
+        
+        const statusText = statusCell.textContent;
+        return statusText.indexOf('PASSED') !== -1 || statusText.indexOf('FAILED') !== -1;
+    });
+}
+// Extract data from a row for use in other tables
 function extractRowData(row, index) {
     const cells = Array.from(row.querySelectorAll('td'));
     const cellData = cells.map(cell => cell.innerHTML);
     
-    // Enhanced userId extraction with multiple methods
-    let userId = null;
+    // Extract userId from various sources
+    let userId = row.getAttribute('data-userid') || row.getAttribute('data-applicantid');
     
-    // 1. Check for data-userid attribute directly on the row
-    userId = row.getAttribute('data-userid') || row.getAttribute('data-applicantid');
-    
-    // 2. Parse onclick attribute from review buttons
     if (!userId) {
         const reviewButton = row.querySelector('.btn-review');
         if (reviewButton) {
@@ -2000,7 +2117,6 @@ function extractRowData(row, index) {
         }
     }
     
-    // 3. Look for approve buttons that contain applicantId (which can be used as userId)
     if (!userId) {
         const approveButton = row.querySelector('.btn-approve');
         if (approveButton) {
@@ -2012,127 +2128,29 @@ function extractRowData(row, index) {
         }
     }
     
-    // 4. Extract from any onclick attribute that might contain the userId
-    if (!userId) {
-        const allButtons = row.querySelectorAll('button');
-        for (const button of allButtons) {
-            const onclickAttr = button.getAttribute('onclick') || '';
-            // Look for any pattern that might contain a numeric ID
-            const idMatch = onclickAttr.match(/\(\s*['"](\d+)['"]/);
-            if (idMatch && idMatch[1]) {
-                userId = idMatch[1];
-                break;
-            }
-        }
-    }
+    // Extract totalScore from onclick
+    let totalScore = 'N/A';
     
-    // 5. Look for userId in any hidden input fields
-    if (!userId) {
-        const hiddenInputs = document.querySelectorAll('input[type="hidden"]');
-        for (const input of hiddenInputs) {
-            if (input.name && (input.name.includes('userId') || input.name.includes('applicantId')) && input.value) {
-                userId = input.value;
-                break;
-            }
-        }
-    }
-    
-    // 6. For declared rows with status "P1 - PASSED" or "P1 - FAILED", extract userId from main table
-    if (!userId) {
-        const statusCell = cells[cells.length - 1];
-        if (statusCell && (statusCell.textContent.includes('PASSED') || statusCell.textContent.includes('FAILED'))) {
-            const nameCell = cells[1];
-            if (nameCell) {
-                const applicantName = nameCell.textContent.trim();
-                userId = findUserIdByNameImproved(applicantName);
-            }
-        }
-    }
-    
-    // Extract score from various sources
-    let totalScore = null;
-    
-    // Check global cache first if we have userId
     if (userId && window.applicantsScores && window.applicantsScores[userId]) {
         totalScore = window.applicantsScores[userId];
-    }
-    
-    // Check review button onclick attribute for score
-    if (totalScore === null) {
+    } else {
         const reviewButton = row.querySelector('.btn-review');
         if (reviewButton) {
             const onclickAttr = reviewButton.getAttribute('onclick') || '';
             const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
             if (scoreMatch && scoreMatch[1]) {
                 totalScore = scoreMatch[1];
-            }
-        }
-    }
-    
-    // Extract from score cell if it exists
-    if (totalScore === null) {
-        const scoreCell = row.querySelector('td:nth-child(5)');
-        if (scoreCell) {
-            const scoreText = scoreCell.textContent.trim();
-            if (scoreText && scoreText !== 'N/A') {
-                const scoreValue = parseFloat(scoreText);
-                if (!isNaN(scoreValue)) {
-                    totalScore = scoreValue;
+                
+                // Store in cache for future use
+                if (userId) {
+                    if (!window.applicantsScores) window.applicantsScores = {};
+                    window.applicantsScores[userId] = totalScore;
                 }
             }
         }
     }
     
-    // Extract from status text if still not found
-    if (totalScore === null) {
-        const lastCell = cells[cells.length - 1];
-        if (lastCell) {
-            const statusText = lastCell.textContent || '';
-            const scoreMatch = statusText.match(/score:?\s*(\d+\.?\d*)/i);
-            if (scoreMatch && scoreMatch[1]) {
-                totalScore = scoreMatch[1];
-            }
-        }
-    }
-    
-    // Default to 'N/A' if no score found
-    if (totalScore === null) {
-        totalScore = 'N/A';
-    }
-    
-    // Extract criteria data for Work Setup/Availability column
-    let workSetup = '';
-    let availability = '';
-    
-    const reviewButton = row.querySelector('.btn-review');
-    if (reviewButton) {
-        const onclickAttr = reviewButton.getAttribute('onclick') || '';
-        const objectRegex = /{([^}]+)}/;
-        const objectMatch = onclickAttr.match(objectRegex);
-        if (objectMatch && objectMatch[1]) {
-            const criteriaParams = objectMatch[1].split(',');
-            for (const param of criteriaParams) {
-                if (param.includes('workSetup')) {
-                    workSetup = param.split(':')[1].trim().replace(/'/g, '');
-                }
-                if (param.includes('availability')) {
-                    availability = param.split(':')[1].trim().replace(/'/g, '');
-                }
-            }
-        }
-    }
-    
-    let criteriaStatus = '';
-    const workSetupValue = (workSetup === 'true' || workSetup === '1' || workSetup === 'yes');
-    const availabilityValue = (availability === 'true' || availability === '1' || availability === 'yes' || !isNaN(parseFloat(availability)));
-    
-    if (workSetupValue && availabilityValue) {
-        criteriaStatus = '<span class="criteria-passed">Passed</span>';
-    } else {
-        criteriaStatus = '<span class="criteria-failed">Failed</span>';
-    }
-    
-    // Get the name from the row for possible lookups
+    // Get the name from row for possible lookups
     let applicantName = '';
     if (cells.length > 1) {
         applicantName = cells[1].textContent.trim();
@@ -2140,22 +2158,21 @@ function extractRowData(row, index) {
     
     // Build the cells array for the new row
     const result = [
-        ...cellData.slice(0, 4), 
-        totalScore, 
-        criteriaStatus,
-        cellData[4]
+        cellData[0], // Applicant No
+        cellData[1], // Last Name, First Name
+        cellData[2], // Department
+        cellData[3], // Position Applied
+        totalScore,  // Total Score
+        '<span class="criteria-passed">Passed</span>', // Work Setup/Availability
+        cellData[4]  // Applicant Status
     ];
-    
-    console.log(`Extracted rowData for index ${index}, userId ${userId}, score ${totalScore}, name ${applicantName}`);
     
     return {
         index: index + 1,
         cells: result,
         userId: userId,
         totalScore: totalScore,
-        criteriaStatus: (workSetupValue && availabilityValue) ? 'passed' : 'failed',
-        workSetup: workSetup,
-        availability: availability,
+        criteriaStatus: 'passed',
         name: applicantName  // Include name for possible lookups
     };
 }
@@ -2174,7 +2191,7 @@ function highlightActiveFilter(status) {
     }
 }
 
-// Improved version with better formatting and caching
+// Update the score cell with formatting
 function updateScoreCellWithFormatting(row, score) {
     if (!row) {
         console.log("Missing row in updateScoreCellWithFormatting");
@@ -2230,154 +2247,11 @@ function updateScoreCellWithFormatting(row, score) {
     }
 }
 
-// Function to update the score cell with the actual score - for backward compatibility
+// Legacy function for backward compatibility
 function updateScoreCell(row, score) {
     updateScoreCellWithFormatting(row, score);
 }
-
-// Enhanced getTotalScoreDirectly function with more fallback methods
-function getTotalScoreDirectly(userId, targetRow) {
-    if (!userId || !targetRow) {
-        console.log("Missing userId or targetRow, cannot get score");
-        return;
-    }
-    
-    console.log(`Looking for direct score for userId: ${userId}`);
-    
-    // Add data-userid attribute to the row for future reference
-    targetRow.setAttribute('data-userid', userId);
-    
-    // 1. Check global cache first (fastest method)
-    if (window.applicantsScores && window.applicantsScores[userId]) {
-        const score = window.applicantsScores[userId];
-        updateScoreCellWithFormatting(targetRow, score);
-        console.log(`Found score in cache: ${score}`);
-        return;
-    }
-    
-    // 2. Try to find score in the main table
-    const mainTable = document.getElementById('mainApplicantTable');
-    if (mainTable) {
-        const mainTableRows = mainTable.querySelectorAll('tbody tr');
-        
-        for (const row of mainTableRows) {
-            // Look for review buttons with this userId
-            const reviewButton = row.querySelector('.btn-review');
-            if (reviewButton) {
-                const onclickAttr = reviewButton.getAttribute('onclick') || '';
-                if (onclickAttr.includes(`'${userId}'`)) {
-                    console.log(`Found matching row for userId: ${userId}`);
-                    
-                    // Extract the score from onclick attribute
-                    const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
-                    if (scoreMatch && scoreMatch[1]) {
-                        const totalScore = scoreMatch[1];
-                        console.log(`Found totalScore: ${totalScore}`);
-                        
-                        // Save to global cache for future use
-                        if (!window.applicantsScores) window.applicantsScores = {};
-                        window.applicantsScores[userId] = totalScore;
-                        
-                        // Update the cell
-                        updateScoreCellWithFormatting(targetRow, totalScore);
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    
-    // 3. Look for scores in other tables (awaiting action, job offer, etc.)
-    const tableIds = ['awaitingActionTable', 'jobOfferTable'];
-    for (const tableId of tableIds) {
-        const table = document.getElementById(tableId);
-        if (!table) continue;
-        
-        const tableRows = table.querySelectorAll('tbody tr');
-        for (const row of tableRows) {
-            if (row.getAttribute('data-userid') === userId) {
-                const scoreCell = row.querySelector('td:nth-child(5)');
-                if (scoreCell) {
-                    const scoreText = scoreCell.textContent.trim();
-                    if (scoreText && scoreText !== 'N/A') {
-                        console.log(`Found score ${scoreText} in table ${tableId}`);
-                        
-                        // Save to global cache
-                        if (!window.applicantsScores) window.applicantsScores = {};
-                        window.applicantsScores[userId] = scoreText;
-                        
-                        // Update the cell
-                        updateScoreCellWithFormatting(targetRow, scoreText);
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    
-    // 4. Try to extract from the row itself
-    const lastCell = targetRow.querySelector('td:last-child');
-    if (lastCell) {
-        const statusText = lastCell.textContent || '';
-        const scoreMatch = statusText.match(/score:?\s*(\d+\.?\d*)/i);
-        if (scoreMatch && scoreMatch[1]) {
-            const score = scoreMatch[1];
-            console.log(`Extracted score ${score} from status text`);
-            
-            // Save to global cache
-            if (!window.applicantsScores) window.applicantsScores = {};
-            window.applicantsScores[userId] = score;
-            
-            // Update the cell
-            updateScoreCellWithFormatting(targetRow, score);
-            return;
-        }
-    }
-    
-    // 5. Last resort - try to get the score from ANOTHER row with the same name
-    const nameCell = targetRow.querySelector('td:nth-child(2)');
-    if (nameCell) {
-        const applicantName = nameCell.textContent.trim();
-        
-        // Look in main table for a matching name
-        if (mainTable) {
-            const mainTableRows = mainTable.querySelectorAll('tbody tr');
-            
-            for (const row of mainTableRows) {
-                const rowNameCell = row.querySelector('td:nth-child(2)');
-                if (!rowNameCell) continue;
-                
-                const rowName = rowNameCell.textContent.trim();
-                if (rowName === applicantName) {
-                    // Found matching name, now look for score
-                    const reviewButton = row.querySelector('.btn-review');
-                    if (reviewButton) {
-                        const onclickAttr = reviewButton.getAttribute('onclick') || '';
-                        const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
-                        if (scoreMatch && scoreMatch[1]) {
-                            const score = scoreMatch[1];
-                            console.log(`Found score ${score} by name matching`);
-                            
-                            // Save to global cache
-                            if (!window.applicantsScores) window.applicantsScores = {};
-                            window.applicantsScores[userId] = score;
-                            
-                            // Update the cell
-                            updateScoreCellWithFormatting(targetRow, score);
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    // If all methods fail, display N/A
-    console.log(`Could not find score for userId ${userId}, using N/A`);
-    updateScoreCellWithFormatting(targetRow, 'N/A');
-}
-
-// Function to update awaiting action table with rows from P1 and P3
+// Update Awaiting Action table with rows from P1 and P3
 function updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3) {
     const awaitingActionTable = document.getElementById('awaitingActionTable');
     if (!awaitingActionTable) return;
@@ -2404,9 +2278,10 @@ function updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3) {
             p1HeaderRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P1 Applicants on Review</td>`;
             awaitingTbody.appendChild(p1HeaderRow);
             
-            // Add each P1 row
+            // Add each P1 row WITHOUT Toggle Status column
             awaitingRowsP1.forEach((rowData, idx) => {
-                const newRow = createTableRow(rowData);
+                // Create row without Toggle Status column
+                const newRow = createTableRow(rowData, false);
                 awaitingTbody.appendChild(newRow);
                 
                 // Set userId attribute on the row
@@ -2414,10 +2289,10 @@ function updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3) {
                     newRow.setAttribute('data-userid', rowData.userId);
                 }
                 
-                // IMPORTANT: Use the direct method to get the score
-                getTotalScoreDirectly(rowData.userId, newRow);
-                
-                console.log(`Added P1 awaiting row ${idx+1} with userId: ${rowData.userId}`);
+                // Get the score directly from database for this userId
+                if (rowData.userId) {
+                    getTotalScoreDirectly(rowData.userId, newRow);
+                }
             });
         }
         
@@ -2429,9 +2304,9 @@ function updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3) {
             p3HeaderRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P3 Applicants on Review</td>`;
             awaitingTbody.appendChild(p3HeaderRow);
             
-            // Add each P3 row
+            // Add each P3 row WITHOUT Toggle Status column
             awaitingRowsP3.forEach((rowData, idx) => {
-                const newRow = createTableRow(rowData);
+                const newRow = createTableRow(rowData, false);
                 awaitingTbody.appendChild(newRow);
                 
                 // Set userId attribute on the row
@@ -2439,10 +2314,10 @@ function updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3) {
                     newRow.setAttribute('data-userid', rowData.userId);
                 }
                 
-                // IMPORTANT: Use the direct method to get the score
-                getTotalScoreDirectly(rowData.userId, newRow);
-                
-                console.log(`Added P3 awaiting row ${idx+1} with userId: ${rowData.userId}`);
+                // Get the score directly from database for this userId
+                if (rowData.userId) {
+                    getTotalScoreDirectly(rowData.userId, newRow);
+                }
             });
         }
     } else {
@@ -2451,16 +2326,18 @@ function updateAwaitingActionTable(awaitingRowsP1, awaitingRowsP3) {
     }
 }
 
-// Fixed and improved updateDeclaredResultsTable function
+// Update Declared Results table with P1 and P3 rows, including Toggle Status column
 function updateDeclaredResultsTable(declaredRowsP1, declaredRowsP3) {
-    console.log("Updating declared results table");
-    console.log(`P1 rows: ${declaredRowsP1.length}, P3 rows: ${declaredRowsP3.length}`);
+    console.log("Updating declared results table with improved score fetching");
     
     const declaredResultsTable = document.getElementById('declaredResultsTable');
     if (!declaredResultsTable) {
         console.log("Declared results table not found");
         return;
     }
+    
+    // Make sure the table has proper headers including Toggle Status column
+    ensureTableHeaders();
     
     const declaredTbody = declaredResultsTable.querySelector('tbody');
     if (!declaredTbody) {
@@ -2482,115 +2359,313 @@ function updateDeclaredResultsTable(declaredRowsP1, declaredRowsP3) {
         declaredHeader.innerHTML = 'Applicants on <span id="currentPhase">Review</span> Declared Results';
     }
     
-    // Ensure applicantsScores cache is initialized
-    if (!window.applicantsScores) {
-        window.applicantsScores = {};
-        captureApplicantsDataEnhanced();
-    }
-    
-    // Pre-process the declared rows to set userIds for any missing ones
-    const processRows = (rows) => {
-        return rows.map(rowData => {
-            // If userId is missing but we have a name, try to find by name
-            if (!rowData.userId && rowData.name) {
-                const cleanName = rowData.name.replace(/\s+/g, ' ').trim();
-                rowData.userId = findUserIdByNameImproved(cleanName);
-                
-                if (rowData.userId) {
-                    console.log(`Found userId ${rowData.userId} for name "${cleanName}"`);
-                    
-                    // If we also found a score for this userId, update it
-                    if (window.applicantsScores[rowData.userId]) {
-                        rowData.totalScore = window.applicantsScores[rowData.userId];
-                        console.log(`Updated score to ${rowData.totalScore} for userId ${rowData.userId}`);
-                    }
-                }
-            }
-            return rowData;
-        });
-    };
-    
-    // Process the rows to find missing userIds
-    const processedP1Rows = processRows(declaredRowsP1);
-    const processedP3Rows = processRows(declaredRowsP3);
+    // Make sure we've captured all available data
+    captureApplicantsDataEnhanced();
     
     // Add content depending on whether we have rows
-    if (processedP1Rows.length > 0 || processedP3Rows.length > 0) {
-        [
-            { rows: processedP1Rows, label: 'List of P1 Applicants on Review - Declared Results' },
-            { rows: processedP3Rows, label: 'List of P3 Applicants on Review - Declared Results' }
-        ].forEach(({ rows, label }) => {
-            if (rows.length > 0) {
-                // Add the section header
-                const headerRow = document.createElement('tr');
-                headerRow.classList.add('section-header-row');
-                headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">${label}</td>`;
-                declaredTbody.appendChild(headerRow);
+    if (declaredRowsP1.length > 0 || declaredRowsP3.length > 0) {
+        // Process P1 rows first if we have any
+        if (declaredRowsP1.length > 0) {
+            // Add the section header
+            const p1HeaderRow = document.createElement('tr');
+            p1HeaderRow.classList.add('section-header-row');
+            p1HeaderRow.innerHTML = `<td colspan="8" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P1 Applicants on Review - Declared Results</td>`;
+            declaredTbody.appendChild(p1HeaderRow);
+            
+            // Add each P1 row with better score handling and toggle button
+            declaredRowsP1.forEach((rowData, idx) => {
+                // Create a new row WITH Toggle Status column
+                const newRow = createTableRow(rowData, true);
+                declaredTbody.appendChild(newRow);
                 
-                // Add each row
-                rows.forEach((rowData, idx) => {
-                    console.log(`Processing ${label} row ${idx+1}:`, JSON.stringify({
-                        userId: rowData.userId,
-                        totalScore: rowData.totalScore,
-                        name: rowData.name
-                    }));
+                // Extract userId from rowData or try to find it
+                let userId = rowData.userId;
+                if (!userId) {
+                    // Try to find userId from the name
+                    const nameCell = newRow.querySelector('td:nth-child(2)');
+                    const name = nameCell ? nameCell.textContent.trim() : '';
+                    userId = findUserIdByNameImproved(name);
                     
-                    // Create the row
-                    const newRow = createTableRow(rowData);
-                    declaredTbody.appendChild(newRow);
-                    
-                    // Set the user ID attribute if available
-                    if (rowData.userId) {
-                        newRow.setAttribute('data-userid', rowData.userId);
+                    if (userId) {
+                        newRow.setAttribute('data-userid', userId);
                         
-                        // Update score cell with the score from cache or rowData
-                        const scoreToUse = window.applicantsScores[rowData.userId] || rowData.totalScore;
-                        updateScoreCellWithFormatting(newRow, scoreToUse);
-                    } else {
-                        // If we still don't have a userId, try to use the totalScore directly
-                        updateScoreCellWithFormatting(newRow, rowData.totalScore);
+                        // Also set userId on the toggle button
+                        const toggleButton = newRow.querySelector('.btn-toggle-status');
+                        if (toggleButton) toggleButton.setAttribute('data-userid', userId);
                     }
-                });
-            }
-        });
+                }
+                
+                // Get the score directly from database for this userId
+                if (userId) {
+                    getTotalScoreDirectly(userId, newRow);
+                }
+            });
+        }
+        
+        // Process P3 rows with similar logic
+        if (declaredRowsP3.length > 0) {
+            // Add the section header
+            const p3HeaderRow = document.createElement('tr');
+            p3HeaderRow.classList.add('section-header-row');
+            p3HeaderRow.innerHTML = `<td colspan="8" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P3 Applicants on Review - Declared Results</td>`;
+            declaredTbody.appendChild(p3HeaderRow);
+            
+            declaredRowsP3.forEach((rowData, idx) => {
+                // Create a new row WITH Toggle Status column
+                const newRow = createTableRow(rowData, true);
+                declaredTbody.appendChild(newRow);
+                
+                // Get userId or try to find it
+                let userId = rowData.userId;
+                if (!userId) {
+                    const nameCell = newRow.querySelector('td:nth-child(2)');
+                    const name = nameCell ? nameCell.textContent.trim() : '';
+                    userId = findUserIdByNameImproved(name);
+                    
+                    if (userId) {
+                        newRow.setAttribute('data-userid', userId);
+                        
+                        // Also set userId on the toggle button
+                        const toggleButton = newRow.querySelector('.btn-toggle-status');
+                        if (toggleButton) toggleButton.setAttribute('data-userid', userId);
+                    }
+                }
+                
+                // Get the score directly from database for this userId
+                if (userId) {
+                    getTotalScoreDirectly(userId, newRow);
+                }
+            });
+        }
     } else {
-        // If no rows, display a message
-        declaredTbody.innerHTML = `<tr><td colspan="7" class="text-center">No applicants with declared review results.</td></tr>`;
+        // If no rows, display a message - note the colspan is now 8 to account for the toggle column
+        declaredTbody.innerHTML = `<tr><td colspan="8" class="text-center">No applicants with declared review results.</td></tr>`;
     }
     
-    // Run a final pass to fix any remaining score issues
+    // Fix any scores that weren't properly set
     setTimeout(() => {
-        const rows = declaredTbody.querySelectorAll('tr:not(.section-header-row)');
-        console.log(`Final pass: checking scores for ${rows.length} rows in declared results`);
+        fixScoresInDeclaredResults();
+    }, 300);
+}
+
+// Handle the Toggle Status button click
+function toggleApplicantStatus(button) {
+    const row = button.closest('tr');
+    if (!row) return;
+    
+    const userId = button.getAttribute('data-userid') || row.getAttribute('data-userid');
+    if (!userId) {
+        console.error("Cannot toggle status: Missing userId");
+        alert("Error: Cannot identify the applicant to update status");
+        return;
+    }
+    
+    // Get current status
+    const statusCell = row.querySelector('td:nth-child(7)');
+    if (!statusCell) return;
+    
+    const currentStatus = statusCell.textContent.trim();
+    console.log(`Toggling status for userId ${userId}, current status: ${currentStatus}`);
+    
+    // Toggle between PASSED and FAILED
+    let newStatus;
+    if (currentStatus.includes('PASSED')) {
+        newStatus = currentStatus.replace('PASSED', 'FAILED');
+        button.classList.remove('status-passed');
+        button.classList.add('status-failed');
+        button.textContent = 'Failed';
+    } else if (currentStatus.includes('FAILED')) {
+        newStatus = currentStatus.replace('FAILED', 'PASSED');
+        button.classList.remove('status-failed');
+        button.classList.add('status-passed');
+        button.textContent = 'Passed';
+    } else {
+        // Default to PASSED if status doesn't contain either keyword
+        newStatus = currentStatus.includes('P1') ? 'P1 - PASSED' : 'P3 - PASSED';
+        button.classList.add('status-passed');
+        button.textContent = 'Passed';
+    }
+    
+    // Update the status cell
+    statusCell.textContent = newStatus;
+    
+    // Store the pending status change in a global object
+    if (!window.pendingStatusChanges) {
+        window.pendingStatusChanges = {};
+    }
+    
+    // Record whether this is a PASS or FAIL
+    window.pendingStatusChanges[userId] = newStatus.includes('PASSED') ? 'PASSED' : 'FAILED';
+    
+    console.log(`Status change for userId ${userId} to ${newStatus} is pending finalization`);
+    console.log('Current pending changes:', window.pendingStatusChanges);
+    
+    // Make API call to update the temporary status in the database
+    // This makes the UI consistent until finalization
+    fetch(`/linemanager/applicant-tracker-jobposition/markAsP1${newStatus.includes('PASSED') ? 'Passed' : 'Failed'}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: userId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error(`Error updating temporary status: ${data.message || 'Unknown error'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error calling temporary status API:', error);
+    });
+}
+
+
+// Get score directly from button attributes with userId
+function forceDatabaseScoreFetch(userId, row) {
+    if (!userId || !row) {
+        console.log("Missing userId or row in forceDatabaseScoreFetch");
+        return;
+    }
+    
+    console.log(`Forcing database score fetch for userId: ${userId}`);
+    
+    // Extract score directly from button attributes with userId
+    const score = extractScoreFromButton(userId);
+    
+    if (score) {
+        // Cache the score
+        if (!window.applicantsScores) window.applicantsScores = {};
+        window.applicantsScores[userId] = score;
         
-        rows.forEach((row, idx) => {
-            const userId = row.getAttribute('data-userid');
-            if (userId) {
-                const scoreCell = row.querySelector('td:nth-child(5)');
-                const scoreText = scoreCell ? scoreCell.textContent.trim() : '';
+        // Update the row
+        updateScoreCellWithFormatting(row, score);
+        console.log(`Set score ${score} from database for userId ${userId}`);
+        return;
+    }
+    
+    // If score not found in buttons, try the cache
+    if (window.applicantsScores && window.applicantsScores[userId]) {
+        const cachedScore = window.applicantsScores[userId];
+        updateScoreCellWithFormatting(row, cachedScore);
+        console.log(`Used cached score ${cachedScore} for userId ${userId}`);
+        return;
+    }
+    
+    // If still not found, use N/A
+    console.log(`No database score found for userId ${userId}`);
+    updateScoreCellWithFormatting(row, 'N/A');
+}
+
+// Function to directly get score from applicant_initialscreening_assessment.totalScore
+function getTotalScoreDirectly(userId, targetRow) {
+    if (!userId || !targetRow) {
+        console.log("Missing userId or targetRow, cannot get score");
+        return;
+    }
+    
+    console.log(`Looking for direct score for userId: ${userId}`);
+    
+    // Add data-userid attribute to the row for future reference
+    targetRow.setAttribute('data-userid', userId);
+    
+    // 1. Search in mainApplicantTable for exact matches to get the correct score from the onclick attribute
+    const mainTable = document.getElementById('mainApplicantTable');
+    if (mainTable) {
+        const mainTableRows = mainTable.querySelectorAll('tbody tr');
+        
+        for (const row of mainTableRows) {
+            const reviewButton = row.querySelector('.btn-review');
+            if (reviewButton) {
+                const onclickAttr = reviewButton.getAttribute('onclick') || '';
                 
-                if (scoreText === 'N/A' || scoreText === '') {
-                    console.log(`Row ${idx+1}: Score still N/A, trying again for userId ${userId}`);
-                    getTotalScoreDirectly(userId, row);
-                }
-            } else {
-                // Try to find userId by name one more time
-                const nameCell = row.querySelector('td:nth-child(2)');
-                if (nameCell) {
-                    const name = nameCell.textContent.replace(/\s+/g, ' ').trim();
-                    const foundUserId = findUserIdByNameImproved(name);
-                    if (foundUserId) {
-                        console.log(`Final pass: Found userId ${foundUserId} for name ${name}`);
-                        row.setAttribute('data-userid', foundUserId);
-                        getTotalScoreDirectly(foundUserId, row);
+                // Look for lineManagerInitialScreeningModal with this userId as first parameter
+                if (onclickAttr.includes(`lineManagerInitialScreeningModal('${userId}'`) || 
+                    onclickAttr.includes(`lineManagerInitialScreeningModal("${userId}"`)) {
+                    
+                    // Extract totalScore - it's passed after all the nested objects and before document URLs
+                    // Pattern: }, 'scoreValue', 'degreeUrl', etc
+                    const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
+                    if (scoreMatch && scoreMatch[1]) {
+                        const totalScore = scoreMatch[1];
+                        console.log(`Found totalScore ${totalScore} from lineManagerInitialScreeningModal`);
+                        
+                        // Cache the score
+                        if (!window.applicantsScores) window.applicantsScores = {};
+                        window.applicantsScores[userId] = totalScore;
+                        
+                        // Update the cell
+                        updateScoreCellWithFormatting(targetRow, totalScore);
+                        return;
                     }
                 }
             }
-        });
-    }, 200);
+        }
+    }
+    
+    // 2. Try cached scores as fallback
+    if (window.applicantsScores && window.applicantsScores[userId]) {
+        const cachedScore = window.applicantsScores[userId];
+        console.log(`Using cached score ${cachedScore} for userId ${userId}`);
+        updateScoreCellWithFormatting(targetRow, cachedScore);
+        return;
+    }
+    
+    // 3. Search ALL buttons in the document for this userId as last resort
+    const allButtons = document.querySelectorAll('button[onclick*="' + userId + '"]');
+    for (const button of allButtons) {
+        const onclickAttr = button.getAttribute('onclick') || '';
+        
+        if (onclickAttr.includes('lineManagerInitialScreeningModal')) {
+            const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
+            if (scoreMatch && scoreMatch[1]) {
+                const totalScore = scoreMatch[1];
+                console.log(`Found totalScore ${totalScore} from any button in the document`);
+                
+                // Cache the score
+                if (!window.applicantsScores) window.applicantsScores = {};
+                window.applicantsScores[userId] = totalScore;
+                
+                // Update the cell
+                updateScoreCellWithFormatting(targetRow, totalScore);
+                return;
+            }
+        }
+    }
+    
+    // 4. If all methods fail, display N/A
+    console.log(`No score found for userId ${userId}, using N/A`);
+    updateScoreCellWithFormatting(targetRow, 'N/A');
 }
 
-// Add the missing setupModalEventListeners function
+// Extract score from button
+function extractScoreFromButton(userId) {
+    // This function specifically extracts the applicant_initialscreening_assessment.totalScore
+    // from the lineManagerInitialScreeningModal button attributes
+    
+    // Look for any button containing this userId
+    const buttons = document.querySelectorAll(`button[onclick*="'${userId}'"]`);
+    for (const button of buttons) {
+        const onclickAttr = button.getAttribute('onclick') || '';
+        
+        // If this is the screening modal function
+        if (onclickAttr.includes('lineManagerInitialScreeningModal')) {
+            // The score is the parameter after all the nested objects
+            // It's typically in the format: }, 'score', 'doc1', 'doc2', 'doc3'
+            // or: }, 'score')
+            
+            // Try to match the score parameter (should be after the closing curly brace)
+            const scoreMatch = onclickAttr.match(/},\s*['"]([^'"]*)['"]/);
+            if (scoreMatch && scoreMatch[1]) {
+                return scoreMatch[1];
+            }
+        }
+    }
+    
+    return null;
+}
+
+// Setup modal event listeners
 function setupModalEventListeners() {
     console.log("Setting up modal event listeners");
     
@@ -2617,7 +2692,8 @@ function setupModalEventListeners() {
         });
     });
 }
-// Add the missing updateJobOfferSection function
+
+// Update Job Offer section
 function updateJobOfferSection(jobOfferRows, container) {
     console.log("Updating job offer section with", jobOfferRows.length, "rows");
     
@@ -2668,7 +2744,7 @@ function updateJobOfferSection(jobOfferRows, container) {
                 
                 // Add each job offer row
                 jobOfferRows.forEach((rowData, idx) => {
-                    const newRow = createTableRow(rowData);
+                    const newRow = createTableRow(rowData, false); // No toggle status for job offers
                     jobOfferTbody.appendChild(newRow);
                     
                     // Set userId attribute for score lookup
@@ -2690,8 +2766,7 @@ function updateJobOfferSection(jobOfferRows, container) {
     }
 }
 
-
-// Add the missing updateReviewSectionsVisibility function
+// Update section visibilities
 function updateReviewSectionsVisibility(hasAwaitingRows, hasDeclaredRows, hasJobOfferRows, hasP1Data, hasP3Data) {
     console.log("Updating section visibility:", {
         hasAwaitingRows, hasDeclaredRows, hasJobOfferRows, hasP1Data, hasP3Data
@@ -2738,24 +2813,18 @@ function updateReviewSectionsVisibility(hasAwaitingRows, hasDeclaredRows, hasJob
     if (jobOfferTable) {
         jobOfferTable.style.display = hasJobOfferRows ? 'table' : 'none';
     }
-    
-    // Update the notify all applicants button text based on available data
-    const notifyAllButton = document.getElementById('notifyAllApplicants');
-    if (notifyAllButton) {
-        if (hasP1Data && !hasP3Data) {
-            notifyAllButton.textContent = "Finalize P1 Review";
-        } else if (!hasP1Data && hasP3Data) {
-            notifyAllButton.textContent = "Finalize P3 Review";
-        } else if (hasP1Data && hasP3Data) {
-            notifyAllButton.textContent = "Finalize Review";
-        } else {
-            notifyAllButton.textContent = "Notify All Applicants";
-        }
-    }
+    // Handle the notifyAllApplicants button if it exists (for backward compatibility)
+// We're now using dynamic buttons instead of updating text
+// Call updateSectionHeaderButtons to refresh the button state
+updateSectionHeaderButtons();
+// Call updateSectionHeaderButtons if we're already on the review filter
+const activeFilter = document.querySelector(".filter-button.active");
+if (activeFilter && activeFilter.id === 'filter-forreview') {
+    setTimeout(updateSectionHeaderButtons, 500); // Small delay to ensure data is loaded
+}
 }
 
-
-// Improved function to fix scores in declared results table
+// Fix scores in declared results table specifically
 function fixScoresInDeclaredResults() {
     console.log("Fixing scores in declared results table");
     
@@ -2767,6 +2836,9 @@ function fixScoresInDeclaredResults() {
     console.log(`Checking ${rows.length} rows in declared results table`);
     
     rows.forEach((row, idx) => {
+        // Skip rows with message (colspan)
+        if (row.querySelector('td[colspan]')) return;
+        
         // Try getting userId from data attribute
         let userId = row.getAttribute('data-userid');
         
@@ -2775,41 +2847,15 @@ function fixScoresInDeclaredResults() {
             const nameCell = row.querySelector('td:nth-child(2)');
             if (nameCell) {
                 const name = nameCell.textContent.trim().replace(/\s+/g, ' ');
-                
-                // Parse the name to handle cases with newlines and emails
-                let cleanName = name;
-                // Remove email if present (usually after a newline)
-                if (name.includes('\n')) {
-                    cleanName = name.split('\n')[0].trim();
-                } else if (name.includes('@')) {
-                    // If email is in the same line, try to extract just the name part
-                    cleanName = name.split('@')[0].trim();
-                    if (cleanName.includes(',')) {
-                        cleanName = cleanName.split(',')[0].trim() + ',' + cleanName.split(',')[1].split('@')[0].trim();
-                    }
-                }
-                
-                // Additional manual mapping for problem cases
-                // This special case handles the specific issue with "jl, blond jl@gmail.com"
-                if (name.includes('jl, blond') && name.includes('jl@gmail.com')) {
-                    // Manually assign a userId if you know it
-                    // Update this value with the correct userId for jl, blond
-                    userId = document.querySelector('[data-userid]')?.getAttribute('data-userid') || '32';
-                    console.log(`Manual mapping: Assigned userId ${userId} to "${name}"`);
-                } else {
-                    // Try normal userId lookup
-                    userId = findUserIdByNameImproved(cleanName);
-                    console.log(`Tried to find userId for "${cleanName}", found: ${userId || 'none'}`);
-                }
+                userId = findUserIdByNameImproved(name);
                 
                 // Set the userId on the row if found
                 if (userId) {
                     row.setAttribute('data-userid', userId);
                     
-                    // Also update the name mapping for future lookups
-                    if (!window.applicantNameMapping) window.applicantNameMapping = {};
-                    window.applicantNameMapping[cleanName] = userId;
-                    window.applicantNameMapping[name] = userId;
+                    // Also set userId on toggle button if it exists
+                    const toggleButton = row.querySelector('.btn-toggle-status');
+                    if (toggleButton) toggleButton.setAttribute('data-userid', userId);
                 }
             }
         }
@@ -2817,31 +2863,193 @@ function fixScoresInDeclaredResults() {
         // If we now have a userId, update the score
         if (userId) {
             console.log(`Row ${idx}: Using userId ${userId} to get score`);
-            // Try to get the score from cache or directly
+            // Try to get the score from database
             getTotalScoreDirectly(userId, row);
-        } else {
-            // Last resort: try to get score from status text
-            const statusCell = row.querySelector('td:last-child');
-            if (statusCell) {
-                const statusText = statusCell.textContent || '';
-                const scoreMatch = statusText.match(/score:?\s*(\d+\.?\d*)/i);
-                if (scoreMatch && scoreMatch[1]) {
-                    const score = scoreMatch[1];
-                    console.log(`Row ${idx}: Extracted score ${score} from status text`);
-                    updateScoreCellWithFormatting(row, score);
-                } else {
-                    console.log(`Row ${idx}: No score found in status text, using default score`);
-                    // For testing, we'll use a default score of 75.5
-                    updateScoreCellWithFormatting(row, '75.5');
-                }
-            }
         }
     });
 }
 
+// Set up toggle status buttons
+function setupToggleStatusButtons() {
+    const buttons = document.querySelectorAll('.btn-toggle-status:not([data-has-listener])');
+    console.log(`Setting up ${buttons.length} toggle status buttons`);
+    
+    buttons.forEach(button => {
+        // Mark that we've added a listener to avoid duplicates
+        button.setAttribute('data-has-listener', 'true');
+        
+        // Get the userId - either from the button's data attribute or from the parent row
+        const userId = button.getAttribute('data-userid') || 
+                       button.closest('tr').getAttribute('data-userid');
+        
+        if (userId) {
+            // Set initial button state based on current status
+            const row = button.closest('tr');
+            if (row) {
+                const statusCell = row.querySelector('td:nth-child(7)');
+                if (statusCell) {
+                    const currentStatus = statusCell.textContent.trim();
+                    // Set initial button text and style
+                    if (currentStatus.includes('PASSED')) {
+                        button.textContent = 'Passed';
+                        button.classList.add('status-passed');
+                    } else if (currentStatus.includes('FAILED')) {
+                        button.textContent = 'Failed';
+                        button.classList.add('status-failed');
+                    } else {
+                        button.textContent = 'Toggle';
+                    }
+                }
+            }
+            
+            // Add click event listener
+            button.addEventListener('click', function() {
+                toggleApplicantStatus(this);
+            });
+        } else {
+            console.log(`Button missing userId, cannot set up toggle functionality`);
+        }
+    });
+    
+    return buttons.length;
+}
 
+// Function to sort declared results
+function sortDeclaredResults(sortType) {
+    const table = document.getElementById('declaredResultsTable');
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+    
+    const rows = Array.from(tbody.querySelectorAll('tr:not(.section-header-row)'));
+    
+    // Keep section header rows in place
+    const headerRows = Array.from(tbody.querySelectorAll('tr.section-header-row'));
+    
+    // Group rows by section (P1 and P3)
+    const p1Rows = rows.filter(row => {
+        const statusCell = row.querySelector('td:nth-child(7)');
+        return statusCell && statusCell.textContent.includes('P1');
+    });
+    
+    const p3Rows = rows.filter(row => {
+        const statusCell = row.querySelector('td:nth-child(7)');
+        return statusCell && statusCell.textContent.includes('P3');
+    });
+    
+    // Sort rows based on selected option
+    if (sortType === 'ascending' || sortType === 'descending') {
+        // Sort by score
+        const sortFn = (a, b) => {
+            const scoreA = parseFloat(a.getAttribute('data-score') || '0');
+            const scoreB = parseFloat(b.getAttribute('data-score') || '0');
+            return sortType === 'ascending' ? scoreA - scoreB : scoreB - scoreA;
+        };
+        
+        p1Rows.sort(sortFn);
+        p3Rows.sort(sortFn);
+    } else if (sortType === 'alphabetical') {
+        // Sort alphabetically by name
+        const sortFn = (a, b) => {
+            const nameA = a.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+            const nameB = b.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+            return nameA.localeCompare(nameB);
+        };
+        
+        p1Rows.sort(sortFn);
+        p3Rows.sort(sortFn);
+    }
+    
+    // Clear the tbody
+    tbody.innerHTML = '';
+    
+    // Add P1 header and rows if we have any
+    if (p1Rows.length > 0) {
+        const p1Header = headerRows.find(row => row.textContent.includes('P1'));
+        if (p1Header) tbody.appendChild(p1Header);
+        p1Rows.forEach(row => tbody.appendChild(row));
+    }
+    
+    // Add P3 header and rows if we have any
+    if (p3Rows.length > 0) {
+        const p3Header = headerRows.find(row => row.textContent.includes('P3'));
+        if (p3Header) tbody.appendChild(p3Header);
+        p3Rows.forEach(row => tbody.appendChild(row));
+    }
+}
+
+// Add missing toggle columns for declared results table only
+function addMissingToggleColumns() {
+    console.log("Checking for missing Toggle Status columns...");
+    
+    // ONLY target the declared results table
+    const declaredResultsTable = document.getElementById('declaredResultsTable');
+    if (!declaredResultsTable) return;
+    
+    const rows = declaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
+    console.log(`Checking ${rows.length} rows in declaredResultsTable`);
+    
+    rows.forEach(row => {
+        // Skip message rows (those with colspan)
+        if (row.querySelector('td[colspan]')) return;
+        
+        // Check if the row already has enough columns
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 8) {
+            console.log("Found row missing Toggle Status column");
+            
+            // Get the userId from the row
+            const userId = row.getAttribute('data-userid');
+            
+            // Create the toggle button cell
+            const toggleCell = document.createElement('td');
+            toggleCell.innerHTML = `<button class="btn-toggle-status">Toggle Status</button>`;
+            row.appendChild(toggleCell);
+            
+            // If we have a userId, set it on the button
+            if (userId) {
+                const button = toggleCell.querySelector('.btn-toggle-status');
+                if (button) {
+                    button.setAttribute('data-userid', userId);
+                }
+            }
+        }
+    });
+    
+    // After adding missing columns, set up the event listeners
+    setupToggleStatusButtons();
+}
+
+// Function for displaying uploaded documents in modal
+function displayUploadedDocument(fileUrl, linkId, previewId) {
+    const docLink = document.getElementById(linkId);
+    const docPreview = document.getElementById(previewId);
+
+    if (!fileUrl || fileUrl === '#') {
+        docLink.href = "#";
+        docLink.textContent = "No document uploaded";
+        docPreview.innerHTML = ""; // Clear preview
+        return;
+    }
+
+    docLink.href = fileUrl;
+    docLink.textContent = "View Uploaded Document";
+
+    const fileExtension = fileUrl.split('.').pop().toLowerCase();
+
+    if (["jpg", "jpeg", "png"].includes(fileExtension)) {
+        docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
+    } else if (fileExtension === "pdf") {
+        docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>`;
+    } else {
+        docPreview.innerHTML = ""; // No preview for other file types
+    }
+}
+
+// Function for the Line Manager Initial Screening Modal
 function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
-    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict,  degreeUrl, certUrl, resumeUrl });
+    console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl });
     
     // If userId is missing or "undefined", log an error and stop further processing.
     if (!userId || userId === "undefined") {
@@ -2853,15 +3061,17 @@ function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday,
     // Set the hidden input value for userId
     document.getElementById('userId').value = userId;
 
-    // Set the hidden input value for jobId
-    document.getElementById('jobId').value = jobId; // Ensure jobId is passed to this function
+    // Set the hidden input value for jobId if it exists
+    const jobIdElement = document.getElementById('jobId');
+    if (jobIdElement && typeof jobId !== 'undefined') {
+        jobIdElement.value = jobId;
+    }
 
     // Optionally hide the applicantId container if not needed
     let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
     if (applicantIdContainer) {
         applicantIdContainer.style.display = "none";
     }
-
 
     // Populate visible applicant details
     document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
@@ -2887,450 +3097,511 @@ function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday,
 
     // Display the modal
     document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
+    
+    // Store this score in our global cache - this is the applicant_initialscreening_assessment.totalScore
+    if (!window.applicantsScores) window.applicantsScores = {};
+    window.applicantsScores[userId] = verdict;
+}
+// Function to open standard modals
+function openModal(modalId, applicantName) {
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+        console.error(`Modal ${modalId} not found`);
+        return;
+    }
+    
+    // If this is the job offer modal, update the name
+    if (modalId === 'releaseJobOfferModal' && applicantName) {
+        const nameElement = document.getElementById('applicant-name-job-offer');
+        if (nameElement) {
+            nameElement.textContent = applicantName;
+        }
+    }
+    
+    // Display the modal
+    modal.style.display = 'block';
 }
 
-
-function displayUploadedDocument(fileUrl, linkId, previewId) {
-    const docLink = document.getElementById(linkId);
-    const docPreview = document.getElementById(previewId);
-
-    if (!fileUrl) {
-        docLink.href = "#";
-        docLink.textContent = "No document uploaded";
-        docPreview.innerHTML = ""; // Clear preview
-        return;
-    }
-
-    docLink.href = fileUrl;
-    docLink.textContent = "View Uploaded Document";
-
-    const fileExtension = fileUrl.split('.').pop().toLowerCase();
-
-    if (["jpg", "jpeg", "png"].includes(fileExtension)) {
-        docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
-    } else if (fileExtension === "pdf") {
-        docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>`;
-    } else {
-        docPreview.innerHTML = ""; // No preview for other file types
+// Function to close standard modals
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
     }
 }
 
-function confirmP1LineManagerPassed() {
-    const userIdElement = document.getElementById("userId");
-    if (!userIdElement) {
-        alert("Error: userId is missing. Please try again.");
+// Function to approve Line Manager
+function approveLineManager(applicantId) {
+    if (!applicantId) {
+        alert("Error: Missing applicant ID");
         return;
     }
-
-    const userIdRaw = userIdElement.value.trim();
-    console.log("User  ID (raw):", userIdRaw);
-
-    const userId = parseInt(userIdRaw, 10);
-    console.log("User  ID (parsed):", userId);
-
-    if (isNaN(userId)) {
-        alert("Error: User ID is invalid. Please try again.");
-        return;
-    }
-
-    fetch('/linemanager/applicant-tracker-jobposition/P1LineManagerPassed', {
-        method: 'POST', 
+    
+    // Make API call to approve
+    fetch('/linemanager/applicant-tracker-jobposition/postApproveLineManager', {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId }), // Only send userId
+        body: JSON.stringify({ applicantId: applicantId }),
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Server Response:", data);
-
         if (data.success) {
-            const modal = document.getElementById('hrInitialScreeningModalHtml');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-            alert("Successfully updated applicant status!");
+            alert("Successfully approved applicant!");
+            
+            // Refresh the view
+            setTimeout(() => {
+                const activeFilter = document.querySelector(".filter-button.active");
+                if (activeFilter) {
+                    activeFilter.click();
+                } else {
+                    document.getElementById("filter-all").click();
+                }
+            }, 500);
         } else {
-            alert("Error updating applicant status: " + data.message);
+            alert("Error approving applicant: " + (data.message || "Unknown error"));
         }
     })
     .catch(error => {
-        console.error("Fetch Error:", error);
+        console.error("Error:", error);
+        alert("Failed to approve applicant.");
+    });
+}
+
+// Function to handle notification for job offers
+function sendNotification() {
+    // This would normally send notifications to applicants
+    alert("Notification sent to applicant!");
+    closeModal('releaseJobOfferModal');
+    
+    // Refresh the view after sending notification
+    setTimeout(() => {
+        const activeFilter = document.querySelector(".filter-button.active");
+        if (activeFilter) {
+            activeFilter.click();
+        }
+    }, 500);
+}
+
+// Function to handle onboarding confirmation
+function confirmOnboarding() {
+    alert("Applicant moved to onboarding");
+    closeModal('moveToOnboardingModal');
+    
+    // Refresh the view
+    setTimeout(() => {
+        document.getElementById("filter-foronboarding").click();
+    }, 500);
+}
+
+// Function to handle account setup confirmation
+function confirmAccountSetup() {
+    alert("Account setup confirmed");
+    closeModal('accountSetupReminderModal');
+}
+
+// Function to set interview availabilities (placeholder)
+function setInterviewAvailabilities() {
+    // This would normally open Calendly or another scheduling tool
+    alert("Opening Calendly to set interview availabilities...");
+    // window.open('https://calendly.com/your-calendly-link', '_blank');
+}
+
+// Function to finalize P1 Review
+function finalizeP1Review() {
+    console.log("Finalizing P1 review process...");
+    
+    // Extract status updates from rows in the declared results table
+    const declaredResultsTable = document.getElementById("declaredResultsTable");
+    const rows = declaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
+    
+    // Arrays to store passed and failed user IDs
+    const passedUserIds = [];
+    const failedUserIds = [];
+    
+    // Process each row to determine which users passed and which failed
+    rows.forEach(row => {
+        // Skip message rows
+        if (row.querySelector('td[colspan]')) return;
+        
+        const statusCell = row.querySelector('td:nth-child(7)');
+        const userId = row.getAttribute('data-userid');
+        
+        if (statusCell && userId) {
+            const statusText = statusCell.textContent.trim();
+            
+            // Only include P1 rows
+            if (statusText.includes('P1')) {
+                if (statusText.includes('PASSED')) {
+                    passedUserIds.push(userId);
+                } else if (statusText.includes('FAILED')) {
+                    failedUserIds.push(userId);
+                }
+            }
+        }
+    });
+    
+    console.log(`Finalizing P1 Review: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+    
+    // Send API request for P1 finalization
+    fetch('/linemanager/applicant-tracker-jobposition/finalizeP1Review', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            passedUserIds: passedUserIds,
+            failedUserIds: failedUserIds
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("P1 Review finalization complete! All applicants have been notified of their status.");
+            
+            // Clear the pending status changes after finalization
+            window.pendingStatusChanges = {};
+            
+            closeModal('notifyApplicantsModal');
+            
+            // Refresh the view after finalization
+            setTimeout(() => {
+                // Trigger current filter to refresh the view
+                const activeFilter = document.querySelector(".filter-button.active");
+                if (activeFilter) {
+                    activeFilter.click();
+                } else {
+                    // Default to "all" if no active filter found
+                    document.getElementById("filter-all").click();
+                }
+            }, 500);
+        } else {
+            alert("Error finalizing P1 review: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("Error finalizing P1 review:", error);
+        alert("Failed to finalize P1 review. Please try again.");
+    });
+    
+    // Close the modal
+    closeModal('notifyApplicantsModal');
+}
+
+// Function for the Line Manager Initial Screening Modal actions
+function passApplicant() {
+    const userId = document.getElementById('userId').value;
+    if (!userId) {
+        alert("Error: Invalid User ID");
+        return;
+    }
+    
+    // Make API call to update status in line manager's view
+    fetch('/linemanager/applicant-tracker-jobposition/markAsP1Passed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: userId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close the modal
+            document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+            
+            // Record this in the pending changes
+            if (!window.pendingStatusChanges) {
+                window.pendingStatusChanges = {};
+            }
+            window.pendingStatusChanges[userId] = 'PASSED';
+            
+            // Move the row from awaiting action to declared results
+            const moveResult = moveRowToSection(userId, 'awaitingActionTable', 'declaredResultsTable');
+            
+            if (moveResult) {
+                console.log(`Successfully moved row for user ${userId} to declared results table`);
+            } else {
+                console.log(`Row movement failed for user ${userId}, refreshing view`);
+                // If movement fails, refresh the entire view
+                setTimeout(() => {
+                    const activeFilter = document.querySelector(".filter-button.active");
+                    if (activeFilter) {
+                        activeFilter.click();
+                    } else {
+                        document.getElementById("filter-all").click();
+                    }
+                }, 500);
+            }
+            
+            // Show success message
+            alert("Successfully marked applicant status as PASSED! The applicant will be notified when you finalize the review.");
+            
+        } else {
+            alert("Error updating applicant status: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
         alert("Failed to update applicant status.");
     });
 }
 
-    // Close the modal
-    document.querySelector('.review-close-button').addEventListener('click', function () {
-        document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+// Handle the Reject button click in the modal
+function rejectApplicant() {
+    const userId = document.getElementById('userId').value;
+    if (!userId) {
+        alert("Error: Invalid User ID");
+        return;
+    }
+    
+    // Make API call to update status in line manager's view
+    fetch('/linemanager/applicant-tracker-jobposition/markAsP1Failed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: userId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close the modal
+            document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+            
+            // Record this in the pending changes
+            if (!window.pendingStatusChanges) {
+                window.pendingStatusChanges = {};
+            }
+            window.pendingStatusChanges[userId] = 'FAILED';
+            
+            // Move the row from awaiting action to declared results
+            const moveResult = moveRowToSection(userId, 'awaitingActionTable', 'declaredResultsTable');
+            
+            if (moveResult) {
+                console.log(`Successfully moved row for user ${userId} to declared results table`);
+            } else {
+                console.log(`Row movement failed for user ${userId}, refreshing view`);
+                // If movement fails, refresh the entire view
+                setTimeout(() => {
+                    const activeFilter = document.querySelector(".filter-button.active");
+                    if (activeFilter) {
+                        activeFilter.click();
+                    } else {
+                        document.getElementById("filter-all").click();
+                    }
+                }, 500);
+            }
+            
+            // Show success message
+            alert("Successfully marked applicant status as FAILED! The applicant will be notified when you finalize the review.");
+            
+        } else {
+            alert("Error updating applicant status: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to update applicant status.");
     });
+}
 
-    // Close modal if clicked outside the modal content
-    window.addEventListener('click', function (event) {
-        const modal = document.getElementById('lineManagerInitialScreeningModalHtml');
-        if (event.target === modal) {
-            modal.style.display = 'none';
+// Function for finalizing P3 Review (updated to match P1 pattern)
+function finalizeP3Review() {
+    console.log("Finalizing P3 review process...");
+    
+    // Extract status updates from rows in the declared results table
+    const declaredResultsTable = document.getElementById("declaredResultsTable");
+    const rows = declaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
+    
+    // Arrays to store passed and failed user IDs
+    const passedUserIds = [];
+    const failedUserIds = [];
+    
+    // Process each row to determine which users passed and which failed
+    rows.forEach(row => {
+        // Skip message rows
+        if (row.querySelector('td[colspan]')) return;
+        
+        const statusCell = row.querySelector('td:nth-child(7)');
+        const userId = row.getAttribute('data-userid');
+        
+        if (statusCell && userId) {
+            const statusText = statusCell.textContent.trim();
+            
+            // Only include P3 rows
+            if (statusText.includes('P3')) {
+                if (statusText.includes('PASSED')) {
+                    passedUserIds.push(userId);
+                } else if (statusText.includes('FAILED')) {
+                    failedUserIds.push(userId);
+                }
+            }
         }
     });
     
-    document.addEventListener("DOMContentLoaded", function () {
-        // Function to filter rows based on status
-        function filterRowsByStatus(status) {
-        const rows = document.querySelectorAll('.tracking-table tbody tr');
-        const rowsForReview = [];
-        const rowsOtherStatus = [];
-
-        rows.forEach(row => {
-            // Show rows matching the status or all rows if status is "all"
-            if (status === "all" || row.classList.contains(`status-${status}`)) {
-                if (status === "for-review") {
-                    // Separate rows with the "For Review" status
-                    const mailIconButton = row.querySelector("button.btn-review i.fas.fa-envelope"); // Look for the mail icon inside the button
-                    if (mailIconButton) {
-                        rowsForReview.push(row); // Rows with mail icon
-                    } else {
-                        rowsOtherStatus.push(row); // Rows without mail icon
-                    }
+    console.log(`Finalizing P3 Review: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+    
+    if (passedUserIds.length === 0 && failedUserIds.length === 0) {
+        alert("No P3 applicants found with PASSED or FAILED status.");
+        closeModal('notifyApplicantsModal');
+        return;
+    }
+    
+    // Send API request for P3 finalization
+    fetch('/linemanager/applicant-tracker-jobposition/finalizeP3Review', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            passedUserIds: passedUserIds,
+            failedUserIds: failedUserIds
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("P3 Review finalization complete! All applicants have been notified of their status.");
+            
+            // Clear the pending status changes after finalization
+            window.pendingStatusChanges = {};
+            
+            closeModal('notifyApplicantsModal');
+            
+            // Refresh the view after finalization
+            setTimeout(() => {
+                // Trigger current filter to refresh the view
+                const activeFilter = document.querySelector(".filter-button.active");
+                if (activeFilter) {
+                    activeFilter.click();
                 } else {
-                    rowsOtherStatus.push(row); // All other statuses
+                    // Default to "all" if no active filter found
+                    document.getElementById("filter-all").click();
                 }
-                row.style.display = ""; // Show
-            } else {
-                row.style.display = "none"; // Hide
-            }
-        });
-
-        // Rearrange "For Review" rows with mail icon last
-        if (status === "for-review") {
-            const sortedRows = [...rowsOtherStatus, ...rowsForReview]; // Move rows with mail icon to the end
-            sortedRows.forEach(row => row.parentElement.appendChild(row)); // Reorder rows in the DOM
-            document.querySelector(".finalize-container").style.display = "block"; // Show the finalize button
-
+            }, 500);
         } else {
-            // For other statuses, just display them in the order they appear
-            rowsOtherStatus.forEach(row => row.style.display = "");
-            document.querySelector(".finalize-container").style.display = "none"; // Hide the finalize button
+            alert("Error finalizing P3 review: " + (data.message || "Unknown error"));
         }
-
-        // Highlight the active filter button
-        highlightActiveFilter(status);
-    }
-
-
-    // Event listeners for finalize buttons
-    document.getElementById("finalize-p1").addEventListener("click", function () {
-        finalizeReview("P1");
+    })
+    .catch(error => {
+        console.error("Error finalizing P3 review:", error);
+        alert("Failed to finalize P3 review. Please try again.");
     });
-
-    document.getElementById("finalize-p2").addEventListener("click", function () {
-        finalizeReview("P2");
-    });
-
-    document.getElementById("finalize-p3").addEventListener("click", function () {
-        finalizeReview("P3");
-    });
-
-    // Finalize review function
-    function finalizeReview(phase) {
-        alert(`${phase}: Finalizing review and notifying applicants.`);
-        // Add logic to handle finalization for the specified phase
-        // Example: Update database, send notifications, etc.
-        console.log(`${phase}: Review finalized. Notifications sent.`);
-    }
-
-
-        // Function to filter rows based on the search input
-        function filterTable() {
-            const searchValue = document.getElementById("searchBar").value.toLowerCase();
-            const rows = document.querySelectorAll('.tracking-table tbody tr');
-
-            rows.forEach(row => {
-                const cells = row.querySelectorAll("td");
-                const rowText = Array.from(cells)
-                    .map(cell => {
-                        const button = cell.querySelector("button");
-                        // Include button text in the searchable content
-                        return button ? cell.textContent.toLowerCase() + " " + button.textContent.toLowerCase() : cell.textContent.toLowerCase();
-                    })
-                    .join(" ");
-                if (rowText.includes(searchValue)) {
-                    row.style.display = ""; // Show if search term matches
-                } else {
-                    row.style.display = "none"; // Hide otherwise
-                }
-            });
-        }
-
-        // Function to highlight the active filter button
-        function highlightActiveFilter(status) {
-            const buttons = document.querySelectorAll(".right-section button");
-            buttons.forEach(button => {
-                if (button.id === `filter-${status}`) {
-                    button.classList.add("active"); // Add active class
-                } else {
-                    button.classList.remove("active"); // Remove active class
-                }
-            });
-        }
-
-        // Initialize buttons for filtering by status
-        const buttons = {
-            all: document.getElementById("filter-all"),
-            review: document.getElementById("filter-review"),
-            evaluation: document.getElementById("filter-evaluation"),
-            onboarding: document.getElementById("filter-onboarding"),
-        };
-
-        // Add event listeners to filter buttons
-        buttons.all.addEventListener("click", () => filterRowsByStatus("all"));
-        buttons.review.addEventListener("click", () => filterRowsByStatus("for-review"));
-        buttons.evaluation.addEventListener("click", () => filterRowsByStatus("for-evaluation"));
-        buttons.onboarding.addEventListener("click", () => filterRowsByStatus("for-onboarding"));
-
-        // Search functionality
-        document.querySelector(".search-button").addEventListener("click", filterTable);
-        document.getElementById("searchBar").addEventListener("keypress", function (e) {
-            if (e.key === "Enter") {
-                e.preventDefault(); // Prevent form submission if inside a form
-                filterTable();
-            }
-        });
-
-        // Set button text dynamically based on row class
-        const rows = document.querySelectorAll('.tracking-table tbody tr');
-        rows.forEach(row => {
-            const statusCell = row.querySelector('td:last-child');
-            const button = statusCell.querySelector('button');
-            if (row.classList.contains('status-for-review')) {
-                button.textContent = "For Review";
-            } else if (row.classList.contains('status-for-onboarding')) {
-                button.textContent = "For Onboarding";
-            } else if (row.classList.contains('status-for-evaluation')) {
-                button.textContent = "For Evaluation";
-            }
-        });
-
-        // Display all rows initially
-        filterRowsByStatus("all");
-    });
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const evaluationButtons = document.querySelectorAll(".btn-evaluation");
-
-        evaluationButtons.forEach(button => {
-            button.addEventListener("click", function () {
-                window.location.href = "/hr/evaluation-form";
-            });
-        });
-    });
-
-    // Function to open the modal
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = "block";
-    }
-
-    // Function to close the modal
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = "none";
-    }
-
-    // Function for sending notification to the applicant
-    function sendNotification() {
-        alert("Sent notification to applicant");
-        closeModal('releaseJobOfferModal');
-    }
-
-    // Function for confirming onboarding
-    function confirmOnboarding() {
-        alert("Applicant moved to onboarding");
-        closeModal('moveToOnboardingModal');
-    }
-
-    // Function for confirming account setup
-    function confirmAccountSetup() {
-        alert("Account setup confirmed");
-        closeModal('accountSetupReminderModal');
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-    const finalizeP1Button = document.getElementById("finalize-p1");
-    const finalizeP2Button = document.getElementById("finalize-p2");
-    const finalizeP3Button = document.getElementById("finalize-p3");
-
-    const modalP1 = document.getElementById("finalizeModalP1");
-    const modalP2 = document.getElementById("finalizeModalP2");
-    const modalP3 = document.getElementById("finalizeModalP3");
-
-    const closeButtonP1 = modalP1.querySelector(".close-button");
-    const backButtonP1 = modalP1.querySelector("#backButtonP1");
-    const confirmButtonP1 = modalP1.querySelector("#confirmButtonP1");
-
-    const closeButtonP2 = modalP2.querySelector(".close-button");
-    const backButtonP2 = modalP2.querySelector("#backButtonP2");
-    const confirmButtonP2 = modalP2.querySelector("#confirmButtonP2");
-
-    const closeButtonP3 = modalP3.querySelector(".close-button");
-    const backButtonP3 = modalP3.querySelector("#backButtonP3");
-    const confirmButtonP3 = modalP3.querySelector("#confirmButtonP3");
-
-    // Show the modal for P1 when the "P1: Finalize Review and Notify Applicants" button is clicked
-    finalizeP1Button.addEventListener("click", function() {
-        modalP1.style.display = "block";
-    });
-
-    // Show the modal for P2 when the "P2: Finalize Review and Notify Applicants" button is clicked
-    finalizeP2Button.addEventListener("click", function() {
-        modalP2.style.display = "block";
-    });
-
-    // Show the modal for P3 when the "P3: Finalize Review and Notify Applicants" button is clicked
-    finalizeP3Button.addEventListener("click", function() {
-        modalP3.style.display = "block";
-    });
-
-    // Close the modal for P1 when the close button (X) is clicked
-    closeButtonP1.addEventListener("click", function() {
-        modalP1.style.display = "none";
-    });
-
-    // Close the modal for P2 when the close button (X) is clicked
-    closeButtonP2.addEventListener("click", function() {
-        modalP2.style.display = "none";
-    });
-
-    // Close the modal for P3 when the close button (X) is clicked
-    closeButtonP3.addEventListener("click", function() {
-        modalP3.style.display = "none";
-    });
-
-    // Close the modal for P1 when the back button is clicked
-    backButtonP1.addEventListener("click", function() {
-        modalP1.style.display = "none";
-    });
-
-    // Close the modal for P2 when the back button is clicked
-    backButtonP2.addEventListener("click", function() {
-        modalP2.style.display = "none";
-    });
-
-    // Close the modal for P3 when the back button is clicked
-    backButtonP3.addEventListener("click", function() {
-        modalP3.style.display = "none";
-    });
-
-    // Handle the confirm action for P1 (you can add your own confirmation logic here)
-    confirmButtonP1.addEventListener("click", function() {
-        // Add your confirmation action here (e.g., notify applicants)
-        alert("P1 Review finalized and applicants notified.");
-        modalP1.style.display = "none"; // Close the modal after confirming
-    });
-
-    // Handle the confirm action for P2 (you can add your own confirmation logic here)
-    confirmButtonP2.addEventListener("click", function() {
-        // Add your confirmation action here (e.g., notify applicants)
-        alert("P2 Review finalized and applicants notified.");
-        modalP2.style.display = "none"; // Close the modal after confirming
-    });
-
-    // Handle the confirm action for P3 (you can add your own confirmation logic here)
-    confirmButtonP3.addEventListener("click", function() {
-        // Add your confirmation action here (e.g., notify applicants)
-        alert("P3 Review finalized and applicants notified.");
-        modalP3.style.display = "none"; // Close the modal after confirming
-    });
-
-    // Close the modal if the user clicks outside of it (for P1)
-    window.addEventListener("click", function(event) {
-        if (event.target == modalP1) {
-            modalP1.style.display = "none";
-        }
-    });
-
-    // Close the modal if the user clicks outside of it (for P2)
-    window.addEventListener("click", function(event) {
-        if (event.target == modalP2) {
-            modalP2.style.display = "none";
-        }
-    });
-
-    // Close the modal if the user clicks outside of it (for P3)
-    window.addEventListener("click", function(event) {
-        if (event.target == modalP3) {
-            modalP3.style.display = "none";
-        }
-    });
-});
-
-// Function to open the modal
-function openModal(name, age, email, contact) {
-    document.getElementById("applicant-name").value = name;
-    document.getElementById("applicant-age").value = age;
-    document.getElementById("applicant-email").value = email;
-    document.getElementById("applicant-contact").value = contact;
-    document.getElementById("reviewModal").style.display = "block";
+    
+    // Close the modal
+    closeModal('notifyApplicantsModal');
 }
 
-// Add event listeners to all "For Review" buttons
-document.querySelectorAll(".btn-review").forEach(button => {
-    button.addEventListener("click", function() {
-        const parentRow = button.closest("tr");
-        const name = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[0];
-        const email = parentRow.querySelector("td:nth-child(2)").innerText.split("\n")[1];
-        const age = "N/A";  // Placeholder for age
-        const contact = "N/A";  // Placeholder for contact
-        openModal(name, age, email, contact);
-    });
-});
-
-// Function to close the modal
-document.querySelector(".review-close-button").addEventListener("click", function() {
-    document.getElementById("reviewModal").style.display = "none";
-});
-
-// Close modal when clicking outside of the modal content
-window.addEventListener("click", function(event) {
-    if (event.target == document.getElementById("reviewModal")) {
-        document.getElementById("reviewModal").style.display = "none";
+// Function to handle moving rows between sections
+function moveRowToSection(userId, fromSection, toSection) {
+    console.log(`Moving user ${userId} from ${fromSection} to ${toSection}`);
+    
+    if (!userId || !fromSection || !toSection) {
+        console.error("Missing required parameters for row movement");
+        return false;
     }
-});
-
-// Back button functionality
-document.getElementById("backButton").addEventListener("click", function() {
-    document.getElementById("reviewModal").style.display = "none";
-});
-
-// Confirm button functionality
-document.getElementById("confirmButton").addEventListener("click", function() {
-    alert("Applicant has been selected and recommended for panel interview.");
-    document.getElementById("reviewModal").style.display = "none";
-});
-
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
-        });
-
+    
+    // Get source and target tables
+    const sourceTable = document.getElementById(fromSection);
+    const targetTable = document.getElementById(toSection);
+    
+    if (!sourceTable || !targetTable) {
+        console.error(`Tables not found: ${fromSection} or ${toSection}`);
+        return false;
+    }
+    
+    // Find the row in the source table
+    const sourceRows = sourceTable.querySelectorAll('tbody tr');
+    let rowToMove = null;
+    let rowData = null;
+    
+    for (const row of sourceRows) {
+        // Skip section headers and message rows
+        if (row.classList.contains('section-header-row') || row.querySelector('td[colspan]')) {
+            continue;
+        }
+        
+        const rowUserId = row.getAttribute('data-userid');
+        if (rowUserId === userId) {
+            rowToMove = row;
+            // Extract the row data before removing it
+            rowData = extractRowData(row, 0);
+            break;
+        }
+    }
+    
+    if (!rowToMove || !rowData) {
+        console.error(`Row for user ${userId} not found in ${fromSection}`);
+        return false;
+    }
+    
+    // Remove the row from source table
+    rowToMove.remove();
+    
+    // Check if we need to add a "no data" message to source table if it's now empty
+    const remainingSourceRows = Array.from(sourceTable.querySelectorAll('tbody tr')).filter(
+        row => !row.classList.contains('section-header-row') && !row.querySelector('td[colspan]')
+    );
+    
+    if (remainingSourceRows.length === 0) {
+        const sourceTbody = sourceTable.querySelector('tbody');
+        if (sourceTbody) {
+            // Get column count from table headers
+            const headerCount = sourceTable.querySelectorAll('thead th').length;
+            const messageRow = document.createElement('tr');
+            const messageCell = document.createElement('td');
+            messageCell.setAttribute('colspan', headerCount.toString());
+            messageCell.className = 'text-center';
+            messageCell.textContent = 'No applicants awaiting review.';
+            messageRow.appendChild(messageCell);
+            sourceTbody.appendChild(messageRow);
+        }
+    }
+    
+    // Add row to target table with appropriate modifications
+    const targetTbody = targetTable.querySelector('tbody');
+    if (!targetTbody) {
+        console.error(`Target tbody not found in ${toSection}`);
+        return false;
+    }
+    
+    // Clear any "no data" message in the target table
+    const noDataRow = targetTbody.querySelector('tr td[colspan].text-center');
+    if (noDataRow) {
+        noDataRow.closest('tr').remove();
+    }
+    
+    // Create new row for target table
+    // Special handling for declaredResultsTable - add Toggle Status column
+    const needsToggleColumn = (toSection === 'declaredResultsTable');
+    const newRow = createTableRow(rowData, needsToggleColumn);
+    
+    // Set the same userId on the new row
+    newRow.setAttribute('data-userid', userId);
+    
+    // Add the row to the target tbody
+    targetTbody.appendChild(newRow);
+    
+    // If moving to declared results, set up the toggle button
+    if (needsToggleColumn) {
+        const toggleButton = newRow.querySelector('.btn-toggle-status');
+        if (toggleButton) {
+            toggleButton.setAttribute('data-userid', userId);
+            setupToggleStatusButtons();
+        }
+    }
+    
+    // Update the score in the new row
+    if (window.applicantsScores && window.applicantsScores[userId]) {
+        updateScoreCellWithFormatting(newRow, window.applicantsScores[userId]);
+    } else {
+        getTotalScoreDirectly(userId, newRow);
+    }
+    
+    return true;
+}
 
 
 // document.addEventListener("DOMContentLoaded", function () {
