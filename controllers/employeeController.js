@@ -77,6 +77,171 @@ const employeeController = {
     }
 },
 
+getEmployeeNotifications: async function(req, res) {
+        // Check for authentication
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+    
+        try {
+            const userId = req.session.user.userId;
+            
+            // Fetch user's applicant status
+            const { data: userData, error: userError } = await supabase
+                .from('applicantaccounts')
+                .select('applicantId, applicantStatus, lastName, firstName')
+                .eq('userId', userId)
+                .single();
+                
+            const applicantStatus = userData ? userData.applicantStatus : null;
+            const userFullName = userData ? `${userData.firstName} ${userData.lastName}` : null;
+            
+            // 1. Fetch 360 degree feedback submissions that need action
+            const { data: feedbackData, error: feedbackError } = await supabase
+                .from('feedback_periods')
+                .select('feedbackId, quarter, startDate, endDate, isActive')
+                .eq('isActive', true)
+                .order('endDate', { ascending: true });
+    
+            if (feedbackError) throw feedbackError;
+    
+            // Filter to get only the ones relevant to this employee
+            const currentDate = new Date();
+            const activeFeedbacks = feedbackData.filter(feedback => 
+                new Date(feedback.endDate) > currentDate && 
+                new Date(feedback.startDate) <= currentDate
+            );
+    
+            // Format the feedback data 
+            const formattedFeedbackSubmissions = activeFeedbacks.map(feedback => {
+                const daysRemaining = Math.ceil((new Date(feedback.endDate) - currentDate) / (1000 * 60 * 60 * 24));
+                
+                return {
+                    id: feedback.feedbackId,
+                    quarter: feedback.quarter,
+                    startDate: feedback.startDate,
+                    endDate: feedback.endDate,
+                    isUrgent: daysRemaining <= 3, // Mark as urgent if 3 or fewer days remaining
+                    daysRemaining: daysRemaining,
+                    formattedDate: new Date(feedback.startDate).toLocaleString('en-US', {
+                        weekday: 'short', 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit'
+                    })
+                };
+            });
+    
+            // 2. Fetch pending leave requests
+            const { data: leaveRequests, error: leaveRequestsError } = await supabase
+                .from('leaverequests')
+                .select('leaveRequestId, leaveTypeId, fromDate, untilDate, status, updated_at, leave_types(typeName)')
+                .eq('userId', userId)
+                .in('status', ['Pending for Approval', 'Approved', 'Rejected'])
+                .order('updated_at', { ascending: false })
+                .limit(5);
+    
+            if (leaveRequestsError) throw leaveRequestsError;
+    
+            // Format the leave requests data
+            const formattedLeaveRequests = leaveRequests.map(request => ({
+                id: request.leaveRequestId,
+                type: request.leave_types?.typeName || 'Leave',
+                from: new Date(request.fromDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                until: new Date(request.untilDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                status: request.status,
+                updateDate: new Date(request.updated_at).toLocaleString('en-US', {
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                })
+            }));
+    
+            // 3. Fetch performance updates
+            const { data: performanceData, error: performanceError } = await supabase
+                .from('staff_performance_updates')
+                .select('updateId, updateType, updateTitle, updateDescription, created_at')
+                .eq('userId', userId)
+                .order('created_at', { ascending: false })
+                .limit(5);
+    
+            if (performanceError) throw performanceError;
+    
+            // Format performance updates
+            const formattedPerformanceUpdates = performanceData.map(update => ({
+                id: update.updateId,
+                type: update.updateType,
+                title: update.updateTitle,
+                description: update.updateDescription,
+                date: new Date(update.created_at).toLocaleString('en-US', {
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric'
+                })
+            }));
+    
+            // Improved API request detection - checking multiple conditions
+            const isApiRequest = req.xhr || 
+                                req.headers.accept?.includes('application/json') || 
+                                req.path.includes('/api/');
+    
+            // If it's an API request, return JSON with explicit content type
+            if (isApiRequest) {
+                return res
+                    .header('Content-Type', 'application/json')
+                    .json({
+                        feedbackSubmissions: formattedFeedbackSubmissions,
+                        leaveRequests: formattedLeaveRequests,
+                        performanceUpdates: formattedPerformanceUpdates,
+                        notificationCount: formattedFeedbackSubmissions.length + formattedLeaveRequests.length + formattedPerformanceUpdates.length,
+                        // Include user information
+                        userInfo: {
+                            applicantStatus: applicantStatus,
+                            fullName: userFullName
+                        }
+                    });
+            }
+    
+            // Otherwise, return the rendered partial template
+            return res.render('partials/employee_partials', {
+                feedbackSubmissions: formattedFeedbackSubmissions,
+                leaveRequests: formattedLeaveRequests,
+                performanceUpdates: formattedPerformanceUpdates,
+                notificationCount: formattedFeedbackSubmissions.length + formattedLeaveRequests.length + formattedPerformanceUpdates.length,
+                // Include user information
+                userInfo: {
+                    applicantStatus: applicantStatus,
+                    fullName: userFullName
+                }
+            });
+        } catch (err) {
+            console.error('Error fetching notification data:', err);
+            
+            // Better error handling for API requests
+            const isApiRequest = req.xhr || 
+                               req.headers.accept?.includes('application/json') || 
+                               req.path.includes('/api/');
+            
+            if (isApiRequest) {
+                return res
+                    .status(500)
+                    .header('Content-Type', 'application/json')
+                    .json({ 
+                        error: 'An error occurred while loading notifications.',
+                        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+                    });
+            }
+            
+            return res.status(500).send('Error loading notifications');
+        }
+    },
+
 
 // Password reset controller function
 resetPassword: async function(req, res) {

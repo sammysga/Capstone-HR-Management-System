@@ -148,6 +148,7 @@ router.get('/employee/employeefeedbackquestionnaire', employeeController.getFeed
 
 // Route to fetch the feedback form for a specific user and quarter
 router.get('/employee/employeefeedbackquestionnaire/:selectedUserId', employeeController.get360FeedbackList);
+router.get('/api/linemanager/notifications', employeeController.getEmployeeNotifications);
 
 // Route to submit the feedback
 // router.post('/employee/employeefeedbackquestionnaire/:selectedUser Id/submit', employeeController.submitFeedback);
