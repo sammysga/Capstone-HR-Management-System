@@ -52,7 +52,7 @@ const applicantController = {
     },
 
 // Fixed version of getJobDetails method with better error handling
-getJobDetails: async function(req, res) {
+getJobDetailsTitle: async function(req, res) {
     try {
         const jobId = req.params.jobId;
         

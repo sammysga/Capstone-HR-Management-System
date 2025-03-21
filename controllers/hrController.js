@@ -1501,7 +1501,7 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
     },
 
     // Controller function to handle job offer update
-// Enhanced controller function to handle job offer update with item removal
+// Updated updateJobOffer function to correctly handle form data
 updateJobOffer: async function(req, res) {
     if (req.session.user && req.session.user.userRole === 'HR') {
         try {
@@ -1510,19 +1510,33 @@ updateJobOffer: async function(req, res) {
                 jobTitle, 
                 jobDescrpt, 
                 isActiveHiring,
+                isActiveJob,  
+                hiringStartDate,  
+                hiringEndDate,    
                 remove_id // Array of IDs to remove
             } = req.body;
 
-            // Process isActiveHiring from checkbox
-            const isActive = isActiveHiring === 'on' || isActiveHiring === true;
+            // Process checkbox values
+            const isHiringActive = isActiveHiring === 'on' || isActiveHiring === true;
+            const isJobActive = isActiveJob === 'on' || isActiveJob === true;
+
+            // Log the selected job title and date values for debugging
+            console.log('Selected Job Title:', jobTitle);
+            console.log('Hiring Start Date:', hiringStartDate);
+            console.log('Hiring End Date:', hiringEndDate);
+            console.log('isActiveHiring:', isHiringActive);
+            console.log('isActiveJob:', isJobActive);
 
             // Update the main job offer in the 'jobpositions' table
             const { error: jobUpdateError } = await supabase
                 .from('jobpositions')
                 .update({
-                    jobTitle,
+                    jobTitle,  
                     jobDescrpt,
-                    isActiveHiring: isActive
+                    isActiveHiring: isHiringActive,  // Use the processed boolean value
+                    isActiveJob: isJobActive,        // Use the processed boolean value
+                    hiringStartDate: hiringStartDate || null,
+                    hiringEndDate: hiringEndDate || null
                 })
                 .eq('jobId', jobId);
 
@@ -1953,6 +1967,18 @@ updateJobOffer: async function(req, res) {
         
                 console.log('Fetched Job:', job);  // Log the fetched job data
         
+                // Fetch all job titles to populate the dropdown
+                const { data: jobTitles, error: jobTitlesError } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle')
+                    .order('jobTitle', { ascending: true });
+        
+                if (jobTitlesError) {
+                    console.error('Error fetching job titles:', jobTitlesError);
+                    req.flash('errors', { fetchError: 'Error fetching job titles.' });
+                    return res.redirect('/hr/joboffers');
+                }
+        
                 // Fetch job skills
                 const { data: jobSkills, error: jobSkillsError } = await supabase
                     .from('jobreqskills')
@@ -2008,6 +2034,7 @@ updateJobOffer: async function(req, res) {
                 // Render the job edit page with all the data
                 res.render('staffpages/hr_pages/hreditjoboffers', { 
                     job, 
+                    jobTitles, // Pass job titles to the template
                     hardSkills, 
                     softSkills, 
                     certifications, 
