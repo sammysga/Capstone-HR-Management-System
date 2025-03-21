@@ -2521,7 +2521,7 @@ res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobpositio
     
             // Check if Mid-Year IDP data exists to control access to 360 Degree Feedback steps
             const { data: midYearData, error: midYearError } = await supabase
-                .from('midyearidp')
+                .from('midyearidps')
                 .select('*')
                 .eq('userId', user.userId)
                 .eq('jobId', jobId)
