@@ -24,7 +24,7 @@ router.get('/applicant/schedule-interview', applicantController.getCalendly);
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
-router.get('/job-details/:jobId', applicantController.getJobDetails);
+router.get('/job-details/:jobId', applicantController.getJobDetailsTitle);
 // router.get('/chatbothome', applicantController.getChatbotPage);
 //router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);
 router.get('/onboarding', applicantController.getOnboarding);
