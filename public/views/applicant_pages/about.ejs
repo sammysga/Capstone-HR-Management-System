@@ -5,126 +5,459 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About the Company - Prime Infra</title>
     <link rel="stylesheet" href="/css/publicapplicant.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Styles for layout and design */
+        /* Base Styles */
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f9f9f9;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
             margin: 0;
             padding: 0;
-            color: #333;
+            color: #334155;
+            line-height: 1.6;
         }
-        .announcements, .about-us {
-            background-color: #fff;
-            padding: 20px;
-            margin: 20px auto;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            max-width: 800px;
-        }
-        .announcements h2, .about-us h2, .values-heading {
-            color: #07ACB9;
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #07ACB9, #056770);
+            color: white;
+            padding: 80px 20px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"%3E%3Cpath fill="%23ffffff" fill-opacity="0.1" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"%3E%3C/path%3E%3C/svg%3E');
+            background-size: cover;
+            background-position: center bottom;
+            opacity: 0.2;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 2.8rem;
+            font-weight: 700;
             margin-bottom: 20px;
         }
-        .announcement-content {
+
+        .hero-description {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            font-weight: 300;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            max-width: 1100px;
+            margin: -40px auto 60px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Announcements Section */
+        .announcements {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .section-header {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            align-items: center;
+            margin-bottom: 30px;
         }
+
+        .section-title {
+            color: #07ACB9;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background-color: #07ACB9;
+            border-radius: 4px;
+        }
+
+        .announcement-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
         .announcement-item {
-            background-color: #f4f4f4;
-            padding: 20px;
-            border-radius: 6px;
-            transition: background-color 0.3s ease;
+            background-color: #f8fafc;
+            padding: 25px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border-top: 4px solid #07ACB9;
+            position: relative;
+            overflow: hidden;
         }
+
         .announcement-item:hover {
-            background-color: #e0e0e0;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
+
         .announcement-item .subject {
             font-weight: 600;
-            color: #333;
+            font-size: 1.2rem;
+            color: #1e293b;
             margin-bottom: 10px;
         }
+
         .announcement-item .timestamp {
-            font-size: 0.9em;
-            color: #888;
-            margin-bottom: 10px;
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 15px;
+            background-color: rgba(7, 172, 185, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
         }
+
+        .announcement-item .timestamp i {
+            margin-right: 6px;
+        }
+
         .announcement-item .description {
-            color: #666;
-            line-height: 1.5;
+            color: #475569;
+            line-height: 1.7;
+            font-size: 0.95rem;
         }
+
         .announcement-item img {
             max-width: 100%;
             height: auto;
-            margin-top: 10px;
+            margin-top: 15px;
+            border-radius: 8px;
         }
+
         .no-announcement {
             text-align: center;
-            color: #999;
+            color: #94a3b8;
             font-style: italic;
+            padding: 40px 0;
+            grid-column: 1 / -1;
         }
+
+        .no-announcement i {
+            font-size: 3rem;
+            color: #e2e8f0;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* About Us Section */
+        .about-us {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            overflow: hidden;
+        }
+
+        .purpose-mission {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .purpose, .mission {
+            background-color: #f8fafc;
+            padding: 30px;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .purpose::before, .mission::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background-color: #07ACB9;
+        }
+
+        .purpose h2, .mission h2 {
+            color: #1e293b;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .purpose h2::before, .mission h2::before {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            margin-right: 15px;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .purpose h2::before {
+            background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2307ACB9"%3E%3Cpath d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"%3E%3C/path%3E%3C/svg%3E');
+        }
+
+        .mission h2::before {
+            background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2307ACB9"%3E%3Cpath d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4 8-8z"%3E%3C/path%3E%3C/svg%3E');
+        }
+
+        .purpose p, .mission p {
+            color: #475569;
+            line-height: 1.8;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .values-heading {
+            color: #1e293b;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 50px 0 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .values-heading::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background-color: #07ACB9;
+            border-radius: 4px;
+        }
+
+        .values-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .value {
+            padding: 30px;
+            background-color: #f8fafc;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .value:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        .value h3 {
+            color: #07ACB9;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .value i {
+            background-color: rgba(7, 172, 185, 0.1);
+            color: #07ACB9;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .value p {
+            color: #475569;
+            line-height: 1.8;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 60px 20px;
+            }
+            
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            
+            .main-content {
+                margin-top: -30px;
+            }
+            
+            .announcements, .about-us {
+                padding: 25px;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+            
+            .announcement-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .purpose-mission {
+                grid-template-columns: 1fr;
+            }
+            
+            .values-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animation for values */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .value {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .value:nth-child(1) { animation-delay: 0.1s; }
+        .value:nth-child(2) { animation-delay: 0.3s; }
+        .value:nth-child(3) { animation-delay: 0.5s; }
+        .value:nth-child(4) { animation-delay: 0.7s; }
     </style>
 </head>
 <body>
     <%- include('../partials/publicheader') %>
 
-    <!-- Announcements Section -->
-    <section class="announcements">
-        <h2>ANNOUNCEMENTS</h2>
-        <div class="announcement-content">
-            <% if (announcements && announcements.length > 0) { %>
-                <% announcements.forEach(announcement => { %>
-                    <div class="announcement-item">
-                        <div class="subject"><%= announcement.subject %></div>
-                        <div class="timestamp">Posted on: <%= new Date(announcement.createdAt).toLocaleDateString() %></div>
-                        <div class="description"><%= announcement.content %></div>
-                        <% if (announcement.imageUrl) { %>
-                            <img src="<%= announcement.imageUrl %>" alt="Announcement Image">
-                        <% } %>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">About Prime Infrastructure</h1>
+            <p class="hero-description">Transforming developing markets through reliable, resilient, and sustainable infrastructure.</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <!-- Announcements Section -->
+        <section class="announcements">
+            <div class="section-header">
+                <h2 class="section-title">Announcements</h2>
+            </div>
+            <div class="announcement-content">
+                <% if (announcements && announcements.length > 0) { %>
+                    <% announcements.forEach(announcement => { %>
+                        <div class="announcement-item">
+                            <div class="subject"><%= announcement.subject %></div>
+                            <div class="timestamp">
+                                <i class="far fa-calendar-alt"></i>
+                                <%= new Date(announcement.createdAt).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) %>
+                            </div>
+                            <div class="description"><%= announcement.content %></div>
+                            <% if (announcement.imageUrl) { %>
+                                <img src="<%= announcement.imageUrl %>" alt="Announcement Image">
+                            <% } %>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="no-announcement">
+                        <i class="far fa-bell-slash"></i>
+                        <p>No announcements available at the moment.</p>
+                        <p>Check back later for updates.</p>
                     </div>
-                <% }) %>
-            <% } else { %>
-                <p class="no-announcement">No announcements available at the moment.</p>
-            <% } %>
-        </div>
-    </section>
+                <% } %>
+            </div>
+        </section>
 
-    <!-- About Us Section -->
-    <section class="about-us">
-        <div class="purpose-mission">
-            <div class="purpose">
-                <h2>PURPOSE</h2>
-                <p>Better lives and resilient economies through critical infrastructure.</p>
+        <!-- About Us Section -->
+        <section class="about-us">
+            <div class="section-header">
+                <h2 class="section-title">About Us</h2>
             </div>
-            <div class="mission">
-                <h2>MISSION</h2>
-                <p>Transforming developing markets around the world by providing them with reliable, resilient, and sustainable infrastructure, carried out through fast and lean management processes, a holistic thinking approach, and a customer-centric mindset.</p>
+            
+            <div class="purpose-mission">
+                <div class="purpose">
+                    <h2>PURPOSE</h2>
+                    <p>Better lives and resilient economies through critical infrastructure.</p>
+                </div>
+                <div class="mission">
+                    <h2>MISSION</h2>
+                    <p>Transforming developing markets around the world by providing them with reliable, resilient, and sustainable infrastructure, carried out through fast and lean management processes, a holistic thinking approach, and a customer-centric mindset.</p>
+                </div>
             </div>
-        </div>
 
-        <h2 class="values-heading">OUR VALUES</h2>
-        <div class="values-container">
-            <div class="value">
-                <h3><i class="fas fa-star"></i> VALUE CREATION</h3>
-                <p>We create meaningful value by investing in projects that improve the quality of life for our host communities, investing in the development and welfare of our employees, and managing these investments to deliver high returns to our shareholders.</p>
+            <h2 class="values-heading">OUR VALUES</h2>
+            <div class="values-container">
+                <div class="value">
+                    <h3><i class="fas fa-star"></i> VALUE CREATION</h3>
+                    <p>We create meaningful value by investing in projects that improve the quality of life for our host communities, investing in the development and welfare of our employees, and managing these investments to deliver high returns to our shareholders.</p>
+                </div>
+                <div class="value">
+                    <h3><i class="fas fa-shield-alt"></i> INTEGRITY</h3>
+                    <p>We are ethical, fair, and transparent in our business practices at every level of our organization while delivering a profitable and sustainable business, and expect similar behavior from our business partners.</p>
+                </div>
+                <div class="value">
+                    <h3><i class="fas fa-lightbulb"></i> PIONEERING</h3>
+                    <p>We evolve new approaches, explore new methods and ideas, in order to create innovative solutions and deliver lasting impact for the countries in which we operate.</p>
+                </div>
+                <div class="value">
+                    <h3><i class="fas fa-heart"></i> PASSION</h3>
+                    <p>We live and breathe the work that we do, and seek out colleagues and business partners that share the same deep commitment to our purpose.</p>
+                </div>
             </div>
-            <div class="value">
-                <h3><i class="fas fa-shield-alt"></i> INTEGRITY</h3>
-                <p>We are ethical, fair, and transparent in our business practices at every level of our organization while delivering a profitable and sustainable business, and expect similar behavior from our business partners.</p>
-            </div>
-            <div class="value">
-                <h3><i class="fas fa-lightbulb"></i> PIONEERING</h3>
-                <p>We evolve new approaches, explore new methods and ideas, in order to create innovative solutions and deliver lasting impact for the countries in which we operate.</p>
-            </div>
-            <div class="value">
-                <h3><i class="fas fa-heart"></i> PASSION</h3>
-                <p>We live and breathe the work that we do, and seek out colleagues and business partners that share the same deep commitment to our purpose.</p>
-            </div>
-        </div>
-    </section>
+        </section>
+    </div>
 </body>
 </html>
