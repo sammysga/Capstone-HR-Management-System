@@ -1549,8 +1549,10 @@ console.log('Final applicants list:', applicants);
                 // });
 
                 // Render the page with updated applicants
-res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { applicants });
-            } catch (error) {
+res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { applicants });res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { 
+    applicants,
+    applicantsJSON: JSON.stringify(applicants) // Add this line to make data accessible in script
+  });            } catch (error) {
                 console.error('Error fetching applicants:', error);
                 res.status(500).json({ error: 'Error fetching applicants' });
             }
