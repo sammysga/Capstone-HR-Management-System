@@ -661,48 +661,145 @@ const lineManagerController = {
 
     getPersInfoCareerProg: async function(req, res) {
         try {
+            console.log("Starting getPersInfoCareerProg...");
+    
             const userId = req.session.user ? req.session.user.userId : null;
             if (!userId) {
-                req.flash('errors', { authError: 'Unauthorized access.' });
+                console.log("User not logged in.");
+                req.flash('errors', { authError: 'User not logged in.' });
                 return res.redirect('/staff/login');
             }
     
-            const { data: user, error } = await supabase
+            console.log(`Fetching user data for userId: ${userId}`);
+    
+            // Fetch user email and role from useraccounts table
+            const { data: user, error: userError } = await supabase
                 .from('useraccounts')
                 .select('userEmail, userRole')
-                .eq('userId', userId)
-                .single();
+                .eq('userId', userId);
     
-            const { data: staff, error: staffError } = await supabase
-                .from('staffaccounts')
-                .select('firstName, lastName')
-                .eq('userId', userId)
-                .single();
-    
-            if (error || staffError) {
-                console.error('Error fetching user or staff details:', error || staffError);
-                req.flash('errors', { dbError: 'Error fetching user data.' });
-                return res.redirect('/linemanager/dashboard');
+            if (userError) {
+                console.error('Error fetching user data:', userError);
+                req.flash('errors', { dbError: 'Error fetching user information.' });
+                return res.redirect('/employee/employeepersinfocareerprog');
             }
     
+            console.log("User data fetched successfully.");
+    
+            // Fetch personal information from staffaccounts table
+            const { data: staff, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('firstName, lastName, phoneNumber, dateOfBirth, emergencyContactName, emergencyContactNumber, employmentType, hireDate, departmentId, jobId, staffId')
+                .eq('userId', userId);
+    
+            if (staffError) {
+                console.error('Error fetching staff data:', staffError);
+                req.flash('errors', { dbError: 'Error fetching staff information.' });
+                return res.redirect('/employee/employeepersinfocareerprog');
+            }
+    
+            console.log("Staff data fetched successfully.");
+            const staffId = staff[0]?.staffId;
+            if (!staffId) {
+                console.error('Staff ID not found for the user.');
+                req.flash('errors', { dbError: 'Staff ID not found.' });
+                return res.redirect('/employee/employeepersinfocareerprog');
+            }
+    
+            console.log(`Fetching degree information for staffId: ${staffId}`);
+    
+            // Fetch degree information
+            const { data: degrees, error: degreeError } = await supabase
+                .from('staffdegrees')
+                .select('degreeName, universityName, graduationYear')
+                .eq('staffId', staffId);
+    
+            console.log("Degree information fetched.");
+    
+            // Fetch job title from jobpositions table
+            const jobId = staff[0]?.jobId;
+            console.log(`Fetching job title for jobId: ${jobId}`);
+            const { data: job, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobTitle')
+                .eq('jobId', jobId);
+    
+            console.log("Job title fetched.");
+    
+            // Fetch department name from departments table
+            const { data: department, error: departmentError } = await supabase
+                .from('departments')
+                .select('deptName')
+                .eq('departmentId', staff[0]?.departmentId);
+    
+            console.log("Department information fetched.");
+    
+            // Fetch career progression milestones
+            const { data: milestones, error: milestonesError } = await supabase
+                .from('staffcareerprogression')
+                .select('milestoneName, startDate, endDate')
+                .eq('staffId', staffId);
+    
+            console.log("Career milestones fetched.");
+    
+            // Fetch experiences
+            const { data: experiences, error: experienceError } = await supabase
+                .from('staffexperiences')
+                .select('companyName, startDate, endDate')
+                .eq('staffId', staffId);
+    
+            console.log("Experience data fetched.");
+    
+            // Fetch certifications
+            const { data: certifications, error: certificationError } = await supabase
+                .from('staffcertification')
+                .select('certificateName, certDate')
+                .eq('staffId', staffId);
+    
+            console.log("Certifications fetched.");
+    
+            // Check for any data fetch errors
+            if (userError || degreeError || jobError || departmentError || milestonesError || experienceError || certificationError) {
+                console.error('Error fetching one or more sets of data:', userError, degreeError, jobError, departmentError, milestonesError, experienceError, certificationError);
+                req.flash('errors', { dbError: 'Error fetching data.' });
+                return res.redirect('/employee/employeepersinfocareerprog');
+            }
+    
+            // Construct user data
             const userData = {
-                ...user,
-                firstName: staff.firstName,
-                lastName: staff.lastName,
-                phoneNumber: '123-456-7890', // Dummy phone number
-                dateOfBirth: '1990-01-01', // Dummy date of birth
-                emergencyContact: 'Jane Doe (123-456-7890)' // Dummy emergency contact
+                userEmail: user[0]?.userEmail || '',
+                userRole: user[0]?.userRole || '',
+                firstName: staff[0]?.firstName || '',
+                lastName: staff[0]?.lastName || '',
+                phoneNumber: staff[0]?.phoneNumber || '',
+                dateOfBirth: staff[0]?.dateOfBirth || '',
+                emergencyContactName: staff[0]?.emergencyContactName || '',
+                emergencyContactNumber: staff[0]?.emergencyContactNumber || '',
+                employmentType: staff[0]?.employmentType || '',
+                hireDate: staff[0]?.hireDate || '',
+                jobTitle: job[0]?.jobTitle || '',
+                departmentName: department[0]?.deptName || '',
+                milestones: milestones || [],
+                degrees: degrees || [],
+                experiences: experiences || [],
+                certifications: certifications || []
             };
     
-            res.render('staffpages/linemanager_pages/managerpersinfocareerprog', { user: userData });
+            console.log("User data constructed successfully.");
+    
+            // Render the personal information and career progression page
+            res.render('staffpages/employee_pages/employeepersinfocareerprog', {
+                user: userData,
+                errors: req.flash('errors')
+            });
         } catch (err) {
             console.error('Error in getPersInfoCareerProg controller:', err);
-            req.flash('errors', { dbError: 'An error occurred while loading the page.' });
-            res.redirect('/linemanager/managerdashboard');
+            req.flash('errors', { dbError: 'An error occurred while loading the personal info page.' });
+            res.redirect('/employee/useracc');
         }
     },
 
-    updatePersUserInfo: async function(req, res) {
+    editPersonalInformation: async function(req, res) {
         try {
             const userId = req.session.user ? req.session.user.userId : null;
             if (!userId) {
@@ -710,49 +807,365 @@ const lineManagerController = {
                 return res.redirect('/staff/login');
             }
     
-            const { userEmail, phone, dateOfBirth, emergencyContact, employmentType, jobTitle, department, hireDate } = req.body;
+            const { firstName, lastName, phone, dateOfBirth, emergencyContactName, emergencyContactNumber } = req.body;
     
-            const { error: userError } = await supabase
-                .from('useraccounts')
-                .update({
-                    userEmail,
-                    phone, 
-                    dateOfBirth, 
-                    emergencyContact 
-                })
-                .eq('userId', userId);
+            // Log the data received for debugging
+            console.log("Received data for update:", { firstName, lastName, phone, dateOfBirth, emergencyContactName, emergencyContactNumber });
     
-            if (userError) {
-                console.error('Error updating user account:', userError);
-                req.flash('errors', { dbError: 'Error updating user information.' });
-                return res.redirect('staffpages/linemanager_pages/managerpersinfocareerprog');
-            }
-
-            const { error: staffError } = await supabase
+            // Update the user information in Supabase
+            const { error } = await supabase
                 .from('staffaccounts')
                 .update({
-                    employmentType,
-                    jobTitle,
-                    department,
-                    hireDate
+                    firstName,
+                    lastName,
+                    phoneNumber: phone,
+                    dateOfBirth, // Ensure this is the correct field in your Supabase table
+                    emergencyContactName,
+                    emergencyContactNumber
                 })
                 .eq('userId', userId);
     
-            if (staffError) {
-                console.error('Error updating staff account:', staffError);
-                req.flash('errors', { dbError: 'Error updating staff information.' });
-                return res.redirect('staffpages/linemanager_pages/managerpersinfocareerprog');
+            if (error) {
+                console.error('Error updating personal information:', error);
+                req.flash('errors', { dbError: 'Error updating personal information.' });
+                return res.redirect('/employee/employeepersinfocareerprog');
             }
     
-            req.flash('success', { updateSuccess: 'User information updated successfully!' });
-            res.redirect('staffpages/linemanager_pages/managerpersinfocareerprog');
-    
+            req.flash('success', { updateSuccess: 'Personal information updated successfully!' });
+            res.json({ success: true });
         } catch (err) {
-            console.error('Error in updateUserInfo controller:', err);
+            console.error('Error in editPersonalInformation:', err);
             req.flash('errors', { dbError: 'An error occurred while updating the information.' });
-            res.redirect('staffpages/linemanager_pages/managerpersinfocareerprog');
+            res.json({ success: false, error: 'An error occurred while updating the information.' });
         }
     },
+    
+    editCareerProgression: async function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            // First, get the staffId associated with this userId
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('staffId')
+                .eq('userId', userId)
+                .single();
+    
+            if (staffError || !staffData) {
+                console.error('Error fetching staff ID:', staffError);
+                req.flash('errors', { dbError: 'Error fetching staff information.' });
+                return res.status(500).json({ success: false, error: 'Error fetching staff information.' });
+            }
+    
+            const staffId = staffData.staffId;
+            const { milestones = [] } = req.body;
+    
+            console.log("Saving career progression for staffId:", staffId, "Milestones:", milestones);
+    
+            // Delete old career milestones before inserting new ones
+            const { error: deleteError } = await supabase
+                .from('staffcareerprogression')
+                .delete()
+                .eq('staffId', staffId);
+                
+            if (deleteError) {
+                console.error('Error deleting existing milestones:', deleteError);
+            }
+    
+            // Insert new milestones
+            for (const milestone of milestones) {
+                const { milestoneName, startDate, endDate } = milestone;
+                const { error: insertError } = await supabase
+                    .from('staffcareerprogression')
+                    .insert({
+                        milestoneName,
+                        startDate,
+                        endDate: endDate || null,
+                        staffId: staffId
+                    });
+                    
+                if (insertError) {
+                    console.error('Error inserting milestone:', insertError);
+                    throw insertError;
+                }
+            }
+    
+            return res.json({ 
+                success: true, 
+                message: 'Career progression updated successfully!' 
+            });
+        } catch (err) {
+            console.error('Error in editCareerProgression:', err);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'An error occurred while updating career progression.' 
+            });
+        }
+    },
+    
+    editDegreeInformation: async function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            // First, get the staffId associated with this userId
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('staffId')
+                .eq('userId', userId)
+                .single();
+    
+            if (staffError || !staffData) {
+                console.error('Error fetching staff ID:', staffError);
+                req.flash('errors', { dbError: 'Error fetching staff information.' });
+                return res.status(500).json({ success: false, error: 'Error fetching staff information.' });
+            }
+    
+            const staffId = staffData.staffId;
+            const { degrees = [] } = req.body;
+    
+            console.log("Saving degree information for staffId:", staffId, "Degrees:", degrees);
+    
+            // Delete old degrees before inserting new ones
+            const { error: deleteError } = await supabase
+                .from('staffdegrees')
+                .delete()
+                .eq('staffId', staffId);
+                
+            if (deleteError) {
+                console.error('Error deleting existing degrees:', deleteError);
+            }
+    
+            // Insert new degrees
+            for (const degree of degrees) {
+                const { degreeName, universityName, graduationYear } = degree;
+                const { error: insertError } = await supabase
+                    .from('staffdegrees')
+                    .insert({
+                        degreeName,
+                        universityName,
+                        graduationYear,
+                        staffId: staffId
+                    });
+                    
+                if (insertError) {
+                    console.error('Error inserting degree:', insertError);
+                    throw insertError;
+                }
+            }
+    
+            return res.json({ 
+                success: true, 
+                message: 'Degree information updated successfully!' 
+            });
+        } catch (err) {
+            console.error('Error in editDegreeInformation:', err);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'An error occurred while updating degree information.' 
+            });
+        }
+    },
+    
+    editExperiences: async function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            // First, get the staffId associated with this userId
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('staffId')
+                .eq('userId', userId)
+                .single();
+    
+            if (staffError || !staffData) {
+                console.error('Error fetching staff ID:', staffError);
+                req.flash('errors', { dbError: 'Error fetching staff information.' });
+                return res.status(500).json({ success: false, error: 'Error fetching staff information.' });
+            }
+    
+            const staffId = staffData.staffId;
+            const { experiences = [] } = req.body;
+    
+            console.log("Saving experiences for staffId:", staffId, "Experiences:", experiences);
+    
+            // Delete old experiences before inserting new ones
+            const { error: deleteError } = await supabase
+                .from('staffexperiences')
+                .delete()
+                .eq('staffId', staffId);
+                
+            if (deleteError) {
+                console.error('Error deleting existing experiences:', deleteError);
+            }
+    
+            // Insert new experiences
+            for (const experience of experiences) {
+                const { companyName, jobTitle, startDate, endDate } = experience;
+                const { error: insertError } = await supabase
+                    .from('staffexperiences')
+                    .insert({
+                        companyName,
+                        jobTitle: jobTitle || '',
+                        startDate,
+                        endDate: endDate || null,
+                        staffId: staffId
+                    });
+                    
+                if (insertError) {
+                    console.error('Error inserting experience:', insertError);
+                    throw insertError;
+                }
+            }
+    
+            return res.json({ 
+                success: true, 
+                message: 'Experience information updated successfully!' 
+            });
+        } catch (err) {
+            console.error('Error in editExperiences:', err);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'An error occurred while updating experience information.' 
+            });
+        }
+    },
+    
+    editCertifications: async function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            if (!userId) {
+                req.flash('errors', { authError: 'Unauthorized access.' });
+                return res.redirect('/staff/login');
+            }
+    
+            // First, get the staffId associated with this userId
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('staffId')
+                .eq('userId', userId)
+                .single();
+    
+            if (staffError || !staffData) {
+                console.error('Error fetching staff ID:', staffError);
+                req.flash('errors', { dbError: 'Error fetching staff information.' });
+                return res.status(500).json({ success: false, error: 'Error fetching staff information.' });
+            }
+    
+            const staffId = staffData.staffId;
+            const { certifications = [] } = req.body;
+    
+            console.log("Saving certifications for staffId:", staffId, "Certifications:", certifications);
+    
+            // Delete old certifications before inserting new ones
+            const { error: deleteError } = await supabase
+                .from('staffcertification')  // Note: The table name is 'staffcertification' (singular), not 'staffcertifications'
+                .delete()
+                .eq('staffId', staffId);
+                
+            if (deleteError) {
+                console.error('Error deleting existing certifications:', deleteError);
+            }
+    
+            // Insert new certifications
+            for (const certification of certifications) {
+                const { certificateName, certDate } = certification;
+                const { error: insertError } = await supabase
+                    .from('staffcertification')  // Note: The table name is 'staffcertification' (singular)
+                    .insert({
+                        certificateName,
+                        certDate,
+                        staffId: staffId
+                    });
+                    
+                if (insertError) {
+                    console.error('Error inserting certification:', insertError);
+                    throw insertError;
+                }
+            }
+    
+            return res.json({ 
+                success: true, 
+                message: 'Certification information updated successfully!' 
+            });
+        } catch (err) {
+            console.error('Error in editCertifications:', err);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'An error occurred while updating certification information.' 
+            });
+        }
+    },
+
+// Add this function to your employeeController
+updatePersUserInfo: async function(req, res) {
+    try {
+        const userId = req.session.user ? req.session.user.userId : null;
+        if (!userId) {
+            req.flash('errors', { authError: 'Unauthorized access.' });
+            return res.redirect('/staff/login');
+        }
+
+        // Extract user information from the request body
+        const { userEmail, phone, dateOfBirth, emergencyContact, employmentType, jobTitle, department, hireDate } = req.body;
+
+        // Update user account information
+        const { error: userError } = await supabase
+            .from('useraccounts')
+            .update({
+                userEmail, // Update email
+                phone, // Assuming you add a phone field to useraccounts
+                dateOfBirth, // Assuming you add a dateOfBirth field to useraccounts
+                emergencyContact // Assuming you add an emergencyContact field to useraccounts
+            })
+            .eq('userId', userId);
+
+        // Check for errors
+        if (userError) {
+            console.error('Error updating user account:', userError);
+            req.flash('errors', { dbError: 'Error updating user information.' });
+            return res.redirect('/employee/persinfocareerprog');
+        }
+
+        // Update staff account information
+        const { error: staffError } = await supabase
+            .from('staffaccounts')
+            .update({
+                employmentType,
+                jobTitle,
+                department,
+                hireDate
+            })
+            .eq('userId', userId);
+
+        // Check for errors
+        if (staffError) {
+            console.error('Error updating staff account:', staffError);
+            req.flash('errors', { dbError: 'Error updating staff information.' });
+            return res.redirect('/staff/employee/persinfocareerprog');
+        }
+
+        // Redirect back to the personal information page with success message
+        req.flash('success', { updateSuccess: 'User information updated successfully!' });
+        res.redirect('/staff/employee/persinfocareerprog');
+
+    } catch (err) {
+        console.error('Error in updateUserInfo controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while updating the information.' });
+        res.redirect('/staff/employee/persinfocareerprog');
+    }
+},
 
     getMRF: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {

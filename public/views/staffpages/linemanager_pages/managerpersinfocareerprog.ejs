@@ -4,10 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Information & Career Progression</title>
-    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
-    <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
     <style>
-  .profile-container { 
+        /* Cancel button styling */
+.cancel-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+.cancel-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Button group styling for better alignment */
+.button-group {
+    display: flex;
+    margin-top: 10px;
+}
+.button-group button {
+    margin-right: 10px;
+}
+       /* Base styles for the profile container */
+.profile-container { 
     display: flex; 
     align-items: center; 
     margin-bottom: 20px; 
@@ -26,243 +50,847 @@
 .profile-info h3 { 
     margin: 0; 
     font-size: 1.4rem; 
-    color: #09191F; /* Updated color from useracc.ejs */
+    color: #09191F; 
 }
 .profile-info p { 
     margin: 5px 0; 
     font-size: 1rem; 
     color: #666; 
 }
-.edit-btn, .save-btn { 
-    background-color: #124A5C; /* Updated color from useracc.ejs */
-    color: white; 
-    border: none; 
-    padding: 10px 20px; 
-    border-radius: 5px; 
-    font-size: 1rem; 
-    cursor: pointer; 
-    margin-top: 10px; 
-    transition: background-color 0.3s ease; 
-}
-.edit-btn:hover, .save-btn:hover { 
-    background-color: #059ca4; /* Updated hover color from useracc.ejs */
-}
-.form-input { 
-    width: 100%; 
-    padding: 10px; 
-    margin: 10px 0; 
-    border-radius: 5px; 
-    border: 1px solid #ccc; 
-    display: none; 
-}
-.form-text { 
-    font-size: 1.1rem; 
-    color: #09191F; /* Updated color from useracc.ejs */
-}
-.milestone-container { 
-    margin: 30px 0; 
-}
-.milestone { 
-    position: relative; 
-    margin-left: 20px; 
-    margin-bottom: 30px; 
-}
-.milestone:before { 
-    content: ''; 
-    position: absolute; 
-    left: -10px; 
-    top: 0; 
-    height: 100%; 
-    border-left: 2px solid #124A5C; /* Updated color from useracc.ejs */
-}
-.milestone-label { 
-    position: relative; 
-    padding-left: 20px; 
-}
-.milestone-label h4 { 
-    margin: 0; 
-    font-size: 1.2rem; 
-    color: #124A5C; /* Updated color from useracc.ejs */
-}
-.milestone-label p { 
-    margin: 0; 
-    font-size: 1rem; 
-    color: #666; 
-}
+
+/* Section styling */
 .section { 
     margin: 20px 0; 
+    position: relative;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
 }
 .section h2 { 
     margin-bottom: 10px; 
+    display: inline-block;
+    color: #124A5C;
 }
-.section p { 
-    margin: 5px 0; 
-    font-size: 1rem; 
-    color: #333; 
+.section p {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+/* Button styling */
+.edit-btn, .save-btn {
+    background-color: #124A5C;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 5px;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+.edit-btn:hover {
+    background-color: #059ca4;
+}
+.save-btn {
+    display: none;
+    background-color: #4CAF50;
+}
+.save-btn:hover {
+    background-color: #45a049;
+}
+
+/* Edit section styling */
+.edit-section {
+    display: none;
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+.edit-section h3 {
+    margin-top: 0;
+    color: #124A5C;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+/* Form item styling */
+.milestone-item, .degree-item, .experience-item, .certification-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.milestone-form, .degree-form, .experience-form, .certification-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+@media (min-width: 768px) {
+    .milestone-form, .degree-form, .experience-form, .certification-form {
+        grid-template-columns: 1fr 1fr 1fr auto;
+    }
+}
+.milestone-form input, .degree-form input, .experience-form input, .certification-form input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Add button styling */
+.add-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+.add-btn:hover {
+    background-color: #45a049;
+}
+
+/* Remove button styling */
+.milestone-form button, .degree-form button, .experience-form button, .certification-form button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.milestone-form button:hover, .degree-form button:hover, .experience-form button:hover, .certification-form button:hover {
+    background-color: #d32f2f;
+}
+
+/* Personal info section specific styling */
+#viewPersonalInfo p, #editPersonalInfo p {
+    margin: 8px 0;
+}
+#editPersonalInfo input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 300px;
+}
+
+/* Fix for button sizing */
+.section button.edit-btn, .section button.save-btn {
+    width: auto;
+    min-width: 160px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .section .edit-btn, .section .save-btn {
+        position: relative;
+        display: block;
+        margin-top: 10px;
+        width: 100%;
+    }
+    
+    .milestone-form, .degree-form, .experience-form, .certification-form {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-container {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-pic {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
 }
 
     </style>
 </head>
 <body>
-    <%- include('../../partials/linemanager_partials') %>
+    <%- include('../../partials/employee_partials') %>
 
-    <!-- Main content area -->
     <div class="main-content">
-
-        <!-- Profile section -->
         <div class="profile-container">
             <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
             <div class="profile-info">
-                <h3 id="display-name"><%= user.firstName %> <%= user.lastName %></h3> <!-- Display name -->
-                <p id="display-role"><%= user.userRole %></p> <!-- Display role -->
+                <h3 id="display-name"><%= user.firstName %> <%= user.lastName %></h3>
+                <p id="display-role"><%= user.userRole %></p>
             </div>
         </div>
 
-        <!-- Personal Information Section -->
-        <h2>Personal Information</h2>
-        <form id="edit-user-info" action="/employee/update-persinfo" method="POST">
-            <p><strong>Email:</strong> <span id="display-email" class="form-text"><%= user.userEmail %></span></p>
-            <input type="email" id="userEmail" name="userEmail" value="<%= user.userEmail %>" class="form-input">
-
-            <p><strong>Phone:</strong> <span id="display-phone" class="form-text">+1-234-567-8901</span></p> <!-- Dummy Phone -->
-            <input type="text" id="phone" name="phone" value="+1-234-567-8901" class="form-input">
-
-            <p><strong>Date of Birth:</strong> <span id="display-dob" class="form-text">1990-01-15</span></p> <!-- Dummy Date of Birth -->
-            <input type="date" id="dateOfBirth" name="dateOfBirth" value="1990-01-15" class="form-input">
-
-            <p><strong>Emergency Contact:</strong> <span id="display-emergency" class="form-text">John Doe (Brother) - +1-234-555-6789</span></p> <!-- Dummy Emergency Contact -->
-            <input type="text" id="emergencyContact" name="emergencyContact" value="John Doe (Brother) - +1-234-555-6789" class="form-input">
-
-            <!-- Employment Details Section -->
+        <div id="employment-details" class="section">
             <h2>Employment Details</h2>
-            <p><strong>Employment Type:</strong> <span id="display-employment-type" class="form-text">Full-Time</span></p>
-            <input type="text" id="employmentType" name="employmentType" value="Full-Time" class="form-input">
-
-            <p><strong>Job Title:</strong> <span id="display-job-title" class="form-text">Software Engineer</span></p>
-            <input type="text" id="jobTitle" name="jobTitle" value="Software Engineer" class="form-input">
-
-            <p><strong>Department:</strong> <span id="display-department" class="form-text">IT Department</span></p>
-            <input type="text" id="department" name="department" value="IT Department" class="form-input">
-
-            <p><strong>Hire Date:</strong> <span id="display-hire-date" class="form-text">2020-06-01</span></p>
-            <input type="date" id="hireDate" name="hireDate" value="2020-06-01" class="form-input">
-
-            <!-- Edit and Save buttons -->
-            <button type="button" class="edit-btn" id="edit-info-btn">Edit Information</button>
-            <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
-        </form>
-
-        <!-- Career Progression Section -->
-        <h2>Career Progression</h2>
-
-        <!-- Vertical Milestone List -->
-        <div class="milestone-container">
-            <div class="milestone">
-                <div class="milestone-label">
-                    <h4>Milestone 1</h4>
-                    <p>Joined Company</p>
-                </div>
-            </div>
-            <div class="milestone">
-                <div class="milestone-label">
-                    <h4>Milestone 2</h4>
-                    <p>Promoted to Junior Developer</p>
-                </div>
-            </div>
-            <div class="milestone">
-                <div class="milestone-label">
-                    <h4>Milestone 3</h4>
-                    <p>Completed Major Project</p>
-                </div>
-            </div>
-            <div class="milestone">
-                <div class="milestone-label">
-                    <h4>Milestone 4</h4>
-                    <p>Promoted to Developer</p>
-                </div>
-            </div>
-            <div class="milestone">
-                <div class="milestone-label">
-                    <h4>Milestone 5</h4>
-                    <p>Achieved Team Lead Role</p>
-                </div>
-            </div>
+            <p><strong>Job Title:</strong> <%= user.jobTitle %></p>
+            <p><strong>Department:</strong> <%= user.departmentName %></p>
         </div>
 
-        <!-- Degree, Experiences, and Uploaded Certifications Section -->
-        <div class="section">
-            <h2>Degree</h2>
-            <p>Bachelor of Science in Computer Science</p>
-            <p>University of Technology - Graduated 2012</p>
-        </div>
-
-        <div class="section">
-            <h2>Experiences</h2>
-            <p>Software Engineer at XYZ Corp (2015 - Present)</p>
-            <p>Junior Developer at ABC Inc. (2012 - 2015)</p>
-        </div>
-
-        <div class="section">
-            <h2>Uploaded Certifications</h2>
-            <p>Certified Scrum Master (CSM)</p>
-            <p>Oracle Certified Java Programmer</p>
-            <p>Microsoft Certified: Azure Developer Associate</p>
-        </div>
-
+<!-- Personal Information Section (with cancel button) -->
+<div id="personal-info" class="section">
+    <h2>Personal Information</h2>            
+    <!-- Display section -->
+    <div id="viewPersonalInfo">
+        <p><strong>First Name:</strong> <span id="display-firstName"><%= user.firstName %></span></p>
+        <p><strong>Last Name:</strong> <span id="display-lastName"><%= user.lastName %></span></p>
+        <p><strong>Phone:</strong> <span id="display-phone"><%= user.phoneNumber %></span></p>
+        <p><strong>Date of Birth:</strong> <span id="display-dob"><%= user.dateOfBirth %></span></p>
+        <p><strong>Emergency Contact Name:</strong> <span id="display-emergencyContactName"><%= user.emergencyContactName %></span></p>
+        <p><strong>Emergency Contact Number:</strong> <span id="display-emergencyContactNumber"><%= user.emergencyContactNumber %></span></p>
     </div>
+        
+    <!-- Edit section (initially hidden) -->
+    <div id="editPersonalInfo" style="display: none;">
+        <p><strong>First Name:</strong> <input type="text" id="edit-firstName" value="<%= user.firstName %>"></p>
+        <p><strong>Last Name:</strong> <input type="text" id="edit-lastName" value="<%= user.lastName %>"></p>
+        <p><strong>Phone:</strong> <input type="text" id="edit-phone" value="<%= user.phoneNumber %>"></p>
+        <p><strong>Date of Birth:</strong> <input type="date" id="edit-dob" value="<%= user.dateOfBirth %>"></p>
+        <p><strong>Emergency Contact Name:</strong> <input type="text" id="edit-emergencyContactName" value="<%= user.emergencyContactName %>"></p>
+        <p><strong>Emergency Contact Number:</strong> <input type="text" id="edit-emergencyContactNumber" value="<%= user.emergencyContactNumber %>"></p>
+        <div class="button-group">
+            <button type="button" class="save-btn" onclick="savePersonalInformation()">Save Changes</button>
+            <button type="button" class="cancel-btn" onclick="cancelPersonalInfoEdit()">Cancel</button>
+        </div>
+    </div>
+        
+    <button type="button" class="edit-btn" onclick="toggleEditPersonalInfoSection('PersonalInfo')">Edit Personal Information</button>
+</div>
 
-    <!-- JavaScript for toggling edit mode -->
+<!-- Career Progression Section (with cancel button) -->
+<div id="career-progression" class="section">
+    <h2>Career Progression</h2>
+    <button type="button" class="edit-btn" onclick="toggleSection('careerProgressionForm')">Edit Career Progression</button>
+    <% if (user.milestones.length > 0) { %>
+        <% user.milestones.forEach(function(milestone) { %>
+            <p><strong>Milestone:</strong> <%= milestone.milestoneName %> (<strong>Start:</strong> <%= milestone.startDate %>, <strong>End:</strong> <%= milestone.endDate %>)</p>
+        <% }) %>
+    <% } else { %>
+        <p>No career progression milestones available.</p>
+    <% } %>
+
+    <!-- Career Progression Form -->
+    <div id="careerProgressionForm" class="edit-section" style="display: none;">
+        <h3>Edit Career Progression</h3>
+        <div id="milestones-container">
+            <!-- Existing milestones will be pre-populated here -->
+            <% if (user.milestones && user.milestones.length > 0) { %>
+                <% user.milestones.forEach(function(milestone) { %>
+                    <div class="milestone-item">
+                        <div class="milestone-form">
+                            <input type="text" name="milestoneName" value="<%= milestone.milestoneName %>" required>
+                            <input type="date" name="milestoneStartDate" value="<%= milestone.startDate.substring(0, 10) %>" required>
+                            <input type="date" name="milestoneEndDate" value="<%= milestone.endDate ? milestone.endDate.substring(0, 10) : '' %>">
+                            <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="milestone-item">
+                    <div class="milestone-form">
+                        <input type="text" name="milestoneName" placeholder="Milestone" required>
+                        <input type="date" name="milestoneStartDate" placeholder="Start Date" required>
+                        <input type="date" name="milestoneEndDate" placeholder="End Date">
+                        <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+        <div class="button-group">
+            <button type="button" class="add-btn" onclick="addMilestone()">Add Milestone</button>
+            <button type="button" class="save-btn" onclick="saveCareerProgression()">Save Changes</button>
+            <button type="button" class="cancel-btn" onclick="cancelEdit('careerProgressionForm')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Degree Information Section (with cancel button) -->
+<div id="degree-info" class="section">
+    <h2>Degree Information</h2>
+    <button type="button" class="edit-btn" onclick="toggleSection('degreeForm')">Edit Degree Information</button>
+
+    <% if (user.degrees.length > 0) { %>
+        <% user.degrees.forEach(function(degree) { %>
+            <p><strong>Degree:</strong> <%= degree.degreeName %>, <strong>University:</strong> <%= degree.universityName %> (<strong>Graduation Year:</strong> <%= degree.graduationYear %>)</p>
+        <% }) %>
+    <% } else { %>
+        <p>No degrees available.</p>
+    <% } %>
+
+    <!-- Degree Information Form -->
+    <div id="degreeForm" class="edit-section" style="display: none;">
+        <h3>Edit Degree Information</h3>
+        <div id="degrees-container">
+            <!-- Existing degrees will be pre-populated here -->
+            <% if (user.degrees && user.degrees.length > 0) { %>
+                <% user.degrees.forEach(function(degree) { %>
+                    <div class="degree-item">
+                        <div class="degree-form">
+                            <input type="text" name="degreeName" value="<%= degree.degreeName %>" required>
+                            <input type="text" name="universityName" value="<%= degree.universityName %>" required>
+                            <input type="number" name="graduationYear" value="<%= degree.graduationYear %>" min="1900" max="2099" required>
+                            <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="degree-item">
+                    <div class="degree-form">
+                        <input type="text" name="degreeName" placeholder="Degree Name" required>
+                        <input type="text" name="universityName" placeholder="University Name" required>
+                        <input type="number" name="graduationYear" placeholder="Graduation Year" min="1900" max="2099" required>
+                        <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+        <div class="button-group">
+            <button type="button" class="add-btn" onclick="addDegree()">Add Degree</button>
+            <button type="button" class="save-btn" onclick="saveDegreeInformation()">Save Changes</button>
+            <button type="button" class="cancel-btn" onclick="cancelEdit('degreeForm')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Experience Section (with cancel button) -->
+<div id="experience" class="section">
+    <h2>Experience</h2>
+    <button type="button" class="edit-btn" onclick="toggleSection('experienceForm')">Edit Experiences</button>
+    <% if (user.experiences.length > 0) { %>
+        <% user.experiences.forEach(function(exp) { %>
+            <p><strong>Company:</strong> <%= exp.companyName %>, <strong>Start Date:</strong> <%= exp.startDate %>, <strong>End Date:</strong> <%= exp.endDate %></p>
+        <% }) %>
+    <% } else { %>
+        <p>No experiences available.</p>
+    <% } %>
+
+    <!-- Experience Form -->
+    <div id="experienceForm" class="edit-section" style="display: none;">
+        <h3>Edit Experience</h3>
+        <div id="experiences-container">
+            <!-- Existing experiences will be pre-populated here -->
+            <% if (user.experiences && user.experiences.length > 0) { %>
+                <% user.experiences.forEach(function(exp) { %>
+                    <div class="experience-item">
+                        <div class="experience-form">
+                            <input type="text" name="companyName" value="<%= exp.companyName %>" required>
+                            <input type="text" name="jobTitle" value="<%= exp.jobTitle || '' %>">
+                            <input type="date" name="expStartDate" value="<%= exp.startDate.substring(0, 10) %>" required>
+                            <input type="date" name="expEndDate" value="<%= exp.endDate ? exp.endDate.substring(0, 10) : '' %>">
+                            <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="experience-item">
+                    <div class="experience-form">
+                        <input type="text" name="companyName" placeholder="Company Name" required>
+                        <input type="text" name="jobTitle" placeholder="Job Title">
+                        <input type="date" name="expStartDate" placeholder="Start Date" required>
+                        <input type="date" name="expEndDate" placeholder="End Date">
+                        <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+        <div class="button-group">
+            <button type="button" class="add-btn" onclick="addExperience()">Add Experience</button>
+            <button type="button" class="save-btn" onclick="saveExperiences()">Save Changes</button>
+            <button type="button" class="cancel-btn" onclick="cancelEdit('experienceForm')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Certifications Section (with cancel button) -->
+<div id="certifications" class="section">
+    <h2>Certifications</h2>
+    <button type="button" class="edit-btn" onclick="toggleSection('certificationForm')">Edit Certifications</button>
+
+    <% if (user.certifications.length > 0) { %>
+        <% user.certifications.forEach(function(cert) { %>
+            <p><strong>Certification:</strong> <%= cert.certificateName %>, <strong>Date:</strong> <%= cert.certDate %></p>
+        <% }) %>
+    <% } else { %>
+        <p>No certifications available.</p>
+    <% } %>
+    
+    <!-- Certification Form -->
+    <div id="certificationForm" class="edit-section" style="display: none;">
+        <h3>Edit Certifications</h3>
+        <div id="certifications-container">
+            <% if (user.certifications && user.certifications.length > 0) { %>
+                <% user.certifications.forEach(function(cert) { %>
+                    <div class="certification-item">
+                        <div class="certification-form">
+                            <input type="text" name="certificateName" value="<%= cert.certificateName %>" required>
+                            <input type="date" name="certDate" value="<%= cert.certDate.substring(0, 10) %>" required>
+                            <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="certification-item">
+                    <div class="certification-form">
+                        <input type="text" name="certificateName" placeholder="Certification Name" required>
+                        <input type="date" name="certDate" placeholder="Certification Date" required>
+                        <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+        <div class="button-group">
+            <button type="button" class="add-btn" onclick="addCertification()">Add Certification</button>
+            <button type="button" class="save-btn" onclick="saveCertifications()">Save Changes</button>
+            <button type="button" class="cancel-btn" onclick="cancelEdit('certificationForm')">Cancel</button>
+        </div>
+    </div>
+</div>
+
     <script>
-        const editBtn = document.getElementById('edit-info-btn');
-        const saveBtn = document.getElementById('save-info-btn');
 
-        const displayFields = document.querySelectorAll('.form-text');
-        const inputFields = document.querySelectorAll('.form-input');
+        // Function to cancel personal info editing
+function cancelPersonalInfoEdit() {
+    toggleEditPersonalInfoSection('PersonalInfo');
+}
 
-        // Toggle edit mode
-        editBtn.addEventListener('click', function () {
-            displayFields.forEach(field => field.style.display = 'none');
-            inputFields.forEach(input => input.style.display = 'block');
-            editBtn.style.display = 'none';
-            saveBtn.style.display = 'inline-block';
+// Function to cancel editing for other sections
+function cancelEdit(sectionId) {
+    toggleSection(sectionId);
+}
+
+// Function to toggle between view and edit modes for personal info section
+function toggleEditPersonalInfoSection(sectionId) {
+    // Log for debugging
+    console.log(`Toggling edit section for ${sectionId}`);
+    
+    // Get the relevant sections
+    const viewSection = document.getElementById(`view${sectionId}`); 
+    const editSection = document.getElementById(`edit${sectionId}`);
+    const editButton = document.querySelector(`#personal-info .edit-btn`);
+    const saveButton = document.querySelector(`#personal-info .save-btn`);
+    
+    // Log elements to check if they're being found
+    console.log(viewSection, editSection, editButton, saveButton);
+
+    // Ensure all elements exist
+    if (!viewSection || !editSection || !editButton || !saveButton) {
+        console.error(`One or more elements for section ${sectionId} are missing.`);
+        return;
+    }
+    
+    // Toggle visibility between view and edit sections
+    if (editSection.style.display === "none") {
+        // Switch to edit mode
+        editSection.style.display = "block";
+        viewSection.style.display = "none";
+        editButton.style.display = "none"; // Hide edit button
+        saveButton.style.display = "inline-block"; // Show save button
+    } else {
+        // Switch back to view mode
+        editSection.style.display = "none";
+        viewSection.style.display = "block";
+        editButton.style.display = "inline-block"; // Show edit button
+        saveButton.style.display = "none"; // Hide save button
+    }
+}
+
+// Function to save personal information
+async function savePersonalInformation() {
+    const firstName = document.getElementById('edit-firstName').value;
+    const lastName = document.getElementById('edit-lastName').value;
+    const phone = document.getElementById('edit-phone').value;
+    const dob = document.getElementById('edit-dob').value;
+    const emergencyContactName = document.getElementById('edit-emergencyContactName').value;
+    const emergencyContactNumber = document.getElementById('edit-emergencyContactNumber').value;
+
+    // Log the values for debugging
+    console.log("Saving Personal Information:", { firstName, lastName, phone, dob, emergencyContactName, emergencyContactNumber });
+
+    try {
+        // Send data to the backend
+        const response = await fetch('/employee/employeepersinfocareerprog/editpersonalinfo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ firstName, lastName, phone, dateOfBirth: dob, emergencyContactName, emergencyContactNumber })
         });
 
-         // Toggle active class for sidebar links
-         document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
+        if (response.ok) {
+            alert("Personal information updated successfully.");
+            toggleEditPersonalInfoSection('PersonalInfo');  // Switch back to view mode
+            location.reload();  // Reload the page to show updated information
+        } else {
+            const errorData = await response.json();
+            alert("Error updating personal information: " + (errorData.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error saving personal information:', error);
+        alert('An error occurred while saving personal information.');
+    }
+}
 
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
-                }
-            });
-        });
+// Function to toggle visibility for other form sections
+function toggleSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) {
+        console.error(`Section with ID ${sectionId} not found`);
+        return;
+    }
 
-        // Handle navigation for Performance Management links
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefaults(); // Prevent default link behavior
+    // Find the parent section that contains the edit and save buttons
+    let parentSection;
+    
+    if (sectionId === 'careerProgressionForm') {
+        parentSection = document.getElementById('career-progression');
+    } else if (sectionId === 'degreeForm') {
+        parentSection = document.getElementById('degree-info');
+    } else if (sectionId === 'experienceForm') {
+        parentSection = document.getElementById('experience');
+    } else if (sectionId === 'certificationForm') {
+        parentSection = document.getElementById('certifications');
+    }
+    
+    if (!parentSection) {
+        console.error(`Parent section for ${sectionId} not found`);
+        return;
+    }
+    
+    const editBtn = parentSection.querySelector('.edit-btn');
+    const saveBtn = parentSection.querySelector('.save-btn');
+    
+    if (!editBtn || !saveBtn) {
+        console.error(`Edit or save button for ${sectionId} not found`);
+        return;
+    }
+    
+    // Toggle visibility
+    if (section.style.display === "none" || section.style.display === "") {
+        // Switch to edit mode
+        section.style.display = "block";
+        editBtn.style.display = "none";
+        saveBtn.style.display = "inline-block";
+    } else {
+        // Switch back to view mode
+        section.style.display = "none";
+        editBtn.style.display = "inline-block";
+        saveBtn.style.display = "none";
+    }
+}
+
+// Function to submit career progression data
+async function saveCareerProgression() {
+    try {
+        // Get all milestone inputs
+        const milestones = [];
+        const milestoneContainers = document.querySelectorAll('#careerProgressionForm .milestone-item');
+        
+        milestoneContainers.forEach(container => {
+            const milestoneName = container.querySelector('input[name="milestoneName"]').value;
+            const startDate = container.querySelector('input[name="milestoneStartDate"]').value;
+            const endDate = container.querySelector('input[name="milestoneEndDate"]').value;
+            
+            if (milestoneName && startDate) {
+                milestones.push({
+                    milestoneName,
+                    startDate,
+                    endDate: endDate || null
+                });
+            }
+        });
+        
+        console.log("Saving career progression:", milestones);
+        
+        const response = await fetch('/employee/employeepersinfocareerprog/editcareerprogression', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ milestones })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            alert('Career progression information saved successfully!');
+            toggleSection('careerProgressionForm');
+            location.reload();
+        } else {
+            alert('Error saving career progression information: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error saving career progression:', error);
+        alert('An error occurred while saving career progression information.');
+    }
+}
+
+// Function to submit degree information
+async function saveDegreeInformation() {
+    try {
+        // Get all degree inputs
+        const degrees = [];
+        const degreeContainers = document.querySelectorAll('#degreeForm .degree-item');
+        
+        degreeContainers.forEach(container => {
+            const degreeName = container.querySelector('input[name="degreeName"]').value;
+            const universityName = container.querySelector('input[name="universityName"]').value;
+            const graduationYear = container.querySelector('input[name="graduationYear"]').value;
+            
+            if (degreeName && universityName && graduationYear) {
+                degrees.push({
+                    degreeName,
+                    universityName,
+                    graduationYear
+                });
+            }
+        });
+        
+        console.log("Saving degrees:", degrees);
+        
+        const response = await fetch('/employee/employeepersinfocareerprog/editdegreeinfo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ degrees })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            alert('Degree information saved successfully!');
+            toggleSection('degreeForm');
+            location.reload();
+        } else {
+            alert('Error saving degree information: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error saving degree information:', error);
+        alert('An error occurred while saving degree information.');
+    }
+}
+
+// Function to submit experience information
+async function saveExperiences() {
+    try {
+        // Get all experience inputs
+        const experiences = [];
+        const experienceContainers = document.querySelectorAll('#experienceForm .experience-item');
+        
+        experienceContainers.forEach(container => {
+            const companyName = container.querySelector('input[name="companyName"]').value;
+            const jobTitle = container.querySelector('input[name="jobTitle"]').value;
+            const startDate = container.querySelector('input[name="expStartDate"]').value;
+            const endDate = container.querySelector('input[name="expEndDate"]').value;
+            
+            if (companyName && startDate) {
+                experiences.push({
+                    companyName,
+                    jobTitle,
+                    startDate,
+                    endDate: endDate || null
+                });
+            }
+        });
+        
+        console.log("Saving experiences:", experiences);
+        
+        const response = await fetch('/employee/employeepersinfocareerprog/editexperience', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ experiences })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            alert('Experience information saved successfully!');
+            toggleSection('experienceForm');
+            location.reload();
+        } else {
+            alert('Error saving experience information: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error saving experience information:', error);
+        alert('An error occurred while saving experience information.');
+    }
+}
+
+// Function to submit certification information
+async function saveCertifications() {
+    try {
+        // Get all certification inputs
+        const certifications = [];
+        const certificationContainers = document.querySelectorAll('#certificationForm .certification-item');
+        
+        certificationContainers.forEach(container => {
+            const certificateName = container.querySelector('input[name="certificateName"]').value;
+            const certDate = container.querySelector('input[name="certDate"]').value;
+            
+            if (certificateName && certDate) {
+                certifications.push({
+                    certificateName,
+                    certDate
+                });
+            }
+        });
+        
+        console.log("Saving certifications:", certifications);
+        
+        const response = await fetch('/employee/employeepersinfocareerprog/editcertification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ certifications })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            alert('Certification information saved successfully!');
+            toggleSection('certificationForm');
+            location.reload();
+        } else {
+            alert('Error saving certification information: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error saving certification information:', error);
+        alert('An error occurred while saving certification information.');
+    }
+}
+
+// Add/remove dynamic form elements
+function addMilestone() {
+    const container = document.getElementById('milestones-container');
+    const milestoneItem = document.createElement('div');
+    milestoneItem.className = 'milestone-item';
+    milestoneItem.innerHTML = `
+        <div class="milestone-form">
+            <input type="text" name="milestoneName" placeholder="Milestone" required>
+            <input type="date" name="milestoneStartDate" placeholder="Start Date" required>
+            <input type="date" name="milestoneEndDate" placeholder="End Date">
+            <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+        </div>
+    `;
+    container.appendChild(milestoneItem);
+}
+
+function addDegree() {
+    const container = document.getElementById('degrees-container');
+    const degreeItem = document.createElement('div');
+    degreeItem.className = 'degree-item';
+    degreeItem.innerHTML = `
+        <div class="degree-form">
+            <input type="text" name="degreeName" placeholder="Degree Name" required>
+            <input type="text" name="universityName" placeholder="University Name" required>
+            <input type="number" name="graduationYear" placeholder="Graduation Year" min="1900" max="2099" required>
+            <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+        </div>
+    `;
+    container.appendChild(degreeItem);
+}
+
+function addExperience() {
+    const container = document.getElementById('experiences-container');
+    const experienceItem = document.createElement('div');
+    experienceItem.className = 'experience-item';
+    experienceItem.innerHTML = `
+        <div class="experience-form">
+            <input type="text" name="companyName" placeholder="Company Name" required>
+            <input type="text" name="jobTitle" placeholder="Job Title">
+            <input type="date" name="expStartDate" placeholder="Start Date" required>
+            <input type="date" name="expEndDate" placeholder="End Date">
+            <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+        </div>
+    `;
+    container.appendChild(experienceItem);
+}
+
+function addCertification() {
+    const container = document.getElementById('certifications-container');
+    const certificationItem = document.createElement('div');
+    certificationItem.className = 'certification-item';
+    certificationItem.innerHTML = `
+        <div class="certification-form">
+            <input type="text" name="certificateName" placeholder="Certification Name" required>
+            <input type="date" name="certDate" placeholder="Certification Date" required>
+            <button type="button" onclick="this.parentElement.parentElement.remove()">Remove</button>
+        </div>
+    `;
+    container.appendChild(certificationItem);
+}
+
+// Initialize the page when DOM content is loaded
+document.addEventListener("DOMContentLoaded", () => {
+    // Set up event handler for personal info save button
+    const personalInfoSaveBtn = document.querySelector("#personal-info .save-btn");
+    if (personalInfoSaveBtn) {
+        personalInfoSaveBtn.onclick = savePersonalInformation;
+    }
+
+    // Add save buttons to each section and set up their event handlers
+    const sections = [
+        { id: 'career-progression', formId: 'careerProgressionForm', saveFunc: saveCareerProgression, buttonText: 'Save Career Progression' },
+        { id: 'degree-info', formId: 'degreeForm', saveFunc: saveDegreeInformation, buttonText: 'Save Degree Information' },
+        { id: 'experience', formId: 'experienceForm', saveFunc: saveExperiences, buttonText: 'Save Experiences' },
+        { id: 'certifications', formId: 'certificationForm', saveFunc: saveCertifications, buttonText: 'Save Certifications' }
+    ];
+    
+    sections.forEach(section => {
+        const sectionDiv = document.getElementById(section.id);
+        if (sectionDiv) {
+            const editBtn = sectionDiv.querySelector('.edit-btn');
+            if (editBtn) {
+                // Update the click handler for edit button
+                editBtn.onclick = function() { toggleSection(section.formId); };
                 
-                // Perform the desired action or navigation
-                const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl; // Navigate to the target URL
-            });
+                // Create save button if it doesn't exist
+                let saveBtn = sectionDiv.querySelector('.save-btn');
+                if (!saveBtn) {
+                    saveBtn = document.createElement('button');
+                    saveBtn.type = 'button';
+                    saveBtn.className = 'save-btn';
+                    saveBtn.textContent = section.buttonText;
+                    saveBtn.style.display = 'none';
+                    saveBtn.onclick = section.saveFunc;
+                    
+                    // Insert save button after the edit button
+                    editBtn.insertAdjacentElement('afterend', saveBtn);
+                }
+            }
+        }
+    });
+
+    // Set up sidebar interactions
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
         });
+    });
+
+    // Set up collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+
+    // Handle navigation for Performance Management links
+    document.querySelectorAll('.collapsible-content a').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default link behavior
+            
+            // Perform the desired action or navigation
+            const targetUrl = this.getAttribute('href');
+            window.location.href = targetUrl; // Navigate to the target URL
+        });
+    });
+});
     </script>
+    
 </body>
 </html>
