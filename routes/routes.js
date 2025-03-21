@@ -24,7 +24,7 @@ router.get('/applicant/schedule-interview', applicantController.getCalendly);
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
-router.get('/job-details/:jobId', applicantController.getJobDetails);
+router.get('/job-details/:jobId', applicantController.getJobDetailsTitle);
 // router.get('/chatbothome', applicantController.getChatbotPage);
 //router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);
 router.get('/onboarding', applicantController.getOnboarding);
@@ -61,6 +61,11 @@ router.get('/hr/useraccount', hrController.getUserAccount);
 router.post('/hr/update-info', hrController.updateUserInfo);
 router.get('/employee/persinfocareerprog', hrController.getPersInfoCareerProg); // copied this url since HR is an employee
 router.post('/employee/update-persinfo', hrController.updatePersUserInfo);
+// Career Progression, Degree, Experience, and Certifications routes
+router.post('/employee/employeepersinfocareerprog/editcareerprogression', employeeController.editCareerProgression);
+router.post('/employee/employeepersinfocareerprog/editdegreeinfo', employeeController.editDegreeInformation);
+router.post('/employee/employeepersinfocareerprog/editexperience', employeeController.editExperiences);
+router.post('/employee/employeepersinfocareerprog/editcertification', employeeController.editCertifications);
 
 router.get('/hr/leaverequest', hrController.getLeaveRequestForm);
 router.post('/hr/leaverequest', hrController.submitLeaveRequest);

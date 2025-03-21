@@ -8,131 +8,393 @@
     <title>Add a Job Posting</title>
 </head>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f9f9f9;
-        margin: 0;
-        padding: 20px;
-    }
+    /* Enhanced CSS for the job posting form */
+/* Enhanced CSS for the job posting form - Premium Version */
+:root {
+    --primary: #07ACB9;
+    --primary-hover: #059AA6;
+    --primary-light: #E0F7F9;
+    --primary-ultra-light: #F0FBFC;
+    --text-dark: #333333;
+    --text-medium: #555555;
+    --text-light: #777777;
+    --danger: #ff4d4d;
+    --danger-hover: #e53e3e;
+    --danger-light: #FFE5E5;
+    --success: #28a745;
+    --success-light: #E3F9E5;
+    --white: #ffffff;
+    --off-white: #fafafa;
+    --bg-light: #f5f7f9;
+    --border: #dddddd;
+    --border-light: #eeeeee;
+    --shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 5px 20px rgba(0, 0, 0, 0.12);
+    --radius: 8px;
+    --radius-sm: 4px;
+    --transition: all 0.3s ease;
+}
 
+/* Base styles that won't affect partials */
+.container {
+    background-color: var(--white);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    max-width: 850px;
+    margin: 25px auto;
+    border: 1px solid var(--border-light);
+}
+
+.container h1.title {
+    color: var(--primary);
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.container h1.title:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: 3px;
+}
+
+/* Form group styling with improved spacing */
+.form-group {
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.form-group + .form-group {
+    margin-top: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 15px;
+    letter-spacing: 0.3px;
+}
+
+/* Visual indicator for required fields */
+label.required:after {
+    content: "*";
+    color: var(--danger);
+    margin-left: 4px;
+}
+
+/* Form control styling with improved aesthetics */
+.form-control,
+input[type="text"],
+input[type="date"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 15px;
+    transition: var(--transition);
+    background-color: var(--white);
+    color: var(--text-dark);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.15);
+    background-color: var(--primary-ultra-light);
+}
+
+input[type="text"]::placeholder,
+textarea::placeholder {
+    color: var(--text-light);
+    opacity: 0.8;
+}
+
+textarea {
+    height: 130px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+/* Section headings with improved visual hierarchy */
+.section {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+    position: relative;
+}
+
+.section:before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: 3px;
+}
+
+.section h2 {
+    color: var(--primary);
+    margin-bottom: 25px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+/* Label styling for requirement sections */
+#certification-section label,
+#degree-section label,
+#experience-section label,
+#skill-section label {
+    font-size: 17px;
+    color: var(--text-medium);
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+/* Input groups for requirements with better alignment */
+.inline-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+    padding: 15px;
+    background-color: var(--off-white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.inline-group:hover {
+    background-color: var(--primary-ultra-light);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.inline-group input,
+.inline-group select {
+    flex: 1;
+    min-width: 0; /* Prevents flex items from expanding beyond container */
+}
+
+.smaller-input {
+    max-width: 220px;
+}
+
+/* Enhanced Add More and Remove buttons */
+.add-more, 
+.remove-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 15px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+    min-width: 100px;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.add-more {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.add-more:hover {
+    background-color: var(--primary);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(7, 172, 185, 0.2);
+}
+
+.remove-btn {
+    background-color: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.remove-btn:hover {
+    background-color: var(--danger);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(255, 77, 77, 0.2);
+}
+
+/* Premium Submit button */
+.submit-btn {
+    background-color: var(--primary);
+    color: var(--white);
+    padding: 15px 20px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    width: 100%;
+    margin-top: 35px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(7, 172, 185, 0.2);
+}
+
+.submit-btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(7, 172, 185, 0.25);
+}
+
+.submit-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(7, 172, 185, 0.2);
+}
+
+/* Submit button ripple effect */
+.submit-btn:after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+}
+
+.submit-btn:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
+}
+
+/* Enhanced help text styling */
+.help-text {
+    color: var(--text-light);
+    font-size: 13px;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+/* Card-style design for form sections */
+.card-styled {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+}
+
+.card-styled:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+/* Add smooth animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-group.inline-group {
+    animation: fadeIn 0.4s ease;
+}
+
+/* Responsive design with improved mobile experience */
+@media (max-width: 768px) {
     .container {
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        max-width: 800px;
-        margin: auto;
+        padding: 20px 15px;
+        margin: 15px;
     }
-
-    h1, h3 {
-        text-align: center;
-        color: #07ACB9;
+    
+    .inline-group {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px;
     }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-    }
-
-    input[type="text"],
-    input[type="date"],
-    textarea,
-    select {
-        width: calc(100% - 22px); /* Adjust for padding and border */
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-
-    textarea {
-        height: 100px;
-    }
-
-    .small-input {
-        width: calc(40% - 22px); /* Smaller width for degree type, adjusted for padding */
-    }
-
-    .submit-btn {
-        background-color: #07ACB9;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: bold;
-        margin-top: 20px;
+    
+    .inline-group input,
+    .inline-group select {
         width: 100%;
+        margin-bottom: 10px;
     }
-
-    .submit-btn:hover {
-        background-color: #009b9f; /* Change on hover */
-    }
-
-    .section {
-        margin-top: 30px;
-    }
-
-    .add-more, .remove-btn {
-        color: #07ACB9;
-        cursor: pointer;
-        margin-top: 10px;
-        display: inline-block;
-        border: 1px solid #07ACB9; /* Add border to match input styling */
-        border-radius: 5px; /* Rounded corners for the button */
-        padding: 8px 12px; /* Consistent padding for buttons */
-        text-align: center; /* Center text in buttons */
-    }
-
+    
+    .add-more, 
     .remove-btn {
-        color: #ff4d4d;
-        margin-left: 10px; /* Space between Add More and Remove button */
+        width: 100%;
+        justify-content: center;
     }
+    
+    .smaller-input {
+        max-width: 100%;
+    }
+    
+    .section h2 {
+        font-size: 20px;
+    }
+    
+    .container h1.title {
+        font-size: 24px;
+    }
+}
 
-    .form-group.inline-group {
-        display: flex;
-        flex-direction: column; /* Align items vertically */
-        gap: 10px; /* Space between input elements */
-        align-items: flex-start; /* Align items to the left */
-    }
+/* Custom select styling */
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
 
-    .form-group.inline-group > div {
-        width: 100%; /* Make inner divs take full width */
-        display: flex; /* Enable flexbox for inner div */
-        align-items: center; /* Align items vertically */
-    }
-
-    .form-group.inline-group > div > label {
-        flex: 1; /* Allow label to take full width */
-    }
-
-    .form-group.inline-group > div > .add-more,
-    .form-group.inline-group > div > .remove-btn {
-        margin-left: 10px; /* Space next to input fields */
-    }
-
-    .form-group + .form-group {
-        margin-top: 25px;
-    }
-
-    .toggle-label {
-        display: flex;
-        align-items: center;
-        margin-top: 10px;
-    }
-
-    .toggle-label input {
-        margin-left: 10px;
-        margin-right: 10px;
-    }
-
-    .toggle-label span {
-        margin: 0 10px;
-    }
+/* Date input styling */
+input[type="date"] {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3e%3c/rect%3e%3cline x1='16' y1='2' x2='16' y2='6'%3e%3c/line%3e%3cline x1='8' y1='2' x2='8' y2='6'%3e%3c/line%3e%3cline x1='3' y1='10' x2='21' y2='10'%3e%3c/line%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
 </style>
 
 
@@ -410,6 +672,33 @@ async function populateDepartments() {
 
             section.appendChild(newDiv);
         }
+
+         // Toggle active class for sidebar links
+         document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // Toggle collapsible content in sidebar
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+        
     </script>
 </body>
 </html>
