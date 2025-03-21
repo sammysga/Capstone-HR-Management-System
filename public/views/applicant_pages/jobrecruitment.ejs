@@ -315,7 +315,7 @@
                 <% if (jobpositions && jobpositions.length > 0) { %>
                     Showing <%= jobpositions.length %> jobs
                 <% } else { %>
-                    No jobs found
+                    No job offers
                 <% } %>
             </span>
         </div>
@@ -348,7 +348,7 @@
             <% } else { %>
                 <div class="no-jobs">
                     <i class="fas fa-briefcase"></i>
-                    <p>No job postings available at the moment.</p>
+                    <p>No job offers</p>
                     <p>Please check back later for new opportunities.</p>
                 </div>
             <% } %>
@@ -389,7 +389,7 @@
                     }
                 });
                 
-                jobCounter.innerText = `Showing ${visibleCount} job${visibleCount !== 1 ? 's' : ''}`;
+                jobCounter.innerText = visibleCount > 0 ? `Showing ${visibleCount} job${visibleCount !== 1 ? 's' : ''}` : 'No job offers';
                 
                 // Show "no jobs" message if no results
                 const noJobsMessage = document.querySelector('.no-jobs');
@@ -398,7 +398,7 @@
                     message.className = 'no-jobs';
                     message.innerHTML = `
                         <i class="fas fa-search"></i>
-                        <p>No jobs match your search criteria.</p>
+                        <p>No job offers</p>
                         <p>Try adjusting your search or filters.</p>
                     `;
                     document.querySelector('.job-listing').appendChild(message);
