@@ -3140,6 +3140,138 @@ updateJobOffer: async function(req, res) {
         });
     },
 
+
+
+    /* NOTIFICATION CONTROLLER */
+
+
+    get360FeedbackToast: async function(req, res) {
+        try {
+            console.log("Entering get360FeedbackToast function");
+    
+            // Step 1: Get today's date in the Philippines Time Zone (PHT) and format it to 'YYYY-MM-DD'
+            const today = new Date();
+            const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
+            const formatter = new Intl.DateTimeFormat('en-US', options);
+            const parts = formatter.formatToParts(today);
+    
+            const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
+    
+            const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4']; // List of feedback tables
+            let activeFeedback = null;
+    
+            // Step 2: Fetch the current user's department ID
+            const currentUserId = req.session?.user?.userId;
+    
+            if (!currentUserId) {
+                console.error("Error: No user ID available in session.");
+                return res.status(400).json({ success: false, message: 'User ID is required.' });
+            }
+    
+            const { data: currentUserData, error: userError } = await supabase
+                .from('staffaccounts')
+                .select('departmentId')
+                .eq('userId', currentUserId)
+                .single();
+    
+            if (userError || !currentUserData) {
+                console.error("Error fetching user details:", userError);
+                return res.status(404).json({ success: false, message: 'User details not found.' });
+            }
+    
+            const { departmentId } = currentUserData;
+    
+            // Step 3: Loop through each feedback table (Q1 to Q4) and fetch the active feedback record
+            for (const feedbackTable of feedbackTables) {
+                console.log(`Fetching data from table: ${feedbackTable}...`);
+    
+                const { data, error } = await supabase
+                    .from(feedbackTable)
+                    .select('*')
+                    .lte('setStartDate', todayString) // Changed from gte to lte to ensure we get records starting today or earlier
+                    .gte('setEndDate', todayString);  // Changed from gt to gte to include today's date
+    
+                if (error) {
+                    console.error(`Error fetching data from ${feedbackTable}:`, error);
+                    continue; // Skip to the next table if there's an error with the current table
+                }
+    
+                // Check if data is found and set activeFeedback
+                if (data && data.length > 0) {
+                    console.log(`Data fetched from ${feedbackTable}:`, data);
+    
+                    // Step 4: Filter userIds to only include those in the same department
+                    const departmentUserIds = [];
+    
+                    for (const record of data) {
+                        const { data: userData, error: userFetchError } = await supabase
+                            .from('staffaccounts')
+                            .select('departmentId')
+                            .eq('userId', record.userId)
+                            .single();
+    
+                        if (userFetchError || !userData) {
+                            console.error("Error fetching user details:", userFetchError);
+                            continue; // Skip if there's an error
+                        }
+    
+                        if (userData.departmentId === departmentId) {
+                            departmentUserIds.push(record); // Store the entire record if the department matches
+                        }
+                    }
+    
+                    if (departmentUserIds.length > 0) {
+                        activeFeedback = departmentUserIds[0]; // Assuming only one active feedback per table
+                        // Also store the table name so we know which quarter it belongs to
+                        activeFeedback.sourceTable = feedbackTable;
+                        break; // Stop searching once an active feedback is found
+                    } else {
+                        console.log(`No active feedback found for the current user's department in ${feedbackTable}.`);
+                    }
+                } else {
+                    console.log(`No data found in ${feedbackTable}.`);
+                }
+            }
+    
+            // Ensure the logic is correct for date matching
+            console.log(`Today's Date: ${todayString}`);
+            console.log('Active Feedback Record:', activeFeedback);
+    
+            // Step 5: Check if any active feedback record was found
+            if (!activeFeedback) {
+                console.log('No active feedback records found for the given date range.');
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'No active feedback records found for the given date range.' 
+                });
+            }
+    
+            // Step 6: Determine quarter from the source table
+            let quarter;
+            if (activeFeedback.sourceTable === 'feedbacks_Q1') quarter = 'Q1';
+            else if (activeFeedback.sourceTable === 'feedbacks_Q2') quarter = 'Q2';
+            else if (activeFeedback.sourceTable === 'feedbacks_Q3') quarter = 'Q3';
+            else if (activeFeedback.sourceTable === 'feedbacks_Q4') quarter = 'Q4';
+            else quarter = activeFeedback.quarter || ''; // Fallback to stored quarter if available
+    
+            // Return the active feedback record with additional user ID for the frontend
+            return res.status(200).json({ 
+                success: true, 
+                feedback: activeFeedback, 
+                quarter,
+                userId: currentUserId
+            });
+    
+        } catch (error) {
+            console.error('Error in get360FeedbackToast:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'An error occurred while fetching feedback data.', 
+                error: error.message 
+            });
+        }
+    },
+    
     
     
 };

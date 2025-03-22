@@ -229,5 +229,9 @@ router.post('/linemanager/applicant-tracker-jobposition/markAsP1Failed',  lineMa
 router.post('/linemanager/applicant-tracker-jobposition/finalizeP3Review', lineManagerController.finalizeP3Review);
 router.post('/linemanager/applicant-tracker-jobposition/markAsP3Passed',  lineManagerController.markAsP3Passed);
 router.post('/linemanager/applicant-tracker-jobposition/markAsP3Failed', lineManagerController.markAsP3Failed);
+
+// Notification routes
+router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
+router.get('/employee/staffFeedbackList', employeeController.getFeedbackUsers);
 module.exports = router; 
 
