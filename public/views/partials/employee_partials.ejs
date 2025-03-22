@@ -174,11 +174,11 @@ body {
 
 /* Special styling for priority buttons */
 .priority-btn {
-    background-color: #FF9800 !important;
+    background-color:#124A5C!important;
 }
 
 .priority-btn:hover {
-    background-color: #FFC107 !important;
+    background-color: #07ACB9 !important;
 }
 
 /* Floating Action Button Styling */
@@ -260,6 +260,7 @@ body {
 }
 </style>
 
+
 <div class="sidebar">
     <div class="logo-container">
         <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Logo" class="logo">
@@ -305,6 +306,7 @@ body {
     <h3>Notifications</h3>
     
     <div id="recent-notifications">
+        <!-- 360 Feedback section will be inserted here when available -->
         <div class="notification-section" id="section-2">
             <h4>Leave Request Updates</h4>
             <!-- Leave requests notifications will be loaded here -->
@@ -352,8 +354,140 @@ body {
     const fab = document.getElementById('fab');
     const seePreviousButton = document.getElementById('see-previous-notifications');
     
-    // API endpoint for fetching notifications
+    // API endpoints for fetching notifications
     const notificationsAPI = '/api/employee/notifications';
+    const feedbackAPI = '/employee/api/get360Feedback';
+    
+    // Track if we have active feedback
+    let hasActiveFeedback = false;
+    let activeFeedbackQuarter = null;
+    
+    // Default FAB click handler
+    const fabDefaultHandler = () => {
+        console.log('Floating Action Button clicked - default handler');
+        window.location.href = '/employee/leaverequest';
+    };
+    
+    // Function to fetch 360 feedback data and update notification panel
+    async function fetch360Feedback() {
+        try {
+            console.log("Fetching 360 feedback data...");
+            
+            // Make the fetch request to the API
+            const response = await fetch(feedbackAPI);
+            
+            if (!response.ok) {
+                // If 404, it just means no active feedback (expected)
+                if (response.status === 404) {
+                    console.log("No active 360 feedback found.");
+                    return false;
+                }
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log("Received 360 feedback response:", data);
+            
+            if (data.success && data.feedback) {
+                // Get the feedback data
+                const feedback = data.feedback;
+                const quarter = data.quarter || '';
+                activeFeedbackQuarter = quarter;
+                
+                // Format dates for display
+                const startDate = new Date(feedback.setStartDate).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+                const endDate = new Date(feedback.setEndDate).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+                
+                // Get current date in Philippines timezone
+                const now = new Date();
+                const currentDateTime = now.toLocaleString('en-US', {
+                    timeZone: 'Asia/Manila',
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Look for an existing feedback section
+                let feedbackSection = document.getElementById('section-feedback');
+                
+                // If no feedback section exists, create it
+                if (!feedbackSection) {
+                    feedbackSection = document.createElement('div');
+                    feedbackSection.id = 'section-feedback';
+                    feedbackSection.className = 'notification-section';
+                    
+                    // Insert at the top of recent-notifications
+                    const recentNotifications = document.getElementById('recent-notifications');
+                    if (recentNotifications.firstChild) {
+                        recentNotifications.insertBefore(feedbackSection, recentNotifications.firstChild);
+                    } else {
+                        recentNotifications.appendChild(feedbackSection);
+                    }
+                }
+                
+                // Update the feedback section content
+                feedbackSection.innerHTML = `
+                    <h4>REQUIRED 360 Degree Feedback</h4>
+                    <div class="notification-item">
+                        <div class="headline">360 Feedback Answers Required</div>
+                        <div class="content">The 360-Degree Quarterly Feedback (${quarter}) must be accomplished from 
+                            <span id="feedback-start-date">${startDate}</span> up until 
+                            <span id="feedback-end-date">${endDate}</span>. 
+                            Your participation is required.
+                        </div>
+                        <div class="date">${currentDateTime}</div>
+                        <button class="action-btn priority-btn" id="feedback-action-btn">Required Action</button>
+                    </div>
+                `;
+                
+                // Add click event for the action button
+                document.getElementById('feedback-action-btn').addEventListener('click', function() {
+                    window.location.href = `/employee/staffFeedbackList?quarter=${quarter}`;
+                });
+                
+                // Update the FAB to point to the feedback page
+                fab.innerHTML = '<i class="fas fa-clipboard-list"></i>';
+                
+                // Remove any existing click handlers from FAB
+                const oldFab = fab.cloneNode(true);
+                fab.parentNode.replaceChild(oldFab, fab);
+                fab = oldFab;
+                
+                // Add new click handler
+                fab.addEventListener('click', function() {
+                    window.location.href = `/employee/staffFeedbackList?quarter=${quarter}`;
+                });
+                
+                // Add a pulse animation to notification bell
+                notificationBell.classList.add('pulse-animation');
+                setTimeout(() => {
+                    notificationBell.classList.remove('pulse-animation');
+                }, 3000);
+                
+                // Increment notification count for the feedback
+                const currentCount = parseInt(notificationCount.textContent || '0');
+                notificationCount.textContent = currentCount + 1;
+                
+                hasActiveFeedback = true;
+                return true;
+            } else {
+                console.log("No active feedback or error in response:", data.message);
+                hasActiveFeedback = false;
+                return false;
+            }
+        } catch (error) {
+            console.error("Error while fetching 360 feedback data:", error);
+            hasActiveFeedback = false;
+            return false;
+        }
+    }
 
     // Function to fetch notifications from the server
     async function fetchNotifications() {
@@ -506,15 +640,23 @@ body {
         // Load notification data when panel is opened
         if (notificationPanel.classList.contains('open')) {
             try {
-                // Show loading indicators
+                // First check for 360 feedback
+                await fetch360Feedback();
+                
+                // Show loading indicators for other sections
                 document.getElementById('section-2').innerHTML = '<h4>Leave Request Updates</h4><div class="loading-indicator"><div class="spinner"></div></div>';
                 document.getElementById('section-3').innerHTML = '<h4>Performance Updates</h4><div class="loading-indicator"><div class="spinner"></div></div>';
                 
-                // Fetch notifications
+                // Fetch regular notifications
                 const notificationData = await fetchNotifications();
                 
                 // Update notification count
-                notificationCount.textContent = notificationData.notificationCount;
+                // If we have active feedback, we need to account for it in the count
+                const adjustedCount = hasActiveFeedback ? 
+                    notificationData.notificationCount + 1 : 
+                    notificationData.notificationCount;
+                
+                notificationCount.textContent = adjustedCount;
                 
                 // Update leave requests section
                 updateLeaveRequestsSection(notificationData.leaveRequests);
@@ -587,23 +729,28 @@ body {
         });
     });
 
-    // Floating action button functionality
-    fab.addEventListener('click', () => {
-        console.log('Floating Action Button clicked');
-        // For employees, redirect to a different page
-        window.location.href = '/employee/leaverequest';
-    });
+    // Floating action button functionality - Default handler is defined above
+    // We'll set this up after checking for active feedback
 
     // Function to periodically check for new notifications
     async function checkNotifications() {
         try {
+            // First check for 360 feedback
+            await fetch360Feedback();
+            
+            // Then get regular notifications
             const notificationData = await fetchNotifications();
             
+            // Calculate total count
+            const totalCount = hasActiveFeedback ? 
+                notificationData.notificationCount + 1 : 
+                notificationData.notificationCount;
+            
             // Check if there are new notifications
-            checkForNewNotifications(notificationData.notificationCount);
+            checkForNewNotifications(totalCount);
             
             // Update the notification count
-            notificationCount.textContent = notificationData.notificationCount;
+            notificationCount.textContent = totalCount;
             
         } catch (error) {
             console.error('Error checking for notifications:', error);
@@ -635,7 +782,15 @@ body {
                 console.warn('Font Awesome may not be loaded correctly. Check the CDN link.');
             }
             
-            // Initial notification check
+            // First check for active 360 feedback
+            await fetch360Feedback();
+            
+            // If no active feedback, set up default FAB behavior
+            if (!hasActiveFeedback) {
+                fab.addEventListener('click', fabDefaultHandler);
+            }
+            
+            // Then check for regular notifications 
             await checkNotifications();
             
             // Set up periodic notification checks (every 5 minutes)
@@ -644,6 +799,9 @@ body {
         } catch (error) {
             console.error('Error loading initial notification count:', error);
             notificationCount.textContent = '0';
+            
+            // Ensure FAB has default behavior even if there's an error
+            fab.addEventListener('click', fabDefaultHandler);
         }
     });
 </script>

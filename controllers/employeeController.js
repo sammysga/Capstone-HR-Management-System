@@ -1861,115 +1861,190 @@ getViewPerformanceTimeline: function(req, res){
         res.redirect('/staff/login');
     }
 },
-// get360FeedbackToast: async function(req, res) {
-//     try {
-//         console.log("Entering get360Feedback function");
 
-//         // Step 1: Get today's date in the Philippines Time Zone (PHT) and format it to 'YYYY-MM-DD'
-//         const today = new Date();
-//         const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
-//         const formatter = new Intl.DateTimeFormat('en-US', options);
-//         const parts = formatter.formatToParts(today);
 
-//         const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
 
-//         const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4']; // List of feedback tables
-//         let activeFeedback = null;
+/* NOTIFICATION DIVIDER */
 
-//         // Step 2: Fetch the current user's department ID
-//         const currentUserId = req.session?.user?.userId;
 
-//         if (!currentUserId) {
-//             console.error("Error: No user ID available in session.");
-//             return res.status(400).json({ message: 'User  ID is required.' });
-//         }
+get360FeedbackToast: async function(req, res) {
+    try {
+        console.log("Entering get360FeedbackToast function for employee");
 
-//         const { data: currentUserData, error: userError } = await supabase
-//             .from('staffaccounts')
-//             .select('departmentId')
-//             .eq('userId', currentUserId)
-//             .single();
+        // Step 1: Get today's date in the Philippines Time Zone (PHT) and format it to 'YYYY-MM-DD'
+        const today = new Date();
+        const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const parts = formatter.formatToParts(today);
 
-//         if (userError || !currentUserData) {
-//             console.error("Error fetching user details:", userError);
-//             return res.status(404).json({ message: 'User  details not found.' });
-//         }
+        const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
 
-//         const { departmentId } = currentUserData;
+        const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4']; // List of feedback tables
+        let activeFeedback = null;
 
-//         // Step 3: Loop through each feedback table (Q1 to Q4) and fetch the active feedback record
-//         for (const feedbackTable of feedbackTables) {
-//             console.log(`Fetching data from table: ${feedbackTable}...`);
+        // Step 2: Fetch the current user's department ID
+        const currentUserId = req.session?.user?.userId;
 
-//             const { data, error } = await supabase
-//                 .from(feedbackTable)
-//                 .select('*')
-//                 .gte('setStartDate', todayString) // Ensure setStartDate is today or in the future
-//                 .gt('setEndDate', todayString); // Ensure setEndDate is in the future
+        if (!currentUserId) {
+            console.error("Error: No user ID available in session.");
+            return res.status(400).json({ success: false, message: 'User ID is required.' });
+        }
 
-//             if (error) {
-//                 console.error(`Error fetching data from ${feedbackTable}:`, error);
-//                 continue; // Skip to the next table if there's an error with the current table
-//             }
+        const { data: currentUserData, error: userError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', currentUserId)
+            .single();
 
-//             // Check if data is found and set activeFeedback
-//             if (data && data.length > 0) {
-//                 console.log(`Data fetched from ${feedbackTable}:`, data);
+        if (userError || !currentUserData) {
+            console.error("Error fetching user details:", userError);
+            return res.status(404).json({ success: false, message: 'User details not found.' });
+        }
 
-//                 // Step 4: Filter userIds to only include those in the same department
-//                 const departmentUserIds = [];
+        const { departmentId } = currentUserData;
 
-//                 for (const record of data) {
-//                     const { data: userData, error: userFetchError } = await supabase
-//                         .from('staffaccounts')
-//                         .select('departmentId')
-//                         .eq('userId', record.userId)
-//                         .single();
+        // Step 3: Loop through each feedback table (Q1 to Q4) and fetch the active feedback record
+        for (const feedbackTable of feedbackTables) {
+            console.log(`Fetching data from table: ${feedbackTable}...`);
 
-//                     if (userFetchError || !userData) {
-//                         console.error("Error fetching user details:", userFetchError);
-//                         continue; // Skip if there's an error
-//                     }
+            const { data, error } = await supabase
+                .from(feedbackTable)
+                .select('*')
+                .lte('setStartDate', todayString) // Check for feedback periods that started today or earlier
+                .gte('setEndDate', todayString);  // Check for feedback periods that end today or later
 
-//                     if (userData.departmentId === departmentId) {
-//                         departmentUserIds.push(record); // Store the entire record if the department matches
-//                     }
-//                 }
+            if (error) {
+                console.error(`Error fetching data from ${feedbackTable}:`, error);
+                continue; // Skip to the next table if there's an error with the current table
+            }
 
-//                 if (departmentUserIds.length > 0) {
-//                     activeFeedback = departmentUserIds[0]; // Assuming only one active feedback per table
-//                     break; // Stop searching once an active feedback is found
-//                 } else {
-//                     console.log(`No active feedback found for the current user's department in ${feedbackTable}.`);
-//                 }
-//             } else {
-//                 console.log(`No data found in ${feedbackTable}.`);
-//             }
-//         }
+            // Check if data is found and set activeFeedback
+            if (data && data.length > 0) {
+                console.log(`Data fetched from ${feedbackTable}:`, data);
 
-//         // Ensure the logic is correct for date matching
-//         console.log(`Today's Date: ${todayString}`);
-//         console.log('Active Feedback Record:', activeFeedback);
+                // Step 4: Filter userIds to only include those in the same department
+                const departmentUserIds = [];
 
-//         // Step 5: Check if any active feedback record was found
-//         if (!activeFeedback) {
-//             console.log('No active feedback records found for the given date range.');
-//             return res.status(404).json({ success: false, message: 'No active feedback records found for the given date range.' });
-//         }
+                for (const record of data) {
+                    const { data: userData, error: userFetchError } = await supabase
+                        .from('staffaccounts')
+                        .select('departmentId')
+                        .eq('userId', record.userId)
+                        .single();
 
-//         // Step 6: Return the active feedback record
-//         console.log('Active feedback found:', activeFeedback);
+                    if (userFetchError || !userData) {
+                        console.error("Error fetching user details:", userFetchError);
+                        continue; // Skip if there's an error
+                    }
 
-//         // Assuming the quarter is fetched from the record
-//         const quarter = activeFeedback.quarter; // Adjust to get the actual quarter from the data
+                    if (userData.departmentId === departmentId) {
+                        departmentUserIds.push(record); // Store the entire record if the department matches
+                    }
+                }
 
-//         return res.status(200).json({ success: true, feedback: activeFeedback, quarter });
+                if (departmentUserIds.length > 0) {
+                    activeFeedback = departmentUserIds[0]; // Assuming only one active feedback per table
+                    // Extract the quarter from the table name (e.g., 'feedbacks_Q1' -> 'Q1')
+                    const tableQuarter = feedbackTable.split('_')[1];
+                    activeFeedback.quarter = tableQuarter;
+                    break; // Stop searching once an active feedback is found
+                } else {
+                    console.log(`No active feedback found for the current user's department in ${feedbackTable}.`);
+                }
+            } else {
+                console.log(`No data found in ${feedbackTable}.`);
+            }
+        }
 
-//     } catch (error) {
-//         console.error('Error in get360Feedback:', error);
-//         return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
-//     }
-// },
+        // Ensure the logic is correct for date matching
+        console.log(`Today's Date: ${todayString}`);
+        console.log('Active Feedback Record:', activeFeedback);
+
+        // Step 5: Check if any active feedback record was found
+        if (!activeFeedback) {
+            console.log('No active feedback records found for the given date range.');
+            return res.status(404).json({ 
+                success: false, 
+                message: 'No active feedback records found for the given date range.' 
+            });
+        }
+
+        // Step 6: Return the active feedback record with additional user ID for the frontend
+        return res.status(200).json({ 
+            success: true, 
+            feedback: activeFeedback, 
+            quarter: activeFeedback.quarter,
+            userId: currentUserId
+        });
+
+    } catch (error) {
+        console.error('Error in get360FeedbackToast:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while fetching feedback data.', 
+            error: error.message 
+        });
+    }
+},
+
+getFeedbackUsers: async function(req, res) {
+    const currentUserId = req.session?.user?.userId;
+    const quarter = req.query.quarter || null;
+
+    if (!currentUserId) {
+        console.error("Error: No user ID available in session.");
+        return res.status(400).json({ message: 'User ID is required.' });
+    }
+
+    try {
+        // Your existing code...
+        
+        // Determine which feedback table to query based on quarter parameter
+        let feedbackTable;
+        let feedbackIdField;
+        
+        if (quarter === 'Q1') {
+            feedbackTable = 'feedbacks_Q1';
+            feedbackIdField = 'feedbackq1_Id';
+        } else if (quarter === 'Q2') {
+            feedbackTable = 'feedbacks_Q2';
+            feedbackIdField = 'feedbackq2_Id';
+        } else if (quarter === 'Q3') {
+            feedbackTable = 'feedbacks_Q3';
+            feedbackIdField = 'feedbackq3_Id';
+        } else if (quarter === 'Q4') {
+            feedbackTable = 'feedbacks_Q4';
+            feedbackIdField = 'feedbackq4_Id';
+        } else {
+            // If no quarter specified, use today's date to determine the quarter
+            const today = new Date();
+            const month = today.getMonth() + 1; // getMonth() returns 0-11
+            
+            if (month <= 3) {
+                feedbackTable = 'feedbacks_Q1';
+                feedbackIdField = 'feedbackq1_Id';
+            } else if (month <= 6) {
+                feedbackTable = 'feedbacks_Q2';
+                feedbackIdField = 'feedbackq2_Id';
+            } else if (month <= 9) {
+                feedbackTable = 'feedbacks_Q3';
+                feedbackIdField = 'feedbackq3_Id';
+            } else {
+                feedbackTable = 'feedbacks_Q4';
+                feedbackIdField = 'feedbackq4_Id';
+            }
+        }
+        
+        // Continue with your existing logic but focus on the selected quarter's table
+        // ...
+        
+        // Continue with rest of your function
+    } catch (error) {
+        console.error('Error in getFeedbackUsers:', error);
+        return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
+    }
+},
+
 getNotificationSection_360DegreeFeedback: async function(req, res) {
     try {
         console.log("Entering getNotificationSection_360DegreeFeedback function");
@@ -2086,214 +2161,7 @@ getNotificationSection_360DegreeFeedback: async function(req, res) {
         return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
     }
 },
-getFeedbackUsers: async function(req, res) {
-    const currentUserId = req.session?.user?.userId;
-    const quarter = req.query.quarter || null;
 
-    if (!currentUserId) {
-        console.error("Error: No user ID available in session.");
-        return res.status(400).json({ message: 'User  ID is required.' });
-    }
-
-    try {
-        // Fetch current user data
-        const { data: currentUserData, error: userError } = await supabase
-            .from('staffaccounts')
-            .select(`
-                userId, 
-                firstName, 
-                lastName, 
-                departmentId, 
-                jobId,
-                departments (deptName),
-                jobpositions (jobTitle)
-            `)
-            .eq('userId', currentUserId)
-            .single();
-
-        if (userError || !currentUserData) {
-            console.error("Error fetching user details:", userError);
-            return res.status(404).json({ message: 'User  details not found.' });
-        }
-
-        console.log("Fetched current user data:", currentUserData);
-
-        const { departmentId, jobpositions: { jobTitle } = {}, departments: { deptName } = {} } = currentUserData;
-
-        if (!departmentId) {
-            console.error("Error: No department ID found.");
-            return res.status(404).json({ message: 'Department ID not found for the user.' });
-        }
-
-        // Get today's date in the Philippines Time Zone (PHT)
-        const today = new Date();
-        const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
-        const formatter = new Intl.DateTimeFormat('en-US', options);
-        const parts = formatter.formatToParts(today);
-        const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
-
-        console.log("Today's date (PHT):", todayString);
-
-        // Define feedback tables and their corresponding ID fields
-        const feedbackTables = [
-            { name: 'feedbacks_Q1', idField: 'feedbackq1_Id' },
-            { name: 'feedbacks_Q2', idField: 'feedbackq2_Id' },
-            { name: 'feedbacks_Q3', idField: 'feedbackq3_Id' },
-            { name: 'feedbacks_Q4', idField: 'feedbackq4_Id' }
-        ];
-        let usersInDepartment = new Set(); // To store unique user IDs
-        let feedbackList = [];
-
-        // Fetch all user IDs from the feedback tables
-        for (const { name, idField } of feedbackTables) {
-            console.log(`Fetching data from table: ${name}...`);
-
-            const { data, error } = await supabase
-                .from(name)
-                .select(`userId, setStartDate, setEndDate, ${idField}`)
-                .gte('setStartDate', todayString)
-                .gt('setEndDate', todayString);
-
-            if (error) {
-                console.error(`Error fetching data from ${name}:`, error);
-                continue; // Skip if there's an error
-            }
-
-            console.log(`Fetched ${data.length} records from ${name}:`, data);
-            if (data && data.length > 0) {
-                data.forEach(record => {
-                    usersInDepartment.add(record.userId);
-                    feedbackList.push({ ...record, sourceTable: name, feedbackIdField: idField });
-                });
-            }
-        }
-
-        if (usersInDepartment.size === 0) {
-            console.warn("No feedback data found.");
-            return res.status(404).json({ message: 'No feedback data found.' });
-        }
-
-        // Convert Set back to Array
-        const usersArray = Array.from(usersInDepartment);
-        console.log("Users in department:", usersArray);
-
-        // Fetch user details for all users in the department
-       
-        const { data: usersDetails, error: usersError } = await supabase
-            .from('staffaccounts')
-            .select('userId, firstName, lastName')
-            .in('userId', usersArray);
-
-        if (usersError) {
-            console.error("Error fetching user details:", usersError);
-            return res.status(500).json({ message: 'Error fetching user details.' });
-        }
-
-        console.log("Fetched user details for department:", usersDetails);
-
-        // Initialize feedbackDetails array
-        let feedbackDetails = [];
-
-        for (const feedback of feedbackList) {
-            const feedbackIdValue = feedback[feedback.feedbackIdField];
-
-            console.log(`Feedback Record:`, feedback);
-            console.log(` Source Table: ${feedback.sourceTable}`);
-            console.log(`Feedback ID Field: ${feedback.feedbackIdField}`);
-            console.log(`Feedback ID Value: ${feedbackIdValue}`);
-
-            if (!feedbackIdValue) {
-                console.error(`Error: Feedback ID is undefined for record:`, feedback);
-                continue;
-            }
-
-            // Fetch linked objectives for the feedback
-            const { data: objectives, error: objectivesError } = await supabase
-                .from('feedbacks_questions-objectives')
-                .select('objectiveId, objectiveQualiQuestion')
-                .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
-
-            if (objectivesError) {
-                console.error(`Error fetching objectives for feedback ID ${feedbackIdValue}:`, objectivesError);
-                continue;
-            }
-
-            console.log(`Fetched ${objectives.length} objectives for feedback ID ${feedbackIdValue}:`, objectives);
-
-            // Fetch linked skills for the feedback
-            const { data: skills, error: skillsError } = await supabase
-                .from('feedbacks_questions-skills')
-                .select('jobReqSkillId')
-                .or(`feedbackq1_Id.eq.${feedbackIdValue},feedbackq2_Id.eq.${feedbackIdValue},feedbackq3_Id.eq.${feedbackIdValue},feedbackq4_Id.eq.${feedbackIdValue}`);
-
-            if (skillsError) {
-                console.error(`Error fetching skills for feedback ID ${feedbackIdValue}:`, skillsError);
-                continue;
-            }
-
-            console.log(`Fetched ${skills.length} skills for feedback ID ${feedbackIdValue}:`, skills);
-
-            // Fetch additional details for objectives
-            const objectiveIds = objectives.map(obj => obj.objectiveId);
-            let objectiveDetails = [];
-            if (objectiveIds.length > 0) {
-                const { data: objectiveSettings, error: objectiveError } = await supabase
-                    .from('objectivesettings_objectives')
-                    .select('*')
-                    .in('objectiveId', objectiveIds);
-
-                if (objectiveError) {
-                    console.error('Error fetching objective settings:', objectiveError);
-                } else {
-                    objectiveDetails = objectiveSettings;
-                    console.log(`Fetched objective details for IDs ${objectiveIds}:`, objectiveDetails);
-                }
-            }
-
-            // Fetch additional details for skills
-            const skillIds = skills.map(skill => skill.jobReqSkillId);
-            let skillDetails = [];
-            if (skillIds.length > 0) {
-                const { data: jobSkills, error: skillError } = await supabase
-                    .from('jobreqskills')
-                    .select('*')
-                    .in('jobReqSkillId', skillIds);
-
-                if (skillError) {
-                    console.error('Error fetching job skills:', skillError);
-                } else {
-                    skillDetails = jobSkills;
-                    console.log(`Fetched skill details for IDs ${skillIds}:`, skillDetails);
-                }
-            }
-
-            feedbackDetails.push({
-                feedback,
-                objectives,
-                skills,
-                objectiveDetails,
-                skillDetails
-            });
-        }
-
-        // Render the EJS template with the user and feedback details
-        return res.render('staffpages/employee_pages/employeefeedbackquestionnaire', {
-            user: {
-                userId: currentUserId,
-                firstName: currentUserData.firstName,
-                lastName: currentUserData.lastName,
-                jobTitle: jobTitle,
-                deptName: deptName,
-                departmentId: departmentId
-            },
-            usersArray: usersDetails,
-            feedbackDetails
-        });
-    } catch (error) {
-        console.error('Error in getFeedbackUsers:', error);
-        return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
-    }
-},
 get360FeedbackList: async function (req, res) {
     const currentUserId = req.session?.user?.userId;
     const quarter = req.query.quarter || null;
