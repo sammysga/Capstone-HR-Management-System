@@ -230,8 +230,10 @@ router.post('/linemanager/applicant-tracker-jobposition/markAsP3Failed', lineMan
 // Notification routes
 router.get('/api/employee/notifications', employeeController.getEmployeeNotifications);
 router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
-router.get('/employee/staffFeedbackList', employeeController.getFeedbackUsers);
-router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
+
+router.get('/employee/staffFeedbackList', employeeController.staffFeedbackList);
+router.get('/employee/api/getQuestionnaireData', employeeController.getQuestionnaireData);
+router.post('/employee/api/submitFeedback', employeeController.submitFeedback);
 
 router.get('/api/linemanager/notifications', lineManagerController.getLineManagerNotifications);
 router.get('/api/get360FeedbackToast', lineManagerController.get360FeedbackToast);

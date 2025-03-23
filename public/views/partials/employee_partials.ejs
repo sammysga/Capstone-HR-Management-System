@@ -389,10 +389,11 @@ body {
             console.log("Received 360 feedback response:", data);
             
             if (data.success && data.feedback) {
-                // Get the feedback data
-                const feedback = data.feedback;
-                const quarter = data.quarter || '';
-                activeFeedbackQuarter = quarter;
+    // Get the feedback data
+    const feedback = data.feedback;
+    const quarter = data.quarter || '';
+    console.log('Active quarter detected:', quarter); // Debug statement
+    activeFeedbackQuarter = quarter;
                 
                 // Format dates for display
                 const startDate = new Date(feedback.setStartDate).toLocaleDateString('en-US', {
@@ -447,11 +448,13 @@ body {
                     </div>
                 `;
                 
-                // Add click event for the action button
-                document.getElementById('feedback-action-btn').addEventListener('click', function() {
-                    window.location.href = `/employee/staffFeedbackList?quarter=${quarter}`;
-                });
-                
+// In your notification bell script
+document.getElementById('feedback-action-btn').addEventListener('click', function() {
+    console.log('Feedback action button clicked');
+    console.log('Quarter value:', activeFeedbackQuarter);
+    console.log('Redirecting to:', `/employee/staffFeedbackList?quarter=${activeFeedbackQuarter}`);
+    window.location.href = `/employee/staffFeedbackList?quarter=${activeFeedbackQuarter}`;
+});
                 // Update the FAB to point to the feedback page
                 fab.innerHTML = '<i class="fas fa-clipboard-list"></i>';
                 
