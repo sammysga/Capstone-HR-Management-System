@@ -42,11 +42,29 @@
             background-color: #ddd;
             cursor: pointer;
         }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .status-pending {
+            background-color: #FFC107;
+            color: #333;
+        }
+        .status-completed-employee {
+            background-color: #2196F3;
+            color: white;
+        }
+        .status-completed {
+            background-color: #4CAF50;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <%- include('../../partials/hr_partials') %>
-
     <div class="main-content">
         <h1 class="account-info-header">Offboarding Requests</h1>
         <table class="requests-table">
@@ -64,7 +82,15 @@
                         <tr onclick="window.location.href='/hr/view-offboarding-request/<%= request.userId %>';">
                             <td><%= request.staffName %></td>
                             <td><%= request.department %></td>
-                            <td><%= request.status %></td>
+                            <td>
+                                <span class="status-badge 
+                                    <%= request.status === 'Pending HR' ? 'status-pending' : 
+                                    request.status === 'Sent to Employee' ? 'status-awaiting' :
+                                    request.status === 'Completed by Employee' ? 'status-completed-employee' : 
+                                    request.status === 'Completed' ? 'status-completed' : 'status-pending' %>">
+                                    <%= request.status %>
+                                </span>
+                            </td>
                             <td><%= new Date(request.last_day).toLocaleDateString() %></td>
                         </tr>
                     <% }); %>
@@ -84,7 +110,6 @@
             this.classList.add('active');
         });
     });
-
     // Toggle collapsible content
     document.querySelectorAll('.collapsible-header').forEach(header => {
         header.addEventListener('click', function() {
