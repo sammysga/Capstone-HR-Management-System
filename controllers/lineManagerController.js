@@ -2614,6 +2614,443 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             res.redirect('/linemanager/records-performance-tracker');
         }
     },    
+
+    saveMidYearIDP: async function(req, res) {
+        try {
+            // Get the user ID from the route parameters or form submission
+            const userId = req.params.userId || req.body.userId;
+            console.log("Starting saveMidYearIDP for userId:", userId);
+    
+            if (!userId) {
+                console.error("User ID is missing");
+                return res.status(400).json({ success: false, message: "User ID is required" });
+            }
+    
+            // Get all form fields from the request body
+            const {
+                profStrengths,
+                profAreasForDevelopment,
+                profActionsToTake,
+                leaderStrengths,
+                leaderAreasForDevelopment,
+                leaderActionsToTake,
+                nextRoleShortTerm,
+                nextRoleLongTerm,
+                nextRoleMobility
+            } = req.body;
+    
+            console.log("Received form data:", req.body);
+    
+            // Check if there's already an entry for this user
+            const { data: existingRecord, error: checkError } = await supabase
+                .from("midyearidps")
+                .select("midyearidpId")
+                .eq("userId", userId)
+                .single();
+    
+            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+                console.error("Error checking for existing midyearidp:", checkError);
+                return res.status(500).json({ success: false, message: "Error checking for existing record" });
+            }
+    
+            let result;
+            if (existingRecord) {
+                // Update existing record
+                console.log("Updating existing midyearidp record:", existingRecord.midyearidpId);
+                const { data, error } = await supabase
+                    .from("midyearidps")
+                    .update({
+                        profStrengths,
+                        profAreasForDevelopment,
+                        profActionsToTake,
+                        leaderStrengths,
+                        leaderAreasForDevelopment,
+                        leaderActionsToTake,
+                        nextRoleShortTerm,
+                        nextRoleLongTerm,
+                        nextRoleMobility
+                    })
+                    .eq("midyearidpId", existingRecord.midyearidpId);
+    
+                if (error) {
+                    console.error("Error updating midyearidp:", error);
+                    return res.status(500).json({ success: false, message: error.message });
+                }
+                
+                result = data;
+            } else {
+                // Create new record
+                console.log("Creating new midyearidp record for userId:", userId);
+                const { data, error } = await supabase
+                    .from("midyearidps")
+                    .insert({
+                        userId,
+                        profStrengths,
+                        profAreasForDevelopment,
+                        profActionsToTake,
+                        leaderStrengths,
+                        leaderAreasForDevelopment,
+                        leaderActionsToTake,
+                        nextRoleShortTerm,
+                        nextRoleLongTerm,
+                        nextRoleMobility
+                    })
+                    .select();
+    
+                if (error) {
+                    console.error("Error inserting midyearidp:", error);
+                    return res.status(500).json({ success: false, message: error.message });
+                }
+                
+                result = data;
+            }
+    
+            console.log("Mid-Year IDP saved successfully:", result);
+    
+            // If it's an API request (AJAX), return JSON
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(200).json({ 
+                    success: true, 
+                    message: "Mid-Year IDP saved successfully" 
+                });
+            }
+    
+            // Otherwise, redirect to the user's records page with success message
+            req.flash('success', 'Mid-Year IDP submitted successfully!');
+            return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
+    
+        } catch (error) {
+            console.error("Error in saveMidYearIDP:", error);
+            
+            // If it's an API request (AJAX), return JSON error
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "An error occurred while saving the Mid-Year IDP",
+                    error: error.message 
+                });
+            }
+    
+            // Otherwise, redirect with error message
+            req.flash('errors', { dbError: 'An error occurred while saving the Mid-Year IDP.' });
+            return res.redirect(`/linemanager/midyear-idp/${req.params.userId || req.body.userId}`);
+        }
+    },
+
+    saveFinalYearIDP: async function(req, res) {
+        try {
+            // Get the user ID from the route parameters or form submission
+            const userId = req.params.userId || req.body.userId;
+            console.log("Starting saveFinalYearIDP for userId:", userId);
+    
+            if (!userId) {
+                console.error("User ID is missing");
+                return res.status(400).json({ success: false, message: "User ID is required" });
+            }
+    
+            // Get all form fields from the request body
+            const {
+                profStrengths,
+                profAreasForDevelopment,
+                profActionsToTake,
+                leaderStrengths,
+                leaderAreasForDevelopment,
+                leaderActionsToTake,
+                nextRoleShortTerm,
+                nextRoleLongTerm,
+                nextRoleMobility
+            } = req.body;
+    
+            console.log("Received form data:", req.body);
+    
+            // Check if there's already an entry for this user
+            const { data: existingRecord, error: checkError } = await supabase
+                .from("finalyearidps")
+                .select("finalyearidpId")
+                .eq("userId", userId)
+                .single();
+    
+            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+                console.error("Error checking for existing finalyearidp:", checkError);
+                return res.status(500).json({ success: false, message: "Error checking for existing record" });
+            }
+    
+            let result;
+            if (existingRecord) {
+                // Update existing record
+                console.log("Updating existing finalyearidp record:", existingRecord.finalyearidpId);
+                const { data, error } = await supabase
+                    .from("finalyearidps")
+                    .update({
+                        profStrengths,
+                        profAreasForDevelopment,
+                        profActionsToTake,
+                        leaderStrengths,
+                        leaderAreasForDevelopment,
+                        leaderActionsToTake,
+                        nextRoleShortTerm,
+                        nextRoleLongTerm,
+                        nextRoleMobility
+                    })
+                    .eq("finalyearidpId", existingRecord.finalyearidpId);
+    
+                if (error) {
+                    console.error("Error updating finalyearidp:", error);
+                    return res.status(500).json({ success: false, message: error.message });
+                }
+                
+                result = data;
+            } else {
+                // Create new record
+                console.log("Creating new finalyearidp record for userId:", userId);
+                const { data, error } = await supabase
+                    .from("finalyearidps")
+                    .insert({
+                        userId,
+                        // Removed both jobId and year fields since they don't exist in the table
+                        profStrengths,
+                        profAreasForDevelopment,
+                        profActionsToTake,
+                        leaderStrengths,
+                        leaderAreasForDevelopment,
+                        leaderActionsToTake,
+                        nextRoleShortTerm,
+                        nextRoleLongTerm,
+                        nextRoleMobility
+                    })
+                    .select();
+    
+                if (error) {
+                    console.error("Error inserting finalyearidp:", error);
+                    return res.status(500).json({ success: false, message: error.message });
+                }
+                
+                result = data;
+            }
+    
+            console.log("Final-Year IDP saved successfully:", result);
+    
+            // If it's an API request (AJAX), return JSON
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(200).json({ 
+                    success: true, 
+                    message: "Final-Year IDP saved successfully" 
+                });
+            }
+    
+            // Otherwise, redirect to the user's records page with success message
+            req.flash('success', 'Final-Year IDP submitted successfully!');
+            return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
+    
+        } catch (error) {
+            console.error("Error in saveFinalYearIDP:", error);
+            
+            // If it's an API request (AJAX), return JSON error
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "An error occurred while saving the Final-Year IDP",
+                    error: error.message 
+                });
+            }
+    
+            // Otherwise, redirect with error message
+            req.flash('errors', { dbError: 'An error occurred while saving the Final-Year IDP.' });
+            return res.redirect(`/linemanager/finalyear-idp/${req.params.userId || req.body.userId}`);
+        }
+    },
+
+    getMidYearIDP: async function(req, res) {
+        try {
+            const userId = req.params.userId;
+            console.log("Fetching Mid-Year IDP for userId:", userId);
+    
+            if (!userId) {
+                console.error("User ID is missing");
+                return res.status(400).json({ success: false, message: "User ID is required" });
+            }
+    
+            // First, get user information
+            const { data: userData, error: userError } = await supabase
+                .from("useraccounts")
+                .select(`
+                    userId,
+                    userEmail,
+                    staffaccounts (
+                        firstName,
+                        lastName,
+                        jobId,
+                        departmentId,
+                        departments (deptName),
+                        jobpositions (jobTitle)
+                    )
+                `)
+                .eq("userId", userId)
+                .single();
+    
+            if (userError) {
+                console.error("Error fetching user data:", userError);
+                return res.status(500).json({ success: false, message: "Error fetching user data" });
+            }
+    
+            // Then, get the Mid-Year IDP data
+            const { data: midYearData, error: midYearError } = await supabase
+                .from("midyearidps")
+                .select("*")
+                .eq("userId", userId)
+                .single();
+    
+            if (midYearError && midYearError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+                console.error("Error fetching midyear IDP:", midYearError);
+                return res.status(500).json({ success: false, message: "Error fetching midyear IDP data" });
+            }
+    
+            // Format the user data
+            const user = {
+                userId: userData.userId,
+                userEmail: userData.userEmail,
+                firstName: userData.staffaccounts[0]?.firstName || "",
+                lastName: userData.staffaccounts[0]?.lastName || "",
+                jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || "",
+                departmentName: userData.staffaccounts[0]?.departments?.deptName || ""
+            };
+    
+            // Determine view state - whether to show form or view-only mode
+            const viewState = {
+                viewOnlyStatus: {
+                    midyearidp: !!midYearData // true if midYearData exists, false otherwise
+                },
+                midYearData // Pass the data for view-only mode
+            };
+    
+            // If it's an API request (AJAX), return JSON
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(200).json({ 
+                    success: true, 
+                    user,
+                    viewState
+                });
+            }
+    
+            // Otherwise, render the midyear IDP page
+            return res.render('staffpages/linemanager_pages/midyear-idp', { 
+                user,
+                viewState
+            });
+    
+        } catch (error) {
+            console.error("Error in getMidYearIDP:", error);
+            
+            // If it's an API request (AJAX), return JSON error
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "An error occurred while fetching the Mid-Year IDP",
+                    error: error.message 
+                });
+            }
+    
+            // Otherwise, redirect with error message
+            req.flash('errors', { dbError: 'An error occurred while loading the Mid-Year IDP.' });
+            return res.redirect('/linemanager/records-performance-tracker');
+        }
+    },
+
+    getFinalYearIDP: async function(req, res) {
+        try {
+            const userId = req.params.userId;
+            console.log("Fetching Final-Year IDP for userId:", userId);
+    
+            if (!userId) {
+                console.error("User ID is missing");
+                return res.status(400).json({ success: false, message: "User ID is required" });
+            }
+    
+            // First, get user information
+            const { data: userData, error: userError } = await supabase
+                .from("useraccounts")
+                .select(`
+                    userId,
+                    userEmail,
+                    staffaccounts (
+                        firstName,
+                        lastName,
+                        departmentId,
+                        departments (deptName),
+                        jobpositions (jobTitle)
+                    )
+                `)
+                .eq("userId", userId)
+                .single();
+    
+            if (userError) {
+                console.error("Error fetching user data:", userError);
+                return res.status(500).json({ success: false, message: "Error fetching user data" });
+            }
+    
+            // Then, get the Final-Year IDP data - without filtering by job or year
+            const { data: finalYearData, error: finalYearError } = await supabase
+                .from("finalyearidps")
+                .select("*")
+                .eq("userId", userId)
+                .single();
+    
+            if (finalYearError && finalYearError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+                console.error("Error fetching finalyear IDP:", finalYearError);
+                return res.status(500).json({ success: false, message: "Error fetching finalyear IDP data" });
+            }
+    
+            // Format the user data
+            const user = {
+                userId: userData.userId,
+                userEmail: userData.userEmail,
+                firstName: userData.staffaccounts[0]?.firstName || "",
+                lastName: userData.staffaccounts[0]?.lastName || "",
+                jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || "",
+                departmentName: userData.staffaccounts[0]?.departments?.deptName || ""
+                // Removed jobId from the user object
+            };
+    
+            // Determine view state - whether to show form or view-only mode
+            const viewState = {
+                viewOnlyStatus: {
+                    finalyearidp: !!finalYearData // true if finalYearData exists, false otherwise
+                },
+                finalYearData // Pass the data for view-only mode
+            };
+    
+            // If it's an API request (AJAX), return JSON
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(200).json({ 
+                    success: true, 
+                    user,
+                    viewState
+                });
+            }
+    
+            // Otherwise, render the finalyear IDP page
+            return res.render('staffpages/linemanager_pages/finalyear-idp', { 
+                user,
+                viewState
+            });
+    
+        } catch (error) {
+            console.error("Error in getFinalYearIDP:", error);
+            
+            // If it's an API request (AJAX), return JSON error
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "An error occurred while fetching the Final-Year IDP",
+                    error: error.message 
+                });
+            }
+    
+            // Otherwise, redirect with error message
+            req.flash('errors', { dbError: 'An error occurred while loading the Final-Year IDP.' });
+            return res.redirect('/linemanager/records-performance-tracker');
+        }
+    },
     
     // getUserProgressView: async function(req, res) {
     //     const user = req.user;
