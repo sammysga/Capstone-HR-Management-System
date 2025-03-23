@@ -161,58 +161,39 @@ getJobDetailsTitle: async function(req, res) {
 },
     
     // Fixed version of the getJobDetails method that takes a jobTitle parameter
-getJobDetailsById: async function(jobTitle) {
-    try {
-        const { data: jobDetails, error } = await supabase
-            .from('jobpositions')
-            .select(`
-                jobId, jobTitle, jobDescrpt, departmentId,
-                jobreqcertifications(jobReqCertificateType, jobReqCertificateDescrpt),
-                jobreqdegrees(jobReqDegreeType, jobReqDegreeDescrpt),
-                jobreqexperiences(jobReqExperienceType, jobReqExperienceDescrpt),
-                jobreqskills(jobReqSkillType, jobReqSkillName)
-            `)
-            .eq('jobTitle', jobTitle);
-
-        if (error) {
-            console.error('Error fetching job details by title:', error);
-            return null;
-        }
-        
-        // Check if any jobs were found
-        if (!jobDetails || jobDetails.length === 0) {
-            console.error('No job found with title:', jobTitle);
-            return null;
-        }
-        
-        // Take the first matching job
-        const job = jobDetails[0];
-        
-        // Ensure all arrays exist even if they're empty
-        return {
-            ...job,
-            jobreqcertifications: job.jobreqcertifications || [],
-            jobreqdegrees: job.jobreqdegrees || [],
-            jobreqexperiences: job.jobreqexperiences || [],
-            jobreqskills: job.jobreqskills || []
-        };
-    } catch (error) {
-        console.error('Server error in getJobDetailsById:', error);
-        return null;
-    }
-},
-
-    
     getActiveJobPositionsList: async function() {
         try {
             const today = new Date().toISOString().split('T')[0]; // Get today's date in "YYYY-MM-DD" format
-    
+            console.log('Today date for comparison:', today);
+            
+            // First, let's fetch ALL positions to see what's actually in the database
+            const { data: allPositions, error: allError } = await supabase
+                .from('jobpositions')
+                .select('jobId, jobTitle, hiringStartDate, hiringEndDate');
+                
+            if (allError) {
+                console.error('❌ [Database] Error fetching all positions:', allError.message);
+            } else {
+                console.log('All positions in database:', allPositions);
+                
+                // Let's manually filter to see what would match
+                const manuallyFiltered = allPositions.filter(position => {
+                    const endDateOk = position.hiringEndDate >= today;
+                    const startDateOk = position.hiringStartDate <= today;
+                    console.log(`Position: ${position.jobTitle}, Start: ${position.hiringStartDate}, End: ${position.hiringEndDate}, EndOK: ${endDateOk}, StartOK: ${startDateOk}`);
+                    return endDateOk && startDateOk;
+                });
+                
+                console.log('Manually filtered positions:', manuallyFiltered);
+            }
+            
+            // Normal query
             const { data: jobpositions, error } = await supabase
                 .from('jobpositions')
                 .select('jobId, jobTitle, hiringStartDate, hiringEndDate')
-                .gte('hiringEndDate', today) // hiringEndDate should be today or later
-                .lte('hiringStartDate', today); // hiringStartDate should be today or earlier
-    
+                .gte('hiringEndDate', today)
+                .lte('hiringStartDate', today);
+            
             if (error) {
                 console.error('❌ [Database] Error fetching job positions:', error.message);
                 return []; // Return an empty array on error
@@ -235,8 +216,6 @@ getJobDetailsById: async function(jobTitle) {
             return [];
         }
     },
-    
-
     
     getJobDetails: async function(jobTitle) {
         try {
@@ -630,6 +609,8 @@ res.render('applicant_pages/chatbot', {
     handleChatbotMessage: async function (req, res) {
         try {
             console.log('✅ [Chatbot] Start processing chatbot message');
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in "YYYY-MM-DD" format
+
     
             const userId = req.session.userID;
             if (!userId) {
@@ -727,6 +708,11 @@ else {
     
             // Fetch job positions
             const positions = await applicantController.getActiveJobPositionsList();
+            console.log('Today:', today);
+            console.log('Query parameters:', {
+                hiringEndDateGte: today,
+                hiringStartDateLte: today
+            });
             const selectedPosition = positions.find(position => userMessage.includes(position.jobTitle.toLowerCase()))?.jobTitle;
     
             req.session.screeningCounters = req.session.screeningCounters || {

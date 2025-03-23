@@ -1801,7 +1801,6 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
-    
     postAddJobOffer: async function (req, res) {
         // Check if the user is HR
         if (req.session.user && req.session.user.userRole === 'HR') {
@@ -1809,11 +1808,14 @@ updateJobOffer: async function(req, res) {
                 // Extract data from the request body
                 const {
                     jobTitle, departmentId, jobDescrpt, jobType, jobTimeCommitment,
+                    jobTimeCommitment_startTime, jobTimeCommitment_endTime,
                     hiringStartDate, hiringEndDate,
                     jobReqCertificateType, jobReqCertificateDescrpt,
                     jobReqDegreeType, jobReqDegreeDescrpt,
                     jobReqExperienceType, jobReqExperienceDescrpt, jobReqSkillType, jobReqSkillName
                 } = req.body;
+    
+                console.log('Processing job offer submission for:', jobTitle);
     
                 // Determine if the job is currently active based on hiring dates
                 const currentDate = new Date();
@@ -1821,19 +1823,23 @@ updateJobOffer: async function(req, res) {
                 const endDate = new Date(hiringEndDate);
                 const isActiveHiring = currentDate >= startDate && currentDate <= endDate;
     
-                // Step 1: Check if the "Talent Acquisitioner" job already exists by jobTitle
+                // Step 1: Check if the selected job title already exists
                 const { data: existingJob, error: existingJobError } = await supabase
                     .from('jobpositions')
-                    .select('jobId')
-                    .eq('jobTitle', "Talent Acquisitioner"); // Explicitly searching for "Talent Acquisitioner"
+                    .select('jobId, jobTitle')
+                    .eq('jobId', jobTitle);
     
-                if (existingJobError) throw existingJobError;
+                if (existingJobError) {
+                    console.error('Error checking existing job:', existingJobError);
+                    throw existingJobError;
+                }
     
                 let jobId;
     
-                // Step 2: If the job exists, use the existing jobId and update the row
+                // Step 2: If the job exists, use the existing jobId
                 if (existingJob && existingJob.length > 0) {
                     jobId = existingJob[0].jobId;
+                    console.log('Using existing job with ID:', jobId);
     
                     // Update the existing job row
                     const { error: updateError } = await supabase
@@ -1842,91 +1848,129 @@ updateJobOffer: async function(req, res) {
                             jobDescrpt,
                             jobType,
                             jobTimeCommitment,
+                            jobTimeCommitment_startTime,
+                            jobTimeCommitment_endTime,
                             hiringStartDate,
                             hiringEndDate,
                             isActiveHiring
                         })
                         .eq('jobId', jobId);
     
-                    if (updateError) throw updateError;
+                    if (updateError) {
+                        console.error('Error updating job:', updateError);
+                        throw updateError;
+                    }
                 } else {
-                    // If the job does not exist, do not insert. You can handle this case differently
-                    return res.status(404).json({ error: 'Talent Acquisitioner job title not found to update' });
+                    // This shouldn't happen because we're selecting a job from dropdown
+                    console.error('Job ID not found:', jobTitle);
+                    return res.status(404).json({ error: 'Job title not found. Please select a valid job title.' });
                 }
     
                 // Step 3: Handle Job Requirements Insertion/Update
     
                 // Function to insert or update job requirements (certificates, degrees, etc.)
                 const upsertData = async (tableName, data, matchingField) => {
-                    for (let record of data) {
-                        // Try inserting data
-                        const { data: existingData, error: existingError } = await supabase
-                            .from(tableName)
-                            .select('jobId') // Check by jobId, assuming jobId is unique
-                            .eq('jobId', record.jobId)
-                            .eq(matchingField, record[matchingField]); // Match the specified field for uniqueness
-    
-                        if (existingError) throw existingError;
-    
-                        if (existingData.length > 0) {
-                            // If data exists, update it
-                            const { error: updateError } = await supabase
-                                .from(tableName)
-                                .update(record)
-                                .eq('jobId', record.jobId); // Use jobId to update
-    
-                            if (updateError) throw updateError;
-                        } else {
-                            // If no data exists, insert it
-                            const { error: insertError } = await supabase
-                                .from(tableName)
-                                .insert([record]);
-    
-                            if (insertError) throw insertError;
-                        }
+                    if (!data || data.length === 0 || !Array.isArray(data)) {
+                        console.log(`No ${tableName} data to upsert`);
+                        return;
                     }
+                    
+                    console.log(`Upserting ${data.length} records to ${tableName}`);
+                    
+                    // First remove existing records for this job
+                    const { error: deleteError } = await supabase
+                        .from(tableName)
+                        .delete()
+                        .eq('jobId', jobId);
+                    
+                    if (deleteError) {
+                        console.error(`Error deleting existing records from ${tableName}:`, deleteError);
+                        throw deleteError;
+                    }
+                    
+                    // Then insert all new records
+                    const { error: insertError } = await supabase
+                        .from(tableName)
+                        .insert(data);
+                    
+                    if (insertError) {
+                        console.error(`Error inserting records into ${tableName}:`, insertError);
+                        throw insertError;
+                    }
+                    
+                    console.log(`Successfully upserted data to ${tableName}`);
                 };
     
                 // Prepare and upsert certifications if provided
                 if (jobReqCertificateType && jobReqCertificateDescrpt) {
-                    const certData = jobReqCertificateType.map((type, index) => ({
-                        jobId,
-                        jobReqCertificateType: type,
-                        jobReqCertificateDescrpt: jobReqCertificateDescrpt[index]
-                    }));
-                    await upsertData('jobreqcertifications', certData, 'jobReqCertificateType');
+                    // Ensure both arrays exist and have the same length
+                    if (Array.isArray(jobReqCertificateType) && Array.isArray(jobReqCertificateDescrpt) && 
+                        jobReqCertificateType.length === jobReqCertificateDescrpt.length) {
+                        
+                        const certData = jobReqCertificateType.map((type, index) => ({
+                            jobId,
+                            jobReqCertificateType: type,
+                            jobReqCertificateDescrpt: jobReqCertificateDescrpt[index]
+                        }));
+                        await upsertData('jobreqcertifications', certData, 'jobReqCertificateType');
+                    } else {
+                        console.warn('Mismatched certification data arrays, skipping.');
+                    }
                 }
     
                 // Prepare and upsert degrees if provided
                 if (jobReqDegreeType && jobReqDegreeDescrpt) {
-                    const degreeData = jobReqDegreeType.map((type, index) => ({
-                        jobId,
-                        jobReqDegreeType: type,
-                        jobReqDegreeDescrpt: jobReqDegreeDescrpt[index]
-                    }));
-                    await upsertData('jobreqdegrees', degreeData, 'jobReqDegreeType');
+                    // Ensure both arrays exist and have the same length
+                    if (Array.isArray(jobReqDegreeType) && Array.isArray(jobReqDegreeDescrpt) && 
+                        jobReqDegreeType.length === jobReqDegreeDescrpt.length) {
+                        
+                        const degreeData = jobReqDegreeType.map((type, index) => ({
+                            jobId,
+                            jobReqDegreeType: type,
+                            jobReqDegreeDescrpt: jobReqDegreeDescrpt[index]
+                        }));
+                        await upsertData('jobreqdegrees', degreeData, 'jobReqDegreeType');
+                    } else {
+                        console.warn('Mismatched degree data arrays, skipping.');
+                    }
                 }
     
                 // Prepare and upsert experiences if provided
                 if (jobReqExperienceType && jobReqExperienceDescrpt) {
-                    const experienceData = jobReqExperienceType.map((type, index) => ({
-                        jobId,
-                        jobReqExperienceType: type,
-                        jobReqExperienceDescrpt: jobReqExperienceDescrpt[index]
-                    }));
-                    await upsertData('jobreqexperiences', experienceData, 'jobReqExperienceType');
+                    // Ensure both arrays exist and have the same length
+                    if (Array.isArray(jobReqExperienceType) && Array.isArray(jobReqExperienceDescrpt) && 
+                        jobReqExperienceType.length === jobReqExperienceDescrpt.length) {
+                        
+                        const experienceData = jobReqExperienceType.map((type, index) => ({
+                            jobId,
+                            jobReqExperienceType: type,
+                            jobReqExperienceDescrpt: jobReqExperienceDescrpt[index]
+                        }));
+                        await upsertData('jobreqexperiences', experienceData, 'jobReqExperienceType');
+                    } else {
+                        console.warn('Mismatched experience data arrays, skipping.');
+                    }
                 }
     
                 // Prepare and upsert skills if provided
                 if (jobReqSkillType && jobReqSkillName) {
-                    const skillData = jobReqSkillType.map((type, index) => ({
-                        jobId,
-                        jobReqSkillType: type,
-                        jobReqSkillName: jobReqSkillName[index]
-                    }));
-                    await upsertData('jobreqskills', skillData, 'jobReqSkillType');
+                    // Ensure both arrays exist and have the same length
+                    if (Array.isArray(jobReqSkillType) && Array.isArray(jobReqSkillName) && 
+                        jobReqSkillType.length === jobReqSkillName.length) {
+                        
+                        const skillData = jobReqSkillType.map((type, index) => ({
+                            jobId,
+                            jobReqSkillType: type,
+                            jobReqSkillName: jobReqSkillName[index]
+                        }));
+                        await upsertData('jobreqskills', skillData, 'jobReqSkillType');
+                    } else {
+                        console.warn('Mismatched skill data arrays, skipping.');
+                    }
                 }
     
+                console.log('Job posting successfully saved/updated');
+                
                 // Success response: redirect to job postings page
                 res.redirect('/hr/joboffers');
     
@@ -1940,7 +1984,6 @@ updateJobOffer: async function(req, res) {
             res.status(403).json({ errors: 'Unauthorized. HR access only.' });
         }
     },
-    
     
     getEditJobOffers: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
