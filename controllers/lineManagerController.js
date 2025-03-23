@@ -3218,6 +3218,197 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
         });
     },
 
+    // Add this new method to check feedback submission status
+checkFeedbackStatus: async function(req, res) {
+    const { userId, quarter } = req.query;
+    const currentUserId = req.session?.user?.userId;
+    
+    if (!userId || !quarter || !currentUserId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Missing required parameters.'
+        });
+    }
+    
+    try {
+        // Determine which feedback table to query based on quarter parameter
+        let feedbackTable, feedbackIdField;
+        
+        if (quarter === 'Q1') {
+            feedbackTable = 'feedbacks_Q1';
+            feedbackIdField = 'feedbackq1_Id';
+        } else if (quarter === 'Q2') {
+            feedbackTable = 'feedbacks_Q2';
+            feedbackIdField = 'feedbackq2_Id';
+        } else if (quarter === 'Q3') {
+            feedbackTable = 'feedbacks_Q3';
+            feedbackIdField = 'feedbackq3_Id';
+        } else if (quarter === 'Q4') {
+            feedbackTable = 'feedbacks_Q4';
+            feedbackIdField = 'feedbackq4_Id';
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid quarter specified.'
+            });
+        }
+        
+        // First get the feedback ID for this user
+        const { data: feedbackData, error: feedbackError } = await supabase
+            .from(feedbackTable)
+            .select(`${feedbackIdField}, userId`)
+            .eq('userId', userId)
+            .single();
+            
+        if (feedbackError || !feedbackData) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'No feedback record found for this user.'
+            });
+        }
+        
+        const feedbackId = feedbackData[feedbackIdField];
+        
+        // Check if the current user has submitted answers for this feedback
+        // First check objectives feedback
+        const { data: objectiveAnswers, error: objectiveError } = await supabase
+            .from('feedbacks_answers-objectives')
+            .select('feedback_answerObjectivesId')
+            .eq('feedback_qObjectivesId', feedbackId)
+            .limit(1);
+            
+        if (!objectiveError && objectiveAnswers && objectiveAnswers.length > 0) {
+            // Feedback has been submitted for objectives
+            return res.status(200).json({
+                success: true,
+                submitted: true,
+                message: 'Feedback has been submitted for this user.'
+            });
+        }
+        
+        // If no objective answers found, check for skill answers
+        const { data: skillAnswers, error: skillError } = await supabase
+            .from('feedbacks_answers-skills')
+            .select('feedback_answerSkillsId')
+            .eq('feedback_qSkillsId', feedbackId)
+            .limit(1);
+            
+        if (!skillError && skillAnswers && skillAnswers.length > 0) {
+            // Feedback has been submitted for skills
+            return res.status(200).json({
+                success: true,
+                submitted: true,
+                message: 'Feedback has been submitted for this user.'
+            });
+        }
+        
+        // If no answers found in either table, feedback has not been submitted
+        return res.status(200).json({
+            success: true,
+            submitted: false,
+            message: 'Feedback has not yet been submitted for this user.'
+        });
+        
+    } catch (error) {
+        console.error('Error in checkFeedbackStatus:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while checking feedback status.', 
+            error: error.message 
+        });
+    }
+},
+
+// Modify the submitFeedback method to properly store feedback answers
+submitFeedback: async function(req, res) {
+    const { userId, feedbackId, quarter, reviewerUserId, objectives, hardSkills, softSkills } = req.body;
+    
+    if (!userId || !feedbackId || !quarter || !reviewerUserId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Missing required parameters.' 
+        });
+    }
+    
+    try {
+        // Determine which feedback table and field based on quarter
+        let feedbackIdField;
+        
+        if (quarter === 'Q1') {
+            feedbackIdField = 'feedbackq1_Id';
+        } else if (quarter === 'Q2') {
+            feedbackIdField = 'feedbackq2_Id';
+        } else if (quarter === 'Q3') {
+            feedbackIdField = 'feedbackq3_Id';
+        } else if (quarter === 'Q4') {
+            feedbackIdField = 'feedbackq4_Id';
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid quarter specified.' 
+            });
+        }
+        
+        // Process objectives feedback
+        if (objectives && objectives.length > 0) {
+            for (const objective of objectives) {
+                const { objectiveId, quantitative, qualitative } = objective;
+                
+                // First get the feedback_qObjectivesId from the mapping table
+                const { data: objectiveMapping, error: mappingError } = await supabase
+                    .from('feedbacks_questions-objectives')
+                    .select('feedback_qObjectivesId')
+                    .eq(feedbackIdField, feedbackId)
+                    .eq('objectiveId', objectiveId)
+                    .single();
+                    
+                if (mappingError || !objectiveMapping) {
+                    console.error('Error finding objective mapping:', mappingError);
+                    continue; // Skip this objective if mapping not found
+                }
+                
+                // Insert the feedback answer
+                const { error: insertError } = await supabase
+                    .from('feedbacks_answers-objectives')
+                    .insert({
+                        feedback_qObjectivesId: objectiveMapping.feedback_qObjectivesId,
+                        objectiveQualInput: qualitative,
+                        objectiveQuantInput: parseInt(quantitative),
+                        created_at: new Date()
+                    });
+                    
+                if (insertError) {
+                    console.error('Error inserting objective feedback:', insertError);
+                }
+            }
+        }
+        
+        // Process hard skills feedback
+        if (hardSkills && hardSkills.length > 0) {
+            await processSkillsFeedback(hardSkills, feedbackId, feedbackIdField);
+        }
+        
+        // Process soft skills feedback
+        if (softSkills && softSkills.length > 0) {
+            await processSkillsFeedback(softSkills, feedbackId, feedbackIdField);
+        }
+        
+        return res.status(200).json({
+            success: true,
+            message: 'Feedback submitted successfully.'
+        });
+        
+    } catch (error) {
+        console.error('Error in submitFeedback:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while submitting feedback.', 
+            error: error.message 
+        });
+    }
+},
+
+
 
 
 
