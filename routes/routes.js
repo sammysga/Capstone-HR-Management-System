@@ -99,6 +99,7 @@ router.get('/hr/view-offboarding-request/:userId', hrController.getViewOffboardi
 router.post('/save-clearance', hrController.saveChecklist);
 router.post('/send-clearance', hrController.sendClearanceToEmployee);
 router.get('/hr/retirement-tracker', hrController.getRetirementTracker);
+router.post('/hr/approve-offboarding', hrController.approveOffboarding);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
@@ -127,7 +128,7 @@ router.post('/employee/reset-password', employeeController.resetPassword);
 router.post('/employee/update-info', employeeController.updateUserInfo);
 router.post('/employee/update-persinfo', employeeController.updatePersUserInfo);
 router.post('/employee/employeeoffboarding', employeeController.postEmployeeOffboarding);
-router.post('/employee-cancel-offboarding', employeeController.cancelOffboardingRequest);
+router.post('/employee/cancel-offboarding', employeeController.cancelOffboardingRequest);
 router.get('/employee/get-clearance-items/:requestId', employeeController.getClearanceItems);
 router.post('/employee/submit-clearance', employeeController.submitEmployeeClearance);
 

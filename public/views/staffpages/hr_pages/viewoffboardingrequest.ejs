@@ -188,6 +188,47 @@
             color: #555;
             margin-top: 5px;
         }
+
+        /* Approval Section Styling */
+        .approval-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .approval-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .approval-container.approved {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .approval-container h3 {
+            color: #124A5C;
+            margin-bottom: 10px;
+        }
+        
+        .approve-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 15px;
+        }
+        
+        .approve-btn:hover {
+            background-color: #388E3C;
+        }
     </style>
 </head>
 <body>
@@ -242,8 +283,28 @@
             <!-- Open Clearance Form Modal Button -->
             <button type="button" class="offboarding-btn" id="openClearanceModal">Open Clearance Form</button>
 
-            <button type="button" class="offboarding-btn" id="sendClearance">Send Clearance to Employee</button>
+            <% if (request.status !== 'Sent to Employee' && request.status !== 'Completed by Employee' && request.status !== 'Completed') { %>
+                <button type="button" class="offboarding-btn" id="sendClearance">Send Clearance to Employee</button>
+            <% } %>
         </form>
+
+        <!-- Approval Section -->
+        <div class="approval-section">
+            <% if (request.status === 'Completed by Employee') { %>
+                <div style="margin-top: 20px; padding: 15px; background-color: #e8f5e9; border-radius: 5px; border-left: 4px solid #4CAF50;">
+                    <h3 style="color: #2E7D32; margin-bottom: 10px;">Employee has completed all clearance items</h3>
+                    <p>Review the employee's completed clearance checklist and approve to finalize the offboarding process.</p>
+                    <button id="approveBtn" style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer;">
+                        Approve Offboarding
+                    </button>
+                </div>
+            <% } else if (request.status === 'Completed') { %>
+                <div style="margin-top: 20px; padding: 15px; background-color: #e8f5e9; border-radius: 5px; border-left: 4px solid #4CAF50;">
+                    <h3 style="color: #2E7D32; margin-bottom: 10px;">Offboarding Completed</h3>
+                    <p>This offboarding request has been completed and approved.</p>
+                </div>
+            <% } %>   
+        </div>
     </div>
 
     <!-- Clearance Form Modal -->
@@ -276,110 +337,175 @@
     </div>
 
     <script>
-        document.getElementById("sendClearance").addEventListener("click", function () {
-            const requestId = "<%= request.requestId %>"; 
-
-            fetch("/send-clearance", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ requestId }),
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert("Clearance sent to employee successfully!");
-                    window.location.reload();
-                } else {
-                    alert("Failed to send clearance: " + data.error);
-                }
-            })
-            .catch(error => {
-                console.error("Error sending clearance:", error);
-                alert("An error occurred. Please check the console for details.");
-            });
-        });
-        // Open Modal
-        document.getElementById("openClearanceModal").addEventListener("click", function () {
-            const modal = document.getElementById("clearanceModal");
-            modal.style.display = "flex";
-            
-        });
-
-        // Close Modal
-        document.getElementById("closeModal").addEventListener("click", function () {
-            document.getElementById("clearanceModal").style.display = "none";
-        });
-
-        document.getElementById("cancelClearance").addEventListener("click", function () {
-            document.getElementById("clearanceModal").style.display = "none";
-        });
-
-        // Add Item to Checklist
-        function addChecklistItem() {
-            const newTask = document.getElementById("newChecklistItem").value;
-            const newContact = document.getElementById("newContactPerson").value;
-
-            if (newTask.trim() === "" || newContact.trim() === "") {
-                alert("Please enter both a task and a contact person.");
-                return;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Send Clearance to Employee
+            const sendClearanceBtn = document.getElementById("sendClearance");
+            if (sendClearanceBtn) {
+                sendClearanceBtn.addEventListener("click", function () {
+                    const requestId = "<%= request.requestId %>"; 
+                    fetch("/send-clearance", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ requestId }),
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            alert("Clearance sent to employee successfully!");
+                            window.location.reload();
+                        } else {
+                            alert("Failed to send clearance: " + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error sending clearance:", error);
+                        alert("An error occurred. Please check the console for details.");
+                    });
+                });
             }
 
-            const checklist = document.getElementById("clearanceChecklist");
-            const li = document.createElement("li");
-            li.innerHTML = `
-                <div class="checklist-item">
-                    <span data-task>${newTask}</span>
-                    <span class="contact-person" data-contact>Contact: ${newContact}</span>
-                    <button class="delete-item" onclick="deleteChecklistItem(this)">✖</button>
-                </div>
-            `;
-            checklist.appendChild(li);
-            document.getElementById("newChecklistItem").value = "";
-            document.getElementById("newContactPerson").value = "";
-        }
+            // Open Modal
+            const openModalBtn = document.getElementById("openClearanceModal");
+            if (openModalBtn) {
+                openModalBtn.addEventListener("click", function () {
+                    const modal = document.getElementById("clearanceModal");
+                    modal.style.display = "flex";
+                });
+            }
 
-        // Delete Item from Checklist
-        function deleteChecklistItem(button) {
-            const li = button.closest("li");
-            li.remove();
-        }
+            // Close Modal
+            const closeModalBtn = document.getElementById("closeModal");
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener("click", function () {
+                    document.getElementById("clearanceModal").style.display = "none";
+                });
+            }
 
-        // Save Clearance
-        document.getElementById("saveClearance").addEventListener("click", function () {
-            const checklistItems = [];
-            document.querySelectorAll("#clearanceChecklist li").forEach((item) => {
-                const taskElement = item.querySelector("[data-task]");
-                const contactElement = item.querySelector("[data-contact]");
-                
-                if (taskElement && contactElement) {
-                    const task = taskElement.textContent.trim();
-                    const contactPerson = contactElement.textContent.replace("Contact: ", "").trim();
-                    checklistItems.push({ task, contactPerson });
-                }
-            });
+            const cancelClearanceBtn = document.getElementById("cancelClearance");
+            if (cancelClearanceBtn) {
+                cancelClearanceBtn.addEventListener("click", function () {
+                    document.getElementById("clearanceModal").style.display = "none";
+                });
+            }
+
+            // Approve Offboarding
+            const approveBtn = document.getElementById('approveBtn');
+            console.log("Approve button exists:", !!approveBtn);
             
-            console.log("Items to save:", checklistItems); 
-            
-            fetch("/save-clearance", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    requestId: "<%= request.requestId %>",
-                    checklist: checklistItems
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert("Clearance saved successfully!");
-                document.getElementById("clearanceModal").style.display = "none";
-            })
-            .catch(error => console.error("Error saving clearance:", error));
+            if (approveBtn) {
+                console.log("Adding click listener to approve button");
+                approveBtn.addEventListener('click', function() {
+                    const requestId = "<%= request.requestId %>";
+                    console.log("Approve button clicked for request ID:", requestId);
+                    
+                    if (confirm('Are you sure you want to approve this offboarding request? This action cannot be undone.')) {
+                        // Disable button to prevent double-clicking
+                        approveBtn.disabled = true;
+                        approveBtn.textContent = 'Processing...';
+                        
+                        console.log("Sending approval request to server");
+                        fetch('/hr/approve-offboarding', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ requestId: requestId })
+                        })
+                        .then(response => {
+                            console.log("Approval response status:", response.status);
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log("Approval response data:", data);
+                            if (data.success) {
+                                alert('Offboarding approved successfully!');
+                                window.location.reload();
+                            } else {
+                                alert('Error: ' + (data.error || 'Failed to approve offboarding'));
+                                approveBtn.disabled = false;
+                                approveBtn.textContent = 'Approve Offboarding';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error during approval:', error);
+                            alert('An error occurred: ' + error.message);
+                            approveBtn.disabled = false;
+                            approveBtn.textContent = 'Approve Offboarding';
+                        });
+                    }
+                });
+            } else {
+                console.error("Could not find approveBtn button");
+            }
+
+            // Save Clearance
+            const saveClearanceBtn = document.getElementById("saveClearance");
+            if (saveClearanceBtn) {
+                saveClearanceBtn.addEventListener("click", function () {
+                    const checklistItems = [];
+                    document.querySelectorAll("#clearanceChecklist li").forEach((item) => {
+                        const taskElement = item.querySelector("[data-task]");
+                        const contactElement = item.querySelector("[data-contact]");
+                        
+                        if (taskElement && contactElement) {
+                            const task = taskElement.textContent.trim();
+                            const contactPerson = contactElement.textContent.replace("Contact: ", "").trim();
+                            checklistItems.push({ task, contactPerson });
+                        }
+                    });
+                    
+                    console.log("Items to save:", checklistItems); 
+                    
+                    fetch("/save-clearance", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            requestId: "<%= request.requestId %>",
+                            checklist: checklistItems
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert("Clearance saved successfully!");
+                        document.getElementById("clearanceModal").style.display = "none";
+                    })
+                    .catch(error => console.error("Error saving clearance:", error));
+                });
+            }
         });
+
+            // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
     </script>
 </body>
 </html>
