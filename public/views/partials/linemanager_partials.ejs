@@ -31,11 +31,12 @@ body {
     font-weight: bold;
 }
 /* Notification Bell and Counter Styles*/
+/* Notification Bell and Counter Styles*/
 #notification-bell {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 1002;
+    z-index: 1001;
     background: none;
     border: none;
     cursor: pointer;
@@ -52,6 +53,7 @@ body {
     padding: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: background-color 0.3s, transform 0.3s;
+    /* Make sure the icon is displayed as block */
     display: inline-block;
     text-align: center;
     width: 36px;
@@ -79,17 +81,17 @@ body {
     align-items: center;
 }
 
-/* Notification Panel - Simplified version that works */
+/* Notification Panel */
 #notification-panel {
     position: fixed;
     top: 0;
-    right: -350px;
+    right: -400px;
     width: 350px;
     height: 100%;
     background-color: #fff;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
     transition: right 0.3s ease-in-out;
-    z-index: 1001;
+    z-index: 1000;
     padding: 20px;
     overflow-y: auto;
 }
@@ -103,6 +105,9 @@ body {
     margin-bottom: 20px;
     font-size: 20px;
     color: #07ACB9;
+    text-align: left;
+    margin-left: 0;
+    padding-left: 0;
 }
 
 .notification-section {
@@ -116,17 +121,17 @@ body {
     color: #333;
 }
 
-/* Special styling for P3 section */
-#section-p3 {
-    background-color: #FFF3E0;
+/* Special styling for P2 section */
+#section-p2 {
+    background-color: #FFF3E0; /* Light orange background */
     border-radius: 5px;
     padding: 10px;
-    border-left: 4px solid #FF9800;
+    border-left: 4px solid #FF9800; /* Orange left border */
     margin-bottom: 15px;
 }
 
-#section-p3 h4 {
-    color: #E65100;
+#section-p2 h4 {
+    color: #E65100; /* Darker orange for heading */
     font-weight: bold;
 }
 
@@ -173,20 +178,11 @@ body {
 
 /* Special styling for evaluate applicant buttons */
 .evaluate-applicant-btn {
-    background-color: #FF9800 !important;
+    background-color: #FF9800 !important; /* Orange color to indicate priority */
 }
 
 .evaluate-applicant-btn:hover {
     background-color: #FFC107 !important;
-}
-
-/* Priority buttons styling */
-.priority-btn {
-    background-color: #124A5C !important;
-}
-
-.priority-btn:hover {
-    background-color: #07ACB9 !important;
 }
 
 /* Floating Action Button Styling */
@@ -215,6 +211,7 @@ body {
 }
 
 .fab i {
+    /* Ensure the icon is properly centered */
     display: inline-block;
 }
 
@@ -254,6 +251,13 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Fix for sidebar items if needed */
+.sidebar ul li a i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
 }
 
 /* Animation for new notifications */
@@ -780,49 +784,42 @@ body {
         previousNotificationCount = currentCount;
     }
 
-    // Notification bell click event
-    notificationBell.addEventListener('click', async function() {
+    // Notification bell click event - FIXED VERSION
+    notificationBell.addEventListener('click', async function(event) {
         console.log('Notification bell clicked');
         notificationPanel.classList.toggle('open');
         
-        // Load notification data when panel is opened
+        // Add explicit style manipulation for better cross-browser compatibility
         if (notificationPanel.classList.contains('open')) {
             try {
                 // First check for 360 feedback
                 await fetch360Feedback();
                 
                 // Show loading indicators for other sections
-                document.getElementById('section-2').innerHTML = '<h4>Leave Request Updates</h4><div class="loading-indicator"><div class="spinner"></div></div>';
-                document.getElementById('section-3').innerHTML = '<h4>Performance Updates</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+                document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+                document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4><div class="loading-indicator"><div class="spinner"></div></div>';
                 
                 // Fetch regular notifications
                 const notificationData = await fetchNotifications();
                 
-                // Update notification count
-                // If we have active feedback, we need to account for it in the count
-                const adjustedCount = hasActiveFeedback ? 
-                    notificationData.notificationCount + 1 : 
-                    notificationData.notificationCount;
+                notificationCount.textContent = notificationData.notificationCount;
                 
-                notificationCount.textContent = adjustedCount;
-                
-                // Update leave requests section
+                // Update sections
+                updateApplicantsSection(notificationData.applicants);
                 updateLeaveRequestsSection(notificationData.leaveRequests);
                 
-                // Update performance updates section
-                updatePerformanceSection(notificationData.performanceUpdates);
             } catch (error) {
                 console.error('Error updating notifications:', error);
                 
                 // Show error message in sections
-                document.getElementById('section-2').innerHTML = '<h4>Leave Request Updates</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load leave request data. Please try again later.</div></div>';
+                document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load applicant data. Please try again later.</div></div>';
                 
-                document.getElementById('section-3').innerHTML = '<h4>Performance Updates</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load performance data. Please try again later.</div></div>';
+                document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load leave request data. Please try again later.</div></div>';
             }
         }
     });
 
-    // Close notification panel when clicking outside
+  // Close notification panel when clicking outside
     document.addEventListener('click', function(event) {
         if (!notificationPanel.contains(event.target) && !notificationBell.contains(event.target)) {
             notificationPanel.classList.remove('open');
@@ -880,22 +877,13 @@ body {
     // Function to periodically check for new notifications
     async function checkNotifications() {
         try {
-            // First check for 360 feedback
-            await fetch360Feedback();
-            
-            // Then get regular notifications
             const notificationData = await fetchNotifications();
             
-            // Calculate total count
-            const totalCount = hasActiveFeedback ? 
-                notificationData.notificationCount + 1 : 
-                notificationData.notificationCount;
-            
             // Check if there are new notifications
-            checkForNewNotifications(totalCount);
+            checkForNewNotifications(notificationData.notificationCount);
             
             // Update the notification count
-            notificationCount.textContent = totalCount;
+            notificationCount.textContent = notificationData.notificationCount;
             
         } catch (error) {
             console.error('Error checking for notifications:', error);
@@ -927,15 +915,7 @@ body {
                 console.warn('Font Awesome may not be loaded correctly. Check the CDN link.');
             }
             
-            // First check for active 360 feedback
-            await fetch360Feedback();
-            
-            // If no active feedback, set up default FAB behavior
-            if (!hasActiveFeedback) {
-                fab.addEventListener('click', fabDefaultHandler);
-            }
-            
-            // Then check for regular notifications 
+            // Initial notification check
             await checkNotifications();
             
             // Set up periodic notification checks (every 5 minutes)
@@ -944,13 +924,33 @@ body {
         } catch (error) {
             console.error('Error loading initial notification count:', error);
             notificationCount.textContent = '0';
-            
-            // Ensure FAB has default behavior even if there's an error
-            fab.addEventListener('click', fabDefaultHandler);
         }
     });
+
+    // Original sidebar functionality 
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+    });
 </script>
-
-
-
-
