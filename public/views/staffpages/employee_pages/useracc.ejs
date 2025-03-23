@@ -246,173 +246,184 @@
         }
 
         /* Modal Styles */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-}
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
 
-.modal-container {
-    background-color: white;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 900px;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 30px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    position: relative;
-}
+        .modal-container {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
 
-.modal-close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-}
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
 
-.modal-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-.modal-header h2 {
-    color: #124A5C;
-    margin-bottom: 10px;
-}
+        .modal-header h2 {
+            color: #124A5C;
+            margin-bottom: 10px;
+        }
 
-.modal-header p {
-    color: #666;
-}
+        .modal-header p {
+            color: #666;
+        }
 
-/* Clearance checklist table */
-.clearance-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    background-color: white;
-}
+        /* Clearance checklist table */
+        .clearance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+        }
 
-.clearance-table th,
-.clearance-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
+        .clearance-table th,
+        .clearance-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
 
-.clearance-table th {
-    background-color: #124A5C;
-    color: white;
-    font-weight: bold;
-}
+        .clearance-table th {
+            background-color: #124A5C;
+            color: white;
+            font-weight: bold;
+        }
 
-/* Signature container styles */
-.signature-container {
-    display: none;
-    margin-top: 10px;
-}
+        /* Signature container styles */
+        .signature-container {
+            display: none;
+            margin-top: 10px;
+        }
 
-.signature-canvas {
-    border: 1px solid #ccc;
-    background-color: #f9f9f9;
-}
+        .signature-canvas {
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
 
-.signature-preview {
-    margin-top: 10px;
-    min-height: 40px;
-}
+        .signature-preview {
+            margin-top: 10px;
+            min-height: 40px;
+        }
 
-.signature-preview img {
-    max-width: 100%;
-    max-height: 80px;
-    border: 1px solid #eee;
-}
+        .signature-preview img {
+            max-width: 100%;
+            max-height: 80px;
+            border: 1px solid #eee;
+        }
 
-.action-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
 
-.btn-sign {
-    background-color: #124A5C;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 12px;
-}
+        .btn-sign {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
 
-.btn-submit-signature, 
-.btn-clear-signature, 
-.btn-cancel-signature {
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    padding: 5px 10px;
-    border-radius: 3px;
-    font-size: 12px;
-    cursor: pointer;
-}
+        .btn-submit-signature, 
+        .btn-clear-signature, 
+        .btn-cancel-signature {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+        }
 
-.btn-submit-signature {
-    background-color: #124A5C;
-    color: white;
-    border: none;
-}
+        .btn-submit-signature {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+        }
 
-/* Modal footer */
-.modal-footer {
-    margin-top: 30px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-}
+        /* Modal footer */
+        .modal-footer {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
 
-.btn-modal-cancel,
-.btn-modal-submit {
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-}
+        .btn-modal-cancel,
+        .btn-modal-submit {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
 
-.btn-modal-cancel {
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    color: #333;
-}
+        .btn-modal-cancel {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            color: #333;
+        }
 
-.btn-modal-submit {
-    background-color: #124A5C;
-    color: white;
-    border: none;
-}
+        .btn-modal-submit {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+        }
 
-/* For the "verified" checkbox */
-.verification-checkbox {
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        /* For the "verified" checkbox */
+        .verification-checkbox {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-.verification-checkbox input[type="checkbox"] {
-    transform: scale(1.5);
-}
+        .verification-checkbox input[type="checkbox"] {
+            transform: scale(1.5);
+        }
 
-.verification-checkbox span {
-    font-weight: bold;
-    color: #333;
+        .verification-checkbox span {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-approved {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .offboarding-complete-message {
+            color: #4CAF50;
+            font-weight: bold;
+            font-style: italic;
 }
     </style>
 </head>
@@ -486,6 +497,7 @@
                             <span class="status-badge 
                                 <%= request.status === 'Pending Line Manager' ? 'status-pending' : 
                                    request.status === 'Sent to Employee' ? 'status-awaiting' : 
+                                   request.status === 'Completed by Employee' ? 'status-completed-employee' : 
                                    request.status === 'Completed' ? 'status-approved' : 
                                    request.status === 'Rejected' ? 'status-rejected' : 'status-pending' %>">
                                 <%= request.status %>
@@ -502,10 +514,10 @@
                             <% } else if (request.status === 'Completed by Employee') { %>
                                 <span>Awaiting HR Final Approval</span>
                             <% } else if (request.status === 'Completed') { %>
-                                <span>Offboarding Completed</span>
+                                <span class="offboarding-complete-message">Your offboarding process has been completed! We wish you all the best.</span>
                             <% } %>
                         </div>
-                    </div>
+                    </div>                    
                 </div>
             <% }) %>
         <% } else { %>
@@ -524,7 +536,7 @@
                 <p>Please complete all items below before your last working day</p>
             </div>
 
-            <form id="modalClearanceForm">
+            <form id="inlineClearanceForm">
                 <input type="hidden" id="modalRequestId" name="requestId" value="">
                 
                 <div class="clearance-list" id="clearanceChecklist">
@@ -542,7 +554,7 @@
                 </div>
 
                 <div class="clearance-actions">
-                    <button type="button" class="secondary-btn" id="cancelClearance">Cancel</button>
+                    <button type="button" class="secondary-btn" id="cancelInlineClearance">Cancel</button>
                     <button type="submit" class="action-btn">Submit Clearance</button>
                 </div>
             </form>
@@ -712,24 +724,26 @@
         });
         
         // Initialize a object to store signature pads
-        const signaturePads = {};
+        window.signaturePads = {};
 
         // Function to initialize a signature pad on a canvas element if not already done
         function initSignaturePad(canvas) {
-            if (!signaturePads[canvas.id]) {
-                signaturePads[canvas.id] = new SignaturePad(canvas, {
-                    backgroundColor: 'rgba(255, 255, 255, 0)',
-                    penColor: 'black'
-                });
-            }
+        if (!window.signaturePads[canvas.id]) {
+            window.signaturePads[canvas.id] = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'black'
+            });
         }
+    }
 
         // View clearance form buttons (opens the modal)
         document.querySelectorAll('.view-clearance-btn').forEach(button => {
             button.addEventListener('click', async function() {
                 const requestId = this.getAttribute('data-request-id');
                 console.log("Clearance button clicked for request ID:", requestId);
+
                 document.getElementById('modalRequestId').value = requestId;
+                document.getElementById('requestId').value = requestId;
                 
                 try {
                     const response = await fetch(`/employee/get-clearance-items/${requestId}`);
@@ -802,7 +816,7 @@
             });
         });
 
-        // Set up signature buttons event listeners
+            // Set up signature buttons event listeners
         function setupSignatureButtons() {
             // Show signature container on "Sign Here" click
             document.querySelectorAll('.btn-sign').forEach((button) => {
@@ -823,12 +837,12 @@
                     const canvas = document.getElementById(canvasId);
                     const container = document.getElementById(containerId);
                     
-                    if (signaturePads[canvasId].isEmpty()) {
+                    if (window.signaturePads[canvasId].isEmpty()) {
                         alert('Please provide a signature before submitting.');
                         return;
                     }
                     
-                    const signatureImage = signaturePads[canvasId].toDataURL();
+                    const signatureImage = window.signaturePads[canvasId].toDataURL();
                     const index = canvasId.split('-')[2];
                     const previewId = `signature-preview-${index}`;
                     
@@ -842,7 +856,7 @@
             document.querySelectorAll('.btn-clear-signature').forEach((button) => {
                 button.addEventListener('click', function() {
                     const canvasId = this.getAttribute('data-canvas');
-                    signaturePads[canvasId].clear();
+                    window.signaturePads[canvasId].clear();
                 });
             });
 
@@ -861,7 +875,7 @@
         });
 
         // Cancel clearance button
-        document.getElementById('cancelClearance').addEventListener('click', function() {
+        document.getElementById('cancelInlineClearance').addEventListener('click', function() {
             document.getElementById('clearanceModal').style.display = 'none';
         });
 
@@ -909,21 +923,37 @@
             
             // Collect all signatures
             const allSignatures = {};
-            Object.keys(signaturePads).forEach(canvasId => {
-                if (!signaturePads[canvasId].isEmpty()) {
-                    const index = canvasId.split('-')[2];
-                    allSignatures[index] = signaturePads[canvasId].toDataURL();
-                    console.log(`Added signature for index ${index}`);
-                } else {
-                    console.log(`Signature pad ${canvasId} is empty`);
+            
+            // Get all signature previews and extract the image source
+            document.querySelectorAll('.signature-preview img').forEach((img, index) => {
+                if (img.src) {
+                    allSignatures[index] = img.src;
+                    console.log(`Added signature for index ${index} from preview`);
                 }
             });
 
             console.log("Total signatures collected:", Object.keys(allSignatures).length);
             
-            // Get the request ID
-            const requestId = document.getElementById('requestId').value;
-            console.log("Request ID:", requestId);
+            // IMPORTANT: Try both request ID elements to ensure we get the value
+            let requestId = document.getElementById('requestId').value;
+            if (!requestId) {
+                requestId = document.getElementById('modalRequestId').value;
+                console.log("Using modalRequestId instead:", requestId);
+            }
+            
+            console.log("Final Request ID being used:", requestId);
+
+            if (!requestId) {
+                alert('Error: Request ID not found. Please reload the page and try again.');
+                return;
+            }
+
+            // Display loading state or disable submit button
+            const submitButton = document.querySelector('.btn-modal-submit');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submitting...';
+            }
 
             // Send data to server
             console.log("Sending data to server:", {
@@ -944,19 +974,36 @@
                     completed: true
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log("Response status:", response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log("Response data:", data);
                 if (data.success) {
                     alert('Clearance submitted successfully!');
                     document.getElementById('clearanceModal').style.display = 'none';
                     window.location.reload();
                 } else {
-                    alert('Error: ' + data.error);
+                    alert('Error: ' + (data.error || 'Unknown error occurred'));
+                    // Re-enable submit button
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit Clearance';
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                alert('An error occurred. Please try again: ' + error.message);
+                // Re-enable submit button
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Clearance';
+                }
             });
         });
     });

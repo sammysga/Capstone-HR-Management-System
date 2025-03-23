@@ -2814,17 +2814,25 @@ updateJobOffer: async function(req, res) {
                 return res.redirect('/staff/login');
             }
     
-            // Fetch offboarding requests with userId and status
+            console.log('Fetching offboarding requests for HR dashboard');
+    
+            // Fetch offboarding requests with userId and status - include ALL relevant statuses
             const { data: requests, error: requestsError } = await supabase
                 .from('offboarding_requests')
                 .select('requestId, userId, message, last_day, status, created_at')
-                .eq('status', 'Pending HR')  // Fetch only requests pending HR approval
+                .in('status', ['Pending HR', 'Sent to Employee', 'Completed by Employee'])
                 .order('created_at', { ascending: false });
     
             if (requestsError) {
                 console.error('Error fetching offboarding requests:', requestsError);
                 req.flash('errors', { dbError: 'Failed to load offboarding requests.' });
                 return res.redirect('/hr/dashboard');
+            }
+    
+            console.log(`Found ${requests ? requests.length : 0} offboarding requests`);
+            
+            if (requests && requests.length > 0) {
+                console.log('Statuses found:', requests.map(r => r.status));
             }
     
             // Fetch employee names and department names based on userId
@@ -2850,7 +2858,8 @@ updateJobOffer: async function(req, res) {
                 };
             });
     
-            res.render('staffpages/hr_pages/offboardingrequest', { requests: requestsWithNames }); // Render HR-specific view
+            console.log('Rendering HR dashboard with requests');
+            res.render('staffpages/hr_pages/offboardingrequest', { requests: requestsWithNames });
         } catch (err) {
             console.error('Error in getOffboardingRequestsDash controller:', err);
             req.flash('errors', { dbError: 'An error occurred while loading offboarding requests.' });
@@ -3005,6 +3014,89 @@ updateJobOffer: async function(req, res) {
         } catch (err) {
             console.error("Error in sendClearanceToEmployee controller:", err);
             res.status(500).json({ error: "An error occurred while sending the clearance." });
+        }
+    },
+
+    approveOffboarding: async function (req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            const { requestId } = req.body;
+            
+            if (!userId || req.session.user.userRole !== 'HR') { 
+                return res.status(401).json({ 
+                    success: false, 
+                    error: 'Unauthorized access.' 
+                });
+            }
+            
+            if (!requestId) {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Request ID is required.' 
+                });
+            }
+            
+            console.log(`Approving offboarding request ID: ${requestId} by HR user ID: ${userId}`);
+            
+            // Verify that the request exists and is in the correct status
+            const { data: request, error: requestError } = await supabase
+                .from('offboarding_requests')
+                .select('status')
+                .eq('requestId', requestId)
+                .single();
+                
+            if (requestError) {
+                console.error('Error fetching offboarding request:', requestError);
+                return res.status(404).json({ 
+                    success: false, 
+                    error: 'Request not found.' 
+                });
+            }
+            
+            if (!request) {
+                return res.status(404).json({ 
+                    success: false, 
+                    error: 'Request not found.' 
+                });
+            }
+            
+            if (request.status !== 'Completed by Employee') {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'This request cannot be approved in its current status.' 
+                });
+            }
+            
+            // Update the request status to "Completed"
+            const { data: updateData, error: updateError } = await supabase
+                .from('offboarding_requests')
+                .update({ 
+                    status: 'Completed',
+                    hr_decision_date: new Date().toISOString()
+                })
+                .eq('requestId', requestId)
+                .select();
+                
+            if (updateError) {
+                console.error('Error updating request status:', updateError);
+                return res.status(500).json({ 
+                    success: false, 
+                    error: 'Failed to approve offboarding request.' 
+                });
+            }
+            
+            console.log('Offboarding request approved successfully:', updateData);
+            
+            return res.json({ 
+                success: true, 
+                message: 'Offboarding request approved successfully.' 
+            });
+        } catch (err) {
+            console.error('Error in approveOffboarding controller:', err);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'An error occurred while processing the request.' 
+            });
         }
     },
     

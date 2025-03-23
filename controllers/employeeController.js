@@ -1288,15 +1288,33 @@ cancelOffboardingRequest: async function(req, res) {
 },
 
 // Submit completed clearance
+// Modify your submitEmployeeClearance function to check if the column exists
+
 submitEmployeeClearance: async function(req, res) {
     try {
         const userId = req.session.user ? req.session.user.userId : null;
         const { requestId, signatures, completed } = req.body;
         
+        console.log("Clearance submission received:", {
+            userId,
+            requestId,
+            signaturesCount: signatures ? Object.keys(signatures).length : 0,
+            completed
+        });
+        
         if (!userId) {
+            console.error("No user ID in session");
             return res.status(401).json({ 
                 success: false, 
                 error: 'Unauthorized access.' 
+            });
+        }
+        
+        if (!requestId) {
+            console.error("No requestId provided in request body");
+            return res.status(400).json({
+                success: false,
+                error: 'Request ID is required.'
             });
         }
         
@@ -1310,7 +1328,7 @@ submitEmployeeClearance: async function(req, res) {
             .eq('userId', userId)
             .single();
             
-        if (requestError || !request) {
+        if (requestError) {
             console.error('Error fetching offboarding request:', requestError);
             return res.status(404).json({ 
                 success: false, 
@@ -1318,60 +1336,82 @@ submitEmployeeClearance: async function(req, res) {
             });
         }
         
-        // Store signature and update request status
-        try {
-            const { data: offboardingCompletion, error: insertError } = await supabase
-                .from('offboarding_completion')
-                .insert([{
-                    requestId: requestId,
-                    employee_signature: JSON.stringify(signatures), // Store as JSON string
-                    completion_date: new Date().toISOString(),
-                    completed_by: userId
-                }]);
-                
-            if (insertError) {
-                console.error('Error storing completion data:', insertError);
-                return res.status(500).json({ 
-                    success: false, 
-                    error: 'Failed to store completion data.' 
-                });
-            }
-            
-            console.log('Completion data stored successfully');
-        } catch (err) {
-            console.error('Exception storing completion data:', err);
-            return res.status(500).json({
-                success: false,
-                error: 'Exception occurred while storing completion data.'
+        if (!request) {
+            console.error('Request not found for ID:', requestId);
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Request not found or unauthorized access.' 
             });
         }
         
-        // Update request status - CRITICAL FIX: ensure status is correctly set
+        console.log('Found request with status:', request.status);
+        
+        // First, check if the employee_signatures column exists
         try {
-            const { error: updateError } = await supabase
+            // Try to query for employee_signatures to see if it exists
+            console.log('Checking if employee_signatures column exists');
+            const { data: columnCheck, error: columnError } = await supabase
                 .from('offboarding_requests')
-                .update({ 
-                    status: 'Completed by Employee',
-                    employee_completion_date: new Date().toISOString()
-                })
-                .eq('requestId', requestId);
+                .select('employee_signatures')
+                .limit(1);
                 
-            if (updateError) {
-                console.error('Error updating request status:', updateError);
-                return res.status(500).json({ 
-                    success: false, 
-                    error: 'Failed to update request status.' 
-                });
+            if (columnError) {
+                console.error('Error checking column:', columnError);
+                // Column might not exist, update without it
+                console.log('Updating request without employee_signatures');
+                
+                const { data: updateData, error: updateError } = await supabase
+                    .from('offboarding_requests')
+                    .update({ 
+                        status: 'Completed by Employee',
+                        employee_completion_date: new Date().toISOString()
+                        // employee_signatures column omitted
+                    })
+                    .eq('requestId', requestId)
+                    .select();
+                    
+                if (updateError) {
+                    console.error('Error updating request status:', updateError);
+                    return res.status(500).json({ 
+                        success: false, 
+                        error: 'Failed to update request status: ' + updateError.message
+                    });
+                }
+                
+                console.log('Request status updated successfully:', updateData);
+            } else {
+                // Column exists, update with employee_signatures
+                console.log('Updating request with employee_signatures');
+                
+                const { data: updateData, error: updateError } = await supabase
+                    .from('offboarding_requests')
+                    .update({ 
+                        status: 'Completed by Employee',
+                        employee_completion_date: new Date().toISOString(),
+                        employee_signatures: JSON.stringify(signatures)
+                    })
+                    .eq('requestId', requestId)
+                    .select();
+                    
+                if (updateError) {
+                    console.error('Error updating request status:', updateError);
+                    return res.status(500).json({ 
+                        success: false, 
+                        error: 'Failed to update request status: ' + updateError.message
+                    });
+                }
+                
+                console.log('Request updated successfully with signatures:', updateData);
             }
-            
-            console.log('Request status updated successfully to "Completed by Employee"');
         } catch (err) {
-            console.error('Exception updating request status:', err);
+            console.error('Exception updating request:', err);
             return res.status(500).json({
                 success: false,
-                error: 'Exception occurred while updating request status.'
+                error: 'Exception occurred while updating request: ' + err.message
             });
         }
+        
+        console.log('Clearance submission completed successfully');
         
         return res.json({ 
             success: true, 
@@ -1381,7 +1421,7 @@ submitEmployeeClearance: async function(req, res) {
         console.error('Error in submitEmployeeClearance controller:', err);
         return res.status(500).json({ 
             success: false, 
-            error: 'An error occurred while processing the request.' 
+            error: 'An error occurred while processing the request: ' + err.message 
         });
     }
 },
