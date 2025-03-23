@@ -9,6 +9,175 @@
     <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* IDP Form Styles */
+.idp-form fieldset {
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 25px;
+    background-color: #f9f9f9;
+    transition: var(--transition);
+}
+
+.idp-form fieldset:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.idp-form legend {
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 0 15px;
+    font-size: 1.1rem;
+}
+
+.idp-form label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: var(--primary-color);
+}
+
+.idp-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.idp-form textarea:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(5, 156, 164, 0.2);
+    outline: none;
+}
+
+.idp-form textarea.error {
+    border-color: var(--danger-color);
+    background-color: rgba(244, 67, 54, 0.05);
+}
+
+.idp-form .submit-button-container {
+    margin-top: 30px;
+    text-align: right;
+}
+
+.idp-form .save-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.idp-form .save-btn:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+.idp-form .save-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* View-only mode styles */
+.view-only-mode fieldset {
+    background-color: #f5f7fa;
+    border: 1px solid #e1e5eb;
+}
+
+.view-only-mode textarea {
+    background-color: #f9f9f9;
+    border: 1px solid #e1e5eb;
+    pointer-events: none;
+    color: #555;
+}
+
+.view-only-mode .save-btn {
+    display: none;
+}
+
+/* Last updated info for view-only mode */
+.last-updated-info {
+    margin-top: 20px;
+    font-style: italic;
+    color: #777;
+    text-align: right;
+    font-size: 0.9em;
+}
+
+/* Progress indicator for IDP forms */
+.idp-progress {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f5f7fa;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+}
+
+.idp-progress h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: var(--secondary-color);
+    border-radius: 5px;
+    transition: width 0.5s ease;
+}
+
+/* Tooltip styles for required fields */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    margin-left: 5px;
+    cursor: help;
+}
+
+.tooltip .tooltip-icon {
+    color: var(--primary-color);
+    font-size: 0.8em;
+}
+
+.tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
         /* New modern styling */
         :root {
             --primary-color: #124A5C;
@@ -1010,6 +1179,65 @@
                     </div>
                 </form>
             </section>
+
+            <!-- Final-Year IDP Form -->
+<section id="finalYearIDPForm" class="fade-out section" style="display: none;">
+    <h2><i class="fas fa-clipboard-check"></i> Final-Year Individual Development Plan (IDP)</h2>
+
+    <form id="finalYearIDPFormDetails" method="POST" action="/linemanager/finalyear-idp/<%= user.userId %>">
+        <!-- Professional Competences -->
+        <fieldset>
+            <legend><i class="fas fa-briefcase"></i> PROFESSIONAL COMPETENCES</legend>
+
+            <label for="profStrengths"><strong>STRENGTHS:</strong></label>
+            <textarea id="profStrengths" name="profStrengths" rows="4" placeholder="Describe technical competences achieved during the year" required></textarea>
+
+            <label for="profAreasForDevelopment"><strong>AREAS FOR DEVELOPMENT:</strong></label>
+            <textarea id="profAreasForDevelopment" name="profAreasForDevelopment" rows="4" placeholder="Describe remaining gaps to address" required></textarea>
+
+            <label for="profActionsToTake"><strong>ACTIONS TO TAKE:</strong></label>
+            <textarea id="profActionsToTake" name="profActionsToTake" rows="4" placeholder="Recommended actions to address development needs for next year" required></textarea>
+        </fieldset>
+
+        <hr style="margin: 25px 0; border: 0; height: 1px; background-color: #ddd;">
+
+        <!-- Leadership Competences -->
+        <fieldset>
+            <legend><i class="fas fa-users"></i> LEADERSHIP COMPETENCES</legend>
+
+            <label for="leaderStrengths"><strong>STRENGTHS:</strong></label>
+            <textarea id="leaderStrengths" name="leaderStrengths" rows="4" placeholder="Describe leadership competences developed this year (e.g., Authenticity, Fostering Growth, Building Collaboration, Nurturing Performance)" required></textarea>
+
+            <label for="leaderAreasForDevelopment"><strong>AREAS FOR DEVELOPMENT:</strong></label>
+            <textarea id="leaderAreasForDevelopment" name="leaderAreasForDevelopment" rows="4" placeholder="Describe leadership gaps that need further development" required></textarea>
+
+            <label for="leaderActionsToTake"><strong>ACTIONS TO TAKE:</strong></label>
+            <textarea id="leaderActionsToTake" name="leaderActionsToTake" rows="4" placeholder="Recommended actions to address leadership development needs for next year" required></textarea>
+        </fieldset>
+
+        <hr style="margin: 25px 0; border: 0; height: 1px; background-color: #ddd;">
+
+        <!-- Next Role Options -->
+        <fieldset>
+            <legend><i class="fas fa-road"></i> CAREER PLANNING</legend>
+
+            <label for="nextRoleShortTerm"><strong>SHORT-TERM GOALS:</strong></label>
+            <textarea id="nextRoleShortTerm" name="nextRoleShortTerm" rows="4" placeholder="Goals and target roles for the next 1-2 years" required></textarea>
+
+            <label for="nextRoleLongTerm"><strong>LONG-TERM GOALS:</strong></label>
+            <textarea id="nextRoleLongTerm" name="nextRoleLongTerm" rows="4" placeholder="Career aspirations for the next 3-5 years" required></textarea>
+
+            <label for="nextRoleMobility"><strong>MOBILITY AND FLEXIBILITY:</strong></label>
+            <textarea id="nextRoleMobility" name="nextRoleMobility" rows="4" placeholder="Willingness and ability to work in different locations, roles, or schedules" required></textarea>
+        </fieldset>
+
+        <div id="submitButtonContainer" style="margin-top: 25px; text-align: right;">
+            <button id="submitFinalYearIDP" type="submit" class="save-btn">
+                <i class="fas fa-paper-plane"></i> Submit Final-Year IDP
+            </button>
+        </div>
+    </form>
+</section>
             
             <!-- JavaScript for page functionality -->
             <script>
@@ -1799,6 +2027,521 @@
                         }
                     }
                 }
+
+                // Initialize global variables
+let midYearIDPData = null;
+let finalYearIDPData = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Initialize UI components
+    const midYearIDPButton = document.getElementById("midYearIDP");
+    const finalYearIDPButton = document.getElementById("finalYearIDP");
+    const midYearIDPForm = document.getElementById("midYearIDPForm");
+    const midYearIDPFormDetails = document.getElementById("midYearIDPFormDetails");
+    const submitMidYearIDP = document.getElementById("submitMidYearIDP");
+    
+    // Add event listeners for IDP buttons
+    if (midYearIDPButton) {
+        midYearIDPButton.addEventListener("click", navigateToMidYearIDP);
+    }
+    
+    if (finalYearIDPButton) {
+        finalYearIDPButton.addEventListener("click", navigateToFinalYearIDP);
+    }
+    
+    // Add event listeners for form submissions
+    if (midYearIDPFormDetails) {
+        midYearIDPFormDetails.addEventListener("submit", submitMidYearIDPForm);
+    }
+    
+    // Get viewState data
+    const viewStateElement = document.getElementById('viewState');
+    if (viewStateElement) {
+        try {
+            const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
+            initializeIDPForms(viewState);
+        } catch (error) {
+            console.error("Error parsing viewState:", error);
+        }
+    }
+});
+
+// Function to initialize IDP forms based on viewState
+function initializeIDPForms(viewState) {
+    // Check if we have view-only status for midyearidp and finalyearidp
+    if (viewState.viewOnlyStatus) {
+        const midYearIDPButton = document.getElementById("midYearIDP");
+        const finalYearIDPButton = document.getElementById("finalYearIDP");
+        
+        if (midYearIDPButton && viewState.viewOnlyStatus.midyearidp) {
+            // Mid-Year IDP is in view-only mode
+            midYearIDPButton.classList.add("view-only");
+            loadMidYearIDPData(viewState.userId);
+        }
+        
+        if (finalYearIDPButton && viewState.viewOnlyStatus.finalyearidp) {
+            // Final-Year IDP is in view-only mode
+            finalYearIDPButton.classList.add("view-only");
+            loadFinalYearIDPData(viewState.userId, viewState.selectedYear);
+        }
+    }
+}
+
+// Function to navigate to Mid-Year IDP
+function navigateToMidYearIDP() {
+    const midYearIDPButton = document.getElementById("midYearIDP");
+    const midYearIDPForm = document.getElementById("midYearIDPForm");
+    
+    if (midYearIDPButton.classList.contains("accessible")) {
+        // Hide other sections
+        hideAllSections();
+        
+        // Show the Mid-Year IDP form
+        if (midYearIDPForm) {
+            midYearIDPForm.style.display = "block";
+            midYearIDPForm.classList.remove("fade-out");
+            midYearIDPForm.classList.add("fade-in");
+            midYearIDPForm.scrollIntoView({ behavior: "smooth" });
+            
+            // Load existing data if in view-only mode
+            const viewStateElement = document.getElementById('viewState');
+            if (viewStateElement) {
+                const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
+                if (viewState.viewOnlyStatus && viewState.viewOnlyStatus.midyearidp) {
+                    // If view-only mode, load the existing data
+                    createViewOnlyMidYearIDP(midYearIDPData);
+                } else {
+                    // If editable mode, ensure form fields are enabled
+                    enableMidYearIDPForm();
+                }
+            }
+            
+            console.log("Navigated to the Mid-Year IDP form.");
+        }
+    } else {
+        // Show friendly notification
+        alert("You must complete the previous steps first.");
+    }
+}
+
+// Function to navigate to Final-Year IDP
+function navigateToFinalYearIDP() {
+    const finalYearIDPButton = document.getElementById("finalYearIDP");
+    const midYearIDPForm = document.getElementById("midYearIDPForm"); // We'll reuse the same form
+    
+    if (finalYearIDPButton.classList.contains("accessible")) {
+        // Hide other sections
+        hideAllSections();
+        
+        // Show the Final-Year IDP form (reusing the Mid-Year form layout)
+        if (midYearIDPForm) {
+            midYearIDPForm.style.display = "block";
+            midYearIDPForm.classList.remove("fade-out");
+            midYearIDPForm.classList.add("fade-in");
+            
+            // Update form title and submit button for Final-Year IDP
+            const formTitle = midYearIDPForm.querySelector("h2");
+            if (formTitle) {
+                formTitle.innerHTML = '<i class="fas fa-clipboard-check"></i> Final-Year Individual Development Plan (IDP)';
+            }
+            
+            const submitButton = document.getElementById("submitMidYearIDP");
+            if (submitButton) {
+                submitButton.textContent = "Submit Final-Year IDP";
+                submitButton.id = "submitFinalYearIDP";
+                submitButton.onclick = submitFinalYearIDPForm;
+            }
+            
+            // Set form action to final-year endpoint
+            const formElement = document.getElementById("midYearIDPFormDetails");
+            if (formElement) {
+                const userId = getUserIdFromURL();
+                formElement.action = `/linemanager/finalyear-idp/${userId}`;
+            }
+            
+            // Load existing data if in view-only mode
+            const viewStateElement = document.getElementById('viewState');
+            if (viewStateElement) {
+                const viewState = JSON.parse(viewStateElement.getAttribute('data-viewstate'));
+                if (viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp) {
+                    // If view-only mode, load the existing data
+                    createViewOnlyFinalYearIDP(finalYearIDPData);
+                } else {
+                    // If editable mode, ensure form fields are enabled
+                    enableFinalYearIDPForm();
+                }
+            }
+            
+            midYearIDPForm.scrollIntoView({ behavior: "smooth" });
+            console.log("Navigated to the Final-Year IDP form.");
+        }
+    } else {
+        // Show friendly notification
+        alert("You must complete the previous steps first.");
+    }
+}
+
+// Function to hide all sections
+function hideAllSections() {
+    const sectionsToHide = [
+        document.getElementById("objective-skill-progress-form"),
+        document.getElementById("view-only-page"),
+        document.getElementById("feedback-section")
+    ];
+    
+    sectionsToHide.forEach(section => {
+        if (section) section.style.display = "none";
+    });
+}
+
+// Function to submit Mid-Year IDP form
+function submitMidYearIDPForm(event) {
+    event.preventDefault();
+    
+    // Validate the form
+    if (!validateIDPForm()) {
+        return;
+    }
+    
+    // Get form data
+    const formData = {
+        profStrengths: document.getElementById("profStrengths").value,
+        profAreasForDevelopment: document.getElementById("profAreasForDevelopment").value,
+        profActionsToTake: document.getElementById("profActionsToTake").value,
+        leaderStrengths: document.getElementById("leaderStrengths").value,
+        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment").value,
+        leaderActionsToTake: document.getElementById("leaderActionsToTake").value,
+        nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value,
+        nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value,
+        nextRoleMobility: document.getElementById("nextRoleMobility").value
+    };
+    
+    const userId = getUserIdFromURL();
+    
+    // Disable the submit button and show loading state
+    const submitButton = document.getElementById("submitMidYearIDP");
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    }
+    
+    // Submit the form using AJAX
+    fetch(`/linemanager/midyear-idp/${userId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Mid-Year IDP saved successfully!");
+            // Redirect or update UI as needed
+            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+        } else {
+            alert("Error saving Mid-Year IDP: " + data.message);
+            // Re-enable the submit button
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Error submitting Mid-Year IDP:", error);
+        alert("An error occurred while submitting the Mid-Year IDP. Please try again.");
+        // Re-enable the submit button
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
+        }
+    });
+}
+
+// Function to submit Final-Year IDP form
+function submitFinalYearIDPForm(event) {
+    event.preventDefault();
+    
+    // Validate the form
+    if (!validateIDPForm()) {
+        return;
+    }
+    
+    // Get form data
+    const formData = {
+        profStrengths: document.getElementById("profStrengths").value,
+        profAreasForDevelopment: document.getElementById("profAreasForDevelopment").value,
+        profActionsToTake: document.getElementById("profActionsToTake").value,
+        leaderStrengths: document.getElementById("leaderStrengths").value,
+        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment").value,
+        leaderActionsToTake: document.getElementById("leaderActionsToTake").value,
+        nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value,
+        nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value,
+        nextRoleMobility: document.getElementById("nextRoleMobility").value
+    };
+    
+    const userId = getUserIdFromURL();
+    
+    // Disable the submit button and show loading state
+    const submitButton = document.getElementById("submitFinalYearIDP");
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    }
+    
+    // Submit the form using AJAX
+    fetch(`/linemanager/finalyear-idp/${userId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Final-Year IDP saved successfully!");
+            // Redirect or update UI as needed
+            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+        } else {
+            alert("Error saving Final-Year IDP: " + data.message);
+            // Re-enable the submit button
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Final-Year IDP';
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Error submitting Final-Year IDP:", error);
+        alert("An error occurred while submitting the Final-Year IDP. Please try again.");
+        // Re-enable the submit button
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Final-Year IDP';
+        }
+    });
+}
+
+// Function to validate IDP form
+function validateIDPForm() {
+    const requiredFields = [
+        "profStrengths", 
+        "profAreasForDevelopment", 
+        "profActionsToTake", 
+        "leaderStrengths", 
+        "leaderAreasForDevelopment", 
+        "leaderActionsToTake", 
+        "nextRoleShortTerm", 
+        "nextRoleLongTerm", 
+        "nextRoleMobility"
+    ];
+    
+    let isValid = true;
+    
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field && !field.value.trim()) {
+            field.classList.add("error");
+            isValid = false;
+        } else if (field) {
+            field.classList.remove("error");
+        }
+    });
+    
+    if (!isValid) {
+        alert("Please fill all required fields.");
+    }
+    
+    return isValid;
+}
+
+// Function to load Mid-Year IDP data
+function loadMidYearIDPData(userId) {
+    fetch(`/linemanager/midyear-idp/${userId}`, {
+        method: "GET",
+        headers: {
+            "Accept": "application/json"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            midYearIDPData = data.viewState.midYearData;
+            console.log("Loaded Mid-Year IDP data:", midYearIDPData);
+        } else {
+            console.error("Error loading Mid-Year IDP data:", data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Error fetching Mid-Year IDP data:", error);
+    });
+}
+
+// Function to load Final-Year IDP data
+function loadFinalYearIDPData(userId, year) {
+    fetch(`/linemanager/finalyear-idp/${userId}?year=${year}`, {
+        method: "GET",
+        headers: {
+            "Accept": "application/json"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            finalYearIDPData = data.viewState.finalYearData;
+            console.log("Loaded Final-Year IDP data:", finalYearIDPData);
+        } else {
+            console.error("Error loading Final-Year IDP data:", data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Error fetching Final-Year IDP data:", error);
+    });
+}
+
+// Function to create view-only Mid-Year IDP
+function createViewOnlyMidYearIDP(data) {
+    if (!data) {
+        console.error("No Mid-Year IDP data available for view-only mode");
+        return;
+    }
+    
+    // Create view-only form
+    const form = document.getElementById("midYearIDPFormDetails");
+    if (form) {
+        // Disable all form inputs
+        const inputs = form.querySelectorAll("input, textarea");
+        inputs.forEach(input => {
+            input.disabled = true;
+        });
+        
+        // Hide submit button
+        const submitButton = document.getElementById("submitMidYearIDP");
+        if (submitButton) {
+            submitButton.style.display = "none";
+        }
+        
+        // Set values for view-only
+        setIDPFormValues(data);
+    }
+}
+
+// Function to create view-only Final-Year IDP
+function createViewOnlyFinalYearIDP(data) {
+    if (!data) {
+        console.error("No Final-Year IDP data available for view-only mode");
+        return;
+    }
+    
+    // Create view-only form
+    const form = document.getElementById("midYearIDPFormDetails");
+    if (form) {
+        // Disable all form inputs
+        const inputs = form.querySelectorAll("input, textarea");
+        inputs.forEach(input => {
+            input.disabled = true;
+        });
+        
+        // Hide submit button
+        const submitButton = document.getElementById("submitFinalYearIDP");
+        if (submitButton) {
+            submitButton.style.display = "none";
+        }
+        
+        // Set values for view-only
+        setIDPFormValues(data);
+    }
+}
+
+// Function to enable Mid-Year IDP form for editing
+function enableMidYearIDPForm() {
+    const form = document.getElementById("midYearIDPFormDetails");
+    if (form) {
+        // Enable all form inputs
+        const inputs = form.querySelectorAll("input, textarea");
+        inputs.forEach(input => {
+            input.disabled = false;
+        });
+        
+        // Show submit button
+        const submitButton = document.getElementById("submitMidYearIDP");
+        if (submitButton) {
+            submitButton.style.display = "inline-block";
+        }
+    }
+}
+
+// Function to enable Final-Year IDP form for editing
+function enableFinalYearIDPForm() {
+    const form = document.getElementById("midYearIDPFormDetails");
+    if (form) {
+        // Enable all form inputs
+        const inputs = form.querySelectorAll("input, textarea");
+        inputs.forEach(input => {
+            input.disabled = false;
+        });
+        
+        // Show submit button
+        const submitButton = document.getElementById("submitFinalYearIDP");
+        if (submitButton) {
+            submitButton.style.display = "inline-block";
+        }
+    }
+}
+
+// Function to set IDP form values
+function setIDPFormValues(data) {
+    // Set each field value if it exists
+    if (data.profStrengths) document.getElementById("profStrengths").value = data.profStrengths;
+    if (data.profAreasForDevelopment) document.getElementById("profAreasForDevelopment").value = data.profAreasForDevelopment;
+    if (data.profActionsToTake) document.getElementById("profActionsToTake").value = data.profActionsToTake;
+    if (data.leaderStrengths) document.getElementById("leaderStrengths").value = data.leaderStrengths;
+    if (data.leaderAreasForDevelopment) document.getElementById("leaderAreasForDevelopment").value = data.leaderAreasForDevelopment;
+    if (data.leaderActionsToTake) document.getElementById("leaderActionsToTake").value = data.leaderActionsToTake;
+    if (data.nextRoleShortTerm) document.getElementById("nextRoleShortTerm").value = data.nextRoleShortTerm;
+    if (data.nextRoleLongTerm) document.getElementById("nextRoleLongTerm").value = data.nextRoleLongTerm;
+    if (data.nextRoleMobility) document.getElementById("nextRoleMobility").value = data.nextRoleMobility;
+}
+
+// Helper function to get userId from URL
+function getUserIdFromURL() {
+    const pathParts = window.location.pathname.split('/');
+    const userIdIndex = pathParts.indexOf('records-performance-tracker') + 1;
+    if (userIdIndex < pathParts.length) {
+        return pathParts[userIdIndex];
+    }
+    return null;
+}
+
+ // Original sidebar functionality 
+ document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+        
             </script>
         </div>
     </div>

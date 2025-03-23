@@ -2614,6 +2614,443 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             res.redirect('/linemanager/records-performance-tracker');
         }
     },    
+
+    saveMidYearIDP: async function(req, res) {
+        try {
+            // Get the user ID from the route parameters or form submission
+            const userId = req.params.userId || req.body.userId;
+            console.log("Starting saveMidYearIDP for userId:", userId);
+    
+            if (!userId) {
+                console.error("User ID is missing");
+                return res.status(400).json({ success: false, message: "User ID is required" });
+            }
+    
+            // Get all form fields from the request body
+            const {
+                profStrengths,
+                profAreasForDevelopment,
+                profActionsToTake,
+                leaderStrengths,
+                leaderAreasForDevelopment,
+                leaderActionsToTake,
+                nextRoleShortTerm,
+                nextRoleLongTerm,
+                nextRoleMobility
+            } = req.body;
+    
+            console.log("Received form data:", req.body);
+    
+            // Check if there's already an entry for this user
+            const { data: existingRecord, error: checkError } = await supabase
+                .from("midyearidps")
+                .select("midyearidpId")
+                .eq("userId", userId)
+                .single();
+    
+            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+                console.error("Error checking for existing midyearidp:", checkError);
+                return res.status(500).json({ success: false, message: "Error checking for existing record" });
+            }
+    
+            let result;
+            if (existingRecord) {
+                // Update existing record
+                console.log("Updating existing midyearidp record:", existingRecord.midyearidpId);
+                const { data, error } = await supabase
+                    .from("midyearidps")
+                    .update({
+                        profStrengths,
+                        profAreasForDevelopment,
+                        profActionsToTake,
+                        leaderStrengths,
+                        leaderAreasForDevelopment,
+                        leaderActionsToTake,
+                        nextRoleShortTerm,
+                        nextRoleLongTerm,
+                        nextRoleMobility
+                    })
+                    .eq("midyearidpId", existingRecord.midyearidpId);
+    
+                if (error) {
+                    console.error("Error updating midyearidp:", error);
+                    return res.status(500).json({ success: false, message: error.message });
+                }
+                
+                result = data;
+            } else {
+                // Create new record
+                console.log("Creating new midyearidp record for userId:", userId);
+                const { data, error } = await supabase
+                    .from("midyearidps")
+                    .insert({
+                        userId,
+                        profStrengths,
+                        profAreasForDevelopment,
+                        profActionsToTake,
+                        leaderStrengths,
+                        leaderAreasForDevelopment,
+                        leaderActionsToTake,
+                        nextRoleShortTerm,
+                        nextRoleLongTerm,
+                        nextRoleMobility
+                    })
+                    .select();
+    
+                if (error) {
+                    console.error("Error inserting midyearidp:", error);
+                    return res.status(500).json({ success: false, message: error.message });
+                }
+                
+                result = data;
+            }
+    
+            console.log("Mid-Year IDP saved successfully:", result);
+    
+            // If it's an API request (AJAX), return JSON
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(200).json({ 
+                    success: true, 
+                    message: "Mid-Year IDP saved successfully" 
+                });
+            }
+    
+            // Otherwise, redirect to the user's records page with success message
+            req.flash('success', 'Mid-Year IDP submitted successfully!');
+            return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
+    
+        } catch (error) {
+            console.error("Error in saveMidYearIDP:", error);
+            
+            // If it's an API request (AJAX), return JSON error
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "An error occurred while saving the Mid-Year IDP",
+                    error: error.message 
+                });
+            }
+    
+            // Otherwise, redirect with error message
+            req.flash('errors', { dbError: 'An error occurred while saving the Mid-Year IDP.' });
+            return res.redirect(`/linemanager/midyear-idp/${req.params.userId || req.body.userId}`);
+        }
+    },
+
+    saveFinalYearIDP: async function(req, res) {
+        try {
+            // Get the user ID from the route parameters or form submission
+            const userId = req.params.userId || req.body.userId;
+            console.log("Starting saveFinalYearIDP for userId:", userId);
+    
+            if (!userId) {
+                console.error("User ID is missing");
+                return res.status(400).json({ success: false, message: "User ID is required" });
+            }
+    
+            // Get all form fields from the request body
+            const {
+                profStrengths,
+                profAreasForDevelopment,
+                profActionsToTake,
+                leaderStrengths,
+                leaderAreasForDevelopment,
+                leaderActionsToTake,
+                nextRoleShortTerm,
+                nextRoleLongTerm,
+                nextRoleMobility
+            } = req.body;
+    
+            console.log("Received form data:", req.body);
+    
+            // Check if there's already an entry for this user
+            const { data: existingRecord, error: checkError } = await supabase
+                .from("finalyearidps")
+                .select("finalyearidpId")
+                .eq("userId", userId)
+                .single();
+    
+            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+                console.error("Error checking for existing finalyearidp:", checkError);
+                return res.status(500).json({ success: false, message: "Error checking for existing record" });
+            }
+    
+            let result;
+            if (existingRecord) {
+                // Update existing record
+                console.log("Updating existing finalyearidp record:", existingRecord.finalyearidpId);
+                const { data, error } = await supabase
+                    .from("finalyearidps")
+                    .update({
+                        profStrengths,
+                        profAreasForDevelopment,
+                        profActionsToTake,
+                        leaderStrengths,
+                        leaderAreasForDevelopment,
+                        leaderActionsToTake,
+                        nextRoleShortTerm,
+                        nextRoleLongTerm,
+                        nextRoleMobility
+                    })
+                    .eq("finalyearidpId", existingRecord.finalyearidpId);
+    
+                if (error) {
+                    console.error("Error updating finalyearidp:", error);
+                    return res.status(500).json({ success: false, message: error.message });
+                }
+                
+                result = data;
+            } else {
+                // Create new record
+                console.log("Creating new finalyearidp record for userId:", userId);
+                const { data, error } = await supabase
+                    .from("finalyearidps")
+                    .insert({
+                        userId,
+                        // Removed both jobId and year fields since they don't exist in the table
+                        profStrengths,
+                        profAreasForDevelopment,
+                        profActionsToTake,
+                        leaderStrengths,
+                        leaderAreasForDevelopment,
+                        leaderActionsToTake,
+                        nextRoleShortTerm,
+                        nextRoleLongTerm,
+                        nextRoleMobility
+                    })
+                    .select();
+    
+                if (error) {
+                    console.error("Error inserting finalyearidp:", error);
+                    return res.status(500).json({ success: false, message: error.message });
+                }
+                
+                result = data;
+            }
+    
+            console.log("Final-Year IDP saved successfully:", result);
+    
+            // If it's an API request (AJAX), return JSON
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(200).json({ 
+                    success: true, 
+                    message: "Final-Year IDP saved successfully" 
+                });
+            }
+    
+            // Otherwise, redirect to the user's records page with success message
+            req.flash('success', 'Final-Year IDP submitted successfully!');
+            return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
+    
+        } catch (error) {
+            console.error("Error in saveFinalYearIDP:", error);
+            
+            // If it's an API request (AJAX), return JSON error
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "An error occurred while saving the Final-Year IDP",
+                    error: error.message 
+                });
+            }
+    
+            // Otherwise, redirect with error message
+            req.flash('errors', { dbError: 'An error occurred while saving the Final-Year IDP.' });
+            return res.redirect(`/linemanager/finalyear-idp/${req.params.userId || req.body.userId}`);
+        }
+    },
+
+    getMidYearIDP: async function(req, res) {
+        try {
+            const userId = req.params.userId;
+            console.log("Fetching Mid-Year IDP for userId:", userId);
+    
+            if (!userId) {
+                console.error("User ID is missing");
+                return res.status(400).json({ success: false, message: "User ID is required" });
+            }
+    
+            // First, get user information
+            const { data: userData, error: userError } = await supabase
+                .from("useraccounts")
+                .select(`
+                    userId,
+                    userEmail,
+                    staffaccounts (
+                        firstName,
+                        lastName,
+                        jobId,
+                        departmentId,
+                        departments (deptName),
+                        jobpositions (jobTitle)
+                    )
+                `)
+                .eq("userId", userId)
+                .single();
+    
+            if (userError) {
+                console.error("Error fetching user data:", userError);
+                return res.status(500).json({ success: false, message: "Error fetching user data" });
+            }
+    
+            // Then, get the Mid-Year IDP data
+            const { data: midYearData, error: midYearError } = await supabase
+                .from("midyearidps")
+                .select("*")
+                .eq("userId", userId)
+                .single();
+    
+            if (midYearError && midYearError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+                console.error("Error fetching midyear IDP:", midYearError);
+                return res.status(500).json({ success: false, message: "Error fetching midyear IDP data" });
+            }
+    
+            // Format the user data
+            const user = {
+                userId: userData.userId,
+                userEmail: userData.userEmail,
+                firstName: userData.staffaccounts[0]?.firstName || "",
+                lastName: userData.staffaccounts[0]?.lastName || "",
+                jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || "",
+                departmentName: userData.staffaccounts[0]?.departments?.deptName || ""
+            };
+    
+            // Determine view state - whether to show form or view-only mode
+            const viewState = {
+                viewOnlyStatus: {
+                    midyearidp: !!midYearData // true if midYearData exists, false otherwise
+                },
+                midYearData // Pass the data for view-only mode
+            };
+    
+            // If it's an API request (AJAX), return JSON
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(200).json({ 
+                    success: true, 
+                    user,
+                    viewState
+                });
+            }
+    
+            // Otherwise, render the midyear IDP page
+            return res.render('staffpages/linemanager_pages/midyear-idp', { 
+                user,
+                viewState
+            });
+    
+        } catch (error) {
+            console.error("Error in getMidYearIDP:", error);
+            
+            // If it's an API request (AJAX), return JSON error
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "An error occurred while fetching the Mid-Year IDP",
+                    error: error.message 
+                });
+            }
+    
+            // Otherwise, redirect with error message
+            req.flash('errors', { dbError: 'An error occurred while loading the Mid-Year IDP.' });
+            return res.redirect('/linemanager/records-performance-tracker');
+        }
+    },
+
+    getFinalYearIDP: async function(req, res) {
+        try {
+            const userId = req.params.userId;
+            console.log("Fetching Final-Year IDP for userId:", userId);
+    
+            if (!userId) {
+                console.error("User ID is missing");
+                return res.status(400).json({ success: false, message: "User ID is required" });
+            }
+    
+            // First, get user information
+            const { data: userData, error: userError } = await supabase
+                .from("useraccounts")
+                .select(`
+                    userId,
+                    userEmail,
+                    staffaccounts (
+                        firstName,
+                        lastName,
+                        departmentId,
+                        departments (deptName),
+                        jobpositions (jobTitle)
+                    )
+                `)
+                .eq("userId", userId)
+                .single();
+    
+            if (userError) {
+                console.error("Error fetching user data:", userError);
+                return res.status(500).json({ success: false, message: "Error fetching user data" });
+            }
+    
+            // Then, get the Final-Year IDP data - without filtering by job or year
+            const { data: finalYearData, error: finalYearError } = await supabase
+                .from("finalyearidps")
+                .select("*")
+                .eq("userId", userId)
+                .single();
+    
+            if (finalYearError && finalYearError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+                console.error("Error fetching finalyear IDP:", finalYearError);
+                return res.status(500).json({ success: false, message: "Error fetching finalyear IDP data" });
+            }
+    
+            // Format the user data
+            const user = {
+                userId: userData.userId,
+                userEmail: userData.userEmail,
+                firstName: userData.staffaccounts[0]?.firstName || "",
+                lastName: userData.staffaccounts[0]?.lastName || "",
+                jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || "",
+                departmentName: userData.staffaccounts[0]?.departments?.deptName || ""
+                // Removed jobId from the user object
+            };
+    
+            // Determine view state - whether to show form or view-only mode
+            const viewState = {
+                viewOnlyStatus: {
+                    finalyearidp: !!finalYearData // true if finalYearData exists, false otherwise
+                },
+                finalYearData // Pass the data for view-only mode
+            };
+    
+            // If it's an API request (AJAX), return JSON
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(200).json({ 
+                    success: true, 
+                    user,
+                    viewState
+                });
+            }
+    
+            // Otherwise, render the finalyear IDP page
+            return res.render('staffpages/linemanager_pages/finalyear-idp', { 
+                user,
+                viewState
+            });
+    
+        } catch (error) {
+            console.error("Error in getFinalYearIDP:", error);
+            
+            // If it's an API request (AJAX), return JSON error
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "An error occurred while fetching the Final-Year IDP",
+                    error: error.message 
+                });
+            }
+    
+            // Otherwise, redirect with error message
+            req.flash('errors', { dbError: 'An error occurred while loading the Final-Year IDP.' });
+            return res.redirect('/linemanager/records-performance-tracker');
+        }
+    },
     
     // getUserProgressView: async function(req, res) {
     //     const user = req.user;
@@ -3217,6 +3654,197 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             res.redirect('/staff/login');
         });
     },
+
+    // Add this new method to check feedback submission status
+checkFeedbackStatus: async function(req, res) {
+    const { userId, quarter } = req.query;
+    const currentUserId = req.session?.user?.userId;
+    
+    if (!userId || !quarter || !currentUserId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Missing required parameters.'
+        });
+    }
+    
+    try {
+        // Determine which feedback table to query based on quarter parameter
+        let feedbackTable, feedbackIdField;
+        
+        if (quarter === 'Q1') {
+            feedbackTable = 'feedbacks_Q1';
+            feedbackIdField = 'feedbackq1_Id';
+        } else if (quarter === 'Q2') {
+            feedbackTable = 'feedbacks_Q2';
+            feedbackIdField = 'feedbackq2_Id';
+        } else if (quarter === 'Q3') {
+            feedbackTable = 'feedbacks_Q3';
+            feedbackIdField = 'feedbackq3_Id';
+        } else if (quarter === 'Q4') {
+            feedbackTable = 'feedbacks_Q4';
+            feedbackIdField = 'feedbackq4_Id';
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid quarter specified.'
+            });
+        }
+        
+        // First get the feedback ID for this user
+        const { data: feedbackData, error: feedbackError } = await supabase
+            .from(feedbackTable)
+            .select(`${feedbackIdField}, userId`)
+            .eq('userId', userId)
+            .single();
+            
+        if (feedbackError || !feedbackData) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'No feedback record found for this user.'
+            });
+        }
+        
+        const feedbackId = feedbackData[feedbackIdField];
+        
+        // Check if the current user has submitted answers for this feedback
+        // First check objectives feedback
+        const { data: objectiveAnswers, error: objectiveError } = await supabase
+            .from('feedbacks_answers-objectives')
+            .select('feedback_answerObjectivesId')
+            .eq('feedback_qObjectivesId', feedbackId)
+            .limit(1);
+            
+        if (!objectiveError && objectiveAnswers && objectiveAnswers.length > 0) {
+            // Feedback has been submitted for objectives
+            return res.status(200).json({
+                success: true,
+                submitted: true,
+                message: 'Feedback has been submitted for this user.'
+            });
+        }
+        
+        // If no objective answers found, check for skill answers
+        const { data: skillAnswers, error: skillError } = await supabase
+            .from('feedbacks_answers-skills')
+            .select('feedback_answerSkillsId')
+            .eq('feedback_qSkillsId', feedbackId)
+            .limit(1);
+            
+        if (!skillError && skillAnswers && skillAnswers.length > 0) {
+            // Feedback has been submitted for skills
+            return res.status(200).json({
+                success: true,
+                submitted: true,
+                message: 'Feedback has been submitted for this user.'
+            });
+        }
+        
+        // If no answers found in either table, feedback has not been submitted
+        return res.status(200).json({
+            success: true,
+            submitted: false,
+            message: 'Feedback has not yet been submitted for this user.'
+        });
+        
+    } catch (error) {
+        console.error('Error in checkFeedbackStatus:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while checking feedback status.', 
+            error: error.message 
+        });
+    }
+},
+
+// Modify the submitFeedback method to properly store feedback answers
+submitFeedback: async function(req, res) {
+    const { userId, feedbackId, quarter, reviewerUserId, objectives, hardSkills, softSkills } = req.body;
+    
+    if (!userId || !feedbackId || !quarter || !reviewerUserId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Missing required parameters.' 
+        });
+    }
+    
+    try {
+        // Determine which feedback table and field based on quarter
+        let feedbackIdField;
+        
+        if (quarter === 'Q1') {
+            feedbackIdField = 'feedbackq1_Id';
+        } else if (quarter === 'Q2') {
+            feedbackIdField = 'feedbackq2_Id';
+        } else if (quarter === 'Q3') {
+            feedbackIdField = 'feedbackq3_Id';
+        } else if (quarter === 'Q4') {
+            feedbackIdField = 'feedbackq4_Id';
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid quarter specified.' 
+            });
+        }
+        
+        // Process objectives feedback
+        if (objectives && objectives.length > 0) {
+            for (const objective of objectives) {
+                const { objectiveId, quantitative, qualitative } = objective;
+                
+                // First get the feedback_qObjectivesId from the mapping table
+                const { data: objectiveMapping, error: mappingError } = await supabase
+                    .from('feedbacks_questions-objectives')
+                    .select('feedback_qObjectivesId')
+                    .eq(feedbackIdField, feedbackId)
+                    .eq('objectiveId', objectiveId)
+                    .single();
+                    
+                if (mappingError || !objectiveMapping) {
+                    console.error('Error finding objective mapping:', mappingError);
+                    continue; // Skip this objective if mapping not found
+                }
+                
+                // Insert the feedback answer
+                const { error: insertError } = await supabase
+                    .from('feedbacks_answers-objectives')
+                    .insert({
+                        feedback_qObjectivesId: objectiveMapping.feedback_qObjectivesId,
+                        objectiveQualInput: qualitative,
+                        objectiveQuantInput: parseInt(quantitative),
+                        created_at: new Date()
+                    });
+                    
+                if (insertError) {
+                    console.error('Error inserting objective feedback:', insertError);
+                }
+            }
+        }
+        
+        // Process hard skills feedback
+        if (hardSkills && hardSkills.length > 0) {
+            await processSkillsFeedback(hardSkills, feedbackId, feedbackIdField);
+        }
+        
+        // Process soft skills feedback
+        if (softSkills && softSkills.length > 0) {
+            await processSkillsFeedback(softSkills, feedbackId, feedbackIdField);
+        }
+        
+        return res.status(200).json({
+            success: true,
+            message: 'Feedback submitted successfully.'
+        });
+        
+    } catch (error) {
+        console.error('Error in submitFeedback:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while submitting feedback.', 
+            error: error.message 
+        });
+    }
+},
+
 
 
 
