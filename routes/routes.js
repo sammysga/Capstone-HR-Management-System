@@ -248,5 +248,12 @@ router.post('/linemanager/midyear-idp/:userId', lineManagerController.saveMidYea
 router.get('/linemanager/finalyear-idp/:userId', lineManagerController.getFinalYearIDP);
 router.post('/linemanager/finalyear-idp/:userId', lineManagerController.saveFinalYearIDP);
 
+router.get('/linemanager/get-feedback-data/:userId', lineManagerController.getFeedbackData);
+// In your routes file
+
+// Add this to your routes file (routes.js or similar)
+router.get('/linemanager/check-feedback-status', lineManagerController.checkFeedbackStatus);
+
+
 module.exports = router; 
 
