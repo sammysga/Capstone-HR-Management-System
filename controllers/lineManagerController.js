@@ -3323,6 +3323,381 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
         }
     },    
 
+ // Updated getFeedbackData method with fixed column name
+
+getFeedbackData: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        const quarter = req.query.quarter; // e.g., "Q1", "Q2", etc.
+        
+        if (!userId || !quarter) {
+            return res.status(400).json({
+                success: false, 
+                message: "User ID and quarter are required."
+            });
+        }
+        
+        console.log(`Fetching ${quarter} feedback data for user ${userId}`);
+        
+        // 1. Determine which feedback table to query
+        let feedbackTable, feedbackIdField;
+        
+        if (quarter === 'Q1') {
+            feedbackTable = 'feedbacks_Q1';
+            feedbackIdField = 'feedbackq1_Id';
+        } else if (quarter === 'Q2') {
+            feedbackTable = 'feedbacks_Q2';
+            feedbackIdField = 'feedbackq2_Id';
+        } else if (quarter === 'Q3') {
+            feedbackTable = 'feedbacks_Q3';
+            feedbackIdField = 'feedbackq3_Id';
+        } else if (quarter === 'Q4') {
+            feedbackTable = 'feedbacks_Q4';
+            feedbackIdField = 'feedbackq4_Id';
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid quarter specified."
+            });
+        }
+        
+        // 2. Get the feedback record for this user and quarter
+        const { data: feedbackData, error: feedbackError } = await supabase
+            .from(feedbackTable)
+            .select(`
+                ${feedbackIdField},
+                userId,
+                jobId,
+                setStartDate,
+                setEndDate,
+                dateCreated,
+                year,
+                quarter
+            `)
+            .eq('userId', userId)
+            .eq('quarter', quarter)
+            .single();
+            
+        if (feedbackError) {
+            console.error('Error fetching feedback data:', feedbackError);
+            return res.status(404).json({
+                success: false,
+                message: `No ${quarter} feedback found for this user.`
+            });
+        }
+        
+        if (!feedbackData) {
+            return res.status(404).json({
+                success: false,
+                message: `No ${quarter} feedback record found for this user.`
+            });
+        }
+        
+        const feedbackId = feedbackData[feedbackIdField];
+        const jobId = feedbackData.jobId;
+        
+        // If no feedbackId is found, return early
+        if (!feedbackId) {
+            return res.status(404).json({
+                success: false,
+                message: `No feedback ID found for this ${quarter} record.`
+            });
+        }
+        
+        // 3. Get the objective settings for this user
+        const { data: objectiveSettings, error: objectivesSettingsError } = await supabase
+            .from('objectivesettings')
+            .select('objectiveSettingsId, performancePeriodYear')
+            .eq('userId', userId)
+            .eq('jobId', jobId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+            
+        if (objectivesSettingsError) {
+            console.error('Error fetching objective settings:', objectivesSettingsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving objective settings."
+            });
+        }
+        
+        if (!objectiveSettings || objectiveSettings.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No objectives found for this user."
+            });
+        }
+        
+        const objectiveSettingsId = objectiveSettings[0].objectiveSettingsId;
+        
+        // 4. Get the actual objectives
+        const { data: objectives, error: objectivesError } = await supabase
+            .from('objectivesettings_objectives')
+            .select('*')
+            .eq('objectiveSettingsId', objectiveSettingsId);
+            
+        if (objectivesError) {
+            console.error('Error fetching objectives:', objectivesError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving objectives."
+            });
+        }
+        
+        // 5. Get the feedback questions for objectives
+        const { data: objectiveQuestionsMapping, error: objectiveQuestionsError } = await supabase
+            .from('feedbacks_questions-objectives')
+            .select(`
+                feedback_qObjectivesId,
+                objectiveId,
+                objectiveQualiQuestion,
+                ${feedbackIdField}
+            `)
+            .eq(feedbackIdField, feedbackId);
+            
+        if (objectiveQuestionsError) {
+            console.error('Error fetching objective questions:', objectiveQuestionsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving objective questions."
+            });
+        }
+        
+        // 6. For each objective mapping, get actual answers
+        const objectiveFeedback = [];
+        
+        for (const objective of objectives) {
+            const mapping = objectiveQuestionsMapping.find(q => q.objectiveId === objective.objectiveId);
+            
+            if (!mapping) continue;
+            
+            const { data: answers, error: answersError } = await supabase
+                .from('feedbacks_answers-objectives')
+                .select('objectiveQualInput, objectiveQuantInput, created_at')
+                .eq('feedback_qObjectivesId', mapping.feedback_qObjectivesId);
+                
+            if (answersError) {
+                console.error('Error fetching objective answers:', answersError);
+                continue;
+            }
+            
+            // Calculate average rating
+            let totalRating = 0;
+            let validRatings = 0;
+            
+            for (const answer of answers || []) {
+                if (answer.objectiveQuantInput) {
+                    totalRating += answer.objectiveQuantInput;
+                    validRatings++;
+                }
+            }
+            
+            const averageRating = validRatings > 0 ? totalRating / validRatings : null;
+            
+            // Format comments
+            const comments = (answers || []).map(answer => ({
+                text: answer.objectiveQualInput || "No comment provided",
+                submittedOn: answer.created_at,
+                responderType: 'Anonymous' // You might want to add logic to determine responder type
+            }));
+            
+            objectiveFeedback.push({
+                ...objective,
+                question: mapping.objectiveQualiQuestion,
+                averageRating,
+                comments: comments || []
+            });
+        }
+        
+        // 7. Get skills data
+        const { data: skills, error: skillsError } = await supabase
+            .from('jobreqskills')
+            .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
+            .eq('jobId', jobId);
+            
+        if (skillsError) {
+            console.error('Error fetching skills:', skillsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving skills data."
+            });
+        }
+        
+        // 8. Get skill questions
+        const { data: skillQuestionsMapping, error: skillQuestionsError } = await supabase
+            .from('feedbacks_questions-skills')
+            .select(`
+                feedback_qSkillsId,
+                jobReqSkillId,
+                ${feedbackIdField}
+            `)
+            .eq(feedbackIdField, feedbackId);
+            
+        if (skillQuestionsError) {
+            console.error('Error fetching skill questions:', skillQuestionsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving skill questions."
+            });
+        }
+        
+        // 9. For each skill, get answers
+        const skillsFeedback = [];
+        
+        for (const skill of skills || []) {
+            const mapping = skillQuestionsMapping.find(q => q.jobReqSkillId === skill.jobReqSkillId);
+            
+            if (!mapping) continue;
+            
+            // FIXED: Column name corrected from skillQuantInput to skillsQuantInput
+            const { data: answers, error: answersError } = await supabase
+                .from('feedbacks_answers-skills')
+                .select('skillsQuantInput, created_at')
+                .eq('feedback_qSkillsId', mapping.feedback_qSkillsId);
+                
+            if (answersError) {
+                console.error('Error fetching skill answers:', answersError);
+                continue;
+            }
+            
+            // Calculate average rating
+            let totalRating = 0;
+            let validRatings = 0;
+            
+            // FIXED: Column name corrected from skillQuantInput to skillsQuantInput
+            for (const answer of answers || []) {
+                if (answer.skillsQuantInput) {
+                    totalRating += answer.skillsQuantInput;
+                    validRatings++;
+                }
+            }
+            
+            const averageRating = validRatings > 0 ? totalRating / validRatings : null;
+            
+            skillsFeedback.push({
+                skillName: skill.jobReqSkillName,
+                skillType: skill.jobReqSkillType,
+                averageRating,
+                responseCount: validRatings
+            });
+        }
+        
+        // 10. Build individual responder data for detailed view
+        // This will be a simplified version as we don't have responder identification
+        const individualAnswers = [];
+        
+        // Group answers by created_at timestamp to simulate individual responders
+        const allObjectiveAnswers = [];
+        const allSkillAnswers = [];
+        
+        // Get all objective answers
+        for (const mapping of objectiveQuestionsMapping || []) {
+            const { data: answers, error } = await supabase
+                .from('feedbacks_answers-objectives')
+                .select('*, feedbacks_questions-objectives!inner(objectiveId)')
+                .eq('feedback_qObjectivesId', mapping.feedback_qObjectivesId);
+                
+            if (!error && answers) {
+                allObjectiveAnswers.push(...answers);
+            }
+        }
+        
+        // Get all skill answers
+        for (const mapping of skillQuestionsMapping || []) {
+            const { data: answers, error } = await supabase
+                .from('feedbacks_answers-skills')
+                .select('*, feedbacks_questions-skills!inner(jobReqSkillId)')
+                .eq('feedback_qSkillsId', mapping.feedback_qSkillsId);
+                
+            if (!error && answers) {
+                allSkillAnswers.push(...answers);
+            }
+        }
+        
+        // Group by created_at (simplistic approach - in production you'd use a responder ID)
+        const timestamps = new Set([
+            ...allObjectiveAnswers.map(a => a.created_at),
+            ...allSkillAnswers.map(a => a.created_at)
+        ]);
+        
+        let responderCounter = 1;
+        for (const timestamp of timestamps) {
+            const objAnswers = allObjectiveAnswers.filter(a => a.created_at === timestamp);
+            const skillAnswers = allSkillAnswers.filter(a => a.created_at === timestamp);
+            
+            // Format objective answers
+            const formattedObjAnswers = objAnswers.map(answer => {
+                const objective = objectives.find(o => o.objectiveId === answer['feedbacks_questions-objectives'].objectiveId);
+                return {
+                    objectiveName: objective?.objectiveDescrpt || 'Unknown Objective',
+                    rating: answer.objectiveQuantInput,
+                    comment: answer.objectiveQualInput
+                };
+            });
+            
+            // Format skill answers
+            const formattedSkillRatings = {};
+            
+            // FIXED: Column name corrected from skillQuantInput to skillsQuantInput
+            skillAnswers.forEach(answer => {
+                const skillId = answer['feedbacks_questions-skills'].jobReqSkillId;
+                const skill = skills.find(s => s.jobReqSkillId === skillId);
+                if (skill) {
+                    formattedSkillRatings[skill.jobReqSkillName] = answer.skillsQuantInput;
+                }
+            });
+            
+            individualAnswers.push({
+                responderId: responderCounter++,
+                responderType: 'Anonymous',
+                submittedDate: timestamp,
+                objectiveAnswers: formattedObjAnswers,
+                skillRatings: formattedSkillRatings
+            });
+        }
+        
+        // 11. Build summary stats
+        const totalResponses = individualAnswers.length;
+        
+        const totalRatingSum = objectiveFeedback.reduce((sum, obj) => 
+            sum + (obj.averageRating || 0), 0);
+        
+        const averageRating = objectiveFeedback.length > 0 ? 
+            totalRatingSum / objectiveFeedback.length : 0;
+        
+        // For completion rate, we would need to know how many people were supposed to respond
+        // For now, we'll calculate a percentage based on some assumptions
+        const estimatedTotalRespondersExpected = 10; // Replace with actual logic if available
+        const completionRate = Math.round((totalResponses / estimatedTotalRespondersExpected) * 100) + "%";
+        
+        // 12. Return the compiled data
+        return res.status(200).json({
+            success: true,
+            stats: {
+                totalResponses,
+                averageRating: averageRating.toFixed(1),
+                completionRate
+            },
+            objectiveFeedback,
+            skillsFeedback,
+            individualAnswers,
+            meta: {
+                feedbackId,
+                quarter,
+                startDate: feedbackData.setStartDate,
+                endDate: feedbackData.setEndDate
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error in getFeedbackData:', error);
+        return res.status(500).json({
+            success: false,
+            message: "An unexpected error occurred while fetching feedback data.",
+            error: error.message
+        });
+    }
+},
     save360DegreeFeedback: async function(req, res) {
         const { userId, startDate, endDate, jobId, feedbackData, quarter } = req.body;
     
