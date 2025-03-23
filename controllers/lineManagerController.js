@@ -3,7 +3,26 @@ const bcrypt = require('bcrypt');
 const { getISOWeek } = require('date-fns');
 
 
-
+async function getLeaveTypeName(leaveTypeId) {
+    try {
+        // Query the leave types table to get the name
+        const { data, error } = await supabase
+            .from('leavetypes')
+            .select('leaveTypeName')
+            .eq('leaveTypeId', leaveTypeId)
+            .single();
+            
+        if (error || !data) {
+            console.log('Error getting leave type name:', error);
+            return 'Leave';
+        }
+        
+        return data.leaveTypeName || 'Leave';
+    } catch (err) {
+        console.error('Error in getLeaveTypeName:', err);
+        return 'Leave';
+    }
+}
 function isValidQuarter(quarter) {
     return ['Q1', 'Q2', 'Q3', 'Q4'].includes(quarter);
 }
@@ -246,167 +265,167 @@ const lineManagerController = {
     },
     
 
-    // Updated Line Manager Controller function to fetch applicant notifications
+    // // Updated Line Manager Controller function to fetch applicant notifications
 
-    getLineManagerNotifications: async function (req, res) {
-        // Check for authentication
-        if (!req.session.user) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
+    // getLineManagerNotifications: async function (req, res) {
+    //     // Check for authentication
+    //     if (!req.session.user) {
+    //         return res.status(401).json({ error: 'Unauthorized' });
+    //     }
     
-        try {
-            // Get the line manager's department ID first
-            const lineManagerId = req.session.user.userId;
-            const { data: lineManagerData, error: lineManagerError } = await supabase
-                .from('staffaccounts')
-                .select('departmentId')
-                .eq('userId', lineManagerId)
-                .single();
+    //     try {
+    //         // Get the line manager's department ID first
+    //         const lineManagerId = req.session.user.userId;
+    //         const { data: lineManagerData, error: lineManagerError } = await supabase
+    //             .from('staffaccounts')
+    //             .select('departmentId')
+    //             .eq('userId', lineManagerId)
+    //             .single();
     
-            if (lineManagerError) {
-                console.error('Error fetching line manager department:', lineManagerError);
-                throw lineManagerError;
-            }
+    //         if (lineManagerError) {
+    //             console.error('Error fetching line manager department:', lineManagerError);
+    //             throw lineManagerError;
+    //         }
     
-            const lineManagerDepartmentId = lineManagerData?.departmentId;
+    //         const lineManagerDepartmentId = lineManagerData?.departmentId;
     
-            if (!lineManagerDepartmentId) {
-                console.error('Line manager has no department assigned');
-                return res.status(400).json({ error: 'Department not assigned to your account' });
-            }
+    //         if (!lineManagerDepartmentId) {
+    //             console.error('Line manager has no department assigned');
+    //             return res.status(400).json({ error: 'Department not assigned to your account' });
+    //         }
     
-            // Fetch applicants awaiting Line Manager action (P1 status) 
-            // Filter applicants by the line manager's department
-            const { data: p1Applicants, error: p1ApplicantsError } = await supabase
-                .from('applicantaccounts')
-                .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
-                .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED')
-                .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
-                .order('created_at', { ascending: false });
+    //         // Fetch applicants awaiting Line Manager action (P1 status) 
+    //         // Filter applicants by the line manager's department
+    //         const { data: p1Applicants, error: p1ApplicantsError } = await supabase
+    //             .from('applicantaccounts')
+    //             .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
+    //             .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED')
+    //             .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
+    //             .order('created_at', { ascending: false });
     
-            if (p1ApplicantsError) throw p1ApplicantsError;
+    //         if (p1ApplicantsError) throw p1ApplicantsError;
     
-            // Fetch applicants awaiting Line Manager evaluation (P3 status) 
-            // Filter applicants by the line manager's department
-            const { data: p3Applicants, error: p3ApplicantsError } = await supabase
-                .from('applicantaccounts')
-                .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
-                .eq('applicantStatus', 'P3 - Awaiting for Line Manager Evaluation')
-                .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
-                .order('created_at', { ascending: false });
+    //         // Fetch applicants awaiting Line Manager evaluation (P3 status) 
+    //         // Filter applicants by the line manager's department
+    //         const { data: p3Applicants, error: p3ApplicantsError } = await supabase
+    //             .from('applicantaccounts')
+    //             .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
+    //             .eq('applicantStatus', 'P3 - Awaiting for Line Manager Evaluation')
+    //             .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
+    //             .order('created_at', { ascending: false });
     
-            if (p3ApplicantsError) throw p3ApplicantsError;
+    //         if (p3ApplicantsError) throw p3ApplicantsError;
     
-            // Combine the applicants
-            const allApplicants = [...p1Applicants, ...p3Applicants];
+    //         // Combine the applicants
+    //         const allApplicants = [...p1Applicants, ...p3Applicants];
     
-            // Format the applicants data
-            const formattedApplicants = allApplicants.map(applicant => ({
-                id: applicant.applicantId,
-                firstName: applicant.firstName || 'N/A',
-                lastName: applicant.lastName || 'N/A',
-                status: applicant.applicantStatus || 'N/A',
-                jobId: applicant.jobId, // Include jobId for the redirect
-                createdAt: applicant.created_at,
-                formattedDate: new Date(applicant.created_at).toLocaleString('en-US', {
-                    weekday: 'short', 
-                    year: 'numeric', 
-                    month: 'short', 
-                    day: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit'
-                })
-            }));
+    //         // Format the applicants data
+    //         const formattedApplicants = allApplicants.map(applicant => ({
+    //             id: applicant.applicantId,
+    //             firstName: applicant.firstName || 'N/A',
+    //             lastName: applicant.lastName || 'N/A',
+    //             status: applicant.applicantStatus || 'N/A',
+    //             jobId: applicant.jobId, // Include jobId for the redirect
+    //             createdAt: applicant.created_at,
+    //             formattedDate: new Date(applicant.created_at).toLocaleString('en-US', {
+    //                 weekday: 'short', 
+    //                 year: 'numeric', 
+    //                 month: 'short', 
+    //                 day: 'numeric', 
+    //                 hour: '2-digit', 
+    //                 minute: '2-digit'
+    //             })
+    //         }));
     
-            // Fetch pending leave requests for staff in the line manager's department
-            const { data: leaveRequests, error: leaveError } = await supabase
-                .from('leaverequests')
-                .select(`
-                    leaveRequestId, 
-                    userId, 
-                    created_at, 
-                    fromDate, 
-                    untilDate, 
-                    status,
-                    useraccounts (
-                        userId, 
-                        userEmail,
-                        staffaccounts (
-                            departmentId,
-                            departments (deptName), 
-                            lastName, 
-                            firstName
-                        )
-                    ), 
-                    leave_types (
-                        typeName
-                    )
-                `)
-                .eq('status', 'Pending')
-                .order('created_at', { ascending: false });
+    //         // Fetch pending leave requests for staff in the line manager's department
+    //         const { data: leaveRequests, error: leaveError } = await supabase
+    //             .from('leaverequests')
+    //             .select(`
+    //                 leaveRequestId, 
+    //                 userId, 
+    //                 created_at, 
+    //                 fromDate, 
+    //                 untilDate, 
+    //                 status,
+    //                 useraccounts (
+    //                     userId, 
+    //                     userEmail,
+    //                     staffaccounts (
+    //                         departmentId,
+    //                         departments (deptName), 
+    //                         lastName, 
+    //                         firstName
+    //                     )
+    //                 ), 
+    //                 leave_types (
+    //                     typeName
+    //                 )
+    //             `)
+    //             .eq('status', 'Pending')
+    //             .order('created_at', { ascending: false });
     
-            if (leaveError) throw leaveError;
+    //         if (leaveError) throw leaveError;
     
-            // Filter leave requests to only include those from the line manager's department
-            const filteredLeaveRequests = leaveRequests.filter(leave => 
-                leave.useraccounts?.staffaccounts[0]?.departmentId === lineManagerDepartmentId
-            );
+    //         // Filter leave requests to only include those from the line manager's department
+    //         const filteredLeaveRequests = leaveRequests.filter(leave => 
+    //             leave.useraccounts?.staffaccounts[0]?.departmentId === lineManagerDepartmentId
+    //         );
     
-            // Format leave requests
-            const formattedLeaveRequests = filteredLeaveRequests.map(leave => ({
-                userId: leave.userId,
-                lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
-                firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
-                department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
-                filedDate: new Date(leave.created_at).toLocaleString('en-US', {
-                    weekday: 'short', 
-                    year: 'numeric', 
-                    month: 'short', 
-                    day: 'numeric'
-                }),
-                type: leave.leave_types?.typeName || 'N/A',
-                startDate: leave.fromDate || 'N/A',
-                endDate: leave.untilDate || 'N/A',
-                status: leave.status || 'Pending'
-            }));
+    //         // Format leave requests
+    //         const formattedLeaveRequests = filteredLeaveRequests.map(leave => ({
+    //             userId: leave.userId,
+    //             lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+    //             firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+    //             department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+    //             filedDate: new Date(leave.created_at).toLocaleString('en-US', {
+    //                 weekday: 'short', 
+    //                 year: 'numeric', 
+    //                 month: 'short', 
+    //                 day: 'numeric'
+    //             }),
+    //             type: leave.leave_types?.typeName || 'N/A',
+    //             startDate: leave.fromDate || 'N/A',
+    //             endDate: leave.untilDate || 'N/A',
+    //             status: leave.status || 'Pending'
+    //         }));
     
-            // Calculate total notification count
-            const notificationCount = formattedApplicants.length + formattedLeaveRequests.length;
+    //         // Calculate total notification count
+    //         const notificationCount = formattedApplicants.length + formattedLeaveRequests.length;
     
-            // If it's an API request, return JSON
-            if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
-                return res
-                    .header('Content-Type', 'application/json')
-                    .json({
-                        applicants: formattedApplicants,
-                        leaveRequests: formattedLeaveRequests,
-                        notificationCount: notificationCount
-                    });
-            }
+    //         // If it's an API request, return JSON
+    //         if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
+    //             return res
+    //                 .header('Content-Type', 'application/json')
+    //                 .json({
+    //                     applicants: formattedApplicants,
+    //                     leaveRequests: formattedLeaveRequests,
+    //                     notificationCount: notificationCount
+    //                 });
+    //         }
     
-            // Otherwise, return the rendered partial template
-            return res.render('partials/linemanager_partials', {
-                applicants: formattedApplicants,
-                leaveRequests: formattedLeaveRequests,
-                notificationCount: notificationCount
-            });
-        } catch (err) {
-            console.error('Error fetching notification data:', err);
+    //         // Otherwise, return the rendered partial template
+    //         return res.render('partials/linemanager_partials', {
+    //             applicants: formattedApplicants,
+    //             leaveRequests: formattedLeaveRequests,
+    //             notificationCount: notificationCount
+    //         });
+    //     } catch (err) {
+    //         console.error('Error fetching notification data:', err);
             
-            // Better error handling for API requests
-            if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
-                return res
-                    .status(500)
-                    .header('Content-Type', 'application/json')
-                    .json({ 
-                        error: 'An error occurred while loading notifications.',
-                        details: process.env.NODE_ENV === 'development' ? err.message : undefined
-                    });
-            }
+    //         // Better error handling for API requests
+    //         if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
+    //             return res
+    //                 .status(500)
+    //                 .header('Content-Type', 'application/json')
+    //                 .json({ 
+    //                     error: 'An error occurred while loading notifications.',
+    //                     details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    //                 });
+    //         }
             
-            return res.status(500).send('Error loading notifications');
-        }
-    },
+    //         return res.status(500).send('Error loading notifications');
+    //     }
+    // },
     
     getLeaveRequest: async function(req, res) {
         const userId = req.query.userId;
@@ -3198,6 +3217,395 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             res.redirect('/staff/login');
         });
     },
+
+
+
+
+/* ---------- NOTIFICATION DIVIDER ---------- */
+
+
+getLeaveTypeName: async function(leaveTypeId) {
+    try {
+        // Query the leave types table to get the name
+        const { data, error } = await supabase
+            .from('leavetypes')
+            .select('leaveTypeName')
+            .eq('leaveTypeId', leaveTypeId)
+            .single();
+            
+        if (error || !data) {
+            console.log('Error getting leave type name:', error);
+            return 'Leave';
+        }
+        
+        return data.leaveTypeName || 'Leave';
+    } catch (err) {
+        console.error('Error in _getLeaveTypeName:', err);
+        return 'Leave';
+    }
+},
+
+getLineManagerNotifications: async function (req, res) {
+    // Check for authentication
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        // Get the line manager's department ID first
+        const lineManagerId = req.session.user.userId;
+        const { data: lineManagerData, error: lineManagerError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', lineManagerId)
+            .single();
+
+        if (lineManagerError) {
+            console.error('Error fetching line manager department:', lineManagerError);
+            throw lineManagerError;
+        }
+
+        const lineManagerDepartmentId = lineManagerData?.departmentId;
+
+        if (!lineManagerDepartmentId) {
+            console.error('Line manager has no department assigned');
+            return res.status(400).json({ error: 'Department not assigned to your account' });
+        }
+
+        // Fetch applicants awaiting Line Manager action (P1 status) 
+        // Filter applicants by the line manager's department
+        const { data: p1Applicants, error: p1ApplicantsError } = await supabase
+            .from('applicantaccounts')
+            .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
+            .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED')
+            .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
+            .order('created_at', { ascending: false });
+
+        if (p1ApplicantsError) throw p1ApplicantsError;
+
+        // Fetch applicants awaiting Line Manager evaluation (P3 status) 
+        // Filter applicants by the line manager's department
+        const { data: p3Applicants, error: p3ApplicantsError } = await supabase
+            .from('applicantaccounts')
+            .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
+            .eq('applicantStatus', 'P3 - Awaiting for Line Manager Evaluation')
+            .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
+            .order('created_at', { ascending: false });
+
+        if (p3ApplicantsError) throw p3ApplicantsError;
+
+        // Combine the applicants
+        const allApplicants = [...p1Applicants, ...p3Applicants];
+
+        // Format the applicants data
+        const formattedApplicants = allApplicants.map(applicant => ({
+            id: applicant.applicantId,
+            firstName: applicant.firstName || 'N/A',
+            lastName: applicant.lastName || 'N/A',
+            status: applicant.applicantStatus || 'N/A',
+            jobId: applicant.jobId, // Include jobId for the redirect
+            createdAt: applicant.created_at,
+            formattedDate: new Date(applicant.created_at).toLocaleString('en-US', {
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit'
+            })
+        }));
+
+        // Fetch pending leave requests for staff in the line manager's department
+        const { data: leaveRequests, error: leaveError } = await supabase
+            .from('leaverequests')
+            .select(`
+                leaveRequestId, 
+                userId, 
+                created_at, 
+                fromDate, 
+                untilDate, 
+                status,
+                useraccounts (
+                    userId, 
+                    userEmail,
+                    staffaccounts (
+                        departmentId,
+                        departments (deptName), 
+                        lastName, 
+                        firstName
+                    )
+                ), 
+                leave_types (
+                    typeName
+                )
+            `)
+            .eq('status', 'Pending')
+            .order('created_at', { ascending: false });
+
+        if (leaveError) throw leaveError;
+
+        // Filter leave requests to only include those from the line manager's department
+        const filteredLeaveRequests = leaveRequests.filter(leave => 
+            leave.useraccounts?.staffaccounts[0]?.departmentId === lineManagerDepartmentId
+        );
+
+        // Format leave requests
+        const formattedLeaveRequests = filteredLeaveRequests.map(leave => ({
+            userId: leave.userId,
+            lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+            firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+            department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+            filedDate: new Date(leave.created_at).toLocaleString('en-US', {
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric'
+            }),
+            type: leave.leave_types?.typeName || 'N/A',
+            startDate: leave.fromDate || 'N/A',
+            endDate: leave.untilDate || 'N/A',
+            status: leave.status || 'Pending'
+        }));
+
+        // Calculate total notification count
+        const notificationCount = formattedApplicants.length + formattedLeaveRequests.length;
+
+        // If it's an API request, return JSON
+        if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
+            return res
+                .header('Content-Type', 'application/json')
+                .json({
+                    applicants: formattedApplicants,
+                    leaveRequests: formattedLeaveRequests,
+                    notificationCount: notificationCount
+                });
+        }
+
+        // Otherwise, return the rendered partial template
+        return res.render('partials/linemanager_partials', {
+            applicants: formattedApplicants,
+            leaveRequests: formattedLeaveRequests,
+            notificationCount: notificationCount
+        });
+    } catch (err) {
+        console.error('Error fetching notification data:', err);
+        
+        // Better error handling for API requests
+        if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
+            return res
+                .status(500)
+                .header('Content-Type', 'application/json')
+                .json({ 
+                    error: 'An error occurred while loading notifications.',
+                    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+                });
+        }
+        
+        return res.status(500).send('Error loading notifications');
+    }
+},
+// Updated function to handle missing tables gracefully
+get360FeedbackToast: async function(req, res) {
+    try {
+        console.log("Entering get360FeedbackToast function for line manager");
+
+        // Step 1: Get today's date in the Philippines Time Zone (PHT)
+        const today = new Date();
+        const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const parts = formatter.formatToParts(today);
+
+        const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
+        console.log(`Today's date (PHT): ${todayString}`);
+
+        const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4']; 
+        let activeFeedback = null;
+
+        // Step 2: Fetch the current user's department ID
+        const currentUserId = req.session?.user?.userId;
+
+        if (!currentUserId) {
+            console.log("Error: No user ID available in session.");
+            return res.status(400).json({ success: false, message: 'User ID is required.' });
+        }
+
+        // Check if staffaccounts table exists and get department ID
+        let departmentId;
+        try {
+            const { data: currentUserData, error: userError } = await supabase
+                .from('staffaccounts')
+                .select('departmentId')
+                .eq('userId', currentUserId)
+                .single();
+
+            if (userError) {
+                console.log("Error fetching user details:", userError);
+                // If table doesn't exist, provide a fallback response
+                if (userError.code === '42P01') { // Table doesn't exist
+                    console.log("Staff accounts table does not exist yet");
+                    return res.status(200).json({ 
+                        success: true, 
+                        feedback: {
+                            setStartDate: new Date().toISOString(),
+                            setEndDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+                            quarter: "Development"
+                        }, 
+                        quarter: "Development",
+                        userId: currentUserId
+                    });
+                }
+                return res.status(404).json({ success: false, message: 'User details not found.' });
+            }
+
+            if (!currentUserData) {
+                console.log("No user data found");
+                return res.status(404).json({ success: false, message: 'User details not found.' });
+            }
+
+            departmentId = currentUserData.departmentId;
+        } catch (staffError) {
+            console.error("Error accessing staff accounts:", staffError);
+            // Return a development feedback in case tables are not set up
+            return res.status(200).json({ 
+                success: true, 
+                feedback: {
+                    setStartDate: new Date().toISOString(),
+                    setEndDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+                    quarter: "Development"
+                }, 
+                quarter: "Development",
+                userId: currentUserId
+            });
+        }
+
+        // Step 3: Loop through each feedback table and fetch active feedback
+        for (const feedbackTable of feedbackTables) {
+            try {
+                console.log(`Checking feedback table: ${feedbackTable}...`);
+
+                // First check if the table exists
+                const { error: tableCheckError } = await supabase
+                    .from(feedbackTable)
+                    .select('count')
+                    .limit(1);
+
+                if (tableCheckError && tableCheckError.code === '42P01') {
+                    console.log(`Table ${feedbackTable} does not exist yet, skipping`);
+                    continue;
+                }
+
+                const { data, error } = await supabase
+                    .from(feedbackTable)
+                    .select('*')
+                    .lte('setStartDate', todayString) // Started today or earlier
+                    .gte('setEndDate', todayString);  // Ends today or later
+
+                if (error) {
+                    console.log(`Error fetching data from ${feedbackTable}:`, error);
+                    continue; 
+                }
+
+                if (data && data.length > 0) {
+                    console.log(`Found ${data.length} active feedback entries in ${feedbackTable}`);
+
+                    // Use the first active feedback found
+                    activeFeedback = data[0];
+                    const tableQuarter = feedbackTable.split('_')[1];
+                    activeFeedback.quarter = tableQuarter;
+                    break;
+                } else {
+                    console.log(`No active feedback found in ${feedbackTable}.`);
+                }
+            } catch (feedbackTableError) {
+                // Log and continue to next table if there's an error
+                console.log(`Error processing ${feedbackTable}:`, feedbackTableError);
+            }
+        }
+
+        // Check if any active feedback record was found
+        if (!activeFeedback) {
+            console.log('No active feedback records found for the given date range.');
+            return res.status(404).json({ 
+                success: false, 
+                message: 'No active feedback records found.' 
+            });
+        }
+
+        return res.status(200).json({ 
+            success: true, 
+            feedback: activeFeedback, 
+            quarter: activeFeedback.quarter,
+            userId: currentUserId
+        });
+
+    } catch (error) {
+        console.error('Error in get360FeedbackToast:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while fetching feedback data.', 
+            error: error.message 
+        });
+    }
+},
+
+getFeedbackUsers: async function(req, res) {
+    const currentUserId = req.session?.user?.userId;
+    const quarter = req.query.quarter || null;
+
+    if (!currentUserId) {
+        console.error("Error: No user ID available in session.");
+        return res.status(400).json({ message: 'User ID is required.' });
+    }
+
+    try {
+        // Your existing code...
+        
+        // Determine which feedback table to query based on quarter parameter
+        let feedbackTable;
+        let feedbackIdField;
+        
+        if (quarter === 'Q1') {
+            feedbackTable = 'feedbacks_Q1';
+            feedbackIdField = 'feedbackq1_Id';
+        } else if (quarter === 'Q2') {
+            feedbackTable = 'feedbacks_Q2';
+            feedbackIdField = 'feedbackq2_Id';
+        } else if (quarter === 'Q3') {
+            feedbackTable = 'feedbacks_Q3';
+            feedbackIdField = 'feedbackq3_Id';
+        } else if (quarter === 'Q4') {
+            feedbackTable = 'feedbacks_Q4';
+            feedbackIdField = 'feedbackq4_Id';
+        } else {
+            // If no quarter specified, use today's date to determine the quarter
+            const today = new Date();
+            const month = today.getMonth() + 1; // getMonth() returns 0-11
+            
+            if (month <= 3) {
+                feedbackTable = 'feedbacks_Q1';
+                feedbackIdField = 'feedbackq1_Id';
+            } else if (month <= 6) {
+                feedbackTable = 'feedbacks_Q2';
+                feedbackIdField = 'feedbackq2_Id';
+            } else if (month <= 9) {
+                feedbackTable = 'feedbacks_Q3';
+                feedbackIdField = 'feedbackq3_Id';
+            } else {
+                feedbackTable = 'feedbacks_Q4';
+                feedbackIdField = 'feedbackq4_Id';
+            }
+        }
+        
+        // Continue with your existing logic but focus on the selected quarter's table
+        // ...
+        
+        // Continue with rest of your function
+    } catch (error) {
+        console.error('Error in getFeedbackUsers:', error);
+        return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
+    }
+},
+
     
 };
 

@@ -1864,7 +1864,7 @@ getViewPerformanceTimeline: function(req, res){
 
 
 
-/* NOTIFICATION DIVIDER */
+/* ---------- NOTIFICATION DIVIDER ---------- */
 
 
 get360FeedbackToast: async function(req, res) {

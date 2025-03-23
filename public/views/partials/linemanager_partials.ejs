@@ -30,13 +30,12 @@ body {
     color: #D8D8D8;
     font-weight: bold;
 }
-
 /* Notification Bell and Counter Styles*/
 #notification-bell {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 1001;
+    z-index: 1002;
     background: none;
     border: none;
     cursor: pointer;
@@ -53,7 +52,6 @@ body {
     padding: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: background-color 0.3s, transform 0.3s;
-    /* Make sure the icon is displayed as block */
     display: inline-block;
     text-align: center;
     width: 36px;
@@ -81,17 +79,17 @@ body {
     align-items: center;
 }
 
-/* Notification Panel */
+/* Notification Panel - Simplified version that works */
 #notification-panel {
     position: fixed;
     top: 0;
-    right: -400px;
+    right: -350px;
     width: 350px;
     height: 100%;
     background-color: #fff;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
     transition: right 0.3s ease-in-out;
-    z-index: 1000;
+    z-index: 1001;
     padding: 20px;
     overflow-y: auto;
 }
@@ -120,15 +118,15 @@ body {
 
 /* Special styling for P3 section */
 #section-p3 {
-    background-color: #FFF3E0; /* Light orange background */
+    background-color: #FFF3E0;
     border-radius: 5px;
     padding: 10px;
-    border-left: 4px solid #FF9800; /* Orange left border */
+    border-left: 4px solid #FF9800;
     margin-bottom: 15px;
 }
 
 #section-p3 h4 {
-    color: #E65100; /* Darker orange for heading */
+    color: #E65100;
     font-weight: bold;
 }
 
@@ -175,11 +173,20 @@ body {
 
 /* Special styling for evaluate applicant buttons */
 .evaluate-applicant-btn {
-    background-color: #FF9800 !important; /* Orange color to indicate priority */
+    background-color: #FF9800 !important;
 }
 
 .evaluate-applicant-btn:hover {
     background-color: #FFC107 !important;
+}
+
+/* Priority buttons styling */
+.priority-btn {
+    background-color: #124A5C !important;
+}
+
+.priority-btn:hover {
+    background-color: #07ACB9 !important;
 }
 
 /* Floating Action Button Styling */
@@ -208,7 +215,6 @@ body {
 }
 
 .fab i {
-    /* Ensure the icon is properly centered */
     display: inline-block;
 }
 
@@ -248,13 +254,6 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-}
-
-/* Fix for sidebar items if needed */
-.sidebar ul li a i {
-    margin-right: 10px;
-    width: 20px;
-    text-align: center;
 }
 
 /* Animation for new notifications */
@@ -312,16 +311,7 @@ body {
 <div id="notification-panel">
     <h3>Notifications</h3>
     <div id="recent-notifications">
-        <div class="notification-section" id="section-1">
-            <h4>REQUIRED 360 Degree Feedback Submission</h4>
-            <!-- Sample 360 Feedback notifications -->
-            <div class="notification-item">
-                <div class="headline">360 Feedback Answers Required</div>
-                <div class="content">Your participation is required from March 15, 2025 to March 30, 2025.</div>
-                <div class="date">Wed, Mar 12, 2025, 09:15 AM</div>
-                <button class="action-btn">Required Action</button>
-            </div>
-        </div>
+        <!-- 360 Feedback section will be inserted here when available -->
         <div class="notification-section" id="section-2">
             <h4>Applicants Awaiting Review</h4>
             <!-- Applicants awaiting review will be loaded here -->
@@ -370,139 +360,338 @@ body {
     const fab = document.getElementById('fab');
     const seePreviousButton = document.getElementById('see-previous-notifications');
     
-    // API endpoint for fetching notifications
+    // API endpoints for fetching notifications
     const notificationsAPI = '/api/linemanager/notifications';
+    const feedbackAPI = '/api/get360FeedbackToast';
+    
+    // Track if we have active feedback
+    let hasActiveFeedback = false;
+    let activeFeedbackQuarter = null;
+    
+    // Default FAB click handler
+    const fabDefaultHandler = () => {
+        console.log('Floating Action Button clicked - default handler');
+        window.location.href = '/linemanager/applicant-tracker-jobposition';
+    };
+    
+    // Function to fetch 360 feedback data and update notification panel
+    async function fetch360Feedback() {
+    try {
+        console.log("Checking for 360 feedback data...");
+        
+        // Make the fetch request to the API with a catch for network errors
+        let response;
+        try {
+            response = await fetch(feedbackAPI);
+        } catch (networkError) {
+            console.log("Network error when fetching 360 feedback. Assuming no feedback.");
+            return false;
+        }
+        
+        // If response is 404, that's expected (no active feedback)
+        if (response.status === 404) {
+            console.log("No active 360 feedback found.");
+            // Remove any existing feedback section
+            const existingFeedbackSection = document.getElementById('section-feedback');
+            if (existingFeedbackSection) {
+                existingFeedbackSection.remove();
+            }
+            hasActiveFeedback = false;
+            return false;
+        }
+        
+        // For other non-OK responses, log but don't throw
+        if (!response.ok) {
+            console.log(`Server responded with status: ${response.status}. Assuming no feedback.`);
+            return false;
+        }
+        
+        // Try to parse the JSON response
+        let data;
+        try {
+            data = await response.json();
+            console.log("Received 360 feedback response:", data);
+        } catch (jsonError) {
+            console.log("Error parsing 360 feedback response:", jsonError);
+            return false;
+        }
+        
+        if (data.success && data.feedback) {
+            // Get the feedback data
+            const feedback = data.feedback;
+            const quarter = data.quarter || '';
+            activeFeedbackQuarter = quarter;
+            
+            // Format dates for display
+            const startDate = new Date(feedback.setStartDate).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+            const endDate = new Date(feedback.setEndDate).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+            
+            // Get current date in Philippines timezone
+            const now = new Date();
+            const currentDateTime = now.toLocaleString('en-US', {
+                timeZone: 'Asia/Manila',
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Look for an existing feedback section
+            let feedbackSection = document.getElementById('section-feedback');
+            
+            // If no feedback section exists, create it
+            if (!feedbackSection) {
+                feedbackSection = document.createElement('div');
+                feedbackSection.id = 'section-feedback';
+                feedbackSection.className = 'notification-section';
+                
+                // Insert at the top of recent-notifications
+                const recentNotifications = document.getElementById('recent-notifications');
+                if (recentNotifications.firstChild) {
+                    recentNotifications.insertBefore(feedbackSection, recentNotifications.firstChild);
+                } else {
+                    recentNotifications.appendChild(feedbackSection);
+                }
+            }
+            
+            // Update the feedback section content
+            feedbackSection.innerHTML = `
+                <h4>REQUIRED 360 Degree Feedback</h4>
+                <div class="notification-item">
+                    <div class="headline">360 Feedback Answers Required</div>
+                    <div class="content">The 360-Degree Quarterly Feedback (${quarter}) must be accomplished from 
+                        <span id="feedback-start-date">${startDate}</span> up until 
+                        <span id="feedback-end-date">${endDate}</span>. 
+                        Your participation is required.
+                    </div>
+                    <div class="date">${currentDateTime}</div>
+                    <button class="action-btn priority-btn" id="feedback-action-btn">Required Action</button>
+                </div>
+            `;
+            
+            // Add click event for the action button
+            document.getElementById('feedback-action-btn').addEventListener('click', function() {
+                window.location.href = `/linemanager/staffFeedbackList?quarter=${quarter}`;
+            });
+            
+            // Update the FAB to point to the feedback page
+            const fabElement = document.getElementById('fab');
+            if (fabElement) {
+                fabElement.innerHTML = '<i class="fas fa-clipboard-list"></i>';
+                
+                // Remove any existing click handlers from FAB
+                const newFab = fabElement.cloneNode(true);
+                if (fabElement.parentNode) {
+                    fabElement.parentNode.replaceChild(newFab, fabElement);
+                }
+                
+                // Add new click handler to the new element
+                document.getElementById('fab').addEventListener('click', function() {
+                    window.location.href = `/linemanager/staffFeedbackList?quarter=${quarter}`;
+                });
+            }
+            
+            // Add a pulse animation to notification bell
+            notificationBell.classList.add('pulse-animation');
+            setTimeout(() => {
+                notificationBell.classList.remove('pulse-animation');
+            }, 3000);
+            
+            // Increment notification count for the feedback
+            const currentCount = parseInt(notificationCount.textContent || '0');
+            notificationCount.textContent = currentCount + 1;
+            
+            hasActiveFeedback = true;
+            return true;
+        } else {
+            console.log("No active feedback or error in response:", data.message);
+            hasActiveFeedback = false;
+            return false;
+        }
+    } catch (error) {
+        console.error("Error while fetching 360 feedback data:", error);
+        hasActiveFeedback = false;
+        return false;
+    }
+}
 
     // Function to fetch notifications from the server
     async function fetchNotifications() {
         try {
-            const response = await fetch(notificationsAPI, {
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Server responded with status: ${response.status}`);
+            // Check if notification API is configured - use dummy data if not available
+            let response;
+            try {
+                response = await fetch(notificationsAPI, {
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    cache: 'no-store'
+                });
+            } catch (networkError) {
+                console.log("Network error when fetching notifications. Using empty data.");
+                return { 
+                    applicants: [], 
+                    leaveRequests: [],
+                    notificationCount: 0
+                };
             }
             
-            return await response.json();
+            if (!response.ok) {
+                console.log(`Server responded with status: ${response.status}. Using empty data.`);
+                return { 
+                    applicants: [], 
+                    leaveRequests: [],
+                    notificationCount: 0
+                };
+            }
+            
+            // Try to parse the response
+            try {
+                const data = await response.json();
+                return data;
+            } catch (jsonError) {
+                console.log("Error parsing notifications response:", jsonError);
+                return { 
+                    applicants: [], 
+                    leaveRequests: [],
+                    notificationCount: 0
+                };
+            }
         } catch (error) {
             console.error('Error fetching notifications:', error);
             return { 
                 applicants: [], 
-                leaveRequests: [], 
-                notificationCount: 0 
+                leaveRequests: [],
+                notificationCount: 0
             };
         }
     }
     
-    // Function to update the notification panel with applicants awaiting review
+    // Function to update applicants section
     function updateApplicantsSection(applicants) {
         const applicantsSection = document.getElementById('section-2');
         applicantsSection.innerHTML = '<h4>Applicants Awaiting Review</h4>';
-        
-        // Filter applicants with status "P3 - Awaiting for Line Manager Evaluation"
-        const p3Applicants = applicants.filter(applicant => 
-            applicant.status === "P3 - Awaiting for Line Manager Evaluation"
-        );
-        
-        // Regular applicants (not P3)
-        const regularApplicants = applicants.filter(applicant => 
-            applicant.status !== "P3 - Awaiting for Line Manager Evaluation"
-        );
 
-        // Remove any existing P3 section if it exists
-        const existingP3Section = document.getElementById('section-p3');
-        if (existingP3Section) {
-            existingP3Section.remove();
-        }
-
-        if (applicants.length === 0) {
+        if (!applicants || applicants.length === 0) {
             const emptyMessage = document.createElement('div');
             emptyMessage.classList.add('notification-item');
             emptyMessage.innerHTML = `
                 <div class="headline">No applicants awaiting review</div>
+                <div class="content">You don't have any pending applicants to review.</div>
+            `;
+            applicantsSection.appendChild(emptyMessage);
+            return;
+        }
+        
+        // Make sure we can safely access applicant properties by checking structure
+        const validateApplicant = (applicant) => {
+            // Check if object has required fields, or provide defaults based on actual DB structure
+            return {
+                id: applicant.applicantId || applicant.id || 'unknown',
+                jobId: applicant.jobId || applicant.job_id || 'unknown',
+                firstName: applicant.firstName || applicant.first_name || 'Applicant',
+                lastName: applicant.lastName || applicant.last_name || '',
+                status: applicant.applicantStatus || applicant.status || 'Pending Review',
+                formattedDate: applicant.formattedDate || applicant.formatted_date || 
+                    (applicant.applicantDate ? new Date(applicant.applicantDate).toLocaleString('en-US', {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    }) : 'Recent')
+            };
+        };
+        
+        // Map to standardized format to handle both column naming conventions
+        const normalizedApplicants = applicants.map(validateApplicant);
+        
+        // Filter P3 applicants - check for actual applicant status types from your database
+        const p3ApplicantStatus = "P3 - Awaiting for Line Manager Evaluation";
+        
+        const p3Applicants = normalizedApplicants.filter(a => 
+            a.status === p3ApplicantStatus || 
+            a.applicantStatus === p3ApplicantStatus
+        );
+        
+        const regularApplicants = normalizedApplicants.filter(a => 
+            (a.status !== p3ApplicantStatus && a.applicantStatus !== p3ApplicantStatus) && 
+            a.status !== "hired" && a.status !== "rejected" && a.applicantStatus !== "hired" && a.applicantStatus !== "rejected"
+        );
+        
+        // Remove existing P3 section
+        const existingP3Section = document.getElementById('section-p3');
+        if (existingP3Section) existingP3Section.remove();
+        
+        // Add regular applicants
+        if (regularApplicants.length > 0) {
+            regularApplicants.forEach(applicant => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <div class="headline">Applicant Review: ${applicant.firstName} ${applicant.lastName}</div>
+                    <div class="content">Status: ${applicant.status}</div>
+                    <div class="date">${applicant.formattedDate}</div>
+                    <button class="view-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Review Applicant</button>
+                `;
+                applicantsSection.appendChild(notificationItem);
+            });
+        } else {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.classList.add('notification-item');
+            emptyMessage.innerHTML = `
+                <div class="headline">No pending reviews</div>
                 <div class="content">There are currently no applicants awaiting your review.</div>
             `;
             applicantsSection.appendChild(emptyMessage);
-        } else {
-            // Add regular applicants to notification panel
-            if (regularApplicants.length > 0) {
-                regularApplicants.forEach(applicant => {
-                    const notificationItem = document.createElement('div');
-                    notificationItem.classList.add('notification-item');
-                    notificationItem.innerHTML = `
-                        <div class="headline">Applicant Review: ${applicant.firstName} ${applicant.lastName}</div>
-                        <div class="content">Status: ${applicant.status}</div>
-                        <div class="date">${applicant.formattedDate}</div>
-                        <button class="view-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Review Applicant</button>
-                    `;
-                    applicantsSection.appendChild(notificationItem);
-                });
-            } else {
-                // No regular applicants
-                const emptyMessage = document.createElement('div');
-                emptyMessage.classList.add('notification-item');
-                emptyMessage.innerHTML = `
-                    <div class="headline">No pending reviews</div>
-                    <div class="content">There are currently no applicants awaiting your review.</div>
-                `;
-                applicantsSection.appendChild(emptyMessage);
-            }
-            
-            // Add P3 applicants section if any exist
-            if (p3Applicants.length > 0) {
-                // Create a special section for P3 applicants
-                const p3Section = document.createElement('div');
-                p3Section.classList.add('notification-section');
-                p3Section.id = 'section-p3';
-                p3Section.innerHTML = '<h4>Applicants Awaiting Evaluation</h4>';
-                
-                // Add P3 applicants to the special section
-                p3Applicants.forEach(applicant => {
-                    const notificationItem = document.createElement('div');
-                    notificationItem.classList.add('notification-item');
-                    notificationItem.innerHTML = `
-                        <div class="headline">Evaluation Required: ${applicant.firstName} ${applicant.lastName}</div>
-                        <div class="content">Status: ${applicant.status}</div>
-                        <div class="date">${applicant.formattedDate}</div>
-                        <button class="evaluate-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Evaluate Applicant</button>
-                    `;
-                    p3Section.appendChild(notificationItem);
-                });
-                
-                // Insert the P3 section after the regular applicants section
-                const recentNotifications = document.getElementById('recent-notifications');
-                const section3 = document.getElementById('section-3');
-                recentNotifications.insertBefore(p3Section, section3);
-            }
-
-            document.querySelectorAll('.view-applicant-btn, .evaluate-applicant-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const applicantId = this.getAttribute('data-id');
-        const jobId = this.getAttribute('data-jobid');
-        console.log('Applicant action clicked:', applicantId, 'Job ID:', jobId);
+        }
         
-        // Both button types now redirect to the same URL
-        if (this.classList.contains('evaluate-applicant-btn')) {
-            console.log('Evaluation action triggered');
-            window.location.href = `/linemanager/applicant-tracker-jobposition?jobId=${jobId}`;
-        } else {
-            console.log('View action triggered');
-            window.location.href = `/linemanager/applicant-tracker-jobposition?jobId=${jobId}`;
+        // Add P3 applicants section
+        if (p3Applicants.length > 0) {
+            const p3Section = document.createElement('div');
+            p3Section.id = 'section-p3';
+            p3Section.classList.add('notification-section');
+            p3Section.innerHTML = '<h4>Applicants Awaiting Evaluation</h4>';
+            
+            p3Applicants.forEach(applicant => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <div class="headline">Evaluation Required: ${applicant.firstName} ${applicant.lastName}</div>
+                    <div class="content">Status: ${applicant.status}</div>
+                    <div class="date">${applicant.formattedDate}</div>
+                    <button class="evaluate-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Evaluate Applicant</button>
+                `;
+                p3Section.appendChild(notificationItem);
+            });
+            
+            // Insert after section-2
+            const section3 = document.getElementById('section-3');
+            section3.parentNode.insertBefore(p3Section, section3);
         }
-    });
-});
-        }
+        
+        // Add click handlers for applicant buttons
+        setTimeout(() => {
+            document.querySelectorAll('.view-applicant-btn, .evaluate-applicant-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const jobId = this.getAttribute('data-jobid');
+                    window.location.href = `/linemanager/applicant-tracker-jobposition?jobId=${jobId}`;
+                });
+            });
+        }, 100);
     }
-    
-    // Function to update the notification panel with leave requests
+
+    // Function to update leave request section
     function updateLeaveRequestsSection(leaveRequests) {
         const leaveSection = document.getElementById('section-3');
         leaveSection.innerHTML = '<h4>Leave Requests</h4>';
 
-        if (leaveRequests.length === 0) {
+        if (!leaveRequests || leaveRequests.length === 0) {
             const emptyMessage = document.createElement('div');
             emptyMessage.classList.add('notification-item');
             emptyMessage.innerHTML = `
@@ -510,29 +699,49 @@ body {
                 <div class="content">There are currently no leave requests pending approval.</div>
             `;
             leaveSection.appendChild(emptyMessage);
-        } else {
-            // Add leave requests to notification panel
-            leaveRequests.forEach(leave => {
-                const notificationItem = document.createElement('div');
-                notificationItem.classList.add('notification-item');
-                notificationItem.innerHTML = `
-                    <div class="headline">Leave Request: ${leave.firstName} ${leave.lastName}</div>
-                    <div class="content">Type: ${leave.type}, From: ${leave.startDate} To: ${leave.endDate}</div>
-                    <div class="date">${leave.filedDate}</div>
-                    <button class="view-leave-btn" data-id="${leave.userId}">Review Request</button>
-                `;
-                leaveSection.appendChild(notificationItem);
-            });
-
-            // Add event listeners to the view leave request buttons
+            return;
+        }
+        
+        // Normalize leave request data to handle different column names
+        const validateLeaveRequest = (leave) => {
+            return {
+                userId: leave.userId || leave.user_id || leave.employee_id || 'unknown',
+                requestId: leave.leaveRequestId || leave.requestId || 'unknown', 
+                // If we get staff information from a join, it will be in userInfo
+                firstName: leave.userInfo?.firstName || leave.firstName || leave.first_name || 'Employee',
+                lastName: leave.userInfo?.lastName || leave.lastName || leave.last_name || '',
+                type: leave.type || leave.leaveType || leave.leave_type || 'Leave',
+                startDate: leave.startDate || leave.fromDate || leave.from_date || leave.from || 'TBD',
+                endDate: leave.endDate || leave.untilDate || leave.until_date || leave.until || 'TBD',
+                filedDate: leave.filedDate || leave.created_at || 'Recent'
+            };
+        };
+        
+        // Map all leave requests to normalized format
+        const normalizedLeaveRequests = leaveRequests.map(validateLeaveRequest);
+        
+        // Add leave requests
+        normalizedLeaveRequests.forEach(leave => {
+            const notificationItem = document.createElement('div');
+            notificationItem.classList.add('notification-item');
+            notificationItem.innerHTML = `
+                <div class="headline">Leave Request: ${leave.firstName} ${leave.lastName}</div>
+                <div class="content">Type: ${leave.type}, From: ${leave.startDate} To: ${leave.endDate}</div>
+                <div class="date">${leave.filedDate}</div>
+                <button class="view-leave-btn" data-id="${leave.userId}">Review Request</button>
+            `;
+            leaveSection.appendChild(notificationItem);
+        });
+        
+        // Add click handlers for leave buttons
+        setTimeout(() => {
             document.querySelectorAll('.view-leave-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const userId = this.getAttribute('data-id');
-                    console.log('Review leave request clicked:', userId);
                     window.location.href = `/linemanager/leaverequest?userId=${userId}`;
                 });
             });
-        }
+        }, 100);
     }
 
     // Sample older notifications data
@@ -579,31 +788,36 @@ body {
         // Load notification data when panel is opened
         if (notificationPanel.classList.contains('open')) {
             try {
-                // Show loading indicators
-                document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4><div class="loading-indicator"><div class="spinner"></div></div>';
-                document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+                // First check for 360 feedback
+                await fetch360Feedback();
                 
-                // Fetch notifications
+                // Show loading indicators for other sections
+                document.getElementById('section-2').innerHTML = '<h4>Leave Request Updates</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+                document.getElementById('section-3').innerHTML = '<h4>Performance Updates</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+                
+                // Fetch regular notifications
                 const notificationData = await fetchNotifications();
                 
-                // Calculate total notification count (including P3 applicants)
-                let totalCount = notificationData.notificationCount || 0;
-                
                 // Update notification count
-                notificationCount.textContent = totalCount;
+                // If we have active feedback, we need to account for it in the count
+                const adjustedCount = hasActiveFeedback ? 
+                    notificationData.notificationCount + 1 : 
+                    notificationData.notificationCount;
                 
-                // Update applicants section
-                updateApplicantsSection(notificationData.applicants);
+                notificationCount.textContent = adjustedCount;
                 
                 // Update leave requests section
                 updateLeaveRequestsSection(notificationData.leaveRequests);
+                
+                // Update performance updates section
+                updatePerformanceSection(notificationData.performanceUpdates);
             } catch (error) {
                 console.error('Error updating notifications:', error);
                 
                 // Show error message in sections
-                document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load applicant data. Please try again later.</div></div>';
+                document.getElementById('section-2').innerHTML = '<h4>Leave Request Updates</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load leave request data. Please try again later.</div></div>';
                 
-                document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load leave request data. Please try again later.</div></div>';
+                document.getElementById('section-3').innerHTML = '<h4>Performance Updates</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load performance data. Please try again later.</div></div>';
             }
         }
     });
@@ -663,27 +877,19 @@ body {
         });
     });
 
-    // Initialize button click handlers for sample notifications
-    document.querySelectorAll('.action-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            console.log('Action button clicked');
-            window.location.href = '/linemanager/staffFeedbackList';
-        });
-    });
-
-    // Floating action button functionality
-    fab.addEventListener('click', () => {
-        console.log('Floating Action Button clicked');
-        window.location.href = '/linemanager/staffFeedbackList';
-    });
-
     // Function to periodically check for new notifications
     async function checkNotifications() {
         try {
+            // First check for 360 feedback
+            await fetch360Feedback();
+            
+            // Then get regular notifications
             const notificationData = await fetchNotifications();
             
-            // Calculate total notification count
-            let totalCount = notificationData.notificationCount || 0;
+            // Calculate total count
+            const totalCount = hasActiveFeedback ? 
+                notificationData.notificationCount + 1 : 
+                notificationData.notificationCount;
             
             // Check if there are new notifications
             checkForNewNotifications(totalCount);
@@ -721,7 +927,15 @@ body {
                 console.warn('Font Awesome may not be loaded correctly. Check the CDN link.');
             }
             
-            // Initial notification check
+            // First check for active 360 feedback
+            await fetch360Feedback();
+            
+            // If no active feedback, set up default FAB behavior
+            if (!hasActiveFeedback) {
+                fab.addEventListener('click', fabDefaultHandler);
+            }
+            
+            // Then check for regular notifications 
             await checkNotifications();
             
             // Set up periodic notification checks (every 5 minutes)
@@ -730,6 +944,13 @@ body {
         } catch (error) {
             console.error('Error loading initial notification count:', error);
             notificationCount.textContent = '0';
+            
+            // Ensure FAB has default behavior even if there's an error
+            fab.addEventListener('click', fabDefaultHandler);
         }
     });
 </script>
+
+
+
+

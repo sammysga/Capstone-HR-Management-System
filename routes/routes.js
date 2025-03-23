@@ -154,8 +154,6 @@ router.get('/employee/employeefeedbackquestionnaire', employeeController.getFeed
 
 // Route to fetch the feedback form for a specific user and quarter
 router.get('/employee/employeefeedbackquestionnaire/:selectedUserId', employeeController.get360FeedbackList);
-router.get('/api/linemanager/notifications', employeeController.getEmployeeNotifications);
-
 // Route to submit the feedback
 // router.post('/employee/employeefeedbackquestionnaire/:selectedUser Id/submit', employeeController.submitFeedback);
 
@@ -171,7 +169,6 @@ router.post('/linemanager/approve-line-manager', lineManagerController.postAppro
 
 // New route to notify Line Manager
 //router.post('/linemanager/notify', lineManagerController.notifyLineManager);
-router.get('/api/linemanager/notifications', lineManagerController.getLineManagerNotifications);
 
 router.get('/linemanager/useraccount', lineManagerController.getUserAccount);
 router.post('/linemanager/update-info', lineManagerController.updateUserInfo);
@@ -231,7 +228,15 @@ router.post('/linemanager/applicant-tracker-jobposition/markAsP3Passed',  lineMa
 router.post('/linemanager/applicant-tracker-jobposition/markAsP3Failed', lineManagerController.markAsP3Failed);
 
 // Notification routes
+router.get('/api/employee/notifications', employeeController.getEmployeeNotifications);
 router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
 router.get('/employee/staffFeedbackList', employeeController.getFeedbackUsers);
+router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
+
+router.get('/api/linemanager/notifications', lineManagerController.getLineManagerNotifications);
+router.get('/api/get360FeedbackToast', lineManagerController.get360FeedbackToast);
+router.get('/linemanager/api/get360Feedback', lineManagerController.get360FeedbackToast);
+router.get('/linemanager/staffFeedbackList', lineManagerController.getFeedbackUsers);
+
 module.exports = router; 
 
