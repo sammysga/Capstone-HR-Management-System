@@ -418,27 +418,40 @@ input[type="date"] {
                     <option value="">Select Job Title</option>
                 </select>
             </div>
-            <!-- Job Type -->
-            <div class="form-group">
-                <label for="jobType">Job Type</label>
-                <select id="jobType" name="jobType" required>
-                    <option value="">Select Job Type</option>
-                    <option value="Onsite">Onsite</option>
-                    <option value="Hybrid">Hybrid</option>
-                    <option value="Remote">Remote</option>
-                </select>
-            </div>
+          <!-- Job Type (renamed to Work Setup) -->
+<!-- Work Setup (formerly Job Type) -->
+<div class="form-group">
+    <label for="jobType">Work Setup</label>
+    <select id="jobType" name="jobType" required>
+        <option value="">Select Work Setup</option>
+        <option value="Onsite">Onsite</option>
+        <option value="Online">Online</option>
+        <option value="Hybrid">Hybrid</option>
+    </select>
+</div>
 
-            <!-- Employment Type -->
-            <div class="form-group">
-                <label for="jobTimeCommitment">Employment Type</label>
-                <select id="jobTimeCommitment" name="jobTimeCommitment" required>
-                    <option value="">Select Employment Type</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                </select>
-            </div>
+<!-- Availability Section -->
+<div class="form-group">
+    <label for="jobTimeCommitment">Availability</label>
+    <select id="jobTimeCommitment" name="jobTimeCommitment" required>
+        <option value="">Select Availability</option>
+        <option value="Full-time">Full-time</option>
+        <option value="Part-time">Part-time</option>
+    </select>
+</div>
 
+<!-- Work Hours -->
+<div class="form-group">
+    <label for="jobTimeCommitment_startTime">Start Time</label>
+    <input type="time" id="jobTimeCommitment_startTime" name="jobTimeCommitment_startTime" required>
+    <p class="help-text">Enter the expected start time for this position</p>
+</div>
+
+<div class="form-group">
+    <label for="jobTimeCommitment_endTime">End Time</label>
+    <input type="time" id="jobTimeCommitment_endTime" name="jobTimeCommitment_endTime" required>
+    <p class="help-text">Enter the expected end time for this position</p>
+</div>
             <!-- Job Description -->
             <div class="form-group">
                 <label for="jobDescrpt">Job Description</label>
@@ -516,7 +529,7 @@ input[type="date"] {
         <!-- <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script> -->
-        <script>
+<script>
 
 
 // Populate departments dropdown
@@ -643,29 +656,29 @@ async function populateDepartments() {
 
             if (inputName === 'jobReqCertificateDescrpt') {
                 newDiv.innerHTML = `
+                    <input type="text" name="jobReqCertificateType[]" placeholder="Enter certification type">
                     <input type="text" name="jobReqCertificateDescrpt[]" placeholder="Enter certification description">
                     <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
                 `;
             } else if (inputName === 'degree') {
                 newDiv.innerHTML = `
-                    <input type="text" class="small-input" name="jobReqDegreeType[]" placeholder="Enter degree type">
+                    <input type="text" class="smaller-input" name="jobReqDegreeType[]" placeholder="Enter degree type">
                     <input type="text" name="jobReqDegreeDescrpt[]" placeholder="Enter degree description">
                     <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
                 `;
             } else if (inputName === 'experience') {
                 newDiv.innerHTML = `
-                    <input type="text" name="jobReqExperienceType[]" placeholder="Enter experience type">
-                    <input type="text" name="jobReqExperienceDescrpt[]" placeholder="Enter experience description">
+                    <input type="text" class="smaller-input" name="jobReqExperienceType[]" placeholder="Enter experience type">
+                    <input type="text" class="smaller-input" name="jobReqExperienceDescrpt[]" placeholder="Enter experience description">
                     <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
                 `;
             } else if (inputName === 'skill') {
                 newDiv.innerHTML = `
-                    <select name="jobReqSkillType[]">
-                        <option value="">Select Skill Type</option>
+                    <select name="jobReqSkillType[]" class="smaller-input">
                         <option value="Hard">Hard Skill</option>
                         <option value="Soft">Soft Skill</option>
                     </select>
-                    <input type="text" name="jobReqSkillName[]" placeholder="Enter skill name">
+                    <input type="text" class="smaller-input" name="jobReqSkillName[]" placeholder="Enter skill name">
                     <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
                 `;
             }
