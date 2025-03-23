@@ -3,143 +3,771 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Objective and Performance Review Tracker</title>
+    <title>Performance Dashboard</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Main content styling */
         .main-content {
-            margin-left: 270px; /* Offset for the sidebar */
+            margin-left: 270px;
             padding: 20px;
             font-family: 'Inter', sans-serif;
         }
 
+        /* Dashboard header */
+        .dashboard-header {
+            margin-bottom: 25px;
+        }
+
+        .dashboard-header h2 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .dashboard-header p {
+            color: #666;
+            font-size: 0.95rem;
+            max-width: 800px;
+        }
+
+        /* Tabs styling */
+        .tabs-container {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .tabs-nav {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background-color: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tab-button i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .tab-button.active {
+            color: #07ACB9;
+            border-bottom: 3px solid #07ACB9;
+            background-color: #f8fdfd;
+        }
+
+        .tab-button:hover:not(.active) {
+            color: #124A5C;
+            border-bottom: 3px solid #ddd;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 25px 0;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Card styling */
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .card-header {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid #eee;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f9f9f9;
+            font-weight: 600;
+            color: #444;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fdfd;
+        }
+
+        /* Progress bar styling */
+        .progress-container {
+            width: 100%;
+            background-color: #f2f2f2;
+            border-radius: 4px;
+            height: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            text-align: center;
+            color: #fff;
+            line-height: 20px;
+            background-color: #07ACB9;
+            transition: width 0.3s ease-in-out;
+            position: relative;
+        }
+
+        /* Skills Box styling */
+        .skills-box {
+            margin-bottom: 30px;
+        }
+
+        .skills-box h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.1rem;
+            color: #333;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .skill-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .skill-item .skill-name {
+            width: 65%;
+            font-size: 14px;
+            color: #444;
+        }
+
+        .skill-progress {
+            width: 32%;
+            background-color: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            height: 16px;
+        }
+
+        .skill-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+            position: relative;
+            background-color: #07ACB9;
+        }
+
+        .percentage {
+            position: absolute;
+            right: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.7rem;
+            line-height: 16px;
+        }
+
+        /* Stepper styling */
+        .stepper-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .stepper-container::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #eee;
+            z-index: 1;
+        }
+
+        .step {
+            width: 14%;
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 0 10px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .step-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            background-color: #fff;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .step-icon i {
+            font-size: 1.4rem;
+            color: #999;
+            transition: all 0.3s;
+        }
+
+        .step-label {
+            font-size: 13px;
+            color: #777;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .step.current .step-icon {
+            background-color: #e0f7fa;
+            border-color: #07ACB9;
+        }
+
+        .step.current .step-icon i,
+        .step.current .step-label {
+            color: #07ACB9;
+        }
+
+        .step:hover .step-icon {
+            border-color: #07ACB9;
+            transform: translateY(-2px);
+        }
+
+        /* Content sections */
+        .content-section {
+            display: none;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            margin-top: 30px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        .idp-section {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
     
+    .idp-section h4 {
+        color: #07ACB9;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+    }
+    
+    .idp-item {
+        margin-bottom: 15px;
+        padding-left: 15px;
+        border-left: 3px solid #e0f7fa;
+    }
+    
+    .idp-item h5 {
+        font-size: 0.95rem;
+        color: #444;
+        margin-bottom: 8px;
+    }
+    
+    .step.completed .step-icon {
+        background-color: #e0f7fa;
+        border-color: #07ACB9;
+    }
+    
+    .step.completed .step-icon i {
+        color: #07ACB9;
+    }
     </style>
 </head>
 <body>
     <%- include('../../partials/employee_partials') %>
-
     <!-- Main content area -->
     <div class="main-content">
-        <!-- Stepper Section -->
-        <section class="stepper">
-            <h2>Objective and Performance Review Tracker</h2>
-            <div class="stepper-container">
-                <div class="step" onclick="showObjectiveForm()">
-                    <div class="step-icon"><i class="fa fa-bullseye"></i></div>
-                    <div class="step-label">Objective Setting</div>
+        <div class="dashboard-header">
+            <h2>Performance Dashboard</h2>
+            <p>View your comprehensive performance metrics, skills assessment, and development progress tracking in one place.</p>
+        </div>
+
+        <!-- Tabs Container -->
+        <div class="tabs-container">
+            <ul class="tabs-nav">
+                <li><button class="tab-button active" data-tab="objectives-tab">
+                    <i class="fas fa-bullseye"></i> Objectives
+                </button></li>
+                <li><button class="tab-button" data-tab="skills-tab">
+                    <i class="fas fa-chart-line"></i> Skills Analysis
+                </button></li>
+                <li><button class="tab-button" data-tab="timeline-tab">
+                    <i class="fas fa-stream"></i> Development Timeline
+                </button></li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-contents">
+                <!-- Objectives Tab -->
+                <div id="objectives-tab" class="tab-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Objective-Based Quarterly Progress Overview</h3>
+                        </div>
+                        <p>This overview is derived from the most recent 360-degree feedback scores, averaging input from HR and Line Managers. It presents an objective-based analysis, highlighting key strengths and areas for development in alignment with company objectives.</p>
+                        
+                        <!-- Objectives Table -->
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>KRA/Objectives</th>
+                                    <th>KPI</th>
+                                    <th>Target</th>
+                                    <th>UOM</th>
+                                    <th>Weight</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (objectives && objectives.length > 0) { %>
+                                    <% objectives.forEach(objective => { %>
+                                        <tr>
+                                            <td><%= objective.objectiveDescrpt %></td>
+                                            <td><%= objective.objectiveKPI %></td>
+                                            <td><%= objective.objectiveTarget %></td>
+                                            <td><%= objective.objectiveUOM %></td>
+                                            <td><%= (objective.objectiveAssignedWeight * 100).toFixed(0) %>%</td>
+                                            <td>
+                                                <% 
+                                                    let score = 0;
+                                                    if (objectiveScores && objectiveScores[objective.objectiveId]) {
+                                                        score = objectiveScores[objective.objectiveId];
+                                                    }
+                                                    const scorePercentage = (score / 5) * 100;
+                                                %>
+                                                <div class="progress-container">
+                                                    <div class="progress-bar" style="width: 5%;"><%= score %></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="6">No objectives found. Your objectives will appear here once they are set by your line manager.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="step">
-                    <div class="step-icon"><i class="fa fa-users"></i></div>
-                    <div class="step-label">[1/4] 360 Degree Feedback</div>
+                
+                <!-- Updated Skills Analysis Tab -->
+                <div id="skills-tab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Job Required Skill and Gap Analysis</h3>
+                        </div>
+                        <p>This analysis shows your current skill levels based on the latest 360-degree feedback. Skills are measured against the requirements for your current position.</p>
+                        
+                        <!-- Hard Skills Section -->
+                        <div class="skills-box">
+                            <h3>Hard Skills</h3>
+                            <% if (hardSkills && hardSkills.length > 0) { %>
+                                <% hardSkills.forEach(skill => { %>
+                                    <div class="skill-item">
+                                        <span class="skill-name"><%= skill.jobReqSkillName %></span>
+                                        <div class="skill-progress">
+                                            <% 
+                                                let score = 0;
+                                                if (skillScores && skillScores[skill.jobReqSkillId]) {
+                                                    score = skillScores[skill.jobReqSkillId];
+                                                }
+                                                const scorePercentage = (score / 5) * 100;
+                                            %>
+                                            <div class="skill-bar" style="width: 5%;">
+                                                <span class="percentage"><%= score %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <p>No hard skills data available.</p>
+                            <% } %>
+                        </div>
+                        
+                        <!-- Soft Skills Section -->
+                        <div class="skills-box">
+                            <h3>Soft Skills</h3>
+                            <% if (softSkills && softSkills.length > 0) { %>
+                                <% softSkills.forEach(skill => { %>
+                                    <div class="skill-item">
+                                        <span class="skill-name"><%= skill.jobReqSkillName %></span>
+                                        <div class="skill-progress">
+                                            <% 
+                                                let score = 0;
+                                                if (skillScores && skillScores[skill.jobReqSkillId]) {
+                                                    score = skillScores[skill.jobReqSkillId];
+                                                }
+                                                const scorePercentage = (score / 5) * 100;
+                                            %>
+                                            <div class="skill-bar" style="width: 5%;">
+                                                <span class="percentage"><%= score %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <p>No soft skills data available.</p>
+                            <% } %>
+                        </div>
+                    </div>
                 </div>
-                <div class="step">
-                    <div class="step-icon"><i class="fa fa-users"></i></div>
-                    <div class="step-label">[2/4] 360 Degree Feedback</div>
-                </div>
-                <div class="step">
-                    <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
-                    <div class="step-label">Mid-Year IDP</div>
-                </div>
-                <div class="step">
-                    <div class="step-icon"><i class="fa fa-users"></i></div>
-                    <div class="step-label">[3/4] 360 Degree Feedback</div>
-                </div>
-                <div class="step">
-                    <div class="step-icon"><i class="fa fa-users"></i></div>
-                    <div class="step-label">[4/4] 360 Degree Feedback</div>
-                </div>
-                <div class="step">
-                    <div class="step-icon"><i class="fa fa-clipboard-check"></i></div>
-                    <div class="step-label">Final-Year IDP</div>
+                
+                <!-- Updated Development Timeline Tab -->
+                <div id="timeline-tab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Objective and Performance Review Tracker</h3>
+                        </div>
+                        <p>This timeline shows your progress through the annual performance cycle. Click on a step to view more details.</p>
+                        
+                        <!-- Stepper Section -->
+                        <div class="stepper-container">
+                            <% steps.forEach((step, index) => { %>
+                                <div class="step <%= index === currentStep ? 'current' : '' %> <%= step.completed ? 'completed' : '' %>" data-section="<%= step.id %>">
+                                    <div class="step-icon"><i class="fa <%= step.icon %>"></i></div>
+                                    <div class="step-label"><%= step.name %></div>
+                                </div>
+                            <% }); %>
+                        </div>
+                        
+                        <!-- Detail sections for each step -->
+                        <div class="content-section <%= currentStep === 0 ? 'active' : '' %>" id="objectiveSettingForm">
+                            <h3>Objective Setting Form</h3>
+                            <% if (objectives && objectives.length > 0) { %>
+                                <p>Your objectives for this performance period have been set. You can view them in the Objectives tab.</p>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Objective</th>
+                                            <th>KPI</th>
+                                            <th>Target</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% objectives.forEach(obj => { %>
+                                            <tr>
+                                                <td><%= obj.objectiveDescrpt %></td>
+                                                <td><%= obj.objectiveKPI %></td>
+                                                <td><%= obj.objectiveTarget %> <%= obj.objectiveUOM %></td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            <% } else { %>
+                                <p>At the start of the work year, employees collaborate with their line managers to conduct objective setting, where key performance objectives and individual goals are discussed and established. The line manager inputs these agreed-upon objectives into the system, consolidating them for tracking throughout the year. Once the objectives are finalized and inputted, they will be reflected on your performance records, enabling you to monitor progress through quarterly 360-degree feedback.</p>
+                                <p><strong>Status:</strong> Pending - Your objectives have not yet been set by your line manager.</p>
+                            <% } %>
+                        </div>
+                        
+                        <div class="content-section <%= currentStep === 1 ? 'active' : '' %>" id="quarterlyProgress1">
+                            <h3>First Quarter 360° Feedback</h3>
+                            <% if (quarterlyData && quarterlyData.q1) { %>
+                                <p><strong>Period:</strong> <%= new Date(quarterlyData.q1.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q1.setEndDate).toLocaleDateString() %></p>
+                                <p>Your first quarter feedback has been completed. This feedback incorporates perspectives from your line manager, peers, and HR, offering a comprehensive view of your progress.</p>
+                                
+                                <% if (quarterlyData.q1.feedbacks_answers && quarterlyData.q1.feedbacks_answers.length > 0) { %>
+                                    <h4>Feedback Summary</h4>
+                                    <% let reviewersCount = quarterlyData.q1.feedbacks_answers.length; %>
+                                    <p><strong>Number of reviewers:</strong> <%= reviewersCount %></p>
+                                    
+                                    <% if (quarterlyData.q1.feedbacks_answers[0].remarks) { %>
+                                        <h4>Remarks</h4>
+                                        <p><%= quarterlyData.q1.feedbacks_answers[0].remarks %></p>
+                                    <% } %>
+                                <% } %>
+                            <% } else { %>
+                                <p>The first quarterly feedback session provides early insights into your performance against objectives. This feedback incorporates perspectives from your line manager, peers, and HR, offering a comprehensive view of your progress.</p>
+                                <p><strong>Status:</strong> Pending - Your Q1 feedback has not yet been completed.</p>
+                            <% } %>
+                        </div>
+                        
+                        <div class="content-section <%= currentStep === 2 ? 'active' : '' %>" id="quarterlyProgress2">
+                            <h3>Second Quarter 360° Feedback</h3>
+                            <% if (quarterlyData && quarterlyData.q2) { %>
+                                <p><strong>Period:</strong> <%= new Date(quarterlyData.q2.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q2.setEndDate).toLocaleDateString() %></p>
+                                <p>Your second quarter feedback has been completed. This feedback builds on previous insights, tracking progressive improvement or identifying persistent challenges.</p>
+                            <% } else { %>
+                                <p>The second quarterly feedback session builds on previous insights, tracking progressive improvement or identifying persistent challenges. This helps in preparing for the Mid-Year Individual Development Plan.</p>
+                                <p><strong>Status:</strong> Pending - Your Q2 feedback has not yet been completed.</p>
+                            <% } %>
+                        </div>
+                        
+                        <div class="content-section <%= currentStep === 3 ? 'active' : '' %>" id="midYearReview">
+                            <h3>Mid-Year Individual Development Plan</h3>
+                            <% if (midYearIDP) { %>
+                                <div class="idp-section">
+                                    <h4>Professional Development</h4>
+                                    <div class="idp-item">
+                                        <h5>Strengths</h5>
+                                        <p><%= midYearIDP.profStrengths %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Areas for Development</h5>
+                                        <p><%= midYearIDP.profAreasForDevelopment %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Actions to Take</h5>
+                                        <p><%= midYearIDP.profActionsToTake %></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="idp-section">
+                                    <h4>Leadership Development</h4>
+                                    <div class="idp-item">
+                                        <h5>Strengths</h5>
+                                        <p><%= midYearIDP.leaderStrengths %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Areas for Development</h5>
+                                        <p><%= midYearIDP.leaderAreasForDevelopment %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Actions to Take</h5>
+                                        <p><%= midYearIDP.leaderActionsToTake %></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="idp-section">
+                                    <h4>Career Planning</h4>
+                                    <div class="idp-item">
+                                        <h5>Short-Term Role Aspirations</h5>
+                                        <p><%= midYearIDP.nextRoleShortTerm %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Long-Term Role Aspirations</h5>
+                                        <p><%= midYearIDP.nextRoleLongTerm %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Mobility Preferences</h5>
+                                        <p><%= midYearIDP.nextRoleMobility %></p>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <p>The Mid-Year IDP is a comprehensive review of your performance over the first half of the year. It includes a discussion of achievements, challenges, and adjustments to objectives if necessary. A personalized development plan is created to focus efforts for the remainder of the year.</p>
+                                <p><strong>Status:</strong> Pending - Your Mid-Year IDP has not yet been completed.</p>
+                            <% } %>
+                        </div>
+                        
+                        <div class="content-section <%= currentStep === 4 ? 'active' : '' %>" id="quarterlyProgress3">
+                            <h3>Third Quarter 360° Feedback</h3>
+                            <% if (quarterlyData && quarterlyData.q3) { %>
+                                <p><strong>Period:</strong> <%= new Date(quarterlyData.q3.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q3.setEndDate).toLocaleDateString() %></p>
+                                <p>Your third quarter feedback has been completed. This assessment evaluates how effectively you've implemented development recommendations from your Mid-Year IDP.</p>
+                            <% } else { %>
+                                <p>The third quarterly session assesses your progress following the Mid-Year IDP, evaluating how effectively you've implemented development recommendations and continued to work toward your objectives.</p>
+                                <p><strong>Status:</strong> Pending - Your Q3 feedback has not yet been completed.</p>
+                            <% } %>
+                        </div>
+                        
+                        <div class="content-section <%= currentStep === 5 ? 'active' : '' %>" id="quarterlyProgress4">
+                            <h3>Fourth Quarter 360° Feedback</h3>
+                            <% if (quarterlyData && quarterlyData.q4) { %>
+                                <p><strong>Period:</strong> <%= new Date(quarterlyData.q4.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q4.setEndDate).toLocaleDateString() %></p>
+                                <p>Your fourth quarter feedback has been completed. This provides a comprehensive evaluation of your performance throughout the year.</p>
+                            <% } else { %>
+                                <p>The final quarterly feedback session provides a comprehensive evaluation of your performance throughout the year, serving as a foundation for the Year-End Individual Development Plan.</p>
+                                <p><strong>Status:</strong> Pending - Your Q4 feedback has not yet been completed.</p>
+                            <% } %>
+                        </div>
+                        
+                        <div class="content-section <%= currentStep === 6 ? 'active' : '' %>" id="yearEndReview">
+                            <h3>Final-Year Individual Development Plan</h3>
+                            <% if (finalYearIDP) { %>
+                                <div class="idp-section">
+                                    <h4>Professional Development</h4>
+                                    <div class="idp-item">
+                                        <h5>Strengths</h5>
+                                        <p><%= finalYearIDP.profStrengths %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Areas for Development</h5>
+                                        <p><%= finalYearIDP.profAreasForDevelopment %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Actions to Take</h5>
+                                        <p><%= finalYearIDP.profActionsToTake %></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="idp-section">
+                                    <h4>Leadership Development</h4>
+                                    <div class="idp-item">
+                                        <h5>Strengths</h5>
+                                        <p><%= finalYearIDP.leaderStrengths %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Areas for Development</h5>
+                                        <p><%= finalYearIDP.leaderAreasForDevelopment %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Actions to Take</h5>
+                                        <p><%= finalYearIDP.leaderActionsToTake %></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="idp-section">
+                                    <h4>Career Planning</h4>
+                                    <div class="idp-item">
+                                        <h5>Short-Term Role Aspirations</h5>
+                                        <p><%= finalYearIDP.nextRoleShortTerm %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Long-Term Role Aspirations</h5>
+                                        <p><%= finalYearIDP.nextRoleLongTerm %></p>
+                                    </div>
+                                    <div class="idp-item">
+                                        <h5>Mobility Preferences</h5>
+                                        <p><%= finalYearIDP.nextRoleMobility %></p>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <p>The Year-End IDP offers a complete assessment of your annual performance, highlighting achievements, areas for growth, and setting the stage for the next year's objectives. This session may include discussions about career progression, compensation adjustments, and long-term development opportunities.</p>
+                                <p><strong>Status:</strong> Pending - Your Final-Year IDP has not yet been completed.</p>
+                            <% } %>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
-
-        <!-- Objective Setting Form (hidden by default) -->
-        <div class="objective-setting-form" id="objectiveSettingForm">
-            <h3>Objective Setting Form</h3>
-            <p>At the start of the work year, employees will collaborate with their line managers to conduct objective setting, where key performance objectives and individual goals will be discussed and established. The line manager will input these agreed-upon objectives into the system, consolidating them for tracking throughout the year. Once the objectives are finalized and inputted by the line manager, they will be reflected on the employee's performance records enabling to monitor their progress from the 360-degree feedback to be conducted quarterly.</p>
         </div>
     </div>
 
-    <!-- JavaScript to toggle form visibility -->
+    <!-- JavaScript for tabs, stepper, and other interactions -->
     <script>
-        function toggleObjectiveForm() {
-            const form = document.getElementById('objectiveSettingForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        }
-
-
         document.addEventListener('DOMContentLoaded', () => {
-    const steps = document.querySelectorAll('.step');
-    const forms = {
-        objectiveSetting: document.getElementById('objectiveSettingForm')
-        // Add more mappings here if other steps have forms/content sections
-    };
+            // Tab functionality
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
 
-    // Initialize step states based on content presence
-    steps.forEach((step, index) => {
-        const formId = Object.keys(forms)[index];
-        const form = forms[formId];
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
 
-        if (form && form.innerHTML.trim() !== '') {
-            step.classList.add('active'); // Content exists, mark as active
-        } else {
-            step.classList.add('inactive'); // No content, mark as inactive
-        }
-    });
+                    // Add active class to clicked button
+                    button.classList.add('active');
 
-    // Click event handler only for active steps
-    steps.forEach(step => {
-        if (step.classList.contains('active')) {
-            step.addEventListener('click', () => {
-                toggleObjectiveForm();
+                    // Show corresponding content
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
             });
-        }
-    });
-});
 
-// Toggle active class for sidebar links
-document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
+            // Stepper functionality
+            const steps = document.querySelectorAll('.step');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            // Initialize - hide all content sections
+            contentSections.forEach(section => {
+                section.classList.remove('active');
             });
-        });
 
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
+            // Add click handlers to steps
+            steps.forEach(step => {
+                step.addEventListener('click', () => {
+                    const targetSectionId = step.getAttribute('data-section');
+
+                    if (targetSectionId) {
+                        // Hide all content sections
+                        contentSections.forEach(section => {
+                            section.classList.remove('active');
+                        });
+
+                        // Show target section
+                        const targetSection = document.getElementById(targetSectionId);
+                        if (targetSection) {
+                            targetSection.classList.add('active');
                         }
-                    });
-                    content.style.display = 'block';
-                }
+
+                        // Update step styling
+                        steps.forEach(s => s.classList.remove('current'));
+                        step.classList.add('current');
+                    }
+                });
+            });
+
+            // Sidebar navigation
+            document.querySelectorAll('.sidebar ul li a').forEach(link => {
+                link.addEventListener('click', function() {
+                    document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Collapsible sections in sidebar
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    var content = this.nextElementSibling;
+                    if (content.style.display === 'block') {
+                        content.style.display = 'none';
+                    } else {
+                        // Hide all other collapsible contents
+                        document.querySelectorAll('.collapsible-content').forEach(item => {
+                            if (item !== content) {
+                                item.style.display = 'none';
+                            }
+                        });
+                        content.style.display = 'block';
+                    }
+                });
             });
         });
-
-        // Handle navigation for Performance Management links
-        document.querySelectorAll('.collapsible-content a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default link behavior
-                
-                // Perform the desired action or navigation
-                const targetUrl = this.getAttribute('href');
-                window.location.href = targetUrl; // Navigate to the target URL
-            });
-        });
-
     </script>
 </body>
 </html>
-
