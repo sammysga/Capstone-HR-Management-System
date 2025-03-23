@@ -240,5 +240,13 @@ router.get('/api/get360FeedbackToast', lineManagerController.get360FeedbackToast
 router.get('/linemanager/api/get360Feedback', lineManagerController.get360FeedbackToast);
 router.get('/linemanager/staffFeedbackList', lineManagerController.getFeedbackUsers);
 
+// Mid-year IDP routes
+router.get('/linemanager/midyear-idp/:userId', lineManagerController.getMidYearIDP);
+router.post('/linemanager/midyear-idp/:userId', lineManagerController.saveMidYearIDP);
+
+// Final-year IDP routes
+router.get('/linemanager/finalyear-idp/:userId', lineManagerController.getFinalYearIDP);
+router.post('/linemanager/finalyear-idp/:userId', lineManagerController.saveFinalYearIDP);
+
 module.exports = router; 
 
