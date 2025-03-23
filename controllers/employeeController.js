@@ -1346,7 +1346,7 @@ submitEmployeeClearance: async function(req, res) {
             });
         }
         
-        // Update request status
+        // Update request status - CRITICAL FIX: ensure status is correctly set
         try {
             const { error: updateError } = await supabase
                 .from('offboarding_requests')
@@ -1364,7 +1364,7 @@ submitEmployeeClearance: async function(req, res) {
                 });
             }
             
-            console.log('Request status updated successfully');
+            console.log('Request status updated successfully to "Completed by Employee"');
         } catch (err) {
             console.error('Exception updating request status:', err);
             return res.status(500).json({
@@ -1853,9 +1853,293 @@ postAttendance: async function (req, res) {
 },
 
 
-getViewPerformanceTimeline: function(req, res){
+getViewPerformanceTimeline: async function(req, res) {
     if (req.session.user && req.session.user.userRole === 'Employee') {
-        res.render('staffpages/employee_pages/employee-viewtimeline');
+        try {
+            const userId = req.session.user.userId;
+            
+            // Fetch employee job information
+            const { data: staffData, error: staffError } = await supabase
+                .from("staffaccounts")
+                .select("jobId")
+                .eq("userId", userId)
+                .single();
+            
+            if (staffError) {
+                console.error("Error fetching staff data:", staffError);
+                return res.status(500).render('error', { message: 'Error fetching staff information' });
+            }
+            
+            const jobId = staffData.jobId;
+            
+            // 1. Fetch objective settings
+            const { data: objectivesData, error: objectivesError } = await supabase
+                .from("objectivesettings")
+                .select(`
+                    objectiveSettingsId,
+                    performancePeriodYear,
+                    objectivesettings_objectives (
+                        objectiveId,
+                        objectiveDescrpt,
+                        objectiveKPI,
+                        objectiveTarget,
+                        objectiveUOM,
+                        objectiveAssignedWeight
+                    )
+                `)
+                .eq("userId", userId)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            
+            if (objectivesError) {
+                console.error("Error fetching objectives:", objectivesError);
+            }
+            
+            // 2. Fetch job required skills
+            const { data: skillsData, error: skillsError } = await supabase
+                .from("jobreqskills")
+                .select("*")
+                .eq("jobId", jobId);
+            
+            if (skillsError) {
+                console.error("Error fetching job skills:", skillsError);
+            }
+            
+            // 3a. First fetch Q1 data without trying to join the problematic tables
+            const { data: q1Data, error: q1Error } = await supabase
+                .from("feedbacks_Q1")
+                .select("*")
+                .eq("userId", userId)
+                .eq("year", new Date().getFullYear());
+            
+            if (q1Error) {
+                console.error("Error fetching Q1 feedback:", q1Error);
+            }
+            
+            // 3b. If we have Q1 data, fetch the answers separately
+            let q1Answers = [];
+            let objectiveScores = {};
+            let skillScores = {};
+            
+            if (q1Data && q1Data.length > 0) {
+                const feedbackQ1Id = q1Data[0].feedbackq1_Id;
+                
+                // Get feedback answers
+                const { data: answersData, error: answersError } = await supabase
+                    .from("feedbacks_answers")
+                    .select("feedbackId_answerId, reviewerUserId, remarks")
+                    .eq("feedbackq1_Id", feedbackQ1Id);
+                
+                if (answersError) {
+                    console.error("Error fetching Q1 answers:", answersError);
+                } else if (answersData && answersData.length > 0) {
+                    q1Answers = answersData;
+                    
+                    // For each answer, get objectives feedback and skills feedback
+                    for (const answer of answersData) {
+                        // Get objective feedback
+                        const { data: objectiveFeedback, error: objError } = await supabase
+                            .from("feedbacks_answers-objectives")
+                            .select("feedback_qObjectivesId, objectiveQuantInput, objectiveQualInput")
+                            .eq("feedback_answerObjectivesId", answer.feedbackId_answerId);
+                        
+                        if (!objError && objectiveFeedback) {
+                            // Process objective scores
+                            objectiveFeedback.forEach(objFeedback => {
+                                const feedbackQObjectivesId = objFeedback.feedback_qObjectivesId;
+                                if (objFeedback.objectiveQuantInput) {
+                                    if (!objectiveScores[feedbackQObjectivesId]) {
+                                        objectiveScores[feedbackQObjectivesId] = [];
+                                    }
+                                    objectiveScores[feedbackQObjectivesId].push(objFeedback.objectiveQuantInput);
+                                }
+                            });
+                        }
+                        
+                        // Get skills feedback
+                        const { data: skillsFeedback, error: skillsError } = await supabase
+                            .from("feedbacks_answers-skills")
+                            .select("feedback_qSkillsId, skillsQuantInput, skillsQualInput")
+                            .eq("feedback_answerSkillsId", answer.feedbackId_answerId);
+                        
+                        if (!skillsError && skillsFeedback) {
+                            // Process skills scores
+                            skillsFeedback.forEach(skillFeedback => {
+                                const feedbackQSkillsId = skillFeedback.feedback_qSkillsId;
+                                if (skillFeedback.skillsQuantInput) {
+                                    if (!skillScores[feedbackQSkillsId]) {
+                                        skillScores[feedbackQSkillsId] = [];
+                                    }
+                                    skillScores[feedbackQSkillsId].push(skillFeedback.skillsQuantInput);
+                                }
+                            });
+                        }
+                    }
+                    
+                    // Calculate average scores for objectives and skills
+                    for (const [id, scores] of Object.entries(objectiveScores)) {
+                        objectiveScores[id] = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+                    }
+                    
+                    for (const [id, scores] of Object.entries(skillScores)) {
+                        skillScores[id] = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+                    }
+                }
+            }
+            
+            // 4. Similarly fetch Q2, Q3, Q4 data (without trying the complex joins)
+            const { data: q2Data, error: q2Error } = await supabase
+                .from("feedbacks_Q2")
+                .select("*")
+                .eq("userId", userId)
+                .eq("year", new Date().getFullYear());
+            
+            if (q2Error) {
+                console.error("Error fetching Q2 feedback:", q2Error);
+            }
+            
+            const { data: q3Data, error: q3Error } = await supabase
+                .from("feedbacks_Q3")
+                .select("*")
+                .eq("userId", userId)
+                .eq("year", new Date().getFullYear());
+            
+            if (q3Error) {
+                console.error("Error fetching Q3 feedback:", q3Error);
+            }
+            
+            const { data: q4Data, error: q4Error } = await supabase
+                .from("feedbacks_Q4")
+                .select("*")
+                .eq("userId", userId)
+                .eq("year", new Date().getFullYear());
+            
+            if (q4Error) {
+                console.error("Error fetching Q4 feedback:", q4Error);
+            }
+            
+            // 5. Fetch mid-year IDP data
+            const { data: midYearData, error: midYearError } = await supabase
+                .from("midyearidps")
+                .select("*")
+                .eq("userId", userId)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            
+            if (midYearError) {
+                console.error("Error fetching mid-year IDP:", midYearError);
+            }
+            
+            // 6. Fetch final-year IDP data
+            const { data: finalYearData, error: finalYearError } = await supabase
+                .from("finalyearidps")
+                .select("*")
+                .eq("userId", userId)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            
+            if (finalYearError) {
+                console.error("Error fetching final-year IDP:", finalYearError);
+            }
+            
+            // Process objectives for display
+            let objectives = [];
+            
+            if (objectivesData && objectivesData.length > 0 && objectivesData[0].objectivesettings_objectives) {
+                objectives = objectivesData[0].objectivesettings_objectives;
+            }
+            
+            // Process skills data
+            let hardSkills = [];
+            let softSkills = [];
+            
+            if (skillsData) {
+                skillsData.forEach(skill => {
+                    if (skill.jobReqSkillType === 'Hard') {
+                        hardSkills.push(skill);
+                    } else if (skill.jobReqSkillType === 'Soft') {
+                        softSkills.push(skill);
+                    }
+                });
+            }
+            
+            // Create stepper progress data
+            const steps = [
+                { 
+                    id: 'objectiveSettingForm', 
+                    completed: objectives.length > 0,
+                    name: 'Objective Setting',
+                    icon: 'fa-bullseye'
+                },
+                { 
+                    id: 'quarterlyProgress1', 
+                    completed: q1Data && q1Data.length > 0,
+                    name: '[1/4] 360° Feedback',
+                    icon: 'fa-users'
+                },
+                { 
+                    id: 'quarterlyProgress2', 
+                    completed: q2Data && q2Data.length > 0,
+                    name: '[2/4] 360° Feedback',
+                    icon: 'fa-users' 
+                },
+                { 
+                    id: 'midYearReview', 
+                    completed: midYearData && midYearData.length > 0,
+                    name: 'Mid-Year IDP',
+                    icon: 'fa-clipboard-check'
+                },
+                { 
+                    id: 'quarterlyProgress3', 
+                    completed: q3Data && q3Data.length > 0,
+                    name: '[3/4] 360° Feedback',
+                    icon: 'fa-users'
+                },
+                { 
+                    id: 'quarterlyProgress4', 
+                    completed: q4Data && q4Data.length > 0,
+                    name: '[4/4] 360° Feedback',
+                    icon: 'fa-users'
+                },
+                { 
+                    id: 'yearEndReview', 
+                    completed: finalYearData && finalYearData.length > 0,
+                    name: 'Final-Year IDP',
+                    icon: 'fa-clipboard-check'
+                }
+            ];
+            
+            // Find the current active step
+            let currentStep = steps.findIndex(step => !step.completed);
+            if (currentStep === -1) currentStep = steps.length - 1; // All completed
+            
+            // Prepare IDPs if available
+            const midYearIDP = midYearData && midYearData.length > 0 ? midYearData[0] : null;
+            const finalYearIDP = finalYearData && finalYearData.length > 0 ? finalYearData[0] : null;
+            
+            // Render the page with all data
+            res.render('staffpages/employee_pages/employee-viewtimeline', {
+                objectives,
+                objectiveScores,
+                hardSkills,
+                softSkills,
+                skillScores,
+                steps,
+                currentStep,
+                midYearIDP,
+                finalYearIDP,
+                quarterlyData: {
+                    q1: q1Data && q1Data.length > 0 ? q1Data[0] : null,
+                    q2: q2Data && q2Data.length > 0 ? q2Data[0] : null,
+                    q3: q3Data && q3Data.length > 0 ? q3Data[0] : null,
+                    q4: q4Data && q4Data.length > 0 ? q4Data[0] : null
+                }
+            });
+            
+        } catch (error) {
+            console.error("Error in getViewPerformanceTimeline:", error);
+            res.status(500).render('error', { message: 'An error occurred while retrieving performance data' });
+        }
     } else {
         req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
         res.redirect('/staff/login');
