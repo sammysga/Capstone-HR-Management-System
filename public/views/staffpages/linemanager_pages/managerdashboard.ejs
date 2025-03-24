@@ -441,7 +441,7 @@
                         <% 
                         let pendingLeaves = [];
                         if (allLeaves && allLeaves.length > 0) {
-                            pendingLeaves = allLeaves.filter(leave => leave.status === 'Pending');
+                            pendingLeaves = allLeaves.filter(leave => leave.status === 'Pending for Approval');
                         }
                         %>
                         
@@ -678,7 +678,7 @@
                 
                 // Count pending leave requests
                 if (allLeaves && allLeaves.length) {
-                    const pendingLeaves = allLeaves.filter(leave => leave.status === 'Pending').length;
+                    const pendingLeaves = allLeaves.filter(leave => leave.status === 'Pending for Approval').length;
                     document.getElementById('pending-leaves').textContent = pendingLeaves;
                 } else {
                     document.getElementById('pending-leaves').textContent = '0';
