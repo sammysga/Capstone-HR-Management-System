@@ -3794,12 +3794,14 @@ function toggleApplicantStatus(button) {
   let apiEndpoint;
   
   if (currentStatus.includes('PASSED')) {
+    // If already PASSED, change to FAILED
     newStatus = currentStatus.includes('P1') ? 'P1 - FAILED (Pending Finalization)' : 'P3 - FAILED (Pending Finalization)';
     apiEndpoint = currentStatus.includes('P1') ? 'markAsP1Failed' : 'markAsP3Failed';
     button.classList.remove('status-passed');
     button.classList.add('status-failed');
     button.textContent = 'Failed';
   } else if (currentStatus.includes('FAILED')) {
+    // If already FAILED, change to PASSED
     newStatus = currentStatus.includes('P1') ? 'P1 - PASSED (Pending Finalization)' : 'P3 - PASSED (Pending Finalization)';
     apiEndpoint = currentStatus.includes('P1') ? 'markAsP1Passed' : 'markAsP3Passed';
     button.classList.remove('status-failed');
@@ -3888,7 +3890,6 @@ function checkAllApplicantsMarked(phase = null) {
     return statusText.indexOf('PASSED') !== -1 || statusText.indexOf('FAILED') !== -1;
   });
 }
-
 // Update section header buttons based on data
 function updateSectionHeaderButtons() {
   const currentPhase = document.querySelector("#currentPhase")?.textContent || "Review";
@@ -3936,8 +3937,147 @@ function updateSectionHeaderButtons() {
             const newConfirmButton = confirmButton.cloneNode(true);
             confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
             
-            // Add new event listener
-            newConfirmButton.addEventListener('click', finalizeP1Review);
+            newConfirmButton.addEventListener('click', function() {
+  console.log("Finalizing P1 review process...");
+
+  // Extract status updates from rows in the declared results table
+  const declaredResultsTable = document.getElementById("declaredResultsTable");
+  const rows = declaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
+
+  // Arrays to store passed and failed user IDs
+  const passedUserIds = [];
+  const failedUserIds = [];
+
+  // Process each row to determine which users passed and which failed
+  rows.forEach(row => {
+    // Skip message rows
+    if (row.querySelector('td[colspan]')) return;
+    
+    const statusCell = row.querySelector('td:nth-child(7)');
+    const userId = row.getAttribute('data-userid');
+    
+    if (statusCell && userId) {
+      const statusText = statusCell.textContent.trim();
+      
+      // Only include P1 rows
+      if (statusText.includes('P1')) {
+        // Check for PASSED with or without "Pending Finalization"
+        if (statusText.includes('PASSED')) {
+          passedUserIds.push(userId);
+          console.log(`Added ${userId} to passed list (${statusText})`);
+        } 
+        // Check for FAILED with or without "Pending Finalization"
+        else if (statusText.includes('FAILED')) {
+          failedUserIds.push(userId);
+          console.log(`Added ${userId} to failed list (${statusText})`);
+        }
+      }
+    }
+  });
+
+  // If no applicants are selected, show an error
+  if (passedUserIds.length === 0 && failedUserIds.length === 0) {
+    alert("No P1 applicants found with PASSED or FAILED status.");
+    closeModal('notifyApplicantsModal');
+    return;
+  }
+
+  console.log(`Finalizing P1 Review: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+
+  // Show confirmation with counts
+  const confirmMessage = `You are about to finalize the P1 review process for ${passedUserIds.length + failedUserIds.length} applicants:
+- ${passedUserIds.length} will be PASSED and proceed to next stage
+- ${failedUserIds.length} will be FAILED and notified of rejection
+
+This action is irreversible. Are you sure you want to proceed?`;
+
+  if (!confirm(confirmMessage)) {
+    closeModal('notifyApplicantsModal');
+    return;
+  }
+
+  // Show loading indicator
+  const confirmButton = document.getElementById('confirmButton');
+  if (confirmButton) {
+    confirmButton.textContent = "Processing...";
+    confirmButton.disabled = true;
+  }
+
+  // Send API request for P1 finalization
+  fetch('/linemanager/applicant-tracker-jobposition/finalizeP1Review', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      passedUserIds: passedUserIds,
+      failedUserIds: failedUserIds
+    }),
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(`P1 Review finalization complete! All applicants have been notified of their status.
+      
+${data.passedCount} applicants passed
+${data.failedCount} applicants failed`);
+      
+      // Update local status for any rows that were marked as pending
+      rows.forEach(row => {
+        const statusCell = row.querySelector('td:nth-child(7)');
+        const rowUserId = row.getAttribute('data-userid');
+        
+        if (statusCell && rowUserId) {
+          const currentStatus = statusCell.textContent.trim();
+          
+          // Update any pending statuses to their final form
+          if (currentStatus.includes('P1') && currentStatus.includes('Pending Finalization')) {
+            if (currentStatus.includes('PASSED')) {
+              statusCell.textContent = 'P1 - PASSED';
+            } else if (currentStatus.includes('FAILED')) {
+              statusCell.textContent = 'P1 - FAILED';
+            }
+          }
+        }
+      });
+      
+      // Clear the pending status changes after finalization
+      window.pendingStatusChanges = {};
+      
+      closeModal('notifyApplicantsModal');
+      
+      // Refresh the view after finalization
+      setTimeout(() => {
+        // Trigger current filter to refresh the view
+        const activeFilter = document.querySelector(".filter-button.active");
+        if (activeFilter) {
+          activeFilter.click();
+        } else {
+          // Default to "all" if no active filter found
+          document.getElementById("filter-all").click();
+        }
+      }, 500);
+    } else {
+      alert("Error finalizing P1 review: " + (data.message || "Unknown error"));
+      
+      // Reset button state
+      if (confirmButton) {
+        confirmButton.textContent = "Confirm";
+        confirmButton.disabled = false;
+      }
+    }
+  })
+  .catch(error => {
+    console.error("Error finalizing P1 review:", error);
+    alert("Failed to finalize P1 review. Please try again.");
+    
+    // Reset button state
+    if (confirmButton) {
+      confirmButton.textContent = "Confirm";
+      confirmButton.disabled = false;
+    }
+  });
+});
           }
         } else {
           alert("Not all P1 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
@@ -3968,8 +4108,129 @@ function updateSectionHeaderButtons() {
             const newConfirmButton = confirmButton.cloneNode(true);
             confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
             
-            // Add new event listener
-            newConfirmButton.addEventListener('click', finalizeP3Review);
+            // Add new event listener with inline function instead of finalizeP3Review
+            newConfirmButton.addEventListener('click', function() {
+              console.log("Finalizing P3 review process...");
+              
+              // Extract status updates from rows in the declared results table
+              const declaredResultsTable = document.getElementById("declaredResultsTable");
+              const rows = declaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
+              
+              // Arrays to store passed and failed user IDs
+              const passedUserIds = [];
+              const failedUserIds = [];
+              
+              // Process each row to determine which users passed and which failed
+              rows.forEach(row => {
+                // Skip message rows
+                if (row.querySelector('td[colspan]')) return;
+                
+                const statusCell = row.querySelector('td:nth-child(7)');
+                const userId = row.getAttribute('data-userid');
+                
+                if (statusCell && userId) {
+                  const statusText = statusCell.textContent.trim();
+                  
+                  // Only include P3 rows
+                  if (statusText.includes('P3')) {
+                    if (statusText.includes('PASSED')) {
+                      passedUserIds.push(userId);
+                      console.log(`Added ${userId} to passed list (${statusText})`);
+                    } else if (statusText.includes('FAILED')) {
+                      failedUserIds.push(userId);
+                      console.log(`Added ${userId} to failed list (${statusText})`);
+                    }
+                  }
+                }
+              });
+              
+              // If no applicants are selected, show an error
+              if (passedUserIds.length === 0 && failedUserIds.length === 0) {
+                alert("No P3 applicants found with PASSED or FAILED status.");
+                closeModal('notifyApplicantsModal');
+                return;
+              }
+              
+              console.log(`Finalizing P3 Review: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+              
+              // Show confirmation with counts
+              const confirmMessage = `You are about to finalize the P3 review process for ${passedUserIds.length + failedUserIds.length} applicants:
+            - ${passedUserIds.length} will be PASSED and receive job offers
+            - ${failedUserIds.length} will be FAILED and notified of rejection
+
+            This action is irreversible. Are you sure you want to proceed?`;
+
+              if (!confirm(confirmMessage)) {
+                closeModal('notifyApplicantsModal');
+                return;
+              }
+              
+              // Show loading indicator
+              const confirmButton = document.getElementById('confirmButton');
+              if (confirmButton) {
+                confirmButton.textContent = "Processing...";
+                confirmButton.disabled = true;
+              }
+              
+              // Send API request for P3 finalization
+              fetch('/linemanager/applicant-tracker-jobposition/finalizeP3Review', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  passedUserIds: passedUserIds,
+                  failedUserIds: failedUserIds
+                }),
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  alert(`P3 Review finalization complete! All applicants have been notified of their status.
+                  
+            ${data.passedCount} applicants passed
+            ${data.failedCount} applicants failed`);
+                  
+                  // Clear the pending status changes after finalization
+                  window.pendingStatusChanges = {};
+                  
+                  closeModal('notifyApplicantsModal');
+                  
+                  // Refresh the view after finalization
+                  setTimeout(() => {
+                    // Trigger current filter to refresh the view
+                    const activeFilter = document.querySelector(".filter-button.active");
+                    if (activeFilter) {
+                      activeFilter.click();
+                    } else {
+                      // Default to "all" if no active filter found
+                      document.getElementById("filter-all").click();
+                    }
+                  }, 500);
+                } else {
+                  alert("Error finalizing P3 review: " + (data.message || "Unknown error"));
+                  
+                  // Reset button state
+                  if (confirmButton) {
+                    confirmButton.textContent = "Confirm";
+                    confirmButton.disabled = false;
+                  }
+                }
+              })
+              .catch(error => {
+                console.error("Error finalizing P3 review:", error);
+                alert("Failed to finalize P3 review. Please try again.");
+                
+                // Reset button state
+                if (confirmButton) {
+                  confirmButton.textContent = "Confirm";
+                  confirmButton.disabled = false;
+                }
+              });
+              
+              // Close the modal
+              closeModal('notifyApplicantsModal');
+            });
           }
         } else {
           alert("Not all P3 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
@@ -4597,87 +4858,120 @@ rows.forEach((row, idx) => {
 });
 }
 
-
-// Function for displaying uploaded documents in modal
 function displayUploadedDocument(fileUrl, linkId, previewId) {
-const docLink = document.getElementById(linkId);
-const docPreview = document.getElementById(previewId);
+  const docLink = document.getElementById(linkId);
+  const docPreview = document.getElementById(previewId);
 
-if (!fileUrl || fileUrl === '#') {
+  if (!docLink || !docPreview) {
+    console.error(`Element not found: linkId=${linkId}, previewId=${previewId}`);
+    return;
+  }
+
+  // Handle empty or invalid URLs
+  if (!fileUrl || fileUrl === '#' || fileUrl === 'undefined' || fileUrl === 'null') {
     docLink.href = "#";
     docLink.textContent = "No document uploaded";
     docPreview.innerHTML = ""; // Clear preview
     return;
+  }
+
+  // Valid URL exists, set the link
+  docLink.href = fileUrl;
+  docLink.textContent = "View Uploaded Document";
+  docLink.target = "_blank"; // Open in new tab
+  
+  // Try to determine file type for preview
+  const fileExtension = fileUrl.split('.').pop().toLowerCase();
+
+  // Choose preview method based on file type
+  if (["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension)) {
+    // Image preview
+    docPreview.innerHTML = `<img src="${fileUrl}" alt="Document Preview" style="max-width: 100%; max-height: 300px; border: 1px solid #ccc; padding: 5px;">`;
+  } else if (fileExtension === "pdf") {
+    // PDF preview
+    docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="300px" style="border: 1px solid #ccc;"></iframe>`;
+  } else {
+    // For other file types, just show a download link with icon
+    docPreview.innerHTML = `
+      <div style="text-align: center; margin: 10px 0;">
+        <i class="fas fa-file-download" style="font-size: 24px; color: #124A5C;"></i>
+        <p>Preview not available. Click the link above to download.</p>
+      </div>
+    `;
+  }
+
+  console.log(`Document preview setup for ${fileUrl} (${fileExtension})`);
 }
-
-docLink.href = fileUrl;
-docLink.textContent = "View Uploaded Document";
-
-const fileExtension = fileUrl.split('.').pop().toLowerCase();
-
-if (["jpg", "jpeg", "png"].includes(fileExtension)) {
-    docPreview.innerHTML = `<img src="${fileUrl}" alt="Uploaded Image" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">`;
-} else if (fileExtension === "pdf") {
-    docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="400px" style="border: none;"></iframe>`;
-} else {
-    docPreview.innerHTML = ""; // No preview for other file types
-}
-}
-
-// Function for the Line Manager Initial Screening Modal
+// Improved function for the Line Manager Initial Screening Modal
 function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
-console.log('Modal Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl });
+  console.log('Modal Data:', { 
+    userId, lastName, firstName, birthday, email, phoneNo, 
+    scores, verdict, 
+    degreeUrl, certUrl, resumeUrl 
+  });
 
-// If userId is missing or "undefined", log an error and stop further processing.
-if (!userId || userId === "undefined") {
+  // If userId is missing or "undefined", log an error and stop further processing.
+  if (!userId || userId === "undefined") {
     console.error("Invalid userId passed to modal:", userId);
     alert("Error: Invalid User ID. Cannot display applicant details.");
     return;
-}
+  }
 
-// Set the hidden input value for userId
-document.getElementById('userId').value = userId;
+  // Set the hidden input value for userId
+  document.getElementById('userId').value = userId;
 
-// Set the hidden input value for jobId if it exists
-const jobIdElement = document.getElementById('jobId');
-if (jobIdElement && typeof jobId !== 'undefined') {
+  // Set the hidden input value for jobId if it exists
+  const jobIdElement = document.getElementById('jobId');
+  if (jobIdElement && typeof jobId !== 'undefined') {
     jobIdElement.value = jobId;
-}
+  }
 
-// Optionally hide the applicantId container if not needed
-let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
-if (applicantIdContainer) {
+  // Optionally hide the applicantId container if not needed
+  let applicantIdContainer = document.getElementById("applicantId")?.parentElement;
+  if (applicantIdContainer) {
     applicantIdContainer.style.display = "none";
-}
+  }
 
-// Populate visible applicant details
-document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
-document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
-document.getElementById('applicant-email').textContent = email || 'N/A';
-document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
+  // Populate visible applicant details
+  document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
+  document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
+  document.getElementById('applicant-email').textContent = email || 'N/A';
+  document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
 
-// Populate score details
-document.getElementById('score-degree').textContent = scores.degree || 'N/A';
-document.getElementById('score-experience').textContent = scores.experience || 'N/A';
-document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
-document.getElementById('score-hard-skills').textContent = scores.hardSkills || 'N/A';
-document.getElementById('score-soft-skills').textContent = scores.softSkills || 'N/A';
-document.getElementById('score-work-setup').textContent = scores.workSetup || 'N/A';
-document.getElementById('score-availability').textContent = scores.availability || 'N/A';
+  // Populate score details
+  document.getElementById('score-degree').textContent = scores.degree || 'N/A';
+  document.getElementById('score-experience').textContent = scores.experience || 'N/A';
+  document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
+  document.getElementById('score-hard-skills').textContent = scores.hardSkills || 'N/A';
+  document.getElementById('score-soft-skills').textContent = scores.softSkills || 'N/A';
+  document.getElementById('score-work-setup').textContent = scores.workSetup || 'N/A';
+  document.getElementById('score-availability').textContent = scores.availability || 'N/A';
 
-document.getElementById('computation-verdict').textContent = verdict || 'N/A';
+  document.getElementById('computation-verdict').textContent = verdict || 'N/A';
 
-// Display documents separately
-displayUploadedDocument(degreeUrl, "degree-doc", "degree-preview");
-displayUploadedDocument(certUrl, "cert-doc", "cert-preview");
-displayUploadedDocument(resumeUrl, "resume-doc", "resume-preview");
+  // Clean up URL values to avoid undefined or null strings
+  const cleanDegreeUrl = (degreeUrl && degreeUrl !== 'undefined' && degreeUrl !== 'null') ? degreeUrl : '#';
+  const cleanCertUrl = (certUrl && certUrl !== 'undefined' && certUrl !== 'null') ? certUrl : '#';
+  const cleanResumeUrl = (resumeUrl && resumeUrl !== 'undefined' && resumeUrl !== 'null') ? resumeUrl : '#';
 
-// Display the modal
-document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
+  // Console log URLs for debugging
+  console.log('Document URLs for preview:', {
+    degree: cleanDegreeUrl,
+    cert: cleanCertUrl,
+    resume: cleanResumeUrl
+  });
 
-// Store this score in our global cache - this is the applicant_initialscreening_assessment.totalScore
-if (!window.applicantsScores) window.applicantsScores = {};
-window.applicantsScores[userId] = verdict;
+  // Display documents separately with the improved function
+  displayUploadedDocument(cleanDegreeUrl, "degree-doc", "degree-preview");
+  displayUploadedDocument(cleanCertUrl, "cert-doc", "cert-preview");
+  displayUploadedDocument(cleanResumeUrl, "resume-doc", "resume-preview");
+
+  // Display the modal
+  document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
+
+  // Store this score in our global cache - this is the applicant_initialscreening_assessment.totalScore
+  if (!window.applicantsScores) window.applicantsScores = {};
+  window.applicantsScores[userId] = verdict;
 }
 // Function to open standard modals
 function openModal(modalId, applicantName) {
@@ -4785,86 +5079,6 @@ alert("Opening Calendly to set interview availabilities...");
 // window.open('https://calendly.com/your-calendly-link', '_blank');
 }
 
-// Function to finalize P1 Review
-function finalizeP1Review() {
-console.log("Finalizing P1 review process...");
-
-// Extract status updates from rows in the declared results table
-const declaredResultsTable = document.getElementById("declaredResultsTable");
-const rows = declaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
-
-// Arrays to store passed and failed user IDs
-const passedUserIds = [];
-const failedUserIds = [];
-
-// Process each row to determine which users passed and which failed
-rows.forEach(row => {
-    // Skip message rows
-    if (row.querySelector('td[colspan]')) return;
-    
-    const statusCell = row.querySelector('td:nth-child(7)');
-    const userId = row.getAttribute('data-userid');
-    
-    if (statusCell && userId) {
-        const statusText = statusCell.textContent.trim();
-        
-        // Only include P1 rows
-        if (statusText.includes('P1')) {
-            if (statusText.includes('PASSED')) {
-                passedUserIds.push(userId);
-            } else if (statusText.includes('FAILED')) {
-                failedUserIds.push(userId);
-            }
-        }
-    }
-});
-
-console.log(`Finalizing P1 Review: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
-
-// Send API request for P1 finalization
-fetch('/linemanager/applicant-tracker-jobposition/finalizeP1Review', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        passedUserIds: passedUserIds,
-        failedUserIds: failedUserIds
-    }),
-})
-.then(response => response.json())
-.then(data => {
-    if (data.success) {
-        alert("P1 Review finalization complete! All applicants have been notified of their status.");
-        
-        // Clear the pending status changes after finalization
-        window.pendingStatusChanges = {};
-        
-        closeModal('notifyApplicantsModal');
-        
-        // Refresh the view after finalization
-        setTimeout(() => {
-            // Trigger current filter to refresh the view
-            const activeFilter = document.querySelector(".filter-button.active");
-            if (activeFilter) {
-                activeFilter.click();
-            } else {
-                // Default to "all" if no active filter found
-                document.getElementById("filter-all").click();
-            }
-        }, 500);
-    } else {
-        alert("Error finalizing P1 review: " + (data.message || "Unknown error"));
-    }
-})
-.catch(error => {
-    console.error("Error finalizing P1 review:", error);
-    alert("Failed to finalize P1 review. Please try again.");
-});
-
-// Close the modal
-closeModal('notifyApplicantsModal');
-}
 // Handle the Pass button click in the modal
 function passApplicant() {
 const userId = document.getElementById('userId').value;
@@ -5038,94 +5252,6 @@ reviewButtons.forEach(button => {
 
 console.log(`Captured ${Object.keys(window.applicantsScores).length} scores`);
 }
-
-// Function for finalizing P3 Review (updated to match P1 pattern)
-function finalizeP3Review() {
-    console.log("Finalizing P3 review process...");
-    
-    // Extract status updates from rows in the declared results table
-    const declaredResultsTable = document.getElementById("declaredResultsTable");
-    const rows = declaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
-    
-    // Arrays to store passed and failed user IDs
-    const passedUserIds = [];
-    const failedUserIds = [];
-    
-    // Process each row to determine which users passed and which failed
-    rows.forEach(row => {
-        // Skip message rows
-        if (row.querySelector('td[colspan]')) return;
-        
-        const statusCell = row.querySelector('td:nth-child(7)');
-        const userId = row.getAttribute('data-userid');
-        
-        if (statusCell && userId) {
-            const statusText = statusCell.textContent.trim();
-            
-            // Only include P3 rows
-            if (statusText.includes('P3')) {
-                if (statusText.includes('PASSED')) {
-                    passedUserIds.push(userId);
-                } else if (statusText.includes('FAILED')) {
-                    failedUserIds.push(userId);
-                }
-            }
-        }
-    });
-    
-    console.log(`Finalizing P3 Review: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
-    
-    if (passedUserIds.length === 0 && failedUserIds.length === 0) {
-        alert("No P3 applicants found with PASSED or FAILED status.");
-        closeModal('notifyApplicantsModal');
-        return;
-    }
-    
-    // Send API request for P3 finalization
-    fetch('/linemanager/applicant-tracker-jobposition/finalizeP3Review', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            passedUserIds: passedUserIds,
-            failedUserIds: failedUserIds
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert("P3 Review finalization complete! All applicants have been notified of their status.");
-            
-            // Clear the pending status changes after finalization
-            window.pendingStatusChanges = {};
-            
-            closeModal('notifyApplicantsModal');
-            
-            // Refresh the view after finalization
-            setTimeout(() => {
-                // Trigger current filter to refresh the view
-                const activeFilter = document.querySelector(".filter-button.active");
-                if (activeFilter) {
-                    activeFilter.click();
-                } else {
-                    // Default to "all" if no active filter found
-                    document.getElementById("filter-all").click();
-                }
-            }, 500);
-        } else {
-            alert("Error finalizing P3 review: " + (data.message || "Unknown error"));
-        }
-    })
-    .catch(error => {
-        console.error("Error finalizing P3 review:", error);
-        alert("Failed to finalize P3 review. Please try again.");
-    });
-    
-    // Close the modal
-    closeModal('notifyApplicantsModal');
-    }
-
 
 function getTotalScoreDirectly(userId, targetRow) {
   if (!userId || !targetRow) {
