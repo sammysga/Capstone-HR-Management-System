@@ -65,14 +65,14 @@
     <h1>Schedule Your Appointment</h1>
     <p>
       Please select a date and time on the embedded Calendly page and wait for
-      email confirmation. Once you’ve received the confirmation, press the
+      email confirmation. Once you've received the confirmation, press the
       "Return to Chatbot" button to continue.
     </p>
 
     <div id="calendly-container">
       <div
         class="calendly-inline-widget"
-        data-url="https://calendly.com/hr-recruitmentprime00/sample-interview"
+        data-url="https://calendly.com/recruitmentprime7/30min"
         style="min-width: 320px; height: 630px;">
       </div>
     </div>
@@ -81,10 +81,10 @@
   </div>
 
   <script>
-    function returnToChatbot() {
-      alert("Returning to the chatbot...");
-      // Redirect or execute chatbot functionality here
-    }
+  function returnToChatbot() {
+    // Redirect back to the chatbot page with a parameter indicating return from Calendly
+    window.location.href = '/applicant/chatbot?from_calendly=true';
+  }
   </script>
 </body>
 </html>
