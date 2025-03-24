@@ -594,6 +594,18 @@ const lineManagerController = {
             return res.redirect('/staff/employee/dashboard');
         }
 
+        // Fetch offboarding requests for this user
+        const { data: offboardingRequests, error: offboardingError } = await supabase
+            .from('offboarding_requests')
+            .select('*')
+            .eq('userId', userId)
+            .order('created_at', { ascending: false });
+
+        if (offboardingError) {
+            console.error('Error fetching offboarding requests:', offboardingError);
+            // Don't redirect, just log the error and continue
+        }
+
         const userData = {
             ...user,
             firstName: staff.firstName,
@@ -602,7 +614,10 @@ const lineManagerController = {
             jobTitle: staff.jobpositions.jobTitle
         };
 
-        res.render('staffpages/employee_pages/useracc', { user: userData });
+        res.render('staffpages/employee_pages/useracc', { 
+            user: userData,
+            offboardingRequests: offboardingRequests || [] // Pass empty array if null
+        });
     } catch (err) {
         console.error('Error in getUserAccount controller:', err);
         req.flash('errors', { dbError: 'An error occurred while loading the account page.' });
