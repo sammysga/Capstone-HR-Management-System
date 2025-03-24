@@ -676,7 +676,7 @@ if (applicantError) {
     if (applicantData.applicantStatus === 'P1 - PASSED') {
         console.log('✅ [Chatbot] Applicant status is P1 - PASSED. Sending congratulations message.');
         
-        const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage once the HR team sets availability via Calendly.";
+        const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage via Calendly.";
         
         // Save congratulations message to chat history
         await supabase
