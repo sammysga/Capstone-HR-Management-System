@@ -1596,6 +1596,7 @@ res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobpositio
         }
     },
 
+
     finalizeP1Review: async function(req, res) {
         try {
             console.log('✅ [LineManager] Finalizing P1 review process');
@@ -1687,10 +1688,6 @@ res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobpositio
         }
     },
     
-    /**
-     * Finalizes the P3 review process and notifies applicants
-     * This should be called when the Line Manager clicks "Finalize P3 Review"
-     */
     finalizeP3Review: async function(req, res) {
         try {
             console.log('✅ [LineManager] Finalizing P3 review process');
@@ -1781,6 +1778,7 @@ res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobpositio
             return res.status(500).json({ success: false, message: "Error finalizing P3 review: " + error.message });
         }
     },
+    
     markAsP1Passed: async function(req, res) {
         try {
             const { userId } = req.body;

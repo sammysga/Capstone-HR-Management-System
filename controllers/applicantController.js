@@ -164,35 +164,13 @@ getJobDetailsTitle: async function(req, res) {
     getActiveJobPositionsList: async function() {
         try {
             const today = new Date().toISOString().split('T')[0]; // Get today's date in "YYYY-MM-DD" format
-            console.log('Today date for comparison:', today);
+            console.log('Today:', today);
             
-            // First, let's fetch ALL positions to see what's actually in the database
-            const { data: allPositions, error: allError } = await supabase
-                .from('jobpositions')
-                .select('jobId, jobTitle, hiringStartDate, hiringEndDate');
-                
-            if (allError) {
-                console.error('❌ [Database] Error fetching all positions:', allError.message);
-            } else {
-                console.log('All positions in database:', allPositions);
-                
-                // Let's manually filter to see what would match
-                const manuallyFiltered = allPositions.filter(position => {
-                    const endDateOk = position.hiringEndDate >= today;
-                    const startDateOk = position.hiringStartDate <= today;
-                    console.log(`Position: ${position.jobTitle}, Start: ${position.hiringStartDate}, End: ${position.hiringEndDate}, EndOK: ${endDateOk}, StartOK: ${startDateOk}`);
-                    return endDateOk && startDateOk;
-                });
-                
-                console.log('Manually filtered positions:', manuallyFiltered);
-            }
-            
-            // Normal query
+            // Only filter by end date, not start date
             const { data: jobpositions, error } = await supabase
                 .from('jobpositions')
                 .select('jobId, jobTitle, hiringStartDate, hiringEndDate')
-                .gte('hiringEndDate', today)
-                .lte('hiringStartDate', today);
+                .gte('hiringEndDate', today); // Only keep jobs that haven't ended yet
             
             if (error) {
                 console.error('❌ [Database] Error fetching job positions:', error.message);
@@ -216,8 +194,8 @@ getJobDetailsTitle: async function(req, res) {
             return [];
         }
     },
-    
-    getJobDetails: async function(jobTitle) {
+
+    getJobDetailsbyTitle: async function(jobTitle) {
         try {
             const { data: jobDetails, error } = await supabase
                 .from('jobpositions')
@@ -230,6 +208,42 @@ getJobDetailsTitle: async function(req, res) {
                 `)
                 .eq('jobTitle', jobTitle)
                 .single();
+    
+            if (error) {
+                console.error('Error fetching job details:', error);
+                return null;
+            }
+            
+            // Ensure all arrays exist even if they're empty
+            return {
+                ...jobDetails,
+                jobreqcertifications: jobDetails.jobreqcertifications || [],
+                jobreqdegrees: jobDetails.jobreqdegrees || [],
+                jobreqexperiences: jobDetails.jobreqexperiences || [],
+                jobreqskills: jobDetails.jobreqskills || []
+            };
+        } catch (error) {
+            console.error('Server error:', error);
+            return null;
+        }
+    },
+
+
+    getJobDetails: async function(jobTitle) {
+        try {
+           const today = new Date().toISOString().split('T')[0]; // Get today's date in "YYYY-MM-DD" format
+        
+        console.log('Today:', today);
+        console.log('Query parameters:', {
+            hiringEndDate: today,
+            hiringStartDate: today
+        });
+        
+        const { data: jobpositions, error } = await supabase
+            .from('jobpositions')
+            .select('jobId, jobTitle, hiringStartDate, hiringEndDate')
+            .gte('hiringEndDate', today) // hiringEndDate should be today or later
+            .lte('hiringStartDate', today); // hiringStartDate should be today or earlier
     
             if (error) {
                 console.error('Error fetching job details:', error);
@@ -313,44 +327,50 @@ getJobDetailsTitle: async function(req, res) {
 
     handleRegisterPage: async function(req, res) {
         console.log('Handling registration request...');
-        const { lastName, firstName, middleInitial, birthDate, email, password, confirmPassword } = req.body;
+        const { lastName, firstName, middleInitial, birthDate, phoneNo, email, password, confirmPassword } = req.body;
         const errors = {};
-
+    
         // Password validation
         if (!password || !confirmPassword || password !== confirmPassword) {
             errors.password = 'Password is required and must match the confirmation';
         }
-
+    
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             errors.email = 'Invalid email format';
         }
-
+        
+        // Phone number validation
+        const phoneRegex = /^\d{10,11}$/;
+        if (!phoneNo || !phoneRegex.test(phoneNo)) {
+            errors.phoneNo = 'Valid phone number is required (10-11 digits)';
+        }
+    
         if (Object.keys(errors).length > 0) {
             return res.status(400).render('applicant_pages/signup', { errors });
         }
-
+    
         // Check if email already exists
         const { data: existingData, error: existingDataError } = await supabase
             .from('useraccounts')
             .select('userEmail')
             .eq('userEmail', email);
-
+    
         if (existingDataError) {
             console.error('Database error:', existingDataError);
             errors.general = 'Error checking existing email';
             return res.status(500).render('applicant_pages/signup', { errors });
         }
-
+    
         if (existingData && existingData.length > 0) {
             errors.email = 'Email is already in use';
             return res.status(400).render('applicant_pages/signup', { errors });
         }
-
+    
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
-
+    
         // Insert user data
         const { data: userData, error: userError } = await supabase
             .from('useraccounts')
@@ -364,13 +384,13 @@ getJobDetailsTitle: async function(req, res) {
             ])
             .select('userId')
             .single();
-
+    
         if (userError) {
             console.error('Error inserting data into useraccounts:', userError);
             errors.general = 'Error inserting data into the database';
             return res.status(500).render('applicant_pages/signup', { errors });
         }
-
+    
         // Insert applicant data
         const { data: applicantData, error: applicantError } = await supabase
             .from('applicantaccounts')
@@ -381,16 +401,17 @@ getJobDetailsTitle: async function(req, res) {
                     firstName: firstName,
                     middleInitial: middleInitial,
                     birthDate: birthDate,
-                    applicantStatus: 'Account initially created',
+                    phoneNo: phoneNo,
+                    applicantStatus: null,
                 },
             ]);
-
+    
         if (applicantError) {
             console.error('Error inserting data into applicantaccounts:', applicantError);
             errors.general = 'Error inserting applicant data into the database';
             return res.status(500).render('applicant_pages/signup', { errors });
         }
-
+    
         // Redirect upon success
         res.redirect('/applicant/login');
     },
@@ -722,7 +743,7 @@ else {
     
             if (selectedPosition) {
                 req.session.selectedPosition = selectedPosition;
-                const jobDetails = await applicantController.getJobDetailsById(selectedPosition);
+                const jobDetails = await applicantController.getJobDetailsbyTitle(selectedPosition);
     
                 if (jobDetails) {
                     // Update applicantaccounts with jobId and departmentId
@@ -771,7 +792,7 @@ else {
                 }
             }
             else if (applicantStage === 'job_selection' && userMessage.includes('yes')) {
-                const jobDetails = await applicantController.getJobDetailsById(req.session.selectedPosition);
+                const jobDetails = await applicantController.getJobDetailsbyTitle(req.session.selectedPosition);
                 if (!jobDetails || isNaN(jobDetails.jobId)) {
                     console.error('❌ [Chatbot] Invalid jobId:', jobDetails.jobId);
                     return res.status(500).json({ response: 'Error identifying job details. Please try again later.' });
@@ -1209,23 +1230,22 @@ getInitialScreeningQuestions: async function (jobId) {
                     { text: 'No', value: 0 }
                 ]
             })),
-
             ...hardSkills.map(s => ({
-                type: 'hardSkill', // Ensure this is set correctly
-                text: `To assess your hard skills, do you have ${s.jobReqSkillName}?`,
+                type: 'hardSkill',
+                text: `To assess your hard skills, do you have experience with ${s.jobReqSkillName}?`,
                 buttons: [
-                    { text: 'Yes', value: 1 },
-                    { text: 'No', value: 0 }
+                  { text: 'Yes', value: 1 },
+                  { text: 'No', value: 0 }
                 ]
-            })),
-            ...softSkills.map(s => ({
-                type: 'softSkill', // Ensure this is set correctly
-                text: `To assess your soft skills, do you have ${s.jobReqSkillName}?`,
+              })),
+              ...softSkills.map(s => ({
+                type: 'softSkill',
+                text: `To assess your soft skills, do you possess ${s.jobReqSkillName}?`,
                 buttons: [
-                    { text: 'Yes', value: 1 },
-                    { text: 'No', value: 0 }
+                  { text: 'Yes', value: 1 },
+                  { text: 'No', value: 0 }
                 ]
-            })),
+              })),
             // Add work setup question
             {
                 type: 'work_setup',
