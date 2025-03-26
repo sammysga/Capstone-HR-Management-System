@@ -1283,60 +1283,66 @@ updatePersUserInfo: async function(req, res) {
         }
     },
     
-    getApplicantTracker: async function(req, res) {
-        if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            try {
-                // First, get the line manager's department ID
-                const userId = req.session.user.userId;
-                const { data: lineManagerData, error: lineManagerError } = await supabase
-                    .from('staffaccounts')
-                    .select('departmentId')
-                    .eq('userId', userId)
-                    .single();
-    
-                if (lineManagerError) {
-                    console.error('Error fetching line manager department:', lineManagerError);
-                    throw lineManagerError;
-                }
-    
-                const lineManagerDepartmentId = lineManagerData?.departmentId;
-    
-                if (!lineManagerDepartmentId) {
-                    console.error('Line manager has no department assigned');
-                    req.flash('errors', { authError: 'Department not assigned to your account. Please contact HR.' });
-                    return res.redirect('/staff/login');
-                }
-    
-                // Fetch job positions filtered by the line manager's department
-                const { data: jobpositions, error: jobpositionsError } = await supabase
-                    .from('jobpositions')
-                    .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
-                    .eq('departmentId', lineManagerDepartmentId) // Filter by the line manager's department
-                    .order('hiringStartDate', { ascending: true });
-    
-                if (jobpositionsError) throw jobpositionsError;
-    
-                // Fetch all departments for dropdown
-                const { data: departments, error: departmentsError } = await supabase
-                    .from('departments')
-                    .select('deptName, departmentId');
-    
-                if (departmentsError) throw departmentsError;
-    
-                // Fetch all applicant accounts with created_at date
-                const { data: applicantaccounts, error: applicantaccountsError } = await supabase
-                    .from('applicantaccounts')
-                    .select('jobId, applicantStatus, created_at');
-    
-                if (applicantaccountsError) throw applicantaccountsError;
-    
-                console.log('Applicant Accounts:', applicantaccounts);
-    
-                // Group and count statuses by jobId
-                const statusCountsMap = {};
-                const applicantDatesMap = {}; // To track application dates for each job
-    
+    // This is the problematic function that needs to be fixed
+getApplicantTracker: async function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'Line Manager') {
+        try {
+            // First, get the line manager's department ID
+            const userId = req.session.user.userId;
+            const { data: lineManagerData, error: lineManagerError } = await supabase
+                .from('staffaccounts')
+                .select('departmentId')
+                .eq('userId', userId)
+                .single();
+
+            if (lineManagerError) {
+                console.error('Error fetching line manager department:', lineManagerError);
+                throw lineManagerError;
+            }
+
+            const lineManagerDepartmentId = lineManagerData?.departmentId;
+
+            if (!lineManagerDepartmentId) {
+                console.error('Line manager has no department assigned');
+                req.flash('errors', { authError: 'Department not assigned to your account. Please contact HR.' });
+                return res.redirect('/staff/login');
+            }
+
+            // Fetch job positions filtered by the line manager's department
+            const { data: jobpositions, error: jobpositionsError } = await supabase
+                .from('jobpositions')
+                .select('jobId, jobTitle, hiringStartDate, hiringEndDate, departmentId')
+                .eq('departmentId', lineManagerDepartmentId) // Filter by the line manager's department
+                .order('hiringStartDate', { ascending: true });
+
+            if (jobpositionsError) throw jobpositionsError;
+
+            // Fetch all departments for dropdown
+            const { data: departments, error: departmentsError } = await supabase
+                .from('departments')
+                .select('deptName, departmentId');
+
+            if (departmentsError) throw departmentsError;
+
+            // Fetch all applicant accounts with created_at date
+            const { data: applicantaccounts, error: applicantaccountsError } = await supabase
+                .from('applicantaccounts')
+                .select('jobId, applicantStatus, created_at');
+
+            if (applicantaccountsError) throw applicantaccountsError;
+
+            console.log('Applicant Accounts:', applicantaccounts);
+
+            // Group and count statuses by jobId
+            const statusCountsMap = {};
+            const applicantDatesMap = {}; // To track application dates for each job
+
+            // Add null check for applicantaccounts before iterating
+            if (applicantaccounts && Array.isArray(applicantaccounts)) {
                 applicantaccounts.forEach(({ jobId, applicantStatus, created_at }) => {
+                    // Skip records with null or undefined values
+                    if (!jobId || !applicantStatus) return;
+                    
                     // Initialize if first time seeing this jobId
                     if (!statusCountsMap[jobId]) {
                         statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 };
@@ -1348,64 +1354,70 @@ updatePersUserInfo: async function(req, res) {
                         applicantDatesMap[jobId].push(new Date(created_at));
                     }
                     
-                    // Count applicants by status
-                    if (applicantStatus.includes('P1')) {
-                        statusCountsMap[jobId].P1++;
-                    } else if (applicantStatus.includes('P2')) {
-                        statusCountsMap[jobId].P2++;
-                    } else if (applicantStatus.includes('P3')) {
-                        statusCountsMap[jobId].P3++;
-                    } else if (applicantStatus.includes('Offered')) {
-                        statusCountsMap[jobId].Offered++;
-                    } else if (applicantStatus.includes('Onboarding')) {
-                        statusCountsMap[jobId].Onboarding++;
+                    // Count applicants by status - Add null check on applicantStatus
+                    if (applicantStatus && typeof applicantStatus === 'string') {
+                        if (applicantStatus.includes('P1')) {
+                            statusCountsMap[jobId].P1++;
+                        } else if (applicantStatus.includes('P2')) {
+                            statusCountsMap[jobId].P2++;
+                        } else if (applicantStatus.includes('P3')) {
+                            statusCountsMap[jobId].P3++;
+                        } else if (applicantStatus.includes('Offered')) {
+                            statusCountsMap[jobId].Offered++;
+                        } else if (applicantStatus.includes('Onboarding')) {
+                            statusCountsMap[jobId].Onboarding++;
+                        }
                     }
                 });
-    
-                console.log('Status Counts Map:', statusCountsMap);
-                console.log('Applicant Dates Map:', applicantDatesMap);
-    
-                // Function to check if any application date falls within hiring date range
-                const hasApplicantsInDateRange = (jobId, hiringStart, hiringEnd) => {
-                    const applicantDates = applicantDatesMap[jobId] || [];
-                    const start = new Date(hiringStart);
-                    const end = new Date(hiringEnd);
-                    
-                    // Check if any application date falls within the hiring range
-                    return applicantDates.some(date => date >= start && date <= end);
-                };
-    
-                // Merge counts into job positions with date check
-                const jobPositionsWithCounts = jobpositions.map((job) => {
-                    const withinHiringRange = hasApplicantsInDateRange(
-                        job.jobId, 
-                        job.hiringStartDate, 
-                        job.hiringEndDate
-                    );
-                    
-                    return {
-                        ...job,
-                        departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
-                        counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 },
-                        hasApplicantsInDateRange: withinHiringRange // Add flag for highlighting in frontend
-                    };
-                });
-    
-                // Render the page
-                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking', {
-                    jobPositions: jobPositionsWithCounts,
-                    departments,
-                });
-            } catch (err) {
-                console.error('Error:', err);
-                req.flash('errors', { databaseError: 'Error fetching job data.' });
-                res.redirect('/staff/login');
             }
-        } else {
-            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+
+            console.log('Status Counts Map:', statusCountsMap);
+            console.log('Applicant Dates Map:', applicantDatesMap);
+
+            // Function to check if any application date falls within hiring date range
+            const hasApplicantsInDateRange = (jobId, hiringStart, hiringEnd) => {
+                const applicantDates = applicantDatesMap[jobId] || [];
+                // Handle case where dates might be missing
+                if (!hiringStart || !hiringEnd) return false;
+                
+                const start = new Date(hiringStart);
+                const end = new Date(hiringEnd);
+                
+                // Check if any application date falls within the hiring range
+                return applicantDates.some(date => date >= start && date <= end);
+            };
+
+            // Merge counts into job positions with date check
+            const jobPositionsWithCounts = jobpositions.map((job) => {
+                const withinHiringRange = hasApplicantsInDateRange(
+                    job.jobId, 
+                    job.hiringStartDate, 
+                    job.hiringEndDate
+                );
+                
+                return {
+                    ...job,
+                    departmentName: departments.find(dept => dept.departmentId === job.departmentId)?.deptName || 'Unknown',
+                    counts: statusCountsMap[job.jobId] || { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 },
+                    hasApplicantsInDateRange: withinHiringRange // Add flag for highlighting in frontend
+                };
+            });
+
+            // Render the page
+            res.render('staffpages/linemanager_pages/linemanagerapplicanttracking', {
+                jobPositions: jobPositionsWithCounts,
+                departments,
+            });
+        } catch (err) {
+            console.error('Error:', err);
+            req.flash('errors', { databaseError: 'Error fetching job data.' });
             res.redirect('/staff/login');
         }
-    },
+    } else {
+        req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+        res.redirect('/staff/login');
+    }
+},
 
     getApplicantTrackerByJobPositions: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
