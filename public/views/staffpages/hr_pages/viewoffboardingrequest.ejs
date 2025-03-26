@@ -482,30 +482,61 @@
             }
         });
 
-            // Toggle active class for sidebar links
-    document.querySelectorAll('.sidebar ul li a').forEach(link => {
-        link.addEventListener('click', function() {
-            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-            this.classList.add('active');
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
         });
-    });
-    // Toggle collapsible content
-    document.querySelectorAll('.collapsible-header').forEach(header => {
-        header.addEventListener('click', function() {
-            var content = this.nextElementSibling;
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                // Hide all other collapsible contents
-                document.querySelectorAll('.collapsible-content').forEach(item => {
-                    if (item !== content) {
-                        item.style.display = 'none';
-                    }
-                });
-                content.style.display = 'block';
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+
+        // Add Item to Checklist
+        function addChecklistItem() {
+            const newTask = document.getElementById("newChecklistItem").value;
+            const newContact = document.getElementById("newContactPerson").value;
+
+            if (newTask.trim() === "" || newContact.trim() === "") {
+                alert("Please enter both a task and a contact person.");
+                return;
             }
-        });
-    });
+
+            const checklist = document.getElementById("clearanceChecklist");
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <div class="checklist-item">
+                    <span data-task>${newTask}</span>
+                    <span class="contact-person" data-contact>Contact: ${newContact}</span>
+                    <button class="delete-item" onclick="deleteChecklistItem(this)">✖</button>
+                </div>
+            `;
+            checklist.appendChild(li);
+            document.getElementById("newChecklistItem").value = "";
+            document.getElementById("newContactPerson").value = "";
+        }
+
+        // Delete Item from Checklist
+        function deleteChecklistItem(button) {
+            const li = button.closest("li");
+            li.remove();
+        }
     </script>
 </body>
 </html>
