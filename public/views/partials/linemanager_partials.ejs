@@ -577,176 +577,194 @@ body {
         }
     }
     
-    // Function to update applicants section
-    function updateApplicantsSection(applicants) {
-        const applicantsSection = document.getElementById('section-2');
-        applicantsSection.innerHTML = '<h4>Applicants Awaiting Review</h4>';
+    // Function to update applicants section (with sorting)
+function updateApplicantsSection(applicants) {
+    const applicantsSection = document.getElementById('section-2');
+    applicantsSection.innerHTML = '<h4>Applicants Awaiting Review</h4>';
 
-        if (!applicants || applicants.length === 0) {
-            const emptyMessage = document.createElement('div');
-            emptyMessage.classList.add('notification-item');
-            emptyMessage.innerHTML = `
-                <div class="headline">No applicants awaiting review</div>
-                <div class="content">You don't have any pending applicants to review.</div>
-            `;
-            applicantsSection.appendChild(emptyMessage);
-            return;
-        }
-        
-        // Make sure we can safely access applicant properties by checking structure
-        const validateApplicant = (applicant) => {
-            // Check if object has required fields, or provide defaults based on actual DB structure
-            return {
-                id: applicant.applicantId || applicant.id || 'unknown',
-                jobId: applicant.jobId || applicant.job_id || 'unknown',
-                firstName: applicant.firstName || applicant.first_name || 'Applicant',
-                lastName: applicant.lastName || applicant.last_name || '',
-                status: applicant.applicantStatus || applicant.status || 'Pending Review',
-                formattedDate: applicant.formattedDate || applicant.formatted_date || 
-                    (applicant.applicantDate ? new Date(applicant.applicantDate).toLocaleString('en-US', {
-                        weekday: 'short',
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    }) : 'Recent')
-            };
-        };
-        
-        // Map to standardized format to handle both column naming conventions
-        const normalizedApplicants = applicants.map(validateApplicant);
-        
-        // Filter P3 applicants - check for actual applicant status types from your database
-        const p3ApplicantStatus = "P3 - Awaiting for Line Manager Evaluation";
-        
-        const p3Applicants = normalizedApplicants.filter(a => 
-            a.status === p3ApplicantStatus || 
-            a.applicantStatus === p3ApplicantStatus
-        );
-        
-        const regularApplicants = normalizedApplicants.filter(a => 
-            (a.status !== p3ApplicantStatus && a.applicantStatus !== p3ApplicantStatus) && 
-            a.status !== "hired" && a.status !== "rejected" && a.applicantStatus !== "hired" && a.applicantStatus !== "rejected"
-        );
-        
-        // Remove existing P3 section
-        const existingP3Section = document.getElementById('section-p3');
-        if (existingP3Section) existingP3Section.remove();
-        
-        // Add regular applicants
-        if (regularApplicants.length > 0) {
-            regularApplicants.forEach(applicant => {
-                const notificationItem = document.createElement('div');
-                notificationItem.classList.add('notification-item');
-                notificationItem.innerHTML = `
-                    <div class="headline">Applicant Review: ${applicant.firstName} ${applicant.lastName}</div>
-                    <div class="content">Status: ${applicant.status}</div>
-                    <div class="date">${applicant.formattedDate}</div>
-                    <button class="view-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Review Applicant</button>
-                `;
-                applicantsSection.appendChild(notificationItem);
-            });
-        } else {
-            const emptyMessage = document.createElement('div');
-            emptyMessage.classList.add('notification-item');
-            emptyMessage.innerHTML = `
-                <div class="headline">No pending reviews</div>
-                <div class="content">There are currently no applicants awaiting your review.</div>
-            `;
-            applicantsSection.appendChild(emptyMessage);
-        }
-        
-        // Add P3 applicants section
-        if (p3Applicants.length > 0) {
-            const p3Section = document.createElement('div');
-            p3Section.id = 'section-p3';
-            p3Section.classList.add('notification-section');
-            p3Section.innerHTML = '<h4>Applicants Awaiting Evaluation</h4>';
-            
-            p3Applicants.forEach(applicant => {
-                const notificationItem = document.createElement('div');
-                notificationItem.classList.add('notification-item');
-                notificationItem.innerHTML = `
-                    <div class="headline">Evaluation Required: ${applicant.firstName} ${applicant.lastName}</div>
-                    <div class="content">Status: ${applicant.status}</div>
-                    <div class="date">${applicant.formattedDate}</div>
-                    <button class="evaluate-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Evaluate Applicant</button>
-                `;
-                p3Section.appendChild(notificationItem);
-            });
-            
-            // Insert after section-2
-            const section3 = document.getElementById('section-3');
-            section3.parentNode.insertBefore(p3Section, section3);
-        }
-        
-        // Add click handlers for applicant buttons
-        setTimeout(() => {
-            document.querySelectorAll('.view-applicant-btn, .evaluate-applicant-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const jobId = this.getAttribute('data-jobid');
-                    window.location.href = `/linemanager/applicant-tracker-jobposition?jobId=${jobId}`;
-                });
-            });
-        }, 100);
+    if (!applicants || applicants.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.classList.add('notification-item');
+        emptyMessage.innerHTML = `
+            <div class="headline">No applicants awaiting review</div>
+            <div class="content">You don't have any pending applicants to review.</div>
+        `;
+        applicantsSection.appendChild(emptyMessage);
+        return;
     }
-
-    // Function to update leave request section
-    function updateLeaveRequestsSection(leaveRequests) {
-        const leaveSection = document.getElementById('section-3');
-        leaveSection.innerHTML = '<h4>Leave Requests</h4>';
-
-        if (!leaveRequests || leaveRequests.length === 0) {
-            const emptyMessage = document.createElement('div');
-            emptyMessage.classList.add('notification-item');
-            emptyMessage.innerHTML = `
-                <div class="headline">No pending leave requests</div>
-                <div class="content">There are currently no leave requests pending approval.</div>
-            `;
-            leaveSection.appendChild(emptyMessage);
-            return;
-        }
-        
-        // Normalize leave request data to handle different column names
-        const validateLeaveRequest = (leave) => {
-            return {
-                userId: leave.userId || leave.user_id || leave.employee_id || 'unknown',
-                requestId: leave.leaveRequestId || leave.requestId || 'unknown', 
-                // If we get staff information from a join, it will be in userInfo
-                firstName: leave.userInfo?.firstName || leave.firstName || leave.first_name || 'Employee',
-                lastName: leave.userInfo?.lastName || leave.lastName || leave.last_name || '',
-                type: leave.type || leave.leaveType || leave.leave_type || 'Leave',
-                startDate: leave.startDate || leave.fromDate || leave.from_date || leave.from || 'TBD',
-                endDate: leave.endDate || leave.untilDate || leave.until_date || leave.until || 'TBD',
-                filedDate: leave.filedDate || leave.created_at || 'Recent'
-            };
+    
+    // Make sure we can safely access applicant properties by checking structure
+    const validateApplicant = (applicant) => {
+        // Check if object has required fields, or provide defaults based on actual DB structure
+        return {
+            id: applicant.applicantId || applicant.id || 'unknown',
+            jobId: applicant.jobId || applicant.job_id || 'unknown',
+            firstName: applicant.firstName || applicant.first_name || 'Applicant',
+            lastName: applicant.lastName || applicant.last_name || '',
+            status: applicant.applicantStatus || applicant.status || 'Pending Review',
+            formattedDate: applicant.formattedDate || applicant.formatted_date || 
+                (applicant.applicantDate ? new Date(applicant.applicantDate).toLocaleString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }) : 'Recent'),
+            // Include the original date for sorting
+            date: applicant.applicantDate || applicant.date || applicant.created_at || new Date().toISOString()
         };
-        
-        // Map all leave requests to normalized format
-        const normalizedLeaveRequests = leaveRequests.map(validateLeaveRequest);
-        
-        // Add leave requests
-        normalizedLeaveRequests.forEach(leave => {
+    };
+    
+    // Map to standardized format to handle both column naming conventions
+    const normalizedApplicants = applicants.map(validateApplicant);
+    
+    // Sort applicants by date (newest first)
+    normalizedApplicants.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB - dateA; // Sort by newest first
+    });
+    
+    // Filter P3 applicants - check for actual applicant status types from your database
+    const p3ApplicantStatus = "P3 - Awaiting for Line Manager Evaluation";
+    
+    const p3Applicants = normalizedApplicants.filter(a => 
+        a.status === p3ApplicantStatus || 
+        a.applicantStatus === p3ApplicantStatus
+    );
+    
+    const regularApplicants = normalizedApplicants.filter(a => 
+        (a.status !== p3ApplicantStatus && a.applicantStatus !== p3ApplicantStatus) && 
+        a.status !== "hired" && a.status !== "rejected" && a.applicantStatus !== "hired" && a.applicantStatus !== "rejected"
+    );
+    
+    // Remove existing P3 section
+    const existingP3Section = document.getElementById('section-p3');
+    if (existingP3Section) existingP3Section.remove();
+    
+    // Add regular applicants
+    if (regularApplicants.length > 0) {
+        regularApplicants.forEach(applicant => {
             const notificationItem = document.createElement('div');
             notificationItem.classList.add('notification-item');
             notificationItem.innerHTML = `
-                <div class="headline">Leave Request: ${leave.firstName} ${leave.lastName}</div>
-                <div class="content">Type: ${leave.type}, From: ${leave.startDate} To: ${leave.endDate}</div>
-                <div class="date">${leave.filedDate}</div>
-                <button class="view-leave-btn" data-id="${leave.userId}">Review Request</button>
+                <div class="headline">Applicant Review: ${applicant.firstName} ${applicant.lastName}</div>
+                <div class="content">Status: ${applicant.status}</div>
+                <div class="date">${applicant.formattedDate}</div>
+                <button class="view-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Review Applicant</button>
             `;
-            leaveSection.appendChild(notificationItem);
+            applicantsSection.appendChild(notificationItem);
+        });
+    } else {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.classList.add('notification-item');
+        emptyMessage.innerHTML = `
+            <div class="headline">No pending reviews</div>
+            <div class="content">There are currently no applicants awaiting your review.</div>
+        `;
+        applicantsSection.appendChild(emptyMessage);
+    }
+    
+    // Add P3 applicants section
+    if (p3Applicants.length > 0) {
+        const p3Section = document.createElement('div');
+        p3Section.id = 'section-p3';
+        p3Section.classList.add('notification-section');
+        p3Section.innerHTML = '<h4>Applicants Awaiting Evaluation</h4>';
+        
+        p3Applicants.forEach(applicant => {
+            const notificationItem = document.createElement('div');
+            notificationItem.classList.add('notification-item');
+            notificationItem.innerHTML = `
+                <div class="headline">Evaluation Required: ${applicant.firstName} ${applicant.lastName}</div>
+                <div class="content">Status: ${applicant.status}</div>
+                <div class="date">${applicant.formattedDate}</div>
+                <button class="evaluate-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Evaluate Applicant</button>
+            `;
+            p3Section.appendChild(notificationItem);
         });
         
-        // Add click handlers for leave buttons
-        setTimeout(() => {
-            document.querySelectorAll('.view-leave-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const userId = this.getAttribute('data-id');
-                    window.location.href = `/linemanager/leaverequest?userId=${userId}`;
-                });
-            });
-        }, 100);
+        // Insert after section-2
+        const section3 = document.getElementById('section-3');
+        section3.parentNode.insertBefore(p3Section, section3);
     }
+    
+    // Add click handlers for applicant buttons
+    setTimeout(() => {
+        document.querySelectorAll('.view-applicant-btn, .evaluate-applicant-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const jobId = this.getAttribute('data-jobid');
+                window.location.href = `/linemanager/applicant-tracker-jobposition?jobId=${jobId}`;
+            });
+        });
+    }, 100);
+}
+
+    // Function to update leave request section (with sorting)
+function updateLeaveRequestsSection(leaveRequests) {
+    const leaveSection = document.getElementById('section-3');
+    leaveSection.innerHTML = '<h4>Leave Requests</h4>';
+
+    if (!leaveRequests || leaveRequests.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.classList.add('notification-item');
+        emptyMessage.innerHTML = `
+            <div class="headline">No pending leave requests</div>
+            <div class="content">There are currently no leave requests pending approval.</div>
+        `;
+        leaveSection.appendChild(emptyMessage);
+        return;
+    }
+    
+    // Normalize leave request data to handle different column names
+    const validateLeaveRequest = (leave) => {
+        return {
+            userId: leave.userId || leave.user_id || leave.employee_id || 'unknown',
+            requestId: leave.leaveRequestId || leave.requestId || 'unknown', 
+            // If we get staff information from a join, it will be in userInfo
+            firstName: leave.userInfo?.firstName || leave.firstName || leave.first_name || 'Employee',
+            lastName: leave.userInfo?.lastName || leave.lastName || leave.last_name || '',
+            type: leave.type || leave.leaveType || leave.leave_type || 'Leave',
+            startDate: leave.startDate || leave.fromDate || leave.from_date || leave.from || 'TBD',
+            endDate: leave.endDate || leave.untilDate || leave.until_date || leave.until || 'TBD',
+            filedDate: leave.filedDate || leave.created_at || 'Recent',
+            // Include the original date for sorting
+            date: leave.filedDate || leave.created_at || leave.request_date || new Date().toISOString()
+        };
+    };
+    
+    // Map all leave requests to normalized format
+    const normalizedLeaveRequests = leaveRequests.map(validateLeaveRequest);
+    
+    // Sort leave requests by date (newest first)
+    normalizedLeaveRequests.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB - dateA; // Sort by newest first
+    });
+    
+    // Add leave requests
+    normalizedLeaveRequests.forEach(leave => {
+        const notificationItem = document.createElement('div');
+        notificationItem.classList.add('notification-item');
+        notificationItem.innerHTML = `
+            <div class="headline">Leave Request: ${leave.firstName} ${leave.lastName}</div>
+            <div class="content">Type: ${leave.type}, From: ${leave.startDate} To: ${leave.endDate}</div>
+            <div class="date">${leave.filedDate}</div>
+            <button class="view-leave-btn" data-id="${leave.userId}">Review Request</button>
+        `;
+        leaveSection.appendChild(notificationItem);
+    });
+    
+    // Add click handlers for leave buttons
+    setTimeout(() => {
+        document.querySelectorAll('.view-leave-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                window.location.href = `/linemanager/leaverequest?userId=${userId}`;
+            });
+        });
+    }, 100);
+}
 
     // Sample older notifications data
     const olderNotifications = [
@@ -819,21 +837,70 @@ body {
         }
     });
 
-  // Close notification panel when clicking outside
-    document.addEventListener('click', function(event) {
-        if (!notificationPanel.contains(event.target) && !notificationBell.contains(event.target)) {
-            notificationPanel.classList.remove('open');
-        }
+  // Update the older notifications handling to sort by date
+document.addEventListener('DOMContentLoaded', function() {
+    // Sort the older notifications array by timestamp (newest first)
+    olderNotifications.sort((a, b) => {
+        return new Date(b.timestamp) - new Date(a.timestamp);
     });
+    
+    // Update the initial Recent Notifications section with the 3 most recent
+    document.getElementById('section-4').innerHTML = '<h4>Recent Notifications</h4>';
+    olderNotifications.slice(0, 3).forEach(notification => {
+        const notificationItem = document.createElement('div');
+        notificationItem.classList.add('notification-item');
+        notificationItem.innerHTML = `
+            <div class="headline">${notification.message}</div>
+            <div class="date">${formatDate(new Date(notification.timestamp))}</div>
+        `;
+        document.getElementById('section-4').appendChild(notificationItem);
+    });
+});
 
-    // See previous notifications button functionality
-    seePreviousButton.addEventListener('click', function() {
-        console.log('See Previous Notifications clicked');
-        // Clear section-4 before adding all notifications
-        document.getElementById('section-4').innerHTML = '<h4>All Notifications</h4>';
+// Update the See Previous Notifications button functionality to sort properly
+seePreviousButton.addEventListener('click', function() {
+    console.log('See Previous Notifications clicked');
+    // Clear section-4 before adding all notifications
+    document.getElementById('section-4').innerHTML = '<h4>All Notifications</h4>';
+    
+    // Sort older notifications by timestamp (newest first)
+    olderNotifications.sort((a, b) => {
+        const dateA = new Date(a.timestamp);
+        const dateB = new Date(b.timestamp);
+        return dateB - dateA; // Sort by newest first
+    });
+    
+    // Add all notifications to section-4
+    olderNotifications.forEach(notification => {
+        const notificationItem = document.createElement('div');
+        notificationItem.classList.add('notification-item');
+        notificationItem.innerHTML = `
+            <div class="headline">${notification.message}</div>
+            <div class="date">${formatDate(new Date(notification.timestamp))}</div>
+        `;
+        document.getElementById('section-4').appendChild(notificationItem);
+    });
+    
+    // Hide the button after showing all notifications
+    seePreviousButton.style.display = 'none';
+    
+    // Add a "Show Less" button
+    const showLessButton = document.createElement('button');
+    showLessButton.id = 'show-less-notifications';
+    showLessButton.textContent = 'Show Less';
+    showLessButton.style = seePreviousButton.style.cssText;
+    document.getElementById('recent-notifications').appendChild(showLessButton);
+    
+    showLessButton.addEventListener('click', function() {
+        // Reset to initial state
+        document.getElementById('section-4').innerHTML = '<h4>Recent Notifications</h4>';
         
-        // Add all notifications to section-4
-        olderNotifications.forEach(notification => {
+        // Sort notifications and take only the most recent 3
+        const recentThree = [...olderNotifications]
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .slice(0, 3);
+            
+        recentThree.forEach(notification => {
             const notificationItem = document.createElement('div');
             notificationItem.classList.add('notification-item');
             notificationItem.innerHTML = `
@@ -843,36 +910,13 @@ body {
             document.getElementById('section-4').appendChild(notificationItem);
         });
         
-        // Hide the button after showing all notifications
-        seePreviousButton.style.display = 'none';
+        // Show the "See Previous" button again
+        seePreviousButton.style.display = 'block';
         
-        // Add a "Show Less" button
-        const showLessButton = document.createElement('button');
-        showLessButton.id = 'show-less-notifications';
-        showLessButton.textContent = 'Show Less';
-        showLessButton.style = seePreviousButton.style.cssText;
-        document.getElementById('recent-notifications').appendChild(showLessButton);
-        
-        showLessButton.addEventListener('click', function() {
-            // Reset to initial state
-            document.getElementById('section-4').innerHTML = '<h4>Recent Notifications</h4>';
-            olderNotifications.slice(0, 3).forEach(notification => {
-                const notificationItem = document.createElement('div');
-                notificationItem.classList.add('notification-item');
-                notificationItem.innerHTML = `
-                    <div class="headline">${notification.message}</div>
-                    <div class="date">${formatDate(new Date(notification.timestamp))}</div>
-                `;
-                document.getElementById('section-4').appendChild(notificationItem);
-            });
-            
-            // Show the "See Previous" button again
-            seePreviousButton.style.display = 'block';
-            
-            // Remove the "Show Less" button
-            this.remove();
-        });
+        // Remove the "Show Less" button
+        this.remove();
     });
+});
 
     // Function to periodically check for new notifications
     async function checkNotifications() {
