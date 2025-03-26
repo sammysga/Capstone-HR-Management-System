@@ -401,144 +401,160 @@ body {
         }
     }
     
-    // Function to update the notification panel with HR applicants
-    function updateHRApplicantsSection(hrApplicants) {
-        const hrSection = document.getElementById('section-2');
-        hrSection.innerHTML = '<h4>HR Applicant Updates</h4>';
-        
-        // Filter applicants with status "P2 - Awaiting for HR Evaluation"
-        const p2Applicants = hrApplicants.filter(applicant => 
-            applicant.status === "P2 - Awaiting for HR Evaluation"
-        );
-        
-        // Regular applicants (not P2)
-        const regularApplicants = hrApplicants.filter(applicant => 
-            applicant.status !== "P2 - Awaiting for HR Evaluation"
-        );
-
-        // Remove any existing P2 section if it exists
-        const existingP2Section = document.getElementById('section-p2');
-        if (existingP2Section) {
-            existingP2Section.remove();
-        }
-
-        if (hrApplicants.length === 0) {
-            const emptyMessage = document.createElement('div');
-            emptyMessage.classList.add('notification-item');
-            emptyMessage.innerHTML = `
-                <div class="headline">No HR applicants found</div>
-                <div class="content">There are currently no applicants with HR status.</div>
-            `;
-            hrSection.appendChild(emptyMessage);
-        } else {
-            // Add regular applicants to notification panel
-            if (regularApplicants.length > 0) {
-                regularApplicants.forEach(applicant => {
-                    const notificationItem = document.createElement('div');
-                    notificationItem.classList.add('notification-item');
-                    notificationItem.innerHTML = `
-                        <div class="headline">New HR Applicant: ${applicant.firstName} ${applicant.lastName}</div>
-                        <div class="content">Status: ${applicant.status}</div>
-                        <div class="date">${applicant.formattedDate}</div>
-                        <button class="view-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">View Applicant</button>
-                    `;
-                    hrSection.appendChild(notificationItem);
-                });
-            } else {
-                // No regular applicants
-                const emptyMessage = document.createElement('div');
-                emptyMessage.classList.add('notification-item');
-                emptyMessage.innerHTML = `
-                    <div class="headline">No pending applicants</div>
-                    <div class="content">There are currently no applicants awaiting HR action.</div>
-                `;
-                hrSection.appendChild(emptyMessage);
-            }
-            
-            // Add P2 applicants section if any exist
-            if (p2Applicants.length > 0) {
-                // Create a special section for P2 applicants
-                const p2Section = document.createElement('div');
-                p2Section.classList.add('notification-section');
-                p2Section.id = 'section-p2';
-                p2Section.innerHTML = '<h4>Applicants Awaiting Evaluation</h4>';
-                
-                // Add P2 applicants to the special section
-                p2Applicants.forEach(applicant => {
-                    const notificationItem = document.createElement('div');
-                    notificationItem.classList.add('notification-item');
-                    notificationItem.innerHTML = `
-                        <div class="headline">Evaluation Required: ${applicant.firstName} ${applicant.lastName}</div>
-                        <div class="content">Status: ${applicant.status}</div>
-                        <div class="date">${applicant.formattedDate}</div>
-                        <button class="evaluate-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Evaluate Applicant</button>
-                    `;
-                    p2Section.appendChild(notificationItem);
-                });
-                
-                // Insert the P2 section after the regular applicants section
-                const recentNotifications = document.getElementById('recent-notifications');
-                const section3 = document.getElementById('section-3');
-                recentNotifications.insertBefore(p2Section, section3);
-            }
-
-            // Add event listeners to the view and evaluate applicant buttons
-            document.querySelectorAll('.view-applicant-btn, .evaluate-applicant-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const applicantId = this.getAttribute('data-id');
-                    const jobId = this.getAttribute('data-jobid');
-                    console.log('Applicant action clicked:', applicantId, 'Job ID:', jobId);
-                    
-                    // Both button types should redirect to the same page, but we'll keep different console logs for troubleshooting
-                    if (this.classList.contains('evaluate-applicant-btn')) {
-                        console.log('Evaluation action triggered');
-                        window.location.href = `/hr/applicant-tracker-jobposition?jobId=${jobId}`;
-                    } else {
-                        console.log('View action triggered');
-                        window.location.href = `/hr/applicant-tracker-jobposition?jobId=${jobId}`;
-                    }
-                });
-            });
-        }
-    }
+    // Function to update the notification panel with HR applicants (with sorting)
+function updateHRApplicantsSection(hrApplicants) {
+    const hrSection = document.getElementById('section-2');
+    hrSection.innerHTML = '<h4>HR Applicant Updates</h4>';
     
-    // Function to update the notification panel with pending MRFs
-    function updatePendingMRFsSection(pendingMRFs) {
-        const mrfSection = document.getElementById('section-3');
-        mrfSection.innerHTML = '<h4>Pending MRF Requests</h4>';
+    // Sort all applicants by date (newest first)
+    // This assumes each applicant has a 'date' property that can be parsed as a date
+    hrApplicants.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB - dateA; // Sort by newest first
+    });
+    
+    // Filter applicants with status "P2 - Awaiting for HR Evaluation"
+    const p2Applicants = hrApplicants.filter(applicant => 
+        applicant.status === "P2 - Awaiting for HR Evaluation"
+    );
+    
+    // Regular applicants (not P2)
+    const regularApplicants = hrApplicants.filter(applicant => 
+        applicant.status !== "P2 - Awaiting for HR Evaluation"
+    );
 
-        if (pendingMRFs.length === 0) {
-            const emptyMessage = document.createElement('div');
-            emptyMessage.classList.add('notification-item');
-            emptyMessage.innerHTML = `
-                <div class="headline">No pending MRF requests</div>
-                <div class="content">There are currently no MRF requests pending approval.</div>
-            `;
-            mrfSection.appendChild(emptyMessage);
-        } else {
-            // Add MRFs to notification panel
-            pendingMRFs.forEach(mrf => {
+    // Remove any existing P2 section if it exists
+    const existingP2Section = document.getElementById('section-p2');
+    if (existingP2Section) {
+        existingP2Section.remove();
+    }
+
+    if (hrApplicants.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.classList.add('notification-item');
+        emptyMessage.innerHTML = `
+            <div class="headline">No HR applicants found</div>
+            <div class="content">There are currently no applicants with HR status.</div>
+        `;
+        hrSection.appendChild(emptyMessage);
+    } else {
+        // Add regular applicants to notification panel
+        if (regularApplicants.length > 0) {
+            regularApplicants.forEach(applicant => {
                 const notificationItem = document.createElement('div');
                 notificationItem.classList.add('notification-item');
                 notificationItem.innerHTML = `
-                    <div class="headline">MRF: ${mrf.position}</div>
-                    <div class="content">Department: ${mrf.department}</div>
-                    <div class="date">Requested: ${mrf.requestDate}</div>
-                    <button class="view-mrf-btn" data-id="${mrf.id}">Review Request</button>
+                    <div class="headline">New HR Applicant: ${applicant.firstName} ${applicant.lastName}</div>
+                    <div class="content">Status: ${applicant.status}</div>
+                    <div class="date">${applicant.formattedDate}</div>
+                    <button class="view-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">View Applicant</button>
                 `;
-                mrfSection.appendChild(notificationItem);
+                hrSection.appendChild(notificationItem);
             });
-
-            // Add event listeners to the view MRF buttons
-            document.querySelectorAll('.view-mrf-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const mrfId = this.getAttribute('data-id');
-                    console.log('Review MRF clicked:', mrfId);
-                    window.location.href = `/hr/view-mrf/${mrfId}`;
-                });
-            });
+        } else {
+            // No regular applicants
+            const emptyMessage = document.createElement('div');
+            emptyMessage.classList.add('notification-item');
+            emptyMessage.innerHTML = `
+                <div class="headline">No pending applicants</div>
+                <div class="content">There are currently no applicants awaiting HR action.</div>
+            `;
+            hrSection.appendChild(emptyMessage);
         }
+        
+        // Add P2 applicants section if any exist
+        if (p2Applicants.length > 0) {
+            // Create a special section for P2 applicants
+            const p2Section = document.createElement('div');
+            p2Section.classList.add('notification-section');
+            p2Section.id = 'section-p2';
+            p2Section.innerHTML = '<h4>Applicants Awaiting Evaluation</h4>';
+            
+            // Add P2 applicants to the special section
+            p2Applicants.forEach(applicant => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <div class="headline">Evaluation Required: ${applicant.firstName} ${applicant.lastName}</div>
+                    <div class="content">Status: ${applicant.status}</div>
+                    <div class="date">${applicant.formattedDate}</div>
+                    <button class="evaluate-applicant-btn" data-id="${applicant.id}" data-jobid="${applicant.jobId}">Evaluate Applicant</button>
+                `;
+                p2Section.appendChild(notificationItem);
+            });
+            
+            // Insert the P2 section after the regular applicants section
+            const recentNotifications = document.getElementById('recent-notifications');
+            const section3 = document.getElementById('section-3');
+            recentNotifications.insertBefore(p2Section, section3);
+        }
+
+        // Add event listeners to the view and evaluate applicant buttons
+        document.querySelectorAll('.view-applicant-btn, .evaluate-applicant-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const applicantId = this.getAttribute('data-id');
+                const jobId = this.getAttribute('data-jobid');
+                console.log('Applicant action clicked:', applicantId, 'Job ID:', jobId);
+                
+                // Both button types should redirect to the same page, but we'll keep different console logs for troubleshooting
+                if (this.classList.contains('evaluate-applicant-btn')) {
+                    console.log('Evaluation action triggered');
+                    window.location.href = `/hr/applicant-tracker-jobposition?jobId=${jobId}`;
+                } else {
+                    console.log('View action triggered');
+                    window.location.href = `/hr/applicant-tracker-jobposition?jobId=${jobId}`;
+                }
+            });
+        });
     }
+}
+    
+    
+// Function to update the notification panel with pending MRFs (with sorting)
+function updatePendingMRFsSection(pendingMRFs) {
+    const mrfSection = document.getElementById('section-3');
+    mrfSection.innerHTML = '<h4>Pending MRF Requests</h4>';
+
+    // Sort MRFs by request date (newest first)
+    pendingMRFs.sort((a, b) => {
+        const dateA = new Date(a.requestDate);
+        const dateB = new Date(b.requestDate);
+        return dateB - dateA; // Sort by newest first
+    });
+
+    if (pendingMRFs.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.classList.add('notification-item');
+        emptyMessage.innerHTML = `
+            <div class="headline">No pending MRF requests</div>
+            <div class="content">There are currently no MRF requests pending approval.</div>
+        `;
+        mrfSection.appendChild(emptyMessage);
+    } else {
+        // Add MRFs to notification panel
+        pendingMRFs.forEach(mrf => {
+            const notificationItem = document.createElement('div');
+            notificationItem.classList.add('notification-item');
+            notificationItem.innerHTML = `
+                <div class="headline">MRF: ${mrf.position}</div>
+                <div class="content">Department: ${mrf.department}</div>
+                <div class="date">Requested: ${mrf.requestDate}</div>
+                <button class="view-mrf-btn" data-id="${mrf.id}">Review Request</button>
+            `;
+            mrfSection.appendChild(notificationItem);
+        });
+
+        // Add event listeners to the view MRF buttons
+        document.querySelectorAll('.view-mrf-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const mrfId = this.getAttribute('data-id');
+                console.log('Review MRF clicked:', mrfId);
+                window.location.href = `/hr/view-mrf/${mrfId}`;
+            });
+        });
+    }
+}
 
     // Sample older notifications data
     const olderNotifications = [
@@ -617,14 +633,50 @@ body {
         }
     });
 
-    // See previous notifications button functionality
-    seePreviousButton.addEventListener('click', function() {
-        console.log('See Previous Notifications clicked');
-        // Clear section-4 before adding all notifications
-        document.getElementById('section-4').innerHTML = '<h4>All Notifications</h4>';
+    // Update the older notifications handling to sort by date
+seePreviousButton.addEventListener('click', function() {
+    console.log('See Previous Notifications clicked');
+    // Clear section-4 before adding all notifications
+    document.getElementById('section-4').innerHTML = '<h4>All Notifications</h4>';
+    
+    // Sort older notifications by timestamp (newest first)
+    olderNotifications.sort((a, b) => {
+        const dateA = new Date(a.timestamp);
+        const dateB = new Date(b.timestamp);
+        return dateB - dateA; // Sort by newest first
+    });
+    
+    // Add all notifications to section-4
+    olderNotifications.forEach(notification => {
+        const notificationItem = document.createElement('div');
+        notificationItem.classList.add('notification-item');
+        notificationItem.innerHTML = `
+            <div class="headline">${notification.message}</div>
+            <div class="date">${formatDate(new Date(notification.timestamp))}</div>
+        `;
+        document.getElementById('section-4').appendChild(notificationItem);
+    });
+    
+    // Hide the button after showing all notifications
+    seePreviousButton.style.display = 'none';
+    
+    // Add a "Show Less" button
+    const showLessButton = document.createElement('button');
+    showLessButton.id = 'show-less-notifications';
+    showLessButton.textContent = 'Show Less';
+    showLessButton.style = seePreviousButton.style.cssText;
+    document.getElementById('recent-notifications').appendChild(showLessButton);
+    
+    showLessButton.addEventListener('click', function() {
+        // Reset to initial state
+        document.getElementById('section-4').innerHTML = '<h4>Recent Notifications</h4>';
         
-        // Add all notifications to section-4
-        olderNotifications.forEach(notification => {
+        // Sort notifications and take only the most recent 3
+        const recentThree = [...olderNotifications]
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .slice(0, 3);
+            
+        recentThree.forEach(notification => {
             const notificationItem = document.createElement('div');
             notificationItem.classList.add('notification-item');
             notificationItem.innerHTML = `
@@ -634,36 +686,13 @@ body {
             document.getElementById('section-4').appendChild(notificationItem);
         });
         
-        // Hide the button after showing all notifications
-        seePreviousButton.style.display = 'none';
+        // Show the "See Previous" button again
+        seePreviousButton.style.display = 'block';
         
-        // Add a "Show Less" button
-        const showLessButton = document.createElement('button');
-        showLessButton.id = 'show-less-notifications';
-        showLessButton.textContent = 'Show Less';
-        showLessButton.style = seePreviousButton.style.cssText;
-        document.getElementById('recent-notifications').appendChild(showLessButton);
-        
-        showLessButton.addEventListener('click', function() {
-            // Reset to initial state
-            document.getElementById('section-4').innerHTML = '<h4>Recent Notifications</h4>';
-            olderNotifications.slice(0, 3).forEach(notification => {
-                const notificationItem = document.createElement('div');
-                notificationItem.classList.add('notification-item');
-                notificationItem.innerHTML = `
-                    <div class="headline">${notification.message}</div>
-                    <div class="date">${formatDate(new Date(notification.timestamp))}</div>
-                `;
-                document.getElementById('section-4').appendChild(notificationItem);
-            });
-            
-            // Show the "See Previous" button again
-            seePreviousButton.style.display = 'block';
-            
-            // Remove the "Show Less" button
-            this.remove();
-        });
+        // Remove the "Show Less" button
+        this.remove();
     });
+});
 
     // Initialize button click handlers for sample notifications
     document.querySelectorAll('.action-btn').forEach(button => {
