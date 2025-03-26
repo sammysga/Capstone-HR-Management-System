@@ -422,34 +422,26 @@ const hrController = {
     
                 // Group and count statuses by jobId
                 const statusCountsMap = {};
-                
-                // Check if applicantaccounts is a valid array before iterating
-                if (applicantaccounts && Array.isArray(applicantaccounts)) {
-                    applicantaccounts.forEach(({ jobId, applicantStatus }) => {
-                        // Skip if jobId or applicantStatus is missing or null
-                        if (!jobId || !applicantStatus) return;
-                        
-                        // Initialize counter for this jobId if not exists
-                        if (!statusCountsMap[jobId]) {
-                            statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 };
+                applicantaccounts.forEach(({ jobId, applicantStatus }) => {
+                    if (!statusCountsMap[jobId]) {
+                        statusCountsMap[jobId] = { P1: 0, P2: 0, P3: 0, Offered: 0, Onboarding: 0 };
+                    }
+                    
+                    // Check if applicantStatus is not null or undefined before using includes()
+                    if (applicantStatus) {
+                        if (applicantStatus.includes('P1')) {
+                            statusCountsMap[jobId].P1++;
+                        } else if (applicantStatus.includes('P2')) {
+                            statusCountsMap[jobId].P2++;
+                        } else if (applicantStatus.includes('P3')) {
+                            statusCountsMap[jobId].P3++;
+                        } else if (applicantStatus.includes('Offered')) {
+                            statusCountsMap[jobId].Offered++;
+                        } else if (applicantStatus.includes('Onboarding')) {
+                            statusCountsMap[jobId].Onboarding++;
                         }
-                        
-                        // Use safe string checks to avoid null reference errors
-                        if (typeof applicantStatus === 'string') {
-                            if (applicantStatus.includes('P1')) {
-                                statusCountsMap[jobId].P1++;
-                            } else if (applicantStatus.includes('P2')) {
-                                statusCountsMap[jobId].P2++;
-                            } else if (applicantStatus.includes('P3')) {
-                                statusCountsMap[jobId].P3++;
-                            } else if (applicantStatus.includes('Offered')) {
-                                statusCountsMap[jobId].Offered++;
-                            } else if (applicantStatus.includes('Onboarding')) {
-                                statusCountsMap[jobId].Onboarding++;
-                            }
-                        }
-                    });
-                }
+                    }
+                });
     
                 // Log final counts for each jobId
                 console.log('Status Counts Map:', statusCountsMap);
