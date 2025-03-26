@@ -1258,12 +1258,12 @@ updatePersUserInfo: async function(req, res) {
 
     getEvaluationForm: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/linemanagerevaluationform');
+            res.render('staffpages/linemanager_pages/interview-form-linemanager');
         } else {
             req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
             res.redirect('/staff/login');
         }
-    },
+    }, 
 
     getInterviewFormLinemanager: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
