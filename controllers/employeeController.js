@@ -2674,15 +2674,15 @@ get360FeedbackList: async function (req, res) {
 
   // Add this route handler
   staffFeedbackList: async function (req, res) {
-
     console.log("staffFeedbackList function called!");
     console.log("Quarter param:", req.query.quarter);
     const currentUserId = req.session?.user?.userId;
     const quarter = req.query.quarter || 'Q1'; // Default to Q1 if not provided
     
     if (!currentUserId) {
-        return res.status(400).render('error', { 
-            error: 'Authentication Required', 
+        return res.status(400).json({
+            success: false,
+            error: 'Authentication Required',
             message: 'Please log in to access this page.'
         });
     }
@@ -2702,17 +2702,15 @@ get360FeedbackList: async function (req, res) {
             `)
             .eq('userId', currentUserId)
             .single();
-
         if (userError || !currentUserData) {
             console.error("Error fetching user details:", userError);
-            return res.status(404).render('error', { 
-                error: 'User Not Found', 
+            return res.status(404).json({
+                success: false,
+                error: 'User Not Found',
                 message: 'Unable to retrieve your user information.'
             });
         }
-
         const { departmentId } = currentUserData;
-
         // Fetch all staff members in the same department
         const { data: staffList, error: staffError } = await supabase
             .from('staffaccounts')
@@ -2724,15 +2722,14 @@ get360FeedbackList: async function (req, res) {
             `)
             .eq('departmentId', departmentId)
             .neq('userId', currentUserId); // Exclude current user
-
         if (staffError) {
             console.error("Error fetching staff list:", staffError);
-            return res.status(500).render('error', { 
-                error: 'Data Fetch Error', 
+            return res.status(500).json({
+                success: false,
+                error: 'Data Fetch Error',
                 message: 'Unable to retrieve department staff list.'
             });
         }
-
         // Format the staff list for proper display
         const formattedStaffList = staffList.map(staff => ({
             userId: staff.userId,
@@ -2740,7 +2737,6 @@ get360FeedbackList: async function (req, res) {
             lastName: staff.lastName,
             jobTitle: staff.jobpositions?.jobTitle || 'Employee'
         }));
-
         // Render the staff feedback list page
         return res.render('staffpages/employee_pages/employee-quarterlyfeedbackquestionnaire.ejs', {
             title: '360 Degree Feedback Questionnaires',
@@ -2751,12 +2747,13 @@ get360FeedbackList: async function (req, res) {
         
     } catch (error) {
         console.error('Error in staffFeedbackList:', error);
-        return res.status(500).render('error', { 
-            error: 'Server Error', 
+        return res.status(500).json({
+            success: false,
+            error: 'Server Error',
             message: 'An unexpected error occurred. Please try again later.'
         });
     }
-  },
+},
 
 // API endpoint to get questionnaire data for a specific staff member
 getQuestionnaireData: async function (req, res) {
@@ -2791,7 +2788,7 @@ getQuestionnaireData: async function (req, res) {
             .order('created_at', { ascending: false })
             .limit(1);
 
-        if (feedbackError || !feedbackData || feedbackData.length === 0) {
+        if (feedbackError) {
             console.error(`Error fetching feedback data:`, feedbackError);
             return res.status(404).json({ 
                 success: false, 
@@ -2799,27 +2796,49 @@ getQuestionnaireData: async function (req, res) {
             });
         }
 
+        if (!feedbackData || feedbackData.length === 0) {
+            console.log(`No feedback data found for user ${targetUserId} in ${quarterTable}`);
+            return res.status(404).json({
+                success: false,
+                message: 'No feedback data found for this user.'
+            });
+        }
+
         const feedback = feedbackData[0];
         const feedbackId = feedback[idField];
+
+        console.log(`Found feedback record with ID ${feedbackId}`);
         
         // Fetch user details for additional information
         const { data: userData, error: userError } = await supabase
             .from('staffaccounts')
             .select(`
                 departments (deptName),
-                jobpositions (jobTitle)
+                jobpositions (jobTitle),
+                jobId
             `)
             .eq('userId', targetUserId)
             .single();
             
-        if (!userError && userData) {
+        if (userError) {
+            console.error("Error fetching user data:", userError);
+        } else if (userData) {
             // Add department and job title to feedback data
             feedback.deptName = userData.departments?.deptName;
             feedback.jobTitle = userData.jobpositions?.jobTitle;
+            
+            // Use jobId from user data if not available in feedback
+            if (!feedback.jobId && userData.jobId) {
+                feedback.jobId = userData.jobId;
+            }
         }
-        
+
         // Add an id field for easier reference in the frontend
         feedback.id = feedbackId;
+
+        // Construct OR condition string for feedback ID fields
+        const orCondition = `feedbackq1_Id.eq.${feedbackId},feedbackq2_Id.eq.${feedbackId},feedbackq3_Id.eq.${feedbackId},feedbackq4_Id.eq.${feedbackId}`;
+        console.log(`Using OR condition: ${orCondition}`);
         
         // Fetch objectives for this feedback using OR condition for ID fields
         const { data: objectivesData, error: objectivesError } = await supabase
@@ -2829,7 +2848,7 @@ getQuestionnaireData: async function (req, res) {
                 objectiveId,
                 objectiveQualiQuestion
             `)
-            .or(`feedbackq1_Id.eq.${feedbackId},feedbackq2_Id.eq.${feedbackId},feedbackq3_Id.eq.${feedbackId},feedbackq4_Id.eq.${feedbackId}`);
+            .or(orCondition);
             
         if (objectivesError) {
             console.error("Error fetching objectives:", objectivesError);
@@ -2838,6 +2857,8 @@ getQuestionnaireData: async function (req, res) {
                 message: 'Error fetching objectives data.'
             });
         }
+
+        console.log(`Found ${objectivesData?.length || 0} objectives`);
         
         // Get detailed objective information
         let objectives = [];
@@ -2849,13 +2870,24 @@ getQuestionnaireData: async function (req, res) {
                 .select('*')
                 .in('objectiveId', objectiveIds);
                 
-            if (!objectiveDetailsError && objectiveDetails) {
+            if (objectiveDetailsError) {
+                console.error("Error fetching objective details:", objectiveDetailsError);
+            } else if (objectiveDetails) {
+                console.log(`Found ${objectiveDetails.length} objective details`);
+                
                 // Combine the data
                 objectives = objectivesData.map(obj => {
                     const detail = objectiveDetails.find(d => d.objectiveId === obj.objectiveId);
                     return {
                         ...obj,
-                        ...detail
+                        ...detail,
+                        // Ensure these fields are properly mapped for frontend
+                        objectiveDescription: detail?.objectiveDescrpt, // Match the DB field name
+                        description: detail?.objectiveDescrpt, // Add an alias for convenience
+                        kpi: detail?.objectiveKPI,
+                        target: detail?.objectiveTarget,
+                        uom: detail?.objectiveUOM,
+                        weight: detail?.objectiveAssignedWeight
                     };
                 });
             } else {
@@ -2864,25 +2896,41 @@ getQuestionnaireData: async function (req, res) {
         }
         
         // Fetch job requirement skills
-        const { data: jobData, error: jobError } = await supabase
-            .from('staffaccounts')
-            .select('jobId')
-            .eq('userId', targetUserId)
-            .single();
-            
-        if (jobError || !jobData) {
-            console.error("Error fetching job ID:", jobError);
+        let jobId = feedback.jobId;
+        if (!jobId && userData) {
+            jobId = userData.jobId;
+        }
+        
+        // If still no jobId, fetch it explicitly
+        if (!jobId) {
+            const { data: jobData, error: jobError } = await supabase
+                .from('staffaccounts')
+                .select('jobId')
+                .eq('userId', targetUserId)
+                .single();
+                
+            if (jobError) {
+                console.error("Error fetching job ID:", jobError);
+            } else if (jobData) {
+                jobId = jobData.jobId;
+            }
+        }
+        
+        if (!jobId) {
+            console.error("No job ID found for user", targetUserId);
             return res.status(500).json({ 
                 success: false, 
                 message: 'Error fetching job data.'
             });
         }
         
+        console.log(`Using jobId: ${jobId} to fetch skills`);
+        
         // Fetch all skills for this job
         const { data: skillsData, error: skillsError } = await supabase
             .from('jobreqskills')
             .select('*')
-            .eq('jobId', jobData.jobId);
+            .eq('jobId', jobId);
             
         if (skillsError) {
             console.error("Error fetching skills:", skillsError);
@@ -2891,11 +2939,26 @@ getQuestionnaireData: async function (req, res) {
                 message: 'Error fetching skills data.'
             });
         }
-        
+
+        console.log(`Found ${skillsData?.length || 0} total skills`);
+
         // Separate hard and soft skills
         const hardSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Hard') || [];
         const softSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Soft') || [];
         
+        console.log(`Hard skills: ${hardSkills.length}, Soft skills: ${softSkills.length}`);
+
+        // Check if feedback is already submitted by this reviewer
+        const { data: existingFeedback, error: existingFeedbackError } = await supabase
+            .from('feedbacks_answers')
+            .select('feedbackId_answerId')
+            .eq(idField, feedbackId)
+            .eq('reviewerUserId', currentUserId)
+            .limit(1);
+            
+        const isSubmitted = existingFeedback && existingFeedback.length > 0;
+        console.log(`Feedback already submitted by this reviewer: ${isSubmitted}`);
+
         // Return all data
         return res.json({
             success: true,
@@ -2926,6 +2989,16 @@ submitFeedback: async function (req, res) {
         softSkills = [] 
     } = req.body;
     
+    console.log("Submit feedback request received:", {
+        reviewerUserId: currentUserId,
+        targetUserId: userId,
+        quarter,
+        feedbackId,
+        objectivesCount: objectives.length,
+        hardSkillsCount: hardSkills.length,
+        softSkillsCount: softSkills.length
+    });
+    
     if (!currentUserId || !feedbackId || !quarter || !userId) {
         return res.status(400).json({ 
             success: false, 
@@ -2937,13 +3010,31 @@ submitFeedback: async function (req, res) {
         // Determine which feedback ID field to use based on quarter
         const idField = `feedback${quarter.toLowerCase()}_Id`;
         
+        // Check if feedback was already submitted
+        const { data: existingFeedback, error: existingFeedbackError } = await supabase
+            .from('feedbacks_answers')
+            .select('feedbackId_answerId')
+            .eq(idField, feedbackId)
+            .eq('reviewerUserId', currentUserId)
+            .limit(1);
+            
+        if (existingFeedbackError) {
+            console.error("Error checking existing feedback:", existingFeedbackError);
+        } else if (existingFeedback && existingFeedback.length > 0) {
+            console.log("Feedback already submitted by this reviewer");
+            return res.json({
+                success: false,
+                message: 'You have already submitted feedback for this user.'
+            });
+        }
+        
         // Insert feedback answers record
         const { data: answerData, error: answerError } = await supabase
             .from('feedbacks_answers')
             .insert({
                 [idField]: feedbackId,
                 reviewerUserId: currentUserId,
-                userld: userId, // Note: assuming this is the correct field name with 'ld' not 'Id'
+                userld: userId, // Note: this appears to be spelled with 'ld' not 'Id' in the DB schema
                 reviewDate: new Date().toISOString().split('T')[0],
                 created_at: new Date()
             })
@@ -2958,12 +3049,15 @@ submitFeedback: async function (req, res) {
         }
         
         const feedbackAnswerId = answerData[0].feedbackId_answerId;
+        console.log(`Created feedback answer record with ID ${feedbackAnswerId}`);
         
         // Insert objective answers
         if (objectives.length > 0) {
+            console.log(`Processing ${objectives.length} objectives`);
+            
             const objectiveAnswers = objectives.map(obj => ({
                 feedback_answerObjectivesId: feedbackAnswerId,
-                feedback_qObjectivesId: obj.objectiveId,
+                feedback_qObjectivesId: obj.objectiveId, // Make sure this matches your frontend
                 objectiveQuantInput: parseInt(obj.quantitative) || 0,
                 objectiveQualInput: obj.qualitative || '',
                 created_at: new Date()
@@ -2980,10 +3074,14 @@ submitFeedback: async function (req, res) {
                     message: 'Error saving objective feedback.'
                 });
             }
+            
+            console.log(`Saved ${objectives.length} objective answers`);
         }
         
         // Insert skills answers (hard skills)
         if (hardSkills.length > 0) {
+            console.log(`Processing ${hardSkills.length} hard skills`);
+            
             const hardSkillAnswers = hardSkills.map(skill => ({
                 feedback_answerSkillsId: feedbackAnswerId,
                 feedback_qSkillsId: skill.skillId,
@@ -3003,10 +3101,14 @@ submitFeedback: async function (req, res) {
                     message: 'Error saving hard skills feedback.'
                 });
             }
+            
+            console.log(`Saved ${hardSkills.length} hard skill answers`);
         }
         
         // Insert skills answers (soft skills)
         if (softSkills.length > 0) {
+            console.log(`Processing ${softSkills.length} soft skills`);
+            
             const softSkillAnswers = softSkills.map(skill => ({
                 feedback_answerSkillsId: feedbackAnswerId,
                 feedback_qSkillsId: skill.skillId,
@@ -3026,6 +3128,8 @@ submitFeedback: async function (req, res) {
                     message: 'Error saving soft skills feedback.'
                 });
             }
+            
+            console.log(`Saved ${softSkills.length} soft skill answers`);
         }
         
         // Success response
@@ -3034,15 +3138,82 @@ submitFeedback: async function (req, res) {
             message: 'Feedback submitted successfully'
         });
         
-        } catch (error) {
-            console.error('Error in submitFeedback:', error);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'An error occurred while submitting feedback.'
+    } catch (error) {
+        console.error('Error in submitFeedback:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while submitting feedback.',
+            error: error.message
+        });
+    }
+},
+
+// API endpoint to check if feedback has been submitted by the current user
+checkFeedbackStatus: async function (req, res) {
+    const currentUserId = req.session?.user?.userId;
+    const targetUserId = req.query.userId;
+    const quarter = req.query.quarter || 'Q1';
+    
+    if (!currentUserId || !targetUserId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'User IDs are required.'
+        });
+    }
+    
+    try {
+        // Get appropriate ID field based on quarter
+        const idField = `feedback${quarter.toLowerCase()}_Id`;
+        
+        // First get the feedback ID
+        const { data: feedbackData, error: feedbackError } = await supabase
+            .from(`feedbacks_${quarter}`)
+            .select(idField)
+            .eq('userId', targetUserId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+            
+        if (feedbackError || !feedbackData || feedbackData.length === 0) {
+            console.log(`No feedback found for user ${targetUserId} in quarter ${quarter}`);
+            return res.json({
+                success: true,
+                submitted: false,
+                message: 'No feedback record found'
             });
         }
-    },
-
+        
+        const feedbackId = feedbackData[0][idField];
+        
+        // Check if current user has submitted feedback
+        const { data: answerData, error: answerError } = await supabase
+            .from('feedbacks_answers')
+            .select('feedbackId_answerId')
+            .eq(idField, feedbackId)
+            .eq('reviewerUserId', currentUserId)
+            .limit(1);
+            
+        if (answerError) {
+            console.error("Error checking feedback submission:", answerError);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error checking feedback status.'
+            });
+        }
+        
+        return res.json({
+            success: true,
+            submitted: answerData && answerData.length > 0,
+            message: answerData && answerData.length > 0 ? 'Feedback already submitted' : 'Feedback not yet submitted'
+        });
+        
+    } catch (error) {
+        console.error('Error in checkFeedbackStatus:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while checking feedback status.'
+        });
+    }
+},
 // get360FeedbackList: async function (req, res) {
 //     const currentUserId = req.session?.user?.userId;
 //     const selectedUserId = req.query.userId; // Get the userId from the query parameters

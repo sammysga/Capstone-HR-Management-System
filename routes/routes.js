@@ -235,6 +235,7 @@ router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToas
 router.get('/employee/staffFeedbackList', employeeController.staffFeedbackList);
 router.get('/employee/api/getQuestionnaireData', employeeController.getQuestionnaireData);
 router.post('/employee/api/submitFeedback', employeeController.submitFeedback);
+router.get('/employee/api/checkFeedbackStatus', employeeController.checkFeedbackStatus);
 
 router.get('/api/linemanager/notifications', lineManagerController.getLineManagerNotifications);
 router.get('/api/get360FeedbackToast', lineManagerController.get360FeedbackToast);
