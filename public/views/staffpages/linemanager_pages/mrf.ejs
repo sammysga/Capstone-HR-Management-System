@@ -16,7 +16,7 @@
 
             <a href="/linemanager/request-mrf" class="new-mrf-button">+ Request New MRF</a>
 
-            <table class="form-table">
+            <table class="form-table" id="mrf-table">
                 <thead>
                     <tr>
                         <th>Position Title</th>
@@ -26,7 +26,7 @@
                 </thead>
                 <tbody>
                     <% mrfRequests.forEach(request => { %>
-                        <tr>
+                        <tr data-date="<%= request.requisitionDate %>">
                             <td><%= request.positionTitle %></td>
                             <td><%= new Date(request.requisitionDate).toLocaleDateString() %></td>
                             <td>
@@ -67,6 +67,33 @@
                 }
             });
         });
+
+        // Sort MRF Requests by date (newest first)
+        function sortTableByDate() {
+            const table = document.getElementById('mrf-table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Sort rows by the date attribute
+            rows.sort((a, b) => {
+                const dateA = new Date(a.getAttribute('data-date'));
+                const dateB = new Date(b.getAttribute('data-date'));
+                return dateB - dateA; // Sort in descending order (newest first)
+            });
+            
+            // Clear the table body
+            while (tbody.firstChild) {
+                tbody.removeChild(tbody.firstChild);
+            }
+            
+            // Add sorted rows back to the table
+            rows.forEach(row => {
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Call the sorting function when the page loads
+        document.addEventListener('DOMContentLoaded', sortTableByDate);
     </script>
 </body>
 </html>
