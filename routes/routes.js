@@ -183,7 +183,7 @@ router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
 router.get('/linemanager/records-performance-tracker', lineManagerController.getRecordsPerformanceTrackerByDepartmentId);
 
 router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getRecordsPerformanceTrackerByUserId);
-router.get('/linemanager/interview-form', lineManagerController.getEvaluationForm);
+router.get('/linemanager/interview-form/:applicantId', lineManagerController.getEvaluationForm);
 
 router.get('/linemanager/offboarding-requests', lineManagerController.getOffboardingRequestsDash);
 router.get('/linemanager/view-offboarding-request/:userId', lineManagerController.getViewOffboardingRequest);

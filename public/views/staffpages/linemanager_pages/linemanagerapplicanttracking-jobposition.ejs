@@ -885,11 +885,12 @@ table.tracking-table tbody:empty::after {
                                         onclick="approveLineManager('<%= applicant.applicantId %>')">
                                         Approve
                                     </button>
-                                <% } else if (applicant.applicantStatus === 'P3 - Awaiting for Line Manager Evaluation') { %>
-                                    <!-- For Evaluation Button -->
-                                    <a href="/linemanager/evaluation-form/<%= applicant.applicantId %>">
-                                        <button class="btn-evaluation">For Evaluation</button>
-                                    </a>
+                                    <% } else if (applicant.applicantStatus === 'P3 - Awaiting for Line Manager Evaluation') { %>
+                                      <!-- For Evaluation Button -->
+                                      <a href="/linemanager/evaluation-form/<%= applicant.applicantId %>">
+                                          <button class="btn-evaluation">For Evaluation</button>
+                                      </a>
+                                  
                                 <% } else if (applicant.applicantStatus === 'P3 - Line Manager Evaluation Accomplished') { %>
                                     <!-- For Review Button -->
                                     <button 
@@ -1175,6 +1176,15 @@ table.tracking-table tbody:empty::after {
     </script>
 
 <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const evaluationButtons = document.querySelectorAll(".btn-evaluation");
+
+    evaluationButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            window.location.href = "/linemanager/interview-form";
+        });
+    });
+});
 document.addEventListener("DOMContentLoaded", function() {
   // Initialize global data structures
   window.allUserIds = [];
