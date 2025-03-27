@@ -555,7 +555,7 @@ const lineManagerController = {
             // Log the successful update
             console.log('Leave request updated successfully:', data);
     
-            return res.redirect('/linemanager/dashboard');            return res.redirect('/linemanager/dashboard');
+            return res.redirect('/linemanager/dashboard'); 
         } catch (error) {
             console.error('Error updating leave request:', error);
             return res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
@@ -1595,10 +1595,10 @@ console.log('Final applicants list:', applicants);
                 // });
 
                 // Render the page with updated applicants
-res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { applicants });res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { 
-    applicants,
-    applicantsJSON: JSON.stringify(applicants) // Add this line to make data accessible in script
-  });            } catch (error) {
+                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { 
+                    applicants,
+                    applicantsJSON: JSON.stringify(applicants) // Make data accessible in script
+                });           } catch (error) {
                 console.error('Error fetching applicants:', error);
                 res.status(500).json({ error: 'Error fetching applicants' });
             }
