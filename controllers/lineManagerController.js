@@ -1258,12 +1258,27 @@ updatePersUserInfo: async function(req, res) {
 
     getEvaluationForm: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            res.render('staffpages/linemanager_pages/interview-form-linemanager');
-        } else {
-            req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
-            res.redirect('/staff/login');
-        }
-    }, 
+            const applicantId = req.params.applicantId; // Extract applicantId from URL
+    
+            // Debug log to verify applicantId is being received
+            console.log('Received applicantId:', applicantId);
+    
+            // Ensure applicantId is valid before rendering
+            if (!applicantId) {
+                req.flash('errors', { message: 'Invalid Applicant ID.' });
+                return res.redirect('/linemanager/dashboard'); // Redirect to a safe page
+            }
+    
+            // Make sure you're passing the correct template path
+            return res.render('staffpages/linemanager_pages/interview-form-linemanager', {
+                applicantId: applicantId, // Pass applicantId to EJS template
+                user: req.session.user // Also pass user session data for the template
+            });
+        } 
+    
+        req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+        return res.redirect('/staff/login');
+    },
 
     getInterviewFormLinemanager: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
