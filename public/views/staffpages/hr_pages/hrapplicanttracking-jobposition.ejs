@@ -10,6 +10,48 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
+
+        /* Add this CSS to your existing styles */
+
+/* Center the scores table and enhance its appearance */
+.scores-table {
+    margin: 0 auto;  /* Center the table horizontally */
+    width: 80%;      /* Control the width of the table */
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    text-align: center; /* Center text within the table */
+}
+
+.scores-table th, 
+.scores-table td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+}
+
+.scores-table th {
+    background-color: #f2f2f2;
+}
+
+.scores-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Add a container around the scores section to center all elements within */
+.scores-section {
+    text-align: center;
+    margin: 15px 0;
+}
+
+/* Style for the computation verdict section */
+.computation-verdict {
+    text-align: center;
+    margin: 15px 0;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
@@ -811,50 +853,52 @@
             <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
         </div>
         <h4>HR Online Assessment Form Breakdown</h4>
-        <h4>Initial Screening Scores</h4> 
-
-        <table class="scores-table"> 
-            <thead> 
-                <tr> 
-                    <th>Criteria</th> 
-                    <th>Score</th> 
-                </tr> 
-            </thead> 
-            <tbody> 
-                <tr> 
-                    <td>Industry Specific Degree</td> 
-                    <td id="score-degree"></td> 
-                </tr> 
-                <tr> 
-                    <td>Experiences</td> 
-                    <td id="score-experience"></td> 
-                </tr> 
-                <tr> 
-                    <td>Certifications</td> 
-                    <td id="score-certifications"></td> 
-                </tr> 
-                <tr> 
-                    <td>Hard Skills</td> 
-                    <td id="score-hard-skills"></td> 
-                </tr> 
-                <tr> 
-                    <td>Soft Skills</td> 
-                    <td id="score-soft-skills"></td> 
-                </tr> 
-                <tr> 
-                    <td>Work Setup</td> 
-                    <td id="score-work-setup"></td> 
-                </tr> 
-                <tr> 
-                    <td>Availability</td> 
-                    <td id="score-availability"></td> 
-                </tr> 
-            </tbody> 
-        </table> 
-
-        <div class="computation-verdict"> 
-            <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
-        </div> 
+        <div class="scores-section">
+            <h4>Initial Screening Scores</h4> 
+        
+            <table class="scores-table"> 
+                <thead> 
+                    <tr> 
+                        <th>Criteria</th> 
+                        <th>Score</th> 
+                    </tr> 
+                </thead> 
+                <tbody> 
+                    <tr> 
+                        <td>Industry Specific Degree</td> 
+                        <td id="score-degree"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Experiences</td> 
+                        <td id="score-experience"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Certifications</td> 
+                        <td id="score-certifications"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Hard Skills</td> 
+                        <td id="score-hard-skills"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Soft Skills</td> 
+                        <td id="score-soft-skills"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Work Setup</td> 
+                        <td id="score-work-setup"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Availability</td> 
+                        <td id="score-availability"></td> 
+                    </tr> 
+                </tbody> 
+            </table> 
+        
+            <div class="computation-verdict"> 
+                <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
+            </div>
+        </div>
 
         <h4>Uploaded Documents</h4>
         <p><strong>Degree:</strong> <a id="degree-doc" href="#" target="_blank">No document uploaded</a></p>
