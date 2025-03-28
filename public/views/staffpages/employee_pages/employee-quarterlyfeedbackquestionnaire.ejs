@@ -113,6 +113,404 @@
                 grid-template-columns: 1fr 3fr;
             }
         }
+        
+        /* Star Rating */
+        .rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+        
+        .rating > input {
+            display: none;
+        }
+        
+        .rating > label {
+            position: relative;
+            width: 1.1em;
+            font-size: 24px;
+            color: #FFD700;
+            cursor: pointer;
+        }
+        
+        .rating > label::before {
+            content: "\2605";
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .rating > label:hover:before,
+        .rating > label:hover ~ label:before {
+            opacity: 1 !important;
+        }
+        
+        .rating > input:checked ~ label:before {
+            opacity: 1;
+        }
+        
+        .rating:hover > input:checked ~ label:before {
+            opacity: 0.4;
+        }
+        
+        /* Additional styles to match your template */
+        .bg-blue-50 {
+            background-color: #f0f7ff;
+        }
+        
+        .text-gray-500 {
+            color: #6b7280;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-green-600 {
+            color: #16a34a;
+        }
+        
+        .text-green-700 {
+            color: #15803d;
+        }
+        
+        .text-gray-900 {
+            color: #111827;
+        }
+        
+        .bg-gray-50 {
+            background-color: #f9fafb;
+        }
+        
+        .bg-green-100 {
+            background-color: #dcfce7;
+        }
+        
+        .border {
+            border: 1px solid #e5e7eb;
+        }
+        
+        .border-green-400 {
+            border-color: #4ade80;
+        }
+        
+        .border-red-400 {
+            border-color: #f87171;
+        }
+        
+        .bg-red-100 {
+            background-color: #fee2e2;
+        }
+        
+        .text-red-700 {
+            color: #b91c1c;
+        }
+        
+        .rounded {
+            border-radius: 0.25rem;
+        }
+        
+        .rounded-lg {
+            border-radius: 0.5rem;
+        }
+        
+        .rounded-md {
+            border-radius: 0.375rem;
+        }
+        
+        .p-2 {
+            padding: 0.5rem;
+        }
+        
+        .p-4 {
+            padding: 1rem;
+        }
+        
+        .p-6 {
+            padding: 1.5rem;
+        }
+        
+        .p-8 {
+            padding: 2rem;
+        }
+        
+        .px-3 {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        .px-6 {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+        
+        .py-2 {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        
+        .py-3 {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+        
+        .py-4 {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        
+        .mb-1 {
+            margin-bottom: 0.25rem;
+        }
+        
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+        
+        .mb-6 {
+            margin-bottom: 1.5rem;
+        }
+        
+        .mb-8 {
+            margin-bottom: 2rem;
+        }
+        
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+        
+        .mt-4 {
+            margin-top: 1rem;
+        }
+        
+        .mt-6 {
+            margin-top: 1.5rem;
+        }
+        
+        .mr-2 {
+            margin-right: 0.5rem;
+        }
+        
+        .ml-2 {
+            margin-left: 0.5rem;
+        }
+        
+        .my-6 {
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .text-xs {
+            font-size: 0.75rem;
+        }
+        
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        
+        .text-xl {
+            font-size: 1.25rem;
+        }
+        
+        .text-3xl {
+            font-size: 1.875rem;
+        }
+        
+        .font-medium {
+            font-weight: 500;
+        }
+        
+        .font-semibold {
+            font-weight: 600;
+        }
+        
+        .font-bold {
+            font-weight: 700;
+        }
+        
+        .uppercase {
+            text-transform: uppercase;
+        }
+        
+        .tracking-wider {
+            letter-spacing: 0.05em;
+        }
+        
+        .whitespace-nowrap {
+            white-space: nowrap;
+        }
+        
+        .text-blue-900 {
+            color: #1e3a8a;
+        }
+        
+        .bg-blue-600 {
+            background-color: #2563eb;
+        }
+        
+        .hover\:bg-blue-700:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .flex-1 {
+            flex: 1 1 0%;
+        }
+        
+        .flex-col {
+            flex-direction: column;
+        }
+        
+        .items-center {
+            align-items: center;
+        }
+        
+        .justify-center {
+            justify-content: center;
+        }
+        
+        .justify-end {
+            justify-content: flex-end;
+        }
+        
+        .gap-4 {
+            gap: 1rem;
+        }
+        
+        .gap-6 {
+            gap: 1.5rem;
+        }
+        
+        .space-y-2 > * + * {
+            margin-top: 0.5rem;
+        }
+        
+        .grid-cols-1 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        
+        .divide-y > * + * {
+            border-top-width: 1px;
+        }
+        
+        .divide-gray-200 > * + * {
+            border-color: #e5e7eb;
+        }
+        
+        .border-gray-200 {
+            border-color: #e5e7eb;
+        }
+        
+        .border-dashed {
+            border-style: dashed;
+        }
+        
+        .border-gray-300 {
+            border-color: #d1d5db;
+        }
+        
+        .overflow-x-auto {
+            overflow-x: auto;
+        }
+        
+        .min-w-full {
+            min-width: 100%;
+        }
+        
+        .h-full {
+            height: 100%;
+        }
+        
+        .w-full {
+            width: 100%;
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .w-12 {
+            width: 3rem;
+        }
+        
+        .h-12 {
+            height: 3rem;
+        }
+        
+        .border-4 {
+            border-width: 4px;
+        }
+        
+        .border-t-4 {
+            border-top-width: 4px;
+        }
+        
+        .border-t-blue-500 {
+            border-top-color: #3b82f6;
+        }
+        
+        .border-gray-200 {
+            border-color: #e5e7eb;
+        }
+        
+        .rounded-full {
+            border-radius: 9999px;
+        }
+        
+        /* Star rating input */
+        .star-rating {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+        
+        .star-rating input {
+            display: none;
+        }
+        
+        .star-rating label {
+            cursor: pointer;
+            width: 1.5em;
+            font-size: 1.5em;
+            color: #ddd;
+        }
+        
+        .star-rating label:before {
+            content: '★';
+        }
+        
+        .star-rating input:checked ~ label {
+            color: #FFD700;
+        }
+        
+        .star-rating:hover label:hover,
+        .star-rating:hover label:hover ~ label {
+            color: #FFD700;
+        }
     </style>
 </head>
 <body>
@@ -198,7 +596,8 @@
         
         // Function to update the department progress bar
         function updateProgressBar() {
-            const total = Array.isArray(staffList) ? staffList.length : 0;
+            const staffOptions = document.querySelectorAll('#staff-dropdown option');
+            const total = staffOptions.length > 1 ? staffOptions.length - 1 : 0; // Exclude the placeholder option
             const percentage = total > 0 ? Math.round((totalCompleted / total) * 100) : 0;
             
             progressBar.style.width = `${percentage}%`;
@@ -325,8 +724,10 @@
         // Function to render the questionnaire
         function renderQuestionnaire(data, employeeName, jobTitle, isSubmitted) {
             const { feedback, objectives, hardSkills, softSkills } = data;
-            const startDate = new Date(feedback.setStartDate).toLocaleDateString();
-            const endDate = new Date(feedback.setEndDate).toLocaleDateString();
+            
+            // Format dates properly
+            const startDate = feedback.setStartDate ? new Date(feedback.setStartDate).toLocaleDateString() : 'Not set';
+            const endDate = feedback.setEndDate ? new Date(feedback.setEndDate).toLocaleDateString() : 'Not set';
             
             // Extract employee first and last name
             const nameParts = employeeName.split(',');
@@ -402,44 +803,56 @@
                             <tbody class="bg-white divide-y divide-gray-200">
             `;
             
-            objectives.forEach((objective, index) => {
+            if (objectives && objectives.length > 0) {
+                objectives.forEach((objective, index) => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.description || objective.objectiveDescription}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.kpi || ''}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.target || ''}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.uom || ''}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.weight || ''}</td>
+                            <td class="px-4 py-4">
+                                <div class="space-y-2">
+                                    <div class="star-rating">
+                                        <input type="radio" id="objective${index}-star5" name="objectives[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="objective${index}-star5" title="5 stars"></label>
+                                        <input type="radio" id="objective${index}-star4" name="objectives[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="objective${index}-star4" title="4 stars"></label>
+                                        <input type="radio" id="objective${index}-star3" name="objectives[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="objective${index}-star3" title="3 stars"></label>
+                                        <input type="radio" id="objective${index}-star2" name="objectives[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="objective${index}-star2" title="2 stars"></label>
+                                        <input type="radio" id="objective${index}-star1" name="objectives[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                        <label for="objective${index}-star1" title="1 star"></label>
+                                    </div>
+                                    <textarea 
+                                        name="objectives[${index}][qualitative]"
+                                        class="w-full p-2 border rounded" 
+                                        rows="2"
+                                        placeholder="Qualitative feedback..."
+                                        required
+                                        ${isSubmitted ? 'disabled' : ''}
+                                    ></textarea>
+                                    <input 
+                                        type="hidden" 
+                                        name="objectives[${index}][objectiveId]" 
+                                        value="${objective.objectiveId}"
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
                 html += `
                     <tr>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.description || objective.objectiveDescription}</td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.kpi || ''}</td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.target || ''}</td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.uom || ''}</td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.weight || ''}</td>
-                        <td class="px-4 py-4">
-                            <div class="space-y-2">
-                                <input 
-                                    type="number" 
-                                    name="objectives[${index}][quantitative]" 
-                                    min="1" 
-                                    max="5" 
-                                    class="w-full p-2 border rounded" 
-                                    placeholder="Score (1-5)" 
-                                    required
-                                    ${isSubmitted ? 'disabled' : ''}
-                                />
-                                <textarea 
-                                    name="objectives[${index}][qualitative]"
-                                    class="w-full p-2 border rounded" 
-                                    rows="2"
-                                    placeholder="Qualitative feedback..."
-                                    required
-                                    ${isSubmitted ? 'disabled' : ''}
-                                ></textarea>
-                                <input 
-                                    type="hidden" 
-                                    name="objectives[${index}][objectiveId]" 
-                                    value="${objective.objectiveId}"
-                                />
-                            </div>
+                        <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
+                            No objectives found for this employee.
                         </td>
                     </tr>
                 `;
-            });
+            }
             
             html += `
                             </tbody>
@@ -467,40 +880,52 @@
                             <tbody class="bg-white divide-y divide-gray-200">
             `;
             
-            hardSkills.forEach((skill, index) => {
+            if (hardSkills && hardSkills.length > 0) {
+                hardSkills.forEach((skill, index) => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
+                            <td class="px-4 py-4">
+                                <div class="space-y-2">
+                                    <div class="star-rating">
+                                        <input type="radio" id="hardSkill${index}-star5" name="hardSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="hardSkill${index}-star5" title="5 stars"></label>
+                                        <input type="radio" id="hardSkill${index}-star4" name="hardSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="hardSkill${index}-star4" title="4 stars"></label>
+                                        <input type="radio" id="hardSkill${index}-star3" name="hardSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="hardSkill${index}-star3" title="3 stars"></label>
+                                        <input type="radio" id="hardSkill${index}-star2" name="hardSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="hardSkill${index}-star2" title="2 stars"></label>
+                                        <input type="radio" id="hardSkill${index}-star1" name="hardSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                        <label for="hardSkill${index}-star1" title="1 star"></label>
+                                    </div>
+                                    <textarea 
+                                        name="hardSkills[${index}][qualitative]"
+                                        class="w-full p-2 border rounded" 
+                                        rows="2"
+                                        placeholder="Qualitative feedback..."
+                                        required
+                                        ${isSubmitted ? 'disabled' : ''}
+                                    ></textarea>
+                                    <input 
+                                        type="hidden" 
+                                        name="hardSkills[${index}][skillId]" 
+                                        value="${skill.jobReqSkillId}"
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
                 html += `
                     <tr>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
-                        <td class="px-4 py-4">
-                            <div class="space-y-2">
-                                <input 
-                                    type="number" 
-                                    name="hardSkills[${index}][quantitative]" 
-                                    min="1" 
-                                    max="5" 
-                                    class="w-full p-2 border rounded" 
-                                    placeholder="Score (1-5)" 
-                                    required
-                                    ${isSubmitted ? 'disabled' : ''}
-                                />
-                                <textarea 
-                                    name="hardSkills[${index}][qualitative]"
-                                    class="w-full p-2 border rounded" 
-                                    rows="2"
-                                    placeholder="Qualitative feedback..."
-                                    required
-                                    ${isSubmitted ? 'disabled' : ''}
-                                ></textarea>
-                                <input 
-                                    type="hidden" 
-                                    name="hardSkills[${index}][skillId]" 
-                                    value="${skill.jobReqSkillId}"
-                                />
-                            </div>
+                        <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
+                            No hard skills found for this employee.
                         </td>
                     </tr>
                 `;
-            });
+            }
             
             html += `
                             </tbody>
@@ -528,40 +953,52 @@
                             <tbody class="bg-white divide-y divide-gray-200">
             `;
             
-            softSkills.forEach((skill, index) => {
+            if (softSkills && softSkills.length > 0) {
+                softSkills.forEach((skill, index) => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
+                            <td class="px-4 py-4">
+                                <div class="space-y-2">
+                                    <div class="star-rating">
+                                        <input type="radio" id="softSkill${index}-star5" name="softSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="softSkill${index}-star5" title="5 stars"></label>
+                                        <input type="radio" id="softSkill${index}-star4" name="softSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="softSkill${index}-star4" title="4 stars"></label>
+                                        <input type="radio" id="softSkill${index}-star3" name="softSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="softSkill${index}-star3" title="3 stars"></label>
+                                        <input type="radio" id="softSkill${index}-star2" name="softSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="softSkill${index}-star2" title="2 stars"></label>
+                                        <input type="radio" id="softSkill${index}-star1" name="softSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                        <label for="softSkill${index}-star1" title="1 star"></label>
+                                    </div>
+                                    <textarea 
+                                        name="softSkills[${index}][qualitative]"
+                                        class="w-full p-2 border rounded" 
+                                        rows="2"
+                                        placeholder="Qualitative feedback..."
+                                        required
+                                        ${isSubmitted ? 'disabled' : ''}
+                                    ></textarea>
+                                    <input 
+                                        type="hidden" 
+                                        name="softSkills[${index}][skillId]" 
+                                        value="${skill.jobReqSkillId}"
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
                 html += `
                     <tr>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
-                        <td class="px-4 py-4">
-                            <div class="space-y-2">
-                                <input 
-                                    type="number" 
-                                    name="softSkills[${index}][quantitative]" 
-                                    min="1" 
-                                    max="5" 
-                                    class="w-full p-2 border rounded" 
-                                    placeholder="Score (1-5)" 
-                                    required
-                                    ${isSubmitted ? 'disabled' : ''}
-                                />
-                                <textarea 
-                                    name="softSkills[${index}][qualitative]"
-                                    class="w-full p-2 border rounded" 
-                                    rows="2"
-                                    placeholder="Qualitative feedback..."
-                                    required
-                                    ${isSubmitted ? 'disabled' : ''}
-                                ></textarea>
-                                <input 
-                                    type="hidden" 
-                                    name="softSkills[${index}][skillId]" 
-                                    value="${skill.jobReqSkillId}"
-                                />
-                            </div>
+                        <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
+                            No soft skills found for this employee.
                         </td>
                     </tr>
                 `;
-            });
+            }
             
             html += `
                             </tbody>
@@ -596,8 +1033,8 @@
             }
             
             html += `
-                </div>
-            </form>
+                    </div>
+                </form>
             `;
             
             // Set the HTML and add event listener
@@ -607,6 +1044,11 @@
             if (!isSubmitted) {
                 document.getElementById('feedback-form').addEventListener('submit', function(event) {
                     event.preventDefault();
+                    
+                    // Validate the form
+                    if (!validateForm()) {
+                        return;
+                    }
                     
                     // Get form data
                     const formData = new FormData(this);
@@ -629,6 +1071,13 @@
                             formDataObj[key] = Object.values(formDataObj[key]);
                         }
                     });
+                    
+                    // Show submitting state
+                    const submitButton = document.querySelector('#feedback-form button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+                    }
                     
                     // Submit data
                     fetch('/employee/api/submitFeedback', {
@@ -680,9 +1129,63 @@
                         errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
                         errorDiv.innerHTML = `<p>${error.message}</p>`;
                         document.getElementById('feedback-form').appendChild(errorDiv);
+                        
+                        // Reset submit button
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Submit Feedback';
+                        }
                     });
                 });
             }
+        }
+        
+        // Function to validate the form
+        function validateForm() {
+            let isValid = true;
+            
+            // Check all required fields
+            const requiredFields = document.querySelectorAll('#feedback-form [required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+            
+            // Check star ratings
+            const starGroups = document.querySelectorAll('.star-rating');
+            starGroups.forEach(group => {
+                const checkedStar = group.querySelector('input:checked');
+                if (!checkedStar) {
+                    group.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    group.classList.remove('border-red-500');
+                }
+            });
+            
+            if (!isValid) {
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+                errorDiv.innerHTML = `<p>Please complete all required fields and ratings.</p>`;
+                
+                // Remove existing error message if any
+                const existingError = document.querySelector('.bg-red-100');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
+                document.getElementById('feedback-form').appendChild(errorDiv);
+                
+                // Scroll to the top of the form
+                document.getElementById('feedback-form').scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            return isValid;
         }
         
         // Helper function to parse complex form data keys like objectives[0][quantitative]

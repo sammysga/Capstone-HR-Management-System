@@ -3055,89 +3055,186 @@ submitFeedback: async function (req, res) {
         if (objectives.length > 0) {
             console.log(`Processing ${objectives.length} objectives`);
             
-            const objectiveAnswers = objectives.map(obj => ({
-                feedback_answerObjectivesId: feedbackAnswerId,
-                feedback_qObjectivesId: obj.objectiveId, // Make sure this matches your frontend
-                objectiveQuantInput: parseInt(obj.quantitative) || 0,
-                objectiveQualInput: obj.qualitative || '',
-                created_at: new Date()
-            }));
-            
-            const { error: objAnswerError } = await supabase
-                .from('feedbacks_answers-objectives')
-                .insert(objectiveAnswers);
+            try {
+                // Check if answers already exist for this feedback
+                const { data: existingAnswers, error: checkError } = await supabase
+                    .from('feedbacks_answers-objectives')
+                    .select('feedback_answerObjectivesId, feedback_qObjectivesId')
+                    .eq('feedback_answerObjectivesId', feedbackAnswerId);
+                    
+                if (checkError) {
+                    console.error("Error checking existing objective answers:", checkError);
+                }
                 
-            if (objAnswerError) {
-                console.error("Error inserting objective answers:", objAnswerError);
+                // Prepare answers, avoiding duplicates
+                const objectiveAnswers = objectives.map(obj => {
+                    // Check if this answer already exists
+                    const exists = existingAnswers && existingAnswers.some(
+                        existing => existing.feedback_qObjectivesId === obj.objectiveId
+                    );
+                    
+                    // Only include if it doesn't exist
+                    if (!exists) {
+                        return {
+                            feedback_answerObjectivesId: feedbackAnswerId,
+                            feedback_qObjectivesId: obj.objectiveId,
+                            objectiveQuantInput: parseInt(obj.quantitative) || 0,
+                            objectiveQualInput: obj.qualitative || '',
+                            created_at: new Date()
+                        };
+                    }
+                    return null;
+                }).filter(answer => answer !== null); // Remove any nulls (already existing answers)
+                
+                // Only insert if there are new answers to add
+                if (objectiveAnswers.length > 0) {
+                    const { error: objAnswerError } = await supabase
+                        .from('feedbacks_answers-objectives')
+                        .insert(objectiveAnswers);
+                        
+                    if (objAnswerError) {
+                        console.error("Error inserting objective answers:", objAnswerError);
+                        return res.status(500).json({ 
+                            success: false, 
+                            message: 'Error saving objective feedback.'
+                        });
+                    }
+                    
+                    console.log(`Saved ${objectiveAnswers.length} objective answers`);
+                } else {
+                    console.log("No new objective answers to save");
+                }
+            } catch (insertError) {
+                console.error("Error processing objective answers:", insertError);
                 return res.status(500).json({ 
                     success: false, 
-                    message: 'Error saving objective feedback.'
+                    message: 'Error processing objective feedback.'
                 });
             }
-            
-            console.log(`Saved ${objectives.length} objective answers`);
         }
         
         // Insert skills answers (hard skills)
         if (hardSkills.length > 0) {
             console.log(`Processing ${hardSkills.length} hard skills`);
             
-            const hardSkillAnswers = hardSkills.map(skill => ({
-                feedback_answerSkillsId: feedbackAnswerId,
-                feedback_qSkillsId: skill.skillId,
-                skillsQuantInput: parseInt(skill.quantitative) || 0,
-                skillsQualInput: skill.qualitative || '',
-                created_at: new Date()
-            }));
-            
-            const { error: hardSkillError } = await supabase
-                .from('feedbacks_answers-skills')
-                .insert(hardSkillAnswers);
+            try {
+                // Check if answers already exist for this feedback
+                const { data: existingAnswers, error: checkError } = await supabase
+                    .from('feedbacks_answers-skills')
+                    .select('feedback_answerSkillsId, feedback_qSkillsId')
+                    .eq('feedback_answerSkillsId', feedbackAnswerId);
+                    
+                if (checkError) {
+                    console.error("Error checking existing hard skill answers:", checkError);
+                }
                 
-            if (hardSkillError) {
-                console.error("Error inserting hard skill answers:", hardSkillError);
+                // Prepare answers, avoiding duplicates
+                const hardSkillAnswers = hardSkills.map(skill => {
+                    // Check if this answer already exists
+                    const exists = existingAnswers && existingAnswers.some(
+                        existing => existing.feedback_qSkillsId === skill.skillId
+                    );
+                    
+                    // Only include if it doesn't exist
+                    if (!exists) {
+                        return {
+                            feedback_answerSkillsId: feedbackAnswerId,
+                            feedback_qSkillsId: skill.skillId,
+                            skillsQuantInput: parseInt(skill.quantitative) || 0,
+                            skillsQualInput: skill.qualitative || '',
+                            created_at: new Date()
+                        };
+                    }
+                    return null;
+                }).filter(answer => answer !== null); // Remove any nulls (already existing answers)
+                
+                // Only insert if there are new answers to add
+                if (hardSkillAnswers.length > 0) {
+                    const { error: hardSkillError } = await supabase
+                        .from('feedbacks_answers-skills')
+                        .insert(hardSkillAnswers);
+                        
+                    if (hardSkillError) {
+                        console.error("Error inserting hard skill answers:", hardSkillError);
+                        return res.status(500).json({ 
+                            success: false, 
+                            message: 'Error saving hard skills feedback.'
+                        });
+                    }
+                    
+                    console.log(`Saved ${hardSkillAnswers.length} hard skill answers`);
+                } else {
+                    console.log("No new hard skill answers to save");
+                }
+            } catch (insertError) {
+                console.error("Error processing hard skill answers:", insertError);
                 return res.status(500).json({ 
                     success: false, 
-                    message: 'Error saving hard skills feedback.'
+                    message: 'Error processing hard skills feedback.'
                 });
             }
-            
-            console.log(`Saved ${hardSkills.length} hard skill answers`);
         }
         
         // Insert skills answers (soft skills)
         if (softSkills.length > 0) {
             console.log(`Processing ${softSkills.length} soft skills`);
-            
-            const softSkillAnswers = softSkills.map(skill => ({
-                feedback_answerSkillsId: feedbackAnswerId,
-                feedback_qSkillsId: skill.skillId,
-                skillsQuantInput: parseInt(skill.quantitative) || 0,
-                skillsQualInput: skill.qualitative || '',
-                created_at: new Date()
-            }));
-            
-            const { error: softSkillError } = await supabase
+
+            try {
+                const { data: existingAnswers, error: checkError } = await supabase
                 .from('feedbacks_answers-skills')
-                .insert(softSkillAnswers);
-                
-            if (softSkillError) {
-                console.error("Error inserting soft skill answers:", softSkillError);
+                .select('feedback_answerSkillsId, feedback_qSkillsId')
+                .eq('feedback_answerSkillsId', feedbackAnswerId);
+            
+                if (checkError) {
+                    console.error("Error checking existing soft skill answers:", checkError);
+                }
+
+                // Prepare answers, avoiding duplicates
+                const softSkillAnswers = softSkills.map(skill => {
+                    // Check if this answer already exists
+                    const exists = existingAnswers && existingAnswers.some(
+                        existing => existing.feedback_qSkillsId === skill.skillId
+                    );
+                    
+                    // Only include if it doesn't exist
+                    if (!exists) {
+                        return {
+                            feedback_answerSkillsId: feedbackAnswerId,
+                            feedback_qSkillsId: skill.skillId,
+                            skillsQuantInput: parseInt(skill.quantitative) || 0,
+                            skillsQualInput: skill.qualitative || '',
+                            created_at: new Date()
+                        };
+                    }
+                    return null;
+                }).filter(answer => answer !== null); // Remove any nulls (already existing answers)
+
+                 // Only insert if there are new answers to add
+                if (softSkillAnswers.length > 0) {
+                    const { error: softSkillError } = await supabase
+                        .from('feedbacks_answers-skills')
+                        .insert(softSkillAnswers);
+                        
+                    if (softSkillError) {
+                        console.error("Error inserting soft skill answers:", softSkillError);
+                        return res.status(500).json({ 
+                            success: false, 
+                            message: 'Error saving soft skills feedback.'
+                        });
+                    }
+                    
+                    console.log(`Saved ${softSkillAnswers.length} soft skill answers`);
+                } else {
+                    console.log("No new soft skill answers to save");
+                }
+            } catch (insertError) {
+                console.error("Error processing soft skill answers:", insertError);
                 return res.status(500).json({ 
                     success: false, 
-                    message: 'Error saving soft skills feedback.'
+                    message: 'Error processing soft skills feedback.'
                 });
             }
-            
-            console.log(`Saved ${softSkills.length} soft skill answers`);
-        }
-        
-        // Success response
-        return res.json({
-            success: true,
-            message: 'Feedback submitted successfully'
-        });
-        
+        } 
     } catch (error) {
         console.error('Error in submitFeedback:', error);
         return res.status(500).json({ 
