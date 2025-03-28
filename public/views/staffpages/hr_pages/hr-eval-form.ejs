@@ -328,20 +328,19 @@
         
             <div class="form-section">
                 <label for="candidate-name">Candidate Name:</label>
-<input type="text" id="candidate-name" name="candidateName" value="<%= applicant?.firstName %> <%= applicant?.lastName %>" readonly>
-
-<label for="position-title">Position Title:</label>
-<input type="text" id="position-title" name="positionTitle" value="<%= applicant?.jobTitle %>" readonly>
-
-        
+                <input type="text" id="candidate-name" name="candidateName" value="<%= applicant?.firstName %> <%= applicant?.lastName %>" readonly>
+            
+                <label for="position-title">Position Title:</label>
+                <input type="text" id="position-title" name="positionTitle" value="<%= applicant?.jobpositions?.jobTitle || 'N/A' %>" readonly>
+            
                 <label for="position-department">Position Department:</label>
-                <input type="text" id="position-department" name="positionDepartment" placeholder="Finance" readonly>
-        
+                <input type="text" id="position-department" name="positionDepartment" value="<%= interviewDetails.departmentName %>" readonly>
+            
                 <label for="conducted-by">Conducted by:</label>
-                <input type="text" id="conducted-by" name="conductedBy" placeholder="Henry, Arthur" readonly>
-        
+                <input type="text" id="conducted-by" name="conductedBy" value="<%= interviewDetails.conductedBy %>" readonly>
+            
                 <label for="date-of-interview">Date of Interview:</label>
-                <input type="text" id="date-of-interview" name="dateOfInterview" placeholder="March 15, 2024" readonly>
+                <input type="text" id="date-of-interview" name="dateOfInterview" value="<%= interviewDetails.dateOfInterview %>" readonly>
             </div>
 
  <!-- Rating Definition Guide -->
