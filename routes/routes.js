@@ -215,6 +215,7 @@ router.get('/staff/managerdashboard', lineManagerController.getLineManagerNotifi
 router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
 router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
 router.post('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', hrController.updateStatusToP1AwaitingforLineManager);
+router.post('/api/webhooks/calendly', applicantController.handleCalendlyWebhook);
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
 
 router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Schedule Your Appointment</title>
+  <title>Schedule Your Interview</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://assets.calendly.com/assets/external/widget.js" async></script> <!-- calendly integration -->
   <style>
@@ -19,7 +19,6 @@
         flex-direction: column;
         height: 100vh;
     }
-
     .container {
         text-align: center;
         background: #ffffff;
@@ -29,18 +28,15 @@
         max-width: 600px;
         width: 90%;
     }
-
     h1 {
         font-size: 1.8rem;
         color: #333333;
     }
-
     p {
         font-size: 1rem;
         color: #555555;
         margin-bottom: 20px;
     }
-
     button {
         background-color: #124A5C;
         color: white;
@@ -50,25 +46,48 @@
         cursor: pointer;
         font-size: 1rem;
     }
-
     button:hover {
         background-color: #059ca4;
     }
-
     #calendly-container {
         margin-bottom: 20px;
     }
-</style>
+    .confirmation-box {
+        display: none;
+        background-color: #e8f5e9;
+        border: 1px solid #4caf50;
+        border-radius: 5px;
+        padding: 15px;
+        margin-top: 20px;
+        text-align: center;
+    }
+    .confirmation-box h3 {
+        margin-top: 0;
+        color: #2e7d32;
+    }
+    #meeting-details {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f8f8f8;
+        border-radius: 5px;
+        text-align: left;
+        font-size: 0.9rem;
+    }
+    .detail-item {
+        margin: 5px 0;
+    }
+    .detail-label {
+        font-weight: bold;
+        color: #124A5C;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>Schedule Your Appointment</h1>
+    <h1>Schedule Your Interview</h1>
     <p>
-      Please select a date and time on the embedded Calendly page and wait for
-      email confirmation. Once you've received the confirmation, press the
-      "Return to Chatbot" button to continue.
+      Please select a date and time below for your interview. After scheduling, you'll receive an email confirmation with all the details.
     </p>
-
     <div id="calendly-container">
       <div
         class="calendly-inline-widget"
@@ -76,13 +95,132 @@
         style="min-width: 320px; height: 630px;">
       </div>
     </div>
-
-    <button onclick="returnToChatbot()">Return to Chatbot</button>
+    
+    <!-- Confirmation box that will show after booking -->
+    <div id="confirmationBox" class="confirmation-box">
+      <h3>Interview Scheduled Successfully!</h3>
+      <p>Thank you for scheduling your interview. You'll receive a confirmation email with all the details.</p>
+      
+      <!-- This div will contain the meeting details -->
+      <div id="meeting-details">
+        <div class="detail-item">
+          <span class="detail-label">Date:</span> 
+          <span id="meeting-date">Loading...</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Time:</span> 
+          <span id="meeting-time">Loading...</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Meeting Type:</span> 
+          <span id="meeting-type">Loading...</span>
+        </div>
+        <div class="detail-item" id="meeting-link-container" style="display: none;">
+          <span class="detail-label">Link:</span> 
+          <a id="meeting-link" href="#" target="_blank">Join Meeting</a>
+        </div>
+      </div>
+      
+      <button onclick="returnToChatbot()" style="margin-top: 15px;">Return to Chatbot</button>
+    </div>
   </div>
-
+  
   <script>
+  // Create a variable to store the meeting details
+  let meetingDetails = {};
+  
+  // Listen for Calendly events
+  window.addEventListener('message', function(e) {
+    if (e.data.event && e.data.event.indexOf('calendly') === 0) {
+      console.log('Calendly event received:', e.data.event);
+      console.log('Event data:', e.data);
+      
+      // When an event is scheduled
+      if (e.data.event === 'calendly.event_scheduled') {
+        console.log('Interview scheduled successfully!');
+        console.log('Event payload:', e.data.payload);
+        
+        // Extract and store the meeting details from the payload
+        try {
+          const payload = e.data.payload;
+          
+          // Store meeting details
+          meetingDetails = {
+            inviteeEmail: payload.invitee.email,
+            eventName: payload.event_type.name,
+            startTime: new Date(payload.event.start_time),
+            endTime: new Date(payload.event.end_time),
+            location: payload.event.location || 'Online',
+            cancelUrl: payload.invitee.cancel_url,
+            rescheduleUrl: payload.invitee.reschedule_url
+          };
+          
+          // Format date as "Day, Month Date, Year"
+          const dateOptions = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          };
+          const formattedDate = meetingDetails.startTime.toLocaleDateString('en-US', dateOptions);
+          
+          // Format time as "hh:mm AM/PM"
+          const timeOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          };
+          const formattedStartTime = meetingDetails.startTime.toLocaleTimeString('en-US', timeOptions);
+          const formattedEndTime = meetingDetails.endTime.toLocaleTimeString('en-US', timeOptions);
+          
+          // Update the meeting details in the confirmation box
+          document.getElementById('meeting-date').textContent = formattedDate;
+          document.getElementById('meeting-time').textContent = formattedStartTime + ' - ' + formattedEndTime;
+          document.getElementById('meeting-type').textContent = meetingDetails.eventName;
+          
+          // If there's a meeting link, display it
+          if (payload.event.location_data && payload.event.location_data.join_url) {
+            document.getElementById('meeting-link').href = payload.event.location_data.join_url;
+            document.getElementById('meeting-link-container').style.display = 'block';
+          }
+          
+          // Store meeting details in localStorage
+          localStorage.setItem('meetingDetails', JSON.stringify({
+            date: formattedDate,
+            time: formattedStartTime + ' - ' + formattedEndTime,
+            type: meetingDetails.eventName,
+            location: meetingDetails.location,
+            startTime: meetingDetails.startTime.toISOString(),
+            endTime: meetingDetails.endTime.toISOString(),
+            cancelUrl: meetingDetails.cancelUrl,
+            rescheduleUrl: meetingDetails.rescheduleUrl
+          }));
+          
+        } catch (error) {
+          console.error('Error processing meeting details:', error);
+          document.getElementById('meeting-date').textContent = 'Details available in email';
+          document.getElementById('meeting-time').textContent = 'Check your email for details';
+          document.getElementById('meeting-type').textContent = 'Interview';
+        }
+        
+        // Show the confirmation box
+        document.getElementById('confirmationBox').style.display = 'block';
+        
+        // Hide the Calendly widget
+        document.getElementById('calendly-container').style.display = 'none';
+        
+        // Store the booking information in localStorage
+        localStorage.setItem('interviewScheduled', 'true');
+      }
+    }
+  });
+  
   function returnToChatbot() {
-    // Redirect back to the chatbot page with a parameter indicating return from Calendly
+    // Set flags in localStorage to indicate the user has booked an interview
+    localStorage.setItem('returnedFromCalendly', 'true');
+    localStorage.setItem('showMeetingDetails', 'true');
+    
+    // Redirect back to the chatbot page
     window.location.href = '/chatbothome';
   }
   </script>

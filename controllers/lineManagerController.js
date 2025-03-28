@@ -1652,7 +1652,7 @@ console.log('Final applicants list:', applicants);
                 }
                 
                 // 2. Send congratulations message through the chatbot history
-                const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage once the HR team sets availability via Calendly.";
+                const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage via Calendly.";
                 
                 const { data: chatData, error: chatError } = await supabase
                     .from('chatbot_history')
@@ -1666,7 +1666,29 @@ console.log('Final applicants list:', applicants);
                     
                 if (chatError) {
                     console.error(`❌ [LineManager] Error sending chat message to ${userId}:`, chatError);
+                    continue;
                 }
+                
+                // 3. Immediately follow up with Calendly scheduling button
+                const calendlyPrompt = {
+                    text: "Please proceed to the next step by clicking the \"Schedule on Calendly\" button. Select a convenient date and time for your interview through the redirected Calendly link. We look forward to meeting you!",
+                    buttons: [{
+                        text: 'Schedule on Calendly',
+                        type: 'link',
+                        url: '/applicant/schedule-interview'
+                    }]
+                };
+                
+                // Save Calendly prompt to chat history with slight delay to ensure proper ordering
+                await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify(calendlyPrompt),
+                        sender: 'bot',
+                        timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second later
+                        applicantStage: 'P1 - PASSED'
+                    }]);
             }
             
             // Process failed applicants
@@ -1714,7 +1736,6 @@ console.log('Final applicants list:', applicants);
             return res.status(500).json({ success: false, message: "Error finalizing P1 review: " + error.message });
         }
     },
-    
     finalizeP3Review: async function(req, res) {
         try {
             console.log('✅ [LineManager] Finalizing P3 review process');
