@@ -814,10 +814,19 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
                         return res.redirect('/hr/applicant-tracker-jobposition');
                     }
         
-                    // Fetch the applicant's details from the database
+                    // Fetch the applicant's details from the database with additional information
                     const { data: applicant, error } = await supabase
                         .from('applicantaccounts')
-                        .select('*')
+                        .select(`
+                            *,
+                            jobpositions (
+                                jobTitle,
+                                departmentId
+                            ),
+                            departments (
+                                deptName
+                            )
+                        `)
                         .eq('applicantId', parsedApplicantId)
                         .single();
         
@@ -831,12 +840,27 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
                         return res.redirect('/hr/applicant-tracker-jobposition');
                     }
         
+                    // Fetch the HR representative's name
+                    const hrName = req.session.user.firstName + ' ' + req.session.user.lastName || 'HR Representative';
+                    
+                    // Get current date for interview
+                    const interviewDate = new Date().toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+        
                     console.log('Applicant Details:', applicant); // Log the applicant details for inspection
         
                     // Render the evaluation form with applicant details
                     res.render('staffpages/hr_pages/hr-eval-form', {
                         applicantId: parsedApplicantId,
-                        applicant, // Pass the applicant details to the template
+                        applicant,
+                        interviewDetails: {
+                            conductedBy: hrName,
+                            dateOfInterview: interviewDate,
+                            departmentName: applicant.departments?.deptName || 'N/A'
+                        }
                     });
                 } catch (err) {
                     // Handle unexpected server errors
