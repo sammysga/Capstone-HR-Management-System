@@ -676,7 +676,30 @@
     <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
         <button class="btn-evaluation">For Evaluation</button>
     </a>
-                            <% } %>
+    <% } else if (applicant.applicantStatus.startsWith('P2 - HR Evaluation Accomplished')) { %>
+        <!-- View Evaluation, Reject and Pass Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <a href="/hr/view-evaluation/<%= applicant.applicantId %>">
+                <button class="btn-view-evaluation" style="background-color: white; color: black; border: 1px solid #124A5C; padding: 8px 15px; border-radius: 5px; width: 150px; transition: background-color 0.3s ease, color 0.3s ease;">View Evaluation</button>
+            </a>
+            <div style="display: flex; gap: 10px;">
+                <button 
+                    class="btn-reject" 
+                    onclick="rejectApplicant('<%= applicant.applicantId %>')"
+                    style="background-color: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 70px;">
+                    Reject
+                </button>
+                <button 
+                    class="btn-pass" 
+                    onclick="passApplicant('<%= applicant.applicantId %>')"
+                    style="background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 70px;">
+                    Pass
+                </button>
+            </div>
+        </div>
+    <% } %>
+</div>
+                            
                         </div>
                     </td>   
                 </tr>
@@ -941,6 +964,62 @@
 </div>
 
 <script>
+
+// Function to handle rejecting an applicant
+function rejectApplicant(applicantId) {
+    if (!confirm("Are you sure you want to reject this applicant? This action cannot be undone.")) {
+        return;
+    }
+
+    fetch('/hr/reject-applicant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Applicant has been rejected successfully.");
+            location.reload(); // Reload to update the UI
+        } else {
+            alert("Failed to reject applicant: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("An error occurred while rejecting the applicant.");
+    });
+}
+
+// Function to handle passing an applicant
+function passApplicant(applicantId) {
+    if (!confirm("Are you sure you want to pass this applicant to the next stage? This action cannot be undone.")) {
+        return;
+    }
+
+    fetch('/hr/pass-applicant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Applicant has been passed to the next stage successfully.");
+            location.reload(); // Reload to update the UI
+        } else {
+            alert("Failed to pass applicant: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("An error occurred while passing the applicant.");
+    });
+}
 
 function handleFailedAction(applicantId) {
         alert('Action required for P2 - FAILED applicant: ' + applicantId);

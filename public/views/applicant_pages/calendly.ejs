@@ -81,10 +81,37 @@
   </div>
 
   <script>
-  function returnToChatbot() {
-    // Redirect back to the chatbot page with a parameter indicating return from Calendly
-    window.location.href = '/chatbothome';
+  // Check if this is a P2 interview by examining the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const isP2Interview = urlParams.get('stage') === 'p2';
+  
+  // Store the interview stage in localStorage for later use
+  if (isP2Interview) {
+    localStorage.setItem('interviewStage', 'P2');
+  } else {
+    localStorage.setItem('interviewStage', 'P1');
   }
+  
+  function returnToChatbot() {
+    // Get the interview stage from localStorage
+    const stage = localStorage.getItem('interviewStage') || 'P1';
+    
+    // Redirect back to the chatbot page with parameters indicating return from Calendly
+    // and which stage of interview
+    window.location.href = `/chatbothome?from=calendly&stage=${stage}`;
+  }
+
+  // Add event listener for Calendly events
+  window.addEventListener('message', function(e) {
+    if (e.data.event && e.data.event.indexOf('calendly') === 0) {
+      // You can detect specific Calendly events like:
+      if (e.data.event === 'calendly.event_scheduled') {
+        console.log('Interview scheduled!');
+        // Set a flag in localStorage that an interview was scheduled
+        localStorage.setItem('interviewScheduled', 'true');
+      }
+    }
+  });
   </script>
 </body>
 </html>

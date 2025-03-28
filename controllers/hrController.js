@@ -2482,7 +2482,7 @@ updateJobOffer: async function(req, res) {
         try {
             // Destructure required fields from the request body
             console.log("Request Body:", req.body);
-            const { applicantId, totalRating } = req.body;
+            const { applicantId, totalRating, newStatus } = req.body;
     
             // Validate required inputs
             if (!applicantId || !totalRating) {
@@ -2501,17 +2501,20 @@ updateJobOffer: async function(req, res) {
                 });
             }
     
-            // Save the evaluation score to the database
+            // Save the evaluation score and update status in the database
             const { data, error } = await supabase
                 .from("applicantaccounts")
-                .update({ hrInterviewFormScore: totalRating }) // Assuming the column exists
-                .eq("applicantId", parsedApplicantId); // Match on the applicantId column
-
+                .update({ 
+                    hrInterviewFormScore: totalRating,
+                    applicantStatus: newStatus // Update the status to "P2 - HR Evaluation Accomplished"
+                })
+                .eq("applicantId", parsedApplicantId);
+    
             console.log("Supabase Response:", { data, error });
-
+    
             // Check for Supabase errors
             if (error) {
-                console.error("Error saving evaluation score:", data, error);
+                console.error("Error saving evaluation score:", error);
                 return res.status(500).json({
                     success: false,
                     message: "Failed to save the evaluation score.",
@@ -2521,7 +2524,7 @@ updateJobOffer: async function(req, res) {
             // Respond with success
             res.json({
                 success: true,
-                message: "Evaluation score saved successfully!",
+                message: "Evaluation score saved and applicant status updated successfully!",
             });
         } catch (err) {
             // Handle unexpected server errors
@@ -2532,6 +2535,106 @@ updateJobOffer: async function(req, res) {
             });
         }
     },
+
+    // Add these functions to your hrController object
+
+// Function to handle rejection of an applicant
+rejectApplicant: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'HR') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    const { applicantId } = req.body;
+
+    if (!applicantId) {
+        return res.status(400).json({ success: false, message: 'Applicant ID is required' });
+    }
+
+    try {
+        // Update the applicant status in the database
+        const { error } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'P2 - FAILED' })
+            .eq('applicantId', applicantId);
+
+        if (error) {
+            console.error('Error rejecting applicant:', error);
+            return res.status(500).json({ success: false, message: 'Database error occurred' });
+        }
+
+        return res.json({ success: true, message: 'Applicant rejected successfully' });
+    } catch (err) {
+        console.error('Server error in rejectApplicant:', err);
+        return res.status(500).json({ success: false, message: 'Server error occurred' });
+    }
+},
+
+// Function to handle passing an applicant to the next stage
+passApplicant: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'HR') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    const { applicantId } = req.body;
+
+    if (!applicantId) {
+        return res.status(400).json({ success: false, message: 'Applicant ID is required' });
+    }
+
+    try {
+        // Update the applicant status in the database
+        const { error } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'P2 - PASSED' })
+            .eq('applicantId', applicantId);
+
+        if (error) {
+            console.error('Error passing applicant:', error);
+            return res.status(500).json({ success: false, message: 'Database error occurred' });
+        }
+
+        return res.json({ success: true, message: 'Applicant passed to next stage successfully' });
+    } catch (err) {
+        console.error('Server error in passApplicant:', err);
+        return res.status(500).json({ success: false, message: 'Server error occurred' });
+    }
+},
+
+// Function to view evaluation (if you need to implement this route)
+viewEvaluation: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'HR') {
+        req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+        return res.redirect('/staff/login');
+    }
+
+    const applicantId = req.params.applicantId;
+    
+    try {
+        // Fetch the applicant's details and evaluation score
+        const { data: applicant, error } = await supabase
+            .from('applicantaccounts')
+            .select('*')
+            .eq('applicantId', applicantId)
+            .single();
+
+        if (error || !applicant) {
+            console.error('Error fetching applicant details:', error);
+            req.flash('errors', { message: 'Could not retrieve applicant evaluation details.' });
+            return res.redirect('/hr/applicant-tracker-jobposition');
+        }
+
+        // Render the evaluation view with the applicant's data
+        res.render('staffpages/hr_pages/view-evaluation-form', { 
+            applicantId, 
+            applicant,
+            evaluationScore: applicant.hrInterviewFormScore || 'No score available'
+        });
+    } catch (err) {
+        console.error('Error in viewEvaluation controller:', err);
+        req.flash('errors', { message: 'Internal server error.' });
+        return res.redirect('/hr/applicant-tracker-jobposition');
+    }
+},
     
     
     

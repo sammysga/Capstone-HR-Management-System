@@ -636,13 +636,17 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ applicantId, totalRating }),
+            body: JSON.stringify({ 
+                applicantId, 
+                totalRating,
+                newStatus: "P2 - HR Evaluation Accomplished" // Add the new status here
+            }),
         });
 
         const result = await response.json();
 
         if (result.success) {
-            alert("Total assessment rating saved successfully!");
+            alert("Evaluation saved successfully! Applicant status updated to P2 - HR Evaluation Accomplished");
             window.location.href = "/hr/applicant-tracker"; // Redirect to a success page or elsewhere
         } else {
             alert("Failed to save the score. Please try again.");

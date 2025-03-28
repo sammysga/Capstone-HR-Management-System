@@ -534,6 +534,60 @@ getJobDetailsTitle: async function(req, res) {
             return res.status(500).send('Internal Server Error');
         }
     },
+
+    // Add this method to your applicantController
+updateApplicantStatus: async function(req, res) {
+    try {
+        const { userId, status } = req.body;
+        
+        if (!userId || !status) {
+            return res.status(400).json({ 
+                success: false, 
+                error: "Missing userId or status" 
+            });
+        }
+        
+        // Validate session for security
+        if (!req.session.authenticated || req.session.userID != userId) {
+            return res.status(401).json({
+                success: false,
+                error: "Unauthorized"
+            });
+        }
+        
+        console.log(`✅ [API] Updating applicant status for userId ${userId} to ${status}`);
+        
+        // Update the database
+        const { data, error } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: status })
+            .eq('userId', userId);
+            
+        if (error) {
+            console.error('❌ [API] Error updating applicant status:', error);
+            return res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+        
+        // Update session if needed
+        req.session.applicantStage = status;
+        
+        console.log(`✅ [API] Successfully updated status to ${status}`);
+        return res.status(200).json({
+            success: true,
+            message: `Applicant status updated to ${status}`
+        });
+        
+    } catch (error) {
+        console.error('❌ [API] Unexpected error updating status:', error);
+        return res.status(500).json({
+            success: false,
+            error: "Server error"
+        });
+    }
+},
    
 
     getChatbotPage: async function(req, res) {
@@ -544,7 +598,7 @@ getJobDetailsTitle: async function(req, res) {
             // ✅ Check if user is authenticated
             if (!userId) {
                 console.log('❌ [getChatbotPage] User not authenticated. Redirecting to login...');
-                return res.redirect('/login');
+                return res.redirect('/applicant/login');
             }
     
             // ✅ Check if there's already chat history in the session
@@ -637,10 +691,55 @@ res.render('applicant_pages/chatbot', {
             if (!userId) {
                 return res.status(401).json({ response: "Unauthorized" });
             }
+
+            // Check if this is a predefined message (like the thank you after Calendly)
+            if (req.body.predefinedMessage) {
+                console.log('✅ [Chatbot] Processing predefined message:', req.body.predefinedMessage);
+                
+                const predefinedMessage = req.body.predefinedMessage;
+                const timestamp = new Date().toISOString();
+                
+                // Save the predefined message to chat history
+                await supabase
+                    .from('chatbot_history')
+                    .insert([{ 
+                        userId, 
+                        message: JSON.stringify(predefinedMessage),
+                        sender: 'bot', 
+                        timestamp,
+                        applicantStage: predefinedMessage.applicantStage || req.session.applicantStage 
+                    }]);
+                
+                // If the applicant stage was specified, update it in the session and database
+                if (predefinedMessage.applicantStage) {
+                    req.session.applicantStage = predefinedMessage.applicantStage;
+                    
+                    // Update the applicant status in the database
+                    console.log(`✅ [Chatbot] Updating applicant status to ${predefinedMessage.applicantStage}`);
+                    const { error: updateError } = await supabase
+                        .from('applicantaccounts')
+                        .update({ applicantStatus: predefinedMessage.applicantStage })
+                        .eq('userId', userId);
+                        
+                    if (updateError) {
+                        console.error(`❌ [Chatbot] Error updating applicant status to ${predefinedMessage.applicantStage}:`, updateError);
+                    } else {
+                        console.log(`✅ [Chatbot] Applicant status successfully updated to ${predefinedMessage.applicantStage}`);
+                    }
+                }
+                
+                // Return success response
+                return res.status(200).json({ success: true });
+            }
     
             const userMessage = req.body.message.toLowerCase();
             const timestamp = new Date().toISOString();
             console.log(`✅ [Chatbot] UserID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
+
+            // Save user message
+        await supabase
+        .from('chatbot_history')
+        .insert([{ userId, message: userMessage, sender: 'user', timestamp, applicantStage: req.session.applicantStage }]);
     
             // Fetch chat history
             const { data: chatHistory, error: chatHistoryError } = await supabase
@@ -667,54 +766,157 @@ const { data: applicantData, error: applicantError } = await supabase
     .eq('userId', userId)
     .single();
 
+    if (!applicantError && applicantData && applicantData.applicantStatus === 'P2 - Awaiting for HR Evaluation') {
+        console.log('✅ [Chatbot] User has scheduled an interview');
+        // You could add special handling here if needed
+    }
+
 if (applicantError) {
     console.error('❌ [Chatbot] Error fetching applicant status:', applicantError);
 } else if (applicantData) {
     console.log(`✅ [Chatbot] Applicant status is: ${applicantData.applicantStatus}`);
     
     // Handle P1 - PASSED status
-    if (applicantData.applicantStatus === 'P1 - PASSED') {
-        console.log('✅ [Chatbot] Applicant status is P1 - PASSED. Sending congratulations message.');
-        
-        const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage via Calendly.";
-        
-        // Save congratulations message to chat history
-        await supabase
-            .from('chatbot_history')
-            .insert([{
-                userId,
-                message: JSON.stringify({ text: congratsMessage }),
-                sender: 'bot',
-                timestamp: new Date().toISOString(),
-                applicantStage: 'P1 - PASSED'
-            }]);
-            
-        req.session.applicantStage = 'P1 - PASSED';
-        
-        return res.status(200).json({ response: { text: congratsMessage } });
-    }
+if (applicantData.applicantStatus === 'P1 - PASSED') {
+    console.log('✅ [Chatbot] Applicant status is P1 - PASSED. Sending congratulations message.');
     
-    // Handle P1 - FAILED status
-    else if (applicantData.applicantStatus === 'P1 - FAILED') {
-        console.log('❌ [Chatbot] Applicant status is P1 - FAILED. Sending rejection message.');
+    const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage via Calendly.";
+    
+    // Add a follow-up message with Calendly link
+    const calendlyMessage = "Please click the button below to schedule your interview at your convenience:";
+    
+    // Save congratulations message to chat history
+    await supabase
+        .from('chatbot_history')
+        .insert([{
+            userId,
+            message: JSON.stringify({ text: congratsMessage }),
+            sender: 'bot',
+            timestamp: new Date().toISOString(),
+            applicantStage: 'P1 - PASSED'
+        }]);
         
-        const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.";
+    // Save Calendly link message to chat history with slight delay
+    await supabase
+        .from('chatbot_history')
+        .insert([{
+            userId,
+            message: JSON.stringify({ 
+                text: calendlyMessage,
+                buttons: [
+                    { 
+                        text: "Schedule Interview", 
+                        value: "schedule_interview",
+                        url: "/applicant/schedule-interview"
+                    }
+                ]
+            }),
+            sender: 'bot',
+            timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
+            applicantStage: 'P1 - PASSED'
+        }]);
         
-        // Save rejection message to chat history
-        await supabase
-            .from('chatbot_history')
-            .insert([{
-                userId,
-                message: JSON.stringify({ text: rejectionMessage }),
-                sender: 'bot',
-                timestamp: new Date().toISOString(),
-                applicantStage: 'P1 - FAILED'
-            }]);
-            
-        req.session.applicantStage = 'P1 - FAILED';
+    req.session.applicantStage = 'P1 - PASSED';
+    
+    // Return both messages for immediate display
+    return res.status(200).json({ 
+        response: { 
+            text: congratsMessage,
+            nextMessage: {
+                text: calendlyMessage,
+                buttons: [
+                    { 
+                        text: "Schedule Interview", 
+                        value: "schedule_interview",
+                        url: "/applicant/schedule-interview"
+                    }
+                ]
+            }
+        } 
+    });
+}
+
+// Inside the code that handles P2 - PASSED status in handleChatbotMessage
+else if (applicantData.applicantStatus === 'P2 - PASSED') {
+    console.log('✅ [Chatbot] Applicant status is P2 - PASSED. Sending second interview message.');
+    
+    const congratsMessage = "Congratulations! We are pleased to inform you that you have successfully passed the initial interview. We would like to invite you for a final interview with our senior management team.";
+    
+    // Add a follow-up message with Calendly link for the second interview
+    const calendlyMessage = "Please click the button below to schedule your final interview at your convenience:";
+    
+    // Save congratulations message to chat history
+    await supabase
+        .from('chatbot_history')
+        .insert([{
+            userId,
+            message: JSON.stringify({ text: congratsMessage }),
+            sender: 'bot',
+            timestamp: new Date().toISOString(),
+            applicantStage: 'P2 - PASSED'
+        }]);
         
-        return res.status(200).json({ response: { text: rejectionMessage } });
-    }
+    // Save Calendly link message to chat history with slight delay
+    await supabase
+        .from('chatbot_history')
+        .insert([{
+            userId,
+            message: JSON.stringify({ 
+                text: calendlyMessage,
+                buttons: [
+                    { 
+                        text: "Schedule Final Interview", 
+                        value: "schedule_final_interview",
+                        url: "/applicant/schedule-interview?stage=P2" // Make sure to include stage=P2 parameter
+                    }
+                ]
+            }),
+            sender: 'bot',
+            timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
+            applicantStage: 'P2 - PASSED'
+        }]);
+        
+    req.session.applicantStage = 'P2 - PASSED';
+    
+    // Return both messages for immediate display
+    return res.status(200).json({ 
+        response: { 
+            text: congratsMessage,
+            nextMessage: {
+                text: calendlyMessage,
+                buttons: [
+                    { 
+                        text: "Schedule Final Interview", 
+                        value: "schedule_final_interview",
+                        url: "/applicant/schedule-interview?stage=P2" // Make sure to include stage=P2 parameter
+                    }
+                ]
+            }
+        } 
+    });
+}
+    
+// Handle P1 - FAILED status
+else if (applicantData.applicantStatus === 'P1 - FAILED') {
+    console.log('❌ [Chatbot] Applicant status is P1 - FAILED. Sending rejection message.');
+    
+    const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.";
+    
+    // Save rejection message to chat history
+    await supabase
+        .from('chatbot_history')
+        .insert([{
+            userId,
+            message: JSON.stringify({ text: rejectionMessage }),
+            sender: 'bot',
+            timestamp: new Date().toISOString(),
+            applicantStage: 'P1 - FAILED'
+        }]);
+        
+    req.session.applicantStage = 'P1 - FAILED';
+    
+    return res.status(200).json({ response: { text: rejectionMessage } });
+}
 
 }
 else {
@@ -1886,7 +2088,7 @@ getLogoutButton: function(req, res) {
             console.error('Error destroying session:', err);
             return res.status(500).send('Internal Server Error');
         }
-        res.redirect('/login');
+        res.redirect('/applicant/login');
     });
 },
 
