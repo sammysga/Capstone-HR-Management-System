@@ -100,6 +100,7 @@ router.post('/save-clearance', hrController.saveChecklist);
 router.post('/send-clearance', hrController.sendClearanceToEmployee);
 router.get('/hr/retirement-tracker', hrController.getRetirementTracker);
 router.post('/hr/approve-offboarding', hrController.approveOffboarding);
+router.post('/hr/applicant-tracker-jobposition/P1HRFailed', hrController.updateStatusToP1HRFailed);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);

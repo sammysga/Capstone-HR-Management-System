@@ -11,6 +11,23 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
 
+.review-modal-reject-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.review-modal-reject-button:hover {
+    opacity: 0.8;
+}
+
+
         /* Add this CSS to your existing styles */
 
 /* Center the scores table and enhance its appearance */
@@ -914,6 +931,7 @@
         <h4>Would you like to recommend this applicant to the Line Manager for shortlisting and proceeding to the HR interview?</h4>
         <div class="review-modal-buttons">
             <button id="backButton" class="review-modal-back-button">Back</button>
+            <button id="rejectButton" class="review-modal-reject-button" onclick="rejectHRInitialScreeningModal()">Reject</button>
             <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmHRInitialScreeningModal()">Confirm</button>
         </div>
     </div>
@@ -1497,6 +1515,55 @@ document.querySelectorAll('.action-required-btn').forEach(button => {
                     }
                 });
             });
+
+            function rejectHRInitialScreeningModal() {
+    const userIdElement = document.getElementById("userId");
+    if (!userIdElement) {
+        alert("Error: userId is missing. Please try again.");
+        return;
+    }
+
+    const userIdRaw = userIdElement.value.trim();
+    console.log("User ID (raw):", userIdRaw);
+
+    const userId = parseInt(userIdRaw, 10);
+    console.log("User ID (parsed):", userId);
+
+    if (isNaN(userId)) {
+        alert("Error: User ID is invalid. Please try again.");
+        return;
+    }
+
+    // Confirm reject action
+    if (confirm("Are you sure you want to reject this applicant? This action cannot be undone.")) {
+        fetch('/hr/applicant-tracker-jobposition/P1HRFailed', {
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId }), // Only send userId
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Server Response:", data);
+
+            if (data.success) {
+                const modal = document.getElementById('hrInitialScreeningModalHtml');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+                alert("Successfully updated applicant status to P1 - HR FAILED!");
+                location.reload(); // Reload the page to reflect the changes
+            } else {
+                alert("Error updating applicant status: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Fetch Error:", error);
+            alert("Failed to update applicant status.");
+        });
+    }
+}
 
 </script>
 

@@ -1330,6 +1330,27 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
             res.redirect('/staff/login');
         }
     },
+    
+    updateStatusToP1HRFailed: async function(req, res) {
+        const { userId } = req.body; // Only get userId from request body
+    
+        try {
+            // No need to update initial screening assessment for rejection
+            // Just update the applicant status directly
+    
+            // Update `applicantaccounts` using `userId`
+            const { error: statusError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: "P1 - HR FAILED" })
+                .eq('userId', userId);
+            
+            if (statusError) throw statusError;
+    
+            res.json({ success: true, message: "Applicant status updated to P1 - HR FAILED successfully.", userId });
+        } catch (error) {
+            res.json({ success: false, message: error.message });
+        }
+    },
 
     getViewMRF: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
