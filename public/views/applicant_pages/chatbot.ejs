@@ -6,6 +6,22 @@
     <title>Chatbot - Online Applicant Screening</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
     <style>
+
+.job-button.calendly-button {
+    background-color: #07ACB9;
+    color: white;
+    font-weight: bold;
+    padding: 12px 20px;
+    border-radius: 24px;
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+.job-button.calendly-button:hover {
+    background-color: #059DAF;
+    transform: scale(1.1);
+}
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f0f4f7;
@@ -475,7 +491,117 @@
     document.addEventListener("DOMContentLoaded", function() {
         console.log("✅ [Chatbot] Page loaded. Initializing chat...");
 
-        loadChatHistory();
+         // Check if returning from calendly
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromCalendly = urlParams.get('from') === 'calendly';
+    const interviewScheduled = localStorage.getItem('interviewScheduled') === 'true';
+    
+    // Clear the localStorage flag if we're using it
+    if (interviewScheduled) {
+        localStorage.removeItem('interviewScheduled');
+    }
+
+    loadChatHistory();
+
+// Handle returning from Calendly scheduling
+if (fromCalendly || interviewScheduled) {
+    console.log("✅ [Chatbot] User returned from Calendly");
+    
+    // Check if this is a P2 interview by examining the URL or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const isP2Interview = urlParams.get('stage') === 'P2' || localStorage.getItem('interviewStage') === 'P2';
+    
+    console.log(`✅ [Chatbot] Interview stage from params: ${isP2Interview ? 'P2' : 'P1'}`);
+    
+    // Wait a moment for chat history to load before adding the thank you message
+    setTimeout(async () => {
+        let thankYouMessage;
+        
+        // Check if this was a P2 interview
+        if (isP2Interview) {
+            console.log("✅ [Chatbot] Final interview scheduled for P2 PASSED applicant");
+            
+            thankYouMessage = {
+                text: "Thank you for scheduling your final interview! We've sent a confirmation to your email. We look forward to discussing your potential role at Prime Infrastructure in more detail.",
+                applicantStage: "P3 - Awaiting for Line Manager Evaluation"
+            };
+            
+            // Update applicant status in the database using a direct API call
+                // This ensures we're not relying on session data which might be inconsistent
+                try {
+                    const response = await fetch("/update-applicant-status", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            userId: userId,
+                            status: "P3 - Awaiting for Line Manager Evaluation"
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('✅ [Chatbot] Applicant status successfully updated to P3 - Awaiting for Line Manager Evaluation');
+                    } else {
+                        console.error('❌ [Chatbot] Error updating applicant status:', result.error);
+                    }
+                } catch (error) {
+                    console.error('❌ [Chatbot] Error updating applicant status:', error);
+                }
+            } else {
+                // For P1 PASSED applicants
+                console.log("✅ [Chatbot] First interview scheduled for P1 PASSED applicant");
+                
+                thankYouMessage = {
+                    text: "Thank you for scheduling your interview! We've sent a confirmation to your email. Looking forward to meeting with you soon!",
+                    applicantStage: "P2 - Awaiting for HR Evaluation"
+                };
+                
+                // Use the same update endpoint for consistency
+                try {
+                    const response = await fetch("/update-applicant-status", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            userId: userId,
+                            status: "P2 - Awaiting for HR Evaluation"
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('✅ [Chatbot] Applicant status successfully updated to P2 - Awaiting for HR Evaluation');
+                    } else {
+                        console.error('❌ [Chatbot] Error updating applicant status:', result.error);
+                    }
+                } catch (error) {
+                    console.error('❌ [Chatbot] Error updating applicant status:', error);
+                }
+            }
+            
+            // Display the message
+            displayBotResponse(thankYouMessage);
+            
+            // Save the thank you message to chat history
+            sendMessageToServer(null, thankYouMessage);
+            
+            // Clear localStorage items to prevent issues on page refresh
+            localStorage.removeItem('interviewStage');
+            localStorage.removeItem('interviewScheduled');
+        }, 1000);
+        
+        // Remove the parameters from URL to prevent showing message on page refresh
+        if (fromCalendly) {
+            const url = new URL(window.location);
+            url.searchParams.delete('from');
+            url.searchParams.delete('stage');
+            window.history.replaceState({}, '', url);
+        }
+    }
+        //loadChatHistory();
 
         // Event listeners for input
         document.getElementById("send-button").addEventListener("click", handleUserInput);
@@ -510,6 +636,48 @@
             });
         });
     });
+
+    // Added support for sending a predefined message (for the thank you message)
+async function sendMessageToServer(userInput, predefinedMessage = null) {
+    try {
+        const payload = predefinedMessage 
+            ? { predefinedMessage } // Send the predefined message
+            : { message: userInput }; // Send a user message
+            
+        const response = await fetch("/chatbothome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) throw new Error("Failed to send message");
+
+        const data = await response.json();
+        console.log("Response from server:", data);
+        
+        // Hide typing indicator
+        showTypingIndicator(false);
+
+        // We don't need to display the response if it was a predefined message
+        // since we already displayed it before sending it to the server
+        if (!predefinedMessage && data.response) {
+            // Check if response contains applicantStage for stepper update
+            if (data.response && data.response.applicantStage) {
+                updateStepper(data.response.applicantStage);
+            }
+            displayBotResponse(data.response);
+        }
+        
+        return data;
+    } catch (error) {
+        console.error("Error sending message:", error);
+        showTypingIndicator(false);
+        if (!predefinedMessage) {
+            // Only show error if this was a user message
+            addMessage("Bot", "There was an error sending your message. Please try again.");
+        }
+    }
+}
 
     // Update stepper function
     function updateStepper(stage) {
@@ -594,7 +762,7 @@
         // Show typing indicator
         showTypingIndicator(true);
         
-        sendMessage(userInput);
+        sendMessageToServer(userInput);
     }
 
     async function sendMessage(message) {
@@ -781,58 +949,168 @@
     }
 
     function displayBotResponse(response) {
-        console.log("Bot response:", response);
-        const chatMessages = document.getElementById("chat-messages");
+    console.log("Bot response:", response);
+    const chatMessages = document.getElementById("chat-messages");
 
-        if (typeof response === "object" && response.text) {
-            addMessage("Bot", response.text);
-            
-            // If this is the first screening question, update stepper
-            if (response.text.includes("would you like to proceed") || 
-                response.text.includes("Do you have a degree") ||
-                response.text.includes("Do you have experience")) {
-                updateStepper('screening_questions');
-            }
-            
-            // If this involves resume upload, update stepper
-            if (response.text.includes("upload your resume") || 
-                response.text.includes("marks the end of the initial screening")) {
-                updateStepper('resume_upload');
-            }
-
-            if (response.buttons && response.buttons.length) {
-                const buttonContainer = document.createElement('div');
-                buttonContainer.classList.add('button-container');
-                
-                response.buttons.forEach((button) => {
-                    const btn = document.createElement("button");
-                    btn.innerText = button.text;
-                    
-                    if (button.type === "file_upload") {
-                        btn.classList.add("file-upload-button");
-                        btn.innerHTML = `<i class="fas fa-file-upload"></i> ${button.text}`;
-                        btn.onclick = () => document.getElementById("fileUpload").click();
-                    } else {
-                        btn.classList.add("job-button");
-                        btn.onclick = async () => {
-                            console.log("Button clicked:", button.text);
-                            addMessage("You", button.text);
-                            showTypingIndicator(true);
-                            await sendMessage(button.text);
-                        };
-                    }
-
-                    buttonContainer.appendChild(btn);
-                });
-                
-                chatMessages.appendChild(buttonContainer);
-            }
-        } else {
-            addMessage("Bot", response);
+    if (typeof response === "object" && response.text) {
+        addMessage("Bot", response.text);
+        
+        // If this is the first screening question, update stepper
+        if (response.text.includes("would you like to proceed") || 
+            response.text.includes("Do you have a degree") ||
+            response.text.includes("Do you have experience")) {
+            updateStepper('screening_questions');
+        }
+        
+        // If this involves resume upload, update stepper
+        if (response.text.includes("upload your resume") || 
+            response.text.includes("marks the end of the initial screening")) {
+            updateStepper('resume_upload');
         }
 
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        // Handle Calendly embed
+        if (response.calendlyEmbed) {
+            // Create a container for the Calendly widget
+            const calendlyContainer = document.createElement('div');
+            calendlyContainer.classList.add('calendly-container');
+            calendlyContainer.style.width = '100%';
+            calendlyContainer.style.height = '630px';
+            calendlyContainer.style.marginTop = '15px';
+            calendlyContainer.style.marginBottom = '15px';
+            calendlyContainer.style.borderRadius = '10px';
+            calendlyContainer.style.overflow = 'hidden';
+            calendlyContainer.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+            
+            // Add the Calendly inline widget
+            const calendlyInline = document.createElement('div');
+            calendlyInline.classList.add('calendly-inline-widget');
+            calendlyInline.setAttribute('data-url', 'https://calendly.com/your-calendly-url');
+            calendlyInline.style.minWidth = '320px';
+            calendlyInline.style.height = '630px';
+            
+            calendlyContainer.appendChild(calendlyInline);
+            chatMessages.appendChild(calendlyContainer);
+            
+            // Load the Calendly script
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = 'https://assets.calendly.com/assets/external/widget.js';
+            script.async = true;
+            document.head.appendChild(script);
+        }
+
+        if (response.buttons && response.buttons.length) {
+            const buttonContainer = document.createElement('div');
+            buttonContainer.classList.add('button-container');
+            
+            response.buttons.forEach((button) => {
+                const btn = document.createElement("button");
+                btn.innerText = button.text;
+                
+                if (button.type === "file_upload") {
+                    btn.classList.add("file-upload-button");
+                    btn.innerHTML = `<i class="fas fa-file-upload"></i> ${button.text}`;
+                    btn.onclick = () => document.getElementById("fileUpload").click();
+                } else if (button.url) {
+                    // Handle URL buttons (like Calendly link)
+                    btn.classList.add("job-button", "calendly-button");  // Add the calendly-button class
+                    btn.style.backgroundColor = "#07ACB9";
+                    btn.style.color = "white";
+                    btn.innerHTML = `<i class="fas fa-calendar-alt"></i> ${button.text}`;
+                    btn.onclick = () => window.location.href = button.url;
+                } else {
+                    btn.classList.add("job-button");
+                    btn.onclick = async () => {
+                        console.log("Button clicked:", button.text);
+                        addMessage("You", button.text);
+                        showTypingIndicator(true);
+                        await sendMessage(button.text);
+                    };
+                }
+
+                buttonContainer.appendChild(btn);
+            });
+            
+            chatMessages.appendChild(buttonContainer);
+        }
+        
+        // Handle nextMessage if it exists (for follow-up messages like Calendly link)
+        if (response.nextMessage) {
+            // Add a slight delay to make it feel more natural
+            setTimeout(() => {
+                addMessage("Bot", response.nextMessage.text);
+                
+                // Handle Calendly embed in nextMessage
+                if (response.nextMessage.calendlyEmbed) {
+                    // Create a container for the Calendly widget
+                    const calendlyContainer = document.createElement('div');
+                    calendlyContainer.classList.add('calendly-container');
+                    calendlyContainer.style.width = '100%';
+                    calendlyContainer.style.height = '630px';
+                    calendlyContainer.style.marginTop = '15px';
+                    calendlyContainer.style.marginBottom = '15px';
+                    calendlyContainer.style.borderRadius = '10px';
+                    calendlyContainer.style.overflow = 'hidden';
+                    calendlyContainer.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                    
+                    // Add the Calendly inline widget
+                    const calendlyInline = document.createElement('div');
+                    calendlyInline.classList.add('calendly-inline-widget');
+                    calendlyInline.setAttribute('data-url', 'https://calendly.com/your-calendly-url');
+                    calendlyInline.style.minWidth = '320px';
+                    calendlyInline.style.height = '630px';
+                    
+                    calendlyContainer.appendChild(calendlyInline);
+                    chatMessages.appendChild(calendlyContainer);
+                    
+                    // Load the Calendly script
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.src = 'https://assets.calendly.com/assets/external/widget.js';
+                    script.async = true;
+                    document.head.appendChild(script);
+                }
+                
+                if (response.nextMessage.buttons && response.nextMessage.buttons.length) {
+                    const nextButtonContainer = document.createElement('div');
+                    nextButtonContainer.classList.add('button-container');
+                    
+                    response.nextMessage.buttons.forEach((button) => {
+                        const btn = document.createElement("button");
+                        btn.innerText = button.text;
+                        
+                        if (button.url) {
+                            // Style URL buttons differently
+                            btn.classList.add("job-button", "calendly-button");  // Also add the calendly-button class here
+                            btn.style.backgroundColor = "#07ACB9";
+                            btn.style.color = "white";
+                            btn.innerHTML = `<i class="fas fa-calendar-alt"></i> ${button.text}`;
+                            btn.onclick = () => window.location.href = button.url;
+                        } else {
+                            btn.classList.add("job-button");
+                            btn.onclick = async () => {
+                                console.log("Button clicked:", button.text);
+                                addMessage("You", button.text);
+                                showTypingIndicator(true);
+                                await sendMessage(button.text);
+                            };
+                        }
+                        
+                        nextButtonContainer.appendChild(btn);
+                    });
+                    
+                    chatMessages.appendChild(nextButtonContainer);
+                }
+                
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 1000); // 1 second delay
+        }
+    } else {
+        addMessage("Bot", response);
     }
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
     
     function showTypingIndicator(show) {
         const typingIndicator = document.getElementById('typing-indicator');

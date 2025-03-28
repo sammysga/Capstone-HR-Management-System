@@ -19,6 +19,7 @@ router.post('/applicant/signup', applicantController.handleRegisterPage);
 router.get('/applicant/login', applicantController.getApplicantLogin);
 router.post('/applicant/login', applicantController.handleLoginSubmit);
 router.get('/applicant/schedule-interview', applicantController.getCalendly);
+router.post('/update-applicant-status', applicantController.updateApplicantStatus);
 
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
@@ -55,7 +56,9 @@ router.post('/hr/api/departments', hrController.addNewDepartment);
 router.post('/hr/api/job-titles', hrController.addNewJobTitle);
 router.post('/hr/api/add-staff', hrController.addNewStaff);
 router.put('/hr/api/update-leavetypes/:leaveTypeId', hrController.updateLeaveTypes); // Ensure leaveTypeId is included in the URL
-
+router.post('/hr/reject-applicant', hrController.rejectApplicant);
+router.post('/hr/pass-applicant', hrController.passApplicant);
+router.get('/hr/view-evaluation/:applicantId', hrController.viewEvaluation);
 
 router.get('/hr/useraccount', hrController.getUserAccount);
 router.post('/hr/update-info', hrController.updateUserInfo);
