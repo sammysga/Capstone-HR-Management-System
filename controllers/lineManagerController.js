@@ -510,6 +510,8 @@ const lineManagerController = {
             return res.status(500).json({ success: false, message: 'Error fetching leave request.' });
         }
     },
+
+    
     
         
     updateLeaveRequest: async function(req, res) {
@@ -1256,29 +1258,1010 @@ updatePersUserInfo: async function(req, res) {
         }
     },
 
-    getEvaluationForm: function(req, res) {
-        if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            const applicantId = req.params.applicantId; // Extract applicantId from URL
-    
-            // Debug log to verify applicantId is being received
-            console.log('Received applicantId:', applicantId);
-    
-            // Ensure applicantId is valid before rendering
-            if (!applicantId) {
+    // Updated getEvaluationForm function for lineManagerController.js
+
+// Updated getEvaluationForm function with better parameter handling and debugging
+getEvaluationForm: async function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'Line Manager') {
+        try {
+            // Extract the applicantId from the URL parameters 
+            const applicantId = req.params.applicantId;
+            
+            // Log all parameters for debugging
+            console.log('All route parameters:', req.params);
+            console.log('All query parameters:', req.query);
+            console.log('Extracted applicantId:', applicantId);
+            
+            // Check if applicantId is valid
+            if (!applicantId || applicantId === ':applicantId') {
+                console.error('Invalid applicantId provided:', applicantId);
                 req.flash('errors', { message: 'Invalid Applicant ID.' });
-                return res.redirect('/linemanager/dashboard'); // Redirect to a safe page
+                return res.redirect('/linemanager/dashboard');
             }
-    
-            // Make sure you're passing the correct template path
-            return res.render('staffpages/linemanager_pages/interview-form-linemanager', {
-                applicantId: applicantId, // Pass applicantId to EJS template
-                user: req.session.user // Also pass user session data for the template
+            
+            console.log('Attempting to fetch applicant with ID:', applicantId);
+            
+            // Fetch applicant data from the database
+            const { data: applicant, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    userId,
+                    firstName,
+                    lastName,
+                    phoneNo,
+                    applicantStatus,
+                    departmentId,
+                    jobId
+                `)
+                .eq('applicantId', applicantId)
+                .single();
+                
+            if (applicantError) {
+                console.error('Error fetching applicant:', applicantError);
+                req.flash('errors', { message: 'Error fetching applicant data.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+            
+            if (!applicant) {
+                console.error('No applicant found with ID:', applicantId);
+                req.flash('errors', { message: 'Applicant not found.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+            
+            console.log('Successfully fetched applicant:', applicant);
+            
+            // Fetch user email if possible
+            const { data: userData, error: userError } = await supabase
+                .from('useraccounts')
+                .select('userEmail')
+                .eq('userId', applicant.userId)
+                .single();
+                
+            if (!userError && userData) {
+                applicant.email = userData.userEmail;
+            } else {
+                applicant.email = 'Email not available';
+            }
+            
+            // Fetch job title
+            const { data: jobData, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobTitle')
+                .eq('jobId', applicant.jobId)
+                .single();
+                
+            if (!jobError && jobData) {
+                applicant.jobTitle = jobData.jobTitle;
+            } else {
+                applicant.jobTitle = 'Job title not available';
+            }
+            
+            // Fetch department name
+            const { data: deptData, error: deptError } = await supabase
+                .from('departments')
+                .select('deptName')
+                .eq('departmentId', applicant.departmentId)
+                .single();
+                
+            if (!deptError && deptData) {
+                applicant.department = deptData.deptName;
+            } else {
+                applicant.department = 'Department not available';
+            }
+            
+            console.log('Rendering interview form with data:', { 
+                applicantId: applicant.applicantId,
+                name: `${applicant.firstName} ${applicant.lastName}`,
+                email: applicant.email
             });
-        } 
+        
+            // Render the interview form with the applicant data
+            return res.render('staffpages/linemanager_pages/interview-form-linemanager', {
+                applicant: applicant,
+                user: req.session.user
+            });
+        } catch (error) {
+            console.error('Error in getEvaluationForm:', error);
+            req.flash('errors', { message: 'An error occurred while processing your request.' });
+            return res.redirect('/linemanager/dashboard');
+        }
+    } 
+
+    req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+    return res.redirect('/staff/login');
+},
+    // Add this function to your lineManagerController.js file
+
+    // Add this function to your lineManagerController.js file
+
+// Add this function to your lineManagerController.js file
+
+// Add this function to your lineManagerController.js file
+
+// Add this function to your lineManagerController.js file
+
+// Add this function to your lineManagerController.js file
+
+submitInterviewEvaluation: async function(req, res) {
+    try {
+        const applicantId = req.params.applicantId || req.body.applicantId;
+        const lineManagerUserId = req.session.user.userId;
+        
+        console.log('Submitting interview evaluation for applicant ID:', applicantId);
+        
+        if (!applicantId) {
+            console.error('Missing applicant ID');
+            req.flash('errors', { message: 'Applicant ID is required' });
+            return res.redirect('/linemanager/dashboard');
+        }
+        
+        // First, check if there's an existing evaluation in the database
+        const { data: existingEvaluation, error: evalCheckError } = await supabase
+            .from('applicant_panelscreening_assessment')
+            .select('panelInterviewId')
+            .eq('applicantUserId', applicantId)
+            .limit(1);
+            
+        if (existingEvaluation && existingEvaluation.length > 0) {
+            console.log('An evaluation already exists for this applicant');
+            
+            // Update the applicant status regardless if an evaluation exists
+            const { error: statusUpdateError } = await supabase
+                .from('applicantaccounts')
+                .update({ 
+                    applicantStatus: 'P3 - Line Manager Evaluation Accomplished',
+                    lineManagerInterviewCompleted: true,
+                    lineManagerInterviewDate: req.body.interviewDate || new Date().toISOString().split('T')[0]
+                })
+                .eq('applicantId', applicantId);
+                
+            if (statusUpdateError) {
+                console.error('Error updating applicant status:', statusUpdateError);
+                req.flash('errors', { message: 'Error updating applicant status' });
+                return res.redirect('/linemanager/applicant-tracker');
+            }
+            
+            req.flash('success', 'Applicant status updated to "P3 - Line Manager Evaluation Accomplished".');
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Calculate total rating from individual ratings
+        const personalReportRating = parseInt(req.body.personalReportRating || 0);
+        const functionalJobRating = parseInt(req.body.functionalJobRating || 0);
+        const instructionsRating = parseInt(req.body.instructionsRating || 0);
+        const peopleRating = parseInt(req.body.peopleRating || 0);
+        const writingRating = parseInt(req.body.writingRating || 0);
+        
+        const totalAssessmentRating = 
+            personalReportRating + 
+            functionalJobRating + 
+            instructionsRating + 
+            peopleRating + 
+            writingRating;
+            
+        // Get the staffId for the current line manager
+        const { data: staffData, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('staffId')
+            .eq('userId', lineManagerUserId)
+            .single();
+            
+        if (staffError || !staffData) {
+            console.error('Line manager not found in staffaccounts:', staffError);
+            req.flash('errors', { message: 'Your account is not properly set up.' });
+            return res.redirect('/linemanager/dashboard');
+        }
+        
+        const managerStaffId = staffData.staffId;
+        
+        // Compile panel form data as a JSON object
+        const panelFormData = JSON.stringify({
+            interviewType: req.body.interviewType,
+            interviewDate: req.body.interviewDate,
+            personalReport: {
+                careerGoals: req.body.careerGoals,
+                resumeWalkthrough: req.body.resumeWalkthrough,
+                rating: personalReportRating
+            },
+            functionalJob: {
+                situation: req.body.jobSituation,
+                action: req.body.jobAction,
+                result: req.body.jobResult,
+                rating: functionalJobRating
+            },
+            instructions: {
+                situation: req.body.instructionsSituation,
+                action: req.body.instructionsAction,
+                result: req.body.instructionsResult,
+                rating: instructionsRating
+            },
+            people: {
+                situation: req.body.peopleSituation,
+                action: req.body.peopleAction,
+                result: req.body.peopleResult,
+                rating: peopleRating
+            },
+            writing: {
+                situation: req.body.writingSituation,
+                action: req.body.writingAction,
+                result: req.body.writingResult,
+                rating: writingRating
+            },
+            overall: {
+                equipmentTools: req.body.equipmentTools,
+                questionsCompany: req.body.questionsCompany,
+                overallRating: req.body.overallRating,
+                recommendation: req.body.recommendation
+            }
+        });
+        
+        // Insert and update operations in a transaction-like approach
+        try {
+            // First insert the evaluation data
+            const { data: insertData, error: insertError } = await supabase
+                .from('applicant_panelscreening_assessment')
+                .insert({
+                    applicantUserId: applicantId,
+                    managerUserId: managerStaffId,
+                    jobId: req.body.jobId, // Make sure this is included in your form
+                    interviewDate: req.body.interviewDate,
+                    longTermGoalsRapport: req.body.careerGoals,
+                    strengthsRapport: req.body.resumeWalkthrough,
+                    panelFormData: panelFormData,
+                    totalAssessmentRating: totalAssessmentRating,
+                    equipmentToolsSoftware: req.body.equipmentTools,
+                    remarks: req.body.remarksByInterviewer,
+                    conclusion: req.body.recommendation
+                });
+            
+            if (insertError) {
+                console.error('Error inserting interview evaluation:', insertError);
+                req.flash('errors', { message: 'Error saving interview evaluation' });
+                return res.redirect('/linemanager/dashboard');
+            }
+            
+            console.log('Successfully inserted interview evaluation. Now updating applicant status...');
+            
+            // Then update the applicant status - IMPORTANT: This is the critical part
+            const { data: updateData, error: updateError } = await supabase
+                .from('applicantaccounts')
+                .update({ 
+                    applicantStatus: 'P3 - Line Manager Evaluation Accomplished',
+                    lineManagerInterviewCompleted: true,
+                    lineManagerInterviewDate: req.body.interviewDate
+                })
+                .eq('applicantId', applicantId); // Make sure we're using the correct ID field here
+                
+            if (updateError) {
+                console.error('Error updating applicant status:', updateError);
+                req.flash('errors', { message: 'The evaluation was saved, but there was an error updating the applicant status.' });
+                return res.redirect('/linemanager/applicant-tracker');
+            }
+            
+            console.log('Successfully updated applicant status to P3 - Line Manager Evaluation Accomplished');
+            
+            req.flash('success', 'Interview evaluation submitted successfully! The applicant status has been updated.');
+            return res.redirect('/linemanager/applicant-tracker');
+        } catch (error) {
+            console.error('Error during interview evaluation submission:', error);
+            req.flash('errors', { message: 'An error occurred during submission. Please try again.' });
+            return res.redirect('/linemanager/dashboard');
+        }
+        
+    } catch (error) {
+        console.error('Error in submitInterviewEvaluation:', error);
+        req.flash('errors', { message: 'An error occurred while processing the interview evaluation' });
+        return res.redirect('/linemanager/dashboard');
+    }
+},
+
+/**
+ * Sends a job offer to an applicant
+ * Updates the applicant status and sends a notification
+ */
+sendJobOffer: async function(req, res) {
+    try {
+        const { applicantId, position, department, startDate, employmentType, additionalMessage } = req.body;
+        
+        if (!applicantId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Applicant ID is required' 
+            });
+        }
+        
+        // Get the applicant information (to get userId for notification)
+        const { data: applicant, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select('userId, firstName, lastName, userEmail, phoneNo')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (applicantError) {
+            console.error('Error fetching applicant details:', applicantError);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching applicant details' 
+            });
+        }
+        
+        // Save the job offer details in the database
+        const { data: jobOfferData, error: jobOfferError } = await supabase
+            .from('job_offers')
+            .insert({
+                applicantId,
+                userId: applicant.userId,
+                position,
+                department,
+                startDate,
+                employmentType,
+                additionalDetails: additionalMessage,
+                status: 'Sent',
+                sentBy: req.session.user.userId,
+                sentDate: new Date().toISOString()
+            })
+            .select('jobOfferId');
+            
+        if (jobOfferError) {
+            console.error('Error saving job offer:', jobOfferError);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error saving job offer details' 
+            });
+        }
+        
+        // Update the applicant status to "Job Offer Sent"
+        const { error: statusUpdateError } = await supabase
+            .from('applicantaccounts')
+            .update({ 
+                applicantStatus: 'P3 - PASSED - Job Offer Sent',
+                jobOfferSent: true,
+                jobOfferSentDate: new Date().toISOString()
+            })
+            .eq('applicantId', applicantId);
+            
+        if (statusUpdateError) {
+            console.error('Error updating applicant status:', statusUpdateError);
+            // Continue despite the error to ensure notification is sent
+        }
+        
+        // Send notification to the applicant via chatbot
+        try {
+            const congratsMessage = `Congratulations! We are pleased to offer you the position of ${position} in our ${department} department. Please check your email for more details about this offer.`;
+            
+            await supabase
+                .from('chatbot_history')
+                .insert({
+                    userId: applicant.userId,
+                    message: JSON.stringify({ text: congratsMessage }),
+                    sender: 'bot',
+                    timestamp: new Date().toISOString(),
+                    applicantStage: 'P3 - PASSED - Job Offer Sent'
+                });
+        } catch (chatError) {
+            console.error('Error sending notification to applicant:', chatError);
+            // Continue despite notification error
+        }
+        
+        // If there's an email function available, we can send the email here
+        // For now, we'll just log it
+        console.log(`Job offer email would be sent to ${applicant.userEmail} for ${position} position`);
+        
+        return res.status(200).json({
+            success: true,
+            message: 'Job offer sent successfully',
+            jobOfferId: jobOfferData[0].jobOfferId
+        });
+        
+    } catch (error) {
+        console.error('Error in sendJobOffer:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while sending job offer',
+            error: error.message
+        });
+    }
+},
+
+/**
+ * Gets the job offer details
+ */
+getJobOfferDetails: async function(req, res) {
+    try {
+        const { jobOfferId } = req.params;
+        
+        if (!jobOfferId) {
+            req.flash('errors', { message: 'Job Offer ID is required' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Fetch the job offer details
+        const { data: jobOffer, error: jobOfferError } = await supabase
+            .from('job_offers')
+            .select(`
+                jobOfferId,
+                applicantId,
+                userId,
+                position,
+                department,
+                startDate,
+                employmentType,
+                additionalDetails,
+                status,
+                sentDate,
+                responseDate,
+                acceptanceStatus
+            `)
+            .eq('jobOfferId', jobOfferId)
+            .single();
+            
+        if (jobOfferError) {
+            console.error('Error fetching job offer details:', jobOfferError);
+            req.flash('errors', { message: 'Error fetching job offer details' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Fetch applicant details
+        const { data: applicant, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                firstName,
+                lastName,
+                userEmail,
+                phoneNo
+            `)
+            .eq('applicantId', jobOffer.applicantId)
+            .single();
+            
+        if (applicantError) {
+            console.error('Error fetching applicant details:', applicantError);
+            req.flash('errors', { message: 'Error fetching applicant details' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Combine data for display
+        const jobOfferDetails = {
+            ...jobOffer,
+            applicantName: `${applicant.firstName} ${applicant.lastName}`,
+            applicantEmail: applicant.userEmail,
+            applicantPhone: applicant.phoneNo,
+            formattedSentDate: new Date(jobOffer.sentDate).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }),
+            formattedResponseDate: jobOffer.responseDate ? new Date(jobOffer.responseDate).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }) : 'Pending Response',
+            formattedStartDate: new Date(jobOffer.startDate).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            })
+        };
+        
+        // Render job offer details view
+        res.render('staffpages/linemanager_pages/job-offer-details', {
+            jobOffer: jobOfferDetails
+        });
+        
+    } catch (error) {
+        console.error('Error in getJobOfferDetails:', error);
+        req.flash('errors', { message: 'An error occurred while retrieving job offer details' });
+        return res.redirect('/linemanager/applicant-tracker');
+    }
+},
+
+// View the interview evaluation form
+getViewInterviewForm: async function(req, res) {
+    try {
+        const applicantId = req.params.applicantId;
+        
+        if (!applicantId) {
+            req.flash('errors', { message: 'Applicant ID is required' });
+            return res.redirect('/linemanager/dashboard');
+        }
+        
+        // Get the applicant details first
+        const { data: applicant, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                userId,
+                firstName,
+                lastName,
+                phoneNo,
+                applicantStatus,
+                departmentId,
+                jobId
+            `)
+            .eq('applicantId', applicantId)
+            .single();
+        
+        if (applicantError || !applicant) {
+            console.error('Error fetching applicant:', applicantError);
+            req.flash('errors', { message: 'Error fetching applicant data' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Get applicant email
+        const { data: userData, error: userError } = await supabase
+            .from('useraccounts')
+            .select('userEmail')
+            .eq('userId', applicant.userId)
+            .single();
+            
+        // Get job and department info
+        const { data: jobData, error: jobError } = await supabase
+            .from('jobpositions')
+            .select('jobTitle')
+            .eq('jobId', applicant.jobId)
+            .single();
+            
+        const { data: deptData, error: deptError } = await supabase
+            .from('departments')
+            .select('deptName')
+            .eq('departmentId', applicant.departmentId)
+            .single();
+        
+        // Get the interview evaluation data
+        const { data: interviewData, error: interviewError } = await supabase
+            .from('applicant_panelscreening_assessment')
+            .select('*')
+            .eq('applicantUserId', applicantId)
+            .order('interviewDate', { ascending: false })
+            .limit(1)
+            .single();
+            
+        if (interviewError || !interviewData) {
+            console.error('Error fetching interview data:', interviewError);
+            req.flash('errors', { message: 'Interview evaluation not found' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Enhance the applicant data with additional information
+        const enhancedApplicant = {
+            ...applicant,
+            email: userData?.userEmail || 'N/A',
+            jobTitle: jobData?.jobTitle || 'N/A',
+            department: deptData?.deptName || 'N/A'
+        };
+        
+        // Parse the JSON data
+        const panelFormData = interviewData.panelFormData ? JSON.parse(interviewData.panelFormData) : {};
+        
+        // Prepare the full evaluation data for the view
+        const evaluation = {
+            applicant: enhancedApplicant,
+            interviewDate: interviewData.interviewDate,
+            interviewType: panelFormData.interviewType || 'Not specified',
+            personalReport: panelFormData.personalReport || { 
+                careerGoals: 'Not provided',
+                resumeWalkthrough: 'Not provided',
+                rating: 0
+            },
+            functionalJob: panelFormData.functionalJob || {
+                situation: 'Not provided',
+                action: 'Not provided',
+                result: 'Not provided',
+                rating: 0
+            },
+            instructions: panelFormData.instructions || {
+                situation: 'Not provided',
+                action: 'Not provided',
+                result: 'Not provided',
+                rating: 0
+            },
+            people: panelFormData.people || {
+                situation: 'Not provided',
+                action: 'Not provided',
+                result: 'Not provided',
+                rating: 0
+            },
+            writing: panelFormData.writing || {
+                situation: 'Not provided',
+                action: 'Not provided',
+                result: 'Not provided',
+                rating: 0
+            },
+            overall: panelFormData.overall || {
+                overallRating: 0,
+                recommendation: 'Not provided',
+                questionsCompany: 'Not provided'
+            },
+            totalAssessmentRating: interviewData.totalAssessmentRating || 0,
+            equipmentToolsSoftware: interviewData.equipmentToolsSoftware || 'Not provided',
+            remarks: interviewData.remarks || 'No remarks provided'
+        };
+        
+        // Render the view with the evaluation data
+        res.render('staffpages/linemanager_pages/view-interview-form', { evaluation });
+        
+    } catch (error) {
+        console.error('Error in getViewInterviewForm:', error);
+        req.flash('errors', { message: 'An error occurred while retrieving the interview evaluation' });
+        res.redirect('/linemanager/dashboard');
+    }
+},
+
+// Pass the applicant after reviewing evaluation
+passApplicant: async function(req, res) {
+    try {
+        const applicantId = req.params.applicantId;
+        
+        if (!applicantId) {
+            req.flash('errors', { message: 'Applicant ID is required' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Update the applicant status to P3 - PASSED (removed updatedAt)
+        const { error } = await supabase
+            .from('applicantaccounts')
+            .update({ 
+                applicantStatus: 'P3 - PASSED'
+            })
+            .eq('applicantId', applicantId);
+            
+        if (error) {
+            console.error('Error updating applicant status:', error);
+            req.flash('errors', { message: 'Error updating applicant status' });
+            return res.redirect(`/linemanager/view-interview-form/${applicantId}`);
+        }
+        
+        // Get applicant's userId for notification
+        const { data: applicant, error: fetchError } = await supabase
+            .from('applicantaccounts')
+            .select('userId')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (!fetchError && applicant) {
+            // Send notification to applicant via chatbot if available
+            try {
+                await supabase
+                    .from('chatbot_history')
+                    .insert({
+                        userId: applicant.userId,
+                        message: JSON.stringify({ 
+                            text: "Congratulations! We are pleased to inform you that you have passed the Line Manager interview. You will be contacted soon with further information about the next steps in the hiring process." 
+                        }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P3 - PASSED'
+                    });
+            } catch (chatError) {
+                console.error('Error sending chat notification:', chatError);
+                // Continue processing even if notification fails
+            }
+        }
+        
+        req.flash('success', 'Applicant has been successfully marked as PASSED!');
+        return res.redirect('/linemanager/applicant-tracker');
+        
+    } catch (error) {
+        console.error('Error in passApplicant:', error);
+        req.flash('errors', { message: 'An error occurred while updating the applicant status' });
+        return res.redirect('/linemanager/applicant-tracker');
+    }
+},
+
+// Reject the applicant after reviewing evaluation
+rejectApplicant: async function(req, res) {
+    try {
+        const applicantId = req.params.applicantId;
+        
+        if (!applicantId) {
+            req.flash('errors', { message: 'Applicant ID is required' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // If this is a form submission with rejection reason
+        let rejectionReason = 'Not a good fit for the position';
+        if (req.method === 'POST' && req.body.rejectionReason) {
+            rejectionReason = req.body.rejectionReason;
+        }
+        
+        // Update the applicant status to P3 - FAILED (removed updatedAt)
+        const { error } = await supabase
+            .from('applicantaccounts')
+            .update({ 
+                applicantStatus: 'P3 - FAILED',
+                rejectionReason: rejectionReason
+            })
+            .eq('applicantId', applicantId);
+            
+        if (error) {
+            console.error('Error updating applicant status:', error);
+            req.flash('errors', { message: 'Error updating applicant status' });
+            return res.redirect(`/linemanager/view-interview-form/${applicantId}`);
+        }
+        
+        // Get applicant's userId for notification
+        const { data: applicant, error: fetchError } = await supabase
+            .from('applicantaccounts')
+            .select('userId')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (!fetchError && applicant) {
+            // Send notification to applicant via chatbot if available
+            try {
+                await supabase
+                    .from('chatbot_history')
+                    .insert({
+                        userId: applicant.userId,
+                        message: JSON.stringify({ 
+                            text: `Thank you for participating in our interview process. After careful consideration, we regret to inform you that we will not be proceeding with your application at this time. Reason: ${rejectionReason}`
+                        }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P3 - FAILED'
+                    });
+            } catch (chatError) {
+                console.error('Error sending chat notification:', chatError);
+                // Continue processing even if notification fails
+            }
+        }
+        
+        req.flash('success', 'Applicant has been marked as REJECTED and notified.');
+        return res.redirect('/linemanager/applicant-tracker');
+        
+    } catch (error) {
+        console.error('Error in rejectApplicant:', error);
+        req.flash('errors', { message: 'An error occurred while updating the applicant status' });
+        return res.redirect('/linemanager/applicant-tracker');
+    }
+},
+
+// Handle API endpoints for pass/reject from the main applicant list
+handlePassApplicant: async function(req, res) {
+    const { applicantId } = req.body;
     
-        req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
-        return res.redirect('/staff/login');
-    },
+    try {
+        if (!applicantId) {
+            return res.status(400).json({ success: false, message: 'Applicant ID is required' });
+        }
+        
+        // Update the applicant status to P3 - PASSED (removed updatedAt)
+        const { error } = await supabase
+            .from('applicantaccounts')
+            .update({ 
+                applicantStatus: 'P3 - PASSED'
+            })
+            .eq('applicantId', applicantId);
+            
+        if (error) {
+            console.error('Error updating applicant status:', error);
+            return res.status(500).json({ success: false, message: 'Error updating applicant status' });
+        }
+        
+        // Notification logic same as in passApplicant method
+        // Get applicant's userId for notification
+        const { data: applicant, error: fetchError } = await supabase
+            .from('applicantaccounts')
+            .select('userId')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (!fetchError && applicant) {
+            // Send notification to applicant via chatbot if available
+            try {
+                await supabase
+                    .from('chatbot_history')
+                    .insert({
+                        userId: applicant.userId,
+                        message: JSON.stringify({ 
+                            text: "Congratulations! We are pleased to inform you that you have passed the Line Manager interview. You will be contacted soon with further information about the next steps in the hiring process." 
+                        }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P3 - PASSED'
+                    });
+            } catch (chatError) {
+                console.error('Error sending chat notification:', chatError);
+                // Continue processing even if notification fails
+            }
+        }
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Applicant has been successfully marked as PASSED!',
+            newStatus: 'P3 - PASSED'
+        });
+        
+    } catch (error) {
+        console.error('Error in handlePassApplicant:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while updating the applicant status'
+        });
+    }
+},
+
+// Handle API endpoints for reject from the main applicant list
+handleRejectApplicant: async function(req, res) {
+    const { applicantId, reason } = req.body;
+    
+    try {
+        if (!applicantId) {
+            return res.status(400).json({ success: false, message: 'Applicant ID is required' });
+        }
+        
+        // Default reason if none provided
+        const rejectionReason = reason || 'Not a good fit for the position';
+        
+        // Update the applicant status to P3 - FAILED (removed updatedAt)
+        const { error } = await supabase
+            .from('applicantaccounts')
+            .update({ 
+                applicantStatus: 'P3 - FAILED',
+                rejectionReason: rejectionReason
+            })
+            .eq('applicantId', applicantId);
+            
+        if (error) {
+            console.error('Error updating applicant status:', error);
+            return res.status(500).json({ success: false, message: 'Error updating applicant status' });
+        }
+        
+        // Notification logic same as in rejectApplicant method
+        // Get applicant's userId for notification
+        const { data: applicant, error: fetchError } = await supabase
+            .from('applicantaccounts')
+            .select('userId')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (!fetchError && applicant) {
+            // Send notification to applicant via chatbot if available
+            try {
+                await supabase
+                    .from('chatbot_history')
+                    .insert({
+                        userId: applicant.userId,
+                        message: JSON.stringify({ 
+                            text: `Thank you for participating in our interview process. After careful consideration, we regret to inform you that we will not be proceeding with your application at this time. Reason: ${rejectionReason}`
+                        }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P3 - FAILED'
+                    });
+            } catch (chatError) {
+                console.error('Error sending chat notification:', chatError);
+                // Continue processing even if notification fails
+            }
+        }
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Applicant has been marked as REJECTED and notified.',
+            newStatus: 'P3 - FAILED'
+        });
+        
+    } catch (error) {
+        console.error('Error in handleRejectApplicant:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while updating the applicant status'
+        });
+    }
+},
+
+getApplicantDetails: async function(req, res) {
+    try {
+        const { applicantId } = req.params;
+        
+        if (!applicantId) {
+            return res.status(400).json({ success: false, message: 'Applicant ID is required' });
+        }
+        
+        // Fetch applicant basic information
+        const { data: applicant, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                userId,
+                firstName,
+                lastName,
+                phoneNo,
+                birthDate,
+                applicantStatus,
+                departmentId,
+                jobId,
+                hrInterviewFormScore,
+                initialScreeningScore,
+                created_at
+            `)
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (applicantError) {
+            console.error('Error fetching applicant:', applicantError);
+            return res.status(500).json({ success: false, message: 'Error fetching applicant details' });
+        }
+        
+        if (!applicant) {
+            return res.status(404).json({ success: false, message: 'Applicant not found' });
+        }
+        
+        // Fetch user email (if available)
+        const { data: userData, error: userError } = await supabase
+            .from('useraccounts')
+            .select('userEmail')
+            .eq('userId', applicant.userId)
+            .single();
+            
+        // Get department name
+        const { data: department, error: departmentError } = await supabase
+            .from('departments')
+            .select('deptName')
+            .eq('departmentId', applicant.departmentId)
+            .single();
+            
+        // Get job title
+        const { data: job, error: jobError } = await supabase
+            .from('jobpositions')
+            .select('jobTitle')
+            .eq('jobId', applicant.jobId)
+            .single();
+            
+        // Fetch screening assessment if available
+        const { data: screening, error: screeningError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select(`
+                initialScreeningId,
+                degreeScore,
+                experienceScore, 
+                certificationScore,
+                hardSkillsScore,
+                softSkillsScore,
+                workSetupScore,
+                availabilityScore,
+                totalScore,
+                resume_url,
+                degree_url,
+                cert_url
+            `)
+            .eq('userId', applicant.userId)
+            .single();
+        
+        // Combine all data
+        const applicantDetails = {
+            ...applicant,
+            email: userData?.userEmail || 'N/A',
+            department: department?.deptName || 'N/A',
+            jobTitle: job?.jobTitle || 'N/A',
+            screening: screening || null,
+            documents: {
+                resume: screening?.resume_url || null,
+                degree: screening?.degree_url || null,
+                certifications: screening?.cert_url || null
+            }
+        };
+        
+        // Return the applicant details
+        return res.status(200).json({ 
+            success: true, 
+            applicant: applicantDetails 
+        });
+        
+    } catch (error) {
+        console.error('Error in getApplicantDetails:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while fetching applicant details',
+            error: error.message
+        });
+    }
+},
+
+
 
     getInterviewFormLinemanager: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Line Manager') {
@@ -1297,6 +2280,312 @@ updatePersUserInfo: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
+
+    // Updated getApplicantDetails function for lineManagerController.js
+
+getApplicantDetails: async function(req, res) {
+    try {
+        const { applicantId } = req.params;
+        console.log('Fetching details for applicantId:', applicantId);
+
+        if (!applicantId) {
+            req.flash('errors', { message: 'Applicant ID is required' });
+            return res.redirect('/linemanager/dashboard');
+        }
+
+        // Fetch basic applicant information
+        const { data: applicant, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                userId,
+                firstName,
+                lastName,
+                phoneNo,
+                birthDate,
+                applicantStatus,
+                departmentId,
+                jobId,
+                hrInterviewFormScore,
+                initialScreeningScore,
+                p2_Approved,
+                p2_hrevalscheduled,
+                created_at
+            `)
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (applicantError) {
+            console.error('Error fetching applicant:', applicantError);
+            req.flash('errors', { message: 'Error fetching applicant details' });
+            return res.redirect('/linemanager/dashboard');
+        }
+        
+        if (!applicant) {
+            req.flash('errors', { message: 'Applicant not found' });
+            return res.redirect('/linemanager/dashboard');
+        }
+        
+        // Fetch user email (if available)
+        const { data: userData, error: userError } = await supabase
+            .from('useraccounts')
+            .select('userEmail')
+            .eq('userId', applicant.userId)
+            .single();
+            
+        // Get department name
+        const { data: department, error: departmentError } = await supabase
+            .from('departments')
+            .select('deptName')
+            .eq('departmentId', applicant.departmentId)
+            .single();
+            
+        // Get job title
+        const { data: job, error: jobError } = await supabase
+            .from('jobpositions')
+            .select('jobTitle')
+            .eq('jobId', applicant.jobId)
+            .single();
+            
+        // Fetch screening assessment if available
+        const { data: screening, error: screeningError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select(`
+                initialScreeningId,
+                degreeScore,
+                experienceScore, 
+                certificationScore,
+                hardSkillsScore,
+                softSkillsScore,
+                workSetupScore,
+                availabilityScore,
+                totalScore,
+                resume_url,
+                degree_url,
+                cert_url
+            `)
+            .eq('userId', applicant.userId)
+            .single();
+        
+        // Fetch interview schedules if available
+        const { data: interviews, error: interviewError } = await supabase
+            .from('interviews')
+            .select('interviewDate, interviewTime, interviewType, interviewStatus')
+            .eq('applicantId', applicantId)
+            .order('interviewDate', { ascending: false });
+
+        if (interviewError) {
+            console.error('Error fetching interview schedules:', interviewError);
+            // Continue processing - interviews are optional
+        }
+
+        // Fetch Line Manager interview form results if available
+        const { data: lineManagerForms, error: lineManagerFormError } = await supabase
+            .from('linemanager_interview_forms')
+            .select('totalRating, remarksByInterviewer, interviewDate')
+            .eq('applicantId', applicantId)
+            .order('interviewDate', { ascending: false });
+
+        if (lineManagerFormError) {
+            console.error('Error fetching line manager interview form:', lineManagerFormError);
+            // Continue processing - line manager assessment is optional
+        }
+
+        // Combine all data into a comprehensive applicant profile
+        const applicantProfile = {
+            ...applicant,
+            email: userData?.userEmail || 'N/A',
+            department: department?.deptName || 'N/A',
+            jobTitle: job?.jobTitle || 'N/A',
+            screening: screening || null,
+            interviews: interviews || [],
+            lineManagerAssessment: lineManagerForms?.length > 0 ? lineManagerForms[0] : null,
+            documents: {
+                resume: screening?.resume_url || null,
+                degree: screening?.degree_url || null,
+                certifications: screening?.cert_url || null
+            }
+        };
+
+        // Render the view with applicant data
+        return res.render('staffpages/linemanager_pages/applicant-profile', {
+            applicant: applicantProfile
+        });
+        
+    } catch (error) {
+        console.error('Error in getApplicantDetails:', error);
+        req.flash('errors', { message: 'An error occurred while fetching applicant details' });
+        return res.redirect('/linemanager/dashboard');
+    }
+},
+
+// Add these functions to your lineManagerController.js to handle applicant approval and rejection
+
+// Handle applicant approval
+approveApplicant: async function(req, res) {
+    try {
+        const { applicantId } = req.body;
+        
+        if (!applicantId) {
+            return res.status(400).json({ success: false, message: 'Applicant ID is required' });
+        }
+        
+        // Get the current status
+        const { data: applicant, error: fetchError } = await supabase
+            .from('applicantaccounts')
+            .select('applicantStatus, userId')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (fetchError) {
+            console.error('Error fetching applicant:', fetchError);
+            return res.status(500).json({ success: false, message: 'Error fetching applicant details' });
+        }
+        
+        // Determine new status based on current status
+        let newStatus;
+        if (applicant.applicantStatus.includes('P1')) {
+            newStatus = 'P1 - PASSED';
+        } else if (applicant.applicantStatus.includes('P3')) {
+            newStatus = 'P3 - PASSED';
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid applicant status for approval action' 
+            });
+        }
+        
+        // Update the applicant status
+        const { error: updateError } = await supabase
+            .from('applicantaccounts')
+            .update({ 
+                applicantStatus: newStatus,
+                lineManagerApproved: true 
+            })
+            .eq('applicantId', applicantId);
+            
+        if (updateError) {
+            console.error('Error updating applicant status:', updateError);
+            return res.status(500).json({ success: false, message: 'Error updating applicant status' });
+        }
+        
+        // Send notification to applicant via chatbot if available
+        try {
+            await supabase
+                .from('chatbot_history')
+                .insert({
+                    userId: applicant.userId,
+                    message: JSON.stringify({ 
+                        text: "Congratulations! Your application has been approved by the Line Manager." 
+                    }),
+                    sender: 'bot',
+                    timestamp: new Date().toISOString(),
+                    applicantStage: newStatus
+                });
+        } catch (chatError) {
+            console.error('Error sending chat notification:', chatError);
+            // Continue processing even if notification fails
+        }
+        
+        return res.json({ 
+            success: true, 
+            message: 'Applicant approved successfully',
+            newStatus
+        });
+        
+    } catch (error) {
+        console.error('Error in approveApplicant:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while processing approval',
+            error: error.message
+        });
+    }
+},
+
+// Handle applicant rejection
+rejectApplicant: async function(req, res) {
+    try {
+        const { applicantId, reason } = req.body;
+        
+        if (!applicantId) {
+            return res.status(400).json({ success: false, message: 'Applicant ID is required' });
+        }
+        
+        // Get the current status
+        const { data: applicant, error: fetchError } = await supabase
+            .from('applicantaccounts')
+            .select('applicantStatus, userId')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (fetchError) {
+            console.error('Error fetching applicant:', fetchError);
+            return res.status(500).json({ success: false, message: 'Error fetching applicant details' });
+        }
+        
+        // Determine new status based on current status
+        let newStatus;
+        if (applicant.applicantStatus.includes('P1')) {
+            newStatus = 'P1 - FAILED';
+        } else if (applicant.applicantStatus.includes('P3')) {
+            newStatus = 'P3 - FAILED';
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid applicant status for rejection action' 
+            });
+        }
+        
+        // Update the applicant status
+        const { error: updateError } = await supabase
+            .from('applicantaccounts')
+            .update({ 
+                applicantStatus: newStatus,
+                lineManagerRejectionReason: reason || 'No reason provided'
+            })
+            .eq('applicantId', applicantId);
+            
+        if (updateError) {
+            console.error('Error updating applicant status:', updateError);
+            return res.status(500).json({ success: false, message: 'Error updating applicant status' });
+        }
+        
+        // Send notification to applicant via chatbot if available
+        try {
+            const rejectionMessage = reason 
+                ? `We regret to inform you that your application has not been successful. Reason: ${reason}`
+                : "We regret to inform you that your application has not been successful at this time.";
+                
+            await supabase
+                .from('chatbot_history')
+                .insert({
+                    userId: applicant.userId,
+                    message: JSON.stringify({ text: rejectionMessage }),
+                    sender: 'bot',
+                    timestamp: new Date().toISOString(),
+                    applicantStage: newStatus
+                });
+        } catch (chatError) {
+            console.error('Error sending chat notification:', chatError);
+            // Continue processing even if notification fails
+        }
+        
+        return res.json({ 
+            success: true, 
+            message: 'Applicant rejected successfully',
+            newStatus
+        });
+        
+    } catch (error) {
+        console.error('Error in rejectApplicant:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while processing rejection',
+            error: error.message
+        });
+    }
+},
     
     // This is the problematic function that needs to be fixed
 getApplicantTracker: async function(req, res) {

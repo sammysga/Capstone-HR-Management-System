@@ -1828,7 +1828,7 @@ getJobPositionsList: async function() {
             } else if (fileType === 'resume') {
                 req.session.resumeUrl = fileUrl;
                 updateField = { resume_url: fileUrl };
-                successMessage = "✅ Resume uploaded successfully. Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.";
+                successMessage = "✅ Resume uploaded successfully. Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the HR department , and we will notify you once a decision has been made.";
                 
                 // Update applicant status to 'P1 - Awaiting for HR Action'
                 console.log('📂 [File Upload] Updating applicant status to P1 - Awaiting for HR Action...');

@@ -187,7 +187,27 @@ router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
 router.get('/linemanager/records-performance-tracker', lineManagerController.getRecordsPerformanceTrackerByDepartmentId);
 
 router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getRecordsPerformanceTrackerByUserId);
-router.get('/linemanager/interview-form/:applicantId', lineManagerController.getEvaluationForm);
+router.get('/interview-form/:applicantId', lineManagerController.getEvaluationForm);
+// POST route to handle form submission
+router.post('/submit-interview-evaluation/:applicantId', lineManagerController.submitInterviewEvaluation);
+router.get('/applicant/:applicantId', lineManagerController.getApplicantDetails);
+
+// Route to view the completed interview form
+router.get('/view-interview-form/:applicantId', lineManagerController.getViewInterviewForm);
+
+// Routes for passing and rejecting applicants through web interface
+router.get('/pass-applicant/:applicantId', lineManagerController.passApplicant);
+router.get('/reject-applicant/:applicantId', lineManagerController.rejectApplicant);
+router.post('/reject-applicant/:applicantId', lineManagerController.rejectApplicant); // For form submission with reason
+
+// API routes for handling pass/reject actions from main applicant list
+router.post('/handle-pass-applicant', lineManagerController.handlePassApplicant);
+router.post('/handle-reject-applicant', lineManagerController.handleRejectApplicant);
+// Approve an applicant
+router.post('/approve-applicant', lineManagerController.approveApplicant);
+
+// Reject an applicant
+router.post('/reject-applicant', lineManagerController.rejectApplicant);
 
 router.get('/linemanager/offboarding-requests', lineManagerController.getOffboardingRequestsDash);
 router.get('/linemanager/view-offboarding-request/:userId', lineManagerController.getViewOffboardingRequest);
