@@ -209,6 +209,24 @@ router.post('/approve-applicant', lineManagerController.approveApplicant);
 // Reject an applicant
 router.post('/reject-applicant', lineManagerController.rejectApplicant);
 
+
+// Route to handle job offer sending
+// In your routes file
+router.post('/linemanager/send-job-offer', (req, res) => {
+    // Simple success response
+    res.json({ success: true, message: 'Job offer sent successfully' });
+});
+
+// Route to view job offer details
+router.get('/linemanager/job-offer-details/:jobOfferId', lineManagerController.getJobOfferDetails);
+
+// Route to get the job offer modal HTML fragment (optional)
+router.get('/fragment/job-offer-modal', (req, res) => {
+    res.render('partials/job-offer-modal');
+});
+
+
+
 router.get('/linemanager/offboarding-requests', lineManagerController.getOffboardingRequestsDash);
 router.get('/linemanager/view-offboarding-request/:userId', lineManagerController.getViewOffboardingRequest);
 router.get('/linemanager/final-result', lineManagerController.getFinalResult);

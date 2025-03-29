@@ -1597,6 +1597,123 @@ submitInterviewEvaluation: async function(req, res) {
         return res.redirect('/linemanager/dashboard');
     }
 },
+
+// Add this function to lineManagerController.js
+
+/**
+ * Send a job offer to an applicant and update their status
+ */
+sendJobOffer: async function(req, res) {
+    console.log('========== SEND JOB OFFER DEBUG START ==========');
+    
+    try {
+        // Log the entire request body
+        console.log('Full Request Body:', req.body);
+        
+        const { applicantId, startDate, additionalNotes } = req.body;
+        
+        // Detailed input validation logging
+        console.log('Extracted Values:');
+        console.log('Applicant ID:', applicantId);
+        console.log('Start Date:', startDate);
+        console.log('Additional Notes:', additionalNotes);
+        
+        // Validate input with detailed logging
+        if (!applicantId) {
+            console.error('ERROR: Applicant ID is MISSING');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Applicant ID is required' 
+            });
+        }
+        
+        if (!startDate) {
+            console.error('ERROR: Start Date is MISSING');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Start date is required' 
+            });
+        }
+        
+        // Fetch current applicant details before update
+        const { data: currentApplicant, error: fetchError } = await supabase
+            .from('applicantaccounts')
+            .select('*')
+            .eq('applicantId', applicantId)
+            .single();
+        
+        console.log('Current Applicant Details:', currentApplicant);
+        
+        if (fetchError) {
+            console.error('ERROR Fetching Applicant:', fetchError);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Applicant not found',
+                error: fetchError 
+            });
+        }
+        
+        // Perform update with detailed logging
+        const { data, error } = await supabase
+            .from('applicantaccounts')
+            .update({ 
+                applicantStatus: 'P3 - PASSED - Job Offer Sent',
+                jobOfferSentDate: new Date().toISOString()
+            })
+            .eq('applicantId', applicantId);
+        
+        // Log update results
+        console.log('Update Operation Results:');
+        console.log('Data:', data);
+        console.log('Error:', error);
+        
+        if (error) {
+            console.error('DATABASE UPDATE ERROR:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Failed to update applicant status',
+                details: error 
+            });
+        }
+        
+        // Verify the update by fetching the record again
+        const { data: updatedApplicant, error: verifyError } = await supabase
+            .from('applicantaccounts')
+            .select('*')
+            .eq('applicantId', applicantId)
+            .single();
+        
+        console.log('Updated Applicant Verification:');
+        console.log('Updated Details:', updatedApplicant);
+        console.log('Verification Error:', verifyError);
+        
+        // Final verification log
+        if (updatedApplicant) {
+            console.log('STATUS CHANGE VERIFICATION:');
+            console.log('Old Status:', currentApplicant?.applicantStatus);
+            console.log('New Status:', updatedApplicant.applicantStatus);
+        }
+        
+        console.log('========== SEND JOB OFFER DEBUG END ==========');
+        
+        // Return success response
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Job offer sent successfully',
+            updatedStatus: updatedApplicant?.applicantStatus
+        });
+        
+    } catch (error) {
+        console.error('CRITICAL ERROR in sendJobOffer:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An unexpected error occurred',
+            errorDetails: error.message,
+            fullError: error
+        });
+    }
+},
+
 /**
  * Gets the job offer details
  */

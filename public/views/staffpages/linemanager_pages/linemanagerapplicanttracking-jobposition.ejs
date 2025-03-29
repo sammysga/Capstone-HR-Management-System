@@ -910,6 +910,15 @@ table.tracking-table tbody:empty::after {
                 </button>
             </div>
 
+            <% } else if (applicant.applicantStatus === 'P3 - PASSED') { %>
+              <!-- Job Offer Button -->
+              <button 
+                  class="btn-job-offer" 
+                  onclick="openSendJobOfferModal('<%= applicant.applicantId %>', '<%= applicant.lastName %>, <%= applicant.firstName %>', '<%= applicant.userEmail %>', '<%= applicant.jobTitle %>', '<%= applicant.deptName %>')">
+                  Send Job Offer
+              </button>
+          
+
             
         <% } %>
     </div>
@@ -1154,6 +1163,45 @@ table.tracking-table tbody:empty::after {
             </div>
         </div>
     </div>
+
+    <!-- Modal for Sending Job Offer -->
+<div id="sendJobOfferModal" class="modal">
+  <div class="modal-content">
+      <span class="close-button" onclick="closeModal('sendJobOfferModal')">&times;</span>
+      <h2>Send Job Offer</h2>
+      
+      <div class="applicant-details" style="margin-bottom: 20px;">
+          <h3 id="applicant-name-job-offer" style="color: #124A5C; margin-bottom: 5px;"></h3>
+          <p><strong>Email:</strong> <span id="applicant-email-job-offer"></span></p>
+          <p><strong>Position:</strong> <span id="applicant-position-job-offer"></span></p>
+          <p><strong>Department:</strong> <span id="applicant-department-job-offer"></span></p>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div style="margin: 20px 0;">
+          <p><strong>Job Offer Details:</strong></p>
+          <div style="margin: 15px 0;">
+              <label for="startDate" style="display: block; margin-bottom: 5px;"><strong>Start Date:</strong></label>
+              <input type="date" id="startDate" class="search-bar" style="width: 100%;" required>
+          </div>
+          
+          <div style="margin: 15px 0;">
+              <label for="offerNotes" style="display: block; margin-bottom: 5px;"><strong>Additional Notes:</strong></label>
+              <textarea id="offerNotes" class="search-bar" style="width: 100%; height: 100px; resize: vertical;" placeholder="Enter any additional details for the job offer..."></textarea>
+          </div>
+      </div>
+      
+      <div class="modal-question">
+          <p><strong>Are you sure you want to send a job offer to this applicant?</strong></p>
+      </div>
+      
+      <div class="modal-buttons">
+          <button id="backButton" class="back-button" onclick="closeModal('sendJobOfferModal')">Cancel</button>
+          <button id="sendOfferButton" class="confirm-button" onclick="sendJobOffer()">Send Job Offer</button>
+      </div>
+  </div>
+</div>
 
     <!-- Modal for Account Setup Creation Reminder -->
     <div id="accountSetupReminderModal" class="modal">
@@ -5901,6 +5949,255 @@ function p3rejectApplicant(applicantId) {
         actionButton.disabled = false;
     });
 }
+
+// Add these functions to your existing JavaScript file
+
+/**
+ * Opens the send job offer modal for a specific applicant
+ * @param {string} applicantId - The ID of the applicant
+ * @param {string} name - Applicant's full name
+ * @param {string} email - Applicant's email address
+ * @param {string} position - Position applied for
+ * @param {string} department - Department of the position
+ */
+ function openSendJobOfferModal(applicantId, name, email, position, department) {
+    // Store applicantId in the modal for reference when submitting
+    document.getElementById('sendJobOfferModal').setAttribute('data-applicant-id', applicantId);
+    
+    // Fill in the applicant details
+    document.getElementById('applicant-name-job-offer').textContent = name;
+    document.getElementById('applicant-email-job-offer').textContent = email;
+    document.getElementById('applicant-position-job-offer').textContent = position;
+    document.getElementById('applicant-department-job-offer').textContent = department;
+    
+    // Set default start date to 2 weeks from today
+    const twoWeeksFromNow = new Date();
+    twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+    document.getElementById('startDate').valueAsDate = twoWeeksFromNow;
+    
+    // Clear any previous notes
+    document.getElementById('offerNotes').value = '';
+    
+    // Show the modal
+    document.getElementById('sendJobOfferModal').style.display = 'block';
+}
+
+/**
+ * Sends the job offer to the applicant
+ */
+ function sendJobOffer() {
+    // Get the applicant ID from the modal
+    const modal = document.getElementById('sendJobOfferModal');
+    const applicantId = modal.getAttribute('data-applicant-id');
+    
+    console.log('FRONTEND DEBUG - Job Offer Send:');
+    console.log('Applicant ID:', applicantId);
+    
+    // Get the form data
+    const startDate = document.getElementById('startDate').value;
+    const additionalNotes = document.getElementById('offerNotes').value;
+    
+    console.log('Start Date:', startDate);
+    console.log('Additional Notes:', additionalNotes);
+    
+    // Validate required fields
+    if (!startDate) {
+        alert('Please select a start date for the job offer');
+        return;
+    }
+    
+    // Disable the button to prevent multiple submissions
+    const sendButton = document.getElementById('sendOfferButton');
+    const originalButtonText = sendButton.textContent;
+    sendButton.disabled = true;
+    sendButton.textContent = 'Sending...';
+    
+    // Send the job offer
+    fetch('/linemanager/send-job-offer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            applicantId,
+            startDate,
+            additionalNotes
+        }),
+    })
+    .then(response => {
+        console.log('Response Status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Server Response:', data);
+        
+        // Check if the response indicates success
+        if (data.success) {
+            // Close the modal
+            closeModal('sendJobOfferModal');
+            
+            // Show success message
+            alert('Job offer sent successfully!');
+            
+            // Update the UI to reflect the new status
+            updateApplicantStatus(applicantId, 'P3 - PASSED - Job Offer Sent');
+            
+            // Optionally refresh the page or specific section
+            setTimeout(() => {
+                const activeFilter = document.querySelector(".filter-button.active");
+                if (activeFilter) {
+                    activeFilter.click();
+                } else {
+                    // Default to refreshing the current view
+                    window.location.reload();
+                }
+            }, 500);
+        } else {
+            // Show error message from server
+            alert(data.message || 'Failed to send job offer');
+        }
+        
+        // Reset button
+        sendButton.disabled = false;
+        sendButton.textContent = originalButtonText;
+    })
+    .catch(error => {
+        console.error('FRONTEND ERROR:', error);
+        alert('An error occurred while sending the job offer');
+        
+        // Reset button
+        sendButton.disabled = false;
+        sendButton.textContent = originalButtonText;
+    });
+}
+
+/**
+ * Updates the UI to reflect the new applicant status
+ * @param {string} applicantId - The ID of the applicant
+ * @param {string} newStatus - The new status to display
+ */
+// Update applicant status in the UI
+function updateApplicantStatus(applicantId, newStatus) {
+    // Find the row for this applicant
+    const applicantRow = document.querySelector(`tr[data-applicant-id="${applicantId}"]`);
+    if (!applicantRow) return;
+    
+    // Update the status text
+    const statusSpan = applicantRow.querySelector('td:nth-child(5) span');
+    if (statusSpan) {
+        statusSpan.textContent = newStatus;
+    }
+    
+    // Replace the "Send Job Offer" button with a "View Job Offer" button
+    const actionsCell = applicantRow.querySelector('td:last-child');
+    if (actionsCell) {
+        const buttonContainer = actionsCell.querySelector('div');
+        if (buttonContainer) {
+            buttonContainer.innerHTML = `
+                <a href="/linemanager/job-offer-details/${applicantId}" class="btn-review" style="background-color: #28a745; color: white;">
+                    View Job Offer
+                </a>
+            `;
+        }
+    }
+}
+
+// Function to modify the main applicant table to add "Send Job Offer" buttons where needed
+function enhanceApplicantTable() {
+    // Get the main applicant table
+    const mainTable = document.getElementById('mainApplicantTable');
+    if (!mainTable) return;
+    
+    // Process each row
+    const rows = mainTable.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        // Get the status cell
+        const statusCell = row.querySelector('td:nth-child(5) span');
+        if (!statusCell) return;
+        
+        const status = statusCell.textContent.trim();
+        
+        // If the status is "P3 - PASSED", add a "Send Job Offer" button
+        if (status === 'P3 - PASSED') {
+            // Get the actions cell (last cell)
+            const actionsCell = row.querySelector('td:last-child');
+            if (!actionsCell) return;
+            
+            // Get user data
+            const userId = row.getAttribute('data-userid');
+            const applicantId = row.getAttribute('data-applicant-id') || userId; // Fallback to userId if applicantId isn't set
+            
+            // Extract name and other details
+            const nameCell = row.querySelector('td:nth-child(2)');
+            const deptCell = row.querySelector('td:nth-child(3)');
+            const positionCell = row.querySelector('td:nth-child(4)');
+            
+            const name = nameCell ? nameCell.textContent.split('\n')[0].trim() : 'Unknown';
+            const email = nameCell && nameCell.textContent.includes('\n') ? 
+                nameCell.textContent.split('\n')[1].trim() : 'No email available';
+            const department = deptCell ? deptCell.textContent.trim() : 'Unknown Department';
+            const position = positionCell ? positionCell.textContent.trim() : 'Unknown Position';
+            
+            // Add the button if it doesn't already exist
+            if (!actionsCell.querySelector('.btn-job-offer')) {
+                // Create a div for buttons if it doesn't exist
+                let buttonContainer = actionsCell.querySelector('div');
+                if (!buttonContainer) {
+                    buttonContainer = document.createElement('div');
+                    buttonContainer.style.marginTop = '10px';
+                    actionsCell.appendChild(buttonContainer);
+                }
+                
+                // Add the "Send Job Offer" button
+                const offerButton = document.createElement('button');
+                offerButton.className = 'btn-job-offer';
+                offerButton.style.backgroundColor = '#28a745';
+                offerButton.style.color = 'white';
+                offerButton.style.marginTop = '5px';
+                offerButton.textContent = 'Send Job Offer';
+                
+                // Set click handler
+                offerButton.onclick = function() {
+                    openSendJobOfferModal(applicantId, name, email, position, department);
+                };
+                
+                buttonContainer.appendChild(offerButton);
+            }
+        }
+    });
+}
+
+// Run the enhancement when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Add the modal to the page if it doesn't exist yet
+    if (!document.getElementById('sendJobOfferModal')) {
+        fetch('/fragment/job-offer-modal')
+            .then(response => response.text())
+            .then(html => {
+                // Append the modal HTML to the body
+                document.body.insertAdjacentHTML('beforeend', html);
+                
+                // Now enhance the table
+                enhanceApplicantTable();
+            })
+            .catch(error => {
+                console.error('Error loading job offer modal:', error);
+                // Try to enhance the table anyway
+                enhanceApplicantTable();
+            });
+    } else {
+        // Modal already exists, just enhance the table
+        enhanceApplicantTable();
+    }
+    
+    // Also enhance when filter buttons are clicked
+    document.querySelectorAll('.filter-button').forEach(button => {
+        button.addEventListener('click', function() {
+            // Wait for the table to update
+            setTimeout(enhanceApplicantTable, 500);
+        });
+    });
+});
 
 </script>
 </body>
