@@ -842,65 +842,78 @@ table.tracking-table tbody:empty::after {
                         <td><%= applicant.deptName %></td> <!-- Display department name -->
                         <td><%= applicant.jobTitle %></td> <!-- Display job title -->
                         <td>
-                            <!-- Display Applicant Status -->
-                            <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
-                            <div style="margin-top: 10px;">
-                                <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action; HR PASSED')) { %>
-                                    <!-- For Review Button -->
-                                    <button 
-                                        class="btn-review" 
-                                        onclick="lineManagerInitialScreeningModal(
-                                              '<%= applicant.userId %>', 
-                                            '<%= applicant.lastName %>', 
-                                            '<%= applicant.firstName %>', 
-                                            '<%= applicant.birthDate %>', 
-                                            '<%= applicant.userEmail %>', 
-                                            '<%= applicant.phoneNo %>', 
-                                            {
-                                                degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
-                                                experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
-                                                certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
-                                                hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
-                                                softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
-                                                workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
-                                                availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
-                                            }, 
-                                            '<%= applicant.initialScreeningAssessment.totalScore %>', 
-                                            '<%= applicant.initialScreeningAssessment.degree_url %>',
-                                            '<%= applicant.initialScreeningAssessment.cert_url %>',
-                                            '<%= applicant.initialScreeningAssessment.resume_url %>'
-                                        )
-                                    ">
-                                    For Review
-                                    </button>
-                                <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
-                                    <!-- For Evaluation Button -->
-                                    <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
-                                        <button class="btn-evaluation">For Evaluation</button>
-                                    </a>
-                                <% } else if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
-                                    <!-- Approve Button for Line Manager Action -->
-                                    <button 
-                                        class="btn-approve" 
-                                        onclick="approveLineManager('<%= applicant.applicantId %>')">
-                                        Approve
-                                    </button>
-                                    <% } else if (applicant.applicantStatus === 'P3 - Awaiting for Line Manager Evaluation') { %>
-                                      <!-- For Evaluation Button -->
-                                      <a href="/linemanager/evaluation-form/<%= applicant.applicantId %>">
-                                          <button class="btn-evaluation">For Evaluation</button>
-                                      </a>
-                                  
-                                <% } else if (applicant.applicantStatus === 'P3 - Line Manager Evaluation Accomplished') { %>
-                                    <!-- For Review Button -->
-                                    <button 
-                                        class="btn-review" 
-                                        onclick="openModal('releaseJobOfferModal', '<%= applicant.lastName %>, <%= applicant.firstName %>')">
-                                        For Review
-                                    </button>
-                                <% } %>
-                            </div>
-                        </td>   
+                             <!-- Display Applicant Status -->
+    <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
+    <div style="margin-top: 10px;">
+        <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action; HR PASSED')) { %>
+            <!-- For Review Button -->
+            <button 
+                class="btn-review" 
+                onclick="lineManagerInitialScreeningModal(
+                        '<%= applicant.userId %>', 
+                        '<%= applicant.lastName %>', 
+                        '<%= applicant.firstName %>', 
+                        '<%= applicant.birthDate %>', 
+                        '<%= applicant.userEmail %>', 
+                        '<%= applicant.phoneNo %>', 
+                        {
+                            degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
+                            experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
+                            certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
+                            hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
+                            softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
+                            workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
+                            availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
+                        }, 
+                        '<%= applicant.initialScreeningAssessment.totalScore %>', 
+                        '<%= applicant.initialScreeningAssessment.degree_url %>',
+                        '<%= applicant.initialScreeningAssessment.cert_url %>',
+                        '<%= applicant.initialScreeningAssessment.resume_url %>'
+                    )
+                ">
+                For Review
+            </button>
+        <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
+            <!-- For Evaluation Button -->
+            <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
+                <button class="btn-evaluation">For Evaluation</button>
+            </a>
+        <% } else if (applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
+            <!-- Approve Button for Line Manager Action -->
+            <button 
+                class="btn-approve" 
+                onclick="approveLineManager('<%= applicant.applicantId %>')">
+                Approve
+            </button>
+        <% } else if (applicant.applicantStatus === 'P3 - Awaiting for Line Manager Evaluation') { %>
+            <!-- For Evaluation Button -->
+            <a href="/interview-form/<%= applicant.applicantId %>">
+                <button class="btn-evaluation">For Evaluation</button>
+            </a>
+        <% } else if (applicant.applicantStatus === 'P3 - Line Manager Evaluation Accomplished') { %>
+            <!-- View, Pass, Reject buttons for completed evaluations -->
+            <a href="/view-interview-form/<%= applicant.applicantId %>">
+                <button class="btn-review" style="margin-bottom: 5px;">View Evaluation</button>
+            </a>
+            <div style="display: flex; gap: 5px;">
+                <button 
+                    class="btn-approve" 
+                    style="flex: 1; background-color: #28a745; color: white;"
+                    onclick="p3passApplicant('<%= applicant.applicantId %>')">
+                    Pass
+                </button>
+                <button 
+                    class="btn-change-status" 
+                    style="flex: 1; background-color: #dc3545; color: white;"
+                    onclick="p3rejectApplicant('<%= applicant.applicantId %>')">
+                    Reject
+                </button>
+            </div>
+
+            
+        <% } %>
+    </div>
+</td>   
                     </tr>
                 <% }); %>
             <% } else { %>
@@ -5747,6 +5760,145 @@ function setupModalEventListeners() {
                 document.getElementById(modalId).style.display = 'none';
             }
         });
+    });
+}
+
+// Add these functions to your existing JavaScript
+
+// Handle passing an applicant
+function p3passApplicant(applicantId) {
+    if (!applicantId) {
+        console.error('Missing applicantId for pass action');
+        alert('Error: Cannot identify the applicant to pass.');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to PASS this applicant? This will update their status to P3 - PASSED and notify them.')) {
+        return;
+    }
+    
+    // Show loading indicator
+    const actionButton = event.target;
+    const originalText = actionButton.textContent;
+    actionButton.textContent = 'Processing...';
+    actionButton.disabled = true;
+    
+    // Send API request to pass the applicant
+    fetch('/handle-pass-applicant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId: applicantId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Applicant has been successfully passed! They will be notified.');
+            
+            // Update the status display in the table
+            const row = actionButton.closest('tr');
+            if (row) {
+                const statusSpan = row.querySelector('td:nth-child(5) span');
+                if (statusSpan) {
+                    statusSpan.textContent = 'P3 - PASSED';
+                }
+                
+                // Replace buttons with a message
+                const actionsDiv = actionButton.closest('div');
+                if (actionsDiv) {
+                    actionsDiv.innerHTML = '<div style="color: green; font-weight: bold;">Applicant has been passed</div>';
+                }
+            }
+        } else {
+            alert('Error: ' + (data.message || 'Failed to pass applicant'));
+            
+            // Restore button state
+            actionButton.textContent = originalText;
+            actionButton.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing your request. Please try again.');
+        
+        // Restore button state
+        actionButton.textContent = originalText;
+        actionButton.disabled = false;
+    });
+}
+
+// Handle rejecting an applicant
+function p3rejectApplicant(applicantId) {
+    if (!applicantId) {
+        console.error('Missing applicantId for reject action');
+        alert('Error: Cannot identify the applicant to reject.');
+        return;
+    }
+    
+    // Prompt for rejection reason
+    const reason = prompt('Please provide a reason for rejecting this applicant:', 'Not a good fit for the position');
+    
+    if (reason === null) {
+        // User cancelled the prompt
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to REJECT this applicant? This will update their status to P3 - FAILED and notify them.')) {
+        return;
+    }
+    
+    // Show loading indicator
+    const actionButton = event.target;
+    const originalText = actionButton.textContent;
+    actionButton.textContent = 'Processing...';
+    actionButton.disabled = true;
+    
+    // Send API request to reject the applicant
+    fetch('/handle-reject-applicant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            applicantId: applicantId,
+            reason: reason
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Applicant has been rejected. They will be notified.');
+            
+            // Update the status display in the table
+            const row = actionButton.closest('tr');
+            if (row) {
+                const statusSpan = row.querySelector('td:nth-child(5) span');
+                if (statusSpan) {
+                    statusSpan.textContent = 'P3 - FAILED';
+                }
+                
+                // Replace buttons with a message
+                const actionsDiv = actionButton.closest('div');
+                if (actionsDiv) {
+                    actionsDiv.innerHTML = '<div style="color: red; font-weight: bold;">Applicant has been rejected</div>';
+                }
+            }
+        } else {
+            alert('Error: ' + (data.message || 'Failed to reject applicant'));
+            
+            // Restore button state
+            actionButton.textContent = originalText;
+            actionButton.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing your request. Please try again.');
+        
+        // Restore button state
+        actionButton.textContent = originalText;
+        actionButton.disabled = false;
     });
 }
 
