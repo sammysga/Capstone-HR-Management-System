@@ -1522,18 +1522,23 @@ getJobPositionsList: async function() {
         try {
             console.log('Received data:', req.body); // Debugging
     
-            const { checklist, signatures, managerVerified, notes } = req.body;
+            const { applicantId, checklist, signatures, managerVerified, notes } = req.body;
     
             // Validate required fields
-            if (!managerVerified) {
-                return res.status(400).json({ success: false, message: 'Manager verification required.' });
+            if (!applicantId || !managerVerified) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Applicant ID and manager verification are required.' 
+                });
             }
+    
     
             // Insert into the `onboarding` table
             const { data: onboardingData, error: onboardingError } = await supabase
                 .from('onboarding')
                 .insert([
                     {
+                        applicantId: applicantId,
                         manager_signature: signatures['manager-signature-canvas'], // Manager's signature
                         notes: notes,
                         checklist_verified: managerVerified,
@@ -1554,6 +1559,7 @@ getJobPositionsList: async function() {
             // Prepare tasks data for insertion into `onboarding_tasks`
             const tasksData = checklist.map((task, index) => ({
                 onboardingId: onboardingId, 
+                applicantId: applicantId,
                 taskId: index + 1, 
                 taskName: task.task,
                 contactPerson: task.contactPerson, 
@@ -1570,6 +1576,12 @@ getJobPositionsList: async function() {
                 console.error('Error inserting into onboarding_tasks table:', tasksError);
                 throw tasksError;
             }
+
+            // Update applicant status
+            await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'Onboarding - Checklist Completed' })
+                .eq('applicantId', applicantId);
     
             console.log('Inserted into onboarding_tasks table:', tasksDataResult); 
     
