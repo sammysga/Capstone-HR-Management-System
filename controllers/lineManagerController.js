@@ -1385,48 +1385,34 @@ getEvaluationForm: async function(req, res) {
 
 submitInterviewEvaluation: async function(req, res) {
     try {
+        console.log('DEBUG [1]: Starting submitInterviewEvaluation function');
+        
+        // Extract form values
+        let userId = req.body.userId;
+        console.log('DEBUG [3]: Original userId from form:', userId);
+        
+        // Clean userId if it contains commas
+        if (userId && typeof userId === 'string' && userId.includes(',')) {
+            console.log('DEBUG [4]: Found comma in userId, cleaning value:', userId);
+            userId = userId.replace(/,/g, '');
+            console.log('DEBUG [5]: Cleaned userId:', userId);
+        }
+        
         const applicantId = req.params.applicantId || req.body.applicantId;
+        const interviewDate = req.body.interviewDate || new Date().toISOString().split('T')[0];
         const lineManagerUserId = req.session.user.userId;
         
-        console.log('Submitting interview evaluation for applicant ID:', applicantId);
+        console.log('DEBUG [6]: Processing with userId:', userId, 'applicantId:', applicantId);
         
-        if (!applicantId) {
-            console.error('Missing applicant ID');
-            req.flash('errors', { message: 'Applicant ID is required' });
+        if (!userId) {
+            console.error('DEBUG [7]: Missing userId - cannot proceed');
+            req.flash('errors', { message: 'User ID is required' });
             return res.redirect('/linemanager/dashboard');
         }
         
-        // First, check if there's an existing evaluation in the database
-        const { data: existingEvaluation, error: evalCheckError } = await supabase
-            .from('applicant_panelscreening_assessment')
-            .select('panelInterviewId')
-            .eq('applicantUserId', applicantId)
-            .limit(1);
-            
-        if (existingEvaluation && existingEvaluation.length > 0) {
-            console.log('An evaluation already exists for this applicant');
-            
-            // Update the applicant status regardless if an evaluation exists
-            const { error: statusUpdateError } = await supabase
-                .from('applicantaccounts')
-                .update({ 
-                    applicantStatus: 'P3 - Line Manager Evaluation Accomplished',
-                    lineManagerInterviewCompleted: true,
-                    lineManagerInterviewDate: req.body.interviewDate || new Date().toISOString().split('T')[0]
-                })
-                .eq('applicantId', applicantId);
-                
-            if (statusUpdateError) {
-                console.error('Error updating applicant status:', statusUpdateError);
-                req.flash('errors', { message: 'Error updating applicant status' });
-                return res.redirect('/linemanager/applicant-tracker');
-            }
-            
-            req.flash('success', 'Applicant status updated to "P3 - Line Manager Evaluation Accomplished".');
-            return res.redirect('/linemanager/applicant-tracker');
-        }
+        // Calculate ratings
+        console.log('DEBUG [8]: Calculating ratings from form data');
         
-        // Calculate total rating from individual ratings
         const personalReportRating = parseInt(req.body.personalReportRating || 0);
         const functionalJobRating = parseInt(req.body.functionalJobRating || 0);
         const instructionsRating = parseInt(req.body.instructionsRating || 0);
@@ -1440,7 +1426,10 @@ submitInterviewEvaluation: async function(req, res) {
             peopleRating + 
             writingRating;
             
-        // Get the staffId for the current line manager
+        console.log('DEBUG [9]: Total assessment rating calculated:', totalAssessmentRating);
+        
+        // Get line manager staffId
+        console.log('DEBUG [10]: Fetching line manager staffId');
         const { data: staffData, error: staffError } = await supabase
             .from('staffaccounts')
             .select('staffId')
@@ -1448,222 +1437,166 @@ submitInterviewEvaluation: async function(req, res) {
             .single();
             
         if (staffError || !staffData) {
-            console.error('Line manager not found in staffaccounts:', staffError);
+            console.error('DEBUG [11]: Error fetching line manager staffId:', staffError);
             req.flash('errors', { message: 'Your account is not properly set up.' });
             return res.redirect('/linemanager/dashboard');
         }
         
         const managerStaffId = staffData.staffId;
+        console.log('DEBUG [12]: Retrieved managerStaffId:', managerStaffId);
         
-        // Compile panel form data as a JSON object
+        // Create panel form data JSON
+        console.log('DEBUG [13]: Preparing panel form data JSON');
+        
         const panelFormData = JSON.stringify({
-            interviewType: req.body.interviewType,
-            interviewDate: req.body.interviewDate,
+            interviewType: req.body.interviewType || 'Not specified',
+            interviewDate: interviewDate,
             personalReport: {
-                careerGoals: req.body.careerGoals,
-                resumeWalkthrough: req.body.resumeWalkthrough,
+                careerGoals: req.body.careerGoals || '',
+                resumeWalkthrough: req.body.resumeWalkthrough || '',
                 rating: personalReportRating
             },
             functionalJob: {
-                situation: req.body.jobSituation,
-                action: req.body.jobAction,
-                result: req.body.jobResult,
+                situation: req.body.jobSituation || '',
+                action: req.body.jobAction || '',
+                result: req.body.jobResult || '',
                 rating: functionalJobRating
             },
             instructions: {
-                situation: req.body.instructionsSituation,
-                action: req.body.instructionsAction,
-                result: req.body.instructionsResult,
+                situation: req.body.instructionsSituation || '',
+                action: req.body.instructionsAction || '',
+                result: req.body.instructionsResult || '',
                 rating: instructionsRating
             },
             people: {
-                situation: req.body.peopleSituation,
-                action: req.body.peopleAction,
-                result: req.body.peopleResult,
+                situation: req.body.peopleSituation || '',
+                action: req.body.peopleAction || '',
+                result: req.body.peopleResult || '',
                 rating: peopleRating
             },
             writing: {
-                situation: req.body.writingSituation,
-                action: req.body.writingAction,
-                result: req.body.writingResult,
+                situation: req.body.writingSituation || '',
+                action: req.body.writingAction || '',
+                result: req.body.writingResult || '',
                 rating: writingRating
             },
             overall: {
-                equipmentTools: req.body.equipmentTools,
-                questionsCompany: req.body.questionsCompany,
-                overallRating: req.body.overallRating,
-                recommendation: req.body.recommendation
+                equipmentTools: req.body.equipmentTools || '',
+                questionsCompany: req.body.questionsCompany || '',
+                overallRating: req.body.overallRating || '0',
+                recommendation: req.body.recommendation || ''
             }
         });
         
-        // Insert and update operations in a transaction-like approach
+        console.log('DEBUG [14]: Successfully created panelFormData JSON');
+        
         try {
-            // First insert the evaluation data
+            // Check the applicant table first to make sure the record exists
+            console.log('DEBUG [15]: Verifying applicant exists with userId:', userId);
+            const { data: checkApplicant, error: checkError } = await supabase
+                .from('applicantaccounts')
+                .select('applicantId, userId, applicantStatus')
+                .eq('userId', userId)
+                .single();
+                
+            if (checkError) {
+                console.error('DEBUG [16]: Error verifying applicant exists:', checkError);
+                req.flash('errors', { message: 'Could not find applicant record with this User ID.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+            
+            console.log('DEBUG [17]: Verified applicant exists. Current status:', checkApplicant.applicantStatus);
+            
+            // Insert the evaluation data
+            console.log('DEBUG [18]: Inserting interview evaluation with applicantUserId:', applicantId);
             const { data: insertData, error: insertError } = await supabase
                 .from('applicant_panelscreening_assessment')
                 .insert({
                     applicantUserId: applicantId,
                     managerUserId: managerStaffId,
-                    jobId: req.body.jobId, // Make sure this is included in your form
-                    interviewDate: req.body.interviewDate,
-                    longTermGoalsRapport: req.body.careerGoals,
-                    strengthsRapport: req.body.resumeWalkthrough,
+                    jobId: req.body.jobId,
+                    interviewDate: interviewDate,
+                    longTermGoalsRapport: req.body.careerGoals || '',
+                    strengthsRapport: req.body.resumeWalkthrough || '',
                     panelFormData: panelFormData,
                     totalAssessmentRating: totalAssessmentRating,
-                    equipmentToolsSoftware: req.body.equipmentTools,
-                    remarks: req.body.remarksByInterviewer,
-                    conclusion: req.body.recommendation
+                    equipmentToolsSoftware: req.body.equipmentTools || '',
+                    remarks: req.body.remarksByInterviewer || '',
+                    conclusion: req.body.recommendation || ''
                 });
             
             if (insertError) {
-                console.error('Error inserting interview evaluation:', insertError);
+                console.error('DEBUG [19]: Error inserting interview evaluation:', insertError);
                 req.flash('errors', { message: 'Error saving interview evaluation' });
                 return res.redirect('/linemanager/dashboard');
             }
             
-            console.log('Successfully inserted interview evaluation. Now updating applicant status...');
+            console.log('DEBUG [20]: Successfully inserted interview evaluation');
             
-            // Then update the applicant status - IMPORTANT: This is the critical part
+            // Update applicant status - FIXED: Removed non-existent columns
+            console.log('DEBUG [21]: Now updating applicant status with userId:', userId);
             const { data: updateData, error: updateError } = await supabase
                 .from('applicantaccounts')
                 .update({ 
                     applicantStatus: 'P3 - Line Manager Evaluation Accomplished',
-                    lineManagerInterviewCompleted: true,
-                    lineManagerInterviewDate: req.body.interviewDate
+                    lineManagerInterviewDate: interviewDate
+                    // Removed: lineManagerInterviewCompleted: true
                 })
-                .eq('applicantId', applicantId); // Make sure we're using the correct ID field here
+                .eq('userId', userId);
                 
             if (updateError) {
-                console.error('Error updating applicant status:', updateError);
-                req.flash('errors', { message: 'The evaluation was saved, but there was an error updating the applicant status.' });
-                return res.redirect('/linemanager/applicant-tracker');
+                console.error('DEBUG [22]: Error updating applicant status:', updateError);
+                
+                // Try with just the status field if other fields fail
+                console.log('DEBUG [23]: Trying fallback update with just the status field');
+                const { data: fallbackData, error: fallbackError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ 
+                        applicantStatus: 'P3 - Line Manager Evaluation Accomplished'
+                        // No other fields
+                    })
+                    .eq('userId', userId);
+                    
+                if (fallbackError) {
+                    console.error('DEBUG [24]: Fallback update also failed:', fallbackError);
+                    req.flash('errors', { message: 'The evaluation was saved, but there was an error updating the applicant status.' });
+                    return res.redirect('/linemanager/applicant-tracker');
+                } else {
+                    console.log('DEBUG [25]: Fallback update succeeded');
+                }
             }
             
-            console.log('Successfully updated applicant status to P3 - Line Manager Evaluation Accomplished');
+            console.log('DEBUG [26]: Successfully updated applicant status to P3 - Line Manager Evaluation Accomplished');
+            
+            // Verify the status was updated
+            console.log('DEBUG [27]: Verifying status update');
+            const { data: verifyData, error: verifyError } = await supabase
+                .from('applicantaccounts')
+                .select('applicantStatus')
+                .eq('userId', userId)
+                .single();
+                
+            if (verifyError) {
+                console.error('DEBUG [28]: Failed to verify status update:', verifyError);
+            } else {
+                console.log('DEBUG [29]: Verified new status:', verifyData.applicantStatus);
+            }
             
             req.flash('success', 'Interview evaluation submitted successfully! The applicant status has been updated.');
+            console.log('DEBUG [30]: Redirecting to applicant tracker');
             return res.redirect('/linemanager/applicant-tracker');
         } catch (error) {
-            console.error('Error during interview evaluation submission:', error);
+            console.error('DEBUG [31]: Error during interview evaluation submission:', error);
             req.flash('errors', { message: 'An error occurred during submission. Please try again.' });
             return res.redirect('/linemanager/dashboard');
         }
         
     } catch (error) {
-        console.error('Error in submitInterviewEvaluation:', error);
+        console.error('DEBUG [32]: Uncaught error in submitInterviewEvaluation:', error);
         req.flash('errors', { message: 'An error occurred while processing the interview evaluation' });
         return res.redirect('/linemanager/dashboard');
     }
 },
-
-/**
- * Sends a job offer to an applicant
- * Updates the applicant status and sends a notification
- */
-sendJobOffer: async function(req, res) {
-    try {
-        const { applicantId, position, department, startDate, employmentType, additionalMessage } = req.body;
-        
-        if (!applicantId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Applicant ID is required' 
-            });
-        }
-        
-        // Get the applicant information (to get userId for notification)
-        const { data: applicant, error: applicantError } = await supabase
-            .from('applicantaccounts')
-            .select('userId, firstName, lastName, userEmail, phoneNo')
-            .eq('applicantId', applicantId)
-            .single();
-            
-        if (applicantError) {
-            console.error('Error fetching applicant details:', applicantError);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Error fetching applicant details' 
-            });
-        }
-        
-        // Save the job offer details in the database
-        const { data: jobOfferData, error: jobOfferError } = await supabase
-            .from('job_offers')
-            .insert({
-                applicantId,
-                userId: applicant.userId,
-                position,
-                department,
-                startDate,
-                employmentType,
-                additionalDetails: additionalMessage,
-                status: 'Sent',
-                sentBy: req.session.user.userId,
-                sentDate: new Date().toISOString()
-            })
-            .select('jobOfferId');
-            
-        if (jobOfferError) {
-            console.error('Error saving job offer:', jobOfferError);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Error saving job offer details' 
-            });
-        }
-        
-        // Update the applicant status to "Job Offer Sent"
-        const { error: statusUpdateError } = await supabase
-            .from('applicantaccounts')
-            .update({ 
-                applicantStatus: 'P3 - PASSED - Job Offer Sent',
-                jobOfferSent: true,
-                jobOfferSentDate: new Date().toISOString()
-            })
-            .eq('applicantId', applicantId);
-            
-        if (statusUpdateError) {
-            console.error('Error updating applicant status:', statusUpdateError);
-            // Continue despite the error to ensure notification is sent
-        }
-        
-        // Send notification to the applicant via chatbot
-        try {
-            const congratsMessage = `Congratulations! We are pleased to offer you the position of ${position} in our ${department} department. Please check your email for more details about this offer.`;
-            
-            await supabase
-                .from('chatbot_history')
-                .insert({
-                    userId: applicant.userId,
-                    message: JSON.stringify({ text: congratsMessage }),
-                    sender: 'bot',
-                    timestamp: new Date().toISOString(),
-                    applicantStage: 'P3 - PASSED - Job Offer Sent'
-                });
-        } catch (chatError) {
-            console.error('Error sending notification to applicant:', chatError);
-            // Continue despite notification error
-        }
-        
-        // If there's an email function available, we can send the email here
-        // For now, we'll just log it
-        console.log(`Job offer email would be sent to ${applicant.userEmail} for ${position} position`);
-        
-        return res.status(200).json({
-            success: true,
-            message: 'Job offer sent successfully',
-            jobOfferId: jobOfferData[0].jobOfferId
-        });
-        
-    } catch (error) {
-        console.error('Error in sendJobOffer:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'An error occurred while sending job offer',
-            error: error.message
-        });
-    }
-},
-
 /**
  * Gets the job offer details
  */
