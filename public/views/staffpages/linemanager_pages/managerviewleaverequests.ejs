@@ -156,10 +156,13 @@ async function submitLeaveRequest(leaveRequestId) {
     const action = document.getElementById('actionSelect').value;
     const remarks = document.getElementById('remarksInput').value;
 
-    if (!action || !remarks) {
-        alert('Please fill in all fields.');
+    if (!action) {
+        alert('Please select an action (Approve or Reject).');
         return;
     }
+    
+    // Use a default remark if none is provided
+    const finalRemarks = remarks || 'No remarks';
 
     try {
         const response = await fetch('/linemanager/leaverequest/update', {
@@ -167,10 +170,19 @@ async function submitLeaveRequest(leaveRequestId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action,
-                remarks,
+                remarks: finalRemarks,
                 leaveRequestId, // Make sure leaveRequestId is passed here
             }),
         });
+
+        if (response.ok) {
+            alert(`Leave request has been ${action === 'approve' ? 'approved' : 'rejected'} successfully.`);
+            // Redirect to the dashboard after successful update
+            window.location.href = '/linemanager/dashboard';
+        } else {
+            const errorData = await response.json();
+            alert(`Error: ${errorData.message || 'Failed to update leave request'}`);
+        }
         // Handle response here
     } catch (error) {
         console.error('Error updating leave request:', error);
