@@ -950,6 +950,41 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
             res.redirect('staff/login');
         }
     },
+
+    sendOnboardingChecklist: async function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const { userId, applicantId } = req.body;
+                
+                if (!userId || !applicantId) {
+                    return res.status(400).json({ success: false, message: 'Missing required information' });
+                }
+                
+                // Update the applicant status in the database
+                const { error: updateError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'Onboarding - First Day Checklist Sent' })
+                    .eq('applicantId', applicantId);
+                
+                if (updateError) {
+                    console.error('Error updating applicant status:', updateError);
+                    return res.status(500).json({ success: false, message: 'Failed to update applicant status' });
+                }
+                
+                // Return success response
+                return res.json({ 
+                    success: true, 
+                    message: 'Applicant status updated successfully' 
+                });
+                
+            } catch (error) {
+                console.error('Error updating applicant status:', error);
+                return res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+        } else {
+            return res.status(401).json({ success: false, message: 'Unauthorized access. HR role required.' });
+        }
+    },
     
     getManageLeaveTypes: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
@@ -1002,6 +1037,7 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
                 .eq('leaveTypeId', leaveTypeId);
     
             if (error) {
+
                 return res.status(400).json({ message: 'Error updating leave type', error });
             }
     
