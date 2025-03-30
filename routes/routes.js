@@ -95,7 +95,7 @@ router.post('/hr/view-mrf/:id', hrController.submitMRF);
 router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
 router.get('/api/hr/notifications', hrController.getHRNotifications);
 
-
+router.post('/hr/send-onboarding-checklist', hrController.sendOnboardingChecklist);
 router.get('/hr/onboarding-view', hrController.getHROnboarding);
 router.get('/hr/offboarding-request', hrController.getOffboardingRequestsDash);
 router.get('/hr/view-offboarding-request/:userId', hrController.getViewOffboardingRequest);
