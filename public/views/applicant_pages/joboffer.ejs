@@ -330,39 +330,40 @@
 
 
     async function acceptJobOffer() {
-    try {
-      // Show loading spinner
-      document.getElementById('loading-spinner').style.display = 'flex';
-      
-      // Hide modal
-      hideConfirmationModal();
-      
-      const applicantId = document.getElementById('applicant-id').value;
-      
-      const response = await fetch('/api/accept-job-offer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ applicantId }),
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('Job offer accepted! You will now proceed to the onboarding process.');
-        window.location.href = result.redirectUrl || '/applicant/onboarding';
-      } else {
-        alert(result.message || 'Failed to accept job offer. Please try again later.');
-      }
-    } catch (error) {
-      console.error('Error accepting job offer:', error);
-      alert('An error occurred. Please try again later.');
-    } finally {
-      // Hide loading spinner
-      document.getElementById('loading-spinner').style.display = 'none';
+  try {
+    // Show loading spinner
+    document.getElementById('loading-spinner').style.display = 'flex';
+    
+    // Hide modal
+    hideConfirmationModal();
+    
+    const applicantId = document.getElementById('applicant-id').value;
+    
+    const response = await fetch('/api/accept-job-offer', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ applicantId }),
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('Job offer accepted! You will now proceed to the onboarding process.');
+      // Explicitly use /applicant/onboarding for the redirect
+      window.location.href = '/applicant/onboarding';
+    } else {
+      alert(result.message || 'Failed to accept job offer. Please try again later.');
     }
+  } catch (error) {
+    console.error('Error accepting job offer:', error);
+    alert('An error occurred. Please try again later.');
+  } finally {
+    // Hide loading spinner
+    document.getElementById('loading-spinner').style.display = 'none';
   }
+}
   </script>
 </body>
 </html>
