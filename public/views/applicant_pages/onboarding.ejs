@@ -302,6 +302,21 @@
 <!-- Update the hidden input field for applicant ID -->
 <input type="hidden" id="applicant-id" name="applicantId" value="<%= applicant.applicantId %>">
 
+<div id="success-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 2000;">
+  <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); text-align: center; max-width: 500px; width: 90%;">
+    <div style="margin-bottom: 15px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#07ACB9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+    </div>
+    <h2 style="color: #124A5C; margin-top: 0; margin-bottom: 15px;">First Day Checklist Accomplished!</h2>
+    <p style="font-size: 16px; margin-bottom: 20px;">Congratulations on completing your first day checklist. Your onboarding is progressing well!</p>
+    <p style="font-size: 16px; margin-bottom: 20px;">Your manager will be notified, and you'll receive further instructions for your next steps soon.</p>
+    <button id="continue-btn" style="background-color: #07ACB9; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; font-weight: 500; cursor: pointer; transition: background-color 0.2s;">Continue to Dashboard</button>
+  </div>
+</div>
+
   <div class="subheader">Accomplishing of First Day Checklist</div>
   <div class="table-header-left">First Day Checklist Guide for Applicant</div>
 
@@ -479,11 +494,17 @@
     </div>
   </div>
 
-  <button class="btn-submit">Proceed to Account Creation</button>
+  <button class="btn-submit">Submit First Day Checklist</button>
+
+
+  
 
   <script>
     const signaturePads = {};
     const overlay = document.getElementById('overlay');
+
+    const successModal = document.getElementById('success-modal');
+
 
     // Function to initialize a signature pad on a canvas element if not already done
     function initSignaturePad(canvas) {
@@ -549,99 +570,174 @@
       });
     });
 
+
+      // Continue button in success modal
+  document.getElementById('continue-btn').addEventListener('click', function() {
+    window.location.href = '/staff/login';
+  });
+
+
     // Final submission: validate checklist items, signatures, and manager verification/signature
     document.querySelector('.btn-submit').addEventListener('click', async function () {
+  const applicantId = document.getElementById('applicant-id').value;
 
-      const applicantId = document.getElementById('applicant-id').value;
+  // Basic validation for checkboxes and signatures
+  let allChecked = true;
+  let allSigned = true;
 
-      let allChecked = true;
-      let allSigned = true;
-      const checklistData = [];
-      const signatureData = {};
+  // Check if all checkboxes are checked
+  document.querySelectorAll('.table-checkbox').forEach((checkbox, index) => {
+    if (!checkbox.checked) {
+      allChecked = false;
+    }
 
-      // Collect checkbox & signature data
-      document.querySelectorAll('.table-checkbox').forEach((checkbox, index) => {
-        // Get the content from the row
-        const row = checkbox.closest('tr');
-        const task = checkbox.nextElementSibling.innerText.trim();
-        const where = row.cells[1].innerText.trim();
-        const contactPerson = row.cells[2].innerText.split('\n')[0].trim();
-        
-        checklistData.push({
-          task: task,
-          where: where,
-          contactPerson: contactPerson,
-          completed: checkbox.checked
-        });
+    const preview = document.getElementById('signature-preview-' + (index + 1));
+    if (!preview || !preview.innerHTML.trim()) {
+      allSigned = false;
+    }
+  });
 
-        if (!checkbox.checked) {
-          allChecked = false;
-        }
+  // Check if manager verified and signed
+  const managerVerified = document.getElementById('manager-verify-checkbox').checked;
+  const managerSignaturePreview = document.getElementById('manager-signature-preview');
+  const managerSigned = managerSignaturePreview && managerSignaturePreview.innerHTML.trim();
 
-        const preview = document.getElementById('signature-preview-' + (index + 1));
-        if (!preview || !preview.innerHTML.trim()) {
-          allSigned = false;
-        }
-      });
+  // Display validation alerts if needed
+  if (!allChecked) {
+    alert('Please complete all checklist items.');
+    return;
+  }
+  if (!allSigned) {
+    alert('Please capture the signature for all tasks.');
+    return;
+  }
+  if (!managerVerified) {
+    alert('Line manager must verify the checklist.');
+    return;
+  }
+  if (!managerSigned) {
+    alert('Line manager must provide a signature.');
+    return;
+  }
 
-      const managerVerified = document.getElementById('manager-verify-checkbox').checked;
-      const managerSignaturePreview = document.getElementById('manager-signature-preview');
-      const managerSigned = managerSignaturePreview && managerSignaturePreview.innerHTML.trim();
-
-      if (!allChecked) {
-        alert('Please complete all checklist items.');
-        return;
-      }
-      if (!allSigned) {
-        alert('Please capture the signature for all tasks.');
-        return;
-      }
-      if (!managerVerified) {
-        alert('Line manager must verify the checklist.');
-        return;
-      }
-      if (!managerSigned) {
-        alert('Line manager must provide a signature.');
-        return;
-      }
-
-      // Collect signatures
-      Object.keys(signaturePads).forEach((canvasId) => {
-        if (!signaturePads[canvasId].isEmpty()) {
-          signatureData[canvasId] = signaturePads[canvasId].toDataURL();
-        }
-      });
-
-      const notes = document.getElementById('notes').innerText.trim();
-
-      // Send Data to Backend
-      try {
-        const response = await fetch('/onboarding', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            applicantId: applicantId,
-            checklist: checklistData,
-            signatures: signatureData,
-            managerVerified,
-            notes
-          })
-        });
-
-        const result = await response.json();
-        if (result.success) {
-          alert('Checklist successfully submitted!');
-          window.location.href = '/onboarding/employee-records'; // Redirect to next step
-        } else {
-          alert('Error submitting checklist: ' + result.message);
-        }
-      } catch (error) {
-        console.error('Error submitting form:', error);
-        alert('Failed to submit checklist. Try again.');
-      }
+  // Send only the applicant ID to update status
+  try {
+    const response = await fetch('/onboarding/update-status', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        applicantId: applicantId
+      })
     });
+
+    const result = await response.json();
+    if (result.success) {
+      // Show success modal
+      document.getElementById('success-modal').style.display = 'block';
+    } else {
+      alert('Error updating status: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error updating status:', error);
+    alert('Failed to update status. Try again.');
+  }
+});
+
+    // Final submission: validate checklist items, signatures, and manager verification/signature
+    // document.querySelector('.btn-submit').addEventListener('click', async function () {
+
+    //   const applicantId = document.getElementById('applicant-id').value;
+
+    //   let allChecked = true;
+    //   let allSigned = true;
+    //   const checklistData = [];
+    //   const signatureData = {};
+
+    //   // Collect checkbox & signature data
+    //   document.querySelectorAll('.table-checkbox').forEach((checkbox, index) => {
+    //     // Get the content from the row
+    //     const row = checkbox.closest('tr');
+    //     const task = checkbox.nextElementSibling.innerText.trim();
+    //     const where = row.cells[1].innerText.trim();
+    //     const contactPerson = row.cells[2].innerText.split('\n')[0].trim();
+        
+    //     checklistData.push({
+    //       task: task,
+    //       where: where,
+    //       contactPerson: contactPerson,
+    //       completed: checkbox.checked
+    //     });
+
+    //     if (!checkbox.checked) {
+    //       allChecked = false;
+    //     }
+
+    //     const preview = document.getElementById('signature-preview-' + (index + 1));
+    //     if (!preview || !preview.innerHTML.trim()) {
+    //       allSigned = false;
+    //     }
+    //   });
+
+    //   const managerVerified = document.getElementById('manager-verify-checkbox').checked;
+    //   const managerSignaturePreview = document.getElementById('manager-signature-preview');
+    //   const managerSigned = managerSignaturePreview && managerSignaturePreview.innerHTML.trim();
+
+    //   if (!allChecked) {
+    //     alert('Please complete all checklist items.');
+    //     return;
+    //   }
+    //   if (!allSigned) {
+    //     alert('Please capture the signature for all tasks.');
+    //     return;
+    //   }
+    //   if (!managerVerified) {
+    //     alert('Line manager must verify the checklist.');
+    //     return;
+    //   }
+    //   if (!managerSigned) {
+    //     alert('Line manager must provide a signature.');
+    //     return;
+    //   }
+
+    //   // Collect signatures
+    //   Object.keys(signaturePads).forEach((canvasId) => {
+    //     if (!signaturePads[canvasId].isEmpty()) {
+    //       signatureData[canvasId] = signaturePads[canvasId].toDataURL();
+    //     }
+    //   });
+
+    //   const notes = document.getElementById('notes').innerText.trim();
+
+    //   // Send Data to Backend
+    //   try {
+    //     const response = await fetch('/onboarding', {
+    //       method: 'POST',
+    //       headers: {
+    //         'Content-Type': 'application/json'
+    //       },
+    //       body: JSON.stringify({
+    //         applicantId: applicantId,
+    //         checklist: checklistData,
+    //         signatures: signatureData,
+    //         managerVerified,
+    //         notes
+    //       })
+    //     });
+
+    //     const result = await response.json();
+    //     if (result.success) {
+    //       alert('Checklist successfully submitted!');
+    //       window.location.href = '/onboarding/employee-records'; // Redirect to next step
+    //     } else {
+    //       alert('Error submitting checklist: ' + result.message);
+    //     }
+    //   } catch (error) {
+    //     console.error('Error submitting form:', error);
+    //     alert('Failed to submit checklist. Try again.');
+    //   }
+    // });
   </script>
 </body>
 </html>

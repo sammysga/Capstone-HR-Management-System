@@ -35,8 +35,14 @@ router.get('/applicant/onboarding/osd-wait', applicantController.getOnboardingWa
 router.get('/applicant/onboarding/objective-setting-view', applicantController.getOnboardingObjectiveSetting);
 
 router.get('/applicant/job-offer', applicantController.getJobOffer);
-router.get('/applicant/onboarding', applicantController.getApplicantOnboarding);
 router.post('/api/accept-job-offer', applicantController.acceptJobOffer);
+router.get('/applicant/onboarding', applicantController.getApplicantOnboarding);
+router.post('/onboarding/update-status', applicantController.updateApplicantStatus);
+
+router.get('/applicant/awaiting-account-setup', function(req, res) {
+    // Render the awaiting account setup page
+    res.render('applicant_pages/awaitingaccountsetup');
+});
 
 // Chatbot routes
 router.get('/chatbothome', applicantController.getChatbotPage);
