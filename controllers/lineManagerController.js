@@ -1603,114 +1603,175 @@ submitInterviewEvaluation: async function(req, res) {
 /**
  * Send a job offer to an applicant and update their status
  */
-sendJobOffer: async function(req, res) {
-    console.log('========== SEND JOB OFFER DEBUG START ==========');
+// sendJobOffer: async function(req, res) {
+//     console.log('========== SEND JOB OFFER DEBUG START ==========');
     
-    try {
-        // Log the entire request body
-        console.log('Full Request Body:', req.body);
+//     try {
+//         // Log the entire request body
+//         console.log('Full Request Body:', req.body);
         
-        const { applicantId, startDate, additionalNotes } = req.body;
+//         const { applicantId, startDate, additionalNotes } = req.body;
         
-        // Detailed input validation logging
-        console.log('Extracted Values:');
-        console.log('Applicant ID:', applicantId);
-        console.log('Start Date:', startDate);
-        console.log('Additional Notes:', additionalNotes);
+//         // Detailed input validation logging
+//         console.log('Extracted Values:');
+//         console.log('Applicant ID:', applicantId);
+//         console.log('Start Date:', startDate);
+//         console.log('Additional Notes:', additionalNotes);
         
-        // Validate input with detailed logging
-        if (!applicantId) {
-            console.error('ERROR: Applicant ID is MISSING');
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Applicant ID is required' 
-            });
+//         // Validate input with detailed logging
+//         if (!applicantId) {
+//             console.error('ERROR: Applicant ID is MISSING');
+//             return res.status(400).json({ 
+//                 success: false, 
+//                 message: 'Applicant ID is required' 
+//             });
+//         }
+        
+//         if (!startDate) {
+//             console.error('ERROR: Start Date is MISSING');
+//             return res.status(400).json({ 
+//                 success: false, 
+//                 message: 'Start date is required' 
+//             });
+//         }
+        
+//         // Fetch current applicant details before update
+//         const { data: currentApplicant, error: fetchError } = await supabase
+//             .from('applicantaccounts')
+//             .select('*')
+//             .eq('applicantId', applicantId)
+//             .single();
+        
+//         console.log('Current Applicant Details:', currentApplicant);
+        
+//         if (fetchError) {
+//             console.error('ERROR Fetching Applicant:', fetchError);
+//             return res.status(404).json({ 
+//                 success: false, 
+//                 message: 'Applicant not found',
+//                 error: fetchError 
+//             });
+//         }
+        
+//         // Perform update with detailed logging
+//         const { data, error } = await supabase
+//             .from('applicantaccounts')
+//             .update({ 
+//                 applicantStatus: 'P3 - PASSED - Job Offer Sent',
+//                 jobOfferSentDate: new Date().toISOString()
+//             })
+//             .eq('applicantId', applicantId);
+        
+//         // Log update results
+//         console.log('Update Operation Results:');
+//         console.log('Data:', data);
+//         console.log('Error:', error);
+        
+//         if (error) {
+//             console.error('DATABASE UPDATE ERROR:', error);
+//             return res.status(500).json({ 
+//                 success: false, 
+//                 message: 'Failed to update applicant status',
+//                 details: error 
+//             });
+//         }
+        
+//         // Verify the update by fetching the record again
+//         const { data: updatedApplicant, error: verifyError } = await supabase
+//             .from('applicantaccounts')
+//             .select('*')
+//             .eq('applicantId', applicantId)
+//             .single();
+        
+//         console.log('Updated Applicant Verification:');
+//         console.log('Updated Details:', updatedApplicant);
+//         console.log('Verification Error:', verifyError);
+        
+//         // Final verification log
+//         if (updatedApplicant) {
+//             console.log('STATUS CHANGE VERIFICATION:');
+//             console.log('Old Status:', currentApplicant?.applicantStatus);
+//             console.log('New Status:', updatedApplicant.applicantStatus);
+//         }
+        
+//         console.log('========== SEND JOB OFFER DEBUG END ==========');
+        
+//         // Return success response
+//         return res.status(200).json({ 
+//             success: true, 
+//             message: 'Job offer sent successfully',
+//             updatedStatus: updatedApplicant?.applicantStatus
+//         });
+        
+//     } catch (error) {
+//         console.error('CRITICAL ERROR in sendJobOffer:', error);
+//         return res.status(500).json({ 
+//             success: false, 
+//             message: 'An unexpected error occurred',
+//             errorDetails: error.message,
+//             fullError: error
+//         });
+//     }
+// },
+
+
+sendJobOffer: async function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'Line Manager') {
+        try {
+            const { applicantId, startDate, additionalNotes } = req.body;
+            
+            if (!applicantId || !startDate) {
+                return res.status(400).json({ success: false, message: 'Missing required information' });
+            }
+            
+            // Get the jobId from the applicant record
+            const { data: applicantData, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select('jobId')
+                .eq('applicantId', applicantId)
+                .single();
+                
+            if (applicantError || !applicantData) {
+                console.error('Error fetching applicant data:', applicantError);
+                return res.status(500).json({ success: false, message: 'Failed to fetch applicant data' });
+            }
+            
+            const jobId = applicantData.jobId;
+            
+            // Save the start date to the onboarding_position-startdate table
+            const { error: startDateError } = await supabase
+                .from('onboarding_position-startdate')
+                .upsert({ 
+                    jobId: jobId,
+                    setStartDate: startDate,
+                    updatedAt: new Date().toISOString(),
+                    isAccepted: false, // Initialize as false until applicant accepts
+                    additionalNotes: additionalNotes || ''
+                });
+                
+            if (startDateError) {
+                console.error('Error saving start date:', startDateError);
+                return res.status(500).json({ success: false, message: 'Failed to save start date' });
+            }
+            
+            // Update the applicant status
+            const { error: updateError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P3 - PASSED - Job Offer Sent' })
+                .eq('applicantId', applicantId);
+                
+            if (updateError) {
+                console.error('Error updating applicant status:', updateError);
+                return res.status(500).json({ success: false, message: 'Failed to update applicant status' });
+            }
+            
+            return res.json({ success: true, message: 'Job offer sent successfully' });
+        } catch (error) {
+            console.error('Error sending job offer:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error' });
         }
-        
-        if (!startDate) {
-            console.error('ERROR: Start Date is MISSING');
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Start date is required' 
-            });
-        }
-        
-        // Fetch current applicant details before update
-        const { data: currentApplicant, error: fetchError } = await supabase
-            .from('applicantaccounts')
-            .select('*')
-            .eq('applicantId', applicantId)
-            .single();
-        
-        console.log('Current Applicant Details:', currentApplicant);
-        
-        if (fetchError) {
-            console.error('ERROR Fetching Applicant:', fetchError);
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Applicant not found',
-                error: fetchError 
-            });
-        }
-        
-        // Perform update with detailed logging
-        const { data, error } = await supabase
-            .from('applicantaccounts')
-            .update({ 
-                applicantStatus: 'P3 - PASSED - Job Offer Sent',
-                jobOfferSentDate: new Date().toISOString()
-            })
-            .eq('applicantId', applicantId);
-        
-        // Log update results
-        console.log('Update Operation Results:');
-        console.log('Data:', data);
-        console.log('Error:', error);
-        
-        if (error) {
-            console.error('DATABASE UPDATE ERROR:', error);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Failed to update applicant status',
-                details: error 
-            });
-        }
-        
-        // Verify the update by fetching the record again
-        const { data: updatedApplicant, error: verifyError } = await supabase
-            .from('applicantaccounts')
-            .select('*')
-            .eq('applicantId', applicantId)
-            .single();
-        
-        console.log('Updated Applicant Verification:');
-        console.log('Updated Details:', updatedApplicant);
-        console.log('Verification Error:', verifyError);
-        
-        // Final verification log
-        if (updatedApplicant) {
-            console.log('STATUS CHANGE VERIFICATION:');
-            console.log('Old Status:', currentApplicant?.applicantStatus);
-            console.log('New Status:', updatedApplicant.applicantStatus);
-        }
-        
-        console.log('========== SEND JOB OFFER DEBUG END ==========');
-        
-        // Return success response
-        return res.status(200).json({ 
-            success: true, 
-            message: 'Job offer sent successfully',
-            updatedStatus: updatedApplicant?.applicantStatus
-        });
-        
-    } catch (error) {
-        console.error('CRITICAL ERROR in sendJobOffer:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'An unexpected error occurred',
-            errorDetails: error.message,
-            fullError: error
-        });
+    } else {
+        return res.status(401).json({ success: false, message: 'Unauthorized access. Line Manager role required.' });
     }
 },
 
