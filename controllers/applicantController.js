@@ -2344,6 +2344,79 @@ getApplicantOnboarding: async function(req, res) {
         res.status(500).send('Something went wrong while preparing your onboarding page.');
     }
 },
+updateApplicantStatus: async function(req, res) {
+    try {
+        // Verify user session
+        if (!req.session.userID) {
+            console.log('❌ [updateApplicantStatus] No user session found');
+            return res.status(401).json({
+                success: false,
+                message: 'Authentication required. Please log in again.'
+            });
+        }
+        
+        const userId = req.session.userID;
+        console.log(`✅ [updateApplicantStatus] Processing status update for user ID: ${userId}`);
+        
+        // Extract data from request body
+        const { applicantId } = req.body;
+        
+        if (!applicantId) {
+            console.log('❌ [updateApplicantStatus] Missing applicant ID');
+            return res.status(400).json({
+                success: false,
+                message: 'Missing applicant ID'
+            });
+        }
+        
+        // Verify the applicant ID belongs to the logged-in user
+        const { data: applicantData, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select('applicantId, applicantStatus')
+            .eq('userId', userId)
+            .eq('applicantId', applicantId)
+            .single();
+        
+        if (applicantError || !applicantData) {
+            console.error('❌ [updateApplicantStatus] Applicant verification failed:', applicantError);
+            return res.status(403).json({
+                success: false,
+                message: 'You do not have permission to update this status'
+            });
+        }
+        
+        // Update applicant status to "Onboarding - Checklist Accomplished"
+        const { data: updateData, error: updateError } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'Onboarding - Checklist Accomplished' })
+            .eq('applicantId', applicantId)
+            .select();
+        
+        if (updateError) {
+            console.error('❌ [updateApplicantStatus] Error updating applicant status:', updateError);
+            return res.status(500).json({
+                success: false,
+                message: 'Status update failed'
+            });
+        }
+        
+        console.log(`✅ [updateApplicantStatus] Successfully updated status for applicant ID: ${applicantId}`);
+        
+        // Return success response
+        return res.status(200).json({
+            success: true,
+            message: 'First day checklist successfully completed',
+            newStatus: 'Onboarding - Checklist Accomplished'
+        });
+        
+    } catch (error) {
+        console.error('❌ [updateApplicantStatus] Unexpected error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An unexpected error occurred while processing your request'
+        });
+    }
+},
 
 updateApplicantStatusFinalizeP1Review: async function (userId) {
     try {
