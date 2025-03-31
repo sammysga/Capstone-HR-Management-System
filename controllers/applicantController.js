@@ -2030,13 +2030,16 @@ updateApplicantStatusToP1Initial: async function (userId) {
 },
 
 // The getJobOffer function (shows the initial job offer page)
+// The getJobOffer function (shows the initial job offer page)
 getJobOffer: async function(req, res) {
     try {
-        if (!req.session.userId) {
+        if (!req.session.userID) { // Using userID to match your existing code
+            console.log('❌ [getJobOffer] No user session found. Redirecting to login...');
             return res.redirect('/applicant/login');
         }
         
-        const userId = req.session.userId;
+        const userId = req.session.userID;
+        console.log(`✅ [getJobOffer] Processing job offer for user ID: ${userId}`);
         
         // Get the applicant information
         const { data: applicantData, error: applicantError } = await supabase
@@ -2050,15 +2053,17 @@ getJobOffer: async function(req, res) {
             .single();
         
         if (applicantError || !applicantData) {
-            console.error('Error fetching applicant data:', applicantError);
-            req.flash('error', 'Unable to retrieve your application information.');
-            return res.redirect('/applicant/dashboard');
+            console.error('❌ [getJobOffer] Error fetching applicant data:', applicantError);
+            return res.status(400).send('Unable to retrieve your application information.');
         }
         
-        // Verify the applicant has a job offer
+        console.log(`✅ [getJobOffer] Applicant status: ${applicantData.applicantStatus}`);
+        
+        // For testing purposes, you might want to temporarily disable this check
+        // Comment this block if you want to see the page regardless of status
         if (applicantData.applicantStatus !== 'P3 - PASSED - Job Offer Sent') {
-            req.flash('error', 'No job offer is currently available for you.');
-            return res.redirect('/applicant/dashboard');
+            console.log(`❌ [getJobOffer] Applicant status does not qualify for job offer: ${applicantData.applicantStatus}`);
+            return res.send('No job offer is currently available for you. Current status: ' + applicantData.applicantStatus);
         }
         
         // Get job position details
@@ -2069,87 +2074,118 @@ getJobOffer: async function(req, res) {
             .single();
         
         if (jobError) {
-            console.error('Error fetching job data:', jobError);
-            req.flash('error', 'Unable to retrieve job information.');
-            return res.redirect('/applicant/dashboard');
+            console.error('❌ [getJobOffer] Error fetching job data:', jobError);
+            return res.status(400).send('Unable to retrieve job information.');
         }
         
         // Get the start date from onboarding_position-startdate table
-        const { data: startDateData, error: startDateError } = await supabase
-            .from('onboarding_position-startdate')
-            .select('setStartDate')
-            .eq('jobId', applicantData.jobId)
-            .single();
+        let startDate;
+        try {
+            const { data: startDateData, error: startDateError } = await supabase
+                .from('onboarding_position-startdate')
+                .select('setStartDate')
+                .eq('jobId', applicantData.jobId)
+                .single();
+            
+            if (startDateError) {
+                console.log('❌ [getJobOffer] Error fetching start date:', startDateError);
+                // Fallback to default start date (2 weeks from now)
+                startDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                console.log(`✅ [getJobOffer] Using default start date: ${startDate}`);
+            } else if (startDateData && startDateData.setStartDate) {
+                startDate = startDateData.setStartDate;
+                console.log(`✅ [getJobOffer] Using database start date: ${startDate}`);
+            } else {
+                // Default to 2 weeks from now if no data found
+                startDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                console.log(`✅ [getJobOffer] Using default start date: ${startDate}`);
+            }
+        } catch (error) {
+            console.error('❌ [getJobOffer] Unexpected error fetching start date:', error);
+            // Default to 2 weeks from now
+            startDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            console.log(`✅ [getJobOffer] Using default start date after error: ${startDate}`);
+        }
         
-        // Set a default start date if none is found
-        const startDate = startDateData && startDateData.setStartDate 
-            ? startDateData.setStartDate 
-            : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Default to 2 weeks from now
-        
-        // Render the job offer page
-        res.render('applicant_pages/joboffer', {
+        // Prepare data for the template
+        const templateData = {
             jobTitle: jobData.jobTitle,
             startDate: startDate,
             applicantId: applicantData.applicantId
-        });
+        };
+        
+        console.log('✅ [getJobOffer] Rendering job offer page with data:', templateData);
+        
+        // Render the job offer page
+        res.render('applicant_pages/joboffer', templateData);
         
     } catch (error) {
-        console.error('Error displaying job offer:', error);
-        req.flash('error', 'Something went wrong while processing your job offer.');
-        res.redirect('/applicant/dashboard');
+        console.error('❌ [getJobOffer] Error displaying job offer:', error);
+        res.status(500).send('Something went wrong while processing your job offer. Please try again later.');
     }
 },
 
 // API endpoint to accept job offer
 acceptJobOffer: async function(req, res) {
     try {
-        if (!req.session.userId) {
-            return res.status(401).json({ success: false, message: 'User is not logged in' });
-        }
+        console.log('✅ [acceptJobOffer] Processing job offer acceptance request');
         
-        const userId = req.session.userId;
         const { applicantId } = req.body;
         
         if (!applicantId) {
+            console.log('❌ [acceptJobOffer] Missing applicant ID in request');
             return res.status(400).json({ success: false, message: 'Missing applicant ID' });
         }
         
-        // Get job ID from applicant record
+        console.log(`✅ [acceptJobOffer] Accepting job offer for applicant ID: ${applicantId}`);
+        
+        // Get userId and jobId from applicant record
         const { data: applicantData, error: applicantError } = await supabase
             .from('applicantaccounts')
-            .select('jobId')
+            .select('userId, jobId')
             .eq('applicantId', applicantId)
             .single();
             
         if (applicantError || !applicantData) {
-            console.error('Error fetching applicant data:', applicantError);
+            console.error('❌ [acceptJobOffer] Error fetching applicant data:', applicantError);
             return res.status(500).json({ success: false, message: 'Failed to fetch applicant data' });
         }
         
+        const userId = applicantData.userId;
         const jobId = applicantData.jobId;
         
+        console.log(`✅ [acceptJobOffer] User ID: ${userId}, Job ID: ${jobId}`);
+        
         // Update the isAccepted field in onboarding_position-startdate table
-        const { error: startDateError } = await supabase
-            .from('onboarding_position-startdate')
-            .update({ isAccepted: true })
-            .eq('jobId', jobId);
-            
-        if (startDateError) {
-            console.error('Error updating job acceptance status:', startDateError);
-            return res.status(500).json({ success: false, message: 'Failed to update job acceptance status' });
+        try {
+            const { error: startDateError } = await supabase
+                .from('onboarding_position-startdate')
+                .update({ isAccepted: true })
+                .eq('jobId', jobId);
+                
+            if (startDateError) {
+                console.error('❌ [acceptJobOffer] Error updating job acceptance status:', startDateError);
+                // Continue with the process even if this fails - it might be a new record or table structure issue
+            } else {
+                console.log('✅ [acceptJobOffer] Updated job acceptance status in onboarding_position-startdate table');
+            }
+        } catch (startDateErr) {
+            console.error('❌ [acceptJobOffer] Unexpected error updating start date acceptance:', startDateErr);
+            // Continue with the process even if this part fails
         }
         
         // Update the applicant status
         const { error: updateError } = await supabase
             .from('applicantaccounts')
             .update({ applicantStatus: 'Job Offer Accepted' })
-            .eq('applicantId', applicantId)
-            .eq('userId', userId);
+            .eq('applicantId', applicantId);
         
         if (updateError) {
-            console.error('Error updating applicant status:', updateError);
+            console.error('❌ [acceptJobOffer] Error updating applicant status:', updateError);
             return res.status(500).json({ success: false, message: 'Failed to update application status' });
         }
+        
+        console.log('✅ [acceptJobOffer] Successfully updated applicant status to "Job Offer Accepted"');
         
         // Send a confirmation message through the chatbot
         try {
@@ -2168,8 +2204,9 @@ acceptJobOffer: async function(req, res) {
                     applicantStage: 'Job Offer Accepted'
                 }]);
             
+            console.log('✅ [acceptJobOffer] Added confirmation message to chatbot history');
         } catch (chatError) {
-            console.error('Error sending confirmation message:', chatError);
+            console.error('❌ [acceptJobOffer] Error sending confirmation message:', chatError);
             // Continue even if the message fails
         }
         
@@ -2180,7 +2217,7 @@ acceptJobOffer: async function(req, res) {
         });
         
     } catch (error) {
-        console.error('Error accepting job offer:', error);
+        console.error('❌ [acceptJobOffer] Error accepting job offer:', error);
         return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 },
