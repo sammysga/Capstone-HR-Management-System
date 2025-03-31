@@ -28,11 +28,15 @@ router.get('/contactform', applicantController.getContactForm);
 router.get('/job-details/:jobId', applicantController.getJobDetailsTitle);
 // router.get('/chatbothome', applicantController.getChatbotPage);
 //router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);
-router.get('/onboarding', applicantController.getOnboarding);
-router.post('/onboarding', applicantController.postOnboarding);
-router.get('/onboarding/employee-records', applicantController.getOnboardingEmployeeRecords);
-router.get('/onboarding/osd-wait', applicantController.getOnboardingWaitOSD);
-router.get('/onboarding/objective-setting-view', applicantController.getOnboardingObjectiveSetting);
+// router.get('/applicant/onboarding', applicantController.getOnboarding);
+// router.post('/applicant/onboarding', applicantController.postOnboarding);
+router.get('/applicant/onboarding/employee-records', applicantController.getOnboardingEmployeeRecords);
+router.get('/applicant/onboarding/osd-wait', applicantController.getOnboardingWaitOSD);
+router.get('/applicant/onboarding/objective-setting-view', applicantController.getOnboardingObjectiveSetting);
+
+router.get('/applicant/job-offer', applicantController.getJobOffer);
+router.get('/applicant/onboarding', applicantController.getApplicantOnboarding);
+router.post('/api/accept-job-offer', applicantController.acceptJobOffer);
 
 // Chatbot routes
 router.get('/chatbothome', applicantController.getChatbotPage);
@@ -96,6 +100,7 @@ router.get('/hr/evaluation-form/:applicantId', hrController.getEvaluationForm);
 router.get('/api/hr/notifications', hrController.getHRNotifications);
 
 router.post('/hr/send-onboarding-checklist', hrController.sendOnboardingChecklist);
+router.get('/hr/get-start-date', hrController.getOnboardingStartDate);
 router.get('/hr/onboarding-view', hrController.getHROnboarding);
 router.get('/hr/offboarding-request', hrController.getOffboardingRequestsDash);
 router.get('/hr/view-offboarding-request/:userId', hrController.getViewOffboardingRequest);
@@ -211,11 +216,8 @@ router.post('/reject-applicant', lineManagerController.rejectApplicant);
 
 
 // Route to handle job offer sending
-// In your routes file
-router.post('/linemanager/send-job-offer', (req, res) => {
-    // Simple success response
-    res.json({ success: true, message: 'Job offer sent successfully' });
-});
+router.post('/linemanager/send-job-offer', lineManagerController.sendJobOffer);
+
 
 // Route to view job offer details
 router.get('/linemanager/job-offer-details/:jobOfferId', lineManagerController.getJobOfferDetails);

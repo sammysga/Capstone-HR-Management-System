@@ -277,10 +277,32 @@
     </div>
   </div>
 
-  <input type="hidden" id="applicant-id" name="applicantId" value="<%= applicant.applicantId %>">
 
+<div class="applicant-info-container" style="max-width: 1200px; margin: 0 auto 30px; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); padding: 20px;">
+  <h2 style="color: #124A5C; margin-top: 0; margin-bottom: 15px; font-weight: 600;">Employee Information</h2>
+  
+  <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+    <div style="flex: 1; min-width: 300px;">
+      <p><strong>Name:</strong> <%= applicant.fullName %></p>
+      <p><strong>Email:</strong> <%= applicant.email %></p>
+      <p><strong>Phone:</strong> <%= applicant.phoneNo %></p>
+    </div>
+    <div style="flex: 1; min-width: 300px;">
+      <p><strong>Position:</strong> <%= applicant.jobTitle %></p>
+      <p><strong>Department:</strong> <%= applicant.department %></p>
+      <p><strong>Start Date:</strong> <%= applicant.startDate %></p>
+    </div>
+  </div>
+  
+  <div style="background-color: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #07ACB9;">
+    <p style="margin: 0;"><strong>Welcome to Prime Infrastructure!</strong> Please complete the first day checklist below to prepare for your onboarding.</p>
+  </div>
+</div>
 
-  <div class="subheader">1. Accomplishing of First Day Checklist</div>
+<!-- Update the hidden input field for applicant ID -->
+<input type="hidden" id="applicant-id" name="applicantId" value="<%= applicant.applicantId %>">
+
+  <div class="subheader">Accomplishing of First Day Checklist</div>
   <div class="table-header-left">First Day Checklist Guide for Applicant</div>
 
   <!-- Checklist Table with Hardcoded Items -->

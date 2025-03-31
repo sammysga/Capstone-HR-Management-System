@@ -750,7 +750,9 @@
                                     '<%= applicant.lastName %>',
                                     '<%= applicant.birthDate %>',
                                     '<%= applicant.userEmail %>',
-                                    '<%= applicant.phoneNo %>'
+                                    '<%= applicant.phoneNo %>',
+                                    '<%= applicant.jobId %>',
+                                    '<%= applicant.jobTitle %>'
                                 )">For Onboarding</button>
                             </div>
                         </td>
@@ -955,10 +957,13 @@
     <div class="modal-content" style="width: 70%; max-width: 1200px; background-color: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); padding: 30px;">
         <span class="close-button" onclick="closeModal('moveToOnboardingModal')" style="color: #666; font-size: 28px; font-weight: bold; position: absolute; right: 20px; top: 15px; cursor: pointer;">&times;</span>
         
-        <h1 style="color: #07ACB9; text-align: center; margin-bottom: 30px; font-weight: 600;">Job Offer Confirmation</h1>
-        
+        <h1 style="color: #07ACB9; text-align: center; margin-bottom: 30px; font-weight: 600;">
+            Move Applicant to Onboarding and Send First Day Checklist?
+        </h1>
+                
         <input type="hidden" id="onboarding-user-id">
         <input type="hidden" id="onboarding-applicant-id">
+        <input type="hidden" id="onboarding-job-id">
         
         <div class="applicant-info-section" style="margin-bottom: 30px; background-color: #f8f9fa; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
             <h2 style="color: #124A5C; margin-top: 0; font-weight: 600; margin-bottom: 15px;"><strong>Applicant Personal Information</strong></h2>
@@ -966,7 +971,27 @@
             <p style="margin: 10px 0; line-height: 1.6;"><strong>Birthday:</strong> <span id="applicant-birthday-onboarding">Text</span></p>
             <p style="margin: 10px 0; line-height: 1.6;"><strong>Email:</strong> <span id="applicant-email-onboarding">Text</span></p>
             <p style="margin: 10px 0; line-height: 1.6;"><strong>Contact No:</strong> <span id="applicant-contact-onboarding">Text</span></p>
+            <p style="margin: 10px 0; line-height: 1.6;"><strong>Position:</strong> <span id="applicant-position-onboarding">Text</span></p>
         </div>
+        
+<!-- Updated Start Date Section in moveToOnboardingModal -->
+<div class="start-date-section" style="margin-bottom: 30px; background-color: #f0f8ff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+    <h2 style="color: #124A5C; margin-top: 0; font-weight: 600; margin-bottom: 15px;"><strong>Start Date Information</strong></h2>
+    
+    <!-- Line Manager's Set Date -->
+    <div style="margin-bottom: 15px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; border-left: 4px solid #07ACB9;">
+        <p style="margin: 0 0 5px 0; font-weight: 600;">Line Manager's Set Date:</p>
+        <p style="margin: 0; font-size: 16px;" id="lm-set-date">Loading...</p>
+    </div>
+    
+    <!-- HR can confirm or modify the date -->
+    <p style="margin: 15px 0;">You can confirm or modify the start date for the applicant:</p>
+    
+    <div style="margin-bottom: 20px;">
+        <label for="start-date-input" style="display: block; font-weight: 600; margin-bottom: 10px;">Confirmed Start Date:</label>
+        <input type="date" id="start-date-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;" min="<%= new Date().toISOString().split('T')[0] %>">
+    </div>
+</div>
         
         <div class="checklist-section" style="margin-bottom: 30px; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border: 1px solid #e9ecef;">
             <h2 style="color: #124A5C; margin-top: 0; font-weight: 600; margin-bottom: 15px;"><strong>First Day Onboarding Checklist</strong></h2>
@@ -1012,7 +1037,7 @@
             <div style="background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-top: 20px;">
                 <p style="margin: 0; display: flex; align-items: center;">
                     <span style="display: inline-block; width: 18px; height: 18px; margin-right: 10px; background-color: #07ACB9; color: white; border-radius: 50%; text-align: center; line-height: 18px; font-weight: bold; font-size: 12px;">i</span>
-                    Confirming will update the applicant's status to "Onboarding - First Day Checklist Sent".
+                    Confirming will update the applicant's status to "Onboarding - First Day Checklist Sent" and send them the first day checklist as a requirement for Onboarding.
                 </p>
             </div>
         </div>
@@ -1463,32 +1488,76 @@ function highlightActiveFilter(status) {
         closeModal('releaseJobOfferModal');
     }
 
-    function openOnboardingModal(userId, applicantId, firstName, lastName, birthDate, email, phoneNo) {
-        // Set the hidden input values
-        document.getElementById('onboarding-user-id').value = userId;
-        document.getElementById('onboarding-applicant-id').value = applicantId;
-        
-        // Set the visible applicant information
-        document.getElementById('applicant-name-onboarding').textContent = lastName + ', ' + firstName;
-        document.getElementById('applicant-birthday-onboarding').textContent = birthDate || 'Not available';
-        document.getElementById('applicant-email-onboarding').textContent = email || 'Not available';
-        document.getElementById('applicant-contact-onboarding').textContent = phoneNo || 'Not available';
-        
-        // Display the modal
-        document.getElementById('moveToOnboardingModal').style.display = 'block';
-    }
+    function openOnboardingModal(userId, applicantId, firstName, lastName, birthDate, email, phoneNo, jobId, jobTitle) {
+    // Set the hidden input values
+    document.getElementById('onboarding-user-id').value = userId;
+    document.getElementById('onboarding-applicant-id').value = applicantId;
+    document.getElementById('onboarding-job-id').value = jobId;
+    
+    // Set the visible applicant information
+    document.getElementById('applicant-name-onboarding').textContent = lastName + ', ' + firstName;
+    document.getElementById('applicant-birthday-onboarding').textContent = birthDate || 'Not available';
+    document.getElementById('applicant-email-onboarding').textContent = email || 'Not available';
+    document.getElementById('applicant-contact-onboarding').textContent = phoneNo || 'Not available';
+    document.getElementById('applicant-position-onboarding').textContent = jobTitle || 'Not available';
+    
+    // Fetch the Line Manager's set date from the database
+    fetch(`/hr/get-start-date?jobId=${jobId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.startDate) {
+                // Format the date for display
+                const date = new Date(data.startDate);
+                const formattedDate = date.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                // Display Line Manager's set date
+                document.getElementById('lm-set-date').textContent = formattedDate;
+                
+                // Set the default value for HR's confirmation field
+                document.getElementById('start-date-input').value = data.startDate;
+            } else {
+                document.getElementById('lm-set-date').textContent = 'No date set by Line Manager';
+                
+                // Set a default start date (2 weeks from today)
+                const twoWeeksFromNow = new Date();
+                twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+                const formattedDate = twoWeeksFromNow.toISOString().split('T')[0];
+                document.getElementById('start-date-input').value = formattedDate;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching start date:', error);
+            document.getElementById('lm-set-date').textContent = 'Error loading date';
+            
+            // Set a default start date (2 weeks from today)
+            const twoWeeksFromNow = new Date();
+            twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+            const formattedDate = twoWeeksFromNow.toISOString().split('T')[0];
+            document.getElementById('start-date-input').value = formattedDate;
+        });
+    
+    // Display the modal
+    document.getElementById('moveToOnboardingModal').style.display = 'block';
+}
     
     // Function for confirming onboarding - Updated version
     function confirmOnboarding() {
         const userId = document.getElementById('onboarding-user-id').value;
         const applicantId = document.getElementById('onboarding-applicant-id').value;
+        const jobId = document.getElementById('onboarding-job-id').value;
+        const startDate = document.getElementById('start-date-input').value;
         
-        if (!userId || !applicantId) {
-            alert('Error: Missing applicant information. Please try again.');
+        if (!userId || !applicantId || !jobId || !startDate) {
+            alert('Error: Missing required information. Please make sure all fields are filled.');
             return;
         }
         
-        // Send request to update applicant status
+        // Send request to update applicant status and save start date
         fetch('/hr/send-onboarding-checklist', {
             method: 'POST',
             headers: {
@@ -1496,13 +1565,15 @@ function highlightActiveFilter(status) {
             },
             body: JSON.stringify({ 
                 userId: userId,
-                applicantId: applicantId 
+                applicantId: applicantId,
+                jobId: jobId,
+                startDate: startDate
             }),
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Status updated to "Onboarding - First Day Checklist Sent" successfully.');
+                alert('Status updated and job offer sent successfully. Start date has been set for ' + startDate);
                 closeModal('moveToOnboardingModal');
                 location.reload(); // Reload to update the UI
             } else {
@@ -1514,6 +1585,7 @@ function highlightActiveFilter(status) {
             alert('An error occurred while processing your request. Please try again.');
         });
     }
+
     // Function for confirming account setup
     function confirmAccountSetup() {
         alert("Account setup confirmed");

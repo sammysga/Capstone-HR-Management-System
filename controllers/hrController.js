@@ -951,13 +951,67 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
         }
     },
 
+    getOnboardingStartDate: async function(req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+            try {
+                const { jobId } = req.query;
+                
+                if (!jobId) {
+                    return res.status(400).json({ success: false, message: 'Missing job ID parameter' });
+                }
+                
+                // Fetch the start date from the onboarding_position-startdate table
+                const { data, error } = await supabase
+                    .from('onboarding_position-startdate')
+                    .select('setStartDate, additionalNotes')
+                    .eq('jobId', jobId)
+                    .single();
+                    
+                if (error) {
+                    console.error('Error fetching start date:', error);
+                    return res.status(500).json({ success: false, message: 'Failed to fetch start date' });
+                }
+                
+                if (!data) {
+                    return res.json({ success: false, message: 'No start date found for this job' });
+                }
+                
+                return res.json({ 
+                    success: true, 
+                    startDate: data.setStartDate,
+                    additionalNotes: data.additionalNotes || ''
+                });
+                
+            } catch (error) {
+                console.error('Error fetching start date:', error);
+                return res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+        } else {
+            return res.status(401).json({ success: false, message: 'Unauthorized access. HR role required.' });
+        }
+    },
+
     sendOnboardingChecklist: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
-                const { userId, applicantId } = req.body;
+                const { userId, applicantId, jobId, startDate } = req.body;
                 
-                if (!userId || !applicantId) {
+                if (!userId || !applicantId || !jobId || !startDate) {
                     return res.status(400).json({ success: false, message: 'Missing required information' });
+                }
+                
+                // First, save the start date in the onboarding_position-startdate table
+                const { error: startDateError } = await supabase
+                    .from('onboarding_position-startdate')
+                    .upsert({ 
+                        jobId: jobId,
+                        setStartDate: startDate,
+                        updatedAt: new Date().toISOString()
+                    });
+                
+                if (startDateError) {
+                    console.error('Error saving start date:', startDateError);
+                    return res.status(500).json({ success: false, message: 'Failed to save start date' });
                 }
                 
                 // Update the applicant status in the database
@@ -971,10 +1025,53 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
                     return res.status(500).json({ success: false, message: 'Failed to update applicant status' });
                 }
                 
+                // Get job title for the message
+                const { data: jobData, error: jobError } = await supabase
+                    .from('jobpositions')
+                    .select('jobTitle')
+                    .eq('jobId', jobId)
+                    .single();
+                    
+                if (jobError) {
+                    console.error('Error fetching job title:', jobError);
+                }
+                
+                const jobTitle = jobData ? jobData.jobTitle : 'the position';
+                
+                // Send a congratulatory message through the chatbot
+                try {
+                    const currentTime = new Date().toISOString();
+                    
+                    // Send a predefined message to the user's chatbot
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId: userId,
+                            message: JSON.stringify({
+                                text: "Congratulations! We're thrilled to inform you that you have successfully passed all phases of our screening processes. Please press the button below if you would like to accept the job offer for " + jobTitle + ".",
+                                buttons: [
+                                    {
+                                        text: "Accept Job Offer",
+                                        url: "/applicant/job-offer"
+                                    }
+                                ]
+                            }),
+                            sender: 'bot',
+                            timestamp: currentTime,
+                            applicantStage: 'Onboarding - First Day Checklist Sent'
+                        }]);
+                    
+                    console.log('✅ [HR] Job offer message sent to applicant through chatbot');
+                    
+                } catch (chatError) {
+                    console.error('Error sending chatbot message:', chatError);
+                    // Continue execution - the status was updated successfully even if the message fails
+                }
+                
                 // Return success response
-                return res.json({ 
-                    success: true, 
-                    message: 'Applicant status updated successfully' 
+                return res.json({
+                    success: true,
+                    message: 'Applicant status updated and job offer sent with start date: ' + startDate
                 });
                 
             } catch (error) {
@@ -985,7 +1082,7 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
             return res.status(401).json({ success: false, message: 'Unauthorized access. HR role required.' });
         }
     },
-    
+
     getManageLeaveTypes: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {

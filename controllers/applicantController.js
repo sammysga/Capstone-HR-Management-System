@@ -2029,6 +2029,266 @@ updateApplicantStatusToP1Initial: async function (userId) {
     }
 },
 
+// The getJobOffer function (shows the initial job offer page)
+getJobOffer: async function(req, res) {
+    try {
+        if (!req.session.userId) {
+            return res.redirect('/applicant/login');
+        }
+        
+        const userId = req.session.userId;
+        
+        // Get the applicant information
+        const { data: applicantData, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                jobId,
+                applicantStatus
+            `)
+            .eq('userId', userId)
+            .single();
+        
+        if (applicantError || !applicantData) {
+            console.error('Error fetching applicant data:', applicantError);
+            req.flash('error', 'Unable to retrieve your application information.');
+            return res.redirect('/applicant/dashboard');
+        }
+        
+        // Verify the applicant has a job offer
+        if (applicantData.applicantStatus !== 'P3 - PASSED - Job Offer Sent') {
+            req.flash('error', 'No job offer is currently available for you.');
+            return res.redirect('/applicant/dashboard');
+        }
+        
+        // Get job position details
+        const { data: jobData, error: jobError } = await supabase
+            .from('jobpositions')
+            .select('jobTitle')
+            .eq('jobId', applicantData.jobId)
+            .single();
+        
+        if (jobError) {
+            console.error('Error fetching job data:', jobError);
+            req.flash('error', 'Unable to retrieve job information.');
+            return res.redirect('/applicant/dashboard');
+        }
+        
+        // Get the start date from onboarding_position-startdate table
+        const { data: startDateData, error: startDateError } = await supabase
+            .from('onboarding_position-startdate')
+            .select('setStartDate')
+            .eq('jobId', applicantData.jobId)
+            .single();
+        
+        // Set a default start date if none is found
+        const startDate = startDateData && startDateData.setStartDate 
+            ? startDateData.setStartDate 
+            : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Default to 2 weeks from now
+        
+        // Render the job offer page
+        res.render('applicant_pages/joboffer', {
+            jobTitle: jobData.jobTitle,
+            startDate: startDate,
+            applicantId: applicantData.applicantId
+        });
+        
+    } catch (error) {
+        console.error('Error displaying job offer:', error);
+        req.flash('error', 'Something went wrong while processing your job offer.');
+        res.redirect('/applicant/dashboard');
+    }
+},
+
+// API endpoint to accept job offer
+acceptJobOffer: async function(req, res) {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: 'User is not logged in' });
+        }
+        
+        const userId = req.session.userId;
+        const { applicantId } = req.body;
+        
+        if (!applicantId) {
+            return res.status(400).json({ success: false, message: 'Missing applicant ID' });
+        }
+        
+        // Get job ID from applicant record
+        const { data: applicantData, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select('jobId')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (applicantError || !applicantData) {
+            console.error('Error fetching applicant data:', applicantError);
+            return res.status(500).json({ success: false, message: 'Failed to fetch applicant data' });
+        }
+        
+        const jobId = applicantData.jobId;
+        
+        // Update the isAccepted field in onboarding_position-startdate table
+        const { error: startDateError } = await supabase
+            .from('onboarding_position-startdate')
+            .update({ isAccepted: true })
+            .eq('jobId', jobId);
+            
+        if (startDateError) {
+            console.error('Error updating job acceptance status:', startDateError);
+            return res.status(500).json({ success: false, message: 'Failed to update job acceptance status' });
+        }
+        
+        // Update the applicant status
+        const { error: updateError } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'Job Offer Accepted' })
+            .eq('applicantId', applicantId)
+            .eq('userId', userId);
+        
+        if (updateError) {
+            console.error('Error updating applicant status:', updateError);
+            return res.status(500).json({ success: false, message: 'Failed to update application status' });
+        }
+        
+        // Send a confirmation message through the chatbot
+        try {
+            const currentTime = new Date().toISOString();
+            
+            // Send a predefined message to the user's chatbot
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId: userId,
+                    message: JSON.stringify({
+                        text: "Thank you for accepting our job offer! We're excited to have you join our team. Please complete your onboarding checklist to prepare for your first day."
+                    }),
+                    sender: 'bot',
+                    timestamp: currentTime,
+                    applicantStage: 'Job Offer Accepted'
+                }]);
+            
+        } catch (chatError) {
+            console.error('Error sending confirmation message:', chatError);
+            // Continue even if the message fails
+        }
+        
+        return res.json({
+            success: true,
+            message: 'Job offer successfully accepted',
+            redirectUrl: '/applicant/onboarding'  // Redirect to onboarding page
+        });
+        
+    } catch (error) {
+        console.error('Error accepting job offer:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+},
+
+// The onboarding page controller (shows the onboarding checklist after job offer acceptance)
+getApplicantOnboarding: async function(req, res) {
+    try {
+        if (!req.session.userId) {
+            return res.redirect('/applicant/login');
+        }
+        
+        const userId = req.session.userId;
+        
+        // Get applicant details including job ID
+        const { data: applicantData, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                firstName,
+                lastName,
+                jobId,
+                userId,
+                phoneNo,
+                applicantStatus,
+                departmentId
+            `)
+            .eq('userId', userId)
+            .single();
+        
+        if (applicantError || !applicantData) {
+            console.error('Error fetching applicant data:', applicantError);
+            req.flash('error', 'Unable to retrieve your application information.');
+            return res.redirect('/applicant/dashboard');
+        }
+        
+        // Verify the applicant has accepted the job offer
+        if (applicantData.applicantStatus !== 'Job Offer Accepted') {
+            req.flash('error', 'You need to accept a job offer before accessing onboarding.');
+            return res.redirect('/applicant/job-offer');
+        }
+        
+        // Get job position details
+        const { data: jobData, error: jobError } = await supabase
+            .from('jobpositions')
+            .select('jobTitle')
+            .eq('jobId', applicantData.jobId)
+            .single();
+        
+        if (jobError) {
+            console.error('Error fetching job data:', jobError);
+            req.flash('error', 'Unable to retrieve job information.');
+            return res.redirect('/applicant/dashboard');
+        }
+        
+        // Get department details
+        const { data: deptData, error: deptError } = await supabase
+            .from('departments')
+            .select('deptName')
+            .eq('departmentId', applicantData.departmentId)
+            .single();
+            
+        const departmentName = deptData ? deptData.deptName : 'Unknown Department';
+        
+        // Get the start date from onboarding_position-startdate table
+        const { data: startDateData, error: startDateError } = await supabase
+            .from('onboarding_position-startdate')
+            .select('setStartDate, isAccepted')
+            .eq('jobId', applicantData.jobId)
+            .single();
+        
+        if (startDateError || !startDateData || !startDateData.isAccepted) {
+            console.error('Error fetching start date or job offer not yet accepted:', startDateError);
+            req.flash('error', 'Your job offer needs to be accepted before proceeding to onboarding.');
+            return res.redirect('/applicant/job-offer');
+        }
+        
+        // Get user email
+        const { data: userData, error: userError } = await supabase
+            .from('useraccounts')
+            .select('userEmail')
+            .eq('userId', userId)
+            .single();
+            
+        const userEmail = userData ? userData.userEmail : null;
+        
+        // Format the applicant object for the template
+        const applicant = {
+            applicantId: applicantData.applicantId,
+            fullName: `${applicantData.firstName} ${applicantData.lastName}`,
+            firstName: applicantData.firstName,
+            lastName: applicantData.lastName,
+            phoneNo: applicantData.phoneNo,
+            email: userEmail,
+            jobTitle: jobData.jobTitle,
+            department: departmentName,
+            startDate: startDateData.setStartDate
+        };
+        
+        // Render the onboarding page
+        res.render('applicant_pages/onboarding', { applicant });
+        
+    } catch (error) {
+        console.error('Error displaying onboarding page:', error);
+        req.flash('error', 'Something went wrong while preparing your onboarding page.');
+        res.redirect('/applicant/dashboard');
+    }
+},
+
 updateApplicantStatusFinalizeP1Review: async function (userId) {
     try {
         const { passedUserIds, failedUserIds, phase } = req.body;
@@ -2076,6 +2336,7 @@ updateApplicantStatusFinalizeP1Review: async function (userId) {
         return res.status(500).json({ success: false, message: "Server error" });
     }
 },
+
 
 
 getOnboarding: async function(req, res) {

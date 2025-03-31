@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Job Offer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <style>
+    /* Matching styles from onboarding.ejs */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .header-container {
+      background-color: #fff;
+      padding: 15px 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+    
+    .header {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 0 20px;
+    }
+    
+    .logo {
+      position: absolute;
+      left: 20px;
+      height: 50px;
+      width: auto;
+    }
+    
+    h1 {
+      color: #07ACB9;
+      margin: 0;
+      font-weight: 600;
+    }
+    
+    /* Job Offer Content Styles */
+    .job-offer-container {
+      max-width: 1000px;
+      margin: 0 auto 40px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+    }
+    
+    .congratulations {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      color: #124A5C;
+      font-weight: 600;
+    }
+    
+    .offer-content {
+      line-height: 1.8;
+      margin-bottom: 30px;
+    }
+    
+    .offer-content p {
+      margin-bottom: 20px;
+    }
+    
+    .highlight {
+      background-color: #f0f8ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 25px 0;
+      border-left: 4px solid #07ACB9;
+    }
+    
+    .highlight h3 {
+      color: #124A5C;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    
+    .info-box {
+      background-color: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+    
+    .info-box-title {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .info-icon {
+      background-color: #07ACB9;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    
+    .contact-section {
+      margin-top: 30px;
+      text-align: center;
+    }
+    
+    .signature {
+      margin-top: 40px;
+      text-align: center;
+    }
+    
+    .signature img {
+      max-width: 200px;
+      margin-bottom: 10px;
+    }
+    
+    .btn-accept {
+      display: block;
+      margin: 40px auto;
+      background-color: #124A5C;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .btn-accept:hover {
+      background-color: #0b3a46;
+    }
+    
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      width: 80%;
+      max-width: 500px;
+      text-align: center;
+    }
+    
+    .modal-title {
+      color: #07ACB9;
+      margin-top: 0;
+    }
+    
+    .modal-buttons {
+      margin-top: 25px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+    
+    .modal-btn {
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .modal-btn-cancel {
+      background-color: #e4e4e4;
+      color: #333;
+      border: none;
+    }
+    
+    .modal-btn-cancel:hover {
+      background-color: #d4d4d4;
+    }
+    
+    .modal-btn-confirm {
+      background-color: #124A5C;
+      color: white;
+      border: none;
+    }
+    
+    .modal-btn-confirm:hover {
+      background-color: #0b3a46;
+    }
+    
+    /* Loading spinner */
+    .spinner {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.7);
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .spinner-inner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #07ACB9;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <input type="hidden" id="applicant-id" value="<%= applicantId %>">
+  
+  <div class="header-container">
+    <div class="header">
+      <img src="/images/prime_assets/primeinfra-logo-with-name.png" alt="Prime Infra Logo" class="logo" />
+      <h1>Job Offer</h1>
+    </div>
+  </div>
+
+  <div class="job-offer-container">
+    <div class="congratulations">
+      Congratulations!
+    </div>
+    
+    <div class="offer-content">
+      <p>
+        We're thrilled to inform you that you have successfully passed all phases of our screening processes.
+      </p>
+      
+      <p>
+        Prime Infrastructure is excited to have you join our team as our new 
+        <strong><%= jobTitle %></strong>.
+      </p>
+      
+      <div class="highlight">
+        <h3>Important Details</h3>
+        <p><strong>Your Start Date:</strong> <%= startDate %></p>
+      </div>
+      
+      <p>
+        On your first day, you will be given a First Day Checklist outlining the activities and resources 
+        to support your onboarding process. You'll also meet with your line manager to set initial objectives 
+        that will guide your onboarding and establish clear goals for your role.
+      </p>
+      
+      <div class="info-box">
+        <div class="info-box-title">
+          <div class="info-icon">i</div>
+          <h3>We're here to support you</h3>
+        </div>
+        <p>
+          Should you have any questions or need assistance before your start date, 
+          please feel free to reach out to us.
+        </p>
+      </div>
+      
+      <div class="contact-section">
+        <p>Contact HR at: <strong>hr@primeinfra.com</strong></p>
+      </div>
+    </div>
+    
+    <div class="signature">
+      <p>We look forward to seeing you and to an exciting journey together at Prime Infrastructure!</p>
+      <p><strong>HR Department</strong><br>Prime Infrastructure</p>
+    </div>
+    
+    <button class="btn-accept" onclick="showConfirmationModal()">Accept Job Offer and Continue Onboarding</button>
+</div>
+  
+  <!-- Confirmation Modal -->
+  <div id="confirmation-modal" class="modal">
+    <div class="modal-content">
+      <h2 class="modal-title">Confirm Acceptance</h2>
+      <p>Are you sure you want to accept this job offer?</p>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="hideConfirmationModal()">Cancel</button>
+        <button class="modal-btn modal-btn-confirm" onclick="acceptJobOffer()">Confirm</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Loading Spinner -->
+  <div id="loading-spinner" class="spinner">
+    <div class="spinner-inner"></div>
+  </div>
+
+  <script>
+    function showConfirmationModal() {
+      document.getElementById('confirmation-modal').style.display = 'block';
+    }
+    
+    function hideConfirmationModal() {
+      document.getElementById('confirmation-modal').style.display = 'none';
+    }
+
+
+    async function acceptJobOffer() {
+    try {
+      // Show loading spinner
+      document.getElementById('loading-spinner').style.display = 'flex';
+      
+      // Hide modal
+      hideConfirmationModal();
+      
+      const applicantId = document.getElementById('applicant-id').value;
+      
+      const response = await fetch('/api/accept-job-offer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Job offer accepted! You will now proceed to the onboarding process.');
+        window.location.href = result.redirectUrl || '/applicant/onboarding';
+      } else {
+        alert(result.message || 'Failed to accept job offer. Please try again later.');
+      }
+    } catch (error) {
+      console.error('Error accepting job offer:', error);
+      alert('An error occurred. Please try again later.');
+    } finally {
+      // Hide loading spinner
+      document.getElementById('loading-spinner').style.display = 'none';
+    }
+  }
+  </script>
+</body>
+</html>
