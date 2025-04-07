@@ -1509,150 +1509,289 @@
                 let submittedObjectives = viewState.submittedObjectives || []; // Initialize with submitted objectives
                 const hardSkills = viewState.hardSkills || []; // Default to empty array if not defined
                 const softSkills = viewState.softSkills || []; // Default to empty array if not defined
+                function initializeFormValues() {
+    // Set jobId from viewState if it's available
+    const jobIdField = document.getElementById("jobId");
+    if (jobIdField && viewState && viewState.jobId) {
+        jobIdField.value = viewState.jobId;
+        console.log("Set jobId from viewState:", viewState.jobId);
+    } else {
+        console.warn("Could not initialize jobId from viewState");
+    }
+}
 
-                document.addEventListener("DOMContentLoaded", function () {
-                    // Initialize UI components
-                    const objectivesButton = document.getElementById("objectivesButton");
-                    const feedbackSection = document.getElementById("feedback-section");
-                    const saveButton = document.getElementById("saveButton"); // Save button for objectives
-                    const saveFeedbackButton = document.getElementById("save360DegreeFeedback"); // Save button for feedback
-                    const feedbackStatus = document.getElementById('feedback-status');
-                    const feedbackMessage = document.getElementById('feedback-message');
-                    const editButton = document.getElementById('edit-questionnaire-button');
-                    const midYearIDPButton = document.getElementById("midYearIDP"); // Button for Mid-Year IDP
-                    const midYearIDPForm = document.getElementById("midYearIDPForm"); // Mid-Year IDP form
-                    
-                    // Add debugging info to console
-                    console.log("Initialized Script.");
-                    console.log("ViewState:", viewState);
-                    console.log("User ID:", userId);
-                    console.log("Job ID:", jobId);
-                    console.log("Submitted Objectives:", submittedObjectives);
-                    console.log("Hard Skills:", hardSkills);
-                    console.log("Soft Skills:", softSkills);
+// Modify your DOMContentLoaded event to call this function
+document.addEventListener("DOMContentLoaded", function () {
+    // Initialize UI components
+    const objectivesButton = document.getElementById("objectivesButton");
+    const feedbackSection = document.getElementById("feedback-section");
+    const saveButton = document.getElementById("saveButton"); // Save button for objectives
+    const saveFeedbackButton = document.getElementById("save360DegreeFeedback"); // Save button for feedback
+    const feedbackStatus = document.getElementById('feedback-status');
+    const feedbackMessage = document.getElementById('feedback-message');
+    const editButton = document.getElementById('edit-questionnaire-button');
+    const midYearIDPButton = document.getElementById("midYearIDP"); // Button for Mid-Year IDP
+    const midYearIDPForm = document.getElementById("midYearIDPForm"); // Mid-Year IDP form
+    
+    // Initialize form values from viewState
+    initializeFormValues();
+    
+    // Add debugging info to console
+    console.log("Initialized Script.");
+    console.log("ViewState:", viewState);
+    console.log("User ID:", userId);
+    console.log("Job ID:", jobId);
+    console.log("Submitted Objectives:", submittedObjectives);
+    console.log("Hard Skills:", hardSkills);
+    console.log("Soft Skills:", softSkills);
 
-                    // Add event listeners
-                    if (objectivesButton) {
-                        console.log('Objectives Button found');
-                        objectivesButton.addEventListener("click", handleObjectiveClick);
-                    } else {
-                        console.error('Objectives Button not found in the DOM.');
-                    }
-                    
-                    // Initialize buttons for Mid-Year IDP
-                    if (midYearIDPButton) {
-                        midYearIDPButton.addEventListener("click", navigateToMidYearIDP);
-                    } else {
-                        console.error("Mid-Year IDP Button not found in the DOM.");
-                    }
-                    
-                    // Add event listener for the save button
-                    if (saveButton) {
-                        saveButton.addEventListener("click", saveObjectives);
-                    }
-                    
-                    // Add event listener for the feedback save button
-                    if (saveFeedbackButton) {
-                        saveFeedbackButton.addEventListener("click", async (event) => {
-                            event.preventDefault(); // Prevent default form submission
-                            await save360DegreeFeedback(); // Call the function to save feedback
-                            // After saving, switch to view-only mode
-                            switchToViewOnlyMode();
-                        });
-                    }
+    // Add event listeners
+    if (objectivesButton) {
+        console.log('Objectives Button found');
+        objectivesButton.addEventListener("click", handleObjectiveClick);
+    } else {
+        console.error('Objectives Button not found in the DOM.');
+    }
+    
+    // Initialize buttons for Mid-Year IDP
+    if (midYearIDPButton) {
+        midYearIDPButton.addEventListener("click", navigateToMidYearIDP);
+    } else {
+        console.error("Mid-Year IDP Button not found in the DOM.");
+    }
+    
+    // Add event listener for the save button
+    if (saveButton) {
+        saveButton.addEventListener("click", saveObjectives);
+    }
+    
+    // Add event listener for the feedback save button
+    if (saveFeedbackButton) {
+        saveFeedbackButton.addEventListener("click", async (event) => {
+            event.preventDefault(); // Prevent default form submission
+            await save360DegreeFeedback(); // Call the function to save feedback
+            // After saving, switch to view-only mode
+            switchToViewOnlyMode();
+        });
+    }
 
-                    // Initialize feedback display status
-                    updateFeedbackStatus();
-                });
-
+    // Initialize feedback display status
+    updateFeedbackStatus();
+});
                 // Function to update total weight in the form
                 function updateTotalWeight() {
-                    const weightInputs = document.querySelectorAll(".weight-input");
-                    let totalWeight = 0;
-                    
-                    weightInputs.forEach(input => {
-                        totalWeight += parseFloat(input.value) || 0;
-                    });
-                    
-                    document.getElementById("totalWeight").value = totalWeight;
-                    document.getElementById("totalWeightDisplay").textContent = totalWeight;
-                    
-                    // Change color based on total weight
-                    const totalWeightDisplay = document.getElementById("totalWeightDisplay");
-                    if (totalWeight === 100) {
-                        totalWeightDisplay.style.color = "#4CAF50"; // Green when exactly 100
-                    } else if (totalWeight > 100) {
-                        totalWeightDisplay.style.color = "#f44336"; // Red when over 100
-                    } else {
-                        totalWeightDisplay.style.color = "#ff9800"; // Orange when under 100
-                    }
-                }
+    const weightInputs = document.querySelectorAll(".weight-input");
+    let totalWeight = 0;
+    
+    weightInputs.forEach(input => {
+        const value = parseFloat(input.value) || 0;
+        totalWeight += value;
+    });
+    
+    const totalWeightElement = document.getElementById("totalWeight");
+    const totalWeightDisplayElement = document.getElementById("totalWeightDisplay");
+    
+    if (totalWeightElement) totalWeightElement.value = totalWeight;
+    if (totalWeightDisplayElement) totalWeightDisplayElement.textContent = totalWeight;
+    
+    // Change color based on total weight
+    if (totalWeightDisplayElement) {
+        if (totalWeight === 100) {
+            totalWeightDisplayElement.style.color = "#4CAF50"; // Green when exactly 100
+        } else if (totalWeight > 100) {
+            totalWeightDisplayElement.style.color = "#f44336"; // Red when over 100
+        } else {
+            totalWeightDisplayElement.style.color = "#ff9800"; // Orange when under 100
+        }
+    }
+}
 
                 // Function to handle objective click
                 function handleObjectiveClick() {
-                    console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
-                    
-                    // Hide the feedback form when switching to objectives
-                    document.getElementById("feedback-section").style.display = "none";
-                    document.getElementById("midYearIDPForm").style.display = "none";
-                    
-                    // Get the form and view-only sections
-                    const formSection = document.getElementById("objective-skill-progress-form");
-                    const viewOnlySection = document.getElementById("view-only-page");
-                    
-                    // Check if the view-only status is true
-                    if (viewState.viewOnlyStatus.objectivesettings) {
-                        // Show the view-only section
-                        displaySubmittedObjectives(submittedObjectives);
-                        viewOnlySection.style.display = "block";
-                        formSection.style.display = "none";
-                        
-                        // Add animation classes
-                        viewOnlySection.classList.remove("fade-out");
-                        viewOnlySection.classList.add("fade-in");
-                        
-                        console.log("Showing view-only page with submitted objectives.");
-                    } else {
-                        // Show the editable form if in edit mode
-                        formSection.style.display = "block";
-                        viewOnlySection.style.display = "none";
-                        
-                        // Add animation classes
-                        formSection.classList.remove("fade-out");
-                        formSection.classList.add("fade-in");
-                        
-                        console.log("Showing editable objective form.");
-                    }
-                }
-
-                // Function to navigate to Mid-Year IDP
-                function navigateToMidYearIDP() {
-                    if (midYearIDPButton.classList.contains("accessible")) {
-                        // Hide other sections
-                        const sectionsToHide = [
-                            document.getElementById("objective-skill-progress-form"),
-                            document.getElementById("view-only-page"),
-                            document.getElementById("feedback-section")
-                        ];
-                        
-                        sectionsToHide.forEach(section => {
-                            if (section) section.style.display = "none";
-                        });
-
-                        // Show the Mid-Year IDP form
-                        const midYearIDPForm = document.getElementById("midYearIDPForm");
-                        if (midYearIDPForm) {
-                            midYearIDPForm.style.display = "block";
-                            midYearIDPForm.classList.remove("fade-out");
-                            midYearIDPForm.classList.add("fade-in");
-                            midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-                            console.log("Navigated to the Mid-Year IDP form.");
-                        }
-                    } else {
-                        // Show friendly notification
-                        alert("You must complete the previous steps first.");
-                    }
-                }
+    console.log("Objective clicked. View only status:", viewState.viewOnlyStatus.objectivesettings);
+    
+    // Hide the feedback form when switching to objectives
+    const feedbackSection = document.getElementById("feedback-section");
+    if (feedbackSection) feedbackSection.style.display = "none";
+    
+    const midYearIDPForm = document.getElementById("midYearIDPForm");
+    if (midYearIDPForm) midYearIDPForm.style.display = "none";
+    
+    // Get the form and view-only sections
+    let formSection = document.getElementById("objective-skill-progress-form");
+    let viewOnlySection = document.getElementById("view-only-page");
+    
+    // Check if the form container exists
+    const formContainer = document.getElementById("objectiveSettingsForm");
+    if (!formContainer) {
+        console.error("Form container (objectiveSettingsForm) not found in the DOM");
+        return;
+    }
+    
+    // Create sections if they don't exist
+    if (!formSection) {
+        console.log("Creating missing objective-skill-progress-form section");
+        formSection = document.createElement("section");
+        formSection.id = "objective-skill-progress-form";
+        formSection.className = "fade-out section";
+        formSection.style.display = "none";
+        formContainer.appendChild(formSection);
+        
+        // Add the basic form structure
+        formSection.innerHTML = `
+            <h2>Annual Objective Setting Form</h2>
+            
+            <div class="header-grid">
+                <div><strong>Employee:</strong> ${viewState.lastName || ''}, ${viewState.firstName || ''}</div>
+                <div><strong>Position:</strong> ${viewState.jobTitle || ''}</div>
+                <div><strong>Year:</strong> <span id="performanceDate">${new Date().getFullYear()}</span></div>
+                <div><strong>Company:</strong> Prime Infrastructure</div>
+                <div><strong>Department:</strong> ${viewState.departmentName || ''}</div>
+            </div>
+            
+            <input type="hidden" name="userId" value="${viewState.userId || ''}">
+            <input type="hidden" id="jobId" name="jobId" value="${viewState.jobId || ''}">
+            <input type="hidden" id="departmentId" name="departmentId" value="${viewState.departmentId || ''}">
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>KRA/Objectives</th>
+                        <th>KPI</th>
+                        <th>Target</th>
+                        <th>UOM</th>
+                        <th>Weight</th>
+                        <th>Actions</th>
+                    </tr>
+                    <tr>
+                        <th colspan="6" style="background-color: #f9f9f9; font-weight: normal; text-align: center; font-style: italic;">
+                            Example: "Improve Customer Satisfaction" | "Satisfaction Rate" | "90" | "%" | "20"
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="progress-table-body">
+                    <tr>
+                        <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
+                        <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
+                        <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
+                        <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
+                        <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Weight %" name="objectiveAssignedWeight" min="0" max="100" required></td>
+                        <td><button type="button" class="cancel-btn" onclick="removeRow(this)">Remove</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <button id="addRowBtn" type="button" class="add-btn" onclick="addRow()">
+                <i class="fas fa-plus"></i> Add Objective
+            </button>
+            
+            <div class="weight-summary" style="margin: 15px 0; padding: 10px; background-color: #f9f9f9; border-radius: 8px; border-left: 4px solid #124A5C;">
+                <strong>Total Assigned Weight:</strong> 
+                <span id="totalWeightDisplay">0</span>% <span style="color: #f44336; font-size: 0.9em;">(must equal 100%)</span>
+                <input id="totalWeight" type="hidden" value="0">
+            </div>
+    
+            <div class="confirmation-box" style="margin: 20px 0; padding: 15px; background-color: rgba(76, 175, 80, 0.1); border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="confirmationCheckbox" required style="margin-right: 10px;">
+                    <span>I confirm that the objective weights have been accurately consolidated and reviewed.</span>
+                </label>
+            </div>
+            
+            <div id="submitButtonContainer">
+                <button id="saveButton" type="button" class="save-btn" onclick="saveObjectives(event)">
+                    <i class="fas fa-save"></i> Save Objectives
+                </button>
+            </div>
+        `;
+    }
+    
+    if (!viewOnlySection && viewState.viewOnlyStatus.objectivesettings) {
+        console.log("Creating missing view-only-page section");
+        viewOnlySection = document.createElement("section");
+        viewOnlySection.id = "view-only-page";
+        viewOnlySection.className = "fade-out section";
+        viewOnlySection.style.display = "none";
+        formContainer.appendChild(viewOnlySection);
+        
+        // Add view-only content
+        viewOnlySection.innerHTML = `
+            <h2><i class="fas fa-clipboard-list"></i> Submitted Annual Objective Setting Form</h2>
+            <div class="header-grid">
+                <div><strong>Employee:</strong> ${viewState.lastName || ''}, ${viewState.firstName || ''}</div>
+                <div><strong>Position:</strong> ${viewState.jobTitle || ''}</div>
+                <div><strong>Performance Year:</strong> ${viewState.performancePeriodYear || new Date().getFullYear()}</div>
+                <div><strong>Company:</strong> Prime Infrastructure</div>
+                <div><strong>Department:</strong> ${viewState.departmentName || ''}</div>
+            </div>
+            
+            <div id="objectivesData" class="view-only-section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>KRA/Objectives</th>
+                            <th>KPI</th>
+                            <th>Target</th>
+                            <th>UOM</th>
+                            <th>Assigned Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody id="view-only-table-body">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px;">No objectives submitted yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    // Now check again if the sections exist after trying to create them
+    formSection = document.getElementById("objective-skill-progress-form");
+    viewOnlySection = document.getElementById("view-only-page");
+    
+    if (!formSection || (!viewOnlySection && viewState.viewOnlyStatus.objectivesettings)) {
+        console.error("Could not create required form sections");
+        return;
+    }
+    
+    // Check if the view-only status is true
+    if (viewState.viewOnlyStatus.objectivesettings) {
+        // Show the view-only section
+        if (viewOnlySection) {
+            displaySubmittedObjectives(submittedObjectives);
+            viewOnlySection.style.display = "block";
+            if (formSection) formSection.style.display = "none";
+            
+            // Add animation classes
+            viewOnlySection.classList.remove("fade-out");
+            viewOnlySection.classList.add("fade-in");
+            
+            console.log("Showing view-only page with submitted objectives.");
+        }
+    } else {
+        // Show the editable form if in edit mode
+        if (formSection) {
+            formSection.style.display = "block";
+            if (viewOnlySection) viewOnlySection.style.display = "none";
+            
+            // Add animation classes
+            formSection.classList.remove("fade-out");
+            formSection.classList.add("fade-in");
+            
+            // Make sure the save button has the event handler
+            const saveButton = document.getElementById("saveButton");
+            if (saveButton) {
+                saveButton.addEventListener("click", saveObjectives);
+            }
+            
+            console.log("Showing editable objective form.");
+        }
+    }
+    
+    // Initialize the total weight display after showing the form
+    updateTotalWeight();
+}
 
   // Modified showFeedbackForm function that explicitly takes the quarter parameter
 function showFeedbackForm(quarter) {
@@ -2105,132 +2244,167 @@ async function checkFeedbackSubmissionStatus(quarter) {
 
                 // Function to save objectives
                 async function saveObjectives(event) {
-                    event.preventDefault(); // Prevent default form submission
-                    
-                    // Get form values
-                    const departmentId = '<%= user.departmentId %>';
-                    const performancePeriodYear = document.getElementById("performanceDate").textContent;
+    event.preventDefault(); // Prevent default form submission
+    
+    // Get form values
+    const userId = document.querySelector('input[name="userId"]').value;
+    let jobId = document.getElementById("jobId").value;
+    
+    // If jobId is not set in the form, try to get it from viewState
+    if (!jobId && viewState && viewState.jobId) {
+        jobId = viewState.jobId;
+        console.log("Using jobId from viewState:", jobId);
+    }
+    
+    console.log("Saving objectives for User ID:", userId);
+    console.log("Job ID:", jobId);
 
-                    console.log("Saving objectives for User ID:", userId);
-                    console.log("Job ID:", jobId);
-                    console.log("Performance Period Year:", performancePeriodYear);
+    // Validate required IDs
+    if (!userId) {
+        console.error("User ID is missing.");
+        alert("Please ensure all fields are filled out correctly before saving.");
+        return;
+    }
+    
+    // Note: We'll allow empty jobId now since the server can fetch it if missing
 
-                    // Validate required IDs
-                    if (!userId || !jobId) {
-                        console.error("One or more required IDs are missing.");
-                        alert("Please ensure all fields are filled out correctly before saving.");
-                        return;
-                    }
+    // Ensure confirmation checkbox is checked
+    const confirmationChecked = document.getElementById("confirmationCheckbox").checked;
+    if (!confirmationChecked) {
+        alert("Please confirm that you have reviewed the objectives before saving.");
+        return;
+    }
 
-                    // Collect objectives from the form
-                    const objectives = [];
-                    const rows = document.querySelectorAll("#progress-table-body tr");
+    // Calculate total weight
+    let totalWeight = 0;
 
-                    // Ensure confirmation checkbox is checked
-                    const confirmationChecked = document.getElementById("confirmationCheckbox").checked;
-                    if (!confirmationChecked) {
-                        alert("Please confirm that you have reviewed the objectives before saving.");
-                        return;
-                    }
+    // Collect objectives from the form
+    const objectiveDescrpt = [];
+    const objectiveKPI = [];
+    const objectiveTarget = [];
+    const objectiveUOM = [];
+    const objectiveAssignedWeight = [];
 
-                    // Calculate total weight
-                    let totalWeight = 0;
+    const rows = document.querySelectorAll("#progress-table-body tr");
+    rows.forEach(row => {
+        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
+        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
+        const targetInput = row.querySelector('input[name="objectiveTarget"]');
+        const uomInput = row.querySelector('input[name="objectiveUOM"]');
+        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
 
-                    rows.forEach(row => {
-                        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
-                        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
-                        const targetInput = row.querySelector('input[name="objectiveTarget"]');
-                        const uomInput = row.querySelector('input[name="objectiveUOM"]');
-                        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
+        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
+            const weight = parseFloat(weightInput.value);
+            totalWeight += weight;
 
-                        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
-                            const weight = parseFloat(weightInput.value);
-                            totalWeight += weight;
+            objectiveDescrpt.push(descriptionInput.value);
+            objectiveKPI.push(kpiInput.value);
+            objectiveTarget.push(targetInput.value);
+            objectiveUOM.push(uomInput.value);
+            objectiveAssignedWeight.push(weight);
+        }
+    });
 
-                            const objective = {
-                                objectiveDescrpt: descriptionInput.value,
-                                objectiveKPI: kpiInput.value,
-                                objectiveTarget: targetInput.value,
-                                objectiveUOM: uomInput.value,
-                                objectiveAssignedWeight: weight,
-                            };
-                            objectives.push(objective);
-                        }
-                    });
+    console.log("Total weight:", totalWeight);
+    console.log("Objectives to save:", {
+        objectiveDescrpt,
+        objectiveKPI,
+        objectiveTarget,
+        objectiveUOM,
+        objectiveAssignedWeight
+    });
 
-                    console.log("Objectives to save:", objectives);
-                    console.log("Total weight:", totalWeight);
+    // Validate total weight
+    if (totalWeight !== 100) {
+        alert("Total assigned weight must be exactly 100% to save.");
+        return;
+    }
 
-                    // Validate total weight
-                    if (totalWeight !== 100) {
-                        alert("Total assigned weight must be exactly 100% to save.");
-                        return;
-                    }
+    // Proceed if objectives are present
+    if (objectiveDescrpt.length > 0) {
+        try {
+            // Show loading state
+            const saveButton = document.getElementById("saveButton");
+            if (saveButton) {
+                saveButton.disabled = true;
+                saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }
 
-                    // Proceed if objectives are present
-                    if (objectives.length > 0) {
-                        try {
-                            // Show loading state
-                            const saveButton = document.getElementById("saveButton");
-                            if (saveButton) {
-                                saveButton.disabled = true;
-                                saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-                            }
+            // Construct the request payload
+            const payload = {
+    userId,
+    jobId,
+    objectiveDescrpt,
+    objectiveKPI,
+    objectiveTarget,
+    objectiveUOM,
+    objectiveAssignedWeight
+};
+            
+            console.log("Sending payload to server:", payload);
 
-                            // Send data to server
-                            const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    jobId,
-                                    departmentId,
-                                    performancePeriodYear,
-                                    objectives,
-                                    totalWeight
-                                })
-                            });
+            // Send data to server
+            const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-                            console.log("Response from server:", response);
+            console.log("Response status:", response.status);
+            console.log("Response headers:", response.headers);
 
-                            // Check if the response was successful
-                            if (!response.ok) {
-                                throw new Error(`Server responded with status ${response.status}`);
-                            }
-
-                            const result = await response.json();
-                            console.log("Result from server:", result);
-
-                            if (result.success) {
-                                // Display a success alert
-                                alert("Objectives saved successfully. Redirecting to view page...");
-
-                                // Redirect to the view-only page after successful save
-                                const viewUrl = `/linemanager/records-performance-tracker/view/${userId}`;
-                                window.location.href = viewUrl;
-                            } else {
-                                alert("Failed to save objectives: " + result.message);
-                                
-                                // Reset button state
-                                if (saveButton) {
-                                    saveButton.disabled = false;
-                                    saveButton.innerHTML = '<i class="fas fa-save"></i> Save Objectives';
-                                }
-                            }
-                        } catch (error) {
-                            console.error("Error saving objectives:", error);
-                            alert("An error occurred while saving objectives. Please try again later.");
-                            
-                            // Reset button state
-                            const saveButton = document.getElementById("saveButton");
-                            if (saveButton) {
-                                saveButton.disabled = false;
-                                saveButton.innerHTML = '<i class="fas fa-save"></i> Save Objectives';
-                            }
-                        }
-                    } else {
-                        alert("No objectives to save. Please add at least one objective.");
-                    }
+            // Get the response text first to debug
+            const responseText = await response.text();
+            console.log("Raw response:", responseText);
+            
+            let result;
+            try {
+                // Try to parse it as JSON (if it is JSON)
+                result = JSON.parse(responseText);
+            } catch (e) {
+                console.error("Response is not valid JSON:", e);
+                // Handle non-JSON response
+                if (responseText.includes("Redirect")) {
+                    console.log("Redirect detected in response");
+                    // The server is trying to redirect, follow the redirect
+                    window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+                    return;
                 }
+                throw new Error("Invalid response format from server");
+            }
+
+            console.log("Parsed result:", result);
+
+            if (result.success) {
+                // Display a success alert
+                alert("Objectives saved successfully.");
+                
+                // Reload the page to show the updated view
+                window.location.reload();
+            } else {
+                alert("Failed to save objectives: " + (result.message || "Unknown error"));
+                
+                // Reset button state
+                if (saveButton) {
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = '<i class="fas fa-save"></i> Save Objectives';
+                }
+            }
+        } catch (error) {
+            console.error("Error saving objectives:", error);
+            alert("An error occurred while saving objectives. Please try again later.");
+            
+            // Reset button state
+            const saveButton = document.getElementById("saveButton");
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="fas fa-save"></i> Save Objectives';
+            }
+        }
+    } else {
+        alert("No objectives to save. Please add at least one objective.");
+    }
+}
 
                 // Function to save 360 feedback
                 // Modify save360DegreeFeedback function to include quarter
