@@ -283,21 +283,16 @@ resetPassword: async function(req, res) {
 updateUserInfo: async function(req, res) {
     try {
         const userId = req.session.user.userId; // Assuming userId is stored in session
-        const { firstName, lastName, userEmail } = req.body;
+        const { firstName, lastName } = req.body;
 
-        // Update the user info in both 'useraccounts' and 'staffaccounts' tables
-        const { error: userError } = await supabase
-            .from('useraccounts')
-            .update({ userEmail }) // This line updates the email
-            .eq('userId', userId);
-
+        // Update the user info in 'staffaccounts' tables; deleted the updating of email 
         const { error: staffError } = await supabase
             .from('staffaccounts')
             .update({ firstName, lastName })
             .eq('userId', userId);
 
-        if (userError || staffError) {
-            console.error('Error updating user information:', userError || staffError);
+        if (staffError) {
+            console.error('Error updating user information:', staffError);
             req.flash('errors', { dbError: 'Error updating user information.' });
             return res.redirect('/employee/useracc');
         }
