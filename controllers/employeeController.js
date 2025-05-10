@@ -1509,12 +1509,66 @@ getLeaveRequestForm: async function(req, res) {
 
 submitLeaveRequest: async function(req, res) {
     console.log('Submitting leave request...');
-    if (!req.session.user || !req.session.user.userId) { // Check userId
+    if (!req.session.user || !req.session.user.userId) {
         console.log('Unauthorized access: No session user');
         return res.status(401).json({ message: 'Unauthorized access' });
     }
 
-    const { leaveTypeId, fromDate, untilDate, reason, fromDayType, untilDayType } = req.body;
+    /* 
+    // File upload functionality - COMMENTED OUT FOR INITIAL TESTING
+    // Setup multer for file handling
+    const storage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            const dir = './public/uploads/certifications';
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+            cb(null, dir);
+        },
+        filename: function (req, file, cb) {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const ext = path.extname(file.originalname);
+            cb(null, 'cert-' + uniqueSuffix + ext);
+        }
+    });
+
+    const upload = multer({ 
+        storage: storage,
+        limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+        fileFilter: function (req, file, cb) {
+            const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
+            const ext = path.extname(file.originalname).toLowerCase();
+            
+            if (allowedTypes.includes(ext)) {
+                cb(null, true);
+            } else {
+                cb(new Error('Invalid file type. Only PDF and image files are allowed.'));
+            }
+        }
+    }).single('certification');
+
+    // Process the upload
+    upload(req, res, async function (err) {
+        if (err instanceof multer.MulterError) {
+            console.error('Multer upload error:', err);
+            return res.status(400).json({ message: err.message });
+        } else if (err) {
+            console.error('Unknown upload error:', err);
+            return res.status(500).json({ message: err.message });
+        }
+    */
+
+    // Get form fields directly from req.body (since we're not using multer middleware for now)
+    const { 
+        leaveTypeId, 
+        fromDate, 
+        untilDate, 
+        reason, 
+        fromDayType, 
+        untilDayType,
+        isSickLeave,
+        isSelfCertified
+    } = req.body;
 
     if (!leaveTypeId || !fromDate || !untilDate || !reason || !fromDayType || !untilDayType) {
         console.log('Missing fields in leave request submission', req.body);
@@ -1522,31 +1576,35 @@ submitLeaveRequest: async function(req, res) {
     }
 
     try {
+        // Get the leave type
+        const { data: leaveTypeData, error: leaveTypeError } = await supabase
+            .from('leave_types')
+            .select('typeName, typeMaxCount')
+            .eq('leaveTypeId', leaveTypeId)
+            .single();
+
+        if (leaveTypeError || !leaveTypeData) {
+            console.log('Leave type not found or error:', leaveTypeError);
+            return res.status(404).json({ message: 'Leave type not found' });
+        }
+
+        // Calculate days
         const fromDateObj = new Date(fromDate);
         const untilDateObj = new Date(untilDate);
         const daysRequested = Math.ceil((untilDateObj - fromDateObj) / (1000 * 60 * 60 * 24)) + 1;
 
-        console.log(`Days requested: ${daysRequested} from ${fromDate} to ${untilDate}`);
+        console.log('Days requested:', daysRequested);
 
+        // Check leave balance
         const { data: balanceData, error: balanceError } = await supabase
             .from('leavebalances')
             .select('usedLeaves, remainingLeaves, totalLeaves')
-            .eq('userId', req.session.user.userId) // Use userId
+            .eq('userId', req.session.user.userId)
             .eq('leaveTypeId', leaveTypeId)
             .single();
 
         let totalLeaves, remainingLeaves;
         if (balanceError || !balanceData) {
-            const { data: leaveTypeData, error: leaveTypeError } = await supabase
-                .from('leave_types')
-                .select('typeMaxCount')
-                .eq('leaveTypeId', leaveTypeId)
-                .single();
-
-            if (leaveTypeError || !leaveTypeData) {
-                console.log('Leave type not found or error:', leaveTypeError);
-                return res.status(404).json({ message: 'Leave type not found' });
-            }
             totalLeaves = leaveTypeData.typeMaxCount;
             remainingLeaves = totalLeaves;
         } else {
@@ -1554,38 +1612,80 @@ submitLeaveRequest: async function(req, res) {
             remainingLeaves = balanceData.remainingLeaves;
         }
 
-        console.log(`Total leaves: ${totalLeaves}, Remaining leaves: ${remainingLeaves}`);
-
         if (remainingLeaves < daysRequested) {
             console.log(`Insufficient leave balance. Remaining: ${remainingLeaves}, Requested: ${daysRequested}`);
             return res.status(400).json({ message: 'Insufficient leave balance for the requested period.' });
         }
 
-        const { error: requestError } = await supabase
+        // Prepare leave request data
+        const leaveRequestData = {
+            userId: req.session.user.userId,
+            leaveTypeId,
+            fromDate,
+            untilDate,
+            fromDayType,
+            untilDayType,
+            reason,
+            status: 'Pending for Approval'
+        };
+
+        // Handle self-certification if it's a sick leave
+        if (isSickLeave === 'true') {
+            const isSickLeaveType = leaveTypeData.typeName.toLowerCase().includes('sick');
+            
+            if (!isSickLeaveType) {
+                console.log('Mismatch between leave type and sick leave flag');
+                return res.status(400).json({ message: 'Invalid leave type for sick leave certification.' });
+            }
+            
+            // Check if self-certification is applicable (for 1-2 day sick leaves)
+            if (daysRequested <= 2 && isSelfCertified === 'true') {
+                console.log('Applying self-certification for short sick leave');
+                leaveRequestData.isSelfCertified = true;
+            } else if (daysRequested > 2) {
+                // For testing, we'll bypass the certificate requirement temporarily
+                console.log('Note: Certificate would normally be required for a ' + daysRequested + '-day sick leave');
+                // Still mark as self-certified for testing purposes
+                leaveRequestData.isSelfCertified = true;
+                
+                /* 
+                // COMMENTED OUT FOR INITIAL TESTING
+                // Medical certificate required for longer sick leave
+                if (req.file) {
+                    // If a file was uploaded, store the path
+                    leaveRequestData.certificationPath = '/uploads/certifications/' + req.file.filename;
+                } else {
+                    console.log('Missing required certification for extended sick leave');
+                    return res.status(400).json({ message: 'Medical certificate is required for sick leaves of 3 or more days.' });
+                }
+                */
+            }
+        }
+
+        // Log data before insert for debugging
+        console.log('Inserting leave request with data:', leaveRequestData);
+
+        // Insert the leave request
+        const { data: insertedData, error: requestError } = await supabase
             .from('leaverequests')
-            .insert([{
-                userId: req.session.user.userId, // Change from staffId to userId
-                leaveTypeId,
-                fromDate,
-                untilDate,
-                fromDayType,
-                untilDayType,
-                reason,
-                status: 'Pending for Approval'
-            }]);
+            .insert([leaveRequestData])
+            .select();
 
         if (requestError) {
             console.error('Error inserting leave request:', requestError.message);
             return res.status(500).json({ message: 'Failed to submit leave request.' });
         }
 
+        console.log('Leave request inserted successfully:', insertedData);
+
+        // Update leave balance
         const newUsedLeaves = (balanceData ? balanceData.usedLeaves : 0) + daysRequested;
         const newRemainingLeaves = totalLeaves - newUsedLeaves;
 
         const { error: upsertError } = await supabase
             .from('leavebalances')
             .upsert({
-                userId: req.session.user.userId, // Use userId
+                userId: req.session.user.userId,
                 leaveTypeId,
                 usedLeaves: newUsedLeaves,
                 remainingLeaves: newRemainingLeaves,
@@ -1597,11 +1697,17 @@ submitLeaveRequest: async function(req, res) {
             return res.status(500).json({ message: 'Failed to update leave balances.' });
         }
 
-        res.status(200).json({ message: 'Leave request submitted successfully.' });
+        // Return success
+        res.status(200).json({ 
+            message: 'Leave request submitted successfully.',
+            leaveType: leaveTypeData.typeName,
+            isSelfCertified: leaveRequestData.isSelfCertified || false
+        });
     } catch (error) {
         console.error('Error submitting leave request:', error);
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
+    /* }); */ // This closing brace for upload.single is also commented out
 },
 
 getLeaveRequestsByUserId: async function(req, res) {
@@ -1678,6 +1784,7 @@ getLeaveRequestsByUserId: async function(req, res) {
         res.status(401).json({ message: 'Unauthorized access' });
     }
 },
+
 postLeaveBalancesByUserId: async function(req, res) {
     console.log('Posting leave balances by user ID...');
 

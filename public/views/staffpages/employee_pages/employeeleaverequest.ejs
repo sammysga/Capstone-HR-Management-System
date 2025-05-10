@@ -216,6 +216,7 @@
                         <th>Last Date</th>
                         <th>Total Days</th>
                         <th>Status</th>
+                        <th>Certification</th>
                     </tr>
                 </thead>
                 <tbody id="leaveRequestsTable">
@@ -227,11 +228,26 @@
                                 <td><%= request.untilDate %></td>
                                 <td><%= Math.ceil((new Date(request.untilDate) - new Date(request.fromDate)) / (1000 * 60 * 60 * 24)) + 1 %></td>
                                 <td><%= request.status %></td>
+                                <td>
+                                    <% if (request.certificationPath) { %>
+                                        <a href="<%= request.certificationPath %>" target="_blank">View</a>
+                                    <% } else if (request.isSelfCertified) { %>
+                                        Self-certified
+                                    <% } else if (request.leave_types.typeName.toLowerCase().includes('sick')) { %>
+                                        <% if (Math.ceil((new Date(request.untilDate) - new Date(request.fromDate)) / (1000 * 60 * 60 * 24)) + 1 > 2) { %>
+                                            <span style="color: red;">Required</span>
+                                        <% } else { %>
+                                            N/A
+                                        <% } %>
+                                    <% } else { %>
+                                        N/A
+                                    <% } %>
+                                </td>
                             </tr>
                         <% }) %>
                     <% } else { %>
                         <tr>
-                            <td colspan="5">No leave requests found.</td>
+                            <td colspan="6">No leave requests found.</td>
                         </tr>
                     <% } %>
                 </tbody>        
@@ -259,22 +275,36 @@
                     <input type="date" id="fromDate" name="fromDate" required>
 
                     <label for="fromDayType">From Day Type:</label>
-<select id="fromDayType" name="fromDayType" required>
-    <option value="whole_day">Whole Day</option>
-    <option value="half_day">Half Day</option>
-</select>
+                    <select id="fromDayType" name="fromDayType" required>
+                        <option value="whole_day">Whole Day</option>
+                        <option value="half_day">Half Day</option>
+                    </select>
 
                     <label for="untilDate">Until Date:</label>
                     <input type="date" id="untilDate" name="untilDate" required>
 
                     <label for="untilDayType">Until Day Type:</label>
-<select id="untilDayType" name="untilDayType" required>
-    <option value="whole_day">Whole Day</option>
-    <option value="half_day">Half Day</option>
-</select>
+                    <select id="untilDayType" name="untilDayType" required>
+                        <option value="whole_day">Whole Day</option>
+                        <option value="half_day">Half Day</option>
+                    </select>
 
                     <label for="reason">Reason:</label>
                     <input type="text" id="reason" name="reason" required>
+
+                     <!-- New certification section - will only show for sick leave -->
+                    <div id="certificationSection" style="display: none; margin-top: 15px; padding: 10px; border: 1px solid #eee; border-radius: 5px;">
+                        <h4 style="margin-top: 0;">Medical Certificate</h4>
+                        <p id="certificationNote" style="font-size: 12px; color: #666;">For sick leaves of 3 or more days, a medical certificate is required.</p>
+                        
+                        <label for="certification">Upload Medical Certificate (if available):</label>
+                        <input type="file" id="certification" name="certification" accept=".pdf,.jpg,.jpeg,.png">
+                        
+                        <div style="margin-top: 10px;">
+                            <input type="checkbox" id="selfCertify" name="selfCertify">
+                            <label for="selfCertify">This is a short-term illness (1-2 days) and I am self-certifying.</label>
+                        </div>
+                    </div>
 
                     <button type="submit">Submit Leave Request</button>
                 </form>
@@ -343,6 +373,7 @@
         // Call this function when the page loads
         window.onload = function() {
             updatePendingRequestsCount();
+            initializeCertificationSection();   // Initialize the certification section functionality
         };
     
         // Update leave requests table with new data
@@ -354,12 +385,32 @@
             const cellUntilDate = newRow.insertCell(2);
             const cellTotalDays = newRow.insertCell(3);
             const cellStatus = newRow.insertCell(4);
+            const cellCertification = newRow.insertCell(5); // New cell for certification
     
             cellLeaveType.textContent = leaveType;
             cellFromDate.textContent = fromDate;
             cellUntilDate.textContent = untilDate;
             cellTotalDays.textContent = totalDays;
             cellStatus.textContent = status;
+
+            // Determine certification display
+            const isSickLeave = leaveType.toLowerCase().includes('sick');
+            const isSelfCertified = document.getElementById('selfCertify') && document.getElementById('selfCertify').checked;
+            const hasCertification = document.getElementById('certification') && document.getElementById('certification').files.length > 0;
+            
+            if (isSickLeave) {
+                if (hasCertification) {
+                    cellCertification.innerHTML = '<span style="color: green;">Provided</span>';
+                } else if (isSelfCertified) {
+                    cellCertification.textContent = 'Self-certified';
+                } else if (totalDays > 2) {
+                    cellCertification.innerHTML = '<span style="color: red;">Required</span>';
+                } else {
+                    cellCertification.textContent = 'N/A';
+                }
+            } else {
+                cellCertification.textContent = 'N/A';
+            }
         }
     
         // This function updates the displayed remaining leaves after a successful leave request
@@ -373,46 +424,191 @@
                 remainingLeavesSpan.textContent = remainingLeaves; // Update the displayed value
             }
         }
+
+        // sick leave request certification section functionality
+        function initializeCertificationSection() {
+            const leaveTypeSelect = document.getElementById('leaveType');
+            const fromDateInput = document.getElementById('fromDate');
+            const untilDateInput = document.getElementById('untilDate');
+            const certificationSection = document.getElementById('certificationSection');
+            const certificationNote = document.getElementById('certificationNote');
+            const certificationInput = document.getElementById('certification');
+            const selfCertifyCheckbox = document.getElementById('selfCertify');
+            
+            // Function to calculate leave duration
+            function calculateDays() {
+                if (!fromDateInput.value || !untilDateInput.value) return 0;
+                const fromDate = new Date(fromDateInput.value);
+                const untilDate = new Date(untilDateInput.value);
+                return Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+            }
+            
+            // Function to update certification section visibility
+            function updateCertificationSection() {
+                if (!leaveTypeSelect || !certificationSection) return;
+                
+                const selectedText = leaveTypeSelect.options[leaveTypeSelect.selectedIndex].text;
+                const isSickLeave = selectedText.toLowerCase().includes('sick');
+                const days = calculateDays();
+                
+                if (isSickLeave) {
+                    certificationSection.style.display = 'block';
+                    
+                    if (days <= 2) {
+                        certificationNote.textContent = 'For short-term sick leave (1-2 days), you can self-certify.';
+                        certificationInput.required = false;
+                        selfCertifyCheckbox.disabled = false;
+                    } else {
+                        certificationNote.textContent = 'For sick leaves of 3 or more days, a medical certificate is required.';
+                        certificationInput.required = true;
+                        selfCertifyCheckbox.disabled = true;
+                        selfCertifyCheckbox.checked = false;
+                    }
+                } else {
+                    certificationSection.style.display = 'none';
+                    certificationInput.required = false;
+                }
+            }
+            
+            // Add event listeners
+            if (leaveTypeSelect) {
+                leaveTypeSelect.addEventListener('change', updateCertificationSection);
+            }
+            
+            if (fromDateInput) {
+                fromDateInput.addEventListener('change', updateCertificationSection);
+            }
+            
+            if (untilDateInput) {
+                untilDateInput.addEventListener('change', updateCertificationSection);
+            }
+            
+            // Initial update
+            updateCertificationSection();
+        }
     
-        // Handle form submission
+       // Handle form submission
         document.getElementById('leaveForm').addEventListener('submit', async (event) => {
             event.preventDefault(); // Prevent the default form submission
-    
-            const leaveTypeId = document.getElementById('leaveType').value;
+
+            const leaveTypeSelect = document.getElementById('leaveType');
+            const leaveTypeId = leaveTypeSelect.value;
+            const leaveTypeText = leaveTypeSelect.options[leaveTypeSelect.selectedIndex].text;
             const fromDate = document.getElementById('fromDate').value;
             const fromDayType = document.getElementById('fromDayType').value;
             const untilDate = document.getElementById('untilDate').value;
             const untilDayType = document.getElementById('untilDayType').value;
             const reason = document.getElementById('reason').value;
-    
+
             const totalDays = Math.ceil((new Date(untilDate) - new Date(fromDate)) / (1000 * 60 * 60 * 24)) + 1;
-    
-            const leaveData = {
-                leaveTypeId,
-                fromDate,
-                fromDayType,
-                untilDate,
-                untilDayType,
-                reason
-            };
-    
+            
+            // Check if this is a sick leave
+            const isSickLeave = leaveTypeText.toLowerCase().includes('sick');
+            const certificationInput = document.getElementById('certification');
+            const selfCertifyCheckbox = document.getElementById('selfCertify');
+            
+            // For FormData approach with file upload
+            let useFormData = false;
+            
+            // Validate certification for sick leave
+            if (isSickLeave && totalDays > 2 && 
+                (!certificationInput || certificationInput.files.length === 0)) {
+                alert('A medical certificate is required for sick leaves of 3 or more days.');
+                return;
+            }
+            
+            // Determine if we need to use FormData (for file uploads)
+            if (isSickLeave && certificationInput && certificationInput.files.length > 0) {
+                useFormData = true;
+            }
+            
             try {
-                const response = await fetch('/employee/leaverequest', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(leaveData)
-                });
-    
+                let response;
+                
+                if (useFormData) {
+                    // Use FormData for file upload
+                    const formData = new FormData();
+                    formData.append('leaveTypeId', leaveTypeId);
+                    formData.append('fromDate', fromDate);
+                    formData.append('fromDayType', fromDayType);
+                    formData.append('untilDate', untilDate);
+                    formData.append('untilDayType', untilDayType);
+                    formData.append('reason', reason);
+                    
+                    // Add certification data if it's a sick leave
+                    if (isSickLeave) {
+                        formData.append('isSickLeave', 'true');
+                        formData.append('leaveDuration', totalDays.toString());
+                        
+                        if (totalDays <= 2 && selfCertifyCheckbox && selfCertifyCheckbox.checked) {
+                            formData.append('isSelfCertified', 'true');
+                        } else if (certificationInput && certificationInput.files.length > 0) {
+                            formData.append('certification', certificationInput.files[0]);
+                        }
+                    }
+                    
+                    response = await fetch('/employee/leaverequest', {
+                        method: 'POST',
+                        body: formData
+                        // Note: Don't set Content-Type header when using FormData
+                    });
+                } else {
+                    // Use JSON for regular submissions
+                    const leaveData = {
+                        leaveTypeId,
+                        fromDate,
+                        fromDayType,
+                        untilDate,
+                        untilDayType,
+                        reason
+                    };
+                    
+                    // Add certification info if it's a sick leave
+                    if (isSickLeave) {
+                        leaveData.isSickLeave = 'true';
+                        leaveData.leaveDuration = totalDays;
+                        
+                        if (totalDays <= 2 && selfCertifyCheckbox && selfCertifyCheckbox.checked) {
+                            leaveData.isSelfCertified = 'true';
+                        }
+                    }
+                    
+                    response = await fetch('/employee/leaverequest', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(leaveData)
+                    });
+                }
+
                 if (response.ok) {
                     const data = await response.json();
                     alert('Leave request submitted successfully!');
-    
-                    updateLeaveData(data.leaveType, fromDate, untilDate, totalDays, 'Pending'); // Update the leave requests table
-                    updateRemainingLeaves(leaveTypeId, totalDays); // Update the remaining leaves
-    
+
+                    // Get certification status for display
+                    let certStatus = 'N/A';
+                    if (isSickLeave) {
+                        if (certificationInput && certificationInput.files.length > 0) {
+                            certStatus = 'Provided';
+                        } else if (selfCertifyCheckbox && selfCertifyCheckbox.checked) {
+                            certStatus = 'Self-certified';
+                        } else if (totalDays > 2) {
+                            certStatus = 'Required';
+                        }
+                    }
+
+                    // Update the UI
+                    updateLeaveDataWithCert(leaveTypeText, fromDate, untilDate, totalDays, 'Pending', certStatus);
+                    updateRemainingLeaves(leaveTypeId, totalDays);
+
                     modal.style.display = "none"; // Close the modal
+                    
+                    // Reset the form
+                    document.getElementById('leaveForm').reset();
+                    
+                    // Update pending requests count
+                    updatePendingRequestsCount();
                 } else {
                     const errorData = await response.json();
                     alert('Error submitting leave request: ' + errorData.message);
@@ -422,6 +618,36 @@
                 alert('Error submitting leave request');
             }
         });
+
+        // Updated function to include certification status
+        function updateLeaveDataWithCert(leaveType, fromDate, untilDate, totalDays, status, certStatus) {
+            const table = document.getElementById('leaveRequestsTable');
+            const newRow = table.insertRow(0); // Insert at the top
+            
+            const cellLeaveType = newRow.insertCell(0);
+            const cellFromDate = newRow.insertCell(1);
+            const cellUntilDate = newRow.insertCell(2);
+            const cellTotalDays = newRow.insertCell(3);
+            const cellStatus = newRow.insertCell(4);
+            const cellCert = newRow.insertCell(5); // New cell for certification
+
+            cellLeaveType.textContent = leaveType;
+            cellFromDate.textContent = fromDate;
+            cellUntilDate.textContent = untilDate;
+            cellTotalDays.textContent = totalDays;
+            cellStatus.textContent = status;
+            
+            // Style certification status
+            if (certStatus === 'Provided') {
+                cellCert.innerHTML = '<span style="color: green;">Provided</span>';
+            } else if (certStatus === 'Self-certified') {
+                cellCert.textContent = 'Self-certified';
+            } else if (certStatus === 'Required') {
+                cellCert.innerHTML = '<span style="color: red;">Required</span>';
+            } else {
+                cellCert.textContent = certStatus;
+            }
+        }
 
         // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
