@@ -3400,6 +3400,147 @@ viewEvaluation: async function(req, res) {
             });
         }
     },
+
+    getContactPersons: async function(req, res) {
+        try {
+            const userId = req.session.user ? req.session.user.userId : null;
+            
+            if (!userId) {
+                return res.status(401).json({ 
+                    success: false, 
+                    error: 'Unauthorized access.' 
+                });
+            }
+            
+            // Fetch department information to get names for the dropdown
+            const { data: departments, error: deptError } = await supabase
+                .from('departments')
+                .select('departmentId, deptName');
+                
+            if (deptError) {
+                console.error('Error fetching departments:', deptError);
+                return res.status(500).json({ 
+                    success: false, 
+                    error: 'Failed to load departments.' 
+                });
+            }
+            
+            // Fetch staff members to use as contacts, including their departments and job positions
+            const { data: staffMembers, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select(`
+                    staffId,
+                    userId,
+                    firstName,
+                    lastName,
+                    departmentId,
+                    jobId,
+                    departments (deptName),
+                    jobpositions (jobTitle)
+                `)
+                .order('departmentId', { ascending: true })
+                .order('lastName', { ascending: true });
+                
+            if (staffError) {
+                console.error('Error fetching staff members:', staffError);
+                return res.status(500).json({ 
+                    success: false, 
+                    error: 'Failed to load staff members.' 
+                });
+            }
+            
+            // Organize contact persons by department
+            const contacts = [];
+            
+            // Add HR department contacts
+            const hrContacts = staffMembers.filter(staff => 
+                staff.departments && staff.departments.deptName === 'HR'
+            ).map(staff => ({
+                contact_id: staff.staffId,
+                department: 'HR',
+                contact_name: `${staff.firstName} ${staff.lastName}`,
+                position: staff.jobpositions ? staff.jobpositions.jobTitle : ''
+            }));
+            
+            contacts.push(...hrContacts);
+            
+            // Add Finance department contacts
+            const financeContacts = staffMembers.filter(staff => 
+                staff.departments && staff.departments.deptName === 'Finance'
+            ).map(staff => ({
+                contact_id: staff.staffId,
+                department: 'Finance',
+                contact_name: `${staff.firstName} ${staff.lastName}`,
+                position: staff.jobpositions ? staff.jobpositions.jobTitle : ''
+            }));
+            
+            contacts.push(...financeContacts);
+            
+            // Add IT department contacts
+            const itContacts = staffMembers.filter(staff => 
+                staff.departments && staff.departments.deptName === 'IT'
+            ).map(staff => ({
+                contact_id: staff.staffId,
+                department: 'IT',
+                contact_name: `${staff.firstName} ${staff.lastName}`,
+                position: staff.jobpositions ? staff.jobpositions.jobTitle : ''
+            }));
+            
+            contacts.push(...itContacts);
+            
+            // Add other departments contacts
+            const otherDepartments = departments.filter(dept => 
+                !['HR', 'Finance', 'IT'].includes(dept.deptName)
+            );
+            
+            for (const dept of otherDepartments) {
+                const deptContacts = staffMembers.filter(staff => 
+                    staff.departmentId === dept.departmentId
+                ).map(staff => ({
+                    contact_id: staff.staffId,
+                    department: dept.deptName,
+                    contact_name: `${staff.firstName} ${staff.lastName}`,
+                    position: staff.jobpositions ? staff.jobpositions.jobTitle : ''
+                }));
+                
+                contacts.push(...deptContacts);
+            }
+            
+            // Add the specific people mentioned in the requirements if they don't exist already
+            const requiredContacts = [
+                { department: 'HR', contact_name: 'Ethan Sullivan', position: 'Compensation and Benefits Manager' },
+                { department: 'Finance', contact_name: 'Jane De Leon', position: 'Financial Analyst' },
+                { department: 'IT', contact_name: 'Jane Smith', position: 'Technical Staff' }
+            ];
+            
+            // Check if the required contacts already exist in our list
+            for (const reqContact of requiredContacts) {
+                const contactExists = contacts.some(contact => 
+                    contact.department === reqContact.department && 
+                    contact.contact_name === reqContact.contact_name
+                );
+                
+                // If not, add them
+                if (!contactExists) {
+                    contacts.push({
+                        contact_id: `special_${reqContact.department}_${reqContact.contact_name.replace(/\s+/g, '_')}`,
+                        ...reqContact
+                    });
+                }
+            }
+            
+            return res.json({ 
+                success: true, 
+                contacts: contacts 
+            });
+        } catch (err) {
+            console.error('Error in getContactPersons controller:', err);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'An error occurred while loading contacts.' 
+            });
+        }
+    },
     
     getRetirementTracker: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {

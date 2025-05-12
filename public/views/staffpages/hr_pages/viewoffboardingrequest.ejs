@@ -225,9 +225,27 @@
             transition: background-color 0.3s ease;
             margin-top: 15px;
         }
-        
         .approve-btn:hover {
             background-color: #388E3C;
+        }
+
+         #contactPersonDropdown {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 10px;
+        background-color: white;
+        }
+        
+        optgroup {
+            font-weight: bold;
+        }
+        
+        option {
+            padding: 5px;
         }
     </style>
 </head>
@@ -326,7 +344,14 @@
                     <% }) %>
                 </ul>
                 <input type="text" id="newChecklistItem" placeholder="Add new task">
-                <input type="text" id="newContactPerson" placeholder="Add contact person">
+                <!-- Dropdown that will be populated from backend -->
+                <select id="contactPersonDropdown">
+                    <option value="">Select Contact Person</option>
+                    <!-- Contact options will be loaded dynamically -->
+                </select>
+                <div id="loadingContacts" style="display: none; color: #666; margin-top: 5px;">
+                    <em>Loading contacts...</em>
+                </div>
                 <button class="add-item" onclick="addChecklistItem()">Add Item</button>
             </div>
             <div class="modal-actions">
@@ -375,6 +400,9 @@
                 openModalBtn.addEventListener("click", function () {
                     const modal = document.getElementById("clearanceModal");
                     modal.style.display = "flex";
+                    
+                    // Load contact persons when the modal opens
+                    loadContactPersons();
                 });
             }
 
@@ -474,10 +502,17 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        alert("Clearance saved successfully!");
-                        document.getElementById("clearanceModal").style.display = "none";
+                        if (data.success) {
+                            alert("Clearance saved successfully!");
+                            document.getElementById("clearanceModal").style.display = "none";
+                        } else {
+                            alert("Error saving clearance: " + (data.error || "Unknown error"));
+                        }
                     })
-                    .catch(error => console.error("Error saving clearance:", error));
+                    .catch(error => {
+                        console.error("Error saving clearance:", error);
+                        alert("An error occurred while saving the checklist.");
+                    });
                 });
             }
         });
@@ -508,13 +543,115 @@
             });
         });
 
-        // Add Item to Checklist
+        // Function to load contact persons from backend
+        function loadContactPersons() {
+            const dropdown = document.getElementById("contactPersonDropdown");
+            const loadingElement = document.getElementById("loadingContacts");
+            
+            // Show loading indicator if it exists
+            if (loadingElement) loadingElement.style.display = "block";
+            
+            // Clear existing options except the first one
+            while (dropdown.options.length > 1) {
+                dropdown.remove(1);
+            }
+            
+            // Get the employee's department to potentially filter contacts
+            const departmentName = "<%= department %>";
+            
+            // Fetch contacts from backend
+            fetch("/get-contact-persons")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Group contacts by department
+                        const departments = {};
+                        
+                        data.contacts.forEach(contact => {
+                            if (!departments[contact.department]) {
+                                departments[contact.department] = [];
+                            }
+                            
+                            departments[contact.department].push(contact);
+                        });
+                        
+                        // Add optgroups and options for each department
+                        Object.keys(departments).sort().forEach(dept => {
+                            const optgroup = document.createElement("optgroup");
+                            optgroup.label = dept;
+                            
+                            departments[dept].forEach(contact => {
+                                const option = document.createElement("option");
+                                const displayText = contact.position 
+                                    ? `${contact.contact_name} (${contact.position})`
+                                    : contact.contact_name;
+                                    
+                                option.value = `${contact.department} - ${displayText}`;
+                                option.textContent = displayText;
+                                optgroup.appendChild(option);
+                            });
+                            
+                            dropdown.appendChild(optgroup);
+                        });
+                        
+                        // Add line manager option if department is available
+                        if (departmentName) {
+                            // Check if department already exists as an optgroup
+                            let deptOptgroup = null;
+                            for (let i = 0; i < dropdown.children.length; i++) {
+                                if (dropdown.children[i].tagName === 'OPTGROUP' && 
+                                    dropdown.children[i].label === departmentName) {
+                                    deptOptgroup = dropdown.children[i];
+                                    break;
+                                }
+                            }
+                            
+                            // If not, create a new optgroup
+                            if (!deptOptgroup) {
+                                deptOptgroup = document.createElement("optgroup");
+                                deptOptgroup.label = departmentName;
+                                dropdown.appendChild(deptOptgroup);
+                            }
+                            
+                            // Add Line Manager option
+                            const lineManagerOption = document.createElement("option");
+                            lineManagerOption.value = `${departmentName} - Line Manager`;
+                            lineManagerOption.textContent = "Line Manager";
+                            deptOptgroup.appendChild(lineManagerOption);
+                        }
+                    } else {
+                        console.error("Failed to load contacts:", data.error);
+                        alert("Failed to load contacts. Please try again.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching contacts:", error);
+                    alert("An error occurred while loading contacts.");
+                })
+                .finally(() => {
+                    // Hide loading indicator
+                    if (loadingElement) loadingElement.style.display = "none";
+                });
+        }
+
+        // Add Item to Checklist - Updated to use the dropdown
         function addChecklistItem() {
             const newTask = document.getElementById("newChecklistItem").value;
-            const newContact = document.getElementById("newContactPerson").value;
+            const contactDropdown = document.getElementById("contactPersonDropdown");
+            const newContact = contactDropdown.value;
 
-            if (newTask.trim() === "" || newContact.trim() === "") {
-                alert("Please enter both a task and a contact person.");
+            if (newTask.trim() === "") {
+                alert("Please enter a task.");
+                return;
+            }
+
+            if (newContact === "") {
+                alert("Please select a contact person.");
                 return;
             }
 
@@ -529,7 +666,7 @@
             `;
             checklist.appendChild(li);
             document.getElementById("newChecklistItem").value = "";
-            document.getElementById("newContactPerson").value = "";
+            contactDropdown.selectedIndex = 0; // Reset dropdown to default option
         }
 
         // Delete Item from Checklist

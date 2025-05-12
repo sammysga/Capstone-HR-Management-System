@@ -110,6 +110,7 @@ router.get('/hr/get-start-date', hrController.getOnboardingStartDate);
 router.get('/hr/onboarding-view', hrController.getHROnboarding);
 router.get('/hr/offboarding-request', hrController.getOffboardingRequestsDash);
 router.get('/hr/view-offboarding-request/:userId', hrController.getViewOffboardingRequest);
+router.get('/get-contact-persons', hrController.getContactPersons);
 router.post('/save-clearance', hrController.saveChecklist);
 router.post('/send-clearance', hrController.sendClearanceToEmployee);
 router.get('/hr/retirement-tracker', hrController.getRetirementTracker);
