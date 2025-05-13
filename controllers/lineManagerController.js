@@ -3114,6 +3114,226 @@ console.log('Final applicants list:', applicants);
             return res.status(500).json({ success: false, message: "Error finalizing P1 review: " + error.message });
         }
     },
+
+
+// Modified finalizeP1Review function with email notifications
+// finalizeP1Review: async function(req, res) {
+//     try {
+//       console.log('✅ [LineManager] Finalizing P1 review process');
+      
+//       const { passedUserIds, failedUserIds } = req.body;
+      
+//       if (!passedUserIds || !failedUserIds) {
+//         return res.status(400).json({ success: false, message: "Missing user IDs" });
+//       }
+      
+//       console.log(`✅ [LineManager] P1 Finalization: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+      
+//       // Process passed applicants
+//       for (const userId of passedUserIds) {
+//         console.log(`✅ [LineManager] Finalizing P1 PASSED for userId: ${userId}`);
+        
+//         // 1. Get user's email from the database
+//         const { data: userData, error: userError } = await supabase
+//           .from('useraccounts')
+//           .select('userEmail, firstName, lastName')
+//           .eq('userId', userId)
+//           .single();
+          
+//         if (userError || !userData) {
+//           console.error(`❌ [LineManager] Error fetching user email for ${userId}:`, userError);
+//           continue;
+//         }
+        
+//         const userEmail = userData.userEmail;
+//         const userName = `${userData.firstName} ${userData.lastName}`;
+        
+//         if (!userEmail) {
+//           console.error(`❌ [LineManager] No email found for user ${userId}`);
+//           continue;
+//         }
+        
+//         // 2. Update applicant status in the database
+//         const { data: updateData, error: updateError } = await supabase
+//           .from('applicantaccounts')
+//           .update({ applicantStatus: 'P1 - PASSED' })
+//           .eq('userId', userId);
+          
+//         if (updateError) {
+//           console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+//           continue;
+//         }
+        
+//         // 3. Send congratulations message through the chatbot history
+//         const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage once the HR team sets availability via Calendly.";
+        
+//         const { data: chatData, error: chatError } = await supabase
+//           .from('chatbot_history')
+//           .insert([{
+//             userId,
+//             message: JSON.stringify({ text: congratsMessage }),
+//             sender: 'bot',
+//             timestamp: new Date().toISOString(),
+//             applicantStage: 'P1 - PASSED'
+//           }]);
+          
+//         if (chatError) {
+//           console.error(`❌ [LineManager] Error sending chat message to ${userId}:`, chatError);
+//         }
+        
+//         // 4. Send congratulatory email to the applicant
+//         const emailSubject = 'Congratulations! You Passed the Initial Screening';
+//         const emailHtml = `
+//           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+//             <div style="text-align: center; margin-bottom: 30px;">
+//               <img src="https://your-company-logo-url.com" alt="Prime Infrastructure Logo" style="max-width: 200px; height: auto;">
+//             </div>
+            
+//             <h1 style="color: #124A5C; text-align: center; margin-bottom: 20px;">Congratulations, ${userName}!</h1>
+            
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">We are delighted to inform you that you have successfully passed the initial screening process for your application with Prime Infrastructure.</p>
+            
+//             <div style="background-color: #f8f8f8; padding: 15px; border-radius: 6px; margin: 25px 0;">
+//               <h2 style="color: #28a745; margin-top: 0;">What's Next?</h2>
+//               <p style="font-size: 16px; line-height: 1.6; color: #333;">Our HR team will be reaching out soon with information regarding the next interview stage. You'll receive a Calendly invitation to schedule your interview at a time that works best for you.</p>
+//             </div>
+            
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">Please continue to monitor both your email inbox and the applicant portal for updates on your application status.</p>
+            
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">If you have any questions in the meantime, feel free to respond to this email or contact our recruitment team at <a href="mailto:careers@primeinfra.com" style="color: #07ACB9;">careers@primeinfra.com</a>.</p>
+            
+//             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+//               <p style="font-size: 14px; color: #666; text-align: center;">Best regards,<br>The Prime Infrastructure Recruitment Team</p>
+//             </div>
+            
+//             <div style="margin-top: 30px; font-size: 12px; color: #999; text-align: center;">
+//               <p>This is an automated email. Please do not reply directly to this message.</p>
+//             </div>
+//           </div>
+//         `;
+        
+//         try {
+//           await transporter.sendMail({
+//             from: `"Prime Infrastructure Careers" <${process.env.EMAIL_USER}>`,
+//             to: userEmail,
+//             subject: emailSubject,
+//             html: emailHtml,
+//           });
+//           console.log(`✅ [LineManager] Successfully sent congratulatory email to ${userEmail}`);
+//         } catch (emailError) {
+//           console.error(`❌ [LineManager] Error sending email to ${userEmail}:`, emailError);
+//         }
+//       }
+      
+//       // Process failed applicants
+//       for (const userId of failedUserIds) {
+//         console.log(`✅ [LineManager] Finalizing P1 FAILED for userId: ${userId}`);
+        
+//         // 1. Get user's email from the database
+//         const { data: userData, error: userError } = await supabase
+//           .from('useraccounts')
+//           .select('userEmail, firstName, lastName')
+//           .eq('userId', userId)
+//           .single();
+          
+//         if (userError || !userData) {
+//           console.error(`❌ [LineManager] Error fetching user email for ${userId}:`, userError);
+//           continue;
+//         }
+        
+//         const userEmail = userData.userEmail;
+//         const userName = `${userData.firstName} ${userData.lastName}`;
+        
+//         if (!userEmail) {
+//           console.error(`❌ [LineManager] No email found for user ${userId}`);
+//           continue;
+//         }
+        
+//         // 2. Update applicant status in the database
+//         const { data: updateData, error: updateError } = await supabase
+//           .from('applicantaccounts')
+//           .update({ applicantStatus: 'P1 - FAILED' })
+//           .eq('userId', userId);
+          
+//         if (updateError) {
+//           console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+//           continue;
+//         }
+        
+//         // 3. Send rejection message through the chatbot history
+//         const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.";
+        
+//         const { data: chatData, error: chatError } = await supabase
+//           .from('chatbot_history')
+//           .insert([{
+//             userId,
+//             message: JSON.stringify({ text: rejectionMessage }),
+//             sender: 'bot',
+//             timestamp: new Date().toISOString(),
+//             applicantStage: 'P1 - FAILED'
+//           }]);
+          
+//         if (chatError) {
+//           console.error(`❌ [LineManager] Error sending chat message to ${userId}:`, chatError);
+//         }
+        
+//         // 4. Send rejection email to the applicant
+//         const emailSubject = 'Update on Your Application with Prime Infrastructure';
+//         const emailHtml = `
+//           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+//             <div style="text-align: center; margin-bottom: 30px;">
+//               <img src="https://your-company-logo-url.com" alt="Prime Infrastructure Logo" style="max-width: 200px; height: auto;">
+//             </div>
+            
+//             <h1 style="color: #124A5C; text-align: center; margin-bottom: 20px;">Application Update</h1>
+            
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">Dear ${userName},</p>
+            
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">Thank you for your interest in joining Prime Infrastructure and for taking the time to apply for our position.</p>
+            
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">After careful consideration of all applications, we regret to inform you that we have decided not to proceed with your application at this time.</p>
+            
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">Please note that this decision does not reflect on your qualifications or experience. We received many applications from qualified candidates, and the selection process was highly competitive.</p>
+            
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">We encourage you to continue monitoring our careers page for future opportunities that match your skills and interests, as we would be happy to consider you for other positions in the future.</p>
+            
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">We wish you the best in your job search and future career endeavors.</p>
+            
+//             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+//               <p style="font-size: 14px; color: #666; text-align: center;">Best regards,<br>The Prime Infrastructure Recruitment Team</p>
+//             </div>
+            
+//             <div style="margin-top: 30px; font-size: 12px; color: #999; text-align: center;">
+//               <p>This is an automated email. Please do not reply directly to this message.</p>
+//             </div>
+//           </div>
+//         `;
+        
+//         try {
+//           await transporter.sendMail({
+//             from: `"Prime Infrastructure Careers" <${process.env.EMAIL_USER}>`,
+//             to: userEmail,
+//             subject: emailSubject,
+//             html: emailHtml,
+//           });
+//           console.log(`✅ [LineManager] Successfully sent rejection email to ${userEmail}`);
+//         } catch (emailError) {
+//           console.error(`❌ [LineManager] Error sending email to ${userEmail}:`, emailError);
+//         }
+//       }
+      
+//       return res.status(200).json({ 
+//         success: true, 
+//         message: "P1 review finalized successfully and applicants have been notified via both chatbot and email.",
+//         passedCount: passedUserIds.length,
+//         failedCount: failedUserIds.length
+//       });
+      
+//     } catch (error) {
+//       console.error('❌ [LineManager] Error finalizing P1 review:', error);
+//       return res.status(500).json({ success: false, message: "Error finalizing P1 review: " + error.message });
+//     }
+//   },
     
     finalizeP3Review: async function(req, res) {
         try {
