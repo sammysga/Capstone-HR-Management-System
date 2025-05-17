@@ -8,6 +8,199 @@
     <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+
+
+        /* Global font styling */
+        body, button, input, select, textarea {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Enhanced textarea styling */
+        textarea {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.2s ease;
+            line-height: 1.5;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            resize: vertical;
+            background-color: #f9fafb;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background-color: white;
+        }
+        
+        textarea:disabled {
+            background-color: #f1f5f9;
+            color: #64748b;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+        }
+        
+        textarea::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        
+        /* Improved status indicators */
+        .status-indicator {
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .status-pending {
+            background-color: #fff7ed;
+            color: #c2410c;
+            border-left: 4px solid #f97316;
+        }
+        
+        .status-submitted {
+            background-color: #ecfdf5;
+            color: #047857;
+            border-left: 4px solid #10b981;
+        }
+        
+        /* Card improvements */
+        .card {
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: #f3f4f6;
+        }
+        
+        .card-title {
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 1.1rem;
+        }
+        
+        /* Better table styling */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+        
+        table th {
+            background-color: #f3f4f6;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: #4b5563;
+            text-align: left;
+        }
+        
+        table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        table td {
+            padding: 1rem;
+            vertical-align: top;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        /* Improved star rating */
+        .star-rating {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            margin-bottom: 0.5rem;
+        }
+        
+        .star-rating input {
+            display: none;
+        }
+        
+        .star-rating label {
+            cursor: pointer;
+            width: 1.5em;
+            font-size: 1.5em;
+            color: #d1d5db;
+            transition: color 0.2s ease;
+        }
+        
+        .star-rating label:before {
+            content: '★';
+        }
+        
+        .star-rating input:checked ~ label {
+            color: #eab308;
+        }
+        
+        .star-rating:hover label:hover,
+        .star-rating:hover label:hover ~ label {
+            color: #f59e0b;
+        }
+        
+        /* Improved button styling */
+        button[type="submit"] {
+            background-color: #2563eb;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        button[type="submit"]:hover {
+            background-color: #1d4ed8;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25);
+            transform: translateY(-1px);
+        }
+        
+        button[type="submit"]:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Progress bar improvements */
+        .progress-bar-container {
+            height: 10px;
+            background-color: #f1f5f9;
+            border-radius: 9999px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+            border-radius: 9999px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+
         /* Select dropdown styling */
         .staff-select-container {
             margin-bottom: 24px;
@@ -52,20 +245,6 @@
             background-color: #e7f5e8;
             color: #27ae60;
             border-left: 4px solid #27ae60;
-        }
-        
-        .progress-bar-container {
-            margin-top: 16px;
-            background-color: #f5f7fa;
-            border-radius: 8px;
-            height: 8px;
-            overflow: hidden;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background-color: #27ae60;
-            transition: width 0.5s ease-in-out;
         }
         
         .submission-info {
@@ -481,36 +660,6 @@
             border-radius: 9999px;
         }
         
-        /* Star rating input */
-        .star-rating {
-            display: inline-flex;
-            flex-direction: row-reverse;
-            justify-content: flex-end;
-        }
-        
-        .star-rating input {
-            display: none;
-        }
-        
-        .star-rating label {
-            cursor: pointer;
-            width: 1.5em;
-            font-size: 1.5em;
-            color: #ddd;
-        }
-        
-        .star-rating label:before {
-            content: '★';
-        }
-        
-        .star-rating input:checked ~ label {
-            color: #FFD700;
-        }
-        
-        .star-rating:hover label:hover,
-        .star-rating:hover label:hover ~ label {
-            color: #FFD700;
-        }
     </style>
 </head>
 <body>

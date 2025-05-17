@@ -2981,6 +2981,164 @@ function toggleFeedbackView(view) {
     }
 }
 
+
+// Function to save 360 feedback
+async function save360DegreeFeedback() {
+    console.log("Saving 360 degree feedback...");
+    
+    // Get form values
+    const startDateElement = document.getElementById('startDate');
+    const endDateElement = document.getElementById('endDate');
+    const saveFeedbackButton = document.getElementById("save360DegreeFeedback");
+    const activeQuarterField = document.getElementById('activeQuarterField');
+
+    if (!startDateElement || !endDateElement || !activeQuarterField) {
+        console.error("One or more required form elements not found.");
+        alert("Form error: Required fields are missing.");
+        return;
+    }
+
+    // Show loading state
+    if (saveFeedbackButton) {
+        saveFeedbackButton.disabled = true;
+        saveFeedbackButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
+
+    const startDate = startDateElement.value;
+    const endDate = endDateElement.value;
+
+    // Get the quarter from the active field
+    const quarter = activeQuarterField.value || 'Q1';
+    
+    // Validate dates
+    if (!startDate || !endDate) {
+        alert("Please enter both start and end dates.");
+        // Reset button state
+        if (saveFeedbackButton) {
+            saveFeedbackButton.disabled = false;
+            saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
+        }
+        return;
+    }
+    
+    if (new Date(startDate) > new Date(endDate)) {
+        alert("End date must be after start date.");
+        // Reset button state
+        if (saveFeedbackButton) {
+            saveFeedbackButton.disabled = false;
+            saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
+        }
+        return;
+    }
+    
+    console.log("Saving questionnaire with the following data:");
+    console.log("User ID:", userId);
+    console.log("Job ID:", jobId);
+    console.log("Start Date:", startDate);
+    console.log("End Date:", endDate);
+    console.log("Quarter:", quarter);
+
+    // Collect feedback data
+    const feedbackData = {
+        questions: [],
+        skills: []
+    };
+
+    // Collect qualitative questions from input fields
+    const feedbackRows = document.querySelectorAll('#feedback-table-body tr');
+    feedbackRows.forEach(row => {
+        const qualitativeInput = row.querySelector('input[type="text"]');
+
+        if (qualitativeInput && qualitativeInput.value.trim()) {
+            const objectiveId = qualitativeInput.getAttribute('data-objective-id');
+            if (objectiveId) {
+                feedbackData.questions.push({
+                    objectiveId: objectiveId,
+                    questionText: qualitativeInput.value.trim()
+                });
+            }
+        }
+    });
+
+    // Check if any questions were added
+    if (feedbackData.questions.length === 0) {
+        alert("Please provide at least one qualitative question.");
+        
+        // Reset button state
+        if (saveFeedbackButton) {
+            saveFeedbackButton.disabled = false;
+            saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
+        }
+        return;
+    }
+
+    console.log("Feedback data to save:", feedbackData);
+
+    // Send data to server
+    try {
+        const response = await fetch(`/linemanager/records-performance-tracker/questionnaire/${userId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId,
+                jobId,
+                startDate,
+                endDate,
+                feedbackData,
+                quarter
+            })
+        });
+
+        console.log("Response from server:", response.status);
+
+        // Check if the response was successful
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Result from server:", result);
+
+        if (result.success) {
+            // Show success message
+            alert("Feedback questionnaire saved successfully!");
+            
+            // Update viewState to reflect the new status
+            const quarterKey = `feedbacks_${quarter}`;
+            viewState.viewOnlyStatus[quarterKey] = true;
+            
+            // Update the UI based on the new state
+            updateStepperAccessibility();
+            
+            // Switch to view-only mode
+            switchToViewOnlyMode();
+            
+            // Switch to the "View Feedback" tab
+            const viewFeedbackBtn = document.getElementById('viewFeedbackBtn');
+            if (viewFeedbackBtn) {
+                viewFeedbackBtn.click();
+            }
+        } else {
+            alert("Failed to save feedback: " + (result.message || "Unknown error"));
+            
+            // Reset button state
+            if (saveFeedbackButton) {
+                saveFeedbackButton.disabled = false;
+                saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
+            }
+        }
+    } catch (error) {
+        console.error("Error saving feedback:", error);
+        alert("An error occurred while saving feedback. Please try again later.");
+        
+        // Reset button state
+        if (saveFeedbackButton) {
+            saveFeedbackButton.disabled = false;
+            saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
+        }
+    }
+}
+
 // Function to fetch year data
 function fetchYearData() {
     const yearSelect = document.getElementById('yearSelect');
