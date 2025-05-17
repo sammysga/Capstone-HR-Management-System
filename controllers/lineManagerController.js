@@ -427,90 +427,98 @@ const lineManagerController = {
     //     }
     // },
     
-    getLeaveRequest: async function(req, res) {
-        const userId = req.query.userId;
-    
-        console.log('Incoming request query:', req.query);
-        
-        if (!userId) {
-            return res.status(400).json({ success: false, message: 'User ID is required.' });
-        }
-    
-        try {
-            console.log('User ID for query:', userId);
-    
-            const fetchLeaveRequestData = async (userId) => {
-                console.log('User ID for fetching leave request:', userId);
-                const { data, error } = await supabase
-                    .from('leaverequests')
-                    .select(`
-                        leaveRequestId,
-                        userId,
-                        fromDate,
-                        fromDayType,
-                        untilDate,
-                        untilDayType,
-                        reason,
-                        leaveTypeId,
-                        useraccounts (
-                            userId,
-                            staffaccounts (
-                                staffId,
-                                lastName,
-                                firstName,
-                                phoneNumber
-                            )
-                        ),
-                        leave_types (
-                            typeName
-                        )
-                    `)
-                    .eq('userId', userId);
-    
-                console.log('Raw leave request data:', data);
-                if (error) {
-                    console.error('Error details:', error);
-                    throw error;
-                }
-    
-                return data;
-            };
-    
-            const leaveRequestData = await fetchLeaveRequestData(userId);
-    
-            if (!leaveRequestData || leaveRequestData.length === 0) {
-                return res.status(404).json({ success: false, message: 'No leave requests found.' });
-            }
-    
-            // Only select the first leave request for rendering
-            const leaveRequest = leaveRequestData[0];
-            
-            const formattedLeaveRequest = {
-                leaveRequestId: leaveRequest.leaveRequestId, // Add this line
-                userId: leaveRequest.userId,
-                fromDate: leaveRequest.fromDate,
-                fromDayType: leaveRequest.fromDayType,
-                untilDate: leaveRequest.untilDate,
-                untilDayType: leaveRequest.untilDayType,
-                reason: leaveRequest.reason,
-                leaveTypeId: leaveRequest.leaveTypeId,
-                leaveTypeName: leaveRequest.leave_types.typeName,
-                staff: {
-                    lastName: leaveRequest.useraccounts.staffaccounts[0]?.lastName || 'N/A',
-                    firstName: leaveRequest.useraccounts.staffaccounts[0]?.firstName || 'N/A',
-                    phoneNumber: leaveRequest.useraccounts.staffaccounts[0]?.phoneNumber || 'N/A'
-                }
-            };
-            
-            
-            return res.render('staffpages/linemanager_pages/managerviewleaverequests', { leaveRequest: formattedLeaveRequest });
-    
-        } catch (err) {
-            console.error('Error fetching leave request:', err);
-            return res.status(500).json({ success: false, message: 'Error fetching leave request.' });
-        }
-    },
+   getLeaveRequest: async function(req, res) {
+    const userId = req.query.userId;
 
+    console.log('Incoming request query:', req.query);
+    
+    if (!userId) {
+        return res.status(400).json({ success: false, message: 'User ID is required.' });
+    }
+
+    try {
+        console.log('User ID for query:', userId);
+
+        // Define the fetch function
+        const fetchLeaveRequestData = async (userId) => {
+            console.log('User ID for fetching leave request:', userId);
+            const { data, error } = await supabase
+                .from('leaverequests')
+                .select(`
+                    leaveRequestId,
+                    userId,
+                    fromDate,
+                    fromDayType,
+                    untilDate,
+                    untilDayType,
+                    reason,
+                    leaveTypeId,
+                    certificationPath,
+                    isSelfCertified,
+                    status,
+                    useraccounts (
+                        userId,
+                        staffaccounts (
+                            staffId,
+                            lastName,
+                            firstName,
+                            phoneNumber
+                        )
+                    ),
+                    leave_types (
+                        typeName
+                    )
+                `)
+                .eq('userId', userId);
+
+            console.log('Raw leave request data:', data);
+            if (error) {
+                console.error('Error details:', error);
+                throw error;
+            }
+
+            return data;
+        };
+
+        // Get the data by calling the function
+        const leaveRequestData = await fetchLeaveRequestData(userId);
+
+        if (!leaveRequestData || leaveRequestData.length === 0) {
+            return res.status(404).json({ success: false, message: 'No leave requests found.' });
+        }
+
+        // Get the first leave request
+        const leaveRequest = leaveRequestData[0];  // THIS LINE WAS MISSING
+        
+        // Now format the data
+        const formattedLeaveRequest = {
+            leaveRequestId: leaveRequest.leaveRequestId,
+            userId: leaveRequest.userId,
+            fromDate: leaveRequest.fromDate,
+            fromDayType: leaveRequest.fromDayType,
+            untilDate: leaveRequest.untilDate,
+            untilDayType: leaveRequest.untilDayType,
+            reason: leaveRequest.reason,
+            leaveTypeId: leaveRequest.leaveTypeId,
+            leaveTypeName: leaveRequest.leave_types.typeName,
+            certificationPath: leaveRequest.certificationPath || null,  // Add fallback for null
+            isSelfCertified: leaveRequest.isSelfCertified || false,     // Add fallback for null
+            status: leaveRequest.status || 'Pending for Approval',      // Add fallback for null
+            staff: {
+                lastName: leaveRequest.useraccounts.staffaccounts[0]?.lastName || 'N/A',
+                firstName: leaveRequest.useraccounts.staffaccounts[0]?.firstName || 'N/A',
+                phoneNumber: leaveRequest.useraccounts.staffaccounts[0]?.phoneNumber || 'N/A'
+            }
+        };
+        
+        // Render the template with the formatted data
+        return res.render('staffpages/linemanager_pages/managerviewleaverequests', { leaveRequest: formattedLeaveRequest });
+
+    } catch (err) {
+        console.error('Error fetching leave request:', err);
+        return res.status(500).json({ success: false, message: 'Error fetching leave request.' });
+    }
+},
     
     
         
