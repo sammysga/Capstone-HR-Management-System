@@ -1,5 +1,7 @@
 const supabase = require('../public/config/supabaseClient');
 const bcrypt = require('bcrypt');
+const path = require('path');
+const fs = require('fs');
 
 const employeeController = {
     getEmployeeDashboard: function(req, res) {
@@ -1509,68 +1511,85 @@ submitLeaveRequest: async function(req, res) {
         return res.status(401).json({ message: 'Unauthorized access' });
     }
 
-    /* 
-    // File upload functionality - COMMENTED OUT FOR INITIAL TESTING
-    // Setup multer for file handling
-    const storage = multer.diskStorage({
-        destination: function (req, file, cb) {
-            const dir = './public/uploads/certifications';
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-            }
-            cb(null, dir);
-        },
-        filename: function (req, file, cb) {
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            const ext = path.extname(file.originalname);
-            cb(null, 'cert-' + uniqueSuffix + ext);
-        }
-    });
-
-    const upload = multer({ 
-        storage: storage,
-        limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-        fileFilter: function (req, file, cb) {
-            const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
-            const ext = path.extname(file.originalname).toLowerCase();
-            
-            if (allowedTypes.includes(ext)) {
-                cb(null, true);
-            } else {
-                cb(new Error('Invalid file type. Only PDF and image files are allowed.'));
-            }
-        }
-    }).single('certification');
-
-    // Process the upload
-    upload(req, res, async function (err) {
-        if (err instanceof multer.MulterError) {
-            console.error('Multer upload error:', err);
-            return res.status(400).json({ message: err.message });
-        } else if (err) {
-            console.error('Unknown upload error:', err);
-            return res.status(500).json({ message: err.message });
-        }
-    */
-
-    // Get form fields directly from req.body (since we're not using multer middleware for now)
-    const { 
-        leaveTypeId, 
-        fromDate, 
-        untilDate, 
-        reason, 
-        fromDayType, 
-        untilDayType,
-        isSickLeave,
-        isSelfCertified
-    } = req.body;
-
-    if (!leaveTypeId || !fromDate || !untilDate || !reason || !fromDayType || !untilDayType) {
-        console.log('Missing fields in leave request submission', req.body);
-        return res.status(400).json({ message: 'All fields are required.' });
-    }
-
     try {
+        // Handle file upload if a medical certificate is included
+        let certificationPath = null;
+        
+        if (req.files && req.files.certification) {
+            console.log('📂 [Leave Request] Medical certificate file detected, processing upload...');
+            
+            const file = req.files.certification;
+            console.log(`📎 [Leave Request] File received: ${file.name} (Type: ${file.mimetype}, Size: ${file.size} bytes)`);
+            
+            // File validation
+            const allowedTypes = [
+                'application/pdf', 'image/jpeg', 'image/png'
+            ];
+            const maxSize = 5 * 1024 * 1024; // 5 MB
+            
+            if (file.size > maxSize) {
+                console.log('❌ [Leave Request] File size exceeds the 5 MB limit.');
+                return res.status(400).json({ message: 'File size exceeds the 5 MB limit.' });
+            }
+            
+            if (!allowedTypes.includes(file.mimetype)) {
+                console.log('❌ [Leave Request] Invalid file type. Only PDF and image files are allowed.');
+                return res.status(400).json({ message: 'Invalid file type. Only PDF and image files are allowed.' });
+            }
+            
+            // Generate unique file name
+            const uniqueName = `cert-${Date.now()}-${file.name}`;
+            const filePath = path.join(__dirname, '../uploads', uniqueName);
+            
+            // Ensure uploads directory exists
+            if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
+                fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
+            }
+            
+            // Save file locally
+            await file.mv(filePath);
+            console.log('📂 [Leave Request] File successfully saved locally. Uploading to Supabase...');
+            
+            // Upload to Supabase
+const { error: uploadError } = await supabase.storage
+    .from('uploads')  // Use the existing bucket name
+    .upload(uniqueName, fs.readFileSync(filePath), {
+        contentType: file.mimetype,
+        cacheControl: '3600',
+        upsert: false,
+    });
+            
+            // Remove local file after upload
+            fs.unlinkSync(filePath);
+            console.log('📂 [Leave Request] Local file deleted after upload to Supabase.');
+            
+            if (uploadError) {
+                console.error('❌ [Leave Request] Error uploading file to Supabase:', uploadError);
+                return res.status(500).json({ message: 'Error uploading medical certificate.' });
+            }
+            
+            // Get the public URL for the file
+certificationPath = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
+            console.log(`✅ [Leave Request] File uploaded successfully: ${certificationPath}`);
+        }
+        
+        // Get form fields from req.body
+        const { 
+            leaveTypeId, 
+            fromDate, 
+            untilDate, 
+            reason, 
+            fromDayType, 
+            untilDayType,
+            isSickLeave,
+            isSelfCertified
+        } = req.body;
+
+        if (!leaveTypeId || !fromDate || !untilDate || !reason || !fromDayType || !untilDayType) {
+            console.log('Missing fields in leave request submission', req.body);
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
+
         // Get the leave type
         const { data: leaveTypeData, error: leaveTypeError } = await supabase
             .from('leave_types')
@@ -1624,7 +1643,7 @@ submitLeaveRequest: async function(req, res) {
             status: 'Pending for Approval'
         };
 
-        // Handle self-certification if it's a sick leave
+        // Handle certification for sick leave
         if (isSickLeave === 'true') {
             const isSickLeaveType = leaveTypeData.typeName.toLowerCase().includes('sick');
             
@@ -1638,23 +1657,21 @@ submitLeaveRequest: async function(req, res) {
                 console.log('Applying self-certification for short sick leave');
                 leaveRequestData.isSelfCertified = true;
             } else if (daysRequested > 2) {
-                // For testing, we'll bypass the certificate requirement temporarily
-                console.log('Note: Certificate would normally be required for a ' + daysRequested + '-day sick leave');
-                // Still mark as self-certified for testing purposes
-                leaveRequestData.isSelfCertified = true;
-                
-                /* 
-                // COMMENTED OUT FOR INITIAL TESTING
                 // Medical certificate required for longer sick leave
-                if (req.file) {
+                if (certificationPath) {
                     // If a file was uploaded, store the path
-                    leaveRequestData.certificationPath = '/uploads/certifications/' + req.file.filename;
+                    leaveRequestData.certificationPath = certificationPath;
+                    console.log('Medical certificate uploaded for extended sick leave');
                 } else {
                     console.log('Missing required certification for extended sick leave');
-                    return res.status(400).json({ message: 'Medical certificate is required for sick leaves of 3 or more days.' });
+                    return res.status(400).json({ 
+                        message: 'Medical certificate is required for sick leaves of 3 or more days.' 
+                    });
                 }
-                */
             }
+        } else if (certificationPath) {
+            // If a certificate was uploaded for non-sick leave, still store it
+            leaveRequestData.certificationPath = certificationPath;
         }
 
         // Log data before insert for debugging
@@ -1692,18 +1709,221 @@ submitLeaveRequest: async function(req, res) {
             return res.status(500).json({ message: 'Failed to update leave balances.' });
         }
 
-        // Return success
+        // Return success with certification info
         res.status(200).json({ 
             message: 'Leave request submitted successfully.',
             leaveType: leaveTypeData.typeName,
-            isSelfCertified: leaveRequestData.isSelfCertified || false
+            isSelfCertified: leaveRequestData.isSelfCertified || false,
+            hasCertification: !!certificationPath
         });
     } catch (error) {
         console.error('Error submitting leave request:', error);
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
-    /* }); */ // This closing brace for upload.single is also commented out
 },
+
+// submitLeaveRequest: async function(req, res) {
+//     console.log('Submitting leave request...');
+//     if (!req.session.user || !req.session.user.userId) {
+//         console.log('Unauthorized access: No session user');
+//         return res.status(401).json({ message: 'Unauthorized access' });
+//     }
+
+//     /* 
+//     // File upload functionality - COMMENTED OUT FOR INITIAL TESTING
+//     // Setup multer for file handling
+//     const storage = multer.diskStorage({
+//         destination: function (req, file, cb) {
+//             const dir = './public/uploads/certifications';
+//             if (!fs.existsSync(dir)) {
+//                 fs.mkdirSync(dir, { recursive: true });
+//             }
+//             cb(null, dir);
+//         },
+//         filename: function (req, file, cb) {
+//             const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+//             const ext = path.extname(file.originalname);
+//             cb(null, 'cert-' + uniqueSuffix + ext);
+//         }
+//     });
+
+//     const upload = multer({ 
+//         storage: storage,
+//         limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+//         fileFilter: function (req, file, cb) {
+//             const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
+//             const ext = path.extname(file.originalname).toLowerCase();
+            
+//             if (allowedTypes.includes(ext)) {
+//                 cb(null, true);
+//             } else {
+//                 cb(new Error('Invalid file type. Only PDF and image files are allowed.'));
+//             }
+//         }
+//     }).single('certification');
+
+//     // Process the upload
+//     upload(req, res, async function (err) {
+//         if (err instanceof multer.MulterError) {
+//             console.error('Multer upload error:', err);
+//             return res.status(400).json({ message: err.message });
+//         } else if (err) {
+//             console.error('Unknown upload error:', err);
+//             return res.status(500).json({ message: err.message });
+//         }
+//     */
+
+//     // Get form fields directly from req.body (since we're not using multer middleware for now)
+//     const { 
+//         leaveTypeId, 
+//         fromDate, 
+//         untilDate, 
+//         reason, 
+//         fromDayType, 
+//         untilDayType,
+//         isSickLeave,
+//         isSelfCertified
+//     } = req.body;
+
+//     if (!leaveTypeId || !fromDate || !untilDate || !reason || !fromDayType || !untilDayType) {
+//         console.log('Missing fields in leave request submission', req.body);
+//         return res.status(400).json({ message: 'All fields are required.' });
+//     }
+
+//     try {
+//         // Get the leave type
+//         const { data: leaveTypeData, error: leaveTypeError } = await supabase
+//             .from('leave_types')
+//             .select('typeName, typeMaxCount')
+//             .eq('leaveTypeId', leaveTypeId)
+//             .single();
+
+//         if (leaveTypeError || !leaveTypeData) {
+//             console.log('Leave type not found or error:', leaveTypeError);
+//             return res.status(404).json({ message: 'Leave type not found' });
+//         }
+
+//         // Calculate days
+//         const fromDateObj = new Date(fromDate);
+//         const untilDateObj = new Date(untilDate);
+//         const daysRequested = Math.ceil((untilDateObj - fromDateObj) / (1000 * 60 * 60 * 24)) + 1;
+
+//         console.log('Days requested:', daysRequested);
+
+//         // Check leave balance
+//         const { data: balanceData, error: balanceError } = await supabase
+//             .from('leavebalances')
+//             .select('usedLeaves, remainingLeaves, totalLeaves')
+//             .eq('userId', req.session.user.userId)
+//             .eq('leaveTypeId', leaveTypeId)
+//             .single();
+
+//         let totalLeaves, remainingLeaves;
+//         if (balanceError || !balanceData) {
+//             totalLeaves = leaveTypeData.typeMaxCount;
+//             remainingLeaves = totalLeaves;
+//         } else {
+//             totalLeaves = balanceData.totalLeaves;
+//             remainingLeaves = balanceData.remainingLeaves;
+//         }
+
+//         if (remainingLeaves < daysRequested) {
+//             console.log(`Insufficient leave balance. Remaining: ${remainingLeaves}, Requested: ${daysRequested}`);
+//             return res.status(400).json({ message: 'Insufficient leave balance for the requested period.' });
+//         }
+
+//         // Prepare leave request data
+//         const leaveRequestData = {
+//             userId: req.session.user.userId,
+//             leaveTypeId,
+//             fromDate,
+//             untilDate,
+//             fromDayType,
+//             untilDayType,
+//             reason,
+//             status: 'Pending for Approval'
+//         };
+
+//         // Handle self-certification if it's a sick leave
+//         if (isSickLeave === 'true') {
+//             const isSickLeaveType = leaveTypeData.typeName.toLowerCase().includes('sick');
+            
+//             if (!isSickLeaveType) {
+//                 console.log('Mismatch between leave type and sick leave flag');
+//                 return res.status(400).json({ message: 'Invalid leave type for sick leave certification.' });
+//             }
+            
+//             // Check if self-certification is applicable (for 1-2 day sick leaves)
+//             if (daysRequested <= 2 && isSelfCertified === 'true') {
+//                 console.log('Applying self-certification for short sick leave');
+//                 leaveRequestData.isSelfCertified = true;
+//             } else if (daysRequested > 2) {
+//                 // For testing, we'll bypass the certificate requirement temporarily
+//                 console.log('Note: Certificate would normally be required for a ' + daysRequested + '-day sick leave');
+//                 // Still mark as self-certified for testing purposes
+//                 leaveRequestData.isSelfCertified = true;
+                
+//                 /* 
+//                 // COMMENTED OUT FOR INITIAL TESTING
+//                 // Medical certificate required for longer sick leave
+//                 if (req.file) {
+//                     // If a file was uploaded, store the path
+//                     leaveRequestData.certificationPath = '/uploads/certifications/' + req.file.filename;
+//                 } else {
+//                     console.log('Missing required certification for extended sick leave');
+//                     return res.status(400).json({ message: 'Medical certificate is required for sick leaves of 3 or more days.' });
+//                 }
+//                 */
+//             }
+//         }
+
+//         // Log data before insert for debugging
+//         console.log('Inserting leave request with data:', leaveRequestData);
+
+//         // Insert the leave request
+//         const { data: insertedData, error: requestError } = await supabase
+//             .from('leaverequests')
+//             .insert([leaveRequestData])
+//             .select();
+
+//         if (requestError) {
+//             console.error('Error inserting leave request:', requestError.message);
+//             return res.status(500).json({ message: 'Failed to submit leave request.' });
+//         }
+
+//         console.log('Leave request inserted successfully:', insertedData);
+
+//         // Update leave balance
+//         const newUsedLeaves = (balanceData ? balanceData.usedLeaves : 0) + daysRequested;
+//         const newRemainingLeaves = totalLeaves - newUsedLeaves;
+
+//         const { error: upsertError } = await supabase
+//             .from('leavebalances')
+//             .upsert({
+//                 userId: req.session.user.userId,
+//                 leaveTypeId,
+//                 usedLeaves: newUsedLeaves,
+//                 remainingLeaves: newRemainingLeaves,
+//                 totalLeaves: totalLeaves
+//             });
+
+//         if (upsertError) {
+//             console.error('Error during leave balance upsert:', upsertError.message);
+//             return res.status(500).json({ message: 'Failed to update leave balances.' });
+//         }
+
+//         // Return success
+//         res.status(200).json({ 
+//             message: 'Leave request submitted successfully.',
+//             leaveType: leaveTypeData.typeName,
+//             isSelfCertified: leaveRequestData.isSelfCertified || false
+//         });
+//     } catch (error) {
+//         console.error('Error submitting leave request:', error);
+//         res.status(500).json({ message: 'Internal server error', error: error.message });
+//     }
+//     /* }); */ // This closing brace for upload.single is also commented out
+// },
 
 getLeaveRequestsByUserId: async function(req, res) {
     console.log('Fetching leave balances for user...');
@@ -3109,8 +3329,10 @@ submitFeedback: async function (req, res) {
     }
     
     try {
-        // Determine which feedback ID field to use based on quarter
-        const idField = `feedback${quarter.toLowerCase()}_Id`;
+        // Determine which feedback ID field to use based on quarter (q1, q2, q3, q4)
+        // The schema shows feedbackq1_Id, feedbackq2_Id, etc.
+        const quarterNum = quarter.charAt(1); // Extract the number from "Q1", "Q2", etc.
+        const idField = `feedbackq${quarterNum}_Id`;
         
         // Check if feedback was already submitted
         const { data: existingFeedback, error: existingFeedbackError } = await supabase
@@ -3136,7 +3358,7 @@ submitFeedback: async function (req, res) {
             .insert({
                 [idField]: feedbackId,
                 reviewerUserId: currentUserId,
-                userld: userId, // Note: this appears to be spelled with 'ld' not 'Id' in the DB schema
+                userld: userId, // Note: following the schema's 'userld' spelling
                 reviewDate: new Date().toISOString().split('T')[0],
                 created_at: new Date()
             })
@@ -3153,42 +3375,37 @@ submitFeedback: async function (req, res) {
         const feedbackAnswerId = answerData[0].feedbackId_answerId;
         console.log(`Created feedback answer record with ID ${feedbackAnswerId}`);
         
-        // Insert objective answers
-        if (objectives.length > 0) {
+        // First, get all the question-objective relationships for this quarter/feedback
+        const { data: qObjectives, error: qObjError } = await supabase
+            .from('feedbacks_questions-objectives')
+            .select('feedback_qObjectivesId, objectiveId')
+            .eq(idField, feedbackId);
+            
+        if (qObjError) {
+            console.error("Error fetching question-objectives:", qObjError);
+        }
+        
+        // Process objective answers with proper relationship IDs
+        if (objectives.length > 0 && qObjectives && qObjectives.length > 0) {
             console.log(`Processing ${objectives.length} objectives`);
             
             try {
-                // Check if answers already exist for this feedback
-                const { data: existingAnswers, error: checkError } = await supabase
-                    .from('feedbacks_answers-objectives')
-                    .select('feedback_answerObjectivesId, feedback_qObjectivesId')
-                    .eq('feedback_answerObjectivesId', feedbackAnswerId);
-                    
-                if (checkError) {
-                    console.error("Error checking existing objective answers:", checkError);
-                }
+                // Map objective IDs to their corresponding question-objective IDs
+                const objectiveMap = {};
+                qObjectives.forEach(qObj => {
+                    objectiveMap[qObj.objectiveId] = qObj.feedback_qObjectivesId;
+                });
                 
-                // Prepare answers, avoiding duplicates
-                const objectiveAnswers = objectives.map(obj => {
-                    // Check if this answer already exists
-                    const exists = existingAnswers && existingAnswers.some(
-                        existing => existing.feedback_qObjectivesId === obj.objectiveId
-                    );
-                    
-                    // Only include if it doesn't exist
-                    if (!exists) {
-                        return {
-                            feedback_answerObjectivesId: feedbackAnswerId,
-                            feedback_qObjectivesId: obj.objectiveId,
-                            objectiveQuantInput: parseInt(obj.quantitative) || 0,
-                            objectiveQualInput: obj.qualitative || '',
-                            created_at: new Date()
-                        };
-                    }
-                    return null;
-                }).filter(answer => answer !== null); // Remove any nulls (already existing answers)
+                // Prepare objective answers with correct relationship IDs
+                const objectiveAnswers = objectives
+                    .filter(obj => objectiveMap[obj.objectiveId]) // Only include objectives with relationships
+                    .map(obj => ({
+                        feedback_qObjectivesId: objectiveMap[obj.objectiveId],
+                        objectiveQuantInput: parseInt(obj.quantitative) || 0,
+                        objectiveQualInput: obj.qualitative || '',
+                        created_at: new Date()
+                    }));
                 
-                // Only insert if there are new answers to add
                 if (objectiveAnswers.length > 0) {
                     const { error: objAnswerError } = await supabase
                         .from('feedbacks_answers-objectives')
@@ -3204,7 +3421,7 @@ submitFeedback: async function (req, res) {
                     
                     console.log(`Saved ${objectiveAnswers.length} objective answers`);
                 } else {
-                    console.log("No new objective answers to save");
+                    console.log("No objective answers to save - missing relationships");
                 }
             } catch (insertError) {
                 console.error("Error processing objective answers:", insertError);
@@ -3215,128 +3432,70 @@ submitFeedback: async function (req, res) {
             }
         }
         
-        // Insert skills answers (hard skills)
-        if (hardSkills.length > 0) {
-            console.log(`Processing ${hardSkills.length} hard skills`);
+        // Get all the question-skills relationships for this quarter/feedback
+        const { data: qSkills, error: qSkillsError } = await supabase
+            .from('feedbacks_questions-skills')
+            .select('feedback_qSkillsId, jobReqSkillId')
+            .eq(idField, feedbackId);
+            
+        if (qSkillsError) {
+            console.error("Error fetching question-skills:", qSkillsError);
+        }
+        
+        // Combined skills processing for both hard and soft skills
+        if (qSkills && qSkills.length > 0) {
+            const allSkills = [...hardSkills, ...softSkills];
+            console.log(`Processing ${allSkills.length} total skills`);
             
             try {
-                // Check if answers already exist for this feedback
-                const { data: existingAnswers, error: checkError } = await supabase
-                    .from('feedbacks_answers-skills')
-                    .select('feedback_answerSkillsId, feedback_qSkillsId')
-                    .eq('feedback_answerSkillsId', feedbackAnswerId);
-                    
-                if (checkError) {
-                    console.error("Error checking existing hard skill answers:", checkError);
-                }
+                // Map skill IDs to their corresponding question-skill IDs
+                const skillMap = {};
+                qSkills.forEach(qSkill => {
+                    skillMap[qSkill.jobReqSkillId] = qSkill.feedback_qSkillsId;
+                });
                 
-                // Prepare answers, avoiding duplicates
-                const hardSkillAnswers = hardSkills.map(skill => {
-                    // Check if this answer already exists
-                    const exists = existingAnswers && existingAnswers.some(
-                        existing => existing.feedback_qSkillsId === skill.skillId
-                    );
-                    
-                    // Only include if it doesn't exist
-                    if (!exists) {
-                        return {
-                            feedback_answerSkillsId: feedbackAnswerId,
-                            feedback_qSkillsId: skill.skillId,
-                            skillsQuantInput: parseInt(skill.quantitative) || 0,
-                            skillsQualInput: skill.qualitative || '',
-                            created_at: new Date()
-                        };
-                    }
-                    return null;
-                }).filter(answer => answer !== null); // Remove any nulls (already existing answers)
+                // Prepare skill answers with correct relationship IDs
+                const skillAnswers = allSkills
+                    .filter(skill => skillMap[skill.skillId]) // Only include skills with relationships
+                    .map(skill => ({
+                        feedback_qSkillsId: skillMap[skill.skillId],
+                        skillsQuantInput: parseInt(skill.quantitative) || 0,
+                        skillsQualInput: skill.qualitative || '',
+                        created_at: new Date()
+                    }));
                 
-                // Only insert if there are new answers to add
-                if (hardSkillAnswers.length > 0) {
-                    const { error: hardSkillError } = await supabase
+                if (skillAnswers.length > 0) {
+                    const { error: skillAnswerError } = await supabase
                         .from('feedbacks_answers-skills')
-                        .insert(hardSkillAnswers);
+                        .insert(skillAnswers);
                         
-                    if (hardSkillError) {
-                        console.error("Error inserting hard skill answers:", hardSkillError);
+                    if (skillAnswerError) {
+                        console.error("Error inserting skill answers:", skillAnswerError);
                         return res.status(500).json({ 
                             success: false, 
-                            message: 'Error saving hard skills feedback.'
+                            message: 'Error saving skills feedback.'
                         });
                     }
                     
-                    console.log(`Saved ${hardSkillAnswers.length} hard skill answers`);
+                    console.log(`Saved ${skillAnswers.length} skill answers`);
                 } else {
-                    console.log("No new hard skill answers to save");
+                    console.log("No skill answers to save - missing relationships");
                 }
             } catch (insertError) {
-                console.error("Error processing hard skill answers:", insertError);
+                console.error("Error processing skill answers:", insertError);
                 return res.status(500).json({ 
                     success: false, 
-                    message: 'Error processing hard skills feedback.'
+                    message: 'Error processing skills feedback.'
                 });
             }
         }
         
-        // Insert skills answers (soft skills)
-        if (softSkills.length > 0) {
-            console.log(`Processing ${softSkills.length} soft skills`);
-
-            try {
-                const { data: existingAnswers, error: checkError } = await supabase
-                .from('feedbacks_answers-skills')
-                .select('feedback_answerSkillsId, feedback_qSkillsId')
-                .eq('feedback_answerSkillsId', feedbackAnswerId);
-            
-                if (checkError) {
-                    console.error("Error checking existing soft skill answers:", checkError);
-                }
-
-                // Prepare answers, avoiding duplicates
-                const softSkillAnswers = softSkills.map(skill => {
-                    // Check if this answer already exists
-                    const exists = existingAnswers && existingAnswers.some(
-                        existing => existing.feedback_qSkillsId === skill.skillId
-                    );
-                    
-                    // Only include if it doesn't exist
-                    if (!exists) {
-                        return {
-                            feedback_answerSkillsId: feedbackAnswerId,
-                            feedback_qSkillsId: skill.skillId,
-                            skillsQuantInput: parseInt(skill.quantitative) || 0,
-                            skillsQualInput: skill.qualitative || '',
-                            created_at: new Date()
-                        };
-                    }
-                    return null;
-                }).filter(answer => answer !== null); // Remove any nulls (already existing answers)
-
-                 // Only insert if there are new answers to add
-                if (softSkillAnswers.length > 0) {
-                    const { error: softSkillError } = await supabase
-                        .from('feedbacks_answers-skills')
-                        .insert(softSkillAnswers);
-                        
-                    if (softSkillError) {
-                        console.error("Error inserting soft skill answers:", softSkillError);
-                        return res.status(500).json({ 
-                            success: false, 
-                            message: 'Error saving soft skills feedback.'
-                        });
-                    }
-                    
-                    console.log(`Saved ${softSkillAnswers.length} soft skill answers`);
-                } else {
-                    console.log("No new soft skill answers to save");
-                }
-            } catch (insertError) {
-                console.error("Error processing soft skill answers:", insertError);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Error processing soft skills feedback.'
-                });
-            }
-        } 
+        // Return success response
+        return res.json({
+            success: true,
+            message: 'Feedback submitted successfully.'
+        });
+        
     } catch (error) {
         console.error('Error in submitFeedback:', error);
         return res.status(500).json({ 
