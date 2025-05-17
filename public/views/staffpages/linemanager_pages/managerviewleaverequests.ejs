@@ -10,25 +10,23 @@
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Line Manager CSS -->
     <style>
         body {
-            font-family: 'Inter', sans-serif; /* Apply the Inter font to the body */
+            font-family: 'Inter', sans-serif;
         }
-        /* Adding styles for the dashboard */
         h2 {
-    color: #2385B0; /* Color for the dashboard title */
-    text-align: center; /* Center the text */
-    margin: 20px 0; /* Add top and bottom margin, remove left margin */
-}
-
+            color: #2385B0;
+            text-align: center;
+            margin: 20px 0;
+        }
         h3 {
-            margin-left: 40px; /* Increased space from the left for the sub-header */
+            margin-left: 40px;
         }
         .content {
-            margin-left: 220px; /* Adjust based on your sidebar width to prevent overlap */
-            padding: 20px; /* Adding some padding for better spacing */
-            background-color: white; /* Set background color to white for the entire content area */
+            margin-left: 220px;
+            padding: 20px;
+            background-color: white;
         }
         .container {
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
             padding: 20px;
             border: 1px solid #ccc;
@@ -40,16 +38,29 @@
         }
         .field label {
             font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #124A5C;
+        }
+        .field p {
+            margin: 5px 0;
+            padding: 8px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
         }
         .action-dropdown {
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         .remarks-input {
             width: 100%;
             padding: 10px;
-            height: 80px; /* Height for remarks input */
+            height: 80px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         .submit-button {
             background-color: #07ACB9;
@@ -59,26 +70,130 @@
             border-radius: 5px;
             cursor: pointer;
             width: 100%;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s;
         }
         .submit-button:hover {
-            background-color: #05a1a0; /* Darker shade for hover effect */
+            background-color: #05a1a0;
         }
-        table {
-            width: 80%; /* Full width for the table */
-            border-collapse: collapse; /* Collapse borders */
-            margin: 20px auto 80px; /* Center table and add space above and below */
+        
+        /* Document display styles */
+        .document-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #eaeaea;
+            border-radius: 6px;
+            background-color: #f9f9f9;
         }
-        th, td {
-            border: 1px solid #ddd; /* Border for table cells */
-            padding: 10px; /* Padding for table cells */
-            text-align: left; /* Left-align text */
+        .document-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
-        th {
-            background-color: #f2f2f2; /* Light gray background for headers */
+        .document-title {
+            font-weight: bold;
+            color: #124A5C;
+            margin: 0;
         }
-        tr:hover {
-            background-color: #f1f1f1; /* Hover effect for table rows */
-            height: 60px; /* Set a minimum height for the rows */
+        .document-link {
+            color: #07ACB9;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .document-link i {
+            margin-right: 5px;
+        }
+        .document-link:hover {
+            text-decoration: underline;
+        }
+        .document-preview {
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: white;
+        }
+        .document-preview img {
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+        .self-certified-badge {
+            display: inline-block;
+            background-color: #e1f5fe;
+            color: #0288d1;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .status-pending {
+            background-color: #fff8e1;
+            color: #ffa000;
+        }
+        .status-approved {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+        .status-rejected {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+        }
+        .modal-close {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal-close:hover {
+            color: black;
+        }
+        .modal-body {
+            padding: 10px 0;
+            max-height: 80vh;
+            overflow: auto;
+        }
+        .modal-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            text-align: right;
         }
     </style>
 </head>
@@ -90,6 +205,13 @@
 <div class="content">
     <h2 class="heading">View Leave Request</h2>
     <div class="container">
+        <!-- Status Badge -->
+        <div class="field" style="text-align: right;">
+            <span class="status-badge <%= leaveRequest.status === 'Pending for Approval' ? 'status-pending' : leaveRequest.status === 'Approved' ? 'status-approved' : 'status-rejected' %>">
+                <%= leaveRequest.status || 'Pending for Approval' %>
+            </span>
+        </div>
+
         <div class="field">
             <label>Employee Name:</label>
             <p><%= leaveRequest.staff.firstName %> <%= leaveRequest.staff.lastName %></p>
@@ -112,7 +234,7 @@
 
         <div class="field">
             <label>Leave Start Date Type:</label>
-            <p><%= leaveRequest.fromDayType %></p>
+            <p><%= leaveRequest.fromDayType.replace('_', ' ').charAt(0).toUpperCase() + leaveRequest.fromDayType.replace('_', ' ').slice(1) %></p>
         </div>
 
         <div class="field">
@@ -122,7 +244,7 @@
 
         <div class="field">
             <label>Leave End Date Type:</label>
-            <p><%= leaveRequest.untilDayType %></p>
+            <p><%= leaveRequest.untilDayType.replace('_', ' ').charAt(0).toUpperCase() + leaveRequest.untilDayType.replace('_', ' ').slice(1) %></p>
         </div>
 
         <div class="field">
@@ -130,7 +252,35 @@
             <p><%= leaveRequest.reason %></p>
         </div>
         
+        <!-- Medical Certificate Section -->
+        <div class="field document-section">
+            <div class="document-header">
+                <h3 class="document-title">Medical Certificate</h3>
+                <% if (leaveRequest.isSelfCertified) { %>
+                    <span class="self-certified-badge">
+                        <i class="fas fa-check-circle"></i> Self-Certified
+                    </span>
+                <% } %>
+            </div>
+            
+            <% if (leaveRequest.certificationPath) { %>
+                <!-- Document link -->
+                <a href="#" id="docLink" class="document-link" onclick="showDocumentModal(); return false;">
+                    <i class="fas fa-file-medical"></i> View Medical Certificate
+                </a>
+                <!-- Document preview thumbnail -->
+                <div id="docThumbnail" class="document-preview" style="height: 100px; overflow: hidden; cursor: pointer;" onclick="showDocumentModal()">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            <% } else if (leaveRequest.isSelfCertified) { %>
+                <p>This leave has been self-certified by the employee as it is a short-term sick leave (1-2 days).</p>
+            <% } else { %>
+                <p>No medical certificate has been provided for this leave request.</p>
+            <% } %>
+        </div>
+        
         <!-- Action section for the request -->
+        <% if (leaveRequest.status === 'Pending for Approval') { %>
         <div class="field">
             <label>Choose an Action:</label>
             <select class="action-dropdown" id="actionSelect">
@@ -146,12 +296,105 @@
         </div>
 
         <button class="submit-button" onclick="submitLeaveRequest('<%= leaveRequest.leaveRequestId %>')">Submit</button>
+        <% } else { %>
+        <div class="field">
+            <label>Status:</label>
+            <p><%= leaveRequest.status %></p>
+        </div>
+        <button class="submit-button" onclick="window.location.href='/linemanager/dashboard'">Back to Dashboard</button>
+        <% } %>
     </div>
 </div>
 
-    
+<!-- Document Modal -->
+<div id="documentModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="hideDocumentModal()">&times;</span>
+        <h3>Medical Certificate</h3>
+        <div class="modal-body" id="docPreview">
+            <!-- Document preview will be loaded here -->
+        </div>
+        <div class="modal-footer">
+            <button class="submit-button" style="width: auto; padding: 8px 20px;" onclick="window.open('<%= leaveRequest.certificationPath %>', '_blank')">
+                Open in New Tab
+            </button>
+        </div>
+    </div>
+</div>
     <script>
-        // Assuming leaveRequestId is part of the leaveRequest object rendered on the frontend
+    // Pass the certification path from server to client-side JavaScript
+    var certificationPath = "<%= leaveRequest.certificationPath || '' %>";
+</script>
+
+<!-- Then at the bottom of your file, replace all your JavaScript with this: -->
+<script>
+// Your existing function with minor improvements
+function displayUploadedDocument(fileUrl, previewId, thumbnailId) {
+    const docPreview = document.getElementById(previewId);
+    const docThumbnail = document.getElementById(thumbnailId);
+    
+    if (!docPreview || !docThumbnail) {
+        console.error(`Element not found: previewId=${previewId}, thumbnailId=${thumbnailId}`);
+        return;
+    }
+    
+    // Handle empty or invalid URLs
+    if (!fileUrl || fileUrl === '#' || fileUrl === 'undefined' || fileUrl === 'null') {
+        docPreview.innerHTML = "<p>No document available for preview</p>";
+        docThumbnail.innerHTML = "<p style='text-align:center;padding-top:40px;color:#999;'>No document</p>";
+        return;
+    }
+    
+    // Try to determine file type for preview
+    const fileExtension = fileUrl.split('.').pop().toLowerCase();
+    
+    // Create thumbnail preview
+    if (["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension)) {
+        // Image thumbnail
+        docThumbnail.innerHTML = `<img src="${fileUrl}" alt="Document Preview" style="max-width: 100%; max-height: 100px; object-fit: cover;">`;
+        
+        // Full preview in modal
+        docPreview.innerHTML = `<img src="${fileUrl}" alt="Document Preview" style="max-width: 100%; max-height: 70vh; display: block; margin: 0 auto;">`;
+    } else if (fileExtension === "pdf") {
+        // PDF thumbnail
+        docThumbnail.innerHTML = `<div style="text-align: center; padding-top: 30px;"><i class="fas fa-file-pdf" style="font-size: 40px; color: #f44336;"></i></div>`;
+        
+        // Full preview in modal
+        docPreview.innerHTML = `<iframe src="${fileUrl}" width="100%" height="500px" style="border: none;"></iframe>`;
+    } else {
+        // Generic file thumbnail
+        docThumbnail.innerHTML = `<div style="text-align: center; padding-top: 30px;"><i class="fas fa-file" style="font-size: 40px; color: #124A5C;"></i></div>`;
+        
+        // Generic file preview
+        docPreview.innerHTML = `
+            <div style="text-align: center; margin: 30px 0;">
+                <i class="fas fa-file-download" style="font-size: 64px; color: #124A5C;"></i>
+                <p style="margin-top: 15px;">Preview not available. Click the button below to download or view the file.</p>
+            </div>
+        `;
+    }
+    
+    console.log(`Document preview setup for ${fileUrl} (${fileExtension})`);
+}
+
+// Modal control functions
+function showDocumentModal() {
+    document.getElementById('documentModal').style.display = 'block';
+}
+
+function hideDocumentModal() {
+    document.getElementById('documentModal').style.display = 'none';
+}
+
+// Close modal when clicking outside the content
+window.onclick = function(event) {
+    const modal = document.getElementById('documentModal');
+    if (event.target == modal) {
+        hideDocumentModal();
+    }
+}
+
+// Function to submit leave request action
 async function submitLeaveRequest(leaveRequestId) {
     const action = document.getElementById('actionSelect').value;
     const remarks = document.getElementById('remarksInput').value;
@@ -171,7 +414,7 @@ async function submitLeaveRequest(leaveRequestId) {
             body: JSON.stringify({
                 action,
                 remarks: finalRemarks,
-                leaveRequestId, // Make sure leaveRequestId is passed here
+                leaveRequestId
             }),
         });
 
@@ -183,14 +426,18 @@ async function submitLeaveRequest(leaveRequestId) {
             const errorData = await response.json();
             alert(`Error: ${errorData.message || 'Failed to update leave request'}`);
         }
-        // Handle response here
     } catch (error) {
         console.error('Error updating leave request:', error);
         alert('An error occurred. Please try again later.');
     }
 }
 
-    </script>
-
+// Initialize document preview when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    if (certificationPath && certificationPath !== '') {
+        displayUploadedDocument(certificationPath, 'docPreview', 'docThumbnail');
+    }
+});
+</script>
 </body>
 </html>
