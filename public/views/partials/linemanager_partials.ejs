@@ -331,20 +331,10 @@ body {
                 <div class="spinner"></div>
             </div>
         </div>
-        <div class="notification-section" id="section-4">
-            <h4>Recent Notifications</h4>
-            <!-- Sample recent notifications - only showing 3 initially -->
-            <div class="notification-item">
-                <div class="headline">Team Meeting Scheduled</div>
-                <div class="date">Wed, Mar 12, 2025, 08:30 AM</div>
-            </div>
-            <div class="notification-item">
-                <div class="headline">Project Deadline Updated</div>
-                <div class="date">Tue, Mar 11, 2025, 04:45 PM</div>
-            </div>
-            <div class="notification-item">
-                <div class="headline">New Training Available</div>
-                <div class="date">Mon, Mar 10, 2025, 11:20 AM</div>
+        <div class="notification-section" id="section-resignation">
+            <h4>Resignation Requests</h4>
+            <div class="loading-indicator">
+                <div class="spinner"></div>
             </div>
         </div>
     </div>
@@ -542,6 +532,7 @@ body {
                 return { 
                     applicants: [], 
                     leaveRequests: [],
+                    offboardingRequests: [],
                     notificationCount: 0
                 };
             }
@@ -766,6 +757,71 @@ function updateLeaveRequestsSection(leaveRequests) {
     }, 100);
 }
 
+// Function to update resignation requests section
+function updateResignationRequestsSection(offboardingRequests) {
+    const resignationSection = document.getElementById('section-resignation');
+    resignationSection.innerHTML = '<h4>Resignation Requests</h4>';
+
+    if (!offboardingRequests || offboardingRequests.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.classList.add('notification-item');
+        emptyMessage.innerHTML = `
+            <div class="headline">No pending resignation requests</div>
+            <div class="content">There are currently no resignation requests pending approval.</div>
+        `;
+        resignationSection.appendChild(emptyMessage);
+        return;
+    }
+    
+    // Normalize resignation request data
+    const validateResignationRequest = (request) => {
+        return {
+            userId: request.userId || request.user_id || 'unknown',
+            requestId: request.requestId || request.request_id || 'unknown',
+            firstName: request.firstName || request.first_name || 'Employee',
+            lastName: request.lastName || request.last_name || '',
+            lastDay: request.lastDay || request.last_day || 'TBD',
+            filedDate: request.filedDate || request.created_at || 'Recent',
+            message: request.message || '',
+            status: request.status || 'Pending',
+            // Include the original date for sorting
+            date: request.filedDate || request.created_at || new Date().toISOString()
+        };
+    };
+    
+    // Map all resignation requests to normalized format
+    const normalizedRequests = offboardingRequests.map(validateResignationRequest);
+    
+    // Sort resignation requests by date (newest first)
+    normalizedRequests.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB - dateA; // Sort by newest first
+    });
+    
+    // Add resignation requests
+    normalizedRequests.forEach(request => {
+        const notificationItem = document.createElement('div');
+        notificationItem.classList.add('notification-item');
+        notificationItem.innerHTML = `
+            <div class="headline">Resignation Request: ${request.firstName} ${request.lastName}</div>
+            <div class="content">Last Working Day: ${request.lastDay}</div>
+            <div class="date">${request.filedDate}</div>
+            <button class="view-resignation-btn" data-id="${request.userId}">Review Request</button>
+        `;
+        resignationSection.appendChild(notificationItem);
+    });
+    
+    // Add click handlers for resignation buttons
+    setTimeout(() => {
+        document.querySelectorAll('.view-resignation-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                window.location.href = `/linemanager/view-offboarding-request/${userId}`;
+            });
+        });
+    }, 100);
+}
     // Sample older notifications data
     const olderNotifications = [
         { message: "Team Meeting Scheduled", timestamp: "2025-03-12T08:30:00" },
@@ -825,6 +881,7 @@ function updateLeaveRequestsSection(leaveRequests) {
                 // Update sections
                 updateApplicantsSection(notificationData.applicants);
                 updateLeaveRequestsSection(notificationData.leaveRequests);
+                updateResignationRequestsSection(notificationData.offboardingRequests); 
                 
             } catch (error) {
                 console.error('Error updating notifications:', error);

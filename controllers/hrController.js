@@ -345,6 +345,50 @@ const hrController = {
                     })
                 };
             });
+
+             // Fetch pending offboarding/resignation requests
+            const { data: offboardingRequests, error: offboardingError } = await supabase
+                .from('offboarding_requests')
+                .select(`
+                    requestId, 
+                    userId, 
+                    message, 
+                    last_day, 
+                    status, 
+                    created_at,
+                    useraccounts:userId (
+                        staffaccounts (
+                            firstName,
+                            lastName,
+                            departmentId
+                        )
+                    )
+                `)
+                .eq('status', 'Pending HR')
+                .order('created_at', { ascending: false });
+
+            if (offboardingError) {
+                console.error('Error fetching offboarding requests:', offboardingError);
+                throw offboardingError;
+            }
+
+            // Format offboarding requests
+            const formattedOffboardingRequests = offboardingRequests.map(request => ({
+                requestId: request.requestId,
+                userId: request.userId,
+                lastName: request.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+                firstName: request.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+                message: request.message || 'N/A',
+                lastDay: request.last_day || 'N/A',
+                filedDate: new Date(request.created_at).toLocaleString('en-US', {
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric'
+                }),
+                status: request.status || 'Pending',
+                type: 'Resignation Request'
+            }));
     
             // Improved API request detection - checking multiple conditions
             const isApiRequest = req.xhr || 
@@ -358,7 +402,8 @@ const hrController = {
                     .json({
                         hrApplicants: formattedHRApplicants,
                         pendingMRFs: formattedPendingMRFs,
-                        notificationCount: formattedHRApplicants.length + formattedPendingMRFs.length
+                        offboardingRequests: formattedOffboardingRequests,
+                        notificationCount: formattedHRApplicants.length + formattedPendingMRFs.length + formattedOffboardingRequests.length
                     });
             }
     
@@ -366,7 +411,8 @@ const hrController = {
             return res.render('partials/hr_partials', {
                 hrApplicants: formattedHRApplicants,
                 pendingMRFs: formattedPendingMRFs,
-                notificationCount: formattedHRApplicants.length + formattedPendingMRFs.length
+                offboardingRequests: formattedOffboardingRequests,
+                notificationCount: formattedHRApplicants.length + formattedPendingMRFs.length + formattedOffboardingRequests.length
             });
         } catch (err) {
             console.error('Error fetching notification data:', err);

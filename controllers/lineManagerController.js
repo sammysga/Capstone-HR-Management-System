@@ -264,169 +264,6 @@ const lineManagerController = {
         }
     },
     
-
-    // // Updated Line Manager Controller function to fetch applicant notifications
-
-    // getLineManagerNotifications: async function (req, res) {
-    //     // Check for authentication
-    //     if (!req.session.user) {
-    //         return res.status(401).json({ error: 'Unauthorized' });
-    //     }
-    
-    //     try {
-    //         // Get the line manager's department ID first
-    //         const lineManagerId = req.session.user.userId;
-    //         const { data: lineManagerData, error: lineManagerError } = await supabase
-    //             .from('staffaccounts')
-    //             .select('departmentId')
-    //             .eq('userId', lineManagerId)
-    //             .single();
-    
-    //         if (lineManagerError) {
-    //             console.error('Error fetching line manager department:', lineManagerError);
-    //             throw lineManagerError;
-    //         }
-    
-    //         const lineManagerDepartmentId = lineManagerData?.departmentId;
-    
-    //         if (!lineManagerDepartmentId) {
-    //             console.error('Line manager has no department assigned');
-    //             return res.status(400).json({ error: 'Department not assigned to your account' });
-    //         }
-    
-    //         // Fetch applicants awaiting Line Manager action (P1 status) 
-    //         // Filter applicants by the line manager's department
-    //         const { data: p1Applicants, error: p1ApplicantsError } = await supabase
-    //             .from('applicantaccounts')
-    //             .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
-    //             .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED')
-    //             .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
-    //             .order('created_at', { ascending: false });
-    
-    //         if (p1ApplicantsError) throw p1ApplicantsError;
-    
-    //         // Fetch applicants awaiting Line Manager evaluation (P3 status) 
-    //         // Filter applicants by the line manager's department
-    //         const { data: p3Applicants, error: p3ApplicantsError } = await supabase
-    //             .from('applicantaccounts')
-    //             .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
-    //             .eq('applicantStatus', 'P3 - Awaiting for Line Manager Evaluation')
-    //             .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
-    //             .order('created_at', { ascending: false });
-    
-    //         if (p3ApplicantsError) throw p3ApplicantsError;
-    
-    //         // Combine the applicants
-    //         const allApplicants = [...p1Applicants, ...p3Applicants];
-    
-    //         // Format the applicants data
-    //         const formattedApplicants = allApplicants.map(applicant => ({
-    //             id: applicant.applicantId,
-    //             firstName: applicant.firstName || 'N/A',
-    //             lastName: applicant.lastName || 'N/A',
-    //             status: applicant.applicantStatus || 'N/A',
-    //             jobId: applicant.jobId, // Include jobId for the redirect
-    //             createdAt: applicant.created_at,
-    //             formattedDate: new Date(applicant.created_at).toLocaleString('en-US', {
-    //                 weekday: 'short', 
-    //                 year: 'numeric', 
-    //                 month: 'short', 
-    //                 day: 'numeric', 
-    //                 hour: '2-digit', 
-    //                 minute: '2-digit'
-    //             })
-    //         }));
-    
-    //         // Fetch pending leave requests for staff in the line manager's department
-    //         const { data: leaveRequests, error: leaveError } = await supabase
-    //             .from('leaverequests')
-    //             .select(`
-    //                 leaveRequestId, 
-    //                 userId, 
-    //                 created_at, 
-    //                 fromDate, 
-    //                 untilDate, 
-    //                 status,
-    //                 useraccounts (
-    //                     userId, 
-    //                     userEmail,
-    //                     staffaccounts (
-    //                         departmentId,
-    //                         departments (deptName), 
-    //                         lastName, 
-    //                         firstName
-    //                     )
-    //                 ), 
-    //                 leave_types (
-    //                     typeName
-    //                 )
-    //             `)
-    //             .eq('status', 'Pending')
-    //             .order('created_at', { ascending: false });
-    
-    //         if (leaveError) throw leaveError;
-    
-    //         // Filter leave requests to only include those from the line manager's department
-    //         const filteredLeaveRequests = leaveRequests.filter(leave => 
-    //             leave.useraccounts?.staffaccounts[0]?.departmentId === lineManagerDepartmentId
-    //         );
-    
-    //         // Format leave requests
-    //         const formattedLeaveRequests = filteredLeaveRequests.map(leave => ({
-    //             userId: leave.userId,
-    //             lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
-    //             firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
-    //             department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
-    //             filedDate: new Date(leave.created_at).toLocaleString('en-US', {
-    //                 weekday: 'short', 
-    //                 year: 'numeric', 
-    //                 month: 'short', 
-    //                 day: 'numeric'
-    //             }),
-    //             type: leave.leave_types?.typeName || 'N/A',
-    //             startDate: leave.fromDate || 'N/A',
-    //             endDate: leave.untilDate || 'N/A',
-    //             status: leave.status || 'Pending'
-    //         }));
-    
-    //         // Calculate total notification count
-    //         const notificationCount = formattedApplicants.length + formattedLeaveRequests.length;
-    
-    //         // If it's an API request, return JSON
-    //         if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
-    //             return res
-    //                 .header('Content-Type', 'application/json')
-    //                 .json({
-    //                     applicants: formattedApplicants,
-    //                     leaveRequests: formattedLeaveRequests,
-    //                     notificationCount: notificationCount
-    //                 });
-    //         }
-    
-    //         // Otherwise, return the rendered partial template
-    //         return res.render('partials/linemanager_partials', {
-    //             applicants: formattedApplicants,
-    //             leaveRequests: formattedLeaveRequests,
-    //             notificationCount: notificationCount
-    //         });
-    //     } catch (err) {
-    //         console.error('Error fetching notification data:', err);
-            
-    //         // Better error handling for API requests
-    //         if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
-    //             return res
-    //                 .status(500)
-    //                 .header('Content-Type', 'application/json')
-    //                 .json({ 
-    //                     error: 'An error occurred while loading notifications.',
-    //                     details: process.env.NODE_ENV === 'development' ? err.message : undefined
-    //                 });
-    //         }
-            
-    //         return res.status(500).send('Error loading notifications');
-    //     }
-    // },
-    
    getLeaveRequest: async function(req, res) {
     const userId = req.query.userId;
 
@@ -6038,8 +5875,57 @@ getLineManagerNotifications: async function (req, res) {
             status: leave.status || 'Pending'
         }));
 
+        // Fetch pending offboarding/resignation requests
+        const { data: offboardingRequests, error: offboardingError } = await supabase
+            .from('offboarding_requests')
+            .select(`
+                requestId, 
+                userId, 
+                message, 
+                last_day, 
+                status, 
+                created_at,
+                useraccounts:userId (
+                    staffaccounts (
+                        firstName,
+                        lastName,
+                        departmentId
+                    )
+                )
+            `)
+            .eq('status', 'Pending Line Manager')
+            .order('created_at', { ascending: false });
+
+        if (offboardingError) {
+            console.error('Error fetching offboarding requests:', offboardingError);
+            throw offboardingError;
+        }
+
+        // Filter offboarding requests to only include those from the line manager's department
+        const filteredOffboardingRequests = offboardingRequests.filter(request => 
+            request.useraccounts?.staffaccounts[0]?.departmentId === lineManagerDepartmentId
+        );
+
+        // Format offboarding requests
+        const formattedOffboardingRequests = filteredOffboardingRequests.map(request => ({
+            requestId: request.requestId,
+            userId: request.userId,
+            lastName: request.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
+            firstName: request.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
+            message: request.message || 'N/A',
+            lastDay: request.last_day || 'N/A',
+            filedDate: new Date(request.created_at).toLocaleString('en-US', {
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric'
+            }),
+            status: request.status || 'Pending',
+            type: 'Resignation Request'
+        }));
+
         // Calculate total notification count
-        const notificationCount = formattedApplicants.length + formattedLeaveRequests.length;
+        const notificationCount = formattedApplicants.length + formattedLeaveRequests.length + formattedOffboardingRequests.length;
 
         // If it's an API request, return JSON
         if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
@@ -6048,6 +5934,7 @@ getLineManagerNotifications: async function (req, res) {
                 .json({
                     applicants: formattedApplicants,
                     leaveRequests: formattedLeaveRequests,
+                    offboardingRequests: formattedOffboardingRequests,
                     notificationCount: notificationCount
                 });
         }
@@ -6056,6 +5943,7 @@ getLineManagerNotifications: async function (req, res) {
         return res.render('partials/linemanager_partials', {
             applicants: formattedApplicants,
             leaveRequests: formattedLeaveRequests,
+            offboardingRequests: formattedOffboardingRequests,
             notificationCount: notificationCount
         });
     } catch (err) {
