@@ -2993,11 +2993,8 @@ get360FeedbackList: async function (req, res) {
     }
 },
 
-
-  // Add this route handler
-  staffFeedbackList: async function (req, res) {
+staffFeedbackList: async function (req, res) {
     console.log("staffFeedbackList function called!");
-    console.log("Quarter param:", req.query.quarter);
     const currentUserId = req.session?.user?.userId;
     const quarter = req.query.quarter || 'Q1'; // Default to Q1 if not provided
     
@@ -3024,6 +3021,7 @@ get360FeedbackList: async function (req, res) {
             `)
             .eq('userId', currentUserId)
             .single();
+        
         if (userError || !currentUserData) {
             console.error("Error fetching user details:", userError);
             return res.status(404).json({
@@ -3032,7 +3030,9 @@ get360FeedbackList: async function (req, res) {
                 message: 'Unable to retrieve your user information.'
             });
         }
+        
         const { departmentId } = currentUserData;
+        
         // Fetch all staff members in the same department
         const { data: staffList, error: staffError } = await supabase
             .from('staffaccounts')
@@ -3044,6 +3044,7 @@ get360FeedbackList: async function (req, res) {
             `)
             .eq('departmentId', departmentId)
             .neq('userId', currentUserId); // Exclude current user
+        
         if (staffError) {
             console.error("Error fetching staff list:", staffError);
             return res.status(500).json({
@@ -3052,18 +3053,109 @@ get360FeedbackList: async function (req, res) {
                 message: 'Unable to retrieve department staff list.'
             });
         }
-        // Format the staff list for proper display
-        const formattedStaffList = staffList.map(staff => ({
-            userId: staff.userId,
-            firstName: staff.firstName,
-            lastName: staff.lastName,
-            jobTitle: staff.jobpositions?.jobTitle || 'Employee'
-        }));
+        
+        // Get the list of users who have feedback data for each quarter
+        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        const usersWithDataByQuarter = {};
+        
+        for (const q of quarters) {
+            usersWithDataByQuarter[q] = [];
+            
+            // First, get users who have data in the main quarterly feedback table
+            const { data: feedbackData, error: feedbackError } = await supabase
+                .from(`feedbacks_${q}`)
+                .select('userId, feedbackq' + q.substring(1) + '_Id');
+                
+            if (feedbackError) {
+                console.error(`Error fetching ${q} feedback data:`, feedbackError);
+                continue;
+            }
+            
+            // Create a set of unique user IDs with feedback data
+            const userIdsWithFeedback = new Set();
+            const feedbackIds = {};
+            
+            // Collect all user IDs and their corresponding feedback IDs
+            feedbackData.forEach(item => {
+                userIdsWithFeedback.add(item.userId);
+                const fbIdKey = 'feedbackq' + q.substring(1) + '_Id';
+                feedbackIds[item.userId] = item[fbIdKey];
+            });
+            
+            // If no users have feedback data for this quarter, continue to next quarter
+            if (userIdsWithFeedback.size === 0) {
+                continue;
+            }
+            
+            // For each user with feedback, check if they have objectives and skills data
+            for (const userId of userIdsWithFeedback) {
+                const feedbackId = feedbackIds[userId];
+                
+                // Check for data in feedbacks_questions-objectives using the feedback ID
+                const { data: objectivesData, error: objectivesError } = await supabase
+                    .from('feedbacks_questions-objectives')
+                    .select('feedback_qObjectivesId')
+                    .eq('feedbackq' + q.substring(1) + '_Id', feedbackId)
+                    .limit(1);
+                    
+                if (objectivesError) {
+                    console.error(`Error fetching ${q} objectives data:`, objectivesError);
+                    continue;
+                }
+                
+                // Check for data in feedbacks_questions-skills using the feedback ID
+                const { data: skillsData, error: skillsError } = await supabase
+                    .from('feedbacks_questions-skills')
+                    .select('feedback_qSkillsId')
+                    .eq('feedbackq' + q.substring(1) + '_Id', feedbackId)
+                    .limit(1);
+                    
+                if (skillsError) {
+                    console.error(`Error fetching ${q} skills data:`, skillsError);
+                    continue;
+                }
+                
+                // Only add user to the list if they have data in ALL THREE tables
+                if (objectivesData.length > 0 && skillsData.length > 0) {
+                    usersWithDataByQuarter[q].push(userId);
+                }
+            }
+        }
+        
+        // Format the staff list with quarter availability info
+        const formattedStaffList = staffList.map(staff => {
+            const availableQuarters = {};
+            
+            quarters.forEach(q => {
+                availableQuarters[q] = usersWithDataByQuarter[q].includes(staff.userId);
+            });
+            
+            return {
+                userId: staff.userId,
+                firstName: staff.firstName,
+                lastName: staff.lastName,
+                jobTitle: staff.jobpositions?.jobTitle || 'Employee',
+                availableQuarters: availableQuarters
+            };
+        });
+        
+        // Filter staff list for the selected quarter
+        const filteredStaffList = formattedStaffList.filter(staff => 
+            staff.availableQuarters[quarter]
+        );
+        
+        // Check if any data exists for this quarter
+        const hasQuarterData = filteredStaffList.length > 0;
+        
+        console.log(`Found ${filteredStaffList.length} staff members with data for ${quarter}`);
+        
         // Render the staff feedback list page
         return res.render('staffpages/employee_pages/employee-quarterlyfeedbackquestionnaire.ejs', {
             title: '360 Degree Feedback Questionnaires',
             quarter: quarter,
-            staffList: formattedStaffList,
+            staffList: filteredStaffList,
+            allStaffList: formattedStaffList, // Send all staff for client-side filtering
+            hasQuarterData: hasQuarterData, // New flag indicating if quarter has data
             user: req.session.user
         });
         
