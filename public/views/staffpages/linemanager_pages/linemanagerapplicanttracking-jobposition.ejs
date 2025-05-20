@@ -1042,98 +1042,91 @@ table.tracking-table tbody:empty::after {
             </div>
         </div>
     </div>
+<!-- P1 - Line Manager Review Modal -->
+<div id="lineManagerInitialScreeningModalHtml" class="review-modal">
+    <div class="review-modal-content">
+        <span class="review-close-button">&times;</span>
+        <h2>P1: Initial Screening Score Breakdown</h2> 
+        <div class="divider"></div>
+        <div class="applicant-details">
+            <input type="hidden" id="userId">
+            <input type="hidden" id="jobId">            
+            <input type="hidden" id="applicantId">
 
-    <!-- P1 - Line Manager Review Modal -->
-    <div id="lineManagerInitialScreeningModalHtml" class="review-modal">
-        <div class="review-modal-content">
-            <span class="review-close-button">&times;</span>
-            <h2>P1: Initial Screening Score Breakdown</h2> 
-            <div class="divider"></div>
-            <div class="applicant-details">
-                <input type="hidden" id="userId">
-                <input type="hidden" id="jobId">            
-                <input type="hidden" id="applicantId">
+            <p><strong>Name:</strong> <span id="applicant-name"></span></p>
+            <p><strong>Birthday:</strong> <span id="applicant-birthday"></span></p>
+            <p><strong>Email:</strong> <span id="applicant-email"></span></p>
+            <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
+        </div>
 
-                <p><strong>Name:</strong> <span id="applicant-name"></span></p>
-                <p><strong>Birthday:</strong> <span id="applicant-birthday"></span></p>
-                <p><strong>Email:</strong> <span id="applicant-email"></span></p>
-                <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
-            </div>
+        <h4>HR Online Assessment Form Breakdown</h4>
+        <h4>Initial Screening Scores</h4> 
 
-            <h4>HR Online Assessment Form Breakdown</h4>
-            <h4>Initial Screening Scores</h4> 
+        <table class="scores-table"> 
+            <thead> 
+                <tr> 
+                    <th>Criteria</th> 
+                    <th>Score</th> 
+                </tr> 
+            </thead> 
+            <tbody> 
+                <tr> <td>Industry Specific Degree</td> <td id="score-degree"></td> </tr> 
+                <tr> <td>Experiences</td> <td id="score-experience"></td> </tr> 
+                <tr> <td>Certifications</td> <td id="score-certifications"></td> </tr> 
+                <tr> <td>Hard Skills</td> <td id="score-hard-skills"></td> </tr> 
+                <tr> <td>Soft Skills</td> <td id="score-soft-skills"></td> </tr> 
+                <tr> <td>Work Setup</td> <td id="score-work-setup"></td> </tr> 
+                <tr> <td>Availability</td> <td id="score-availability"></td> </tr> 
+            </tbody> 
+        </table> 
 
-            <table class="scores-table"> 
-                <thead> 
-                    <tr> 
-                        <th>Criteria</th> 
-                        <th>Score</th> 
-                    </tr> 
-                </thead> 
-                <tbody> 
-                    <tr> 
-                        <td>Industry Specific Degree</td> 
-                        <td id="score-degree"></td> 
-                    </tr> 
-                    <tr> 
-                        <td>Experiences</td> 
-                        <td id="score-experience"></td> 
-                    </tr> 
-                    <tr> 
-                        <td>Certifications</td> 
-                        <td id="score-certifications"></td> 
-                    </tr> 
-                    <tr> 
-                        <td>Hard Skills</td> 
-                        <td id="score-hard-skills"></td> 
-                    </tr> 
-                    <tr> 
-                        <td>Soft Skills</td> 
-                        <td id="score-soft-skills"></td> 
-                    </tr> 
-                    <tr> 
-                        <td>Work Setup</td> 
-                        <td id="score-work-setup"></td> 
-                    </tr> 
-                    <tr> 
-                        <td>Availability</td> 
-                        <td id="score-availability"></td> 
-                    </tr> 
-                </tbody> 
-            </table> 
+        <div class="computation-verdict"> 
+            <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
+        </div> 
 
-            <div class="computation-verdict"> 
-                <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
-            </div> 
+        <h4>Uploaded Documents</h4>
+        <p><strong>Degree:</strong> <a id="degree-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="degree-preview" style="margin-top: 10px;"></div>
 
-            <h4>Uploaded Documents</h4>
-            <p><strong>Degree:</strong> <a id="degree-doc" href="#" target="_blank">No document uploaded</a></p>
-            <div id="degree-preview" style="margin-top: 10px;"></div>
-            
-            <p><strong>Certification:</strong> <a id="cert-doc" href="#" target="_blank">No document uploaded</a></p>
-            <div id="cert-preview" style="margin-top: 10px;"></div>
-            
-            <p><strong>Resume:</strong> <a id="resume-doc" href="#" target="_blank">No document uploaded</a></p>
-            <div id="resume-preview" style="margin-top: 10px;"></div>
-            
-            
-            <h4>Decision</h4>
-            <p>
-                <strong>Would you like to pass or reject this applicant for the HR interview?</strong>
-            </p>
+        <p><strong>Certification:</strong> <a id="cert-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="cert-preview" style="margin-top: 10px;"></div>
 
-            <div class="decision-disclaimer">
-                <p>💡 <strong>Important:</strong> Pressing <strong>"Pass"</strong> will mark the applicant as likely to proceed to the HR interview stage, but this decision can still be changed before finalizing. Likewise, pressing <strong>"Reject"</strong> will mark the applicant as failed, but this can also be modified until the finalization step.</p>
-                <p>⚠️ <strong>Finalization Note:</strong> Once you press "Finalize," all passed and failed applicants will be officially informed of their status. Please double-check before proceeding.</p>
-            </div>
+        <p><strong>Resume:</strong> <a id="resume-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="resume-preview" style="margin-top: 10px;"></div>
 
-            <div class="review-modal-buttons">
-                <button id="backButton" class="review-modal-back-button">Back</button>
-                <button id="rejectButton" class="review-modal-reject-button" onclick="rejectApplicant()">Reject</button>
-                <button id="passButton" class="review-modal-pass-button" onclick="passApplicant()">Pass</button>
-            </div>
+<h4>Line Manager Verification</h4>
+<div style="margin: 10px 0;">
+    <label>
+        <input type="checkbox" id="lineManagerVerificationCheckbox" required>
+        I confirm that I have further reviewed the applicant’s documents and confirm the applicant is eligible to proceed to the next phase for interview.
+    </label>
+    <p style="font-size: 0.9em; color: #c00; margin-top: 5px;">
+        * This checkbox must be ticked to proceed with endorsing the applicant for interview.
+    </p>
+</div>
+
+<div style="margin-top: 10px;">
+    <label for="lineManagerComments"><strong>Comments:</strong></label><br>
+    <textarea id="lineManagerComments" rows="4" style="width: 100%;"></textarea>
+</div>
+
+
+        <h4>Decision</h4>
+        <p><strong>Would you like to pass or reject this applicant for the HR interview?</strong></p>
+
+        <div class="decision-disclaimer">
+            <p>💡 <strong>Important:</strong> Pressing <strong>"Pass"</strong> will mark the applicant as likely to proceed to the HR interview stage, but this decision can still be changed before finalizing. Likewise, pressing <strong>"Reject"</strong> will mark the applicant as failed, but this can also be modified until the finalization step.</p>
+            <p>⚠️ <strong>Finalization Note:</strong> Once you press "Finalize," all passed and failed applicants will be officially informed of their status. Please double-check before proceeding.</p>
+        </div>
+
+        <div class="review-modal-buttons">
+            <button id="backButton" class="review-modal-back-button">Back</button>
+            <button id="rejectButton" class="review-modal-reject-button" onclick="rejectApplicant()">Reject</button>
+            <button id="passButton" class="review-modal-pass-button" onclick="passApplicant()">Pass</button>
         </div>
     </div>
+</div>
+
 
     <!-- Modal for P2: Finalize Review and Notify Applicants -->
     <div id="finalizeModalP2" class="modal">

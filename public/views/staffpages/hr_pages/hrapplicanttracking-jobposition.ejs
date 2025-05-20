@@ -940,9 +940,24 @@
         
         <p><strong>Resume:</strong> <a id="resume-doc" href="#" target="_blank">No document uploaded</a></p>
         <div id="resume-preview" style="margin-top: 10px;"></div>
-        
-        
-        <h4>Would you like to recommend this applicant to the Line Manager for shortlisting and proceeding to the HR interview?</h4>
+
+<!-- HR Verification Statement and Comments -->
+<div class="verification-section" style="margin-top: 20px; padding: 10px; border-top: 1px solid #ccc;">
+    <label style="display: flex; align-items: flex-start; gap: 10px; font-weight: normal;">
+        <input type="checkbox" id="hr-verification-checkbox" style="margin-top: 3px;">
+        <span>
+            I confirm that the applicant is eligible for endorsement to the Line Manager after a review of the submitted documents.
+        </span>
+    </label>
+    <p style="color: #d9534f; margin: 5px 0 15px 25px; font-size: 0.9em;">
+        * This checkbox must be ticked to proceed with confirmation and endorsement to the Line Manager.
+    </p>
+
+    <label for="hr-verification-comments" style="display: block; margin-top: 10px;"><strong>HR Comments (optional):</strong></label>
+    <textarea id="hr-verification-comments" rows="3" style="width: 100%; padding: 8px; resize: vertical;" placeholder="Enter any remarks or notes..."></textarea>
+</div>
+
+
         <div class="review-modal-buttons">
             <button id="backButton" class="review-modal-back-button">Back</button>
             <button id="rejectButton" class="review-modal-reject-button" onclick="rejectHRInitialScreeningModal()">Reject</button>

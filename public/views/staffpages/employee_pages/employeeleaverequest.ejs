@@ -959,22 +959,18 @@ document.getElementById('leaveForm').addEventListener('submit', async (event) =>
     }
 });
 
-// Updated function to update remaining leaves
-function updateRemainingLeaves(leaveTypeName, daysRequested) {
-    // Find the balance element by type name instead of ID
-    const balanceElement = Array.from(document.querySelectorAll('.chart')).find(
-        chart => chart.querySelector('h3').textContent === leaveTypeName
-    );
-
-    if (balanceElement) {
-        const remainingLeavesSpan = balanceElement.querySelector('span');
-        if (remainingLeavesSpan) {
-            let remainingLeaves = parseFloat(remainingLeavesSpan.textContent); // Get current remaining leaves
-            remainingLeaves -= daysRequested; // Decrease by the days requested
-            remainingLeavesSpan.textContent = remainingLeaves.toFixed(1).replace('.0', ''); // Update the displayed value
+        // This function updates the displayed remaining leaves after a successful leave request
+        function updateRemainingLeaves(leaveTypeId, daysRequested) {
+            const balanceElement = document.getElementById(leaveTypeId); // Assuming balance typeName is the same as leaveTypeId
+    
+            if (balanceElement) {
+                const remainingLeavesSpan = balanceElement.querySelector('span');
+                let remainingLeaves = parseInt(remainingLeavesSpan.textContent); // Get current remaining leaves
+                remainingLeaves -= daysRequested; // Decrease by the days requested
+                remainingLeavesSpan.textContent = remainingLeaves; // Update the displayed value
+            }
         }
-    }
-}
+
 
 // Updated function to include certification status
 function updateLeaveDataWithCert(leaveType, fromDate, untilDate, totalDays, status, certStatus) {
