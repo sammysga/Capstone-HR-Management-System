@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line Manager Objective and Performance Review Tracker</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+
+
+        /* Global font styling */
+        body, button, input, select, textarea {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Enhanced textarea styling */
+        textarea {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.2s ease;
+            line-height: 1.5;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            resize: vertical;
+            background-color: #f9fafb;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background-color: white;
+        }
+        
+        textarea:disabled {
+            background-color: #f1f5f9;
+            color: #64748b;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+        }
+        
+        textarea::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        
+        /* Improved status indicators */
+        .status-indicator {
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .status-pending {
+            background-color: #fff7ed;
+            color: #c2410c;
+            border-left: 4px solid #f97316;
+        }
+        
+        .status-submitted {
+            background-color: #ecfdf5;
+            color: #047857;
+            border-left: 4px solid #10b981;
+        }
+        
+        /* Card improvements */
+        .card {
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: #f3f4f6;
+        }
+        
+        .card-title {
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 1.1rem;
+        }
+        
+        /* Better table styling */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+        
+        table th {
+            background-color: #f3f4f6;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: #4b5563;
+            text-align: left;
+        }
+        
+        table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        table td {
+            padding: 1rem;
+            vertical-align: top;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        /* Improved star rating */
+        .star-rating {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            margin-bottom: 0.5rem;
+        }
+        
+        .star-rating input {
+            display: none;
+        }
+        
+        .star-rating label {
+            cursor: pointer;
+            width: 1.5em;
+            font-size: 1.5em;
+            color: #d1d5db;
+            transition: color 0.2s ease;
+        }
+        
+        .star-rating label:before {
+            content: '★';
+        }
+        
+        .star-rating input:checked ~ label {
+            color: #eab308;
+        }
+        
+        .star-rating:hover label:hover,
+        .star-rating:hover label:hover ~ label {
+            color: #f59e0b;
+        }
+        
+        /* Improved button styling */
+        button[type="submit"] {
+            background-color: #2563eb;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        button[type="submit"]:hover {
+            background-color: #1d4ed8;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25);
+            transform: translateY(-1px);
+        }
+        
+        button[type="submit"]:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Progress bar improvements */
+        .progress-bar-container {
+            height: 10px;
+            background-color: #f1f5f9;
+            border-radius: 9999px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+            border-radius: 9999px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+
+        /* Select dropdown styling */
+        .staff-select-container {
+            margin-bottom: 24px;
+        }
+        
+        .staff-dropdown {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 1rem;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .staff-dropdown option {
+            padding: 8px;
+        }
+        
+        .status-indicator {
+            margin-top: 10px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .status-indicator i {
+            margin-right: 8px;
+        }
+        
+        .status-pending {
+            background-color: #fff4e5;
+            color: #e67e22;
+            border-left: 4px solid #e67e22;
+        }
+        
+        .status-submitted {
+            background-color: #e7f5e8;
+            color: #27ae60;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .submission-info {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        /* Card styling */
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        
+        .card-header {
+            padding: 16px;
+            border-bottom: 1px solid #eaeaea;
+            background-color: #f9f9f9;
+        }
+        
+        .card-title {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #124A5C;
+        }
+        
+        .card-content {
+            padding: 16px;
+        }
+        
+        /* Responsive grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+        
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr 3fr;
+            }
+        }
+        
+        /* Star Rating */
+        .rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+        
+        .rating > input {
+            display: none;
+        }
+        
+        .rating > label {
+            position: relative;
+            width: 1.1em;
+            font-size: 24px;
+            color: #FFD700;
+            cursor: pointer;
+        }
+        
+        .rating > label::before {
+            content: "\2605";
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .rating > label:hover:before,
+        .rating > label:hover ~ label:before {
+            opacity: 1 !important;
+        }
+        
+        .rating > input:checked ~ label:before {
+            opacity: 1;
+        }
+        
+        .rating:hover > input:checked ~ label:before {
+            opacity: 0.4;
+        }
+        
+        /* Additional styles to match your template */
+        .bg-blue-50 {
+            background-color: #f0f7ff;
+        }
+        
+        .text-gray-500 {
+            color: #6b7280;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-green-600 {
+            color: #16a34a;
+        }
+        
+        .text-green-700 {
+            color: #15803d;
+        }
+        
+        .text-gray-900 {
+            color: #111827;
+        }
+        
+        .bg-gray-50 {
+            background-color: #f9fafb;
+        }
+        
+        .bg-green-100 {
+            background-color: #dcfce7;
+        }
+        
+        .border {
+            border: 1px solid #e5e7eb;
+        }
+        
+        .border-green-400 {
+            border-color: #4ade80;
+        }
+        
+        .border-red-400 {
+            border-color: #f87171;
+        }
+        
+        .bg-red-100 {
+            background-color: #fee2e2;
+        }
+        
+        .text-red-700 {
+            color: #b91c1c;
+        }
+        
+        .rounded {
+            border-radius: 0.25rem;
+        }
+        
+        .rounded-lg {
+            border-radius: 0.5rem;
+        }
+        
+        .rounded-md {
+            border-radius: 0.375rem;
+        }
+        
+        .p-2 {
+            padding: 0.5rem;
+        }
+        
+        .p-4 {
+            padding: 1rem;
+        }
+        
+        .p-6 {
+            padding: 1.5rem;
+        }
+        
+        .p-8 {
+            padding: 2rem;
+        }
+        
+        .px-3 {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        .px-6 {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+        
+        .py-2 {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        
+        .py-3 {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+        
+        .py-4 {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        
+        .mb-1 {
+            margin-bottom: 0.25rem;
+        }
+        
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+        
+        .mb-6 {
+            margin-bottom: 1.5rem;
+        }
+        
+        .mb-8 {
+            margin-bottom: 2rem;
+        }
+        
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+        
+        .mt-4 {
+            margin-top: 1rem;
+        }
+        
+        .mt-6 {
+            margin-top: 1.5rem;
+        }
+        
+        .mr-2 {
+            margin-right: 0.5rem;
+        }
+        
+        .ml-2 {
+            margin-left: 0.5rem;
+        }
+        
+        .my-6 {
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .text-xs {
+            font-size: 0.75rem;
+        }
+        
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        
+        .text-xl {
+            font-size: 1.25rem;
+        }
+        
+        .text-3xl {
+            font-size: 1.875rem;
+        }
+        
+        .font-medium {
+            font-weight: 500;
+        }
+        
+        .font-semibold {
+            font-weight: 600;
+        }
+        
+        .font-bold {
+            font-weight: 700;
+        }
+        
+        .uppercase {
+            text-transform: uppercase;
+        }
+        
+        .tracking-wider {
+            letter-spacing: 0.05em;
+        }
+        
+        .whitespace-nowrap {
+            white-space: nowrap;
+        }
+        
+        .text-blue-900 {
+            color: #1e3a8a;
+        }
+        
+        .bg-blue-600 {
+            background-color: #2563eb;
+        }
+        
+        .hover\:bg-blue-700:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .flex-1 {
+            flex: 1 1 0%;
+        }
+        
+        .flex-col {
+            flex-direction: column;
+        }
+        
+        .items-center {
+            align-items: center;
+        }
+        
+        .justify-center {
+            justify-content: center;
+        }
+        
+        .justify-end {
+            justify-content: flex-end;
+        }
+        
+        .gap-4 {
+            gap: 1rem;
+        }
+        
+        .gap-6 {
+            gap: 1.5rem;
+        }
+        
+        .space-y-2 > * + * {
+            margin-top: 0.5rem;
+        }
+        
+        .grid-cols-1 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        
+        .divide-y > * + * {
+            border-top-width: 1px;
+        }
+        
+        .divide-gray-200 > * + * {
+            border-color: #e5e7eb;
+        }
+        
+        .border-gray-200 {
+            border-color: #e5e7eb;
+        }
+        
+        .border-dashed {
+            border-style: dashed;
+        }
+        
+        .border-gray-300 {
+            border-color: #d1d5db;
+        }
+        
+        .overflow-x-auto {
+            overflow-x: auto;
+        }
+        
+        .min-w-full {
+            min-width: 100%;
+        }
+        
+        .h-full {
+            height: 100%;
+        }
+        
+        .w-full {
+            width: 100%;
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .w-12 {
+            width: 3rem;
+        }
+        
+        .h-12 {
+            height: 3rem;
+        }
+        
+        .border-4 {
+            border-width: 4px;
+        }
+        
+        .border-t-4 {
+            border-top-width: 4px;
+        }
+        
+        .border-t-blue-500 {
+            border-top-color: #3b82f6;
+        }
+        
+        .border-gray-200 {
+            border-color: #e5e7eb;
+        }
+        
+        .rounded-full {
+            border-radius: 9999px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <%- include('../../partials/linemanager_partials') %>
+
+<div class="main-content">
+    <div class="container p-6">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-2"><i class="fas fa-comment-dots mr-2"></i> 360 Degree Feedback Questionnaires</h1>
+            <p class="text-gray-600">
+                <%= quarter %> - Select a department member to provide feedback
+            </p>
+            
+            <!-- Department members progress summary -->
+            <div class="card mt-4">
+                <div class="card-header bg-blue-50">
+                    <h2 class="card-title">Department Feedback Progress</h2>
+                </div>
+                <div class="card-content">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="department-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="submission-info">
+                        <span id="progress-text">0 of <%= staffList.length %> completed</span>
+                        <span id="progress-percentage">0%</span>
+                    </div>
+                </div>
+            </div>
+<div id="no-quarter-data-message" class="card mt-4 bg-yellow-50 border border-yellow-300" style="display: none;">
+    <div class="card-content p-5">
+<div class="flex items-start">
+    <i class="fas fa-exclamation-circle text-yellow-500 text-2xl mr-8 p-2 mt-1"></i>
+    <div class="flex-1">
+        <h3 class="font-semibold text-lg mb-2">No Data Available</h3>
+                <p class="text-gray-700 mb-3">
+                    There are no 360° feedback questionnaires available for <span id="no-data-quarter" class="font-medium"></span>. This could mean:
+                </p>
+                <ul class="list-disc ml-6 mt-2 space-y-1 text-gray-700">
+                    <li>No feedback periods have been set up for this quarter</li>
+                    <li>No employees have objectives and skills data for this quarter</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        </div>
+
+<div class="grid">
+    <!-- Quarter Select Dropdown -->
+    <div>
+<!-- Quarter Select Dropdown -->
+<div class="card mb-4">
+    <div class="card-header bg-blue-50">
+        <h2 class="card-title">Select Quarter</h2>
+    </div>
+    <div class="card-content">
+        <div class="staff-select-container">
+            <select id="quarter-dropdown" class="staff-dropdown">
+                <option value="Q1" <%= quarter === 'Q1' ? 'selected' : '' %>>Q1</option>
+                <option value="Q2" <%= quarter === 'Q2' ? 'selected' : '' %>>Q2</option>
+                <option value="Q3" <%= quarter === 'Q3' ? 'selected' : '' %>>Q3</option>
+                <option value="Q4" <%= quarter === 'Q4' ? 'selected' : '' %>>Q4</option>
+            </select>
+        </div>
+    </div>
+</div>
+    
+        <!-- Staff Members Select Dropdown -->
+        <div class="card">
+            <div class="card-header bg-blue-50">
+                <h2 class="card-title">Department Members</h2>
+            </div>
+            <div class="card-content">
+                <div class="staff-select-container">
+                    <select id="staff-dropdown" class="staff-dropdown">
+                        <option value="">-- Select a department member --</option>
+                        <% staffList.forEach(function(member) { %>
+                            <option value="<%= member.userId %>" 
+                                data-name="<%= member.lastName %>, <%= member.firstName %>"
+                                data-job="<%= member.jobTitle %>"
+                                data-quarters="<%= JSON.stringify(member.availableQuarters || {}) %>">
+                                <%= member.lastName %>, <%= member.firstName %> - <%= member.jobTitle %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+                
+                <!-- Status indicator - Initially hidden -->
+                <div id="status-indicator" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questionnaire Form -->
+    <div id="questionnaire-container">
+                <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
+                    <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
+                </div>
+            </div>
+            <div id="staff-data" data-staff-count="<%= staffList.length %>"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quarterDropdown = document.getElementById('quarter-dropdown');
+    const staffDropdown = document.getElementById('staff-dropdown');
+    const questionnaireContainer = document.getElementById('questionnaire-container');
+    const statusIndicator = document.getElementById('status-indicator');
+    const progressBar = document.getElementById('department-progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const progressPercentage = document.getElementById('progress-percentage');
+    const noQuarterDataMessage = document.getElementById('no-quarter-data-message');
+    const noDataQuarterSpan = document.getElementById('no-data-quarter');
+    
+    let activeQuarter = '<%= quarter %>';
+    let selectedMemberId = null;
+    let submittedFeedbacks = {}; // Will store the userId of members with submitted feedback
+    let totalCompleted = 0;
+    
+    // Check if the current quarter has data
+    function checkIfQuarterHasData() {
+        // Count the number of department members available in dropdown
+        const staffOptions = document.querySelectorAll('#staff-dropdown option:not(:first-child)');
+        
+        if (staffOptions.length === 0) {
+            // No data available for this quarter, show message
+            noDataQuarterSpan.textContent = activeQuarter;
+            noQuarterDataMessage.style.display = 'block';
+            
+            // Hide the department members dropdown card
+            const staffDropdownCard = staffDropdown.closest('.card');
+            staffDropdownCard.style.display = 'none';
+            
+            // Reset the questionnaire container
+            questionnaireContainer.innerHTML = `
+                <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
+                    <p class="text-gray-500 text-center">No feedback data is available for ${activeQuarter}</p>
+                </div>
+            `;
+            
+            // Reset progress bar
+            progressBar.style.width = '0%';
+            progressText.textContent = '0 of 0 completed';
+            progressPercentage.textContent = '0%';
+            
+            return false;
+        } else {
+            // Data is available, hide the message
+            noQuarterDataMessage.style.display = 'none';
+            
+            // Show the department members dropdown card
+            const staffDropdownCard = staffDropdown.closest('.card');
+            staffDropdownCard.style.display = 'block';
+            
+            return true;
+        }
+    }
+    
+    // Run the check on page load
+    checkIfQuarterHasData();
+    
+    // Handle quarter selection change
+    quarterDropdown.addEventListener('change', function() {
+        const newQuarter = this.value;
+        
+        // Show loading state before redirection
+        questionnaireContainer.innerHTML = `
+            <div class="h-full flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto"></div>
+                    <p class="mt-4 text-gray-600">Loading ${newQuarter} data...</p>
+                </div>
+            </div>
+        `;
+        
+        // Redirect to same page with new quarter parameter
+        window.location.href = `/linemanager/staffFeedbackList?quarter=${newQuarter}`;
+    });
+    
+    // Function to update the department progress bar
+    function updateProgressBar() {
+        const staffOptions = document.querySelectorAll('#staff-dropdown option');
+        const total = staffOptions.length > 1 ? staffOptions.length - 1 : 0; // Exclude the placeholder option
+        const percentage = total > 0 ? Math.round((totalCompleted / total) * 100) : 0;
+        
+        progressBar.style.width = `${percentage}%`;
+        progressText.textContent = `${totalCompleted} of ${total} completed`;
+        progressPercentage.textContent = `${percentage}%`;
+    }
+    
+    // Function to check if feedback has been submitted for a user
+    async function checkFeedbackStatus(userId) {
+        try {
+            const response = await fetch(`/linemanager/api/checkFeedbackStatus?userId=${userId}&quarter=${activeQuarter}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update the global tracking object
+                submittedFeedbacks[userId] = data.submitted;
+                
+                // Count total completed
+                totalCompleted = Object.values(submittedFeedbacks).filter(Boolean).length;
+                
+                // Update progress bar
+                updateProgressBar();
+                
+                return data.submitted;
+            }
+            return false;
+        } catch (error) {
+            console.error("Error checking feedback status:", error);
+            return false;
+        }
+    }
+    
+    // Initialize feedback status checks for all members
+    async function initializeFeedbackStatus() {
+        if (!checkIfQuarterHasData()) {
+            // If no data for quarter, don't proceed with checks
+            return;
+        }
+        
+        const staffOptions = document.querySelectorAll('#staff-dropdown option');
+        let completedCount = 0;
+        
+        for (const option of staffOptions) {
+            const userId = option.value;
+            if (userId) {
+                const submitted = await checkFeedbackStatus(userId);
+                if (submitted) {
+                    completedCount++;
+                }
+            }
+        }
+        
+        // Update progress bar after checking all members
+        totalCompleted = completedCount;
+        updateProgressBar();
+    }
+    
+    // Call the initialization function
+    initializeFeedbackStatus();
+    // Handle staff member selection
+    staffDropdown.addEventListener('change', function() {
+        selectedMemberId = this.value;
+        
+        if (!selectedMemberId) {
+            // Reset container if no selection
+            questionnaireContainer.innerHTML = `
+                <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
+                    <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
+                </div>
+            `;
+            statusIndicator.style.display = 'none';
+            return;
+        }
+        
+        // Get the selected option's data
+        const selectedOption = this.options[this.selectedIndex];
+        const memberName = selectedOption.getAttribute('data-name');
+        const memberJob = selectedOption.getAttribute('data-job');
+        
+        // Check if feedback has already been submitted for this member
+        const isSubmitted = submittedFeedbacks[selectedMemberId];
+        
+        // Update status indicator
+        if (isSubmitted) {
+            statusIndicator.className = 'status-indicator status-submitted';
+            statusIndicator.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                Feedback has already been submitted for ${memberName}
+            `;
+        } else {
+            statusIndicator.className = 'status-indicator status-pending';
+            statusIndicator.innerHTML = `
+                <i class="fas fa-clock"></i>
+                Feedback is pending for ${memberName}
+            `;
+        }
+        statusIndicator.style.display = 'flex';
+        
+        // Show loading state
+        questionnaireContainer.innerHTML = `
+            <div class="h-full flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto"></div>
+                    <p class="mt-4 text-gray-600">Loading questionnaire...</p>
+                </div>
+            </div>
+        `;
+        
+        // Fetch questionnaire data
+        fetch(`/linemanager/api/getQuestionnaireData?userId=${selectedMemberId}&quarter=${activeQuarter}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderQuestionnaire(data, memberName, memberJob, isSubmitted);
+                } else {
+                    throw new Error(data.message || 'Failed to load questionnaire data');
+                }
+            })
+            .catch(error => {
+                questionnaireContainer.innerHTML = `
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            });
+    });
+        // Function to render the questionnaire
+        function renderQuestionnaire(data, employeeName, jobTitle, isSubmitted) {
+            const { feedback, objectives, hardSkills, softSkills } = data;
+            
+            // Format dates properly
+            const startDate = feedback.setStartDate ? new Date(feedback.setStartDate).toLocaleDateString() : 'Not set';
+            const endDate = feedback.setEndDate ? new Date(feedback.setEndDate).toLocaleDateString() : 'Not set';
+            
+            // Extract employee first and last name
+            const nameParts = employeeName.split(',');
+            const lastName = nameParts[0] ? nameParts[0].trim() : '';
+            const firstName = nameParts[1] ? nameParts[1].trim().split('\n')[0] : '';
+            
+            // Build the questionnaire HTML
+            let html = `
+                <form id="feedback-form" class="card">
+                    <div class="card-header bg-blue-50">
+                        <h2 class="card-title">
+                            <i class="fas fa-comment-dots mr-2"></i> 
+                            360 Degree Feedback Questionnaire ${isSubmitted ? '<span class="ml-2 text-green-600">(Submitted)</span>' : ''}
+                        </h2>
+                    </div>
+                    <div class="card-content p-6">
+                        <!-- Date Information -->
+                        <div class="flex flex-col md:flex-row gap-6 mb-6">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium mb-1">Start Date:</label>
+                                <div class="text-gray-900 p-2 bg-gray-50 rounded border">
+                                    ${startDate}
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium mb-1">End Date:</label>
+                                <div class="text-gray-900 p-2 bg-gray-50 rounded border">
+                                    ${endDate}
+                                </div>
+                            </div>
+                        </div>
+    
+                        <!-- Employee Details -->
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6 border">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><strong>Employee:</strong> ${lastName}, ${firstName}</div>
+                                <div><strong>Position:</strong> ${jobTitle || feedback.jobTitle || 'Employee'}</div>
+                                <div><strong>Company:</strong> Prime Infrastructure</div>
+                                <div><strong>Department:</strong> ${feedback.deptName || 'Department'}</div>
+                            </div>
+                        </div>
+    
+                        <hr class="my-6 border-gray-200" />
+    
+                        <!-- Hidden fields for form submission -->
+                        <input type="hidden" name="feedbackId" value="${feedback.id}">
+                        <input type="hidden" name="quarter" value="${feedback.quarter}">
+                        <input type="hidden" name="userId" value="${feedback.userId}">
+                        <input type="hidden" name="reviewerUserId" value="${'<%= user.userId %>'}">
+
+            `;
+            
+            // Objectives Section
+            html += `
+                <!-- Objectives Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-blue-900">
+                        <i class="fas fa-bullseye mr-2"></i> Objective Setting Questions
+                    </h3>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KRA/Objectives</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KPI</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+            `;
+            
+            if (objectives && objectives.length > 0) {
+                objectives.forEach((objective, index) => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.description || objective.objectiveDescription}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.kpi || ''}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.target || ''}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.uom || ''}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.weight || ''}</td>
+                            <td class="px-4 py-4">
+                                <div class="space-y-2">
+                                    <div class="star-rating">
+                                        <input type="radio" id="objective${index}-star5" name="objectives[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="objective${index}-star5" title="5 stars"></label>
+                                        <input type="radio" id="objective${index}-star4" name="objectives[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="objective${index}-star4" title="4 stars"></label>
+                                        <input type="radio" id="objective${index}-star3" name="objectives[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="objective${index}-star3" title="3 stars"></label>
+                                        <input type="radio" id="objective${index}-star2" name="objectives[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="objective${index}-star2" title="2 stars"></label>
+                                        <input type="radio" id="objective${index}-star1" name="objectives[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                        <label for="objective${index}-star1" title="1 star"></label>
+                                    </div>
+                                    <textarea 
+                                        name="objectives[${index}][qualitative]"
+                                        class="w-full p-2 border rounded" 
+                                        rows="2"
+                                        placeholder="Qualitative feedback..."
+                                        required
+                                        ${isSubmitted ? 'disabled' : ''}
+                                    ></textarea>
+                                    <input 
+                                        type="hidden" 
+                                        name="objectives[${index}][objectiveId]" 
+                                        value="${objective.objectiveId}"
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += `
+                    <tr>
+                        <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
+                            No objectives found for this employee.
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            // Hard Skills Section
+            html += `
+                <!-- Hard Skills Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-blue-900">
+                        <i class="fas fa-cogs mr-2"></i> Hard Skills
+                    </h3>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+            `;
+            
+            if (hardSkills && hardSkills.length > 0) {
+                hardSkills.forEach((skill, index) => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
+                            <td class="px-4 py-4">
+                                <div class="space-y-2">
+                                    <div class="star-rating">
+                                        <input type="radio" id="hardSkill${index}-star5" name="hardSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="hardSkill${index}-star5" title="5 stars"></label>
+                                        <input type="radio" id="hardSkill${index}-star4" name="hardSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="hardSkill${index}-star4" title="4 stars"></label>
+                                        <input type="radio" id="hardSkill${index}-star3" name="hardSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="hardSkill${index}-star3" title="3 stars"></label>
+                                        <input type="radio" id="hardSkill${index}-star2" name="hardSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="hardSkill${index}-star2" title="2 stars"></label>
+                                        <input type="radio" id="hardSkill${index}-star1" name="hardSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                        <label for="hardSkill${index}-star1" title="1 star"></label>
+                                    </div>
+                                    <textarea 
+                                        name="hardSkills[${index}][qualitative]"
+                                        class="w-full p-2 border rounded" 
+                                        rows="2"
+                                        placeholder="Qualitative feedback..."
+                                        required
+                                        ${isSubmitted ? 'disabled' : ''}
+                                    ></textarea>
+                                    <input 
+                                        type="hidden" 
+                                        name="hardSkills[${index}][skillId]" 
+                                        value="${skill.jobReqSkillId}"
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += `
+                    <tr>
+                        <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
+                            No hard skills found for this employee.
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            // Soft Skills Section
+            html += `
+                <!-- Soft Skills Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-blue-900">
+                        <i class="fas fa-comments mr-2"></i> Soft Skills
+                    </h3>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+            `;
+            
+            if (softSkills && softSkills.length > 0) {
+                softSkills.forEach((skill, index) => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
+                            <td class="px-4 py-4">
+                                <div class="space-y-2">
+                                    <div class="star-rating">
+                                        <input type="radio" id="softSkill${index}-star5" name="softSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="softSkill${index}-star5" title="5 stars"></label>
+                                        <input type="radio" id="softSkill${index}-star4" name="softSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="softSkill${index}-star4" title="4 stars"></label>
+                                        <input type="radio" id="softSkill${index}-star3" name="softSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="softSkill${index}-star3" title="3 stars"></label>
+                                        <input type="radio" id="softSkill${index}-star2" name="softSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                        <label for="softSkill${index}-star2" title="2 stars"></label>
+                                        <input type="radio" id="softSkill${index}-star1" name="softSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                        <label for="softSkill${index}-star1" title="1 star"></label>
+                                    </div>
+                                    <textarea 
+                                        name="softSkills[${index}][qualitative]"
+                                        class="w-full p-2 border rounded" 
+                                        rows="2"
+                                        placeholder="Qualitative feedback..."
+                                        required
+                                        ${isSubmitted ? 'disabled' : ''}
+                                    ></textarea>
+                                    <input 
+                                        type="hidden" 
+                                        name="softSkills[${index}][skillId]" 
+                                        value="${skill.jobReqSkillId}"
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += `
+                    <tr>
+                        <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
+                            No soft skills found for this employee.
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            // Submit Button (only show if not already submitted)
+            if (!isSubmitted) {
+                html += `
+                    <!-- Submit Button -->
+                    <div class="flex justify-end mt-6">
+                        <button
+                            type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md flex items-center"
+                        >
+                            <i class="fas fa-save mr-2"></i> Submit Feedback
+                        </button>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <!-- Already Submitted Message -->
+                    <div class="flex justify-center mt-6">
+                        <div class="bg-green-100 text-green-700 px-4 py-3 rounded flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            You have already submitted feedback for this employee.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                    </div>
+                </form>
+            `;
+            
+            // Set the HTML and add event listener
+            questionnaireContainer.innerHTML = html;
+            
+            // Add form submission handler if not already submitted
+            if (!isSubmitted) {
+                document.getElementById('feedback-form').addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    // Validate the form
+                    if (!validateForm()) {
+                        return;
+                    }
+                    
+                    // Get form data
+                    const formData = new FormData(this);
+                    const formDataObj = {};
+                    
+                    // Convert FormData to object
+                    for (let [key, value] of formData.entries()) {
+                        if (key.includes('[') && key.includes(']')) {
+                            // Handle nested form data (arrays and objects)
+                            const parsedKey = parseFormDataKey(key);
+                            setNestedValue(formDataObj, parsedKey, value);
+                        } else {
+                            formDataObj[key] = value;
+                        }
+                    }
+                    
+                    // Clean up arrays (convert from objects to actual arrays)
+                    ['objectives', 'hardSkills', 'softSkills'].forEach(key => {
+                        if (formDataObj[key]) {
+                            formDataObj[key] = Object.values(formDataObj[key]);
+                        }
+                    });
+                    
+                    // Show submitting state
+                    const submitButton = document.querySelector('#feedback-form button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+                    }
+                    
+                    // Submit data
+                    fetch('/linemanager/api/submitFeedback', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formDataObj)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update submission status
+                            submittedFeedbacks[selectedMemberId] = true;
+                            totalCompleted++;
+                            updateProgressBar();
+                            
+                            // Show success message
+                            questionnaireContainer.innerHTML = `
+                                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                                    <p>Feedback submitted successfully!</p>
+                                </div>
+                            `;
+                            
+                            // Update status indicator
+                            statusIndicator.className = 'status-indicator status-submitted';
+                            statusIndicator.innerHTML = `
+                                <i class="fas fa-check-circle"></i>
+                                Feedback has been submitted for ${employeeName}
+                            `;
+                            
+                            // Reload dropdown after delay
+                            setTimeout(() => {
+                                staffDropdown.value = '';
+                                statusIndicator.style.display = 'none';
+                                questionnaireContainer.innerHTML = `
+                                    <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
+                                        <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
+                                    </div>
+                                `;
+                            }, 2000);
+                        } else {
+                            throw new Error(data.message || 'Failed to submit feedback');
+                        }
+                    })
+                    .catch(error => {
+                        // Show error message below form
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+                        errorDiv.innerHTML = `<p>${error.message}</p>`;
+                        document.getElementById('feedback-form').appendChild(errorDiv);
+                        
+                        // Reset submit button
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Submit Feedback';
+                        }
+                    });
+                });
+            }
+        }
+        
+        // Function to validate the form
+        function validateForm() {
+            let isValid = true;
+            
+            // Check all required fields
+            const requiredFields = document.querySelectorAll('#feedback-form [required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+            
+            // Check star ratings
+            const starGroups = document.querySelectorAll('.star-rating');
+            starGroups.forEach(group => {
+                const checkedStar = group.querySelector('input:checked');
+                if (!checkedStar) {
+                    group.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    group.classList.remove('border-red-500');
+                }
+            });
+            
+            if (!isValid) {
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+                errorDiv.innerHTML = `<p>Please complete all required fields and ratings.</p>`;
+                
+                // Remove existing error message if any
+                const existingError = document.querySelector('.bg-red-100');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
+                document.getElementById('feedback-form').appendChild(errorDiv);
+                
+                // Scroll to the top of the form
+                document.getElementById('feedback-form').scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            return isValid;
+        }
+        
+        // Helper function to parse complex form data keys like objectives[0][quantitative]
+        function parseFormDataKey(key) {
+            const keyParts = key.match(/([^\[\]]+)|\[([^\[\]]*)\]/g);
+            const parsedKey = [];
+            
+            if (keyParts) {
+                keyParts.forEach(part => {
+                    // Remove brackets and add to parsedKey array
+                    const cleanPart = part.replace(/\[|\]/g, '');
+                    if (cleanPart !== '') {
+                        parsedKey.push(cleanPart);
+                    }
+                });
+            }
+            
+            return parsedKey;
+        }
+        
+        // Helper function to set nested values in an object
+        function setNestedValue(obj, keyParts, value) {
+            let current = obj;
+            
+            for (let i = 0; i < keyParts.length; i++) {
+                const key = keyParts[i];
+                const isLast = i === keyParts.length - 1;
+                
+                if (isLast) {
+                    // Set the final value
+                    current[key] = value;
+                } else {
+                    // Create empty object/array for intermediate keys if they don't exist
+                    if (!current[key]) {
+                        // If next key is numeric, create an array, otherwise an object
+                        const nextKey = keyParts[i + 1];
+                        current[key] = !isNaN(parseInt(nextKey)) ? [] : {};
+                    }
+                    current = current[key];
+                }
+            }
+            
+            return obj;
+        }
+    });
+</script>
+
+</body>
+</html>
