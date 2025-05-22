@@ -368,8 +368,8 @@ body {
         window.location.href = '/linemanager/applicant-tracker-jobposition';
     };
     
-    // Function to fetch 360 feedback data and update notification panel
-    async function fetch360Feedback() {
+// Function to fetch 360 feedback data and update notification panel
+async function fetch360Feedback() {
     try {
         console.log("Checking for 360 feedback data...");
         
@@ -471,6 +471,7 @@ body {
             
             // Add click event for the action button
             document.getElementById('feedback-action-btn').addEventListener('click', function() {
+                // FIX: Change the URL to the new endpoint
                 window.location.href = `/linemanager/staffFeedbackList?quarter=${quarter}`;
             });
             
@@ -487,6 +488,7 @@ body {
                 
                 // Add new click handler to the new element
                 document.getElementById('fab').addEventListener('click', function() {
+                    // FIX: Update the FAB URL too
                     window.location.href = `/linemanager/staffFeedbackList?quarter=${quarter}`;
                 });
             }

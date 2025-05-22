@@ -296,16 +296,16 @@
     <div class="content">
         <h1>Leave Requests</h1>
     
-        <div class="chart-container">
-            <% leaveBalances.forEach(function(balance) { %>
-                <% if (balance.remainingLeaves >= 0) { %> <!-- Check if there are remaining leaves -->
-                    <div class="chart" id="<%= balance.typeName %>">
-                        <h3><%= balance.typeName %></h3>
-                        <p>Remaining Leaves: <span><%= balance.remainingLeaves %></span></p>
-                    </div>
-                <% } %>
-            <% }); %>
-        </div>
+<div class="chart-container">
+    <% leaveBalances.forEach(function(balance) { %>
+        <% if (balance.remainingLeaves >= 0) { %> <!-- Check if there are remaining leaves -->
+            <div class="chart" id="<%= balance.typeName %>">
+                <h3><%= balance.typeName %></h3>
+                <p>Remaining Leaves: <span><%= balance.remainingLeaves %></span></p>
+            </div>
+        <% } %>
+    <% }); %>
+</div>
 
     <!-- Pending Leave Requests (Centered) -->
     <div class="pending-container" style="text-align: center; margin: 20px 0;">
@@ -434,8 +434,7 @@
             </div>
         </div>
     </div>
-    <script>
-// Get the modal
+    <script>// Get the modal
 var modal = document.getElementById("fileLeaveModal");
 
 // Get the button that opens the modal
@@ -460,6 +459,19 @@ btn.onclick = function() {
     const selfCertifyCheckbox = document.getElementById('selfCertify');
     if (selfCertifyCheckbox) {
         selfCertifyCheckbox.checked = false;
+    }
+    
+    // Reset file display
+    const fileNameDisplay = document.getElementById('fileName');
+    if (fileNameDisplay) {
+        fileNameDisplay.textContent = 'No file chosen';
+        fileNameDisplay.style.color = '#666';
+    }
+    
+    // Hide clear file button
+    const clearFileBtn = document.getElementById('clearFileBtn');
+    if (clearFileBtn) {
+        clearFileBtn.style.display = 'none';
     }
     
     // Initialize certification section after form reset
@@ -635,6 +647,7 @@ function initializeCustomCheckbox() {
         });
     }
 }
+
 function initializeCertificationSection() {
     console.log("Initializing certification section");
     
@@ -797,41 +810,102 @@ function initializeCertificationSection() {
     updateCertificationState();
 }
 
-// When the modal is opened
-btn.onclick = function() {
-    modal.style.display = "block";
-    // Reset the form
-    document.getElementById('leaveForm').reset();
+// Function to refresh leave balances from server
+async function refreshLeaveBalances() {
+    try {
+        console.log('Refreshing leave balances...');
+        const response = await fetch('/employee/leaverequest/balances/latest');
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Received updated balances:', data.leaveBalances);
+            
+            // Update the UI with new balances
+            data.leaveBalances.forEach(balance => {
+                updateLeaveBalanceDisplay(balance);
+            });
+        } else {
+            console.error('Failed to refresh leave balances');
+        }
+    } catch (error) {
+        console.error('Error refreshing leave balances:', error);
+    }
+}
+
+// Function to update individual leave balance display (works with your existing HTML)
+function updateLeaveBalanceDisplay(balance) {
+    // Find the chart element for this leave type
+    let chartElement = document.getElementById(balance.typeName);
     
-    // Reset custom checkbox
-    const customCheckbox = document.getElementById('customCheckbox');
-    if (customCheckbox) {
-        customCheckbox.classList.remove('checked');
+    if (!chartElement) {
+        // Try finding by case-insensitive search
+        const allCharts = document.querySelectorAll('.chart');
+        for (const chart of allCharts) {
+            const headerElement = chart.querySelector('h3');
+            if (headerElement && headerElement.textContent.trim().toLowerCase() === balance.typeName.toLowerCase()) {
+                chartElement = chart;
+                break;
+            }
+        }
     }
     
-    // Reset hidden checkbox
-    const selfCertifyCheckbox = document.getElementById('selfCertify');
-    if (selfCertifyCheckbox) {
-        selfCertifyCheckbox.checked = false;
+    if (chartElement) {
+        // Update the remaining leaves span (your existing structure)
+        const remainingLeavesSpan = chartElement.querySelector('p span');
+        if (remainingLeavesSpan) {
+            remainingLeavesSpan.textContent = balance.remainingLeaves;
+            console.log(`Updated ${balance.typeName}: Remaining leaves now shows ${balance.remainingLeaves}`);
+        } else {
+            console.error(`Could not find remaining leaves span for "${balance.typeName}"`);
+        }
+    } else {
+        console.error(`Could not find chart element for leave type "${balance.typeName}"`);
+    }
+}
+
+// Updated function that now calls refreshLeaveBalances for accurate server data
+function updateRemainingLeaves(leaveTypeText, daysRequested) {
+    console.log(`Updating remaining leaves for "${leaveTypeText}" - refreshing from server for accuracy`);
+    
+    // Refresh from server instead of manual calculation to ensure accuracy
+    setTimeout(refreshLeaveBalances, 500);
+}
+// Updated function to include certification status
+function updateLeaveDataWithCert(leaveType, fromDate, untilDate, totalDays, status, certStatus) {
+    const table = document.getElementById('leaveRequestsTable');
+    
+    // Check if table has a "no leave requests" row and remove it
+    const noRequestsRow = table.querySelector('tr td[colspan="6"]');
+    if (noRequestsRow) {
+        noRequestsRow.parentElement.remove();
     }
     
-    // Reset file display
-    const fileNameDisplay = document.getElementById('fileName');
-    if (fileNameDisplay) {
-        fileNameDisplay.textContent = 'No file chosen';
-        fileNameDisplay.style.color = '#666';
-    }
+    const newRow = table.insertRow(0); // Insert at the top
     
-    // Hide clear file button
-    const clearFileBtn = document.getElementById('clearFileBtn');
-    if (clearFileBtn) {
-        clearFileBtn.style.display = 'none';
-    }
+    const cellLeaveType = newRow.insertCell(0);
+    const cellFromDate = newRow.insertCell(1);
+    const cellUntilDate = newRow.insertCell(2);
+    const cellTotalDays = newRow.insertCell(3);
+    const cellStatus = newRow.insertCell(4);
+    const cellCert = newRow.insertCell(5); // New cell for certification
+
+    cellLeaveType.textContent = leaveType;
+    cellFromDate.textContent = fromDate;
+    cellUntilDate.textContent = untilDate;
+    cellTotalDays.textContent = totalDays;
+    cellStatus.textContent = status;
     
-    // Initialize with delay
-    setTimeout(initializeCertificationSection, 100);
-    console.log("Modal opened, form reset");
-};
+    // Style certification status
+    if (certStatus === 'Provided') {
+        cellCert.innerHTML = '<span style="color: green;">Provided</span>';
+    } else if (certStatus === 'Self-certified') {
+        cellCert.textContent = 'Self-certified';
+    } else if (certStatus === 'Required') {
+        cellCert.innerHTML = '<span style="color: red;">Required</span>';
+    } else {
+        cellCert.textContent = certStatus;
+    }
+}
 
 // Initialize everything when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -850,7 +924,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-// Handle form submission
+
+// UPDATED: Enhanced form submission with immediate UI update
 document.getElementById('leaveForm').addEventListener('submit', async (event) => {
     event.preventDefault(); // Prevent the default form submission
 
@@ -932,13 +1007,15 @@ document.getElementById('leaveForm').addEventListener('submit', async (event) =>
             }
 
             // Update the UI
-            updateLeaveDataWithCert(leaveTypeText, fromDate, untilDate, totalDays, 'Pending', certStatus);
-            updateRemainingLeaves(leaveTypeText, totalDays);
+            updateLeaveDataWithCert(leaveTypeText, fromDate, untilDate, totalDays, 'Pending for Approval', certStatus);
 
             modal.style.display = "none"; // Close the modal
             
             // Reset the form
             document.getElementById('leaveForm').reset();
+            
+            // Refresh leave balances from server to get updated effective balances
+            setTimeout(refreshLeaveBalances, 500);
             
             // Update pending requests count
             updatePendingRequestsCount();
@@ -958,56 +1035,6 @@ document.getElementById('leaveForm').addEventListener('submit', async (event) =>
         alert('Error submitting leave request: ' + error.message);
     }
 });
-
-        // This function updates the displayed remaining leaves after a successful leave request
-        function updateRemainingLeaves(leaveTypeId, daysRequested) {
-            const balanceElement = document.getElementById(leaveTypeId); // Assuming balance typeName is the same as leaveTypeId
-    
-            if (balanceElement) {
-                const remainingLeavesSpan = balanceElement.querySelector('span');
-                let remainingLeaves = parseInt(remainingLeavesSpan.textContent); // Get current remaining leaves
-                remainingLeaves -= daysRequested; // Decrease by the days requested
-                remainingLeavesSpan.textContent = remainingLeaves; // Update the displayed value
-            }
-        }
-
-
-// Updated function to include certification status
-function updateLeaveDataWithCert(leaveType, fromDate, untilDate, totalDays, status, certStatus) {
-    const table = document.getElementById('leaveRequestsTable');
-    
-    // Check if table has a "no leave requests" row and remove it
-    const noRequestsRow = table.querySelector('tr td[colspan="6"]');
-    if (noRequestsRow) {
-        noRequestsRow.parentElement.remove();
-    }
-    
-    const newRow = table.insertRow(0); // Insert at the top
-    
-    const cellLeaveType = newRow.insertCell(0);
-    const cellFromDate = newRow.insertCell(1);
-    const cellUntilDate = newRow.insertCell(2);
-    const cellTotalDays = newRow.insertCell(3);
-    const cellStatus = newRow.insertCell(4);
-    const cellCert = newRow.insertCell(5); // New cell for certification
-
-    cellLeaveType.textContent = leaveType;
-    cellFromDate.textContent = fromDate;
-    cellUntilDate.textContent = untilDate;
-    cellTotalDays.textContent = totalDays;
-    cellStatus.textContent = status;
-    
-    // Style certification status
-    if (certStatus === 'Provided') {
-        cellCert.innerHTML = '<span style="color: green;">Provided</span>';
-    } else if (certStatus === 'Self-certified') {
-        cellCert.textContent = 'Self-certified';
-    } else if (certStatus === 'Required') {
-        cellCert.innerHTML = '<span style="color: red;">Required</span>';
-    } else {
-        cellCert.textContent = certStatus;
-    }
-}
     </script>
 </body>
 </html>

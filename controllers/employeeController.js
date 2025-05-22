@@ -1423,13 +1423,12 @@ submitEmployeeClearance: async function(req, res) {
     }
 },
 
-
 getLeaveRequestForm: async function(req, res) {
     console.log('Session User:', req.session.user);
     
     if (req.session.user && req.session.user.userRole === 'Employee') {
         try {
-            const userId = req.session.user.userId; // Get userId from the session
+            const userId = req.session.user.userId;
 
             // Fetch active leave types
             const { data: leaveTypes, error: leaveTypesError } = await supabase
@@ -1441,19 +1440,30 @@ getLeaveRequestForm: async function(req, res) {
 
             console.log('Fetched leave types:', leaveTypes);
 
-            // Fetch leave requests for the logged-in employee using userId
+            // Fetch leave requests for the logged-in employee
             const { data: leaveRequests, error: leaveRequestsError } = await supabase
                 .from('leaverequests')
-                .select('leave_types(typeName), fromDate, untilDate, status')
-                .eq('userId', userId); // Use userId instead of staffId
+                .select(`
+                    leaveRequestId,
+                    leaveTypeId,
+                    fromDate,
+                    untilDate,
+                    fromDayType,
+                    untilDayType,
+                    status,
+                    leave_types(typeName)
+                `)
+                .eq('userId', userId)
+                .order('fromDate', { ascending: false });
 
             if (leaveRequestsError) throw leaveRequestsError;
 
             console.log('Fetched leave requests:', leaveRequests);
 
-            // Fetch leave balances
+            // Calculate effective leave balances
             const leaveBalancesPromises = leaveTypes.map(async (leaveType) => {
-                // Check if leaveTypeId is defined
+                console.log(`\n=== Processing ${leaveType.typeName} (ID: ${leaveType.leaveTypeId}) ===`);
+                
                 if (!leaveType.leaveTypeId) {
                     console.warn(`Leave Type ID is missing for ${leaveType.typeName}. Defaulting to max count.`);
                     return {
@@ -1464,35 +1474,89 @@ getLeaveRequestForm: async function(req, res) {
                     };
                 }
 
+                // Get the LATEST balance from leavebalances table
                 const { data: balanceData, error: balanceError } = await supabase
                     .from('leavebalances')
-                    .select('totalLeaves, usedLeaves, remainingLeaves')
-                    .eq('userId', userId) // Use userId instead of staffId
+                    .select('totalLeaves, usedLeaves, remainingLeaves, created_at')
+                    .eq('userId', userId)
                     .eq('leaveTypeId', leaveType.leaveTypeId)
-                    .single();
+                    .order('created_at', { ascending: false })
+                    .limit(1);
 
-                if (balanceError || !balanceData) {
+                let currentBalance;
+                if (balanceError || !balanceData || balanceData.length === 0) {
                     console.warn(`No balance found for ${leaveType.typeName}. Defaulting to max count.`);
-                    return {
-                        typeName: leaveType.typeName,
+                    currentBalance = {
                         totalLeaves: leaveType.typeMaxCount,
                         usedLeaves: 0,
                         remainingLeaves: leaveType.typeMaxCount
                     };
+                } else {
+                    currentBalance = balanceData[0];
+                    console.log(`Found balance record:`, currentBalance);
                 }
+
+                // Find pending requests for this specific leave type
+                const pendingRequests = leaveRequests.filter(request => {
+                    const isMatchingType = request.leaveTypeId === leaveType.leaveTypeId;
+                    const isPending = request.status === 'Pending for Approval';
+                    console.log(`Request ${request.leaveRequestId}: Type match=${isMatchingType}, Status=${request.status}, Is pending=${isPending}`);
+                    return isMatchingType && isPending;
+                });
+
+                console.log(`Found ${pendingRequests.length} pending requests for ${leaveType.typeName}:`, pendingRequests);
+
+                let totalPendingDays = 0;
+                pendingRequests.forEach(request => {
+                    const fromDate = new Date(request.fromDate);
+                    const untilDate = new Date(request.untilDate);
+                    
+                    // Calculate base days (inclusive)
+                    let days = Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                    
+                    // Adjust for half days
+                    if (request.fromDayType === 'half_day') {
+                        days -= 0.5;
+                        console.log(`Adjusted for half day start: -0.5`);
+                    }
+                    if (request.untilDayType === 'half_day') {
+                        days -= 0.5;
+                        console.log(`Adjusted for half day end: -0.5`);
+                    }
+                    
+                    console.log(`Request ${request.leaveRequestId}: ${request.fromDate} to ${request.untilDate} = ${days} days`);
+                    totalPendingDays += days;
+                });
+
+                console.log(`Total pending days for ${leaveType.typeName}: ${totalPendingDays}`);
+
+                // Calculate effective remaining leaves
+                const effectiveRemainingLeaves = Math.max(0, currentBalance.remainingLeaves - totalPendingDays);
+
+                console.log(`${leaveType.typeName} calculation:`);
+                console.log(`  Database remaining: ${currentBalance.remainingLeaves}`);
+                console.log(`  Pending days: ${totalPendingDays}`);
+                console.log(`  Effective remaining: ${effectiveRemainingLeaves}`);
+
                 return {
                     typeName: leaveType.typeName,
-                    totalLeaves: balanceData.totalLeaves,
-                    usedLeaves: balanceData.usedLeaves,
-                    remainingLeaves: balanceData.remainingLeaves
+                    totalLeaves: currentBalance.totalLeaves,
+                    usedLeaves: currentBalance.usedLeaves,
+                    remainingLeaves: effectiveRemainingLeaves
                 };
             });
 
             const leaveBalances = await Promise.all(leaveBalancesPromises);
-            console.log('Fetched leave balances:', leaveBalances);
+            console.log('\n=== Final leave balances ===');
+            leaveBalances.forEach(balance => {
+                console.log(`${balance.typeName}: ${balance.remainingLeaves} remaining`);
+            });
 
-            // Render the leave request form
-            res.render('staffpages/employee_pages/employeeleaverequest', { leaveTypes, leaveRequests, leaveBalances });
+            res.render('staffpages/employee_pages/employeeleaverequest', { 
+                leaveTypes, 
+                leaveRequests, 
+                leaveBalances 
+            });
         } catch (error) {
             console.error('Error rendering leave request form:', error);
             req.flash('error', { fetchError: 'Unable to load leave request form.' });
@@ -1551,13 +1615,13 @@ submitLeaveRequest: async function(req, res) {
             console.log('📂 [Leave Request] File successfully saved locally. Uploading to Supabase...');
             
             // Upload to Supabase
-const { error: uploadError } = await supabase.storage
-    .from('uploads')  // Use the existing bucket name
-    .upload(uniqueName, fs.readFileSync(filePath), {
-        contentType: file.mimetype,
-        cacheControl: '3600',
-        upsert: false,
-    });
+            const { error: uploadError } = await supabase.storage
+                .from('uploads')  // Use the existing bucket name
+                .upload(uniqueName, fs.readFileSync(filePath), {
+                    contentType: file.mimetype,
+                    cacheControl: '3600',
+                    upsert: false,
+                });
             
             // Remove local file after upload
             fs.unlinkSync(filePath);
@@ -1569,7 +1633,7 @@ const { error: uploadError } = await supabase.storage
             }
             
             // Get the public URL for the file
-certificationPath = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
+            certificationPath = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
             console.log(`✅ [Leave Request] File uploaded successfully: ${certificationPath}`);
         }
         
@@ -1602,14 +1666,22 @@ certificationPath = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/
             return res.status(404).json({ message: 'Leave type not found' });
         }
 
-        // Calculate days
+        // Calculate days for validation
         const fromDateObj = new Date(fromDate);
         const untilDateObj = new Date(untilDate);
-        const daysRequested = Math.ceil((untilDateObj - fromDateObj) / (1000 * 60 * 60 * 24)) + 1;
+        let daysRequested = Math.ceil((untilDateObj - fromDateObj) / (1000 * 60 * 60 * 24)) + 1;
+        
+        // Adjust for half days if specified
+        if (fromDayType === 'half_day') {
+            daysRequested -= 0.5;
+        }
+        if (untilDayType === 'half_day') {
+            daysRequested -= 0.5;
+        }
 
         console.log('Days requested:', daysRequested);
 
-        // Check leave balance
+        // Check leave balance to ensure sufficient days are available
         const { data: balanceData, error: balanceError } = await supabase
             .from('leavebalances')
             .select('usedLeaves, remainingLeaves, totalLeaves')
@@ -1690,24 +1762,8 @@ certificationPath = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/
 
         console.log('Leave request inserted successfully:', insertedData);
 
-        // Update leave balance
-        const newUsedLeaves = (balanceData ? balanceData.usedLeaves : 0) + daysRequested;
-        const newRemainingLeaves = totalLeaves - newUsedLeaves;
-
-        const { error: upsertError } = await supabase
-            .from('leavebalances')
-            .upsert({
-                userId: req.session.user.userId,
-                leaveTypeId,
-                usedLeaves: newUsedLeaves,
-                remainingLeaves: newRemainingLeaves,
-                totalLeaves: totalLeaves
-            });
-
-        if (upsertError) {
-            console.error('Error during leave balance upsert:', upsertError.message);
-            return res.status(500).json({ message: 'Failed to update leave balances.' });
-        }
+        // REMOVED: We no longer update leave balances here
+        // This will happen when the manager approves the request
 
         // Return success with certification info
         res.status(200).json({ 
@@ -1722,212 +1778,9 @@ certificationPath = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/
     }
 },
 
-// submitLeaveRequest: async function(req, res) {
-//     console.log('Submitting leave request...');
-//     if (!req.session.user || !req.session.user.userId) {
-//         console.log('Unauthorized access: No session user');
-//         return res.status(401).json({ message: 'Unauthorized access' });
-//     }
-
-//     /* 
-//     // File upload functionality - COMMENTED OUT FOR INITIAL TESTING
-//     // Setup multer for file handling
-//     const storage = multer.diskStorage({
-//         destination: function (req, file, cb) {
-//             const dir = './public/uploads/certifications';
-//             if (!fs.existsSync(dir)) {
-//                 fs.mkdirSync(dir, { recursive: true });
-//             }
-//             cb(null, dir);
-//         },
-//         filename: function (req, file, cb) {
-//             const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-//             const ext = path.extname(file.originalname);
-//             cb(null, 'cert-' + uniqueSuffix + ext);
-//         }
-//     });
-
-//     const upload = multer({ 
-//         storage: storage,
-//         limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-//         fileFilter: function (req, file, cb) {
-//             const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
-//             const ext = path.extname(file.originalname).toLowerCase();
-            
-//             if (allowedTypes.includes(ext)) {
-//                 cb(null, true);
-//             } else {
-//                 cb(new Error('Invalid file type. Only PDF and image files are allowed.'));
-//             }
-//         }
-//     }).single('certification');
-
-//     // Process the upload
-//     upload(req, res, async function (err) {
-//         if (err instanceof multer.MulterError) {
-//             console.error('Multer upload error:', err);
-//             return res.status(400).json({ message: err.message });
-//         } else if (err) {
-//             console.error('Unknown upload error:', err);
-//             return res.status(500).json({ message: err.message });
-//         }
-//     */
-
-//     // Get form fields directly from req.body (since we're not using multer middleware for now)
-//     const { 
-//         leaveTypeId, 
-//         fromDate, 
-//         untilDate, 
-//         reason, 
-//         fromDayType, 
-//         untilDayType,
-//         isSickLeave,
-//         isSelfCertified
-//     } = req.body;
-
-//     if (!leaveTypeId || !fromDate || !untilDate || !reason || !fromDayType || !untilDayType) {
-//         console.log('Missing fields in leave request submission', req.body);
-//         return res.status(400).json({ message: 'All fields are required.' });
-//     }
-
-//     try {
-//         // Get the leave type
-//         const { data: leaveTypeData, error: leaveTypeError } = await supabase
-//             .from('leave_types')
-//             .select('typeName, typeMaxCount')
-//             .eq('leaveTypeId', leaveTypeId)
-//             .single();
-
-//         if (leaveTypeError || !leaveTypeData) {
-//             console.log('Leave type not found or error:', leaveTypeError);
-//             return res.status(404).json({ message: 'Leave type not found' });
-//         }
-
-//         // Calculate days
-//         const fromDateObj = new Date(fromDate);
-//         const untilDateObj = new Date(untilDate);
-//         const daysRequested = Math.ceil((untilDateObj - fromDateObj) / (1000 * 60 * 60 * 24)) + 1;
-
-//         console.log('Days requested:', daysRequested);
-
-//         // Check leave balance
-//         const { data: balanceData, error: balanceError } = await supabase
-//             .from('leavebalances')
-//             .select('usedLeaves, remainingLeaves, totalLeaves')
-//             .eq('userId', req.session.user.userId)
-//             .eq('leaveTypeId', leaveTypeId)
-//             .single();
-
-//         let totalLeaves, remainingLeaves;
-//         if (balanceError || !balanceData) {
-//             totalLeaves = leaveTypeData.typeMaxCount;
-//             remainingLeaves = totalLeaves;
-//         } else {
-//             totalLeaves = balanceData.totalLeaves;
-//             remainingLeaves = balanceData.remainingLeaves;
-//         }
-
-//         if (remainingLeaves < daysRequested) {
-//             console.log(`Insufficient leave balance. Remaining: ${remainingLeaves}, Requested: ${daysRequested}`);
-//             return res.status(400).json({ message: 'Insufficient leave balance for the requested period.' });
-//         }
-
-//         // Prepare leave request data
-//         const leaveRequestData = {
-//             userId: req.session.user.userId,
-//             leaveTypeId,
-//             fromDate,
-//             untilDate,
-//             fromDayType,
-//             untilDayType,
-//             reason,
-//             status: 'Pending for Approval'
-//         };
-
-//         // Handle self-certification if it's a sick leave
-//         if (isSickLeave === 'true') {
-//             const isSickLeaveType = leaveTypeData.typeName.toLowerCase().includes('sick');
-            
-//             if (!isSickLeaveType) {
-//                 console.log('Mismatch between leave type and sick leave flag');
-//                 return res.status(400).json({ message: 'Invalid leave type for sick leave certification.' });
-//             }
-            
-//             // Check if self-certification is applicable (for 1-2 day sick leaves)
-//             if (daysRequested <= 2 && isSelfCertified === 'true') {
-//                 console.log('Applying self-certification for short sick leave');
-//                 leaveRequestData.isSelfCertified = true;
-//             } else if (daysRequested > 2) {
-//                 // For testing, we'll bypass the certificate requirement temporarily
-//                 console.log('Note: Certificate would normally be required for a ' + daysRequested + '-day sick leave');
-//                 // Still mark as self-certified for testing purposes
-//                 leaveRequestData.isSelfCertified = true;
-                
-//                 /* 
-//                 // COMMENTED OUT FOR INITIAL TESTING
-//                 // Medical certificate required for longer sick leave
-//                 if (req.file) {
-//                     // If a file was uploaded, store the path
-//                     leaveRequestData.certificationPath = '/uploads/certifications/' + req.file.filename;
-//                 } else {
-//                     console.log('Missing required certification for extended sick leave');
-//                     return res.status(400).json({ message: 'Medical certificate is required for sick leaves of 3 or more days.' });
-//                 }
-//                 */
-//             }
-//         }
-
-//         // Log data before insert for debugging
-//         console.log('Inserting leave request with data:', leaveRequestData);
-
-//         // Insert the leave request
-//         const { data: insertedData, error: requestError } = await supabase
-//             .from('leaverequests')
-//             .insert([leaveRequestData])
-//             .select();
-
-//         if (requestError) {
-//             console.error('Error inserting leave request:', requestError.message);
-//             return res.status(500).json({ message: 'Failed to submit leave request.' });
-//         }
-
-//         console.log('Leave request inserted successfully:', insertedData);
-
-//         // Update leave balance
-//         const newUsedLeaves = (balanceData ? balanceData.usedLeaves : 0) + daysRequested;
-//         const newRemainingLeaves = totalLeaves - newUsedLeaves;
-
-//         const { error: upsertError } = await supabase
-//             .from('leavebalances')
-//             .upsert({
-//                 userId: req.session.user.userId,
-//                 leaveTypeId,
-//                 usedLeaves: newUsedLeaves,
-//                 remainingLeaves: newRemainingLeaves,
-//                 totalLeaves: totalLeaves
-//             });
-
-//         if (upsertError) {
-//             console.error('Error during leave balance upsert:', upsertError.message);
-//             return res.status(500).json({ message: 'Failed to update leave balances.' });
-//         }
-
-//         // Return success
-//         res.status(200).json({ 
-//             message: 'Leave request submitted successfully.',
-//             leaveType: leaveTypeData.typeName,
-//             isSelfCertified: leaveRequestData.isSelfCertified || false
-//         });
-//     } catch (error) {
-//         console.error('Error submitting leave request:', error);
-//         res.status(500).json({ message: 'Internal server error', error: error.message });
-//     }
-//     /* }); */ // This closing brace for upload.single is also commented out
-// },
-
 getLeaveRequestsByUserId: async function(req, res) {
     console.log('Fetching leave balances for user...');
-
+     
     if (req.session.user && req.session.user.userRole === 'Employee') {
         try {
             // Step 1: Fetch active leave types
@@ -1935,24 +1788,26 @@ getLeaveRequestsByUserId: async function(req, res) {
                 .from('leave_types')
                 .select('leaveTypeId, typeName')
                 .eq('typeIsActive', true);
-
+             
             if (leaveTypesError) {
                 console.error('Error fetching leave types:', leaveTypesError.message);
                 throw leaveTypesError;
             }
-
+             
             console.log('Fetched active leave types:', activeLeaveTypes);
-
+             
             // Step 2: Fetch leave balances for the logged-in employee using userId
             const leaveBalancesPromises = activeLeaveTypes.map(async (leaveType) => {
-                const { data: leaveBalance, error: balanceError } = await supabase
+                const { data: leaveBalances, error: balanceError } = await supabase
                     .from('leavebalances')
-                    .select('totalLeaves, usedLeaves, remainingLeaves') // Fetch all relevant fields
-                    .eq('userId', req.session.user.userId) // Use userId
+                    .select('totalLeaves, usedLeaves, remainingLeaves')
+                    .eq('userId', req.session.user.userId)
                     .eq('leaveTypeId', leaveType.leaveTypeId)
-                    .single();
-
-                if (balanceError || !leaveBalance) {
+                    .order('createdAt', { ascending: false }) // Get the most recent balance
+                    .limit(1); // Only get the most recent entry
+                
+                // Handle case where no balance exists yet or error occurred
+                if (balanceError || !leaveBalances || leaveBalances.length === 0) {
                     console.warn(`No leave balance found for ${leaveType.typeName}. Defaulting to max count.`);
                     return {
                         leaveTypeId: leaveType.leaveTypeId,
@@ -1962,33 +1817,39 @@ getLeaveRequestsByUserId: async function(req, res) {
                         remainingLeaves: leaveType.typeMaxCount
                     };
                 }
-
+                
+                // Return the most recent balance record
                 return {
                     leaveTypeId: leaveType.leaveTypeId,
                     typeName: leaveType.typeName,
-                    totalLeaves: leaveBalance.totalLeaves,
-                    usedLeaves: leaveBalance.usedLeaves,
-                    remainingLeaves: leaveBalance.remainingLeaves
+                    totalLeaves: leaveBalances[0].totalLeaves,
+                    usedLeaves: leaveBalances[0].usedLeaves,
+                    remainingLeaves: leaveBalances[0].remainingLeaves
                 };
             });
-
+             
             const leaveBalances = await Promise.all(leaveBalancesPromises);
             console.log('Fetched leave balances:', leaveBalances);
-
-            // Step 3: Fetch leave requests for the logged-in employee
+             
+            // Step 3: Fetch leave requests for the logged-in employee with type information
             const { data: leaveRequests, error: leaveRequestsError } = await supabase
                 .from('leaverequests')
-                .select('leaveTypeId, fromDate, untilDate, reason, status') // Include reason and status
-                .eq('userId', req.session.user.userId) // Use userId
+                .select(`
+                    *,
+                    leave_types (
+                        typeName
+                    )
+                `) // Join with leave_types to get type names
+                .eq('userId', req.session.user.userId)
                 .order('fromDate', { ascending: false }); // Order by date descending
-
+             
             if (leaveRequestsError) {
                 console.error('Error fetching leave requests:', leaveRequestsError.message);
                 throw leaveRequestsError;
             }
-
+             
             console.log('Fetched leave requests:', leaveRequests);
-
+             
             res.status(200).json({ leaveBalances, leaveRequests });
         } catch (error) {
             console.error('Error fetching leave balances and requests:', error.message);
@@ -1999,6 +1860,203 @@ getLeaveRequestsByUserId: async function(req, res) {
         res.status(401).json({ message: 'Unauthorized access' });
     }
 },
+getLatestLeaveBalances: async function(req, res) {
+    console.log('Fetching latest leave balances for user...');
+    
+    if (req.session.user && req.session.user.userRole === 'Employee') {
+        try {
+            const userId = req.session.user.userId;
+            console.log(`User ID: ${userId}`);
+
+            // Step 1: Fetch active leave types
+            const { data: activeLeaveTypes, error: leaveTypesError } = await supabase
+                .from('leave_types')
+                .select('leaveTypeId, typeName, typeMaxCount')
+                .eq('typeIsActive', true);
+            
+            if (leaveTypesError) {
+                console.error('Error fetching leave types:', leaveTypesError.message);
+                throw leaveTypesError;
+            }
+
+            console.log('Active leave types:', activeLeaveTypes);
+
+            // Step 2: Fetch all leave requests to calculate pending days
+            const { data: allLeaveRequests, error: requestsError } = await supabase
+                .from('leaverequests')
+                .select('leaveRequestId, leaveTypeId, fromDate, untilDate, fromDayType, untilDayType, status')
+                .eq('userId', userId);
+
+            if (requestsError) {
+                console.error('Error fetching leave requests:', requestsError.message);
+                throw requestsError;
+            }
+
+            console.log('All leave requests for user:', allLeaveRequests);
+            
+            // Step 3: For each leave type, calculate effective balance
+            const leaveBalancesPromises = activeLeaveTypes.map(async (leaveType) => {
+                console.log(`\n=== Processing ${leaveType.typeName} (API call) ===`);
+                
+                // Get the most recent leave balance for this user and leave type
+                const { data: latestBalances, error: balanceError } = await supabase
+                    .from('leavebalances')
+                    .select('totalLeaves, usedLeaves, remainingLeaves, created_at')
+                    .eq('userId', userId)
+                    .eq('leaveTypeId', leaveType.leaveTypeId)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                
+                if (balanceError) {
+                    console.error(`Error fetching balance for ${leaveType.typeName}:`, balanceError.message);
+                    throw balanceError;
+                }
+                
+                // Set default values if no balance found
+                let currentBalance;
+                if (!latestBalances || latestBalances.length === 0) {
+                    console.log(`No balance record found for ${leaveType.typeName}, using defaults`);
+                    currentBalance = {
+                        totalLeaves: leaveType.typeMaxCount || 0,
+                        usedLeaves: 0,
+                        remainingLeaves: leaveType.typeMaxCount || 0
+                    };
+                } else {
+                    currentBalance = latestBalances[0];
+                    console.log(`Latest balance for ${leaveType.typeName}:`, currentBalance);
+                }
+
+                // Calculate pending leave days for this leave type
+                const pendingRequests = allLeaveRequests.filter(request => {
+                    const isMatchingType = request.leaveTypeId === leaveType.leaveTypeId;
+                    const isPending = request.status === 'Pending for Approval';
+                    return isMatchingType && isPending;
+                });
+
+                console.log(`Pending requests for ${leaveType.typeName}:`, pendingRequests);
+
+                let totalPendingDays = 0;
+                pendingRequests.forEach(request => {
+                    const fromDate = new Date(request.fromDate);
+                    const untilDate = new Date(request.untilDate);
+                    let days = Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                    
+                    // Adjust for half days
+                    if (request.fromDayType === 'half_day') days -= 0.5;
+                    if (request.untilDayType === 'half_day') days -= 0.5;
+                    
+                    console.log(`Request ${request.leaveRequestId}: ${days} days`);
+                    totalPendingDays += days;
+                });
+
+                // Calculate effective remaining leaves
+                const effectiveRemainingLeaves = Math.max(0, currentBalance.remainingLeaves - totalPendingDays);
+                
+                console.log(`${leaveType.typeName} final calculation:`);
+                console.log(`  Database: ${currentBalance.remainingLeaves}`);
+                console.log(`  Pending: ${totalPendingDays}`);
+                console.log(`  Effective: ${effectiveRemainingLeaves}`);
+                
+                return {
+                    leaveTypeId: leaveType.leaveTypeId,
+                    typeName: leaveType.typeName,
+                    totalLeaves: currentBalance.totalLeaves,
+                    usedLeaves: currentBalance.usedLeaves,
+                    remainingLeaves: effectiveRemainingLeaves
+                };
+            });
+            
+            const leaveBalances = await Promise.all(leaveBalancesPromises);
+            console.log('\n=== API Response - Final leave balances ===');
+            leaveBalances.forEach(balance => {
+                console.log(`${balance.typeName}: ${balance.remainingLeaves} remaining`);
+            });
+            
+            res.status(200).json({ leaveBalances });
+        } catch (error) {
+            console.error('Error fetching leave balances:', error.message);
+            res.status(500).json({ message: 'Internal server error', error: error.message });
+        }
+    } else {
+        console.log('Unauthorized access: No session user or not an employee');
+        res.status(401).json({ message: 'Unauthorized access' });
+    }
+},
+// previous getLeaveRequestsByUserId code without remainingLeaves edited,
+// getLeaveRequestsByUserId: async function(req, res) {
+//     console.log('Fetching leave balances for user...');
+
+//     if (req.session.user && req.session.user.userRole === 'Employee') {
+//         try {
+//             // Step 1: Fetch active leave types
+//             const { data: activeLeaveTypes, error: leaveTypesError } = await supabase
+//                 .from('leave_types')
+//                 .select('leaveTypeId, typeName')
+//                 .eq('typeIsActive', true);
+
+//             if (leaveTypesError) {
+//                 console.error('Error fetching leave types:', leaveTypesError.message);
+//                 throw leaveTypesError;
+//             }
+
+//             console.log('Fetched active leave types:', activeLeaveTypes);
+
+//             // Step 2: Fetch leave balances for the logged-in employee using userId
+//             const leaveBalancesPromises = activeLeaveTypes.map(async (leaveType) => {
+//                 const { data: leaveBalance, error: balanceError } = await supabase
+//                     .from('leavebalances')
+//                     .select('totalLeaves, usedLeaves, remainingLeaves') // Fetch all relevant fields
+//                     .eq('userId', req.session.user.userId) // Use userId
+//                     .eq('leaveTypeId', leaveType.leaveTypeId)
+//                     .single();
+
+//                 if (balanceError || !leaveBalance) {
+//                     console.warn(`No leave balance found for ${leaveType.typeName}. Defaulting to max count.`);
+//                     return {
+//                         leaveTypeId: leaveType.leaveTypeId,
+//                         typeName: leaveType.typeName,
+//                         totalLeaves: leaveType.typeMaxCount,
+//                         usedLeaves: 0,
+//                         remainingLeaves: leaveType.typeMaxCount
+//                     };
+//                 }
+
+//                 return {
+//                     leaveTypeId: leaveType.leaveTypeId,
+//                     typeName: leaveType.typeName,
+//                     totalLeaves: leaveBalance.totalLeaves,
+//                     usedLeaves: leaveBalance.usedLeaves,
+//                     remainingLeaves: leaveBalance.remainingLeaves
+//                 };
+//             });
+
+//             const leaveBalances = await Promise.all(leaveBalancesPromises);
+//             console.log('Fetched leave balances:', leaveBalances);
+
+//             // Step 3: Fetch leave requests for the logged-in employee
+//             const { data: leaveRequests, error: leaveRequestsError } = await supabase
+//                 .from('leaverequests')
+//                 .select('leaveTypeId, fromDate, untilDate, reason, status') // Include reason and status
+//                 .eq('userId', req.session.user.userId) // Use userId
+//                 .order('fromDate', { ascending: false }); // Order by date descending
+
+//             if (leaveRequestsError) {
+//                 console.error('Error fetching leave requests:', leaveRequestsError.message);
+//                 throw leaveRequestsError;
+//             }
+
+//             console.log('Fetched leave requests:', leaveRequests);
+
+//             res.status(200).json({ leaveBalances, leaveRequests });
+//         } catch (error) {
+//             console.error('Error fetching leave balances and requests:', error.message);
+//             res.status(500).json({ message: 'Internal server error', error: error.message });
+//         }
+//     } else {
+//         console.log('Unauthorized access: No session user or not an employee');
+//         res.status(401).json({ message: 'Unauthorized access' });
+//     }
+// },
 
 postLeaveBalancesByUserId: async function(req, res) {
     console.log('Posting leave balances by user ID...');

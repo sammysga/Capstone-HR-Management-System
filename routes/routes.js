@@ -155,6 +155,7 @@ router.post('/employee/leaverequest', employeeController.submitLeaveRequest); //
 router.get('/employee/leaverequest/requests', employeeController.getLeaveRequestsByUserId); // To get leave requests
 router.post('/employee/leaverequest', employeeController.postLeaveBalancesByUserId); // To get leave balances
 router.get('/employee/leaverequest/pending', employeeController.fetchPendingRequestsCount);
+router.get('/employee/leaverequest/latest', employeeController.getLatestLeaveBalances);
 
 router.get('/employee/viewtimeline', employeeController.getViewPerformanceTimeline);
 
@@ -291,7 +292,12 @@ router.get('/employee/api/checkFeedbackStatus', employeeController.checkFeedback
 router.get('/api/linemanager/notifications', lineManagerController.getLineManagerNotifications);
 router.get('/api/get360FeedbackToast', lineManagerController.get360FeedbackToast);
 router.get('/linemanager/api/get360Feedback', lineManagerController.get360FeedbackToast);
-router.get('/linemanager/staffFeedbackList', lineManagerController.getFeedbackUsers);
+router.get('/linemanager/staffFeedbackList', lineManagerController.staffFeedbackList);
+router.get('/linemanager/api/checkFeedbackStatus', lineManagerController.checkFeedbackStatus);
+router.get('/linemanager/api/getQuestionnaireData', lineManagerController.getQuestionnaireData);
+router.post('/linemanager/api/submitFeedback', lineManagerController.submitFeedback);
+
+
 
 // Mid-year IDP routes
 router.get('/linemanager/midyear-idp/:userId', lineManagerController.getMidYearIDP);
