@@ -64,12 +64,38 @@ app.use((req, res, next) => {
 // Use the routes defined in the 'routes' directory
 app.use('/', routes);
 
+// Global error handler for email-related errors
+app.use((error, req, res, next) => {
+    if (error.message && error.message.includes('email')) {
+        console.error('❌ [Email Error]:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Email service error occurred',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+    next(error);
+});
 
 // Start the server and listen on the specified port
 app.listen(port, (error) => {
     if (error) {
         console.log('Something went wrong', error);
     } else {
-        console.log(`Server is running on http://localhost:${port}`);
+        console.log(`🚀 Server is running on http://localhost:${port}`);
+        
+        // Check email configuration on startup
+        const emailConfigured = !!(process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS);
+        
+        if (emailConfigured) {
+            console.log('✅ Email service configured and ready');
+            console.log(`📧 Using email: ${process.env.EMAIL_USER}`);
+            console.log(`📨 SMTP Host: ${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT}`);
+        } else {
+            console.log('⚠️  Email service not fully configured');
+            console.log('   Please check your .env file for EMAIL_HOST, EMAIL_USER, and EMAIL_PASS');
+        }
+        
+        // Email test routes are available in your routes file
     }
 });
