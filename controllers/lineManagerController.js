@@ -1,6 +1,8 @@
 const supabase = require('../public/config/supabaseClient');
 const bcrypt = require('bcrypt');
 const { getISOWeek } = require('date-fns');
+const { getEmailTemplateData } = require('../utils/emailService');
+
 
 
 async function getLeaveTypeName(leaveTypeId) {
@@ -3001,9 +3003,9 @@ console.log('Final applicants list:', applicants);
     },
 
 
-    finalizeP1Review: async function(req, res) {
+        finalizeP1Review: async function(req, res) {
         try {
-            console.log('✅ [LineManager] Finalizing P1 review process');
+            console.log('✅ [LineManager] Preparing P1 review finalization with Gmail compose integration');
             
             const { passedUserIds, failedUserIds } = req.body;
             
@@ -3013,85 +3015,374 @@ console.log('Final applicants list:', applicants);
             
             console.log(`✅ [LineManager] P1 Finalization: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
             
-            // Process passed applicants
-            for (const userId of passedUserIds) {
-                console.log(`✅ [LineManager] Finalizing P1 PASSED for userId: ${userId}`);
-                
-                // 1. Update applicant status in the database
-                const { data: updateData, error: updateError } = await supabase
+            // Fetch email addresses and applicant details for passed users
+            let passedApplicants = [];
+            if (passedUserIds.length > 0) {
+                const { data: passedData, error: passedError } = await supabase
                     .from('applicantaccounts')
-                    .update({ applicantStatus: 'P1 - PASSED' })
-                    .eq('userId', userId);
+                    .select(`
+                        userId,
+                        firstName,
+                        lastName,
+                        jobId,
+                        useraccounts!inner(userEmail)
+                    `)
+                    .in('userId', passedUserIds);
                     
-                if (updateError) {
-                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                    continue;
+                if (passedError) {
+                    console.error('❌ [LineManager] Error fetching passed applicants:', passedError);
+                    return res.status(500).json({ success: false, message: "Error fetching passed applicants data" });
                 }
                 
-                // 2. Send congratulations message through the chatbot history
-                const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage once the HR team sets availability via Calendly.";
-                
-                const { data: chatData, error: chatError } = await supabase
-                    .from('chatbot_history')
-                    .insert([{
+                passedApplicants = passedData.map(applicant => ({
+                    userId: applicant.userId,
+                    name: `${applicant.firstName} ${applicant.lastName}`,
+                    email: applicant.useraccounts.userEmail,
+                    jobId: applicant.jobId
+                }));
+            }
+            
+            // Fetch email addresses and applicant details for failed users
+            let failedApplicants = [];
+            if (failedUserIds.length > 0) {
+                const { data: failedData, error: failedError } = await supabase
+                    .from('applicantaccounts')
+                    .select(`
                         userId,
-                        message: JSON.stringify({ text: congratsMessage }),
-                        sender: 'bot',
-                        timestamp: new Date().toISOString(),
-                        applicantStage: 'P1 - PASSED'
-                    }]);
+                        firstName,
+                        lastName,
+                        jobId,
+                        useraccounts!inner(userEmail)
+                    `)
+                    .in('userId', failedUserIds);
                     
-                if (chatError) {
-                    console.error(`❌ [LineManager] Error sending chat message to ${userId}:`, chatError);
+                if (failedError) {
+                    console.error('❌ [LineManager] Error fetching failed applicants:', failedError);
+                    return res.status(500).json({ success: false, message: "Error fetching failed applicants data" });
+                }
+                
+                failedApplicants = failedData.map(applicant => ({
+                    userId: applicant.userId,
+                    name: `${applicant.firstName} ${applicant.lastName}`,
+                    email: applicant.useraccounts.userEmail,
+                    jobId: applicant.jobId
+                }));
+            }
+            
+            // Fetch job titles for email templates
+            const allJobIds = [...new Set([...passedApplicants.map(a => a.jobId), ...failedApplicants.map(a => a.jobId)])];
+            let jobTitles = {};
+            
+            if (allJobIds.length > 0) {
+                const { data: jobData, error: jobError } = await supabase
+                    .from('job_positions')
+                    .select('jobId, jobTitle')
+                    .in('jobId', allJobIds);
+                    
+                if (!jobError && jobData) {
+                    jobTitles = jobData.reduce((acc, job) => {
+                        acc[job.jobId] = job.jobTitle;
+                        return acc;
+                    }, {});
                 }
             }
             
-            // Process failed applicants
+            // Add job titles to applicant data
+            passedApplicants = passedApplicants.map(applicant => ({
+                ...applicant,
+                jobTitle: jobTitles[applicant.jobId] || 'Position'
+            }));
+            
+            failedApplicants = failedApplicants.map(applicant => ({
+                ...applicant,
+                jobTitle: jobTitles[applicant.jobId] || 'Position'
+            }));
+            
+            // Return applicant data for Gmail compose
+            return res.status(200).json({ 
+                success: true,
+                requiresGmailCompose: true,
+                passedApplicants: passedApplicants,
+                failedApplicants: failedApplicants,
+                message: "Ready for Gmail compose"
+            });
+            
+        } catch (error) {
+            console.error('❌ [LineManager] Error preparing P1 review finalization:', error);
+            return res.status(500).json({ success: false, message: "Error preparing P1 review finalization: " + error.message });
+        }
+    },
+
+    getEmailTemplates: async function(req, res) {
+        try {
+            const templates = getEmailTemplateData();
+            return res.status(200).json({ success: true, templates });
+            
+        } catch (error) {
+            console.error('❌ [LineManager] Error getting email templates:', error);
+            return res.status(500).json({ success: false, message: "Error getting email templates: " + error.message });
+        }
+    },
+
+    updateP1Statuses: async function(req, res) {
+        try {
+            console.log('✅ [LineManager] Updating P1 statuses after Gmail emails sent');
+            
+            const { passedUserIds, failedUserIds } = req.body;
+            
+            if (!passedUserIds || !failedUserIds) {
+                return res.status(400).json({ success: false, message: "Missing user IDs" });
+            }
+            
+            console.log(`✅ [LineManager] P1 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+            
+            let updateResults = {
+                passed: { updated: 0, errors: [] },
+                failed: { updated: 0, errors: [] }
+            };
+            
+            // Update passed applicants
+            for (const userId of passedUserIds) {
+                try {
+                    console.log(`✅ [LineManager] Updating P1 PASSED status for userId: ${userId}`);
+                    
+                    // Update applicant status in the database
+                    const { data: updateData, error: updateError } = await supabase
+                        .from('applicantaccounts')
+                        .update({ applicantStatus: 'P1 - PASSED' })
+                        .eq('userId', userId);
+                        
+                    if (updateError) {
+                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                        updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
+                        continue;
+                    }
+                    
+                    updateResults.passed.updated++;
+                    
+                    // Add chatbot message
+                    const { data: chatData, error: chatError } = await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify({ text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage." }),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString(),
+                            applicantStage: 'P1 - PASSED'
+                        }]);
+                        
+                    if (chatError) {
+                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
+                    }
+                    
+                } catch (error) {
+                    console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
+                    updateResults.passed.errors.push(`${userId}: ${error.message}`);
+                }
+            }
+            
+            // Update failed applicants
             for (const userId of failedUserIds) {
-                console.log(`✅ [LineManager] Finalizing P1 FAILED for userId: ${userId}`);
-                
-                // 1. Update applicant status in the database
-                const { data: updateData, error: updateError } = await supabase
-                    .from('applicantaccounts')
-                    .update({ applicantStatus: 'P1 - FAILED' })
-                    .eq('userId', userId);
+                try {
+                    console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
                     
-                if (updateError) {
-                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                    continue;
-                }
-                
-                // 2. Send rejection message through the chatbot history
-                const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.";
-                
-                const { data: chatData, error: chatError } = await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify({ text: rejectionMessage }),
-                        sender: 'bot',
-                        timestamp: new Date().toISOString(),
-                        applicantStage: 'P1 - FAILED'
-                    }]);
+                    // Update applicant status in the database
+                    const { data: updateData, error: updateError } = await supabase
+                        .from('applicantaccounts')
+                        .update({ applicantStatus: 'P1 - FAILED' })
+                        .eq('userId', userId);
+                        
+                    if (updateError) {
+                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                        updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
+                        continue;
+                    }
                     
-                if (chatError) {
-                    console.error(`❌ [LineManager] Error sending chat message to ${userId}:`, chatError);
+                    updateResults.failed.updated++;
+                    
+                    // Add chatbot message
+                    const { data: chatData, error: chatError } = await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify({ text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Prime Infrastructure, and we wish you the best in your future endeavors." }),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString(),
+                            applicantStage: 'P1 - FAILED'
+                        }]);
+                        
+                    if (chatError) {
+                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
+                    }
+                    
+                } catch (error) {
+                    console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
+                    updateResults.failed.errors.push(`${userId}: ${error.message}`);
                 }
+            }
+            
+            // Prepare response
+            const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
+            const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
+            
+            if (totalErrors > 0) {
+                console.warn(`⚠️ [LineManager] P1 status update completed with ${totalErrors} errors`);
+                return res.status(207).json({ // 207 Multi-Status for partial success
+                    success: true,
+                    message: `P1 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
+                    updateResults: updateResults,
+                    passedUpdated: updateResults.passed.updated,
+                    failedUpdated: updateResults.failed.updated,
+                    totalErrors: totalErrors
+                });
+            } else {
+                console.log(`✅ [LineManager] P1 status update completed successfully`);
+                return res.status(200).json({ 
+                    success: true, 
+                    message: "P1 statuses updated successfully. All applicants have been processed.",
+                    updateResults: updateResults,
+                    passedUpdated: updateResults.passed.updated,
+                    failedUpdated: updateResults.failed.updated,
+                    totalUpdated: totalUpdated
+                });
+            }
+            
+        } catch (error) {
+            console.error('❌ [LineManager] Error updating P1 statuses:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: "Error updating P1 statuses: " + error.message 
+            });
+        }
+    },
+
+    markAsP1Passed: async function(req, res) {
+        try {
+            const { userId } = req.body;
+            
+            if (!userId) {
+                return res.status(400).json({ success: false, message: "Missing user ID" });
+            }
+            
+            // Update the status for display purposes only
+            const { data, error } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P1 - PASSED (Pending Finalization)' })
+                .eq('userId', userId);
+                
+            if (error) {
+                console.error('❌ [LineManager] Error marking applicant as PASSED:', error);
+                return res.status(500).json({ success: false, message: "Error updating applicant status" });
             }
             
             return res.status(200).json({ 
                 success: true, 
-                message: "P1 review finalized successfully and applicants have been notified.",
-                passedCount: passedUserIds.length,
-                failedCount: failedUserIds.length
+                message: "Applicant marked as PASSED. Status will be finalized after Gmail email is sent."
             });
             
         } catch (error) {
-            console.error('❌ [LineManager] Error finalizing P1 review:', error);
-            return res.status(500).json({ success: false, message: "Error finalizing P1 review: " + error.message });
+            console.error('❌ [LineManager] Error marking as PASSED:', error);
+            return res.status(500).json({ success: false, message: "Error marking applicant as PASSED: " + error.message });
         }
     },
-
+    
+    markAsP1Failed: async function(req, res) {
+        try {
+            const { userId } = req.body;
+            
+            if (!userId) {
+                return res.status(400).json({ success: false, message: "Missing user ID" });
+            }
+            
+            // Update the status for display purposes only
+            const { data, error } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P1 - FAILED (Pending Finalization)' })
+                .eq('userId', userId);
+                
+            if (error) {
+                console.error('❌ [LineManager] Error marking applicant as FAILED:', error);
+                return res.status(500).json({ success: false, message: "Error updating applicant status" });
+            }
+            
+            return res.status(200).json({ 
+                success: true, 
+                message: "Applicant marked as FAILED. Status will be finalized after Gmail email is sent."
+            });
+            
+        } catch (error) {
+            console.error('❌ [LineManager] Error marking as FAILED:', error);
+            return res.status(500).json({ success: false, message: "Error marking applicant as FAILED: " + error.message });
+        }
+    },
+    
+    /**
+     * Temporary marks an applicant as PASSED for P3 in the Line Manager's view
+     * This doesn't notify the applicant yet
+     */
+    markAsP3Passed: async function(req, res) {
+        try {
+            const { userId } = req.body;
+            
+            if (!userId) {
+                return res.status(400).json({ success: false, message: "Missing user ID" });
+            }
+            
+            // Update the status for display purposes only
+            const { data, error } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P3 - PASSED (Pending Finalization)' })
+                .eq('userId', userId);
+                
+            if (error) {
+                console.error('❌ [LineManager] Error marking applicant as P3 PASSED:', error);
+                return res.status(500).json({ success: false, message: "Error updating applicant status" });
+            }
+            
+            return res.status(200).json({ 
+                success: true, 
+                message: "Applicant marked as P3 PASSED. Status will be finalized and applicant will be notified upon review finalization."
+            });
+            
+        } catch (error) {
+            console.error('❌ [LineManager] Error marking as P3 PASSED:', error);
+            return res.status(500).json({ success: false, message: "Error marking applicant as P3 PASSED: " + error.message });
+        }
+    },
+    
+    /**
+     * Temporary marks an applicant as FAILED for P3 in the Line Manager's view
+     * This doesn't notify the applicant yet
+     */
+    markAsP3Failed: async function(req, res) {
+        try {
+            const { userId } = req.body;
+            
+            if (!userId) {
+                return res.status(400).json({ success: false, message: "Missing user ID" });
+            }
+            
+            // Update the status for display purposes only
+            const { data, error } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P3 - FAILED (Pending Finalization)' })
+                .eq('userId', userId);
+                
+            if (error) {
+                console.error('❌ [LineManager] Error marking applicant as P3 FAILED:', error);
+                return res.status(500).json({ success: false, message: "Error updating applicant status" });
+            }
+            
+            return res.status(200).json({ 
+                success: true, 
+                message: "Applicant marked as P3 FAILED. Status will be finalized and applicant will be notified upon review finalization."
+            });
+            
+        } catch (error) {
+            console.error('❌ [LineManager] Error marking as P3 FAILED:', error);
+            return res.status(500).json({ success: false, message: "Error marking applicant as P3 FAILED: " + error.message });
+        }
+    },
 
 // Modified finalizeP1Review function with email notifications
 // finalizeP1Review: async function(req, res) {
@@ -3403,137 +3694,6 @@ console.log('Final applicants list:', applicants);
         }
     },
     
-    markAsP1Passed: async function(req, res) {
-        try {
-            const { userId } = req.body;
-            
-            if (!userId) {
-                return res.status(400).json({ success: false, message: "Missing user ID" });
-            }
-            
-            // Update the status for display purposes only
-            const { data, error } = await supabase
-                .from('applicantaccounts')
-                .update({ applicantStatus: 'P1 - PASSED (Pending Finalization)' })
-                .eq('userId', userId);
-                
-            if (error) {
-                console.error('❌ [LineManager] Error marking applicant as PASSED:', error);
-                return res.status(500).json({ success: false, message: "Error updating applicant status" });
-            }
-            
-            return res.status(200).json({ 
-                success: true, 
-                message: "Applicant marked as PASSED. Status will be finalized and applicant will be notified upon review finalization."
-            });
-            
-        } catch (error) {
-            console.error('❌ [LineManager] Error marking as PASSED:', error);
-            return res.status(500).json({ success: false, message: "Error marking applicant as PASSED: " + error.message });
-        }
-    },
-    
-    /**
-     * Temporary marks an applicant as FAILED in the Line Manager's view
-     * This doesn't notify the applicant yet
-     */
-    markAsP1Failed: async function(req, res) {
-        try {
-            const { userId } = req.body;
-            
-            if (!userId) {
-                return res.status(400).json({ success: false, message: "Missing user ID" });
-            }
-            
-            // Update the status for display purposes only
-            const { data, error } = await supabase
-                .from('applicantaccounts')
-                .update({ applicantStatus: 'P1 - FAILED (Pending Finalization)' })
-                .eq('userId', userId);
-                
-            if (error) {
-                console.error('❌ [LineManager] Error marking applicant as FAILED:', error);
-                return res.status(500).json({ success: false, message: "Error updating applicant status" });
-            }
-            
-            return res.status(200).json({ 
-                success: true, 
-                message: "Applicant marked as FAILED. Status will be finalized and applicant will be notified upon review finalization."
-            });
-            
-        } catch (error) {
-            console.error('❌ [LineManager] Error marking as FAILED:', error);
-            return res.status(500).json({ success: false, message: "Error marking applicant as FAILED: " + error.message });
-        }
-    },
-    
-    /**
-     * Temporary marks an applicant as PASSED for P3 in the Line Manager's view
-     * This doesn't notify the applicant yet
-     */
-    markAsP3Passed: async function(req, res) {
-        try {
-            const { userId } = req.body;
-            
-            if (!userId) {
-                return res.status(400).json({ success: false, message: "Missing user ID" });
-            }
-            
-            // Update the status for display purposes only
-            const { data, error } = await supabase
-                .from('applicantaccounts')
-                .update({ applicantStatus: 'P3 - PASSED (Pending Finalization)' })
-                .eq('userId', userId);
-                
-            if (error) {
-                console.error('❌ [LineManager] Error marking applicant as P3 PASSED:', error);
-                return res.status(500).json({ success: false, message: "Error updating applicant status" });
-            }
-            
-            return res.status(200).json({ 
-                success: true, 
-                message: "Applicant marked as P3 PASSED. Status will be finalized and applicant will be notified upon review finalization."
-            });
-            
-        } catch (error) {
-            console.error('❌ [LineManager] Error marking as P3 PASSED:', error);
-            return res.status(500).json({ success: false, message: "Error marking applicant as P3 PASSED: " + error.message });
-        }
-    },
-    
-    /**
-     * Temporary marks an applicant as FAILED for P3 in the Line Manager's view
-     * This doesn't notify the applicant yet
-     */
-    markAsP3Failed: async function(req, res) {
-        try {
-            const { userId } = req.body;
-            
-            if (!userId) {
-                return res.status(400).json({ success: false, message: "Missing user ID" });
-            }
-            
-            // Update the status for display purposes only
-            const { data, error } = await supabase
-                .from('applicantaccounts')
-                .update({ applicantStatus: 'P3 - FAILED (Pending Finalization)' })
-                .eq('userId', userId);
-                
-            if (error) {
-                console.error('❌ [LineManager] Error marking applicant as P3 FAILED:', error);
-                return res.status(500).json({ success: false, message: "Error updating applicant status" });
-            }
-            
-            return res.status(200).json({ 
-                success: true, 
-                message: "Applicant marked as P3 FAILED. Status will be finalized and applicant will be notified upon review finalization."
-            });
-            
-        } catch (error) {
-            console.error('❌ [LineManager] Error marking as P3 FAILED:', error);
-            return res.status(500).json({ success: false, message: "Error marking applicant as P3 FAILED: " + error.message });
-        }
-    },
 
     // updateP1LineManagerPassed: async function(req, res) {
     //     try {

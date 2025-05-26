@@ -1030,18 +1030,224 @@ table.tracking-table tbody:empty::after {
         </div>
     </div>
 </div>
-    <!-- Modal for P1: Finalize Review and Notify Applicants -->
-    <div id="finalizeModalP1" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Confirm Final Review and Notify Applicants</h2>
-            <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
-            <div class="modal-buttons">
-                <button id="backButtonP1" class="back-button">Back</button>
-                <button id="confirmButtonP1" class="confirm-button">Confirm</button>
-            </div>
+
+    <!-- Automated Email #1 Modal for P1: Finalize Review and Notify Applicants -->
+<div id="finalizeModalP1" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('finalizeModalP1')">&times;</span>
+        <h2>Confirm P1 Review Finalization</h2>
+        <p>You are about to finalize the P1 review process using Gmail compose. This will prepare customizable email templates and open Gmail with pre-filled recipient information for both passed and failed applicants. Are you sure you want to proceed?</p>
+        
+        <div style="background-color: #e7f3ff; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <h4 style="color: #0066cc; margin-top: 0;">📧 Gmail Integration Process</h4>
+            <ol style="color: #0066cc; margin-bottom: 0;">
+                <li>Customize email templates for passed applicants</li>
+                <li>Gmail will open with all emails pre-filled</li>
+                <li>Customize email templates for failed applicants</li>
+                <li>Gmail will open with rejection emails pre-filled</li>
+                <li>Send emails directly from Gmail</li>
+                <li>Return here to update database</li>
+            </ol>
+        </div>
+        
+        <div class="modal-buttons">
+            <button id="backButtonP1" class="back-button" onclick="closeModal('finalizeModalP1')">Back</button>
+            <button id="confirmButtonP1" class="confirm-button" onclick="startGmailIntegrationFlow()">Start Gmail Process</button>
         </div>
     </div>
+</div>
+
+<!-- ADD ALL GMAIL MODALS RIGHT AFTER YOUR EXISTING MODAL -->
+<!-- Gmail Compose Modal for Passed Applicants -->
+<div id="emailPassedModal" class="modal">
+    <div class="modal-content" style="width: 85%; max-width: 900px;">
+        <span class="close-button" onclick="closeModal('emailPassedModal')">&times;</span>
+        <h2 style="color: #28a745;">✅ Gmail Compose - Congratulations Email</h2>
+        
+        <div style="background-color: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4 style="color: #155724; margin-top: 0; display: flex; align-items: center;">
+                <i class="fas fa-users" style="margin-right: 10px;"></i>
+                Recipients (<span id="passedRecipientsCount">0</span> applicants):
+            </h4>
+            <div id="passedRecipientsList" style="color: #155724; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 15px; border-radius: 5px;">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+        
+        <div style="margin: 25px 0;">
+            <label for="passedEmailSubject" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                <i class="fas fa-tag" style="margin-right: 8px;"></i>Email Subject:
+            </label>
+            <input 
+                type="text" 
+                id="passedEmailSubject" 
+                style="width: 100%; padding: 12px; border: 2px solid #28a745; border-radius: 6px; font-size: 16px;"
+                value="Congratulations! You've Passed the Initial Screening - Prime Infrastructure"
+            >
+        </div>
+        
+        <div style="margin: 25px 0;">
+            <label for="passedEmailTemplate" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                <i class="fas fa-edit" style="margin-right: 8px;"></i>Email Template:
+            </label>
+            <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                <small style="color: #6c757d;">
+                    <strong>Available placeholders:</strong> 
+                    <code>{applicantName}</code>, <code>{jobTitle}</code>, <code>{companyName}</code>
+                </small>
+            </div>
+            <textarea 
+                id="passedEmailTemplate" 
+                rows="14" 
+                style="width: 100%; padding: 15px; border: 2px solid #28a745; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;"
+                placeholder="Email template will be loaded here..."
+            ></textarea>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #e7f3ff, #f0f8ff); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
+            <h4 style="color: #0066cc; margin-top: 0; display: flex; align-items: center;">
+                <i class="fab fa-google" style="margin-right: 10px; font-size: 20px;"></i>
+                Gmail Integration Ready
+            </h4>
+            <p style="color: #0066cc; margin-bottom: 0; line-height: 1.6;">
+                Clicking "Open Gmail Compose" will open Gmail in a new tab with:<br>
+                • <strong>All recipient emails</strong> automatically added to "To:" field<br>
+                • <strong>Subject line</strong> pre-filled<br>
+                • <strong>Email template</strong> ready in the message body
+            </p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="back-button" onclick="closeModal('emailPassedModal')">
+                <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
+            </button>
+            <button class="confirm-button" onclick="openGmailForPassed()" style="background: linear-gradient(135deg, #db4437, #c23321); border: none; font-size: 16px; padding: 12px 25px;">
+                <i class="fab fa-google" style="margin-right: 8px;"></i>
+                Open Gmail Compose
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Gmail Compose Modal for Failed Applicants -->
+<div id="emailFailedModal" class="modal">
+    <div class="modal-content" style="width: 85%; max-width: 900px;">
+        <span class="close-button" onclick="closeModal('emailFailedModal')">&times;</span>
+        <h2 style="color: #dc3545;">❌ Gmail Compose - Notification Email</h2>
+        
+        <div style="background-color: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4 style="color: #721c24; margin-top: 0; display: flex; align-items: center;">
+                <i class="fas fa-users" style="margin-right: 10px;"></i>
+                Recipients (<span id="failedRecipientsCount">0</span> applicants):
+            </h4>
+            <div id="failedRecipientsList" style="color: #721c24; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 15px; border-radius: 5px;">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+        
+        <div style="margin: 25px 0;">
+            <label for="failedEmailSubject" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                <i class="fas fa-tag" style="margin-right: 8px;"></i>Email Subject:
+            </label>
+            <input 
+                type="text" 
+                id="failedEmailSubject" 
+                style="width: 100%; padding: 12px; border: 2px solid #dc3545; border-radius: 6px; font-size: 16px;"
+                value="Thank You for Your Interest - Prime Infrastructure"
+            >
+        </div>
+        
+        <div style="margin: 25px 0;">
+            <label for="failedEmailTemplate" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                <i class="fas fa-edit" style="margin-right: 8px;"></i>Email Template:
+            </label>
+            <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                <small style="color: #6c757d;">
+                    <strong>Available placeholders:</strong> 
+                    <code>{applicantName}</code>, <code>{jobTitle}</code>, <code>{companyName}</code>
+                </small>
+            </div>
+            <textarea 
+                id="failedEmailTemplate" 
+                rows="14" 
+                style="width: 100%; padding: 15px; border: 2px solid #dc3545; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;"
+                placeholder="Email template will be loaded here..."
+            ></textarea>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #e7f3ff, #f0f8ff); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
+            <h4 style="color: #0066cc; margin-top: 0; display: flex; align-items: center;">
+                <i class="fab fa-google" style="margin-right: 10px; font-size: 20px;"></i>
+                Gmail Integration Ready
+            </h4>
+            <p style="color: #0066cc; margin-bottom: 0; line-height: 1.6;">
+                Clicking "Open Gmail Compose" will open Gmail in a new tab with:<br>
+                • <strong>All recipient emails</strong> automatically added to "To:" field<br>
+                • <strong>Subject line</strong> pre-filled<br>
+                • <strong>Email template</strong> ready in the message body
+            </p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="back-button" onclick="closeModal('emailFailedModal')">
+                <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
+            </button>
+            <button class="confirm-button" onclick="openGmailForFailed()" style="background: linear-gradient(135deg, #db4437, #c23321); border: none; font-size: 16px; padding: 12px 25px;">
+                <i class="fab fa-google" style="margin-right: 8px;"></i>
+                Open Gmail Compose
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Status Update Modal -->
+<div id="statusUpdateModal" class="modal">
+    <div class="modal-content" style="width: 70%; max-width: 600px;">
+        <h2 style="text-align: center; color: #007bff;">
+            <i class="fab fa-google" style="color: #db4437; margin-right: 10px;"></i>
+            Gmail Compose Opened
+        </h2>
+        
+        <div style="margin: 30px 0; text-align: center;">
+            <div style="font-size: 64px; color: #db4437; margin-bottom: 20px;">
+                <i class="fab fa-google"></i>
+            </div>
+            <p style="font-size: 18px; margin-bottom: 20px;">Gmail compose window has been opened in a new tab with your email pre-filled.</p>
+            
+            <div style="background-color: #e3f2fd; padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 5px solid #2196f3;">
+                <h4 style="color: #1976d2; margin-top: 0;">📋 Next Steps:</h4>
+                <ol style="text-align: left; margin: 15px 0; color: #1976d2; line-height: 1.8;">
+                    <li><strong>Switch to Gmail tab</strong> - Check if Gmail opened correctly</li>
+                    <li><strong>Review recipient list</strong> - Verify all emails are in "To:" field</li>
+                    <li><strong>Check subject line</strong> - Modify if needed</li>
+                    <li><strong>Review email content</strong> - Make final adjustments</li>
+                    <li><strong>Send emails</strong> - Click Gmail's send button</li>
+                    <li><strong>Return here</strong> - Click "Update Database" below</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #f39c12;">
+            <h4 style="color: #856404; margin-top: 0; display: flex; align-items: center;">
+                <i class="fas fa-exclamation-triangle" style="margin-right: 10px;"></i>
+                Important
+            </h4>
+            <p style="color: #856404; margin-bottom: 0; line-height: 1.6;">
+                <strong>After sending emails in Gmail</strong>, return here and click "Update Database" to finalize the applicant statuses in your system.
+            </p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="back-button" onclick="closeModal('statusUpdateModal')">
+                <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel Process
+            </button>
+            <button class="confirm-button" onclick="updateApplicantStatuses()" style="background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px; padding: 12px 25px;">
+                <i class="fas fa-database" style="margin-right: 8px;"></i>
+                Update Database
+            </button>
+        </div>
+    </div>
+</div>
 <!-- P1 - Line Manager Review Modal -->
 <div id="lineManagerInitialScreeningModalHtml" class="review-modal">
     <div class="review-modal-content">
@@ -1275,6 +1481,7 @@ table.tracking-table tbody:empty::after {
     </script>
 
 <script>
+
   document.addEventListener("DOMContentLoaded", function () {
     const evaluationButtons = document.querySelectorAll(".btn-evaluation");
 
@@ -6235,6 +6442,586 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Automated Email #1: P - 1 PASSED CODES
+
+// Global variables to store applicant data
+let currentPassedApplicants = [];
+let currentFailedApplicants = [];
+let emailTemplates = {};
+let emailsToUpdate = { passed: [], failed: [] };
+
+// NEW function to start Gmail integration from your existing modal
+function startGmailIntegrationFlow() {
+    console.log("Starting Gmail integration flow from existing modal...");
+    
+    // Close the existing confirmation modal
+    closeModal('finalizeModalP1');
+    
+    // Now start the Gmail integration process
+    finalizeP1Review();
+}
+
+// UPDATE your existing confirm button event listener
+// Find where you have the confirmButtonP1 event listener and replace it with this:
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Update the existing P1 confirm button to use Gmail flow
+    const confirmButtonP1 = document.getElementById('confirmButtonP1');
+    if (confirmButtonP1) {
+        // Remove existing event listeners by cloning the button
+        const newConfirmButton = confirmButtonP1.cloneNode(true);
+        confirmButtonP1.parentNode.replaceChild(newConfirmButton, confirmButtonP1);
+        
+        // Add new event listener that starts Gmail integration
+        newConfirmButton.addEventListener('click', startGmailIntegrationFlow);
+    }
+    
+    // Also update any other buttons that trigger P1 finalization
+    const finalizeP1Buttons = document.querySelectorAll('#finalizeP1Button, button[onclick*="finalizeP1"]');
+    finalizeP1Buttons.forEach(button => {
+        button.addEventListener('click', function() {
+            if (checkAllApplicantsMarked('P1')) {
+                // Show your existing modal first
+                document.getElementById('finalizeModalP1').style.display = 'block';
+            } else {
+                alert("Not all P1 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+            }
+        });
+    });
+});
+// Modified finalizeP1Review function - REPLACE the existing one
+function finalizeP1Review() {
+    console.log("Starting P1 review finalization with Gmail compose integration...");
+
+    // Extract status updates from rows in the declared results table
+    const declaredResultsTable = document.getElementById("declaredResultsTable");
+    const rows = declaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
+
+    // Arrays to store passed and failed user IDs
+    const passedUserIds = [];
+    const failedUserIds = [];
+
+    // Process each row to determine which users passed and which failed
+    rows.forEach(row => {
+        // Skip message rows
+        if (row.querySelector('td[colspan]')) return;
+        
+        const statusCell = row.querySelector('td:nth-child(7)');
+        const userId = row.getAttribute('data-userid');
+        
+        if (statusCell && userId) {
+            const statusText = statusCell.textContent.trim();
+            
+            // Only include P1 rows
+            if (statusText.includes('P1')) {
+                if (statusText.includes('PASSED')) {
+                    passedUserIds.push(userId);
+                    console.log(`Added ${userId} to passed list (${statusText})`);
+                } else if (statusText.includes('FAILED')) {
+                    failedUserIds.push(userId);
+                    console.log(`Added ${userId} to failed list (${statusText})`);
+                }
+            }
+        }
+    });
+
+    // If no applicants are selected, show an error
+    if (passedUserIds.length === 0 && failedUserIds.length === 0) {
+        alert("No P1 applicants found with PASSED or FAILED status.");
+        closeModal('notifyApplicantsModal');
+        return;
+    }
+
+    console.log(`Preparing Gmail compose for: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+
+    // Show loading indicator
+    const confirmButton = document.getElementById('confirmButton');
+    if (confirmButton) {
+        confirmButton.textContent = "Loading email data...";
+        confirmButton.disabled = true;
+    }
+
+    // Store the user IDs for database updates later
+    emailsToUpdate = {
+        passed: passedUserIds,
+        failed: failedUserIds
+    };
+
+    // Fetch applicant data and email templates
+    Promise.all([
+        fetchApplicantDataForEmails(passedUserIds, failedUserIds),
+        fetchEmailTemplates()
+    ])
+    .then(([applicantData, templates]) => {
+        currentPassedApplicants = applicantData.passedApplicants || [];
+        currentFailedApplicants = applicantData.failedApplicants || [];
+        emailTemplates = templates;
+        
+        // Close the confirmation modal
+        closeModal('notifyApplicantsModal');
+        
+        // Start the Gmail compose process
+        if (currentPassedApplicants.length > 0) {
+            showPassedEmailModal();
+        } else if (currentFailedApplicants.length > 0) {
+            showFailedEmailModal();
+        } else {
+            alert("No applicant data found for email composition.");
+        }
+    })
+    .catch(error => {
+        console.error("Error preparing email composition:", error);
+        alert("Error preparing email composition: " + error.message);
+        
+        // Reset button state
+        if (confirmButton) {
+            confirmButton.textContent = "Confirm";
+            confirmButton.disabled = false;
+        }
+    });
+}
+
+// Fetch applicant data for email composition
+async function fetchApplicantDataForEmails(passedUserIds, failedUserIds) {
+    try {
+        const response = await fetch('/linemanager/applicant-tracker-jobposition/finalizeP1Review', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                passedUserIds: passedUserIds,
+                failedUserIds: failedUserIds
+            }),
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to fetch applicant data');
+        }
+        
+        return {
+            passedApplicants: data.passedApplicants || [],
+            failedApplicants: data.failedApplicants || []
+        };
+        
+    } catch (error) {
+        console.error("Error fetching applicant data:", error);
+        throw error;
+    }
+}
+
+// Fetch email templates
+async function fetchEmailTemplates() {
+    try {
+        const response = await fetch('/linemanager/applicant-tracker-jobposition/getEmailTemplates');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to fetch email templates');
+        }
+        
+        return data.templates;
+        
+    } catch (error) {
+        console.error("Error fetching email templates:", error);
+        // Return default templates if fetch fails
+        return {
+            passed: {
+                subject: 'Congratulations! You\'ve Passed the Initial Screening - Prime Infrastructure',
+                template: 'Dear {applicantName},\n\nCongratulations! You have passed the initial screening for the {jobTitle} position at {companyName}.\n\nBest regards,\n{companyName} Team'
+            },
+            failed: {
+                subject: 'Thank You for Your Interest - Prime Infrastructure',
+                template: 'Dear {applicantName},\n\nThank you for your interest in the {jobTitle} position at {companyName}. We regret to inform you that we have decided to move forward with other candidates.\n\nBest regards,\n{companyName} Team'
+            }
+        };
+    }
+}
+
+// Show passed applicants email modal
+function showPassedEmailModal() {
+    console.log("Showing passed applicants Gmail compose modal");
+    
+    // Populate recipients list
+    const recipientsList = document.getElementById('passedRecipientsList');
+    const recipientsCount = document.getElementById('passedRecipientsCount');
+    
+    if (recipientsList && currentPassedApplicants.length > 0) {
+        recipientsCount.textContent = currentPassedApplicants.length;
+        
+        recipientsList.innerHTML = currentPassedApplicants.map(applicant => `
+            <div class="recipient-item">
+                <div>
+                    <div class="recipient-name">${applicant.name}</div>
+                    <div class="recipient-email">${applicant.email}</div>
+                    <div class="recipient-job" style="font-size: 12px; color: #28a745; margin-top: 4px;">${applicant.jobTitle}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // Set default subject and template
+    document.getElementById('passedEmailSubject').value = emailTemplates.passed?.subject || 'Congratulations! You\'ve Passed the Initial Screening - Prime Infrastructure';
+    document.getElementById('passedEmailTemplate').value = emailTemplates.passed?.template || 'Congratulations! You have passed the initial screening.';
+    
+    // Show the modal
+    document.getElementById('emailPassedModal').style.display = 'block';
+}
+
+// Show failed applicants email modal
+function showFailedEmailModal() {
+    console.log("Showing failed applicants Gmail compose modal");
+    
+    // Populate recipients list
+    const recipientsList = document.getElementById('failedRecipientsList');
+    const recipientsCount = document.getElementById('failedRecipientsCount');
+    
+    if (recipientsList && currentFailedApplicants.length > 0) {
+        recipientsCount.textContent = currentFailedApplicants.length;
+        
+        recipientsList.innerHTML = currentFailedApplicants.map(applicant => `
+            <div class="recipient-item">
+                <div>
+                    <div class="recipient-name">${applicant.name}</div>
+                    <div class="recipient-email">${applicant.email}</div>
+                    <div class="recipient-job" style="font-size: 12px; color: #dc3545; margin-top: 4px;">${applicant.jobTitle}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // Set default subject and template
+    document.getElementById('failedEmailSubject').value = emailTemplates.failed?.subject || 'Thank You for Your Interest - Prime Infrastructure';
+    document.getElementById('failedEmailTemplate').value = emailTemplates.failed?.template || 'Thank you for your interest in our position.';
+    
+    // Show the modal
+    document.getElementById('emailFailedModal').style.display = 'block';
+}
+
+// Open Gmail compose for passed applicants
+function openGmailForPassed() {
+    const subject = document.getElementById('passedEmailSubject').value;
+    const template = document.getElementById('passedEmailTemplate').value;
+    
+    if (!subject || !template) {
+        alert("Please fill in both subject and template fields.");
+        return;
+    }
+    
+    if (!confirm(`This will open Gmail with ${currentPassedApplicants.length} passed applicants in the "To:" field. Continue?`)) {
+        return;
+    }
+    
+    // Build Gmail compose URL
+    const gmailUrl = buildGmailComposeUrl(currentPassedApplicants, subject, template);
+    
+    console.log('Opening Gmail for passed applicants:', gmailUrl);
+    
+    // Open Gmail in new tab
+    const gmailWindow = window.open(gmailUrl, '_blank');
+    
+    if (!gmailWindow) {
+        alert('Please allow pop-ups for this site to open Gmail compose window.');
+        return;
+    }
+    
+    // Close the modal
+    closeModal('emailPassedModal');
+    
+    // If there are also failed applicants, show their modal next
+    if (currentFailedApplicants.length > 0) {
+        setTimeout(() => {
+            showFailedEmailModal();
+        }, 1000);
+    } else {
+        // Show status update modal if no failed applicants
+        setTimeout(() => {
+            showStatusUpdateModal();
+        }, 2000);
+    }
+}
+
+// Open Gmail compose for failed applicants
+function openGmailForFailed() {
+    const subject = document.getElementById('failedEmailSubject').value;
+    const template = document.getElementById('failedEmailTemplate').value;
+    
+    if (!subject || !template) {
+        alert("Please fill in both subject and template fields.");
+        return;
+    }
+    
+    if (!confirm(`This will open Gmail with ${currentFailedApplicants.length} failed applicants in the "To:" field. Continue?`)) {
+        return;
+    }
+    
+    // Build Gmail compose URL
+    const gmailUrl = buildGmailComposeUrl(currentFailedApplicants, subject, template);
+    
+    console.log('Opening Gmail for failed applicants:', gmailUrl);
+    
+    // Open Gmail in new tab
+    const gmailWindow = window.open(gmailUrl, '_blank');
+    
+    if (!gmailWindow) {
+        alert('Please allow pop-ups for this site to open Gmail compose window.');
+        return;
+    }
+    
+    // Close the modal and show status update modal
+    closeModal('emailFailedModal');
+    
+    // Show status update modal
+    setTimeout(() => {
+        showStatusUpdateModal();
+    }, 2000);
+}
+
+// Build Gmail compose URL with pre-filled data
+function buildGmailComposeUrl(applicants, subject, template) {
+    // Extract all email addresses
+    const emailAddresses = applicants.map(applicant => applicant.email).join(',');
+    
+    // Process template for multiple recipients
+    let processedTemplate = template;
+    if (applicants.length > 0) {
+        if (applicants.length > 1) {
+            processedTemplate = template
+                .replace(/\{applicantName\}/g, '[Recipient Name]')
+                .replace(/\{jobTitle\}/g, '[Position Applied]')
+                .replace(/\{companyName\}/g, 'Prime Infrastructure');
+        } else {
+            processedTemplate = template
+                .replace(/\{applicantName\}/g, applicants[0].name)
+                .replace(/\{jobTitle\}/g, applicants[0].jobTitle)
+                .replace(/\{companyName\}/g, 'Prime Infrastructure');
+        }
+    }
+    
+    const plainTextBody = htmlToPlainText(processedTemplate);
+    
+    // Try multiple URL formats - Gmail can be finicky
+    const specificAccount = 'recruitmentprime7@gmail.com';
+    
+    // Try different URL approaches
+    const urlOptions = [
+        // Option 1: Account-specific subdomain approach
+        `https://mail.google.com/mail/u/0/?authuser=${encodeURIComponent(specificAccount)}&view=cm&to=${encodeURIComponent(emailAddresses)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`,
+        
+        // Option 2: Direct account number approach  
+        `https://mail.google.com/mail/u/1/?view=cm&to=${encodeURIComponent(emailAddresses)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`,
+        
+        // Option 3: Account hash approach
+        `https://mail.google.com/mail/u/${encodeURIComponent(specificAccount)}/?view=cm&to=${encodeURIComponent(emailAddresses)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`
+    ];
+    
+    // Use the first option (most reliable)
+    const gmailUrl = urlOptions[0];
+    
+    console.log('🔥 Trying Gmail URL:', gmailUrl);
+    console.log('📧 Target account:', specificAccount);
+    
+    return gmailUrl;
+}
+
+// Convert HTML template to plain text
+function htmlToPlainText(html) {
+    // Create a temporary div to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    // Remove script and style elements
+    const scripts = tempDiv.querySelectorAll('script, style');
+    scripts.forEach(element => element.remove());
+    
+    // Get text content and clean it up
+    let plainText = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Clean up extra whitespace and line breaks
+    plainText = plainText
+        .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
+        .replace(/\n\s*\n/g, '\n\n')   // Replace multiple line breaks with double line break
+        .trim();
+    
+    // Add some basic formatting for better readability in plain text
+    plainText = plainText
+        .replace(/Dear\s+/gi, '\nDear ')
+        .replace(/Best regards/gi, '\n\nBest regards')
+        .replace(/Thank you/gi, '\n\nThank you')
+        .replace(/Congratulations/gi, '\n\nCongratulations')
+        .replace(/What's Next\?/gi, '\n\nWhat\'s Next?')
+        .replace(/•/g, '\n• ')
+        .replace(/- /g, '\n- ');
+    
+    return plainText;
+}
+
+// Show status update modal
+function showStatusUpdateModal() {
+    console.log('Showing status update modal');
+    document.getElementById('statusUpdateModal').style.display = 'block';
+}
+
+// Update applicant statuses in database after emails are sent via Gmail
+function updateApplicantStatuses() {
+    if (!confirm('Have you successfully sent the emails via Gmail? This will update the applicant statuses in the database.')) {
+        return;
+    }
+    
+    console.log('Updating applicant statuses in database...');
+    console.log('Passed userIds:', emailsToUpdate.passed);
+    console.log('Failed userIds:', emailsToUpdate.failed);
+    
+    // Show loading state
+    const updateButton = document.querySelector('#statusUpdateModal .confirm-button');
+    const originalText = updateButton.textContent;
+    updateButton.textContent = 'Updating Database...';
+    updateButton.disabled = true;
+    
+    // Make API call to update statuses
+    fetch('/linemanager/applicant-tracker-jobposition/updateP1Statuses', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            passedUserIds: emailsToUpdate.passed,
+            failedUserIds: emailsToUpdate.failed
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Applicant statuses updated successfully!\n\nUpdated:\n- ${data.passedUpdated || 0} passed applicants\n- ${data.failedUpdated || 0} failed applicants`);
+            
+            // Close modal
+            closeModal('statusUpdateModal');
+            
+            // Clear global variables
+            currentPassedApplicants = [];
+            currentFailedApplicants = [];
+            emailsToUpdate = { passed: [], failed: [] };
+            
+            // Refresh the view
+            setTimeout(() => {
+                const activeFilter = document.querySelector(".filter-button.active");
+                if (activeFilter) {
+                    activeFilter.click();
+                } else {
+                    document.getElementById("filter-all").click();
+                }
+            }, 500);
+        } else {
+            throw new Error(data.message || 'Failed to update statuses');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating statuses:', error);
+        alert('Error updating applicant statuses: ' + error.message);
+        
+        // Reset button state
+        updateButton.textContent = originalText;
+        updateButton.disabled = false;
+    });
+}
+
+// Handle individual email compose (for testing or single applicants)
+function openGmailForSingleApplicant(applicant, subject, template) {
+    const processedTemplate = template
+        .replace(/\{applicantName\}/g, applicant.name)
+        .replace(/\{jobTitle\}/g, applicant.jobTitle)
+        .replace(/\{companyName\}/g, 'Prime Infrastructure');
+    
+    const plainTextBody = htmlToPlainText(processedTemplate);
+    
+    const baseUrl = 'https://mail.google.com/mail/?view=cm';
+    const params = new URLSearchParams({
+        to: applicant.email,
+        subject: subject,
+        body: plainTextBody
+    });
+    
+    const gmailUrl = `${baseUrl}&${params.toString()}`;
+    console.log('Single applicant Gmail URL:', gmailUrl);
+    
+    window.open(gmailUrl, '_blank');
+}
+
+// Test function to verify Gmail compose functionality
+function testGmailCompose() {
+    const testApplicant = {
+        name: 'Test User',
+        email: 'test@example.com',
+        jobTitle: 'Test Position'
+    };
+    
+    const testSubject = 'Test Email Subject';
+    const testTemplate = 'Dear {applicantName},\n\nThis is a test email for the {jobTitle} position at {companyName}.\n\nBest regards,\nTest Team';
+    
+    openGmailForSingleApplicant(testApplicant, testSubject, testTemplate);
+}
+
+// Update existing confirm button event listener to use Gmail flow
+// This should replace the existing finalizeP1Review event listener
+document.addEventListener('DOMContentLoaded', function() {
+    // Update any existing P1 finalization buttons to use the Gmail flow
+    const updateP1ButtonEventListeners = () => {
+        // Look for finalize P1 buttons
+        const p1Buttons = document.querySelectorAll('#finalizeP1Button, button[onclick*="finalizeP1Review"]');
+        
+        p1Buttons.forEach(button => {
+            // Remove existing event listeners by cloning
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            // Add new Gmail-enabled event listener
+            newButton.addEventListener('click', function() {
+                if (checkAllApplicantsMarked('P1')) {
+                    document.getElementById('notifyApplicantsModal').style.display = 'block';
+                    
+                    // Update modal content for Gmail integration
+                    const modalTitle = document.querySelector('#notifyApplicantsModal h2');
+                    if (modalTitle) {
+                        modalTitle.textContent = "Confirm P1 Review Finalization";
+                    }
+                    
+                    const modalParagraph = document.querySelector('#notifyApplicantsModal p');
+                    if (modalParagraph) {
+                        modalParagraph.textContent = "You are about to finalize the P1 review process using Gmail compose. This will prepare customizable email templates and open Gmail with pre-filled recipient information. Are you sure you want to proceed?";
+                    }
+                    
+                    // Update confirm button for Gmail flow
+                    const confirmButton = document.getElementById('confirmButton');
+                    if (confirmButton) {
+                        const newConfirmButton = confirmButton.cloneNode(true);
+                        confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+                        
+                        newConfirmButton.addEventListener('click', finalizeP1Review);
+                    }
+                } else {
+                    alert("Not all P1 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+                }
+            });
+        });
+    };
+    
+    // Run initially and after dynamic content updates
+    updateP1ButtonEventListeners();
+    
+    // Re-run when filter buttons are clicked (in case buttons are recreated)
+    const filterButtons = document.querySelectorAll('.filter-button');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            setTimeout(updateP1ButtonEventListeners, 500);
+        });
+    });
+});
+
+console.log('Gmail integration JavaScript loaded successfully');
+
 
 </script>
 </body>

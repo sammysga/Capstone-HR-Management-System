@@ -1,4 +1,5 @@
-// utils/emailService.js
+// Complete utils/emailService.js with Gmail Integration Support
+
 const nodemailer = require('nodemailer');
 
 // Email configuration - reads from environment variables
@@ -240,7 +241,7 @@ const emailTemplates = {
     }
 };
 
-// Main email sending function
+// Main email sending function (kept for backward compatibility)
 const sendStatusUpdateEmail = async (applicantEmail, applicantName, jobTitle, status) => {
     try {
         console.log(`📧 [Email Service] Preparing to send email for status: ${status}`);
@@ -356,8 +357,99 @@ const sendTestEmail = async (testEmail) => {
     }
 };
 
+// Custom email function for direct SMTP sending (if needed)
+const sendCustomEmail = async (email, subject, htmlTemplate, applicantName, jobTitle) => {
+    try {
+        const transporter = createTransporter();
+        
+        // Verify SMTP connection
+        try {
+            await transporter.verify();
+            console.log('✅ [Email Service] SMTP connection verified for custom email');
+        } catch (verifyError) {
+            console.error('❌ [Email Service] SMTP verification failed:', verifyError);
+            return { success: false, error: verifyError.message };
+        }
+        
+        // Replace placeholders in template
+        let processedTemplate = htmlTemplate
+            .replace(/\{applicantName\}/g, applicantName)
+            .replace(/\{jobTitle\}/g, jobTitle)
+            .replace(/\{companyName\}/g, 'Prime Infrastructure');
+        
+        const mailOptions = {
+            from: `"Prime Infrastructure Recruitment" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: subject,
+            html: processedTemplate
+        };
+        
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`✅ [Email Service] Custom email sent successfully: ${info.messageId}`);
+        
+        return { success: true, messageId: info.messageId };
+        
+    } catch (error) {
+        console.error('❌ [Email Service] Error sending custom email:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Get email template data for frontend (Gmail Integration)
+const getEmailTemplateData = () => {
+    return {
+        passed: {
+            subject: 'Congratulations! You\'ve Passed the Initial Screening - Prime Infrastructure',
+            template: `Dear {applicantName},
+
+We are delighted to inform you that you have successfully passed the initial screening process for the {jobTitle} position at {companyName}.
+
+This is an important milestone in your application journey with us. Your qualifications and responses have impressed our initial screening team.
+
+What's Next?
+• You will receive a scheduling link for your interview shortly
+• Our HR team will contact you within 2-3 business days
+• Please log into your applicant portal for updates
+
+We look forward to the next step in our process together.
+
+Best regards,
+{companyName} Recruitment Team
+
+---
+This is an automated message. Please do not reply to this email.`
+        },
+        failed: {
+            subject: 'Thank You for Your Interest - Prime Infrastructure',
+            template: `Dear {applicantName},
+
+Thank you for your interest in the {jobTitle} position at {companyName} and for taking the time to complete our application process.
+
+After careful consideration of your application and qualifications, we regret to inform you that we have decided to move forward with other candidates whose experience more closely matches our current needs.
+
+We want to emphasize that this decision does not reflect on your qualifications or potential. The competition for this position was exceptionally strong, and we had many qualified candidates to consider.
+
+What's Next?
+• We encourage you to apply for future openings that match your skills
+• Your information will remain in our talent database
+• Follow us on our careers page for new opportunities
+• We may contact you if a suitable position becomes available
+
+We wish you the very best in your career search and thank you again for considering {companyName} as a potential employer.
+
+Best regards,
+{companyName} Recruitment Team
+
+---
+This is an automated message. Please do not reply to this email.`
+        }
+    };
+};
+
 module.exports = {
     sendStatusUpdateEmail,
     sendBatchStatusEmails,
-    sendTestEmail
+    sendTestEmail,
+    sendCustomEmail,
+    getEmailTemplateData
 };
