@@ -273,7 +273,7 @@ router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.g
 
 // Routes for P1 review management
 router.post('/linemanager/applicant-tracker-jobposition/finalizeP1Review', lineManagerController.finalizeP1Review);
-router.post('/linemanager/applicant-tracker-jobposition/markAsP1Passed', lineManagerController.markAsP1Passed);
+router.post('/linemanager/applicant-tracker-jobposition/updateP1Statuses', lineManagerController.updateP1Statuses); 
 router.post('/linemanager/applicant-tracker-jobposition/markAsP1Failed',  lineManagerController.markAsP1Failed);
 // Email functionality routes
 router.get('/linemanager/applicant-tracker-jobposition/getEmailTemplates', lineManagerController.getEmailTemplates);

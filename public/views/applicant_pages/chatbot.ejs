@@ -488,10 +488,10 @@
     let initialResponse = {}; // Declare initialResponse globally
     let currentStage = 'job_selection'; // To track the current stage for stepper
 
-    document.addEventListener("DOMContentLoaded", function() {
-        console.log("✅ [Chatbot] Page loaded. Initializing chat...");
+   document.addEventListener("DOMContentLoaded", function() {
+    console.log("✅ [Chatbot] Page loaded. Initializing chat...");
 
-         // Check if returning from calendly
+    // Check if returning from calendly
     const urlParams = new URLSearchParams(window.location.search);
     const fromCalendly = urlParams.get('from') === 'calendly';
     const interviewScheduled = localStorage.getItem('interviewScheduled') === 'true';
@@ -503,31 +503,30 @@
 
     loadChatHistory();
 
-// Handle returning from Calendly scheduling
-if (fromCalendly || interviewScheduled) {
-    console.log("✅ [Chatbot] User returned from Calendly");
-    
-    // Check if this is a P2 interview by examining the URL or localStorage
-    const urlParams = new URLSearchParams(window.location.search);
-    const isP2Interview = urlParams.get('stage') === 'P2' || localStorage.getItem('interviewStage') === 'P2';
-    
-    console.log(`✅ [Chatbot] Interview stage from params: ${isP2Interview ? 'P2' : 'P1'}`);
-    
-    // Wait a moment for chat history to load before adding the thank you message
-    setTimeout(async () => {
-        let thankYouMessage;
+    // Handle returning from Calendly scheduling
+    if (fromCalendly || interviewScheduled) {
+        console.log("✅ [Chatbot] User returned from Calendly");
         
-        // Check if this was a P2 interview
-        if (isP2Interview) {
-            console.log("✅ [Chatbot] Final interview scheduled for P2 PASSED applicant");
+        // Check if this is a P2 interview by examining the URL or localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const isP2Interview = urlParams.get('stage') === 'P2' || localStorage.getItem('interviewStage') === 'P2';
+        
+        console.log(`✅ [Chatbot] Interview stage from params: ${isP2Interview ? 'P2' : 'P1'}`);
+        
+        // Wait a moment for chat history to load before adding the thank you message
+        setTimeout(async () => {
+            let thankYouMessage;
             
-            thankYouMessage = {
-                text: "Thank you for scheduling your final interview! We've sent a confirmation to your email. We look forward to discussing your potential role at Prime Infrastructure in more detail.",
-                applicantStage: "P3 - Awaiting for Line Manager Evaluation"
-            };
-            
-            // Update applicant status in the database using a direct API call
-                // This ensures we're not relying on session data which might be inconsistent
+            // Check if this was a P2 interview
+            if (isP2Interview) {
+                console.log("✅ [Chatbot] Final interview scheduled for P2 PASSED applicant");
+                
+                thankYouMessage = {
+                    text: "Thank you for scheduling your final interview! We've sent a confirmation to your email. We look forward to discussing your potential role at Prime Infrastructure in more detail.",
+                    applicantStage: "P3 - Awaiting for Line Manager Evaluation"
+                };
+                
+                // Update applicant status in the database using a direct API call
                 try {
                     const response = await fetch("/update-applicant-status", {
                         method: "POST",
@@ -601,41 +600,76 @@ if (fromCalendly || interviewScheduled) {
             window.history.replaceState({}, '', url);
         }
     }
-        //loadChatHistory();
 
-        // Event listeners for input
-        document.getElementById("send-button").addEventListener("click", handleUserInput);
-        document.getElementById("user-input").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                handleUserInput();
+    // Event listeners for input
+    document.getElementById("send-button").addEventListener("click", handleUserInput);
+    document.getElementById("user-input").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            handleUserInput();
+        }
+    });
+
+    // Back button functionality
+    document.getElementById("back-button").addEventListener("click", function() {
+        window.location.href = '/'; // Redirect to the about page route
+    });
+
+    // Logout button functionality
+    document.getElementById("logout-button").addEventListener("click", function() {
+        fetch("/logout", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
             }
-        });
-
-        // Back button functionality
-        document.getElementById("back-button").addEventListener("click", function() {
-            window.location.href = '/'; // Redirect to the about page route
-        });
-
-        // Logout button functionality
-        document.getElementById("logout-button").addEventListener("click", function() {
-            fetch("/logout", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = "/applicant/login";
-                } else {
-                    console.error("Logout failed");
-                }
-            })
-            .catch(error => {
-                console.error("Error during logout:", error);
-            });
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = "/applicant/login";
+            } else {
+                console.error("Logout failed");
+            }
+        })
+        .catch(error => {
+            console.error("Error during logout:", error);
         });
     });
+
+    // ✅ SINGLE status check on page load (only once)
+    setTimeout(() => {
+        console.log("🔍 [Chatbot] Initial status check on page load...");
+        
+// Send a status check message to trigger the server-side status checking
+    fetch("/chatbothome", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: "status_check" })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("📊 [Chatbot] Initial status check response:", data);
+            
+ // If we got a meaningful response (not just "Status checked"), display it
+        if (data.response && data.response.text && data.response.text !== "Status checked") {
+            console.log("✅ [Chatbot] New status detected on page load, displaying response");
+            displayBotResponse(data.response);
+                
+                // // If there's a nextMessage (like Calendly link), handle it too
+                // if (data.response.nextMessage) {
+                //     setTimeout(() => {
+                //         displayBotResponse(data.response.nextMessage);
+                //     }, 1000);
+                // }
+            }
+        })
+        .catch(error => {
+            console.error('❌ [Chatbot] Error in initial status check:', error);
+        });
+    }, 2000); // Check once, 2 seconds after page load
+
+    console.log("✅ [Chatbot] Chat initialized without continuous polling");
+});
 
     // Added support for sending a predefined message (for the thank you message)
 async function sendMessageToServer(userInput, predefinedMessage = null) {
@@ -821,52 +855,7 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
         localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
     }
 
-    function loadChatHistory() {
-        const chatMessages = document.getElementById("chat-messages");
-        // Parse the chatData directly from the rendered JSON string
-        let chatHistory = [];
-        try {
-            chatHistory = JSON.parse(document.getElementById("chat-data").textContent) || [];
-        } catch (e) {
-            console.error("Error parsing chat history:", e);
-            chatHistory = [];
-        }
-
-        console.log("✅ [Chatbot] Loading chat history from Supabase:", chatHistory);
-
-        if (chatHistory.length > 0) {
-            // Find the last applicantStage to update the stepper
-            let lastStage = 'job_selection';
-            
-            chatHistory.forEach((chat) => {
-                if (chat.applicantStage) {
-                    lastStage = chat.applicantStage;
-                }
-                
-                if (chat.sender === 'user') {
-                    addMessage("You", chat.message);
-                } else if (chat.sender === 'bot') {
-                    try {
-                        const botMessage = JSON.parse(chat.message);
-                        displayBotResponse(botMessage);
-                    } catch (error) {
-                        addMessage("Bot", chat.message);
-                    }
-                }
-            });
-
-            // Update stepper based on last stage
-            updateStepper(lastStage);
-            console.log("✅ [Chatbot] Chat history successfully rendered.");
-        } else {
-            console.log("✅ [Chatbot] No chat history. Displaying initial message.");
-            displayInitialMessage(initialResponse);
-        }
-
-        // Auto-scroll to bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
+  
     async function uploadFile(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -947,8 +936,7 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
             addMessage("Bot", "Error uploading file. Please try again.");
         }
     }
-
-    function displayBotResponse(response) {
+function displayBotResponse(response, isFromHistory = false) {
     console.log("Bot response:", response);
     const chatMessages = document.getElementById("chat-messages");
 
@@ -968,37 +956,7 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
             updateStepper('resume_upload');
         }
 
-        // Handle Calendly embed
-        if (response.calendlyEmbed) {
-            // Create a container for the Calendly widget
-            const calendlyContainer = document.createElement('div');
-            calendlyContainer.classList.add('calendly-container');
-            calendlyContainer.style.width = '100%';
-            calendlyContainer.style.height = '630px';
-            calendlyContainer.style.marginTop = '15px';
-            calendlyContainer.style.marginBottom = '15px';
-            calendlyContainer.style.borderRadius = '10px';
-            calendlyContainer.style.overflow = 'hidden';
-            calendlyContainer.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-            
-            // Add the Calendly inline widget
-            const calendlyInline = document.createElement('div');
-            calendlyInline.classList.add('calendly-inline-widget');
-            calendlyInline.setAttribute('data-url', 'https://calendly.com/your-calendly-url');
-            calendlyInline.style.minWidth = '320px';
-            calendlyInline.style.height = '630px';
-            
-            calendlyContainer.appendChild(calendlyInline);
-            chatMessages.appendChild(calendlyContainer);
-            
-            // Load the Calendly script
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = 'https://assets.calendly.com/assets/external/widget.js';
-            script.async = true;
-            document.head.appendChild(script);
-        }
-
+        // Handle buttons for main message
         if (response.buttons && response.buttons.length) {
             const buttonContainer = document.createElement('div');
             buttonContainer.classList.add('button-container');
@@ -1013,7 +971,7 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
                     btn.onclick = () => document.getElementById("fileUpload").click();
                 } else if (button.url) {
                     // Handle URL buttons (like Calendly link)
-                    btn.classList.add("job-button", "calendly-button");  // Add the calendly-button class
+                    btn.classList.add("job-button", "calendly-button");
                     btn.style.backgroundColor = "#07ACB9";
                     btn.style.color = "white";
                     btn.innerHTML = `<i class="fas fa-calendar-alt"></i> ${button.text}`;
@@ -1034,42 +992,11 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
             chatMessages.appendChild(buttonContainer);
         }
         
-        // Handle nextMessage if it exists (for follow-up messages like Calendly link)
-        if (response.nextMessage) {
+        // Only handle nextMessage if this is NOT from chat history
+        if (response.nextMessage && !isFromHistory) {
             // Add a slight delay to make it feel more natural
             setTimeout(() => {
                 addMessage("Bot", response.nextMessage.text);
-                
-                // Handle Calendly embed in nextMessage
-                if (response.nextMessage.calendlyEmbed) {
-                    // Create a container for the Calendly widget
-                    const calendlyContainer = document.createElement('div');
-                    calendlyContainer.classList.add('calendly-container');
-                    calendlyContainer.style.width = '100%';
-                    calendlyContainer.style.height = '630px';
-                    calendlyContainer.style.marginTop = '15px';
-                    calendlyContainer.style.marginBottom = '15px';
-                    calendlyContainer.style.borderRadius = '10px';
-                    calendlyContainer.style.overflow = 'hidden';
-                    calendlyContainer.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-                    
-                    // Add the Calendly inline widget
-                    const calendlyInline = document.createElement('div');
-                    calendlyInline.classList.add('calendly-inline-widget');
-                    calendlyInline.setAttribute('data-url', 'https://calendly.com/your-calendly-url');
-                    calendlyInline.style.minWidth = '320px';
-                    calendlyInline.style.height = '630px';
-                    
-                    calendlyContainer.appendChild(calendlyInline);
-                    chatMessages.appendChild(calendlyContainer);
-                    
-                    // Load the Calendly script
-                    const script = document.createElement('script');
-                    script.type = 'text/javascript';
-                    script.src = 'https://assets.calendly.com/assets/external/widget.js';
-                    script.async = true;
-                    document.head.appendChild(script);
-                }
                 
                 if (response.nextMessage.buttons && response.nextMessage.buttons.length) {
                     const nextButtonContainer = document.createElement('div');
@@ -1081,7 +1008,7 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
                         
                         if (button.url) {
                             // Style URL buttons differently
-                            btn.classList.add("job-button", "calendly-button");  // Also add the calendly-button class here
+                            btn.classList.add("job-button", "calendly-button");
                             btn.style.backgroundColor = "#07ACB9";
                             btn.style.color = "white";
                             btn.innerHTML = `<i class="fas fa-calendar-alt"></i> ${button.text}`;
@@ -1107,6 +1034,49 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
         }
     } else {
         addMessage("Bot", response);
+    }
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Update the loadChatHistory function to pass the isFromHistory flag
+function loadChatHistory() {
+    const chatMessages = document.getElementById("chat-messages");
+    let chatHistory = [];
+    try {
+        chatHistory = JSON.parse(document.getElementById("chat-data").textContent) || [];
+    } catch (e) {
+        console.error("Error parsing chat history:", e);
+        chatHistory = [];
+    }
+
+    console.log("✅ [Chatbot] Loading chat history from Supabase:", chatHistory);
+
+    if (chatHistory.length > 0) {
+        let lastStage = 'job_selection';
+        
+        chatHistory.forEach((chat) => {
+            if (chat.applicantStage) {
+                lastStage = chat.applicantStage;
+            }
+            
+            if (chat.sender === 'user') {
+                addMessage("You", chat.message);
+            } else if (chat.sender === 'bot') {
+                try {
+                    const botMessage = JSON.parse(chat.message);
+                    displayBotResponse(botMessage, true); // Pass true to indicate this is from history
+                } catch (error) {
+                    addMessage("Bot", chat.message);
+                }
+            }
+        });
+
+        updateStepper(lastStage);
+        console.log("✅ [Chatbot] Chat history successfully rendered.");
+    } else {
+        console.log("✅ [Chatbot] No chat history. Displaying initial message.");
+        displayInitialMessage(initialResponse);
     }
 
     chatMessages.scrollTop = chatMessages.scrollHeight;
