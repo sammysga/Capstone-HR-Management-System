@@ -27,8 +27,7 @@
     opacity: 0.8;
 }
 
-
-        /* Add this CSS to your existing styles */
+/* Add this CSS to your existing styles */
 
 /* Center the scores table and enhance its appearance */
 .scores-table {
@@ -285,44 +284,6 @@
                     color: white;
                 }
 
-
-        .set-finalize-review-button {
-            position: relative; 
-            margin: 5px 10px;
-            background-color: #124A5C;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            width: auto; 
-            min-width: 200px; 
-            white-space: nowrap;
-            text-align: center; 
-            font-size: 16px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-            transition: background-color 0.3s ease;
-        }
-
-        .set-finalize-review-button:hover {
-            background-color: #B4E3E3;
-            color: #124A5C; 
-        }
-
-
-        .finalize-container {
-            position: fixed;
-            bottom: 20px; 
-            right: 20px;  
-            display: none;
-            background-color: rgba(255, 255, 255, 0.9); 
-            border: 1px solid #ccc; 
-            padding: 10px; 
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 1000; 
-        }
-
         /* Styling for the Modals */
         .modal {
             display: none; 
@@ -554,6 +515,160 @@
     display: none;
 }
 
+/* ========== ADDED P2 STYLES ========== */
+/* P2 Review Section Styles - Similar to Line Manager P1 styles */
+.applicant-status-section {
+    background-color: #FFFFFF;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin: 10px 5px 20px;
+    display: none; /* Hidden by default */
+}
+
+.applicant-status-section h3.subheader {
+    color: #124A5C;
+    margin-bottom: 15px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.applicant-status-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.applicant-status-section .section-header h3.subheader {
+    margin: 0;
+    color: #124A5C;
+    font-weight: bold;
+}
+
+.applicant-status-section .right-section {
+    display: flex;
+    gap: 10px;
+}
+
+.applicant-status-section .right-section button {
+    padding: 10px 15px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    background-color: #124A5C;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.applicant-status-section .right-section button:hover {
+    background-color: #B4E3E3;
+    color: #124A5C;
+}
+
+.applicant-status-section .divider {
+    height: 2px;
+    background-color: #124A5C;
+    margin: 15px 0;
+    width: 100%;
+    display: block;
+    clear: both;
+}
+
+/* Filter button styling */
+.filter-button {
+    padding: 10px 15px;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    background-color: #124A5C;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    min-width: 130px;
+}
+
+.filter-button:hover {
+    background-color: #0d3a47;
+}
+
+.filter-button.active {
+    background-color: #07ACB9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Sort section styling */
+.sort-section {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.sort-section label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.sort-section select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    min-width: 180px;
+}
+
+/* Toggle Status Button - P2 */
+.btn-toggle-status {
+    padding: 6px 12px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-toggle-status:hover {
+    background-color: #5a6268;
+}
+
+.btn-toggle-status.status-passed {
+    background-color: #28a745;
+}
+
+.btn-toggle-status.status-failed {
+    background-color: #dc3545;
+}
+
+/* No data message */
+.no-data-message {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #07ACB9;
+    color: #555;
+    font-size: 16px;
+    font-style: italic;
+}
+
+.no-data-message p {
+    margin: 0;
+}
+
+/* Section header row in tables */
+.section-header-row {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+.section-header-row td {
+    padding: 8px;
+    background-color: #f0f0f0;
+}
+/* ========== END ADDED P2 STYLES ========== */
 
     </style>
 </head>
@@ -584,17 +699,77 @@
                 <input type="text" class="search-bar" id="searchBar" placeholder="Search by Application No., Name, Email, or Status">
                 <button class="search-button"><i class="fas fa-search"></i> Search</button>
             </div>
+            <!-- ========== MODIFIED FILTER SECTION - Added filter-button class ========== -->
             <div class="right-section">
-                <button id="filter-all">All</button>
-                <button id="filter-review">For Review</button>
-                <button id="filter-evaluation">For Evaluation</button>
-                <button id="filter-onboarding">For Onboarding</button>
+                <button id="filter-all" class="filter-button active">All</button>
+                <button id="filter-review" class="filter-button">For Review</button>
+                <button id="filter-evaluation" class="filter-button">For Evaluation</button>
+                <button id="filter-onboarding" class="filter-button">For Onboarding</button>
             </div>            
+            <!-- ========== END MODIFIED FILTER SECTION ========== -->
         </div>
 
+        <!-- ========== ADDED P2 APPLICANT STATUS SECTION ========== -->
+        <!-- P2 Applicant Status Section (Hidden by default, shown when "For Review" is clicked) -->
+        <div class="applicant-status-section" id="applicantStatusSection">
+            <!-- Header section with flexbox -->
+            <div class="section-header">
+                <h3 class="subheader">List of Applicants on <span id="currentPhase">Review</span></h3>
+                <div class="right-section" id="finalizeButtonContainer">
+                    <!-- Finalize button will be added dynamically based on phase -->
+                </div>
+            </div>
+            <!-- Divider placed immediately after the section-header -->
+            <div class="divider"></div>
+            
+            <h4>Awaiting for Action</h4>
+            <table class="tracking-table" id="awaitingActionTable">
+                <thead>
+                    <tr>
+                        <th>Applicant No.</th>
+                        <th>Last Name, First Name</th>
+                        <th>Department</th>
+                        <th>Position Applied</th>
+                        <th>Total Score</th>
+                        <th>Applicant Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Will be populated dynamically -->
+                </tbody>
+            </table>
+
+            <h4>Applicants on <span id="currentPhase2">Review</span> Declared Results</h4>
+            <div class="sort-section">
+                <label for="sortOptions">Sort By:</label>
+                <select id="sortOptions">
+                    <option value="ascending">Score - Ascending</option>
+                    <option value="descending">Score - Descending</option>
+                    <option value="alphabetical">Alphabetically</option>
+                </select>
+            </div>
+            <table class="tracking-table" id="declaredResultsTable">
+                <thead>
+                    <tr>
+                        <th>Applicant No.</th>
+                        <th>Last Name, First Name</th>
+                        <th>Department</th>
+                        <th>Position Applied</th>
+                        <th>Total Score</th>
+                        <th>Applicant Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+        <!-- ========== END ADDED P2 APPLICANT STATUS SECTION ========== -->
         
 <!-- Table for Applicant Data -->
-<table class="tracking-table" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+<table class="tracking-table" id="mainApplicantTable" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
     <thead>
         <tr>
             <th>Applicant No.</th>
@@ -607,7 +782,13 @@
     <tbody>
         <% if (applicants && applicants.length) { %>
             <% applicants.forEach((applicant, index) => { %>
-                <tr>
+                <tr class="applicant-row" 
+                    data-phase="<%= applicant.applicantStatus.startsWith('P1') ? 'P1' : applicant.applicantStatus.startsWith('P2') ? 'P2' : applicant.applicantStatus.startsWith('P3') ? 'P3' : 'other' %>" 
+                    data-status="<%= applicant.applicantStatus %>"
+                    data-userid="<%= applicant.userId %>"
+                    data-applicantid="<%= applicant.applicantId %>"
+                    data-name="<%= applicant.lastName %>, <%= applicant.firstName %>"
+                    data-score="<%= applicant.hrInterviewFormScore || 'N/A' %>">
                     <td><%= index + 1 %></td>
                     <td>
                         <%= applicant.lastName %>, <%= applicant.firstName %>
@@ -677,26 +858,15 @@
         <button class="btn-evaluation">For Evaluation</button>
     </a>
     <% } else if (applicant.applicantStatus.startsWith('P2 - HR Evaluation Accomplished')) { %>
-        <!-- View Evaluation, Reject and Pass Buttons -->
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <a href="/hr/view-evaluation/<%= applicant.applicantId %>">
-                <button class="btn-view-evaluation" style="background-color: white; color: black; border: 1px solid #124A5C; padding: 8px 15px; border-radius: 5px; width: 150px; transition: background-color 0.3s ease, color 0.3s ease;">View Evaluation</button>
-            </a>
-            <div style="display: flex; gap: 10px;">
-                <button 
-                    class="btn-reject" 
-                    onclick="rejectApplicant('<%= applicant.applicantId %>')"
-                    style="background-color: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 70px;">
-                    Reject
-                </button>
-                <button 
-                    class="btn-pass" 
-                    onclick="passApplicant('<%= applicant.applicantId %>')"
-                    style="background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 70px;">
-                    Pass
-                </button>
-            </div>
-        </div>
+        <!-- ========== MODIFIED P2 ACCOMPLISHED SECTION ========== -->
+        <!-- For Review Button that redirects to review filter -->
+        <button 
+            class="btn-review" 
+            onclick="goToP2ReviewFilter()"
+            style="background-color: white; color: black; border: 1px solid #124A5C; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-size: 14px; transition: background-color 0.3s ease, color 0.3s ease; width: 150px; text-align: center;">
+            For Review
+        </button>
+        <!-- ========== END MODIFIED P2 ACCOMPLISHED SECTION ========== -->
     <% } %>
 </div>
                             
@@ -717,7 +887,7 @@
 
 <h2 class="header-section" style="margin-top: 30px; margin-bottom: 10px;">Onboarding</h2>
 
-<table class="tracking-table" style="width: 100%; border-collapse: collapse;">
+<table class="tracking-table" id="onboardingTable" style="width: 100%; border-collapse: collapse;">
     <thead>
         <tr>
             <th>Application No.</th>
@@ -820,13 +990,6 @@
 
 <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
 
-<!-- Finalize button for review -->
-<div class="finalize-container">
-    <button class="set-finalize-review-button" id="finalize-p1">P1: Finalize Review and Notify Applicants</button>
-    <button class="set-finalize-review-button" id="finalize-p2">P2: Finalize Review and Notify Applicants</button>
-    <button class="set-finalize-review-button" id="finalize-p3">P3: Finalize Review and Notify Applicants</button>
-</div>
-
 <!-- Modal for P1: Finalize Review and Notify Applicants -->
 <div id="finalizeModalP1" class="modal">
     <div class="modal-content">
@@ -865,6 +1028,21 @@
         </div>
     </div>
 </div>
+
+<!-- ========== ADDED P2 NOTIFY MODAL ========== -->
+<!-- Modal for notifying P2 applicants -->
+<div id="notifyApplicantsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal('notifyApplicantsModal')">&times;</span>
+        <h2>Confirm Finalization</h2>
+        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+        <div class="modal-buttons">
+            <button id="backButton" class="back-button" onclick="closeModal('notifyApplicantsModal')">Back</button>
+            <button id="confirmButton" class="confirm-button">Confirm</button>
+        </div>
+    </div>
+</div>
+<!-- ========== END ADDED P2 NOTIFY MODAL ========== -->
 
 
 <!-- P1 - HR Choosing Modal -->
@@ -1068,8 +1246,401 @@
     </div>
 </div>
 
+<!-- ========== ADDED APPLICANTS DATA SCRIPT ========== -->
+<!-- Add this right after the head tag, before any scripts -->
+<script id="applicants-data" type="application/json">
+    <% if (typeof applicants !== 'undefined') { %>
+      <%- JSON.stringify(applicants) %>
+    <% } else { %>
+      []
+    <% } %>
+</script>
+<!-- ========== END ADDED APPLICANTS DATA SCRIPT ========== -->
 
 <script>
+
+// ========== ADDED P2 FUNCTIONS START ==========
+
+// Function to go to P2 Review filter
+function goToP2ReviewFilter() {
+    // Trigger the "For Review" filter
+    document.getElementById("filter-review").click();
+}
+
+// Global variables for P2 functionality
+let currentP2PassedApplicants = [];
+let currentP2FailedApplicants = [];
+let pendingP2StatusChanges = {};
+
+// Function to handle P2 pass action from awaiting table
+function p2passApplicant(applicantId) {
+    if (!applicantId) {
+        alert("Error: Invalid Applicant ID");
+        return;
+    }
+
+    // Make API call to update status
+    fetch('/hr/markAsP2Passed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId: applicantId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Record this in the pending changes
+            if (!window.pendingP2StatusChanges) {
+                window.pendingP2StatusChanges = {};
+            }
+            window.pendingP2StatusChanges[applicantId] = 'PASSED';
+            
+            // Move the row from awaiting to declared results
+            moveP2RowToSection(applicantId, 'awaitingActionTable', 'declaredResultsTable');
+            
+            alert("Successfully marked applicant as P2 PASSED!");
+            
+        } else {
+            alert("Error updating applicant status: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
+// Function to handle P2 reject action from awaiting table
+function p2rejectApplicant(applicantId) {
+    if (!applicantId) {
+        alert("Error: Invalid Applicant ID");
+        return;
+    }
+
+    // Make API call to update status
+    fetch('/hr/markAsP2Failed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId: applicantId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Record this in the pending changes
+            if (!window.pendingP2StatusChanges) {
+                window.pendingP2StatusChanges = {};
+            }
+            window.pendingP2StatusChanges[applicantId] = 'FAILED';
+            
+            // Move the row from awaiting to declared results
+            moveP2RowToSection(applicantId, 'awaitingActionTable', 'declaredResultsTable');
+            
+            alert("Successfully marked applicant as P2 FAILED!");
+            
+        } else {
+            alert("Error updating applicant status: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
+// Move P2 row between sections
+function moveP2RowToSection(applicantId, fromTableId, toTableId) {
+    const fromTable = document.getElementById(fromTableId);
+    const toTable = document.getElementById(toTableId);
+    
+    if (!fromTable || !toTable) return;
+    
+    // Find the row in the source table
+    const rows = fromTable.querySelectorAll('tbody tr');
+    let rowToMove = null;
+    
+    for (const row of rows) {
+        if (row.getAttribute('data-applicantid') === applicantId) {
+            rowToMove = row;
+            break;
+        }
+    }
+    
+    if (!rowToMove) return;
+    
+    // Update the status cell
+    const statusCell = rowToMove.querySelector('td:nth-child(6)');
+    if (statusCell) {
+        const isPassed = window.pendingP2StatusChanges[applicantId] === 'PASSED';
+        statusCell.textContent = isPassed ? 'P2 - PASSED (Pending Finalization)' : 'P2 - FAILED (Pending Finalization)';
+    }
+    
+    // Change the actions column to toggle button for declared results
+    if (toTableId === 'declaredResultsTable') {
+        const actionsCell = rowToMove.querySelector('td:last-child');
+        if (actionsCell) {
+            const isPassed = window.pendingP2StatusChanges[applicantId] === 'PASSED';
+            actionsCell.innerHTML = `
+                <button 
+                    class="btn-toggle-status ${isPassed ? 'status-passed' : 'status-failed'}" 
+                    data-applicantid="${applicantId}"
+                    onclick="toggleP2ApplicantStatus(this)"
+                >
+                    ${isPassed ? 'Passed' : 'Failed'}
+                </button>
+            `;
+        }
+    }
+    
+    // Move the row
+    rowToMove.remove();
+    
+    // Add to target table
+    const targetTbody = toTable.querySelector('tbody');
+    
+    // Remove any "no data" message
+    const noDataRow = targetTbody.querySelector('.no-data-message')?.closest('tr');
+    if (noDataRow) {
+        noDataRow.remove();
+    }
+    
+    // Find or create P2 section header
+    let p2Header = targetTbody.querySelector('.section-header-row');
+    if (!p2Header) {
+        p2Header = document.createElement('tr');
+        p2Header.classList.add('section-header-row');
+        p2Header.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants - Declared Results</td>`;
+        targetTbody.appendChild(p2Header);
+    }
+    
+    // Add the row after the header
+    p2Header.insertAdjacentElement('afterend', rowToMove);
+}
+
+// Toggle P2 applicant status between PASSED and FAILED
+function toggleP2ApplicantStatus(button) {
+    const row = button.closest('tr');
+    if (!row) return;
+    
+    const applicantId = button.getAttribute('data-applicantid') || row.getAttribute('data-applicantid');
+    if (!applicantId) {
+        console.error("Cannot toggle status: Missing applicantId");
+        alert("Error: Cannot identify the applicant to update status");
+        return;
+    }
+    
+    // Get current status
+    const statusCell = row.querySelector('td:nth-child(6)');
+    if (!statusCell) return;
+    
+    const currentStatus = statusCell.textContent.trim();
+    console.log(`Toggling P2 status for applicantId ${applicantId}, current status: ${currentStatus}`);
+    
+    // Toggle between PASSED and FAILED
+    let newStatus;
+    let apiEndpoint;
+    
+    if (currentStatus.includes('PASSED')) {
+        // If already PASSED, change to FAILED
+        newStatus = 'P2 - FAILED (Pending Finalization)';
+        apiEndpoint = 'markAsP2Failed';
+        button.classList.remove('status-passed');
+        button.classList.add('status-failed');
+        button.textContent = 'Failed';
+    } else {
+        // Default to PASSED
+        newStatus = 'P2 - PASSED (Pending Finalization)';
+        apiEndpoint = 'markAsP2Passed';
+        button.classList.remove('status-failed');
+        button.classList.add('status-passed');
+        button.textContent = 'Passed';
+    }
+    
+    // Update the status cell
+    statusCell.textContent = newStatus;
+    
+    // Store the pending status change
+    if (!window.pendingP2StatusChanges) {
+        window.pendingP2StatusChanges = {};
+    }
+    
+    window.pendingP2StatusChanges[applicantId] = newStatus.includes('PASSED') ? 'PASSED' : 'FAILED';
+    
+    console.log(`P2 status change for applicantId ${applicantId} to ${newStatus} is pending finalization`);
+    
+    // Make API call to update the temporary status
+    fetch(`/hr/${apiEndpoint}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId: applicantId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error(`Error updating P2 status: ${data.message || 'Unknown error'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error calling P2 status API:', error);
+    });
+}
+
+// Finalize P2 Review
+function finalizeP2Review() {
+    console.log("Finalizing P2 review process...");
+    
+    // Extract status updates from rows in the declared results table
+    const declaredResultsTable = document.getElementById("declaredResultsTable");
+    const rows = declaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
+    
+    // Arrays to store passed and failed applicant IDs
+    const passedApplicantIds = [];
+    const failedApplicantIds = [];
+    
+    // Process each row to determine which users passed and which failed
+    rows.forEach(row => {
+        // Skip message rows
+        if (row.querySelector('td[colspan]')) return;
+        
+        const statusCell = row.querySelector('td:nth-child(6)');
+        const applicantId = row.getAttribute('data-applicantid');
+        
+        if (statusCell && applicantId) {
+            const statusText = statusCell.textContent.trim();
+            
+            // Only include P2 rows
+            if (statusText.includes('P2')) {
+                if (statusText.includes('PASSED')) {
+                    passedApplicantIds.push(applicantId);
+                    console.log(`Added ${applicantId} to passed list (${statusText})`);
+                } else if (statusText.includes('FAILED')) {
+                    failedApplicantIds.push(applicantId);
+                    console.log(`Added ${applicantId} to failed list (${statusText})`);
+                }
+            }
+        }
+    });
+    
+    // If no applicants are selected, show an error
+    if (passedApplicantIds.length === 0 && failedApplicantIds.length === 0) {
+        alert("No P2 applicants found with PASSED or FAILED status.");
+        closeModal('notifyApplicantsModal');
+        return;
+    }
+    
+    console.log(`Finalizing P2 Review: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
+    
+    // Show confirmation with counts
+    const confirmMessage = `You are about to finalize the P2 review process for ${passedApplicantIds.length + failedApplicantIds.length} applicants:
+- ${passedApplicantIds.length} will be PASSED and proceed to next stage
+- ${failedApplicantIds.length} will be FAILED and notified of rejection
+
+This action is irreversible. Are you sure you want to proceed?`;
+    
+    if (!confirm(confirmMessage)) {
+        closeModal('notifyApplicantsModal');
+        return;
+    }
+    
+    // Show loading indicator
+    const confirmButton = document.getElementById('confirmButton');
+    if (confirmButton) {
+        confirmButton.textContent = "Processing...";
+        confirmButton.disabled = true;
+    }
+    
+    // Send API request for P2 finalization
+    fetch('/hr/finalizeP2Review', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            passedApplicantIds: passedApplicantIds,
+            failedApplicantIds: failedApplicantIds
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`P2 Review finalization complete! All applicants have been notified of their status.
+            
+${data.passedCount} applicants passed
+${data.failedCount} applicants failed`);
+            
+            // Clear the pending status changes after finalization
+            window.pendingP2StatusChanges = {};
+            
+            closeModal('notifyApplicantsModal');
+            
+            // Refresh the view after finalization
+            setTimeout(() => {
+                // Trigger current filter to refresh the view
+                const activeFilter = document.querySelector(".filter-button.active");
+                if (activeFilter) {
+                    activeFilter.click();
+                } else {
+                    // Default to "all" if no active filter found
+                    document.getElementById("filter-all").click();
+                }
+            }, 500);
+        } else {
+            alert("Error finalizing P2 review: " + (data.message || "Unknown error"));
+            
+            // Reset button state
+            if (confirmButton) {
+                confirmButton.textContent = "Confirm";
+                confirmButton.disabled = false;
+            }
+        }
+    })
+    .catch(error => {
+        console.error("Error finalizing P2 review:", error);
+        alert("Failed to finalize P2 review. Please try again.");
+        
+        // Reset button state
+        if (confirmButton) {
+            confirmButton.textContent = "Confirm";
+            confirmButton.disabled = false;
+        }
+    });
+}
+
+// Check if all P2 applicants have been marked
+function checkAllP2ApplicantsMarked() {
+    const declaredResultsTable = document.getElementById("declaredResultsTable");
+    if (!declaredResultsTable) return true;
+    
+    const rows = declaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
+    if (rows.length === 0) return true; // No rows to check
+    
+    let relevantRows = Array.from(rows).filter(row => {
+        const statusCell = row.querySelector('td:nth-child(6)');
+        return statusCell && statusCell.textContent.includes('P2');
+    });
+    
+    if (relevantRows.length === 0) return true; // No P2 rows
+    
+    // Check each P2 row for PASSED/FAILED status
+    return relevantRows.every(row => {
+        // Skip message rows
+        if (row.querySelector('td[colspan]')) {
+            return true;
+        }
+        
+        const statusCell = row.querySelector('td:nth-child(6)');
+        if (!statusCell) return true;
+        
+        const statusText = statusCell.textContent;
+        return statusText.includes('PASSED') || statusText.includes('FAILED');
+    });
+}
+
+// ========== ADDED P2 FUNCTIONS END ==========
 
 // Function to handle rejecting an applicant
 function rejectApplicant(applicantId) {
@@ -1325,83 +1896,439 @@ function confirmHRInitialScreeningModal() {
     });
     
     document.addEventListener("DOMContentLoaded", function () {
+// ========== MODIFIED FILTER FUNCTION TO INCLUDE P2 REVIEW ==========    
 // Function to filter rows based on status
 function filterRowsByStatus(status) {
     const rows = document.querySelectorAll('.tracking-table tbody tr');
+    const mainTable = document.getElementById('mainApplicantTable');
+    const onboardingTable = document.getElementById('onboardingTable');
+    const applicantStatusSection = document.getElementById('applicantStatusSection');
     
-    rows.forEach(row => {
-        // Get the status text from the cell
-        const statusCell = row.querySelector('td:last-child');
-        const statusText = statusCell ? statusCell.textContent : '';
+    // Hide/show applicant status section based on filter
+    if (applicantStatusSection) {
+        applicantStatusSection.style.display = (status === 'review') ? 'block' : 'none';
+    }
+    
+    // Show/hide main table based on filter
+    if (mainTable) {
+        mainTable.style.display = (status === 'review') ? 'none' : '';
+    }
+    
+    if (status === "all") {
+        // Show all rows in main table
+        rows.forEach(row => row.style.display = "");
         
-        if (status === "all") {
-            // Show all rows
-            row.style.display = "";
-        } else if (status === "for-review") {
-            // Check if status contains "P1 - Awaiting for HR Action"
-            if (statusText.includes('P1 - Awaiting for HR Action')) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-            }
-        } else if (status === "for-evaluation") {
-            // Check if status contains "P2 - Awaiting for HR Evaluation"
+        // Show onboarding table
+        if (onboardingTable) onboardingTable.style.display = "";
+        
+    } else if (status === "review") {
+        // Handle P2 Review filter
+        handleP2ReviewFilter();
+        
+    } else if (status === "for-evaluation") {
+        // Show only P2 evaluation rows
+        rows.forEach(row => {
+            const statusCell = row.querySelector('td:last-child');
+            const statusText = statusCell ? statusCell.textContent : '';
+            
             if (statusText.includes('P2 - Awaiting for HR Evaluation')) {
                 row.style.display = "";
             } else {
                 row.style.display = "none";
             }
+        });
+        
+        // Hide onboarding table
+        if (onboardingTable) onboardingTable.style.display = "none";
+        
+    } else if (status === "for-onboarding") {
+        // Show onboarding status rows
+        rows.forEach(row => {
+            const statusCell = row.querySelector('td:last-child');
+            const statusText = statusCell ? statusCell.textContent : '';
             
-            // Also check for button-based filtering as a fallback
-            const evaluationButton = row.querySelector('.btn-evaluation');
-            if (evaluationButton && row.style.display === "none") {
-                row.style.display = "";
-            }
-        } else if (status === "for-onboarding") {
-            // Check for onboarding status
-            if (statusText.includes('For Onboarding')) {
+            if (statusText.includes('P3 - PASSED - Job Offer Sent')) {
                 row.style.display = "";
             } else {
                 row.style.display = "none";
             }
-        } else {
-            row.style.display = "none";
-        }
-    });
-
-    // Show/hide finalize container based on filter
-    if (status === "for-review") {
-        document.querySelector(".finalize-container").style.display = "block";
-    } else {
-        document.querySelector(".finalize-container").style.display = "none";
+        });
+        
+        // Show onboarding table
+        if (onboardingTable) onboardingTable.style.display = "";
     }
-
+    
     // Highlight the active filter button
     highlightActiveFilter(status);
 }
 
-
-    // Event listeners for finalize buttons
-    document.getElementById("finalize-p1").addEventListener("click", function () {
-        finalizeReview("P1");
+// Handle the "For Review" filter for P2
+function handleP2ReviewFilter() {
+    const mainTable = document.getElementById('mainApplicantTable');
+    const applicantStatusSection = document.getElementById('applicantStatusSection');
+    const allMainRows = mainTable ? Array.from(mainTable.querySelectorAll('tbody tr')) : [];
+    
+    // Update the current phase
+    const phaseSpans = document.querySelectorAll('#currentPhase, #currentPhase2');
+    phaseSpans.forEach(span => span.textContent = "P2 Review");
+    
+    // Arrays to store rows
+    const awaitingRowsP2 = [];
+    const declaredRowsP2 = [];
+    
+    // Process each row and categorize it
+    allMainRows.forEach((row, index) => {
+        const lastCell = row.querySelector('td:last-child');
+        if (!lastCell) return;
+        
+        const statusSpan = lastCell.querySelector('span');
+        if (!statusSpan) return;
+        
+        const statusText = statusSpan.textContent.trim();
+        
+        // Extract row data
+        const rowData = extractRowData(row, index);
+        
+        // Check for P2 - HR Evaluation Accomplished
+        if (statusText.includes("P2 - HR Evaluation Accomplished")) {
+            awaitingRowsP2.push(rowData);
+        }
+        // Check for P2 - PASSED or P2 - FAILED (including pending)
+        else if (statusText.includes("P2 - PASSED") || statusText.includes("P2 - FAILED")) {
+            declaredRowsP2.push(rowData);
+        }
     });
+    
+    // Update tables
+    updateAwaitingActionTableP2(awaitingRowsP2);
+    updateDeclaredResultsTableP2(declaredRowsP2);
+    
+    // Update section header buttons
+    updateSectionHeaderButtonsP2();
+}
 
-    document.getElementById("finalize-p2").addEventListener("click", function () {
-        finalizeReview("P2");
-    });
-
-    document.getElementById("finalize-p3").addEventListener("click", function () {
-        finalizeReview("P3");
-    });
-
-    // Finalize review function
-    function finalizeReview(phase) {
-        alert(`${phase}: Finalizing review and notifying applicants.`);
-        // Add logic to handle finalization for the specified phase
-        // Example: Update database, send notifications, etc.
-        console.log(`${phase}: Review finalized. Notifications sent.`);
+// Extract row data for P2
+function extractRowData(row, index) {
+    const cells = Array.from(row.querySelectorAll('td'));
+    const cellData = cells.map(cell => cell.innerHTML);
+    
+    // Get applicantId and score from row attributes
+    const applicantId = row.getAttribute('data-applicantid');
+    const totalScore = row.getAttribute('data-score') || 'N/A';
+    
+    // Get name and email
+    let applicantName = '';
+    let applicantEmail = '';
+    
+    if (cells.length > 1) {
+        const nameCell = cells[1];
+        const fullContent = nameCell.innerHTML;
+        const nameParts = fullContent.split('<br>');
+        
+        if (nameParts.length > 0) {
+            applicantName = nameParts[0].trim();
+        }
+        
+        if (nameParts.length > 1) {
+            const emailHtml = nameParts[1];
+            applicantEmail = emailHtml.replace(/<[^>]*>/g, '').trim();
+        }
     }
+    
+    return {
+        index: index + 1,
+        cells: cellData,
+        applicantId: applicantId,
+        totalScore: totalScore,
+        name: applicantName,
+        email: applicantEmail
+    };
+}
 
+// Update Awaiting Action table for P2
+function updateAwaitingActionTableP2(awaitingRows) {
+    const awaitingActionTable = document.getElementById('awaitingActionTable');
+    if (!awaitingActionTable) return;
+    
+    const awaitingTbody = awaitingActionTable.querySelector('tbody');
+    if (!awaitingTbody) return;
+    
+    // Empty the tbody first
+    awaitingTbody.innerHTML = '';
+    
+    if (awaitingRows.length > 0) {
+        // Add the section header
+        const headerRow = document.createElement('tr');
+        headerRow.classList.add('section-header-row');
+        headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants Awaiting Review</td>`;
+        awaitingTbody.appendChild(headerRow);
+        
+        // Add each row with Pass/Reject buttons
+        awaitingRows.forEach((rowData) => {
+            const newRow = createTableRowP2(rowData, false, true); // third parameter for showing action buttons
+            awaitingTbody.appendChild(newRow);
+        });
+    } else {
+        // Display no data message
+        const messageRow = document.createElement('tr');
+        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No applicants awaiting P2 review.</td>`;
+        awaitingTbody.appendChild(messageRow);
+    }
+}
+
+// Update Declared Results table for P2
+function updateDeclaredResultsTableP2(declaredRows) {
+    const declaredResultsTable = document.getElementById('declaredResultsTable');
+    if (!declaredResultsTable) return;
+    
+    const declaredTbody = declaredResultsTable.querySelector('tbody');
+    if (!declaredTbody) return;
+    
+    // Empty the tbody first
+    declaredTbody.innerHTML = '';
+    
+    if (declaredRows.length > 0) {
+        // Add the section header
+        const headerRow = document.createElement('tr');
+        headerRow.classList.add('section-header-row');
+        headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants - Declared Results</td>`;
+        declaredTbody.appendChild(headerRow);
+        
+        // Add each row with Toggle Status button
+        declaredRows.forEach((rowData) => {
+            const newRow = createTableRowP2(rowData, true);
+            declaredTbody.appendChild(newRow);
+        });
+        
+        // Setup toggle buttons
+        setupToggleStatusButtonsP2();
+    } else {
+        // Display no data message
+        const messageRow = document.createElement('tr');
+        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No P2 applicants with declared results.</td>`;
+        declaredTbody.appendChild(messageRow);
+    }
+}
+
+// Create table row for P2
+function createTableRowP2(rowData, isForDeclaredResults = false, isForAwaitingAction = false) {
+    const newRow = document.createElement('tr');
+    
+    // Add applicantId as data attribute
+    if (rowData.applicantId) {
+        newRow.setAttribute('data-applicantid', rowData.applicantId);
+    }
+    
+    // Create cells from stored data
+    if (rowData.cells && rowData.cells.length >= 5) {
+        // Applicant No
+        const cell1 = document.createElement('td');
+        cell1.innerHTML = rowData.cells[0];
+        newRow.appendChild(cell1);
+        
+        // Name
+        const cell2 = document.createElement('td');
+        cell2.innerHTML = rowData.cells[1];
+        newRow.appendChild(cell2);
+        
+        // Department
+        const cell3 = document.createElement('td');
+        cell3.innerHTML = rowData.cells[2];
+        newRow.appendChild(cell3);
+        
+        // Position
+        const cell4 = document.createElement('td');
+        cell4.innerHTML = rowData.cells[3];
+        newRow.appendChild(cell4);
+        
+        // Total Score
+        const cell5 = document.createElement('td');
+        cell5.textContent = rowData.totalScore || 'N/A';
+        newRow.appendChild(cell5);
+        
+        // Status
+        const cell6 = document.createElement('td');
+        const statusMatch = rowData.cells[4].match(/<span><strong>Status:<\/strong>\s*([^<]+)<\/span>/);
+        const status = statusMatch ? statusMatch[1] : 'Unknown';
+        cell6.textContent = status;
+        newRow.appendChild(cell6);
+        
+        // Add action column based on table type
+        if (isForAwaitingAction) {
+            // Add View Evaluation and Pass/Reject buttons for awaiting action
+            const actionCell = document.createElement('td');
+            actionCell.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <a href="/hr/view-evaluation/${rowData.applicantId}" target="_blank">
+                        <button class="btn-view-evaluation" style="background-color: white; color: black; border: 1px solid #124A5C; padding: 6px 12px; border-radius: 4px; width: 100%; font-size: 14px; transition: background-color 0.3s ease, color 0.3s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='#124A5C'; this.style.color='white';"
+                            onmouseout="this.style.backgroundColor='white'; this.style.color='black';">
+                            View Evaluation
+                        </button>
+                    </a>
+                    <div style="display: flex; gap: 5px;">
+                        <button 
+                            class="btn-pass" 
+                            onclick="p2passApplicant('${rowData.applicantId}')"
+                            style="background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                            Pass
+                        </button>
+                        <button 
+                            class="btn-reject" 
+                            onclick="p2rejectApplicant('${rowData.applicantId}')"
+                            style="background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                            Reject
+                        </button>
+                    </div>
+                </div>
+            `;
+            newRow.appendChild(actionCell);
+        } else if (isForDeclaredResults) {
+            // Add Toggle Status button for declared results
+            const toggleCell = document.createElement('td');
+            toggleCell.innerHTML = `
+                <button 
+                    class="btn-toggle-status" 
+                    data-applicantid="${rowData.applicantId}"
+                    onclick="toggleP2ApplicantStatus(this)"
+                >
+                    ${status.includes('PASSED') ? 'Passed' : 'Failed'}
+                </button>
+            `;
+            newRow.appendChild(toggleCell);
+        }
+    }
+    
+    return newRow;
+}
+
+// Setup toggle status buttons for P2
+function setupToggleStatusButtonsP2() {
+    const buttons = document.querySelectorAll('.btn-toggle-status:not([data-has-listener])');
+    
+    buttons.forEach(button => {
+        button.setAttribute('data-has-listener', 'true');
+        
+        // Set initial button state based on current status
+        const row = button.closest('tr');
+        if (row) {
+            const statusCell = row.querySelector('td:nth-child(6)');
+            if (statusCell) {
+                const currentStatus = statusCell.textContent.trim();
+                if (currentStatus.includes('PASSED')) {
+                    button.textContent = 'Passed';
+                    button.classList.add('status-passed');
+                    button.classList.remove('status-failed');
+                } else if (currentStatus.includes('FAILED')) {
+                    button.textContent = 'Failed';
+                    button.classList.add('status-failed');
+                    button.classList.remove('status-passed');
+                }
+            }
+        }
+    });
+}
+
+// Update section header buttons for P2
+function updateSectionHeaderButtonsP2() {
+    const rightSection = document.querySelector('#finalizeButtonContainer');
+    
+    if (!rightSection) return;
+    
+    // Clear existing buttons
+    rightSection.innerHTML = '';
+    
+    // Add Finalize P2 Review button
+    const p2Button = document.createElement('button');
+    p2Button.id = 'finalizeP2Button';
+    p2Button.textContent = 'Finalize P2 Review';
+    p2Button.style.padding = '10px 15px';
+    p2Button.style.fontSize = '16px';
+    p2Button.style.fontWeight = 'bold';
+    p2Button.style.border = 'none';
+    p2Button.style.backgroundColor = '#124A5C';
+    p2Button.style.color = 'white';
+    p2Button.style.borderRadius = '4px';
+    p2Button.style.cursor = 'pointer';
+    p2Button.style.transition = 'background-color 0.3s ease';
+    
+    p2Button.addEventListener('mouseover', function() {
+        this.style.backgroundColor = '#B4E3E3';
+        this.style.color = '#124A5C';
+    });
+    
+    p2Button.addEventListener('mouseout', function() {
+        this.style.backgroundColor = '#124A5C';
+        this.style.color = 'white';
+    });
+    
+    p2Button.addEventListener('click', function() {
+        if (checkAllP2ApplicantsMarked()) {
+            document.getElementById('notifyApplicantsModal').style.display = 'block';
+            
+            // Update modal for P2
+            const modalTitle = document.querySelector('#notifyApplicantsModal h2');
+            if (modalTitle) {
+                modalTitle.textContent = "Confirm P2 Review Finalization";
+            }
+            
+            // Update confirm button
+            const confirmButton = document.getElementById('confirmButton');
+            if (confirmButton) {
+                const newConfirmButton = confirmButton.cloneNode(true);
+                confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+                newConfirmButton.addEventListener('click', finalizeP2Review);
+            }
+        } else {
+            alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+        }
+    });
+    
+    rightSection.appendChild(p2Button);
+}
+
+// Sort declared results
+function sortDeclaredResults(sortType) {
+    const table = document.getElementById('declaredResultsTable');
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+    
+    const rows = Array.from(tbody.querySelectorAll('tr:not(.section-header-row)'));
+    
+    // Keep section header rows in place
+    const headerRows = Array.from(tbody.querySelectorAll('tr.section-header-row'));
+    
+    // Sort rows based on selected option
+    if (sortType === 'ascending' || sortType === 'descending') {
+        // Sort by score
+        rows.sort((a, b) => {
+            const scoreA = parseFloat(a.querySelector('td:nth-child(5)')?.textContent || '0');
+            const scoreB = parseFloat(b.querySelector('td:nth-child(5)')?.textContent || '0');
+            return sortType === 'ascending' ? scoreA - scoreB : scoreB - scoreA;
+        });
+    } else if (sortType === 'alphabetical') {
+        // Sort alphabetically by name
+        rows.sort((a, b) => {
+            const nameA = a.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+            const nameB = b.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+            return nameA.localeCompare(nameB);
+        });
+    }
+    
+    // Clear the tbody
+    tbody.innerHTML = '';
+    
+    // Add back the header row
+    if (headerRows.length > 0) {
+        headerRows.forEach(row => tbody.appendChild(row));
+    }
+    
+    // Add sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+// ========== END MODIFIED FILTER FUNCTION ==========
 
        // Function to filter table based on search input
 function filterTable() {
@@ -1424,16 +2351,15 @@ function filterTable() {
 
  // Function to highlight the active filter button
 function highlightActiveFilter(status) {
-    const buttons = document.querySelectorAll(".right-section button");
+    const buttons = document.querySelectorAll(".filter-button");
     buttons.forEach(button => {
-        if (button.id === `filter-${status}`) {
-            button.style.backgroundColor = "#B4E3E3";
-            button.style.color = "#124A5C";
-        } else {
-            button.style.backgroundColor = "#124A5C";
-            button.style.color = "white";
-        }
+        button.classList.remove("active");
     });
+    
+    const activeButton = document.getElementById(`filter-${status === "review" ? "review" : status}`);
+    if (activeButton) {
+        activeButton.classList.add("active");
+    }
 }
 
         // Initialize buttons for filtering by status
@@ -1446,7 +2372,7 @@ function highlightActiveFilter(status) {
 
     // Add event listeners to filter buttons
     buttons.all.addEventListener("click", () => filterRowsByStatus("all"));
-    buttons.review.addEventListener("click", () => filterRowsByStatus("for-review"));
+    buttons.review.addEventListener("click", () => filterRowsByStatus("review"));
     buttons.evaluation.addEventListener("click", () => filterRowsByStatus("for-evaluation"));
     buttons.onboarding.addEventListener("click", () => filterRowsByStatus("for-onboarding"));
 
@@ -1608,112 +2534,34 @@ function highlightActiveFilter(status) {
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-    const finalizeP1Button = document.getElementById("finalize-p1");
-    const finalizeP2Button = document.getElementById("finalize-p2");
-    const finalizeP3Button = document.getElementById("finalize-p3");
-
-    const modalP1 = document.getElementById("finalizeModalP1");
-    const modalP2 = document.getElementById("finalizeModalP2");
-    const modalP3 = document.getElementById("finalizeModalP3");
-
-    const closeButtonP1 = modalP1.querySelector(".close-button");
-    const backButtonP1 = modalP1.querySelector("#backButtonP1");
-    const confirmButtonP1 = modalP1.querySelector("#confirmButtonP1");
-
-    const closeButtonP2 = modalP2.querySelector(".close-button");
-    const backButtonP2 = modalP2.querySelector("#backButtonP2");
-    const confirmButtonP2 = modalP2.querySelector("#confirmButtonP2");
-
-    const closeButtonP3 = modalP3.querySelector(".close-button");
-    const backButtonP3 = modalP3.querySelector("#backButtonP3");
-    const confirmButtonP3 = modalP3.querySelector("#confirmButtonP3");
-
-    // Show the modal for P1 when the "P1: Finalize Review and Notify Applicants" button is clicked
-    finalizeP1Button.addEventListener("click", function() {
-        modalP1.style.display = "block";
-    });
-
-    // Show the modal for P2 when the "P2: Finalize Review and Notify Applicants" button is clicked
-    finalizeP2Button.addEventListener("click", function() {
-        modalP2.style.display = "block";
-    });
-
-    // Show the modal for P3 when the "P3: Finalize Review and Notify Applicants" button is clicked
-    finalizeP3Button.addEventListener("click", function() {
-        modalP3.style.display = "block";
-    });
-
-    // Close the modal for P1 when the close button (X) is clicked
-    closeButtonP1.addEventListener("click", function() {
-        modalP1.style.display = "none";
-    });
-
-    // Close the modal for P2 when the close button (X) is clicked
-    closeButtonP2.addEventListener("click", function() {
-        modalP2.style.display = "none";
-    });
-
-    // Close the modal for P3 when the close button (X) is clicked
-    closeButtonP3.addEventListener("click", function() {
-        modalP3.style.display = "none";
-    });
-
-    // Close the modal for P1 when the back button is clicked
-    backButtonP1.addEventListener("click", function() {
-        modalP1.style.display = "none";
-    });
-
-    // Close the modal for P2 when the back button is clicked
-    backButtonP2.addEventListener("click", function() {
-        modalP2.style.display = "none";
-    });
-
-    // Close the modal for P3 when the back button is clicked
-    backButtonP3.addEventListener("click", function() {
-        modalP3.style.display = "none";
-    });
-
-    // Handle the confirm action for P1 (you can add your own confirmation logic here)
-    confirmButtonP1.addEventListener("click", function() {
-        // Add your confirmation action here (e.g., notify applicants)
-        alert("P1 Review finalized and applicants notified.");
-        modalP1.style.display = "none"; // Close the modal after confirming
-    });
-
-    // Handle the confirm action for P2 (you can add your own confirmation logic here)
-    confirmButtonP2.addEventListener("click", function() {
-        // Add your confirmation action here (e.g., notify applicants)
-        alert("P2 Review finalized and applicants notified.");
-        modalP2.style.display = "none"; // Close the modal after confirming
-    });
-
-    // Handle the confirm action for P3 (you can add your own confirmation logic here)
-    confirmButtonP3.addEventListener("click", function() {
-        // Add your confirmation action here (e.g., notify applicants)
-        alert("P3 Review finalized and applicants notified.");
-        modalP3.style.display = "none"; // Close the modal after confirming
-    });
-
-    // Close the modal if the user clicks outside of it (for P1)
-    window.addEventListener("click", function(event) {
-        if (event.target == modalP1) {
-            modalP1.style.display = "none";
+    // Modal functionality for the notify applicants modal
+    const notifyModal = document.getElementById("notifyApplicantsModal");
+    
+    if (notifyModal) {
+        const closeButton = notifyModal.querySelector(".close-button");
+        const backButton = notifyModal.querySelector("#backButton");
+        
+        // Close the modal when the close button (X) is clicked
+        if (closeButton) {
+            closeButton.addEventListener("click", function() {
+                notifyModal.style.display = "none";
+            });
         }
-    });
-
-    // Close the modal if the user clicks outside of it (for P2)
-    window.addEventListener("click", function(event) {
-        if (event.target == modalP2) {
-            modalP2.style.display = "none";
+        
+        // Close the modal when the back button is clicked
+        if (backButton) {
+            backButton.addEventListener("click", function() {
+                notifyModal.style.display = "none";
+            });
         }
-    });
-
-    // Close the modal if the user clicks outside of it (for P3)
-    window.addEventListener("click", function(event) {
-        if (event.target == modalP3) {
-            modalP3.style.display = "none";
-        }
-    });
+        
+        // Close the modal if the user clicks outside of it
+        window.addEventListener("click", function(event) {
+            if (event.target == notifyModal) {
+                notifyModal.style.display = "none";
+            }
+        });
+    }
 });
 
 // Function to open the modal

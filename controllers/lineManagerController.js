@@ -4410,7 +4410,232 @@ viewState.nextAccessibleStep = calculateNextStep(viewState);
             req.flash('errors', { fetchError: 'Error fetching user progress. Please try again.' });
             res.redirect('/linemanager/records-performance-tracker');
         }
-    },    
+    }, 
+
+// Controller method to fetch feedback questionnaire data
+getFeedbackQuestionnaire: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        const quarter = req.query.quarter; // e.g., "Q1", "Q2", etc.
+        
+    if (!userId || !quarter) {
+        return res.status(400).json({
+            success: false, 
+            message: "User ID and quarter are required."
+        });
+    }
+    
+    console.log(`Fetching ${quarter} questionnaire data for user ${userId}`);
+    
+    // 1. Determine which feedback table to query
+    let feedbackTable, feedbackIdField;
+    
+    switch (quarter) {
+        case 'Q1':
+            feedbackTable = 'feedbacks_Q1';
+            feedbackIdField = 'feedbackq1_Id';
+            break;
+        case 'Q2':
+            feedbackTable = 'feedbacks_Q2';
+            feedbackIdField = 'feedbackq2_Id';
+            break;
+        case 'Q3':
+            feedbackTable = 'feedbacks_Q3';
+            feedbackIdField = 'feedbackq3_Id';
+            break;
+        case 'Q4':
+            feedbackTable = 'feedbacks_Q4';
+            feedbackIdField = 'feedbackq4_Id';
+            break;
+        default:
+            return res.status(400).json({
+                success: false,
+                message: "Invalid quarter specified."
+            });
+    }
+    
+    // 2. First, get the user's job information
+    const { data: staffData, error: staffError } = await supabase
+        .from('staffaccounts')
+        .select('jobId')
+        .eq('userId', userId)
+        .single();
+        
+    if (staffError || !staffData) {
+        console.error('Error fetching staff data:', staffError);
+        return res.status(404).json({
+            success: false,
+            message: "User job information not found."
+        });
+    }
+    
+    const jobId = staffData.jobId;
+    
+    // 3. Try to get existing feedback record for this user and quarter
+    const { data: feedbackData, error: feedbackError } = await supabase
+        .from(feedbackTable)
+        .select(`
+            ${feedbackIdField},
+            userId,
+            jobId,
+            setStartDate,
+            setEndDate,
+            dateCreated,
+            year,
+            quarter
+        `)
+        .eq('userId', userId)
+        .eq('quarter', quarter)
+        .maybeSingle(); // Use maybeSingle() instead of single() to avoid error when no data exists
+        
+    // If no existing feedback data, we'll still proceed to show objectives and skills for new input
+    let feedbackId = null;
+    let startDate = null;
+    let endDate = null;
+    let feedbackYear = new Date().getFullYear();
+    
+    if (feedbackData) {
+        feedbackId = feedbackData[feedbackIdField];
+        startDate = feedbackData.setStartDate;
+        endDate = feedbackData.setEndDate;
+        feedbackYear = feedbackData.year;
+        console.log(`Found existing feedback record with ID: ${feedbackId}`);
+    } else {
+        console.log(`No existing ${quarter} feedback found for user ${userId}. Will allow new input.`);
+    }
+    
+    // 4. Get the objective settings for this user
+    const { data: objectiveSettings, error: objectivesSettingsError } = await supabase
+        .from('objectivesettings')
+        .select('objectiveSettingsId, performancePeriodYear')
+        .eq('userId', userId)
+        .eq('jobId', jobId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+        
+    if (objectivesSettingsError) {
+        console.error('Error fetching objective settings:', objectivesSettingsError);
+        return res.status(500).json({
+            success: false,
+            message: "Error retrieving objective settings."
+        });
+    }
+    
+    if (!objectiveSettings || objectiveSettings.length === 0) {
+        return res.status(404).json({
+            success: false,
+            message: "No objectives found for this user. Please complete objective setting first."
+        });
+    }
+    
+    const objectiveSettingsId = objectiveSettings[0].objectiveSettingsId;
+    
+    // 5. Get the actual objectives
+    const { data: objectives, error: objectivesError } = await supabase
+        .from('objectivesettings_objectives')
+        .select('*')
+        .eq('objectiveSettingsId', objectiveSettingsId);
+        
+    if (objectivesError) {
+        console.error('Error fetching objectives:', objectivesError);
+        return res.status(500).json({
+            success: false,
+            message: "Error retrieving objectives."
+        });
+    }
+    
+    // 6. Get the feedback questions for objectives (only if feedback record exists)
+    let objectiveQuestions = [];
+    if (feedbackId) {
+        const { data: questions, error: objectiveQuestionsError } = await supabase
+            .from('feedbacks_questions-objectives')
+            .select(`
+                feedback_qObjectivesId,
+                objectiveId,
+                objectiveQualiQuestion,
+                ${feedbackIdField}
+            `)
+            .eq(feedbackIdField, feedbackId);
+            
+        if (!objectiveQuestionsError && questions) {
+            objectiveQuestions = questions;
+        }
+    }
+    
+    // 7. Combine objectives with their guide questions
+    const objectivesWithQuestions = objectives.map(objective => {
+        const question = objectiveQuestions.find(q => q.objectiveId === objective.objectiveId);
+        return {
+            ...objective,
+            guideQuestion: question ? question.objectiveQualiQuestion : '',
+            questionId: question ? question.feedback_qObjectivesId : null
+        };
+    });
+    
+    // 8. Get skills data (only if feedback record exists)
+    let skillQuestions = [];
+    if (feedbackId) {
+        const { data: questions, error: skillQuestionsError } = await supabase
+            .from('feedbacks_questions-skills')
+            .select(`
+                feedback_qSkillsId,
+                jobReqSkillId,
+                ${feedbackIdField}
+            `)
+            .eq(feedbackIdField, feedbackId);
+            
+        if (!skillQuestionsError && questions) {
+            skillQuestions = questions;
+        }
+    }
+    
+    // 9. Get all skills for this job (whether feedback exists or not)
+    const { data: allSkills, error: allSkillsError } = await supabase
+        .from('jobreqskills')
+        .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
+        .eq('jobId', jobId);
+        
+    if (allSkillsError) {
+        console.error('Error fetching job skills:', allSkillsError);
+        return res.status(500).json({
+            success: false,
+            message: "Error retrieving job skills data."
+        });
+    }
+    
+    // Separate hard and soft skills
+    const hardSkills = allSkills ? allSkills.filter(skill => skill.jobReqSkillType === 'Hard') : [];
+    const softSkills = allSkills ? allSkills.filter(skill => skill.jobReqSkillType === 'Soft') : [];
+    
+    // 10. Return the questionnaire data
+    return res.status(200).json({
+        success: true,
+        message: `${quarter} questionnaire data retrieved successfully`,
+        quarter: quarter,
+        feedbackId: feedbackId,
+        startDate: startDate,
+        endDate: endDate,
+        objectives: objectivesWithQuestions,
+        hardSkills: hardSkills,
+        softSkills: softSkills,
+        isNewFeedback: !feedbackId, // Flag to indicate if this is a new feedback or existing
+        meta: {
+            userId: userId,
+            jobId: jobId,
+            year: feedbackYear,
+            dateCreated: feedbackData ? feedbackData.dateCreated : null
+        }
+    });
+    
+} catch (error) {
+    console.error('Error in getFeedbackQuestionnaire:', error);
+    return res.status(500).json({
+        success: false,
+        message: "An unexpected error occurred while fetching questionnaire data.",
+        error: error.message
+    });
+}
+},
 
     saveMidYearIDP: async function(req, res) {
         try {

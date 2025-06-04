@@ -1058,7 +1058,7 @@
                     </div>
             
                     <!-- Feedback Q1 -->
-                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ1" data-quarter="1" onclick="showFeedbackForm()">
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ1" data-quarter="1" onclick="showFeedbackFormFromButton()">
                         <div class="step-icon"><i class="fa fa-users"></i></div>
                         <div class="step-label">
                             Q1 Feedback
@@ -1074,7 +1074,7 @@
                     </div>
             
                     <!-- Feedback Q2 -->
-                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q1']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ2" data-quarter="2" onclick="showFeedbackForm()">
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q1']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ2" data-quarter="2" onclick="showFeedbackFormFromButton()">
                         <div class="step-icon"><i class="fa fa-users"></i></div>
                         <div class="step-label">
                             Q2 Feedback
@@ -1100,7 +1100,7 @@
                     </div>
             
                     <!-- Feedback Q3 -->
-                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2'] && viewState.viewOnlyStatus['feedbacks_Q1']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ3" data-quarter="3" onclick="showFeedbackForm()">
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q2'] && viewState.viewOnlyStatus['feedbacks_Q1']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ3" data-quarter="3" onclick="showFeedbackFormFromButton()">
                         <div class="step-icon"><i class="fa fa-users"></i></div>
                         <div class="step-label">
                             Q3 Feedback
@@ -1113,7 +1113,7 @@
                     </div>
             
                     <!-- Feedback Q4 -->
-                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3'] && viewState.viewOnlyStatus['feedbacks_Q2'] && viewState.viewOnlyStatus['feedbacks_Q1']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ4" data-quarter="4" onclick="showFeedbackForm()">
+                    <div class="step <%= (viewState.submittedObjectives && viewState.submittedObjectives.length > 0 && viewState.viewOnlyStatus['feedbacks_Q3'] && viewState.viewOnlyStatus['feedbacks_Q2'] && viewState.viewOnlyStatus['feedbacks_Q1']) ? 'accessible' : 'disabled' %>" id="feedbackButtonQ4" data-quarter="4" onclick="showFeedbackFormFromButton()">
                         <div class="step-icon"><i class="fa fa-users"></i></div>
                         <div class="step-label">
                             Q4 Feedback
@@ -2223,7 +2223,335 @@ function isInFeedbackEditMode() {
     return !isViewOnly;
 }
 
-// Function to show feedback form for a specific quarter
+
+// Enhanced JavaScript functions to properly fetch and display feedback questionnaire data
+
+// Function to get feedback questionnaire data for a specific quarter
+async function getFeedbackQuestionnaire(quarter) {
+    console.log(`Fetching questionnaire data for ${quarter}...`);
+    
+    try {
+        // Show loading state
+        const feedbackTableBody = document.getElementById('feedback-table-body');
+        const hardSkillsTableBody = document.getElementById('hard-skills-table-body');
+        const softSkillsTableBody = document.getElementById('soft-skills-table-body');
+        
+        if (feedbackTableBody) {
+            feedbackTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading questionnaire data...
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Format the quarter correctly
+        const formattedQuarter = quarter.toString().startsWith('Q') ? quarter : `Q${quarter}`;
+        
+        // Fetch the questionnaire data from the server
+        const response = await fetch(`/linemanager/get-feedback-questionnaire/${userId}?quarter=${formattedQuarter}`);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch questionnaire data: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log("Fetched questionnaire data:", data);
+            
+            // Clear existing content
+            if (feedbackTableBody) feedbackTableBody.innerHTML = '';
+            if (hardSkillsTableBody) hardSkillsTableBody.innerHTML = '';
+            if (softSkillsTableBody) softSkillsTableBody.innerHTML = '';
+            
+            // Display objectives with their guide questions
+            if (data.objectives && data.objectives.length > 0) {
+                data.objectives.forEach(objective => {
+                    addQuestionnaireObjectiveRow(objective, formattedQuarter);
+                });
+            } else {
+                // Fall back to basic objectives if no questionnaire data
+                if (submittedObjectives && submittedObjectives.length > 0) {
+                    submittedObjectives.forEach(objective => {
+                        addQuestionnaireObjectiveRow(objective, formattedQuarter);
+                    });
+                }
+            }
+            
+            // Display skills
+            if (data.hardSkills && data.hardSkills.length > 0) {
+                data.hardSkills.forEach(skill => {
+                    addQuestionnaireSkillRow(skill, 'hard');
+                });
+            } else if (hardSkills && hardSkills.length > 0) {
+                hardSkills.forEach(skill => {
+                    addQuestionnaireSkillRow(skill, 'hard');
+                });
+            }
+            
+            if (data.softSkills && data.softSkills.length > 0) {
+                data.softSkills.forEach(skill => {
+                    addQuestionnaireSkillRow(skill, 'soft');
+                });
+            } else if (softSkills && softSkills.length > 0) {
+                softSkills.forEach(skill => {
+                    addQuestionnaireSkillRow(skill, 'soft');
+                });
+            }
+            
+            // Set date fields if available
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            
+            if (startDateInput && data.startDate) {
+                startDateInput.value = data.startDate;
+            }
+            
+            if (endDateInput && data.endDate) {
+                endDateInput.value = data.endDate;
+            }
+            
+        } else {
+            console.error("Error fetching questionnaire data:", data.message);
+            
+            // Show error message
+            if (feedbackTableBody) {
+                feedbackTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 20px; color: #f44336;">
+                            <i class="fas fa-exclamation-triangle"></i> Error loading questionnaire data: ${data.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error("Error fetching questionnaire data:", error);
+        
+        // Show error message
+        const feedbackTableBody = document.getElementById('feedback-table-body');
+        if (feedbackTableBody) {
+            feedbackTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #f44336;">
+                        <i class="fas fa-exclamation-triangle"></i> Error loading questionnaire data. Please try again.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+
+// Function to add questionnaire objective row with guide question display
+function addQuestionnaireObjectiveRow(objective, quarter) {
+    const tbody = document.getElementById('feedback-table-body');
+    if (!tbody) {
+        console.error("Feedback table body not found.");
+        return;
+    }
+
+    // Check if we're in view-only mode for this quarter
+    const quarterKey = quarter.replace('Q', '');
+    const isViewOnly = viewState.viewOnlyStatus[`feedbacks_Q${quarterKey}`];
+
+    // Create and append the objective row
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td><strong>${objective.objectiveDescrpt || 'N/A'}</strong></td>
+        <td><strong>${objective.objectiveKPI || 'N/A'}</strong></td>
+        <td><strong>${objective.objectiveTarget || 'N/A'}</strong></td>
+        <td><strong>${objective.objectiveUOM || '%'}</strong></td>
+        <td><strong>${objective.objectiveAssignedWeight ? (objective.objectiveAssignedWeight * 100).toFixed(2) + '%' : 'N/A'}</strong></td>
+    `;
+    tbody.appendChild(row);
+
+    // Create and append the guide question row
+    const inputRow = document.createElement('tr');
+    const inputId = `qualitativeInput_${objective.objectiveId}`;
+    
+    inputRow.innerHTML = `
+        <td colspan="5" class="feedback-input-cell">
+            <div style="margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                <label for="${inputId}" style="display: block; margin-bottom: 8px; font-weight: 500;">
+                    <i class="fas fa-question-circle"></i> <strong>Guide Question for Feedback:</strong>
+                </label>
+                ${isViewOnly ? 
+                    `<div style="padding: 8px; background-color: #f5f5f5; border-radius: 4px; border: 1px solid #e1e5eb;">
+                        ${objective.guideQuestion || objective.objectiveQualiQuestion || 'No guide question available'}
+                    </div>` : 
+                    `<input id="${inputId}" type="text" 
+                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+                        value="${objective.guideQuestion || objective.objectiveQualiQuestion || ''}"  
+                        placeholder="Enter guide question for feedback" 
+                        data-objective-id="${objective.objectiveId}" 
+                        class="guide-question-input"
+                    >`
+                }
+            </div>
+        </td>
+    `;
+    tbody.appendChild(inputRow);
+
+    // Only add rater interface for edit mode
+    if (!isViewOnly) {
+        const raterRow = document.createElement('tr');
+        const starRatingId = `starRating${objective.objectiveId}`;
+        const ratingSectionId = `ratingSection${objective.objectiveId}`;
+
+        raterRow.innerHTML = `
+            <td colspan="5">
+                <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" 
+                        style="background-color: #6c757d; color: white; border: none; padding: 8px 15px; 
+                        cursor: pointer; border-radius: 4px; margin-bottom: 10px; width: 100%;">
+                    <i class="fas fa-eye"></i> Preview Rater's Interface
+                </button>
+                <div id="${ratingSectionId}" style="display: none; margin-top: 10px; padding: 15px; 
+                    background-color: #f9f9f9; border-radius: 8px; border: 1px solid #ddd;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">
+                            <i class="fas fa-star"></i> <strong>Quantitative Rating:</strong>
+                        </label>
+                        <div style="font-size: 14px; margin-bottom: 10px; color: #666;">
+                            Please rate the accomplishment of this objective for the quarter on a scale of 1 to 5.
+                        </div>
+                        <div class="star-rating" style="font-size: 24px; cursor: pointer;" id="${starRatingId}" data-rating="0">
+                            <i class="fa-solid fa-star" data-value="1" style="color: #ddd; margin-right: 5px;"></i>
+                            <i class="fa-solid fa-star" data-value="2" style="color: #ddd; margin-right: 5px;"></i>
+                            <i class="fa-solid fa-star" data-value="3" style="color: #ddd; margin-right: 5px;"></i>
+                            <i class="fa-solid fa-star" data-value="4" style="color: #ddd; margin-right: 5px;"></i>
+                            <i class="fa-solid fa-star" data-value="5" style="color: #ddd;"></i>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">
+                            <i class="fas fa-comment"></i> <strong>Qualitative Feedback:</strong>
+                        </label>
+                        <div style="font-size: 14px; margin-bottom: 10px; color: #666;">
+                            Please provide qualitative feedback regarding this objective for the quarter.
+                        </div>
+                        <textarea id="qualitativeFeedback_${objective.objectiveId}" 
+                            placeholder="Place your qualitative feedback here." 
+                            style="width: 100%; min-height: 80px; padding: 10px;" disabled readonly></textarea>
+                    </div>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(raterRow);
+
+        // Add click event listeners to the stars for preview
+        setTimeout(() => {
+            const stars = document.querySelectorAll(`#${starRatingId} .fa-star`);
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = this.getAttribute('data-value');
+                    const starContainer = document.getElementById(starRatingId);
+                    starContainer.setAttribute('data-rating', rating);
+                    updateStarDisplay(stars, rating);
+                });
+            });
+        }, 100);
+    }
+}
+
+// Function to add questionnaire skill row
+function addQuestionnaireSkillRow(skill, skillType) {
+    const skillTableBody = document.querySelector(`#${skillType}-skills-table-body`);
+    
+    if (!skillTableBody) {
+        console.log(`Skill table body not found for: ${skillType}`);
+        return;
+    }
+    
+    // Create skill name row
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>
+            <span style="font-weight: 500; color: #124A5C;">${skill.jobReqSkillName || skill.skillName}</span>
+        </td>
+    `;
+    skillTableBody.appendChild(row);
+    
+    // Get current edit mode status
+    const activeQuarterField = document.getElementById('activeQuarterField');
+    const quarterValue = activeQuarterField ? activeQuarterField.value : 'Q1';
+    const quarterKey = quarterValue.replace('Q', '');
+    const isViewOnly = viewState.viewOnlyStatus[`feedbacks_Q${quarterKey}`];
+    
+    // Only add rater interface for edit mode
+    if (!isViewOnly) {
+        const raterRow = document.createElement('tr');
+        const starRatingId = `${skillType}SkillRow${(skill.jobReqSkillName || skill.skillName).replace(/\s+/g, '_')}Rating`;
+        const ratingSectionId = `ratingSection${(skill.jobReqSkillName || skill.skillName).replace(/\s+/g, '_')}`;
+        
+        raterRow.innerHTML = `
+        <td>
+            <button type="button" onclick="toggleRatingSection('${ratingSectionId}')" 
+                    style="background-color: #6c757d; color: white; border: none; padding: 8px 15px; 
+                    cursor: pointer; border-radius: 4px; margin-bottom: 10px; width: 100%;">
+                <i class="fas fa-eye"></i> Preview Rater's Interface
+            </button>
+            <div id="${ratingSectionId}" style="display: none; margin: 10px 0 20px; padding: 15px; 
+                    background-color: #f9f9f9; border-radius: 8px; border: 1px solid #ddd;">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">
+                        <i class="fas fa-star"></i> <strong>Quantitative Rating:</strong>
+                    </label>
+                    <div style="font-size: 14px; margin-bottom: 10px; color: #666;">
+                        Rate from 1 to 5 based on this skill's performance during the quarter.
+                    </div>
+                    <div class="star-rating" style="font-size: 24px;" id="${starRatingId}" data-rating="0">
+                        <i class="fa-solid fa-star" data-value="1" style="color: #ddd; margin-right: 5px;"></i>
+                        <i class="fa-solid fa-star" data-value="2" style="color: #ddd; margin-right: 5px;"></i>
+                        <i class="fa-solid fa-star" data-value="3" style="color: #ddd; margin-right: 5px;"></i>
+                        <i class="fa-solid fa-star" data-value="4" style="color: #ddd; margin-right: 5px;"></i>
+                        <i class="fa-solid fa-star" data-value="5" style="color: #ddd;"></i>
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">
+                        <i class="fas fa-comment"></i> <strong>Qualitative Feedback:</strong>
+                    </label>
+                    <div style="font-size: 14px; margin-bottom: 10px; color: #666;">
+                        Provide specific examples related to this skill.
+                    </div>
+                    <textarea placeholder="Enter your qualitative feedback here..." 
+                              style="width: 100%; min-height: 80px; padding: 10px;" disabled readonly></textarea>
+                </div>
+            </div>
+        </td>
+        `;
+        
+        skillTableBody.appendChild(raterRow);
+        
+        // Add click event listeners to the stars for preview
+        setTimeout(() => {
+            const stars = document.querySelectorAll(`#${starRatingId} .fa-star`);
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = this.getAttribute('data-value');
+                    const starContainer = document.getElementById(starRatingId);
+                    starContainer.setAttribute('data-rating', rating);
+                    updateStarDisplay(stars, rating);
+                });
+            });
+        }, 100);
+    }
+}// Add this function to handle clicking on feedback buttons  
+function showFeedbackFormFromButton() {
+    // Get the clicked element's quarter data
+    const clickedElement = event.target.closest('[data-quarter]');
+    if (!clickedElement) {
+        console.error("Could not determine quarter from clicked element");
+        return;
+    }
+    
+    const quarter = clickedElement.getAttribute('data-quarter');
+    showFeedbackForm(quarter);
+}
+
+// Enhanced showFeedbackForm function
 function showFeedbackForm(quarter) {
     // Get the feedback button for this quarter
     const feedbackButton = document.getElementById(`feedbackButtonQ${quarter}`);
@@ -2264,61 +2592,8 @@ function showFeedbackForm(quarter) {
     quarterField.value = `Q${quarter}`;
     console.log(`Set active quarter to Q${quarter} in hidden field`);
     
-    // Clear the table bodies
-    const feedbackTableBody = document.getElementById('feedback-table-body');
-    const hardSkillsTableBody = document.getElementById('hard-skills-table-body');
-    const softSkillsTableBody = document.getElementById('soft-skills-table-body');
-    
-    if (feedbackTableBody) feedbackTableBody.innerHTML = '';
-    if (hardSkillsTableBody) hardSkillsTableBody.innerHTML = '';
-    if (softSkillsTableBody) softSkillsTableBody.innerHTML = '';
-    
     // Check if this quarter's feedback is in view-only mode
     const isViewOnly = viewState.viewOnlyStatus[`feedbacks_Q${quarter}`];
-    
-    // If in edit mode, show the forms with editable fields
-    // If in view mode, fetch and display previously submitted data
-    if (!isViewOnly) {
-        // In edit mode, we show empty form fields
-        console.log(`Feedback for Q${quarter} is in EDIT mode`);
-        
-        // Add rows for objectives with blank guide questions
-        if (submittedObjectives && submittedObjectives.length > 0) {
-            submittedObjectives.forEach(objective => {
-                addFormFeedbackRow(objective);
-            });
-        }
-        
-        // Add hard skills to the feedback form
-        addFormFeedbackSkillsRows(hardSkills, 'hard');
-        
-        // Add soft skills to the feedback form
-        addFormFeedbackSkillsRows(softSkills, 'soft');
-        
-        // Show Save and Submit buttons
-        updateFeedbackButtons(true);
-        
-        // Make sure the questionnaire tab is active
-        const viewQuestionnaireBtn = document.getElementById('viewQuestionnaireBtn');
-        if (viewQuestionnaireBtn) {
-            viewQuestionnaireBtn.click();
-        }
-    } else {
-        // In view mode, load previously submitted data
-        console.log(`Feedback for Q${quarter} is in VIEW mode`);
-        
-        // Fetch previously submitted data
-        fetchSubmittedFeedbackData(quarter);
-        
-        // Show only Submit button (disabled)
-        updateFeedbackButtons(false);
-        
-        // Switch to the "View Feedback" tab automatically
-        const viewFeedbackBtn = document.getElementById('viewFeedbackBtn');
-        if (viewFeedbackBtn) {
-            viewFeedbackBtn.click();
-        }
-    }
     
     // Update form action with the quarter parameter
     const feedbackForm = document.getElementById('feedbackForm');
@@ -2326,7 +2601,129 @@ function showFeedbackForm(quarter) {
         feedbackForm.action = `/linemanager/records-performance-tracker/questionnaire/${userId}?quarter=Q${quarter}`;
         console.log(`Updated form action with quarter=Q${quarter}`);
     }
+    
+    // Show the questionnaire view by default
+    toggleFeedbackView('questionnaire');
+    
+    // Fetch and display the questionnaire data
+    getFeedbackQuestionnaire(`Q${quarter}`);
+    
+    // Update buttons based on view mode
+    if (isViewOnly) {
+        console.log(`Feedback for Q${quarter} is in VIEW mode`);
+        updateFeedbackButtons(false);
+    } else {
+        console.log(`Feedback for Q${quarter} is in EDIT mode`);
+        updateFeedbackButtons(true);
+    }
 }
+
+// Add event listeners for feedback view buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners for view toggle buttons
+    const viewQuestionnaireBtn = document.getElementById('viewQuestionnaireBtn');
+    const viewFeedbackBtn = document.getElementById('viewFeedbackBtn');
+    
+    if (viewQuestionnaireBtn) {
+        viewQuestionnaireBtn.addEventListener('click', function() {
+            toggleFeedbackView('questionnaire');
+        });
+    }
+    
+    if (viewFeedbackBtn) {
+        viewFeedbackBtn.addEventListener('click', function() {
+            toggleFeedbackView('feedback');
+        });
+    }
+});
+
+// Helper function to show feedback error
+function showFeedbackError(message) {
+    const objectiveFeedbackContainer = document.getElementById('objectiveFeedbackContainer');
+    const skillsFeedbackContainer = document.getElementById('skillsFeedbackContainer');
+    
+    const errorHTML = `
+        <div class="error-state" style="text-align: center; padding: 30px; background-color: #ffebee; border-radius: 8px; border-left: 4px solid #f44336;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f44336; margin-bottom: 15px;"></i>
+            <p style="color: #f44336; margin: 0;">${message}</p>
+        </div>
+    `;
+    
+    if (objectiveFeedbackContainer) {
+        objectiveFeedbackContainer.innerHTML = errorHTML;
+    }
+    
+    if (skillsFeedbackContainer) {
+        skillsFeedbackContainer.innerHTML = errorHTML;
+    }
+}
+
+// Helper function to generate star rating HTML
+function generateStarRating(rating) {
+    let starsHTML = '';
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    
+    for (let i = 1; i <= 5; i++) {
+        if (i <= fullStars) {
+            starsHTML += '<i class="fas fa-star"></i>';
+        } else if (i === fullStars + 1 && hasHalfStar) {
+            starsHTML += '<i class="fas fa-star-half-alt"></i>';
+        } else {
+            starsHTML += '<i class="far fa-star"></i>';
+        }
+    }
+    
+    return starsHTML;
+}
+
+// Setup filters for individual answers
+function setupFilters() {
+    const responderFilter = document.getElementById('responderFilter');
+    const questionFilter = document.getElementById('questionFilter');
+    
+    if (responderFilter) {
+        responderFilter.addEventListener('change', filterAnswers);
+    }
+    
+    if (questionFilter) {
+        questionFilter.addEventListener('change', filterAnswers);
+    }
+}
+
+// Function to filter individual answers
+function filterAnswers() {
+    const responderFilter = document.getElementById('responderFilter');
+    const questionFilter = document.getElementById('questionFilter');
+    const answerCards = document.querySelectorAll('.answer-card');
+    
+    if (!responderFilter || !questionFilter) return;
+    
+    const selectedResponder = responderFilter.value;
+    const selectedQuestion = questionFilter.value;
+    
+    answerCards.forEach(card => {
+        let showCard = true;
+        
+        // Filter by responder type
+        if (selectedResponder !== 'all') {
+            const responderType = card.querySelector('h4').textContent.toLowerCase();
+            if (!responderType.includes(selectedResponder)) {
+                showCard = false;
+            }
+        }
+        
+        // Filter by question (if implemented)
+        if (selectedQuestion !== 'all' && showCard) {
+            // This would need to be implemented based on your question structure
+            // For now, we'll keep it simple
+        }
+        
+        card.style.display = showCard ? 'block' : 'none';
+    });
+}
+
+
 
 // Function to navigate to Mid-Year IDP
 function navigateToMidYearIDP() {
@@ -2847,8 +3244,6 @@ function updateGuideQuestionEditability() {
         }
     }
 }
-
-// Function to fetch submitted feedback data
 async function fetchSubmittedFeedbackData(quarter) {
     console.log(`Fetching submitted feedback data for Q${quarter}...`);
     
@@ -2886,17 +3281,39 @@ async function fetchSubmittedFeedbackData(quarter) {
             // Display the fetched objective data with submitted guide questions
             if (data.objectives && data.objectives.length > 0) {
                 data.objectives.forEach(objective => {
-                    // Save the guide question to the objective
+                    // Use the guide question from the API response
                     objective.objectiveQualiQuestion = objective.guideQuestion || '';
                     
-                    // Add to the table
-                    addFormFeedbackRow(objective);
+                    // Add to the table using the new function
+                    addQuestionnaireObjectiveRow(objective, formattedQuarter);
                 });
             } else if (submittedObjectives && submittedObjectives.length > 0) {
                 // Fall back to basic objectives with no guide questions if no data returned
                 submittedObjectives.forEach(objective => {
-                    addFormFeedbackRow(objective);
+                    addQuestionnaireObjectiveRow(objective, formattedQuarter);
                 });
+            }
+            
+            // Display skills data
+            const hardSkillsTableBody = document.getElementById('hard-skills-table-body');
+            const softSkillsTableBody = document.getElementById('soft-skills-table-body');
+            
+            if (hardSkillsTableBody) {
+                hardSkillsTableBody.innerHTML = '';
+                if (data.hardSkills && data.hardSkills.length > 0) {
+                    data.hardSkills.forEach(skill => {
+                        addQuestionnaireSkillRow(skill, 'hard');
+                    });
+                }
+            }
+            
+            if (softSkillsTableBody) {
+                softSkillsTableBody.innerHTML = '';
+                if (data.softSkills && data.softSkills.length > 0) {
+                    data.softSkills.forEach(skill => {
+                        addQuestionnaireSkillRow(skill, 'soft');
+                    });
+                }
             }
             
             // Set the date fields if available
@@ -2918,7 +3335,7 @@ async function fetchSubmittedFeedbackData(quarter) {
             // Fall back to basic objectives with no guide questions
             if (submittedObjectives && submittedObjectives.length > 0) {
                 submittedObjectives.forEach(objective => {
-                    addFormFeedbackRow(objective);
+                    addQuestionnaireObjectiveRow(objective, formattedQuarter);
                 });
             }
         }
@@ -2929,7 +3346,7 @@ async function fetchSubmittedFeedbackData(quarter) {
         if (submittedObjectives && submittedObjectives.length > 0 && feedbackTableBody) {
             feedbackTableBody.innerHTML = '';
             submittedObjectives.forEach(objective => {
-                addFormFeedbackRow(objective);
+                addQuestionnaireObjectiveRow(objective, formattedQuarter);
             });
         }
     }
@@ -2980,9 +3397,6 @@ function toggleFeedbackView(view) {
         loadFeedbackData(quarter);
     }
 }
-
-
-// Function to save 360 feedback
 async function save360DegreeFeedback() {
     console.log("Saving 360 degree feedback...");
     
@@ -3045,18 +3459,14 @@ async function save360DegreeFeedback() {
     };
 
     // Collect qualitative questions from input fields
-    const feedbackRows = document.querySelectorAll('#feedback-table-body tr');
-    feedbackRows.forEach(row => {
-        const qualitativeInput = row.querySelector('input[type="text"]');
-
-        if (qualitativeInput && qualitativeInput.value.trim()) {
-            const objectiveId = qualitativeInput.getAttribute('data-objective-id');
-            if (objectiveId) {
-                feedbackData.questions.push({
-                    objectiveId: objectiveId,
-                    questionText: qualitativeInput.value.trim()
-                });
-            }
+    const guideQuestionInputs = document.querySelectorAll('.guide-question-input');
+    guideQuestionInputs.forEach(input => {
+        const objectiveId = input.getAttribute('data-objective-id');
+        if (objectiveId && input.value.trim()) {
+            feedbackData.questions.push({
+                objectiveId: objectiveId,
+                questionText: input.value.trim()
+            });
         }
     });
 
@@ -3074,9 +3484,9 @@ async function save360DegreeFeedback() {
 
     console.log("Feedback data to save:", feedbackData);
 
-    // Send data to server
+    // Send data to server using the new endpoint
     try {
-        const response = await fetch(`/linemanager/records-performance-tracker/questionnaire/${userId}`, {
+        const response = await fetch(`/linemanager/get-feedback-questionnaire/${userId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -3138,6 +3548,7 @@ async function save360DegreeFeedback() {
         }
     }
 }
+
 
 // Function to fetch year data
 function fetchYearData() {

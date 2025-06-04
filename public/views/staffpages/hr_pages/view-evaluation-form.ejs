@@ -34,12 +34,17 @@
 
         .applicant-info {
             margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #124A5C;
         }
 
         .applicant-info h2 {
             color: #124A5C;
             font-size: 1.5rem;
             margin-bottom: 15px;
+            margin-top: 0;
         }
 
         .info-grid {
@@ -62,57 +67,245 @@
         .info-item span {
             display: block;
             padding: 8px;
-            background-color: #f9f9f9;
+            background-color: white;
             border-radius: 4px;
+            border: 1px solid #e9ecef;
         }
 
-        .evaluation-summary {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
+        /* Rating Definition Guide */
+        .rating-guide {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
         }
 
-        .evaluation-summary h2 {
+        .rating-guide h2 {
             color: #124A5C;
-            font-size: 1.5rem;
+            margin-top: 0;
             margin-bottom: 15px;
         }
 
-        .score-container {
+        .rating-guide table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .rating-guide table th, 
+        .rating-guide table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .rating-guide table th {
+            background-color: #124A5C;
+            color: white;
+            font-weight: bold;
+        }
+
+        .rating-guide table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Evaluation Sections */
+        .evaluation-section {
+            margin: 25px 0;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+
+        .section-header {
+            color: #124A5C;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            margin-top: 0;
+            border-bottom: 2px solid #124A5C;
+            padding-bottom: 8px;
+        }
+
+        .score-item {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            border-left: 3px solid #07ACB9;
+        }
+
+        .score-item:last-of-type {
+            margin-bottom: 15px;
         }
 
         .score-label {
-            font-weight: bold;
-            margin-right: 15px;
-            font-size: 18px;
+            flex: 1;
+            font-weight: 500;
+            color: #333;
         }
 
         .score-value {
-            font-size: 24px;
+            background-color: #124A5C;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
             font-weight: bold;
-            color: #124A5C;
-            background-color: #f0f0f0;
-            padding: 10px 20px;
-            border-radius: 5px;
+            min-width: 40px;
+            text-align: center;
+            font-size: 16px;
         }
 
+        .category-total {
+            background-color: #124A5C;
+            color: white;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Final Assessment */
+        .final-assessment {
+            margin: 30px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, #124A5C, #07ACB9);
+            color: white;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .final-assessment h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .total-score {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        /* Additional Information */
+        .additional-info {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .additional-info h2 {
+            color: #124A5C;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            margin-bottom: 15px;
+        }
+
+        .info-row label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .info-row .value {
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+            color: #555;
+        }
+
+        /* Yes/No Section */
+        .yes-no-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+        }
+
+        .yes-no-section h2 {
+            color: #124A5C;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .yes-no-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .yes-no-item {
+            text-align: center;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .yes-no-item label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .yes-no-value {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .yes-no-value.yes {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .yes-no-value.no {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        /* Action Buttons */
         .button-container {
             display: flex;
             gap: 15px;
-            margin-top: 30px;
+            margin-top: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .action-button {
-            padding: 10px 20px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-button {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .back-button:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
         }
 
         .reject-button {
@@ -120,50 +313,47 @@
             color: white;
         }
 
+        .reject-button:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+
         .pass-button {
             background-color: #27ae60;
             color: white;
         }
 
-        .back-button {
-            background-color: #7f8c8d;
-            color: white;
-        }
-
-        .action-button:hover {
-            opacity: 0.9;
-        }
-
-        .categories-container {
-            margin-top: 30px;
-        }
-
-        .category {
-            margin-bottom: 20px;
-        }
-
-        .category-header {
-            font-weight: bold;
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #124A5C;
-        }
-
-        .category-score {
-            background-color: #f0f0f0;
-            padding: 8px 15px;
-            border-radius: 4px;
-            display: inline-block;
-            font-weight: bold;
+        .pass-button:hover {
+            background-color: #219a52;
+            transform: translateY(-1px);
         }
 
         @media (max-width: 768px) {
             .container {
                 margin-left: 0;
+                padding: 10px;
             }
 
             .info-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .yes-no-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .action-button {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .total-score {
+                font-size: 2rem;
             }
         }
     </style>
@@ -171,96 +361,234 @@
 <body>
     <%- include('../../partials/hr_partials') %>
     <div class="container">
-        <h1>Evaluation Form Review</h1>
+        <h1>HR Evaluation Form Review</h1>
         
         <div class="evaluation-container">
+            <!-- Applicant Information -->
             <div class="applicant-info">
                 <h2>Applicant Information</h2>
                 <div class="info-grid">
                     <div class="info-item">
                         <label>Candidate Name:</label>
-                        <span><%= applicant.firstName %> <%= applicant.lastName %></span>
+                        <span><%= applicant?.firstName %> <%= applicant?.lastName %></span>
                     </div>
                     <div class="info-item">
                         <label>Position Applied:</label>
-                        <span><%= applicant.jobTitle || 'N/A' %></span>
+                        <span><%= applicant?.jobpositions?.jobTitle || 'N/A' %></span>
                     </div>
                     <div class="info-item">
                         <label>Department:</label>
-                        <span><%= applicant.deptName || 'N/A' %></span>
+                        <span><%= interviewDetails?.departmentName || 'N/A' %></span>
                     </div>
                     <div class="info-item">
-                        <label>Email:</label>
-                        <span><%= applicant.userEmail || 'N/A' %></span>
+                        <label>Conducted by:</label>
+                        <span><%= interviewDetails?.conductedBy || 'N/A' %></span>
                     </div>
                     <div class="info-item">
-                        <label>Status:</label>
-                        <span><%= applicant.applicantStatus || 'N/A' %></span>
+                        <label>Date of Interview:</label>
+                        <span><%= evaluation?.interviewDate || 'N/A' %></span>
+                    </div>
+                    <div class="info-item">
+                        <label>Current Status:</label>
+                        <span><%= applicant?.applicantStatus || 'N/A' %></span>
                     </div>
                 </div>
             </div>
-            
-            <div class="evaluation-summary">
-                <h2>Evaluation Summary</h2>
-                <div class="score-container">
-                    <div class="score-label">Total Assessment Rating:</div>
-                    <div class="score-value"><%= evaluationScore %></div>
+
+            <!-- Rating Definition Guide -->
+            <div class="rating-guide">
+                <h2>Rating Definition Guide</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rating Level</th>
+                            <th>Description</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Clearly Evident</strong></td>
+                            <td>Clearly and thoroughly explains actions, thought process, and outcomes. Shows a deep understanding and high level of skill in the area being assessed.</td>
+                            <td><strong>3</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Moderately Evident</strong></td>
+                            <td>Adequately explains actions, thought process, and outcomes, but some aspects may be unclear or underdeveloped. Shows a reasonable understanding and skill level in the area being assessed.</td>
+                            <td><strong>2</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Not Evident</strong></td>
+                            <td>Struggles to explain actions, thought process, and outcomes. Shows a lack of understanding and inadequate skill in the area being assessed.</td>
+                            <td><strong>1</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Professional Background and Experience -->
+            <div class="evaluation-section">
+                <h2 class="section-header">Professional Background and Experience</h2>
+                <div class="score-item">
+                    <span class="score-label">Demonstrated understanding of role requirements?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.professionalBackground?.understanding || 'N/A' %></span>
                 </div>
-                
-                <div class="categories-container">
-                    <div class="category">
-                        <div class="category-header">Professional Background and Experience</div>
-                        <div class="category-score">Score: <%= applicant.professionalBackgroundScore || 'N/A' %></div>
+                <div class="score-item">
+                    <span class="score-label">Relevance of experience to job description?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.professionalBackground?.relevance || 'N/A' %></span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">Highlighted achievements and contributions in previous roles?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.professionalBackground?.achievements || 'N/A' %></span>
+                </div>
+                <div class="category-total">
+                    Professional Background Total: <%= evaluation?.hrFormData?.professionalBackground?.total || 'N/A' %>
+                </div>
+            </div>
+
+            <!-- Teamwork and Collaboration -->
+            <div class="evaluation-section">
+                <h2 class="section-header">Teamwork and Collaboration</h2>
+                <div class="score-item">
+                    <span class="score-label">Emphasized importance of collaboration?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.teamworkAndCollaboration?.collaboration || 'N/A' %></span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">Shared experiences of effective teamwork?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.teamworkAndCollaboration?.experiences || 'N/A' %></span>
+                </div>
+                <div class="category-total">
+                    Teamwork Total: <%= evaluation?.hrFormData?.teamworkAndCollaboration?.total || 'N/A' %>
+                </div>
+            </div>
+
+            <!-- Value Creation -->
+            <div class="evaluation-section">
+                <h2 class="section-header">Value Creation</h2>
+                <div class="score-item">
+                    <span class="score-label">Demonstrated ability to generate innovative ideas or solutions?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.valueCreation?.innovation || 'N/A' %></span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">Contributed to the creation of tangible value for the team or organization?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.valueCreation?.contribution || 'N/A' %></span>
+                </div>
+                <div class="category-total">
+                    Value Creation Total: <%= evaluation?.hrFormData?.valueCreation?.total || 'N/A' %>
+                </div>
+            </div>
+
+            <!-- Integrity -->
+            <div class="evaluation-section">
+                <h2 class="section-header">Integrity</h2>
+                <div class="score-item">
+                    <span class="score-label">Showed respect for colleagues and stakeholders?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.integrity?.respect || 'N/A' %></span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">Acted professionally and courteously in all interactions?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.integrity?.professional || 'N/A' %></span>
+                </div>
+                <div class="category-total">
+                    Integrity Total: <%= evaluation?.hrFormData?.integrity?.total || 'N/A' %>
+                </div>
+            </div>
+
+            <!-- Problem-Solving Abilities -->
+            <div class="evaluation-section">
+                <h2 class="section-header">Problem-Solving Abilities</h2>
+                <div class="score-item">
+                    <span class="score-label">Demonstrated strong problem-solving skills?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.problemSolvingAbilities?.skills || 'N/A' %></span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">Provided examples of problem-solving approach?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.problemSolvingAbilities?.examples || 'N/A' %></span>
+                </div>
+                <div class="category-total">
+                    Problem-Solving Total: <%= evaluation?.hrFormData?.problemSolvingAbilities?.total || 'N/A' %>
+                </div>
+            </div>
+
+            <!-- Motivation and Fit -->
+            <div class="evaluation-section">
+                <h2 class="section-header">Motivation and Fit</h2>
+                <div class="score-item">
+                    <span class="score-label">Demonstrated genuine interest in the position?</span>
+                    <span class="score-value"><%= evaluation?.hrFormData?.motivationAndFit?.interest || 'N/A' %></span>
+                </div>
+                <div class="category-total">
+                    Motivation and Fit Total: <%= evaluation?.hrFormData?.motivationAndFit?.total || 'N/A' %>
+                </div>
+            </div>
+
+            <!-- Final Assessment -->
+            <div class="final-assessment">
+                <h2>Final Assessment Rating</h2>
+                <div class="total-score"><%= evaluation?.totalAssessmentRating || 'N/A' %></div>
+                <p>Total Points Achieved</p>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="additional-info">
+                <h2>Additional Information</h2>
+                <div class="info-row">
+                    <label>Expected Compensation:</label>
+                    <div class="value"><%= evaluation?.expectedCompensation || 'Not provided' %></div>
+                </div>
+                <div class="info-row">
+                    <label>Reason for Applying:</label>
+                    <div class="value"><%= evaluation?.reasonForApplying || 'Not provided' %></div>
+                </div>
+                <div class="info-row">
+                    <label>Availability:</label>
+                    <div class="value"><%= evaluation?.availability || 'Not provided' %></div>
+                </div>
+            </div>
+
+            <!-- Yes/No Questions -->
+            <div class="yes-no-section">
+                <h2>Final Assessment Questions</h2>
+                <div class="yes-no-grid">
+                    <div class="yes-no-item">
+                        <label>Potential Fit for the Role?</label>
+                        <span class="yes-no-value <%= evaluation?.fitForRole ? 'yes' : 'no' %>">
+                            <%= evaluation?.fitForRole ? 'Yes' : 'No' %>
+                        </span>
                     </div>
-                    
-                    <div class="category">
-                        <div class="category-header">Functional Skills</div>
-                        <div class="category-score">Score: <%= applicant.functionalSkillsScore || 'N/A' %></div>
-                    </div>
-                    
-                    <div class="category">
-                        <div class="category-header">Teamwork and Collaboration</div>
-                        <div class="category-score">Score: <%= applicant.teamworkScore || 'N/A' %></div>
-                    </div>
-                    
-                    <div class="category">
-                        <div class="category-header">Value Creation</div>
-                        <div class="category-score">Score: <%= applicant.valueCreationScore || 'N/A' %></div>
-                    </div>
-                    
-                    <div class="category">
-                        <div class="category-header">Integrity</div>
-                        <div class="category-score">Score: <%= applicant.integrityScore || 'N/A' %></div>
-                    </div>
-                    
-                    <div class="category">
-                        <div class="category-header">Problem-Solving Abilities</div>
-                        <div class="category-score">Score: <%= applicant.problemSolvingScore || 'N/A' %></div>
-                    </div>
-                    
-                    <div class="category">
-                        <div class="category-header">Motivation and Fit</div>
-                        <div class="category-score">Score: <%= applicant.motivationScore || 'N/A' %></div>
+                    <div class="yes-no-item">
+                        <label>Recommended for Further Consideration?</label>
+                        <span class="yes-no-value <%= evaluation?.recommendedForConsideration ? 'yes' : 'no' %>">
+                            <%= evaluation?.recommendedForConsideration ? 'Yes' : 'No' %>
+                        </span>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Action Buttons -->
             <div class="button-container">
-                <button class="action-button back-button" onclick="window.location.href='/hr/applicant-tracker-jobposition'">Back</button>
-                <button class="action-button reject-button" onclick="rejectApplicant('<%= applicantId %>')">Reject Applicant</button>
-                <button class="action-button pass-button" onclick="passApplicant('<%= applicantId %>')">Pass Applicant</button>
+                <a href="/hr/applicant-tracker" class="action-button back-button">Back to Applicant Tracker</a>
+                
+                <% if (applicant?.applicantStatus === 'P2 - HR Evaluation Accomplished') { %>
+                    <button class="action-button reject-button" onclick="rejectApplicant('<%= applicant.applicantId %>')">
+                        Mark as Failed
+                    </button>
+                    <button class="action-button pass-button" onclick="passApplicant('<%= applicant.applicantId %>')">
+                        Mark as Passed
+                    </button>
+                <% } %>
             </div>
         </div>
     </div>
 
     <script>
-        // Function to handle rejecting an applicant
+        // Function to handle rejecting an applicant (marking as P2 FAILED)
         function rejectApplicant(applicantId) {
-            if (!confirm("Are you sure you want to reject this applicant? This action cannot be undone.")) {
+            if (!confirm("Are you sure you want to mark this applicant as FAILED? This can be changed until the review is finalized.")) {
                 return;
             }
 
-            fetch('/hr/reject-applicant', {
+            fetch('/hr/markAsP2Failed', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -270,25 +598,25 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert("Applicant has been rejected successfully.");
-                    window.location.href = '/hr/applicant-tracker-jobposition';
+                    alert("Applicant has been marked as P2 FAILED successfully.");
+                    window.location.href = '/hr/applicant-tracker';
                 } else {
-                    alert("Failed to reject applicant: " + (data.message || "Unknown error"));
+                    alert("Failed to mark applicant as failed: " + (data.message || "Unknown error"));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("An error occurred while rejecting the applicant.");
+                alert("An error occurred while marking the applicant as failed.");
             });
         }
 
-        // Function to handle passing an applicant
+        // Function to handle passing an applicant (marking as P2 PASSED)
         function passApplicant(applicantId) {
-            if (!confirm("Are you sure you want to pass this applicant to the next stage? This action cannot be undone.")) {
+            if (!confirm("Are you sure you want to mark this applicant as PASSED? This can be changed until the review is finalized.")) {
                 return;
             }
 
-            fetch('/hr/pass-applicant', {
+            fetch('/hr/markAsP2Passed', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -298,15 +626,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert("Applicant has been passed to the next stage successfully.");
-                    window.location.href = '/hr/applicant-tracker-jobposition';
+                    alert("Applicant has been marked as P2 PASSED successfully.");
+                    window.location.href = '/hr/applicant-tracker';
                 } else {
-                    alert("Failed to pass applicant: " + (data.message || "Unknown error"));
+                    alert("Failed to mark applicant as passed: " + (data.message || "Unknown error"));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("An error occurred while passing the applicant.");
+                alert("An error occurred while marking the applicant as passed.");
             });
         }
     </script>

@@ -845,81 +845,6 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
             }
         },
     
-        getEvaluationForm: async function (req, res) {
-            // Check if the user is logged in and has the 'HR' role
-            if (req.session.user && req.session.user.userRole === 'HR') {
-                const applicantId = req.params.applicantId; // Get applicantId from URL path
-        
-                try {
-                    console.log('Fetching applicant details for applicantId:', applicantId);
-        
-                    // Parse applicantId to ensure it is a valid integer
-                    const parsedApplicantId = parseInt(applicantId, 10);
-                    if (isNaN(parsedApplicantId)) {
-                        req.flash('errors', { message: 'Invalid Applicant ID format.' });
-                        return res.redirect('/hr/applicant-tracker-jobposition');
-                    }
-        
-                    // Fetch the applicant's details from the database with additional information
-                    const { data: applicant, error } = await supabase
-                        .from('applicantaccounts')
-                        .select(`
-                            *,
-                            jobpositions (
-                                jobTitle,
-                                departmentId
-                            ),
-                            departments (
-                                deptName
-                            )
-                        `)
-                        .eq('applicantId', parsedApplicantId)
-                        .single();
-        
-                    // Log the response for debugging
-                    console.log('Database Response:', { data: applicant, error });
-        
-                    // Handle database errors or missing applicant data
-                    if (error || !applicant) {
-                        console.error("Error fetching applicant details:", error || "Applicant not found.");
-                        req.flash('errors', { message: 'Could not retrieve applicant details.' });
-                        return res.redirect('/hr/applicant-tracker-jobposition');
-                    }
-        
-                    // Fetch the HR representative's name
-                    const hrName = req.session.user.firstName + ' ' + req.session.user.lastName || 'HR Representative';
-                    
-                    // Get current date for interview
-                    const interviewDate = new Date().toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-        
-                    console.log('Applicant Details:', applicant); // Log the applicant details for inspection
-        
-                    // Render the evaluation form with applicant details
-                    res.render('staffpages/hr_pages/hr-eval-form', {
-                        applicantId: parsedApplicantId,
-                        applicant,
-                        interviewDetails: {
-                            conductedBy: hrName,
-                            dateOfInterview: interviewDate,
-                            departmentName: applicant.departments?.deptName || 'N/A'
-                        }
-                    });
-                } catch (err) {
-                    // Handle unexpected server errors
-                    console.error("Error loading evaluation form:", err);
-                    req.flash('errors', { message: 'Internal server error.' });
-                    return res.redirect('/hr/applicant-tracker-jobposition');
-                }
-            } else {
-                // Redirect unauthorized users to the login page
-                req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-                res.redirect('/staff/login');
-            }
-        },
 
     /* END OF ATS CODES DIVIDER  */
     
@@ -2680,66 +2605,330 @@ updateJobOffer: async function(req, res) {
         }
     },
 
+saveEvaluation: async function (req, res) {
+    try {
+        console.log("Request Body:", req.body);
+        
+        // Extract all form data
+        const {
+            applicantId,
+            totalAssessmentRating,
+            expectedCompensation,
+            reasonForApplying,
+            availability,
+            fitForRole,
+            recommendedForConsideration,
+            // Individual ratings - Professional Background
+            professional_understanding,
+            professional_relevance,
+            professional_achievements,
+            // Individual ratings - Functional Skills
+            functional_proficiency,
+            functional_experience,
+            functional_examples,
+            // Individual ratings - Other categories
+            teamwork_collaboration,
+            teamwork_experiences,
+            value_innovation,
+            value_contribution,
+            integrity_respect,
+            integrity_professional,
+            problem_solving_skills,
+            problem_solving_examples,
+            motivation_interest,
+            // Category totals
+            professionalTotal,
+            functionalTotal,
+            teamworkTotal,
+            valueTotal,
+            integrityTotal,
+            problemSolvingTotal,
+            motivationTotal
+        } = req.body;
 
-    saveEvaluation: async function (req, res) {
-        try {
-            // Destructure required fields from the request body
-            console.log("Request Body:", req.body);
-            const { applicantId, totalRating, newStatus } = req.body;
-    
-            // Validate required inputs
-            if (!applicantId || !totalRating) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Applicant ID and total rating are required.",
-                });
-            }
-    
-            // Convert `applicantId` to an integer (if applicable)
-            const parsedApplicantId = parseInt(applicantId, 10);
-            if (isNaN(parsedApplicantId)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid Applicant ID format.",
-                });
-            }
-    
-            // Save the evaluation score and update status in the database
-            const { data, error } = await supabase
-                .from("applicantaccounts")
-                .update({ 
-                    hrInterviewFormScore: totalRating,
-                    applicantStatus: newStatus // Update the status to "P2 - HR Evaluation Accomplished"
-                })
-                .eq("applicantId", parsedApplicantId);
-    
-            console.log("Supabase Response:", { data, error });
-    
-            // Check for Supabase errors
-            if (error) {
-                console.error("Error saving evaluation score:", error);
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to save the evaluation score.",
-                });
-            }
-    
-            // Respond with success
-            res.json({
-                success: true,
-                message: "Evaluation score saved and applicant status updated successfully!",
-            });
-        } catch (err) {
-            // Handle unexpected server errors
-            console.error("Server error:", err);
-            res.status(500).json({
+        // Validate required inputs
+        if (!applicantId) {
+            return res.status(400).json({
                 success: false,
-                message: "An unexpected error occurred while saving the evaluation.",
+                message: "Applicant ID is required.",
             });
         }
-    },
 
-    // Add these functions to your hrController object
+        if (totalAssessmentRating === undefined || totalAssessmentRating === null) {
+            return res.status(400).json({
+                success: false,
+                message: "Total assessment rating is required.",
+            });
+        }
+
+        // Convert applicantId to integer
+        const parsedApplicantId = parseInt(applicantId, 10);
+        if (isNaN(parsedApplicantId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Applicant ID format.",
+            });
+        }
+
+        // Get HR user ID from session
+        const hrUserId = req.session.user?.userId;
+        if (!hrUserId) {
+            return res.status(401).json({
+                success: false,
+                message: "HR user not authenticated.",
+            });
+        }
+
+        // First, get the applicant's job ID
+        const { data: applicantData, error: applicantError } = await supabase
+            .from("applicantaccounts")
+            .select("jobId")
+            .eq("applicantId", parsedApplicantId)
+            .single();
+
+        if (applicantError || !applicantData) {
+            console.error("Applicant lookup error:", applicantError);
+            return res.status(404).json({
+                success: false,
+                message: "Applicant not found.",
+            });
+        }
+
+        // Helper function to safely parse integers
+        const safeParseInt = (value) => {
+            const parsed = parseInt(value, 10);
+            return isNaN(parsed) ? 0 : parsed;
+        };
+
+        // Prepare the hrFormData as JSONB structure
+        const hrFormData = {
+            professionalBackground: {
+                understanding: safeParseInt(professional_understanding),
+                relevance: safeParseInt(professional_relevance),
+                achievements: safeParseInt(professional_achievements),
+                total: safeParseInt(professionalTotal)
+            },
+            functionalSkills: {
+                proficiency: safeParseInt(functional_proficiency),
+                experience: safeParseInt(functional_experience),
+                examples: safeParseInt(functional_examples),
+                total: safeParseInt(functionalTotal)
+            },
+            teamworkAndCollaboration: {
+                collaboration: safeParseInt(teamwork_collaboration),
+                experiences: safeParseInt(teamwork_experiences),
+                total: safeParseInt(teamworkTotal)
+            },
+            valueCreation: {
+                innovation: safeParseInt(value_innovation),
+                contribution: safeParseInt(value_contribution),
+                total: safeParseInt(valueTotal)
+            },
+            integrity: {
+                respect: safeParseInt(integrity_respect),
+                professional: safeParseInt(integrity_professional),
+                total: safeParseInt(integrityTotal)
+            },
+            problemSolvingAbilities: {
+                skills: safeParseInt(problem_solving_skills),
+                examples: safeParseInt(problem_solving_examples),
+                total: safeParseInt(problemSolvingTotal)
+            },
+            motivationAndFit: {
+                interest: safeParseInt(motivation_interest),
+                total: safeParseInt(motivationTotal)
+            }
+        };
+
+        // Get current date for interview date
+        const currentDate = new Date().toISOString().split('T')[0];
+
+        // Convert boolean values properly
+        const fitForRoleBool = fitForRole === true || fitForRole === 'true' || fitForRole === 'Yes';
+        const recommendedBool = recommendedForConsideration === true || recommendedForConsideration === 'true' || recommendedForConsideration === 'Yes';
+
+        // Check if evaluation already exists
+        const { data: existingEval, error: checkError } = await supabase
+            .from("applicant_hrscreening_assessment")
+            .select('hrInterviewId')
+            .eq('applicantUserid', parsedApplicantId)
+            .single();
+
+        let evaluationData, evaluationError;
+
+        const evaluationRecord = {
+            hrUserId: hrUserId,
+            jobId: applicantData.jobId,
+            interviewDate: currentDate,
+            hrFormData: hrFormData,
+            recommendedForConsideration: recommendedBool,
+            totalAssessmentRating: parseFloat(totalAssessmentRating),
+            fitForRole: fitForRoleBool,
+            expectedCompensation: expectedCompensation || null,
+            reasonForApplying: reasonForApplying || null,
+            availability: availability || null
+        };
+
+        if (existingEval && !checkError) {
+            // Update existing evaluation
+            evaluationRecord.updatedAt = new Date().toISOString();
+            
+            const updateResult = await supabase
+                .from("applicant_hrscreening_assessment")
+                .update(evaluationRecord)
+                .eq('applicantUserid', parsedApplicantId)
+                .select();
+
+            evaluationData = updateResult.data;
+            evaluationError = updateResult.error;
+            console.log("Updated existing evaluation for applicantId:", parsedApplicantId);
+        } else {
+            // Insert new evaluation
+            evaluationRecord.applicantUserid = parsedApplicantId;
+            evaluationRecord.createdAt = new Date().toISOString();
+            
+            const insertResult = await supabase
+                .from("applicant_hrscreening_assessment")
+                .insert(evaluationRecord)
+                .select();
+
+            evaluationData = insertResult.data;
+            evaluationError = insertResult.error;
+            console.log("Created new evaluation for applicantId:", parsedApplicantId);
+        }
+
+        console.log("Evaluation Supabase Response:", { data: evaluationData, error: evaluationError });
+
+        if (evaluationError) {
+            console.error("Error saving evaluation:", evaluationError);
+            return res.status(500).json({
+                success: false,
+                message: "Failed to save the evaluation.",
+                error: evaluationError.message
+            });
+        }
+
+        // Update applicant status and hrInterviewFormScore in applicantaccounts table
+        const { data: statusData, error: statusError } = await supabase
+            .from("applicantaccounts")
+            .update({
+                applicantStatus: "P2 - HR Evaluation Accomplished",
+                hrInterviewFormScore: parseFloat(totalAssessmentRating)
+            })
+            .eq("applicantId", parsedApplicantId);
+
+        console.log("Status Update Supabase Response:", { data: statusData, error: statusError });
+
+        if (statusError) {
+            console.error("Error updating applicant status:", statusError);
+            // Note: We don't return error here as the evaluation was saved successfully
+        }
+
+        // Respond with success
+        res.json({
+            success: true,
+            message: "Evaluation saved and applicant status updated successfully!",
+            data: {
+                evaluationId: evaluationData?.[0]?.hrInterviewId,
+                totalRating: totalAssessmentRating,
+                applicantStatus: "P2 - HR Evaluation Accomplished"
+            }
+        });
+
+    } catch (err) {
+        console.error("Server error:", err);
+        res.status(500).json({
+            success: false,
+            message: "An unexpected error occurred while saving the evaluation.",
+            error: err.message
+        });
+    }
+},
+
+getEvaluationForm: async function (req, res) {
+    if (req.session.user && req.session.user.userRole === 'HR') {
+        const applicantId = req.params.applicantId;
+        
+        try {
+            console.log('Fetching applicant details for applicantId:', applicantId);
+            
+            const parsedApplicantId = parseInt(applicantId, 10);
+            if (isNaN(parsedApplicantId)) {
+                req.flash('errors', { message: 'Invalid Applicant ID format.' });
+                return res.redirect('/hr/applicant-tracker');
+            }
+            
+            // Fetch applicant details with proper joins
+            const { data: applicant, error } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    *,
+                    jobpositions!inner (
+                        jobTitle,
+                        departmentId,
+                        departments!inner (
+                            deptName
+                        )
+                    )
+                `)
+                .eq('applicantId', parsedApplicantId)
+                .single();
+            
+            console.log('Database Response:', { data: applicant, error });
+            
+            if (error || !applicant) {
+                console.error("Error fetching applicant details:", error || "Applicant not found.");
+                req.flash('errors', { message: 'Could not retrieve applicant details.' });
+                return res.redirect('/hr/applicant-tracker');
+            }
+            
+            // Get HR name from session
+            const hrName = `${req.session.user.firstName || ''} ${req.session.user.lastName || ''}`.trim() || 'HR Representative';
+            
+            // Get current date
+            const interviewDate = new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            console.log('Applicant Details:', applicant);
+            
+            // Check if evaluation already exists
+            const { data: existingEvaluation, error: evalError } = await supabase
+                .from('applicant_hrscreening_assessment')
+                .select('*')
+                .eq('applicantUserid', parsedApplicantId)
+                .single();
+            
+            if (existingEvaluation && !evalError) {
+                req.flash('info', { message: 'An evaluation already exists for this applicant.' });
+                // You can either redirect or show the existing evaluation
+                // For now, we'll continue to show the form
+            }
+            
+            // Render the evaluation form
+            res.render('staffpages/hr_pages/hr-eval-form', {
+                applicantId: parsedApplicantId,
+                applicant,
+                interviewDetails: {
+                    conductedBy: hrName,
+                    dateOfInterview: interviewDate,
+                    departmentName: applicant.jobpositions?.departments?.deptName || 'N/A'
+                },
+                existingEvaluation: existingEvaluation || null
+            });
+            
+        } catch (err) {
+            console.error("Error loading evaluation form:", err);
+            req.flash('errors', { message: 'Internal server error.' });
+            return res.redirect('/hr/applicant-tracker');
+        }
+    } else {
+        req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+        res.redirect('/staff/login');
+    }
+},
 
 // Function to handle rejection of an applicant
 rejectApplicant: async function(req, res) {
@@ -2803,6 +2992,238 @@ passApplicant: async function(req, res) {
     }
 },
 
+
+
+// Mark applicant as P2 PASSED (Pending Finalization)
+markAsP2Passed: async function(req, res) {
+    try {
+        const { applicantId } = req.body;
+        
+        if (!applicantId) {
+            return res.status(400).json({ success: false, message: "Missing applicant ID" });
+        }
+        
+        // Update the status for display purposes only
+        const { data, error } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'P2 - PASSED (Pending Finalization)' })
+            .eq('applicantId', applicantId);
+            
+        if (error) {
+            console.error('❌ [HR] Error marking applicant as P2 PASSED:', error);
+            return res.status(500).json({ success: false, message: "Error updating applicant status" });
+        }
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: "Applicant marked as P2 PASSED. Status will be finalized when review is complete."
+        });
+        
+    } catch (error) {
+        console.error('❌ [HR] Error marking as P2 PASSED:', error);
+        return res.status(500).json({ success: false, message: "Error marking applicant as P2 PASSED: " + error.message });
+    }
+},
+
+// Mark applicant as P2 FAILED (Pending Finalization)
+markAsP2Failed: async function(req, res) {
+    try {
+        const { applicantId } = req.body;
+        
+        if (!applicantId) {
+            return res.status(400).json({ success: false, message: "Missing applicant ID" });
+        }
+        
+        // Update the status for display purposes only
+        const { data, error } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'P2 - FAILED (Pending Finalization)' })
+            .eq('applicantId', applicantId);
+            
+        if (error) {
+            console.error('❌ [HR] Error marking applicant as P2 FAILED:', error);
+            return res.status(500).json({ success: false, message: "Error updating applicant status" });
+        }
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: "Applicant marked as P2 FAILED. Status will be finalized when review is complete."
+        });
+        
+    } catch (error) {
+        console.error('❌ [HR] Error marking as P2 FAILED:', error);
+        return res.status(500).json({ success: false, message: "Error marking applicant as P2 FAILED: " + error.message });
+    }
+},
+
+// Finalize P2 Review and notify applicants
+finalizeP2Review: async function(req, res) {
+    try {
+        console.log('✅ [HR] Finalizing P2 review process');
+        
+        const { passedApplicantIds, failedApplicantIds } = req.body;
+        
+        if (!passedApplicantIds || !failedApplicantIds) {
+            return res.status(400).json({ success: false, message: "Missing applicant IDs" });
+        }
+        
+        console.log(`✅ [HR] P2 Finalization: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
+        
+        let updateResults = {
+            passed: { updated: 0, errors: [] },
+            failed: { updated: 0, errors: [] }
+        };
+        
+        // Update passed applicants
+        for (const applicantId of passedApplicantIds) {
+            try {
+                console.log(`✅ [HR] Updating P2 PASSED status for applicantId: ${applicantId}`);
+                
+                // Update applicant status in the database
+                const { data: updateData, error: updateError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ 
+                        applicantStatus: 'P2 - PASSED',
+                        p2_Approved: true,
+                        p2_hrevalscheduled: true
+                    })
+                    .eq('applicantId', applicantId);
+                    
+                if (updateError) {
+                    console.error(`❌ [HR] Error updating status for ${applicantId}:`, updateError);
+                    updateResults.passed.errors.push(`${applicantId}: ${updateError.message}`);
+                    continue;
+                }
+                
+                updateResults.passed.updated++;
+                
+                // Get userId for chatbot message
+                const { data: applicantData, error: fetchError } = await supabase
+                    .from('applicantaccounts')
+                    .select('userId')
+                    .eq('applicantId', applicantId)
+                    .single();
+                
+                if (!fetchError && applicantData && applicantData.userId) {
+                    // Add chatbot message
+                    const { data: chatData, error: chatError } = await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId: applicantData.userId,
+                            message: JSON.stringify({ 
+                                text: "Congratulations! You have successfully passed the HR evaluation process. We will contact you soon to schedule the next interview stage with the Line Manager." 
+                            }),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString(),
+                            applicantStage: 'P2 - PASSED'
+                        }]);
+                        
+                    if (chatError) {
+                        console.error(`❌ [HR] Error adding chat message for ${applicantId}:`, chatError);
+                    }
+                }
+                
+                // Send email notification (you can customize this)
+                // await sendEmailNotification(applicantId, 'P2_PASSED');
+                
+            } catch (error) {
+                console.error(`❌ [HR] Error processing passed applicant ${applicantId}:`, error);
+                updateResults.passed.errors.push(`${applicantId}: ${error.message}`);
+            }
+        }
+        
+        // Update failed applicants
+        for (const applicantId of failedApplicantIds) {
+            try {
+                console.log(`✅ [HR] Updating P2 FAILED status for applicantId: ${applicantId}`);
+                
+                // Update applicant status in the database
+                const { data: updateData, error: updateError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ 
+                        applicantStatus: 'P2 - FAILED',
+                        p2_Approved: false
+                    })
+                    .eq('applicantId', applicantId);
+                    
+                if (updateError) {
+                    console.error(`❌ [HR] Error updating status for ${applicantId}:`, updateError);
+                    updateResults.failed.errors.push(`${applicantId}: ${updateError.message}`);
+                    continue;
+                }
+                
+                updateResults.failed.updated++;
+                
+                // Get userId for chatbot message
+                const { data: applicantData, error: fetchError } = await supabase
+                    .from('applicantaccounts')
+                    .select('userId')
+                    .eq('applicantId', applicantId)
+                    .single();
+                
+                if (!fetchError && applicantData && applicantData.userId) {
+                    // Add chatbot message
+                    const { data: chatData, error: chatError } = await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId: applicantData.userId,
+                            message: JSON.stringify({ 
+                                text: "We regret to inform you that you have not been selected to proceed to the next stage of the recruitment process. Thank you for your interest in Prime Infrastructure, and we wish you the best in your future endeavors." 
+                            }),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString(),
+                            applicantStage: 'P2 - FAILED'
+                        }]);
+                        
+                    if (chatError) {
+                        console.error(`❌ [HR] Error adding chat message for ${applicantId}:`, chatError);
+                    }
+                }
+                
+                // Send email notification (you can customize this)
+                // await sendEmailNotification(applicantId, 'P2_FAILED');
+                
+            } catch (error) {
+                console.error(`❌ [HR] Error processing failed applicant ${applicantId}:`, error);
+                updateResults.failed.errors.push(`${applicantId}: ${error.message}`);
+            }
+        }
+        
+        // Prepare response
+        const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
+        const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
+        
+        if (totalErrors > 0) {
+            console.warn(`⚠️ [HR] P2 status update completed with ${totalErrors} errors`);
+            return res.status(207).json({ // 207 Multi-Status for partial success
+                success: true,
+                message: `P2 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
+                updateResults: updateResults,
+                passedCount: updateResults.passed.updated,
+                failedCount: updateResults.failed.updated,
+                totalErrors: totalErrors
+            });
+        } else {
+            console.log(`✅ [HR] P2 status update completed successfully`);
+            return res.status(200).json({ 
+                success: true, 
+                message: "P2 statuses updated successfully. All applicants have been processed.",
+                updateResults: updateResults,
+                passedCount: updateResults.passed.updated,
+                failedCount: updateResults.failed.updated,
+                totalUpdated: totalUpdated
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ [HR] Error finalizing P2 review:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error finalizing P2 review: " + error.message 
+        });
+    }
+},
+
 // Function to view evaluation (if you need to implement this route)
 viewEvaluation: async function(req, res) {
     if (!req.session.user || req.session.user.userRole !== 'HR') {
@@ -2813,33 +3234,100 @@ viewEvaluation: async function(req, res) {
     const applicantId = req.params.applicantId;
     
     try {
-        // Fetch the applicant's details and evaluation score
-        const { data: applicant, error } = await supabase
+        console.log('Fetching evaluation for applicantId:', applicantId);
+        
+        // Parse applicantId to integer
+        const parsedApplicantId = parseInt(applicantId, 10);
+        if (isNaN(parsedApplicantId)) {
+            req.flash('errors', { message: 'Invalid Applicant ID format.' });
+            return res.redirect('/hr/applicant-tracker');
+        }
+        
+        // Fetch the applicant's details with job and department information
+        const { data: applicant, error: applicantError } = await supabase
             .from('applicantaccounts')
-            .select('*')
-            .eq('applicantId', applicantId)
+            .select(`
+                *,
+                jobpositions!inner (
+                    jobTitle,
+                    departmentId,
+                    departments!inner (
+                        deptName
+                    )
+                )
+            `)
+            .eq('applicantId', parsedApplicantId)
             .single();
 
-        if (error || !applicant) {
-            console.error('Error fetching applicant details:', error);
-            req.flash('errors', { message: 'Could not retrieve applicant evaluation details.' });
-            return res.redirect('/hr/applicant-tracker-jobposition');
+        if (applicantError || !applicant) {
+            console.error('Error fetching applicant details:', applicantError);
+            req.flash('errors', { message: 'Could not retrieve applicant details.' });
+            return res.redirect('/hr/applicant-tracker');
         }
 
-        // Render the evaluation view with the applicant's data
-        res.render('staffpages/hr_pages/view-evaluation-form', { 
-            applicantId, 
-            applicant,
-            evaluationScore: applicant.hrInterviewFormScore || 'No score available'
+        // Fetch the HR evaluation data using applicantUserid field
+        const { data: evaluation, error: evalError } = await supabase
+            .from('applicant_hrscreening_assessment')
+            .select('*')
+            .eq('applicantUserid', parsedApplicantId)
+            .single();
+
+        if (evalError || !evaluation) {
+            console.error('Error fetching evaluation:', evalError);
+            req.flash('errors', { message: 'Could not retrieve evaluation data. The evaluation may not have been completed yet.' });
+            return res.redirect('/hr/applicant-tracker');
+        }
+
+        // Get HR user details who conducted the evaluation
+        const { data: hrUser, error: hrError } = await supabase
+            .from('useraccounts')
+            .select('firstName, lastName')
+            .eq('userId', evaluation.hrUserId)
+            .single();
+
+        const hrName = hrUser ? `${hrUser.firstName} ${hrUser.lastName}` : 'HR Representative';
+
+        // Format the interview date for display
+        let formattedDate = 'N/A';
+        if (evaluation.interviewDate) {
+            try {
+                const date = new Date(evaluation.interviewDate);
+                formattedDate = date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (dateError) {
+                console.warn('Error formatting date:', dateError);
+                formattedDate = evaluation.interviewDate;
+            }
+        }
+
+        console.log('Evaluation data structure:', {
+            evaluationExists: !!evaluation,
+            hasHrFormData: !!evaluation?.hrFormData,
+            hrFormDataKeys: evaluation?.hrFormData ? Object.keys(evaluation.hrFormData) : [],
+            totalRating: evaluation?.totalAssessmentRating
         });
+        
+        // Render the view evaluation page with all necessary data
+        res.render('staffpages/hr_pages/view-evaluation-form', { 
+            applicant,
+            evaluation,
+            hrName,
+            interviewDetails: {
+                conductedBy: hrName,
+                dateOfInterview: formattedDate,
+                departmentName: applicant.jobpositions?.departments?.deptName || 'N/A'
+            }
+        });
+        
     } catch (err) {
         console.error('Error in viewEvaluation controller:', err);
         req.flash('errors', { message: 'Internal server error.' });
-        return res.redirect('/hr/applicant-tracker-jobposition');
+        return res.redirect('/hr/applicant-tracker');
     }
 },
-    
-    
     
     submitLeaveRequest: async function (req, res) {
         if (!req.session.user || !req.session.user.userId) {

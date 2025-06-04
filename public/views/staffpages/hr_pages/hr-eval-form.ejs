@@ -181,39 +181,54 @@
             border-radius: 4px;
         }
 
-        .yes-no-section {
-            margin-top: 20px;
-            display: flex;
-            justify-content: space-between;
-        }
+      .yes-no-section {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
 
-        .yes-no-section div {
-            flex: 1;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+.yes-no-section > div {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 
-        .yes-no-section div label {
-            display: inline-block;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
+.yes-no-section > div > label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
 
-        .yes-no-section div input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin-right: 5px;
-        }
+.yes-no-section > div > div {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
 
-        .yes-no-section div input[type="checkbox"]:checked + label {
-            color: #28a745; /* Green when checked */
-        }
+.yes-no-section input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+}
 
-        .yes-no-section div input[type="checkbox"]:not(:checked) + label {
-            color: #dc3545; /* Red when not checked */
-        }
+
+.yes-no-section .options {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.yes-no-section .options label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: normal;
+    color: inherit;
+}
 
         .submit-section {
             margin-top: 30px;
@@ -559,15 +574,13 @@
     <h2>Motivation and Fit</h2>
     <div>
         <label>Demonstrated genuine interest in the position?</label>
-        <input type="number" min="1" max="3" class="rating-input" data-category="motivation-fit">
+<select class="rating-dropdown" name="motivation_interest" data-category="motivation-fit">
+    <option value="1">Yes</option>
+    <option value="0">No</option>
+</select>
+
     </div>
 </div>
-
-<div class="category-total">
-    <h3>Total:</h3>
-    <input type="number" readonly id="motivation-total" value="0">
-</div>
-
 <!-- Calculated Total Section -->
 <div class="final-total">
     <h3>Calculated Total Assessment Rating:</h3>
@@ -586,20 +599,29 @@
                 <input type="text" id="availability" placeholder="Enter availability">
             </div>
 
-            <!--Yes/No Section-->
-            <div class="yes-no-section">
-                <div>
-                    <label>Potential Fit for the Role?</label>
-                    <input type="checkbox" id="fit-role" class="checkbox">
-                    <label for="fit-role">Yes</label>
-                </div>
+<!-- Yes/No Section (Redesigned) -->
+<div class="yes-no-section">
+    <div>
+        <label>Potential Fit for the Role?</label>
+        <div>
+            <input type="radio" id="fit-role-yes" name="fitRole" value="Yes">
+            <label for="fit-role-yes">Yes</label>
+            <input type="radio" id="fit-role-no" name="fitRole" value="No">
+            <label for="fit-role-no">No</label>
+        </div>
+    </div>
 
-                <div>
-                    <label>Recommended for Further Consideration in Hiring Process?</label>
-                    <input type="checkbox" id="consideration" class="checkbox">
-                    <label for="consideration">Yes</label>
-                </div>
-            </div>
+    <div>
+        <label>Recommended for Further Consideration in Hiring Process?</label>
+        <div>
+            <input type="radio" id="consideration-yes" name="consideration" value="Yes">
+            <label for="consideration-yes">Yes</label>
+            <input type="radio" id="consideration-no" name="consideration" value="No">
+            <label for="consideration-no">No</label>
+        </div>
+    </div>
+</div>
+
 
             <!--Submit Section-->
             <div class="submit-section">
@@ -609,25 +631,110 @@
         </form>
     </div>
 
-    <script>
+<script>
 
 document.addEventListener("DOMContentLoaded", () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const applicantId = urlParams.get("applicantId");
+    const urlParams = new URLSearchParams(window.location.search);
+    const applicantId = urlParams.get("applicantId");
 
-        if (applicantId) {
-            document.getElementById("applicant-id").value = applicantId;
-        } else {
-            console.error("Applicant ID not found in URL.");
-        }
-    });
+    if (applicantId) {
+        document.getElementById("applicant-id").value = applicantId;
+    } else {
+        console.error("Applicant ID not found in URL.");
+    }
+});
 
-    document.querySelector(".save-submit").addEventListener("click", async function (event) {
+// UPDATED SAVE FUNCTION - Fixed to collect all form data properly
+document.querySelector(".save-submit").addEventListener("click", async function (event) {
     event.preventDefault();
 
+    // Collect all form data
     const applicantId = document.getElementById("applicant-id").value;
     const totalRating = parseFloat(document.getElementById("total-rating").textContent);
-    console.log("Sending applicantId:", applicantId, "Total Rating(parsed):", totalRating); // for debugging
+    
+    // Collect all individual ratings
+    const professionalDropdowns = document.querySelectorAll('#professional-background-section .rating-dropdown');
+    const functionalDropdowns = document.querySelectorAll('#functional-skills-section .rating-dropdown');
+    const teamworkDropdowns = document.querySelectorAll('#teamwork-section .rating-dropdown');
+    const valueDropdowns = document.querySelectorAll('#value-creation-section .rating-dropdown');
+    const integrityDropdowns = document.querySelectorAll('#integrity-section .rating-dropdown');
+    const problemSolvingDropdowns = document.querySelectorAll('#problem-solving-section .rating-dropdown');
+    const motivationDropdown = document.querySelector('#motivation-fit-section .rating-dropdown');
+    
+    // Collect category totals
+    const professionalTotal = document.getElementById('professional-total').value;
+    const functionalTotal = document.getElementById('functional-total').value;
+    const teamworkTotal = document.getElementById('teamwork-total').value;
+    const valueTotal = document.getElementById('value-total').value;
+    const integrityTotal = document.getElementById('integrity-total').value;
+    const problemSolvingTotal = document.getElementById('problem-solving-total').value;
+    
+    // Collect additional info
+    const expectedCompensation = document.getElementById('expected-compensation').value;
+    const reasonForApplying = document.getElementById('reason-applying').value;
+    const availability = document.getElementById('availability').value;
+    
+    // Collect yes/no questions
+    const fitForRole = document.querySelector('input[name="fitRole"]:checked')?.value === 'Yes';
+    const recommendedForConsideration = document.querySelector('input[name="consideration"]:checked')?.value === 'Yes';
+
+    console.log("Sending applicantId:", applicantId, "Total Rating(parsed):", totalRating);
+
+    // Prepare the request body to match backend expectations
+    const requestBody = {
+        applicantId,
+        totalAssessmentRating: totalRating, // Changed from totalRating to totalAssessmentRating
+        
+        // Individual ratings - Professional Background
+        professional_understanding: professionalDropdowns[0]?.value || 0,
+        professional_relevance: professionalDropdowns[1]?.value || 0,
+        professional_achievements: professionalDropdowns[2]?.value || 0,
+        
+        // Individual ratings - Functional Skills
+        functional_proficiency: functionalDropdowns[0]?.value || 0,
+        functional_experience: functionalDropdowns[1]?.value || 0,
+        functional_examples: functionalDropdowns[2]?.value || 0,
+        
+        // Individual ratings - Teamwork
+        teamwork_collaboration: teamworkDropdowns[0]?.value || 0,
+        teamwork_experiences: teamworkDropdowns[1]?.value || 0,
+        
+        // Individual ratings - Value Creation
+        value_innovation: valueDropdowns[0]?.value || 0,
+        value_contribution: valueDropdowns[1]?.value || 0,
+        
+        // Individual ratings - Integrity
+        integrity_respect: integrityDropdowns[0]?.value || 0,
+        integrity_professional: integrityDropdowns[1]?.value || 0,
+        
+        // Individual ratings - Problem Solving
+        problem_solving_skills: problemSolvingDropdowns[0]?.value || 0,
+        problem_solving_examples: problemSolvingDropdowns[1]?.value || 0,
+        
+        // Individual ratings - Motivation
+        motivation_interest: motivationDropdown?.value || 0,
+        
+        // Category totals
+        professionalTotal: parseInt(professionalTotal) || 0,
+        functionalTotal: parseInt(functionalTotal) || 0,
+        teamworkTotal: parseInt(teamworkTotal) || 0,
+        valueTotal: parseInt(valueTotal) || 0,
+        integrityTotal: parseInt(integrityTotal) || 0,
+        problemSolvingTotal: parseInt(problemSolvingTotal) || 0,
+        motivationTotal: parseInt(motivationDropdown?.value) || 0,
+        
+        // Additional information
+        expectedCompensation,
+        reasonForApplying,
+        availability,
+        fitForRole,
+        recommendedForConsideration,
+        
+        // Status update
+        newStatus: "P2 - HR Evaluation Accomplished"
+    };
+
+    console.log("Request body being sent:", requestBody);
 
     try {
         const response = await fetch("/saveEvaluation", {
@@ -635,277 +742,244 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ 
-                applicantId, 
-                totalRating,
-                newStatus: "P2 - HR Evaluation Accomplished" // Add the new status here
-            }),
+            body: JSON.stringify(requestBody),
         });
 
         const result = await response.json();
+        console.log("Server response:", result);
 
         if (result.success) {
             alert("Evaluation saved successfully! Applicant status updated to P2 - HR Evaluation Accomplished");
-            window.location.href = "/hr/applicant-tracker"; // Redirect to a success page or elsewhere
+            window.location.href = "/hr/applicant-tracker";
         } else {
-            alert("Failed to save the score. Please try again.");
+            alert(`Failed to save the evaluation: ${result.message}`);
+            console.error("Server error details:", result);
         }
     } catch (error) {
-        console.error("Error saving the score:", error);
-        alert("An error occurred while saving the score.");
+        console.error("Error saving the evaluation:", error);
+        alert("An error occurred while saving the evaluation.");
     }
 });
 
-
-
-        // Toggle active class for sidebar links
-    document.querySelectorAll('.sidebar ul li a').forEach(link => {
-        link.addEventListener('click', function() {
-            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-            this.classList.add('active');
-        });
+// Toggle active class for sidebar links
+document.querySelectorAll('.sidebar ul li a').forEach(link => {
+    link.addEventListener('click', function() {
+        document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+        this.classList.add('active');
     });
+});
 
-    // Toggle collapsible content
-    document.querySelectorAll('.collapsible-header').forEach(header => {
-        header.addEventListener('click', function() {
-            var content = this.nextElementSibling;
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-            } else {
-                // Hide all other collapsible contents
-                document.querySelectorAll('.collapsible-content').forEach(item => {
-                    if (item !== content) {
-                        item.style.display = 'none';
-                    }
-                });
-                content.style.display = 'block';
-            }
-        });
+// Toggle collapsible content
+document.querySelectorAll('.collapsible-header').forEach(header => {
+    header.addEventListener('click', function() {
+        var content = this.nextElementSibling;
+        if (content.style.display === 'block') {
+            content.style.display = 'none';
+        } else {
+            // Hide all other collapsible contents
+            document.querySelectorAll('.collapsible-content').forEach(item => {
+                if (item !== content) {
+                    item.style.display = 'none';
+                }
+            });
+            content.style.display = 'block';
+        }
     });
-    
-        document.addEventListener('DOMContentLoaded', () => {
-    // Select all rating dropdowns within the Professional Background section
+});
+
+// Professional Background section calculations
+document.addEventListener('DOMContentLoaded', () => {
     const ratingDropdowns = document.querySelectorAll('#professional-background-section .rating-dropdown');
     const categoryTotalInput = document.getElementById('professional-total');
 
-    // Function to update the total score for Professional Background and Experience
     function updateProfessionalTotal() {
         let total = 0;
-
-        // Loop through each dropdown and sum the values
         ratingDropdowns.forEach((dropdown) => {
             const value = parseInt(dropdown.value, 10);
             if (!isNaN(value)) {
                 total += value;
             }
         });
-
-        // Update the total score field
         categoryTotalInput.value = total;
+        updateFinalTotal(); // Update final total when category changes
     }
 
-    // Event listener to update the total when a dropdown value changes
     ratingDropdowns.forEach((dropdown) => {
         dropdown.addEventListener('change', updateProfessionalTotal);
     });
 
-    // Initial call to set the total score on page load
     updateProfessionalTotal();
 });
 
-
-        document.addEventListener('DOMContentLoaded', () => {
-    // Select all rating dropdowns within the Functional Skills section
+// Functional Skills section calculations
+document.addEventListener('DOMContentLoaded', () => {
     const ratingDropdowns = document.querySelectorAll('#functional-skills-section .rating-dropdown');
     const categoryTotalInput = document.getElementById('functional-total');
 
-    // Function to update the total score for Functional Skills
     function updateFunctionalTotal() {
         let total = 0;
-
-        // Loop through each dropdown and sum the values
         ratingDropdowns.forEach((dropdown) => {
             const value = parseInt(dropdown.value, 10);
             if (!isNaN(value)) {
                 total += value;
             }
         });
-
-        // Update the total score field
         categoryTotalInput.value = total;
+        updateFinalTotal(); // Update final total when category changes
     }
 
-    // Event listener to update the total when a dropdown value changes
     ratingDropdowns.forEach((dropdown) => {
         dropdown.addEventListener('change', updateFunctionalTotal);
     });
 
-    // Initial call to set the total score on page load
     updateFunctionalTotal();
 });
 
+// Teamwork section calculations
 document.addEventListener('DOMContentLoaded', () => {
-    // Select all rating dropdowns within the Teamwork and Collaboration section
     const ratingDropdowns = document.querySelectorAll('#teamwork-section .rating-dropdown');
     const categoryTotalInput = document.getElementById('teamwork-total');
 
-    // Function to update the total score for Teamwork and Collaboration
     function updateTeamworkTotal() {
         let total = 0;
-
-        // Loop through each dropdown and sum the values
         ratingDropdowns.forEach((dropdown) => {
             const value = parseInt(dropdown.value, 10);
             if (!isNaN(value)) {
                 total += value;
             }
         });
-
-        // Update the total score field
         categoryTotalInput.value = total;
+        updateFinalTotal(); // Update final total when category changes
     }
 
-    // Event listener to update the total when a dropdown value changes
     ratingDropdowns.forEach((dropdown) => {
         dropdown.addEventListener('change', updateTeamworkTotal);
     });
 
-    // Initial call to set the total score on page load
     updateTeamworkTotal();
 });
 
+// Value Creation section calculations
 document.addEventListener('DOMContentLoaded', () => {
-    // Select all rating dropdowns within the Value Creation section
     const ratingDropdowns = document.querySelectorAll('#value-creation-section .rating-dropdown');
     const categoryTotalInput = document.getElementById('value-total');
 
-    // Function to update the total score for Value Creation
     function updateValueCreationTotal() {
         let total = 0;
-
-        // Loop through each dropdown and sum the values
         ratingDropdowns.forEach((dropdown) => {
             const value = parseInt(dropdown.value, 10);
             if (!isNaN(value)) {
                 total += value;
             }
         });
-
-        // Update the total score field
         categoryTotalInput.value = total;
+        updateFinalTotal(); // Update final total when category changes
     }
 
-    // Event listener to update the total when a dropdown value changes
     ratingDropdowns.forEach((dropdown) => {
         dropdown.addEventListener('change', updateValueCreationTotal);
     });
 
-    // Initial call to set the total score on page load
     updateValueCreationTotal();
 });
 
+// Integrity section calculations
 document.addEventListener('DOMContentLoaded', () => {
-    // Select all rating dropdowns within the Integrity section
     const ratingDropdowns = document.querySelectorAll('#integrity-section .rating-dropdown');
     const categoryTotalInput = document.getElementById('integrity-total');
 
-    // Function to update the total score for Integrity
     function updateIntegrityTotal() {
         let total = 0;
-
-        // Loop through each dropdown and sum the values
         ratingDropdowns.forEach((dropdown) => {
             const value = parseInt(dropdown.value, 10);
             if (!isNaN(value)) {
                 total += value;
             }
         });
-
-        // Update the total score field
         categoryTotalInput.value = total;
+        updateFinalTotal(); // Update final total when category changes
     }
 
-    // Event listener to update the total when a dropdown value changes
     ratingDropdowns.forEach((dropdown) => {
         dropdown.addEventListener('change', updateIntegrityTotal);
     });
 
-    // Initial call to set the total score on page load
     updateIntegrityTotal();
 });
 
+// Problem-Solving section calculations
 document.addEventListener('DOMContentLoaded', () => {
-    // Select all rating dropdowns within the Problem-Solving Abilities section
     const ratingDropdowns = document.querySelectorAll('#problem-solving-section .rating-dropdown');
     const categoryTotalInput = document.getElementById('problem-solving-total');
 
-    // Function to update the total score for Problem-Solving Abilities
     function updateProblemSolvingTotal() {
         let total = 0;
-
-        // Loop through each dropdown and sum the values
         ratingDropdowns.forEach((dropdown) => {
             const value = parseInt(dropdown.value, 10);
             if (!isNaN(value)) {
                 total += value;
             }
         });
-
-        // Update the total score field
         categoryTotalInput.value = total;
+        updateFinalTotal(); // Update final total when category changes
     }
 
-    // Event listener to update the total when a dropdown value changes
     ratingDropdowns.forEach((dropdown) => {
         dropdown.addEventListener('change', updateProblemSolvingTotal);
     });
 
-    // Initial call to set the total score on page load
     updateProblemSolvingTotal();
 });
 
+// Motivation and Fit section calculations - FIXED
 document.addEventListener('DOMContentLoaded', () => {
-    // Select the rating input field in the Motivation and Fit section
-    const ratingInput = document.querySelector('#motivation-fit-section .rating-input');
-    const categoryTotalInput = document.getElementById('motivation-total');
-
-    // Function to update the total score for Motivation and Fit
+    // Note: Changed from .rating-input to .rating-dropdown to match your HTML
+    const ratingDropdown = document.querySelector('#motivation-fit-section .rating-dropdown');
+    
     function updateMotivationTotal() {
-        const value = parseInt(ratingInput.value, 10);
-        // Ensure the value is between 1 and 3, otherwise default to 0
-        const total = isNaN(value) || value < 1 || value > 3 ? 0 : value;
-        categoryTotalInput.value = total;
+        // Since motivation section only has one dropdown, we don't need a separate total field
+        // The value is directly used in the final calculation
+        updateFinalTotal(); // Update final total when this changes
     }
 
-    // Event listener to update the total when the rating input changes
-    ratingInput.addEventListener('input', updateMotivationTotal);
+    if (ratingDropdown) {
+        ratingDropdown.addEventListener('change', updateMotivationTotal);
+    }
 
-    // Initial call to set the total score on page load
     updateMotivationTotal();
 });
 
+// CONSOLIDATED FINAL TOTAL CALCULATION
+function updateFinalTotal() {
+    // Select all category total inputs and motivation dropdown
+    const professionalTotal = parseInt(document.getElementById('professional-total').value) || 0;
+    const functionalTotal = parseInt(document.getElementById('functional-total').value) || 0;
+    const teamworkTotal = parseInt(document.getElementById('teamwork-total').value) || 0;
+    const valueTotal = parseInt(document.getElementById('value-total').value) || 0;
+    const integrityTotal = parseInt(document.getElementById('integrity-total').value) || 0;
+    const problemSolvingTotal = parseInt(document.getElementById('problem-solving-total').value) || 0;
+    
+    // For motivation, get the dropdown value directly since it's not a sum
+    const motivationDropdown = document.querySelector('#motivation-fit-section .rating-dropdown');
+    const motivationTotal = parseInt(motivationDropdown?.value) || 0;
 
+    const finalTotal = professionalTotal + functionalTotal + teamworkTotal + 
+                      valueTotal + integrityTotal + problemSolvingTotal + motivationTotal;
+
+    // Display the final total in the "total-rating" span
+    document.getElementById('total-rating').textContent = finalTotal;
+    
+    console.log("Final Total Updated:", finalTotal);
+}
+
+// Legacy functions kept for compatibility (from your original code)
 document.addEventListener('DOMContentLoaded', () => {
-    // Function to calculate the total rating from all category totals
+    // Function to calculate the total rating from all category totals (LEGACY - now handled by updateFinalTotal)
     function calculateFinalTotal() {
-        // Select all category total inputs
-        const categoryTotals = document.querySelectorAll('.category-total input');
-
-        let finalTotal = 0;
-        categoryTotals.forEach(input => {
-            // Parse each category total value and add to final total
-            const value = parseInt(input.value, 10);
-            if (!isNaN(value)) {
-                finalTotal += value;
-            }
-        });
-
-        // Display the final total in the "total-rating" span
-        document.getElementById('total-rating').textContent = finalTotal;
+        updateFinalTotal(); // Call the new consolidated function
     }
 
-    // Update the total rating whenever a category total changes
+    // Update the total rating whenever a category total changes (LEGACY)
     const ratingInputs = document.querySelectorAll('.rating-input, .rating-dropdown');
     ratingInputs.forEach(input => {
         input.addEventListener('input', calculateFinalTotal);
@@ -916,39 +990,20 @@ document.addEventListener('DOMContentLoaded', () => {
     calculateFinalTotal();
 });
 
-
-
-    
+// Legacy total rating update function (from your original code)
 document.addEventListener("DOMContentLoaded", () => {
     // Select all rating dropdowns after DOM is loaded
     const ratingDropdowns = document.querySelectorAll(".rating-dropdown");
 
-    // Function to update total rating
+    // Function to update total rating (LEGACY - now handled by updateFinalTotal)
     function updateTotalRating() {
-        let totalRating = 0;
-
-        // Iterate over each dropdown to calculate total score
-        ratingDropdowns.forEach((dropdown) => {
-            const value = parseInt(dropdown.value, 10); // Get the selected value
-            if (!isNaN(value)) {
-                totalRating += value;
-            }
-        });
-
-        // Update the displayed total rating
-        document.getElementById("total-rating").textContent = totalRating;
-
-        console.log("Total Rating Updated:", totalRating); // Debugging log
+        updateFinalTotal(); // Call the new consolidated function
+        console.log("Legacy updateTotalRating called"); // Debugging log
     }
 
-    // Function to calculate category totals (if needed, provide implementation)
+    // Function to calculate category totals (LEGACY - now handled by individual section functions)
     function calculateCategoryTotals() {
-        console.log("Category totals calculated.");
-    }
-
-    // Function to calculate the final total (if needed, provide implementation)
-    function calculateFinalTotal() {
-        console.log("Final total calculated.");
+        console.log("Legacy calculateCategoryTotals called.");
     }
 
     // Add event listeners to dropdowns after DOM is fully loaded
@@ -956,79 +1011,67 @@ document.addEventListener("DOMContentLoaded", () => {
         dropdown.addEventListener("change", () => {
             updateTotalRating(); // Update the total rating
             calculateCategoryTotals(); // Update category totals
-            calculateFinalTotal(); // Update the final total
         });
     });
 });
 
+// FORM VALIDATION BEFORE SUBMIT
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if submit-button exists (from your original code)
+    const submitButton = document.getElementById('submit-button');
+    if (submitButton) {
+        submitButton.addEventListener('click', function (event) {
+            const ratingDropdowns = document.querySelectorAll('.rating-dropdown');
+            let allRated = true;
 
+            ratingDropdowns.forEach((dropdown) => {
+                if (dropdown.value === "") {
+                    allRated = false;
+                    dropdown.classList.add('error');
+                } else {
+                    dropdown.classList.remove('error');
+                }
+            });
 
-    
-document.getElementById('submit-button').addEventListener('click', function (event) {
-    const ratingDropdowns = document.querySelectorAll('.rating-dropdown'); // Ensure this class matches your dropdowns
-    let allRated = true;
-
-    ratingDropdowns.forEach((dropdown) => {
-        if (dropdown.value === "") {
-            allRated = false;
-            dropdown.classList.add('error'); // Optionally highlight the empty dropdown
-        } else {
-            dropdown.classList.remove('error'); // Remove the highlight if it's filled
-        }
-    });
-
-    if (!allRated) {
-        alert('Please rate all sections before submitting.');
-        event.preventDefault(); // Prevent form submission
+            if (!allRated) {
+                alert('Please rate all sections before submitting.');
+                event.preventDefault();
+            }
+        });
     }
 });
 
-
-        function calculateCategoryTotals() {
-    const categories = {};
-    ratingDropdowns.forEach(dropdown => {
-        const category = dropdown.dataset.category;  // Assuming each dropdown has a `data-category` attribute
-        const value = parseInt(dropdown.value, 10);
-        if (!categories[category]) {
-            categories[category] = 0;
-        }
-        if (!isNaN(value)) {
-            categories[category] += value;
-        }
-    });
-
-    categoryTotals.forEach(totalInput => {
-        const category = totalInput.id.replace('-total', ''); // Assuming input id is like "category-total-score"
-        totalInput.value = categories[category] || 0;
-    });
+// Legacy category calculation functions (kept for compatibility but simplified)
+function calculateCategoryTotals() {
+    // This is now handled by individual section functions
+    console.log("Legacy calculateCategoryTotals function called");
 }
 
-        function calculateFinalTotal() {
-            let finalTotal = 0;
-            categoryTotals.forEach(input => {
-                const value = parseInt(input.value, 10);
-                if (!isNaN(value)) {
-                    finalTotal += value;
-                }
-            });
-            finalTotalInput.value = finalTotal;
-        }
+function calculateFinalTotal() {
+    // This now calls the new consolidated function
+    updateFinalTotal();
+}
 
-        ratingInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                calculateCategoryTotals();
-                calculateFinalTotal();
-            });
-        });
-        
-
-        document.getElementById('interview-form').addEventListener('submit', (event) => {
+// Legacy form submission handler (from your original code)
+document.addEventListener('DOMContentLoaded', () => {
+    const interviewForm = document.getElementById('interview-form');
+    if (interviewForm) {
+        interviewForm.addEventListener('submit', (event) => {
             event.preventDefault();
-            alert(`Form submitted with final total score: ${finalTotalInput.value}`);
+            const finalTotal = document.getElementById('total-rating').textContent;
+            alert(`Form submitted with final total score: ${finalTotal}`);
         });
+    }
+});
 
-        
+// Initialize final total calculation on page load
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait a bit for all other event listeners to be set up
+    setTimeout(() => {
+        updateFinalTotal();
+    }, 100);
+});
 
-    </script>
+</script>
 </body>
 </html>

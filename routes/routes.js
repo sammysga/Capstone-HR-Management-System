@@ -69,6 +69,12 @@ router.put('/hr/api/update-leavetypes/:leaveTypeId', hrController.updateLeaveTyp
 router.post('/hr/reject-applicant', hrController.rejectApplicant);
 router.post('/hr/pass-applicant', hrController.passApplicant);
 router.get('/hr/view-evaluation/:applicantId', hrController.viewEvaluation);
+// Mark applicant as P2 PASSED (pending finalization)
+router.post('/hr/markAsP2Passed', hrController.markAsP2Passed);
+// Mark applicant as P2 FAILED (pending finalization)
+router.post('/hr/markAsP2Failed', hrController.markAsP2Failed);
+// Finalize P2 review and notify all applicants
+router.post('/hr/finalizeP2Review', hrController.finalizeP2Review);
 
 router.get('/hr/useraccount', hrController.getUserAccount);
 router.post('/hr/update-info', hrController.updateUserInfo);
@@ -122,9 +128,8 @@ router.get('/logout', lineManagerController.getLogoutButton);
 
 // Route for updating applicant status
 router.post('/update-applicant', hrController.updateApplicantIsChosen);
-
+router.get('/evaluation-form/:applicantId', hrController.getEvaluationForm);
 router.post("/saveEvaluation", hrController.saveEvaluation);
-
 
 // Employee Routes
 router.get('/employee/dashboard', employeeController.getEmployeeDashboard);
@@ -200,7 +205,7 @@ router.post('/linemanager/request-mrf', lineManagerController.submitMRF);
 router.get('/linemanager/records-performance-tracker', lineManagerController.getRecordsPerformanceTrackerByDepartmentId);
 
 router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getRecordsPerformanceTrackerByUserId);
-router.get('/interview-form/:applicantId', lineManagerController.getEvaluationForm);
+
 // POST route to handle form submission
 router.post('/submit-interview-evaluation/:applicantId', lineManagerController.submitInterviewEvaluation);
 router.get('/applicant/:applicantId', lineManagerController.getApplicantDetails);
@@ -252,6 +257,9 @@ router.get('/linemanager/first-objective-setting', lineManagerController.getFirs
 router.get('/linemanager/records-performance-tracker/:userId', lineManagerController.getUserProgressView);
 
 router.post('/linemanager/records-performance-tracker/:userId', lineManagerController.saveObjectiveSettings);
+// Route to get feedback questionnaire data
+router.get('/linemanager/get-feedback-questionnaire/:userId', lineManagerController.getFeedbackQuestionnaire);
+
 router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.save360DegreeFeedback);
 router.post('/linemanager/offboarding/update', lineManagerController.updateOffboardingRequest);
 
