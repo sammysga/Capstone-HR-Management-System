@@ -668,8 +668,33 @@
     padding: 8px;
     background-color: #f0f0f0;
 }
-/* ========== END ADDED P2 STYLES ========== */
 
+/* ========== P2 STYLES ========== */
+.recipient-item {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+
+.recipient-item:last-child {
+    border-bottom: none;
+}
+
+.recipient-name {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.recipient-email {
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 2px;
+}
+
+.recipient-job {
+    font-size: 12px;
+    opacity: 0.7;
+    font-style: italic;
+}
     </style>
 </head>
 <body>
@@ -1246,8 +1271,268 @@
     </div>
 </div>
 
+<!-- P2 Gmail Compose Modal for Passed Applicants -->
+<div id="emailP2PassedModal" class="modal">
+    <div class="modal-content" style="width: 85%; max-width: 900px;">
+        <span class="close-button" onclick="closeModal('emailP2PassedModal')">&times;</span>
+        <h2 style="color: #28a745;">✅ Gmail Compose - HR Interview Advancement Email</h2>
+        
+        <div style="background-color: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4 style="color: #155724; margin-top: 0; display: flex; align-items: center;">
+                <i class="fas fa-users" style="margin-right: 10px;"></i>
+                Recipients (<span id="p2PassedRecipientsCount">0</span> applicants):
+            </h4>
+            <div id="p2PassedRecipientsList" style="color: #155724; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 15px; border-radius: 5px;">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+        
+        <div style="margin: 25px 0;">
+            <label for="p2PassedEmailSubject" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                <i class="fas fa-tag" style="margin-right: 8px;"></i>Email Subject:
+            </label>
+            <input 
+                type="text" 
+                id="p2PassedEmailSubject" 
+                style="width: 100%; padding: 12px; border: 2px solid #28a745; border-radius: 6px; font-size: 16px;"
+                value="Great News! You've Advanced to Final Interview - Prime Infrastructure"
+            >
+        </div>
+        
+        <div style="margin: 25px 0;">
+            <label for="p2PassedEmailTemplate" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                <i class="fas fa-edit" style="margin-right: 8px;"></i>Email Template:
+            </label>
+            <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                <small style="color: #6c757d;">
+                    <strong>Available placeholders:</strong> 
+                    <code>{applicantName}</code>, <code>{jobTitle}</code>, <code>{companyName}</code>
+                </small>
+            </div>
+            <textarea 
+                id="p2PassedEmailTemplate" 
+                rows="14" 
+                style="width: 100%; padding: 15px; border: 2px solid #28a745; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;"
+                placeholder="Email template will be loaded here..."
+            ></textarea>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #e7f3ff, #f0f8ff); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
+            <h4 style="color: #0066cc; margin-top: 0; display: flex; align-items: center;">
+                <i class="fab fa-google" style="margin-right: 10px; font-size: 20px;"></i>
+                Gmail Integration Ready
+            </h4>
+            <p style="color: #0066cc; margin-bottom: 0; line-height: 1.6;">
+                Clicking "Open Gmail Compose" will open Gmail in a new tab with:<br>
+                • <strong>All recipient emails</strong> automatically added to "To:" field<br>
+                • <strong>Subject line</strong> pre-filled<br>
+                • <strong>Email template</strong> ready in the message body
+            </p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="back-button" onclick="closeModal('emailP2PassedModal')">
+                <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
+            </button>
+            <button class="confirm-button" onclick="openGmailForP2Passed()" style="background: linear-gradient(135deg, #db4437, #c23321); border: none; font-size: 16px; padding: 12px 25px;">
+                <i class="fab fa-google" style="margin-right: 8px;"></i>
+                Open Gmail Compose
+            </button>
+        </div>
+    </div>
+</div>
+
+    <!-- Updated P2 Gmail Compose Modal for Passed Applicants -->
+    <div id="emailP2PassedModal" class="modal">
+        <div class="modal-content" style="width: 85%; max-width: 900px;">
+            <span class="close-button" onclick="closeModal('emailP2PassedModal')">&times;</span>
+            <h2 style="color: #28a745;">✅ Gmail Compose - HR Interview Advancement Email</h2>
+            
+            <div style="background-color: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h4 style="color: #155724; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-users" style="margin-right: 10px;"></i>
+                    Recipients (<span id="p2PassedRecipientsCount">0</span> applicants):
+                </h4>
+                <div id="p2PassedRecipientsList" style="color: #155724; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 15px; border-radius: 5px;">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+            
+            <div style="margin: 25px 0;">
+                <label for="p2PassedEmailSubject" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                    <i class="fas fa-tag" style="margin-right: 8px;"></i>Email Subject:
+                </label>
+                <input 
+                    type="text" 
+                    id="p2PassedEmailSubject" 
+                    style="width: 100%; padding: 12px; border: 2px solid #28a745; border-radius: 6px; font-size: 16px;"
+                    value="Great News! You've Advanced to Final Interview - Prime Infrastructure"
+                >
+            </div>
+            
+            <div style="margin: 25px 0;">
+                <label for="p2PassedEmailTemplate" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                    <i class="fas fa-edit" style="margin-right: 8px;"></i>Email Template:
+                </label>
+                <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                    <small style="color: #6c757d;">
+                        <strong>Available placeholders:</strong> 
+                        <code>{applicantName}</code>, <code>{jobTitle}</code>, <code>{companyName}</code>
+                    </small>
+                </div>
+                <textarea 
+                    id="p2PassedEmailTemplate" 
+                    rows="14" 
+                    style="width: 100%; padding: 15px; border: 2px solid #28a745; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;"
+                    placeholder="Email template will be loaded here..."
+                ></textarea>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #e7f3ff, #f0f8ff); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
+                <h4 style="color: #0066cc; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fab fa-google" style="margin-right: 10px; font-size: 20px;"></i>
+                    Gmail Integration Ready
+                </h4>
+                <p style="color: #0066cc; margin-bottom: 0; line-height: 1.6;">
+                    Clicking "Open Gmail Compose" will open Gmail in a new tab with:<br>
+                    • <strong>All recipient emails</strong> automatically added to "To:" field<br>
+                    • <strong>Subject line</strong> pre-filled<br>
+                    • <strong>Email template</strong> ready in the message body
+                </p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="back-button" onclick="closeModal('emailP2PassedModal')">
+                    <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
+                </button>
+                <button class="confirm-button" onclick="openGmailForP2Passed()" style="background: linear-gradient(135deg, #db4437, #c23321); border: none; font-size: 16px; padding: 12px 25px;">
+                    <i class="fab fa-google" style="margin-right: 8px;"></i>
+                    Open Gmail Compose
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Updated P2 Gmail Compose Modal for Failed Applicants -->
+    <div id="emailP2FailedModal" class="modal">
+        <div class="modal-content" style="width: 85%; max-width: 900px;">
+            <span class="close-button" onclick="closeModal('emailP2FailedModal')">&times;</span>
+            <h2 style="color: #dc3545;">❌ Gmail Compose - HR Interview Update Email</h2>
+            
+            <div style="background-color: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h4 style="color: #721c24; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-users" style="margin-right: 10px;"></i>
+                    Recipients (<span id="p2FailedRecipientsCount">0</span> applicants):
+                </h4>
+                <div id="p2FailedRecipientsList" style="color: #721c24; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 15px; border-radius: 5px;">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+            
+            <div style="margin: 25px 0;">
+                <label for="p2FailedEmailSubject" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                    <i class="fas fa-tag" style="margin-right: 8px;"></i>Email Subject:
+                </label>
+                <input 
+                    type="text" 
+                    id="p2FailedEmailSubject" 
+                    style="width: 100%; padding: 12px; border: 2px solid #dc3545; border-radius: 6px; font-size: 16px;"
+                    value="Thank You for Your Interview - Prime Infrastructure"
+                >
+            </div>
+            
+            <div style="margin: 25px 0;">
+                <label for="p2FailedEmailTemplate" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                    <i class="fas fa-edit" style="margin-right: 8px;"></i>Email Template:
+                </label>
+                <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                    <small style="color: #6c757d;">
+                        <strong>Available placeholders:</strong> 
+                        <code>{applicantName}</code>, <code>{jobTitle}</code>, <code>{companyName}</code>
+                    </small>
+                </div>
+                <textarea 
+                    id="p2FailedEmailTemplate" 
+                    rows="14" 
+                    style="width: 100%; padding: 15px; border: 2px solid #dc3545; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;"
+                    placeholder="Email template will be loaded here..."
+                ></textarea>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #e7f3ff, #f0f8ff); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
+                <h4 style="color: #0066cc; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fab fa-google" style="margin-right: 10px; font-size: 20px;"></i>
+                    Gmail Integration Ready
+                </h4>
+                <p style="color: #0066cc; margin-bottom: 0; line-height: 1.6;">
+                    Clicking "Open Gmail Compose" will open Gmail in a new tab with:<br>
+                    • <strong>All recipient emails</strong> automatically added to "To:" field<br>
+                    • <strong>Subject line</strong> pre-filled<br>
+                    • <strong>Email template</strong> ready in the message body
+                </p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="back-button" onclick="closeModal('emailP2FailedModal')">
+                    <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
+                </button>
+                <button class="confirm-button" onclick="openGmailForP2Failed()" style="background: linear-gradient(135deg, #db4437, #c23321); border: none; font-size: 16px; padding: 12px 25px;">
+                    <i class="fab fa-google" style="margin-right: 8px;"></i>
+                    Open Gmail Compose
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Updated P2 Status Update Modal -->
+    <div id="p2StatusUpdateModal" class="modal">
+        <div class="modal-content" style="width: 70%; max-width: 600px;">
+            <h2 style="text-align: center; color: #007bff;">
+                <i class="fab fa-google" style="color: #db4437; margin-right: 10px;"></i>
+                Gmail Compose Opened
+            </h2>
+            
+            <div style="margin: 30px 0; text-align: center;">
+                <div style="font-size: 64px; color: #db4437; margin-bottom: 20px;">
+                    <i class="fab fa-google"></i>
+                </div>
+                <p style="font-size: 18px; margin-bottom: 20px;">Gmail compose window has been opened in a new tab with your P2 HR interview emails pre-filled.</p>
+                
+                <div style="background-color: #e3f2fd; padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 5px solid #2196f3;">
+                    <h4 style="color: #1976d2; margin-top: 0;">📋 Next Steps:</h4>
+                    <ol style="text-align: left; margin: 15px 0; color: #1976d2; line-height: 1.8;">
+                        <li><strong>Switch to Gmail tab</strong> - Check if Gmail opened correctly</li>
+                        <li><strong>Review recipient list</strong> - Verify all emails are in "To:" field</li>
+                        <li><strong>Check subject line</strong> - Modify if needed</li>
+                        <li><strong>Review email content</strong> - Make final adjustments</li>
+                        <li><strong>Send emails</strong> - Click Gmail's send button</li>
+                        <li><strong>Return here</strong> - Click "Update Database" below</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #f39c12;">
+                <h4 style="color: #856404; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 10px;"></i>
+                    Important
+                </h4>
+                <p style="color: #856404; margin-bottom: 0; line-height: 1.6;">
+                    <strong>After sending emails in Gmail</strong>, return here and click "Update Database" to finalize the P2 applicant statuses in your system.
+                </p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="back-button" onclick="closeModal('p2StatusUpdateModal')">
+                    <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel Process
+                </button>
+                <button class="confirm-button" onclick="updateP2ApplicantStatuses()" style="background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px; padding: 12px 25px;">
+                    <i class="fas fa-database" style="margin-right: 8px;"></i>
+                    Update Database
+                </button>
+            </div>
+        </div>
+    </div>
 <!-- ========== ADDED APPLICANTS DATA SCRIPT ========== -->
-<!-- Add this right after the head tag, before any scripts -->
 <script id="applicants-data" type="application/json">
     <% if (typeof applicants !== 'undefined') { %>
       <%- JSON.stringify(applicants) %>
@@ -1257,9 +1542,8 @@
 </script>
 <!-- ========== END ADDED APPLICANTS DATA SCRIPT ========== -->
 
-<script>
 
-// ========== ADDED P2 FUNCTIONS START ==========
+<script>
 
 // Function to go to P2 Review filter
 function goToP2ReviewFilter() {
@@ -1271,6 +1555,10 @@ function goToP2ReviewFilter() {
 let currentP2PassedApplicants = [];
 let currentP2FailedApplicants = [];
 let pendingP2StatusChanges = {};
+
+// P2 Email Integration Global Variables
+let p2EmailTemplates = {};
+let p2EmailsToUpdate = { passed: [], failed: [] };
 
 // Function to handle P2 pass action from awaiting table
 function p2passApplicant(applicantId) {
@@ -1489,18 +1777,19 @@ function toggleP2ApplicantStatus(button) {
     });
 }
 
-// Finalize P2 Review
+// Updated finalizeP2Review function to include Gmail integration
+
 function finalizeP2Review() {
-    console.log("Finalizing P2 review process...");
-    
+    console.log("Starting P2 review finalization with Gmail compose integration...");
+
     // Extract status updates from rows in the declared results table
     const declaredResultsTable = document.getElementById("declaredResultsTable");
     const rows = declaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
-    
+
     // Arrays to store passed and failed applicant IDs
     const passedApplicantIds = [];
     const failedApplicantIds = [];
-    
+
     // Process each row to determine which users passed and which failed
     rows.forEach(row => {
         // Skip message rows
@@ -1524,83 +1813,54 @@ function finalizeP2Review() {
             }
         }
     });
-    
+
     // If no applicants are selected, show an error
     if (passedApplicantIds.length === 0 && failedApplicantIds.length === 0) {
         alert("No P2 applicants found with PASSED or FAILED status.");
         closeModal('notifyApplicantsModal');
         return;
     }
-    
-    console.log(`Finalizing P2 Review: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
-    
-    // Show confirmation with counts
-    const confirmMessage = `You are about to finalize the P2 review process for ${passedApplicantIds.length + failedApplicantIds.length} applicants:
-- ${passedApplicantIds.length} will be PASSED and proceed to next stage
-- ${failedApplicantIds.length} will be FAILED and notified of rejection
 
-This action is irreversible. Are you sure you want to proceed?`;
-    
-    if (!confirm(confirmMessage)) {
-        closeModal('notifyApplicantsModal');
-        return;
-    }
-    
+    console.log(`Preparing P2 Gmail compose for: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
+
     // Show loading indicator
     const confirmButton = document.getElementById('confirmButton');
     if (confirmButton) {
-        confirmButton.textContent = "Processing...";
+        confirmButton.textContent = "Loading email data...";
         confirmButton.disabled = true;
     }
-    
-    // Send API request for P2 finalization
-    fetch('/hr/finalizeP2Review', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            passedApplicantIds: passedApplicantIds,
-            failedApplicantIds: failedApplicantIds
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(`P2 Review finalization complete! All applicants have been notified of their status.
-            
-${data.passedCount} applicants passed
-${data.failedCount} applicants failed`);
-            
-            // Clear the pending status changes after finalization
-            window.pendingP2StatusChanges = {};
-            
-            closeModal('notifyApplicantsModal');
-            
-            // Refresh the view after finalization
-            setTimeout(() => {
-                // Trigger current filter to refresh the view
-                const activeFilter = document.querySelector(".filter-button.active");
-                if (activeFilter) {
-                    activeFilter.click();
-                } else {
-                    // Default to "all" if no active filter found
-                    document.getElementById("filter-all").click();
-                }
-            }, 500);
+
+    // Store the applicant IDs for database updates later
+    p2EmailsToUpdate = {
+        passed: passedApplicantIds,
+        failed: failedApplicantIds
+    };
+
+    // Fetch applicant data and email templates
+    Promise.all([
+        fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicantIds),
+        fetchP2EmailTemplates()
+    ])
+    .then(([applicantData, templates]) => {
+        currentP2PassedApplicants = applicantData.passedApplicants || [];
+        currentP2FailedApplicants = applicantData.failedApplicants || [];
+        p2EmailTemplates = templates;
+        
+        // Close the confirmation modal
+        closeModal('notifyApplicantsModal');
+        
+        // Start the Gmail compose process
+        if (currentP2PassedApplicants.length > 0) {
+            showP2PassedEmailModal();
+        } else if (currentP2FailedApplicants.length > 0) {
+            showP2FailedEmailModal();
         } else {
-            alert("Error finalizing P2 review: " + (data.message || "Unknown error"));
-            
-            // Reset button state
-            if (confirmButton) {
-                confirmButton.textContent = "Confirm";
-                confirmButton.disabled = false;
-            }
+            alert("No applicant data found for P2 email composition.");
         }
     })
     .catch(error => {
-        console.error("Error finalizing P2 review:", error);
-        alert("Failed to finalize P2 review. Please try again.");
+        console.error("Error preparing P2 email composition:", error);
+        alert("Error preparing P2 email composition: " + error.message);
         
         // Reset button state
         if (confirmButton) {
@@ -1609,6 +1869,359 @@ ${data.failedCount} applicants failed`);
         }
     });
 }
+
+
+// Fetch P2 applicant data for email composition
+async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicantIds) {
+    try {
+        const response = await fetch('/hr/finalizeP2Review', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                passedApplicantIds: passedApplicantIds,
+                failedApplicantIds: failedApplicantIds,
+                getEmailData: true // Flag to get email data instead of updating
+            }),
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to fetch P2 applicant data');
+        }
+        
+        return {
+            passedApplicants: data.passedApplicants || [],
+            failedApplicants: data.failedApplicants || []
+        };
+        
+    } catch (error) {
+        console.error("Error fetching P2 applicant data:", error);
+        throw error;
+    }
+}
+async function fetchP2EmailTemplates() {
+    try {
+        console.log("Fetching P2 email templates from emailService.js...");
+        
+        // Primary method: Use the unified endpoint that pulls from emailService.js emailTemplates
+        const response = await fetch('/hr/getEmailTemplates?phase=P2');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to fetch P2 email templates');
+        }
+        
+        console.log("Successfully fetched P2 templates from emailService.js via unified endpoint");
+        return data.templates;
+        
+    } catch (error) {
+        console.error("Error fetching P2 email templates from unified endpoint:", error);
+        
+        // Fallback method: Try the P2-specific endpoint
+        try {
+            console.log("Trying P2-specific endpoint as fallback...");
+            const fallbackResponse = await fetch('/hr/getP2EmailTemplates');
+            const fallbackData = await fallbackResponse.json();
+            
+            if (fallbackData.success) {
+                console.log("Successfully fetched P2 templates from P2-specific endpoint");
+                return fallbackData.templates;
+            }
+        } catch (fallbackError) {
+            console.error("P2-specific endpoint also failed:", fallbackError);
+        }
+        
+        // Final fallback: This should never be reached since templates are now in emailService.js
+        // But keeping for safety
+        console.log("Using minimal fallback templates (this should not happen if emailService.js is working)");
+        return {
+            passed: {
+                subject: 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure',
+                template: 'Congratulations! You have advanced to the final interview stage. Please check your applicant portal for more details.'
+            },
+            failed: {
+                subject: 'Thank You for Your Interview - Prime Infrastructure',
+                template: 'Thank you for your time and interest. We have decided to move forward with another candidate.'
+            }
+        };
+    }
+}
+
+function showP2PassedEmailModal() {
+    console.log("Showing P2 passed applicants Gmail compose modal");
+    
+    // Populate recipients list
+    const recipientsList = document.getElementById('p2PassedRecipientsList');
+    const recipientsCount = document.getElementById('p2PassedRecipientsCount');
+    
+    if (recipientsList && currentP2PassedApplicants.length > 0) {
+        recipientsCount.textContent = currentP2PassedApplicants.length;
+        
+        recipientsList.innerHTML = currentP2PassedApplicants.map(applicant => `
+            <div class="recipient-item">
+                <div class="recipient-name">${applicant.name}</div>
+                <div class="recipient-email">${applicant.email}</div>
+                <div class="recipient-job">${applicant.jobTitle}</div>
+            </div>
+        `).join('');
+    }
+    
+    // Set default subject and template
+    document.getElementById('p2PassedEmailSubject').value = p2EmailTemplates.passed?.subject || 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure';
+    document.getElementById('p2PassedEmailTemplate').value = p2EmailTemplates.passed?.template || 'Congratulations! You have advanced to the final interview stage.';
+    
+    // Show the modal
+    document.getElementById('emailP2PassedModal').style.display = 'block';
+}
+
+
+function showP2FailedEmailModal() {
+    console.log("Showing P2 failed applicants Gmail compose modal");
+    
+    // Populate recipients list
+    const recipientsList = document.getElementById('p2FailedRecipientsList');
+    const recipientsCount = document.getElementById('p2FailedRecipientsCount');
+    
+    if (recipientsList && currentP2FailedApplicants.length > 0) {
+        recipientsCount.textContent = currentP2FailedApplicants.length;
+        
+        recipientsList.innerHTML = currentP2FailedApplicants.map(applicant => `
+            <div class="recipient-item">
+                <div class="recipient-name">${applicant.name}</div>
+                <div class="recipient-email">${applicant.email}</div>
+                <div class="recipient-job">${applicant.jobTitle}</div>
+            </div>
+        `).join('');
+    }
+    
+    // Set default subject and template
+    document.getElementById('p2FailedEmailSubject').value = p2EmailTemplates.failed?.subject || 'Thank You for Your Interview - Prime Infrastructure';
+    document.getElementById('p2FailedEmailTemplate').value = p2EmailTemplates.failed?.template || 'Thank you for your interest in our position.';
+    
+    // Show the modal
+    document.getElementById('emailP2FailedModal').style.display = 'block';
+}
+
+function openGmailForP2Passed() {
+    const subject = document.getElementById('p2PassedEmailSubject').value;
+    const template = document.getElementById('p2PassedEmailTemplate').value;
+    
+    if (!subject || !template) {
+        alert("Please fill in both subject and template fields.");
+        return;
+    }
+    
+    if (!confirm(`This will open Gmail with ${currentP2PassedApplicants.length} P2 passed applicants in the "To:" field. Continue?`)) {
+        return;
+    }
+    
+    // Build Gmail compose URL
+    const gmailUrl = buildP2GmailComposeUrl(currentP2PassedApplicants, subject, template);
+    
+    console.log('Opening Gmail for P2 passed applicants:', gmailUrl);
+    
+    // Open Gmail in new tab
+    const gmailWindow = window.open(gmailUrl, '_blank');
+    
+    if (!gmailWindow) {
+        alert('Please allow pop-ups for this site to open Gmail compose window.');
+        return;
+    }
+    
+    // Close the modal
+    closeModal('emailP2PassedModal');
+    
+    // If there are also failed applicants, show their modal next
+    if (currentP2FailedApplicants.length > 0) {
+        setTimeout(() => {
+            showP2FailedEmailModal();
+        }, 1000);
+    } else {
+        // Show status update modal if no failed applicants
+        setTimeout(() => {
+            showP2StatusUpdateModal();
+        }, 2000);
+    }
+}
+
+function openGmailForP2Failed() {
+    const subject = document.getElementById('p2FailedEmailSubject').value;
+    const template = document.getElementById('p2FailedEmailTemplate').value;
+    
+    if (!subject || !template) {
+        alert("Please fill in both subject and template fields.");
+        return;
+    }
+    
+    if (!confirm(`This will open Gmail with ${currentP2FailedApplicants.length} P2 failed applicants in the "To:" field. Continue?`)) {
+        return;
+    }
+    
+    // Build Gmail compose URL
+    const gmailUrl = buildP2GmailComposeUrl(currentP2FailedApplicants, subject, template);
+    
+    console.log('Opening Gmail for P2 failed applicants:', gmailUrl);
+    
+    // Open Gmail in new tab
+    const gmailWindow = window.open(gmailUrl, '_blank');
+    
+    if (!gmailWindow) {
+        alert('Please allow pop-ups for this site to open Gmail compose window.');
+        return;
+    }
+    
+    // Close the modal and show status update modal
+    closeModal('emailP2FailedModal');
+    
+    // Show status update modal
+    setTimeout(() => {
+        showP2StatusUpdateModal();
+    }, 2000);
+}
+
+
+
+// NEW: Build Gmail compose URL for P2 with pre-filled data
+function buildP2GmailComposeUrl(applicants, subject, template) {
+    // Extract all email addresses
+    const emailAddresses = applicants.map(applicant => applicant.email).join(',');
+    
+    // Process template for multiple recipients
+    let processedTemplate = template;
+    if (applicants.length > 0) {
+        if (applicants.length > 1) {
+            processedTemplate = template
+                .replace(/\{applicantName\}/g, '[Recipient Name]')
+                .replace(/\{jobTitle\}/g, '[Position Applied]')
+                .replace(/\{companyName\}/g, 'Prime Infrastructure');
+        } else {
+            processedTemplate = template
+                .replace(/\{applicantName\}/g, applicants[0].name)
+                .replace(/\{jobTitle\}/g, applicants[0].jobTitle)
+                .replace(/\{companyName\}/g, 'Prime Infrastructure');
+        }
+    }
+    
+    const plainTextBody = htmlToPlainText(processedTemplate);
+    
+    // Try multiple URL formats - Gmail can be finicky
+    const specificAccount = 'recruitmentprime7@gmail.com';
+    
+    // Use account-specific subdomain approach
+    const gmailUrl = `https://mail.google.com/mail/u/0/?authuser=${encodeURIComponent(specificAccount)}&view=cm&to=${encodeURIComponent(emailAddresses)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
+    
+    console.log('🔥 P2 Gmail URL:', gmailUrl);
+    console.log('📧 Target account:', specificAccount);
+    
+    return gmailUrl;
+}
+
+// NEW: Convert HTML template to plain text for P2
+function htmlToPlainText(html) {
+    // Create a temporary div to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    // Remove script and style elements
+    const scripts = tempDiv.querySelectorAll('script, style');
+    scripts.forEach(element => element.remove());
+    
+    // Get text content and clean it up
+    let plainText = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Clean up extra whitespace and line breaks
+    plainText = plainText
+        .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
+        .replace(/\n\s*\n/g, '\n\n')   // Replace multiple line breaks with double line break
+        .trim();
+    
+    // Add some basic formatting for better readability in plain text
+    plainText = plainText
+        .replace(/Dear\s+/gi, '\nDear ')
+        .replace(/Best regards/gi, '\n\nBest regards')
+        .replace(/Thank you/gi, '\n\nThank you')
+        .replace(/Congratulations/gi, '\n\nCongratulations')
+        .replace(/What's Next\?/gi, '\n\nWhat\'s Next?')
+        .replace(/•/g, '\n• ')
+        .replace(/- /g, '\n- ');
+    
+    return plainText;
+}
+
+// NEW: Show P2 status update modal
+function showP2StatusUpdateModal() {
+    console.log('Showing P2 status update modal');
+    document.getElementById('p2StatusUpdateModal').style.display = 'block';
+}
+
+// NEW: Update P2 applicant statuses in database after emails are sent via Gmail
+function updateP2ApplicantStatuses() {
+    if (!confirm('Have you successfully sent the P2 emails via Gmail? This will update the applicant statuses in the database.')) {
+        return;
+    }
+    
+    console.log('Updating P2 applicant statuses in database...');
+    console.log('Passed applicantIds:', p2EmailsToUpdate.passed);
+    console.log('Failed applicantIds:', p2EmailsToUpdate.failed);
+    
+    // Show loading state
+    const updateButton = document.querySelector('#p2StatusUpdateModal .confirm-button');
+    const originalText = updateButton.textContent;
+    updateButton.textContent = 'Updating Database...';
+    updateButton.disabled = true;
+    
+    // Make API call to update statuses
+    fetch('/hr/finalizeP2Review', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            passedApplicantIds: p2EmailsToUpdate.passed,
+            failedApplicantIds: p2EmailsToUpdate.failed
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`P2 applicant statuses updated successfully!\n\nUpdated:\n- ${data.passedCount || 0} passed applicants\n- ${data.failedCount || 0} failed applicants`);
+            
+            // Close modal
+            closeModal('p2StatusUpdateModal');
+            
+            // Clear global variables
+            currentP2PassedApplicants = [];
+            currentP2FailedApplicants = [];
+            p2EmailsToUpdate = { passed: [], failed: [] };
+            
+            // Refresh the view
+            setTimeout(() => {
+                const activeFilter = document.querySelector(".filter-button.active");
+                if (activeFilter) {
+                    activeFilter.click();
+                } else {
+                    document.getElementById("filter-all").click();
+                }
+            }, 500);
+        } else {
+            throw new Error(data.message || 'Failed to update P2 statuses');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating P2 statuses:', error);
+        alert('Error updating P2 applicant statuses: ' + error.message);
+        
+        // Reset button state
+        updateButton.textContent = originalText;
+        updateButton.disabled = false;
+    });
+}
+
+
+
 
 // Check if all P2 applicants have been marked
 function checkAllP2ApplicantsMarked() {
@@ -2238,7 +2851,7 @@ function updateSectionHeaderButtonsP2() {
     // Clear existing buttons
     rightSection.innerHTML = '';
     
-    // Add Finalize P2 Review button
+    // Add Finalize P2 Review button with Gmail integration
     const p2Button = document.createElement('button');
     p2Button.id = 'finalizeP2Button';
     p2Button.textContent = 'Finalize P2 Review';
@@ -2266,13 +2879,18 @@ function updateSectionHeaderButtonsP2() {
         if (checkAllP2ApplicantsMarked()) {
             document.getElementById('notifyApplicantsModal').style.display = 'block';
             
-            // Update modal for P2
+            // Update modal for P2 Gmail integration
             const modalTitle = document.querySelector('#notifyApplicantsModal h2');
             if (modalTitle) {
                 modalTitle.textContent = "Confirm P2 Review Finalization";
             }
             
-            // Update confirm button
+            const modalParagraph = document.querySelector('#notifyApplicantsModal p');
+            if (modalParagraph) {
+                modalParagraph.textContent = "You are about to finalize the P2 review process using Gmail compose. This will prepare customizable email templates and open Gmail with pre-filled recipient information for both passed and failed applicants. Are you sure you want to proceed?";
+            }
+            
+            // Update confirm button for P2 Gmail flow
             const confirmButton = document.getElementById('confirmButton');
             if (confirmButton) {
                 const newConfirmButton = confirmButton.cloneNode(true);
@@ -2285,48 +2903,6 @@ function updateSectionHeaderButtonsP2() {
     });
     
     rightSection.appendChild(p2Button);
-}
-
-// Sort declared results
-function sortDeclaredResults(sortType) {
-    const table = document.getElementById('declaredResultsTable');
-    if (!table) return;
-    
-    const tbody = table.querySelector('tbody');
-    if (!tbody) return;
-    
-    const rows = Array.from(tbody.querySelectorAll('tr:not(.section-header-row)'));
-    
-    // Keep section header rows in place
-    const headerRows = Array.from(tbody.querySelectorAll('tr.section-header-row'));
-    
-    // Sort rows based on selected option
-    if (sortType === 'ascending' || sortType === 'descending') {
-        // Sort by score
-        rows.sort((a, b) => {
-            const scoreA = parseFloat(a.querySelector('td:nth-child(5)')?.textContent || '0');
-            const scoreB = parseFloat(b.querySelector('td:nth-child(5)')?.textContent || '0');
-            return sortType === 'ascending' ? scoreA - scoreB : scoreB - scoreA;
-        });
-    } else if (sortType === 'alphabetical') {
-        // Sort alphabetically by name
-        rows.sort((a, b) => {
-            const nameA = a.querySelector('td:nth-child(2)')?.textContent.trim() || '';
-            const nameB = b.querySelector('td:nth-child(2)')?.textContent.trim() || '';
-            return nameA.localeCompare(nameB);
-        });
-    }
-    
-    // Clear the tbody
-    tbody.innerHTML = '';
-    
-    // Add back the header row
-    if (headerRows.length > 0) {
-        headerRows.forEach(row => tbody.appendChild(row));
-    }
-    
-    // Add sorted rows
-    rows.forEach(row => tbody.appendChild(row));
 }
 // ========== END MODIFIED FILTER FUNCTION ==========
 
@@ -2532,6 +3108,7 @@ function highlightActiveFilter(status) {
         alert("Account setup confirmed");
         closeModal('accountSetupReminderModal');
     }
+
 
     document.addEventListener("DOMContentLoaded", function() {
     // Modal functionality for the notify applicants modal

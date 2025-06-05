@@ -75,6 +75,7 @@ router.post('/hr/markAsP2Passed', hrController.markAsP2Passed);
 router.post('/hr/markAsP2Failed', hrController.markAsP2Failed);
 // Finalize P2 review and notify all applicants
 router.post('/hr/finalizeP2Review', hrController.finalizeP2Review);
+router.get('/getP2EmailTemplates', hrController.getP2EmailTemplates);
 
 router.get('/hr/useraccount', hrController.getUserAccount);
 router.post('/hr/update-info', hrController.updateUserInfo);
@@ -282,6 +283,7 @@ router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.g
 // Routes for P1 review management
 router.post('/linemanager/applicant-tracker-jobposition/finalizeP1Review', lineManagerController.finalizeP1Review);
 router.post('/linemanager/applicant-tracker-jobposition/updateP1Statuses', lineManagerController.updateP1Statuses); 
+router.post('/linemanager/applicant-tracker-jobposition/markAsP1Passed',  lineManagerController.markAsP1Passed);
 router.post('/linemanager/applicant-tracker-jobposition/markAsP1Failed',  lineManagerController.markAsP1Failed);
 // Email functionality routes
 router.get('/linemanager/applicant-tracker-jobposition/getEmailTemplates', lineManagerController.getEmailTemplates);

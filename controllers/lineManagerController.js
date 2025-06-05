@@ -1350,18 +1350,7 @@ getEvaluationForm: async function(req, res) {
     req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
     return res.redirect('/staff/login');
 },
-    // Add this function to your lineManagerController.js file
-
-    // Add this function to your lineManagerController.js file
-
-// Add this function to your lineManagerController.js file
-
-// Add this function to your lineManagerController.js file
-
-// Add this function to your lineManagerController.js file
-
-// Add this function to your lineManagerController.js file
-
+    
 submitInterviewEvaluation: async function(req, res) {
     try {
         console.log('DEBUG [1]: Starting submitInterviewEvaluation function');

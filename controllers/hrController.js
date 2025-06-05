@@ -7,6 +7,9 @@ const flash = require('connect-flash/lib/flash');
 const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
 const applicantController = require('../controllers/applicantController');
 const { check } = require('express-validator');
+const { getEmailTemplateData } = require('../utils/emailService');
+
+
 
 
 const hrController = {
@@ -3056,17 +3059,118 @@ markAsP2Failed: async function(req, res) {
     }
 },
 
-// Finalize P2 Review and notify applicants
+// Get P2 email templates for Gmail integration
+getP2EmailTemplates: async function(req, res) {
+    try {
+        console.log('✅ [HR] Getting P2 email templates for Gmail integration');
+        
+        // Use the unified function with P2 phase
+        const templates = getEmailTemplateData('P2');
+        
+        return res.status(200).json({
+            success: true,
+            templates: templates,
+            message: "P2 email templates retrieved successfully"
+        });
+        
+    } catch (error) {
+        console.error('❌ [HR] Error getting P2 email templates:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Error getting P2 email templates: " + error.message
+        });
+    }
+},
+
+// Updated finalizeP2Review function to handle both email data fetching and status updates
 finalizeP2Review: async function(req, res) {
     try {
-        console.log('✅ [HR] Finalizing P2 review process');
+        console.log('✅ [HR] Processing P2 review finalization request');
         
-        const { passedApplicantIds, failedApplicantIds } = req.body;
+        const { passedApplicantIds, failedApplicantIds, getEmailData } = req.body;
         
         if (!passedApplicantIds || !failedApplicantIds) {
             return res.status(400).json({ success: false, message: "Missing applicant IDs" });
         }
         
+        // If this is just to get email data (not update statuses), fetch applicant info
+        if (getEmailData) {
+            console.log('✅ [HR] Fetching P2 applicant data for email composition');
+            
+            const passedApplicants = [];
+            const failedApplicants = [];
+            
+            // Fetch passed applicants data
+            for (const applicantId of passedApplicantIds) {
+                try {
+                    const { data: applicantData, error: fetchError } = await supabase
+                        .from('applicantaccounts')
+                        .select(`
+                            applicantId,
+                            userId,
+                            firstName,
+                            lastName,
+                            userEmail,
+                            jobId,
+                            jobs!inner(jobTitle)
+                        `)
+                        .eq('applicantId', applicantId)
+                        .single();
+                    
+                    if (!fetchError && applicantData) {
+                        passedApplicants.push({
+                            applicantId: applicantData.applicantId,
+                            userId: applicantData.userId,
+                            name: `${applicantData.firstName} ${applicantData.lastName}`,
+                            email: applicantData.userEmail,
+                            jobTitle: applicantData.jobs?.jobTitle || 'Position'
+                        });
+                    }
+                } catch (error) {
+                    console.error(`❌ [HR] Error fetching passed applicant ${applicantId}:`, error);
+                }
+            }
+            
+            // Fetch failed applicants data
+            for (const applicantId of failedApplicantIds) {
+                try {
+                    const { data: applicantData, error: fetchError } = await supabase
+                        .from('applicantaccounts')
+                        .select(`
+                            applicantId,
+                            userId,
+                            firstName,
+                            lastName,
+                            userEmail,
+                            jobId,
+                            jobs!inner(jobTitle)
+                        `)
+                        .eq('applicantId', applicantId)
+                        .single();
+                    
+                    if (!fetchError && applicantData) {
+                        failedApplicants.push({
+                            applicantId: applicantData.applicantId,
+                            userId: applicantData.userId,
+                            name: `${applicantData.firstName} ${applicantData.lastName}`,
+                            email: applicantData.userEmail,
+                            jobTitle: applicantData.jobs?.jobTitle || 'Position'
+                        });
+                    }
+                } catch (error) {
+                    console.error(`❌ [HR] Error fetching failed applicant ${applicantId}:`, error);
+                }
+            }
+            
+            return res.status(200).json({
+                success: true,
+                passedApplicants: passedApplicants,
+                failedApplicants: failedApplicants,
+                message: "P2 applicant data fetched for email composition"
+            });
+        }
+        
+        // Otherwise, proceed with the actual status updates (existing code)
         console.log(`✅ [HR] P2 Finalization: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
         
         let updateResults = {
@@ -3123,9 +3227,6 @@ finalizeP2Review: async function(req, res) {
                     }
                 }
                 
-                // Send email notification (you can customize this)
-                // await sendEmailNotification(applicantId, 'P2_PASSED');
-                
             } catch (error) {
                 console.error(`❌ [HR] Error processing passed applicant ${applicantId}:`, error);
                 updateResults.passed.errors.push(`${applicantId}: ${error.message}`);
@@ -3180,9 +3281,6 @@ finalizeP2Review: async function(req, res) {
                     }
                 }
                 
-                // Send email notification (you can customize this)
-                // await sendEmailNotification(applicantId, 'P2_FAILED');
-                
             } catch (error) {
                 console.error(`❌ [HR] Error processing failed applicant ${applicantId}:`, error);
                 updateResults.failed.errors.push(`${applicantId}: ${error.message}`);
@@ -3223,7 +3321,6 @@ finalizeP2Review: async function(req, res) {
         });
     }
 },
-
 // Function to view evaluation (if you need to implement this route)
 viewEvaluation: async function(req, res) {
     if (!req.session.user || req.session.user.userRole !== 'HR') {

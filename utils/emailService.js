@@ -1,4 +1,4 @@
-// Complete utils/emailService.js with Gmail Integration Support
+// Complete utils/emailService.js with Gmail Integration Support and Unified Templates
 
 const nodemailer = require('nodemailer');
 
@@ -42,42 +42,6 @@ const emailTemplates = {
                     </ul>
                     
                     <p>We look forward to the next step in our process together.</p>
-                    
-                    <p>Best regards,<br>
-                    <strong>Prime Infrastructure Recruitment Team</strong></p>
-                </div>
-                <div style="background-color: #f8f9fa; padding: 10px; text-align: center; font-size: 12px; color: #6c757d;">
-                    <p>This is an automated message. Please do not reply to this email.</p>
-                </div>
-            </div>
-        `
-    },
-    
-    'P2 - PASSED': {
-        subject: 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure',
-        getHtml: (applicantName, jobTitle) => `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
-                    <h1 style="color: #28a745;">Excellent Progress!</h1>
-                </div>
-                <div style="padding: 20px;">
-                    <p>Dear ${applicantName},</p>
-                    
-                    <p>Congratulations! We are pleased to inform you that you have successfully passed the initial interview for the <strong>${jobTitle}</strong> position.</p>
-                    
-                    <p>Your performance in the interview process has been impressive, and we would like to invite you for a final interview with our senior management team.</p>
-                    
-                    <h3>Final Interview Details:</h3>
-                    <ul>
-                        <li>This will be the final step in our selection process</li>
-                        <li>You'll meet with senior leadership</li>
-                        <li>Focus will be on cultural fit and long-term vision</li>
-                        <li>Interview scheduling link will be provided shortly</li>
-                    </ul>
-                    
-                    <p>Please continue to check your applicant portal for scheduling updates.</p>
-                    
-                    <p>We're excited about the possibility of having you join our team!</p>
                     
                     <p>Best regards,<br>
                     <strong>Prime Infrastructure Recruitment Team</strong></p>
@@ -171,29 +135,39 @@ const emailTemplates = {
         getHtml: (applicantName, jobTitle) => `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
-                    <h1 style="color: #6c757d;">Thank You for Your Interview</h1>
+                    <h1 style="color: #6c757d;">Thank You for Your Participation</h1>
                 </div>
                 <div style="padding: 20px;">
                     <p>Dear ${applicantName},</p>
                     
-                    <p>Thank you for taking the time to interview with us for the <strong>${jobTitle}</strong> position at Prime Infrastructure. We enjoyed learning more about your background and experience.</p>
+                    <p>Thank you for taking the time to interview with us for the <strong>${jobTitle}</strong> position at Prime Infrastructure. We genuinely enjoyed learning more about your background, experience, and career aspirations during our HR interview process.</p>
                     
-                    <p>After careful consideration and discussion among our interview panel, we have decided to move forward with another candidate whose background and experience more closely align with our current requirements.</p>
+                    <p>After careful consideration and thorough discussion among our interview panel, we have decided to move forward with another candidate whose background and experience more closely align with our current requirements for this specific role.</p>
                     
-                    <p>We were impressed with your qualifications and professionalism throughout the interview process. This was a difficult decision, as we had several strong candidates.</p>
+                    <p>We want you to know that this was a difficult decision for our team. We were impressed with your qualifications, professionalism, and enthusiasm throughout the entire interview process, and you demonstrated many of the qualities we value highly at Prime Infrastructure.</p>
                     
-                    <h3>Our Appreciation:</h3>
+                    <h3>🙏 Our Sincere Appreciation:</h3>
                     <ul>
-                        <li>Thank you for your time and effort in the interview process</li>
-                        <li>We value the opportunity to have met you</li>
-                        <li>Your application will remain in our talent database</li>
-                        <li>We encourage you to apply for future positions that match your expertise</li>
+                        <li>Thank you for your time and effort in preparing for and participating in our comprehensive interview process</li>
+                        <li>We value the opportunity to have met you and learned about your professional experience and goals</li>
+                        <li>Your professionalism and enthusiasm were evident throughout all our interactions</li>
+                        <li>We appreciate your interest in Prime Infrastructure and the energy you brought to the interview</li>
                     </ul>
                     
-                    <p>We wish you continued success in your career endeavors and hope our paths may cross again in the future.</p>
+                    <h3>🚀 Moving Forward:</h3>
+                    <ul>
+                        <li>Your application and interview details will remain in our talent database for future opportunities</li>
+                        <li>We may contact you if a suitable position becomes available that better matches your background and experience</li>
+                        <li>Please feel free to apply for other positions with us that align with your skills and career interests</li>
+                        <li>Follow our careers page and LinkedIn for new openings that might be a good fit for your profile</li>
+                    </ul>
+                    
+                    <p>We recognize that job searching can be challenging, and we wish you continued success in your career endeavors. We hope our paths may cross again in the future, and we encourage you to stay connected with Prime Infrastructure.</p>
+                    
+                    <p>Thank you again for your interest in joining our team.</p>
                     
                     <p>Best regards,<br>
-                    <strong>Prime Infrastructure Recruitment Team</strong></p>
+                    <strong>Prime Infrastructure HR Team</strong></p>
                 </div>
                 <div style="background-color: #f8f9fa; padding: 10px; text-align: center; font-size: 12px; color: #6c757d;">
                     <p>This is an automated message. Please do not reply to this email.</p>
@@ -395,55 +369,93 @@ const sendCustomEmail = async (email, subject, htmlTemplate, applicantName, jobT
     }
 };
 
-// Get email template data for frontend (Gmail Integration)
-const getEmailTemplateData = () => {
-    return {
-        passed: {
-            subject: 'Congratulations! You\'ve Passed the Initial Screening - Prime Infrastructure',
-            template: `Dear {applicantName},
+// UPDATED: Get email template data for frontend (Gmail Integration)
+// This function handles both P1 and P2 templates based on the phase parameter
+const getEmailTemplateData = (phase = 'P1') => {
+    if (phase === 'P1') {
+        return {
+            passed: {
+                subject: emailTemplates['P1 - PASSED'].subject,
+                template: convertHtmlToPlainText(emailTemplates['P1 - PASSED'].getHtml('{applicantName}', '{jobTitle}'))
+            },
+            failed: {
+                subject: emailTemplates['P1 - FAILED'].subject,
+                template: convertHtmlToPlainText(emailTemplates['P1 - FAILED'].getHtml('{applicantName}', '{jobTitle}'))
+            }
+        };
+    } else if (phase === 'P2') {
+        return {
+            passed: {
+                subject: emailTemplates['P2 - PASSED'].subject,
+                template: convertHtmlToPlainText(emailTemplates['P2 - PASSED'].getHtml('{applicantName}', '{jobTitle}'))
+            },
+            failed: {
+                subject: emailTemplates['P2 - FAILED'].subject,
+                template: convertHtmlToPlainText(emailTemplates['P2 - FAILED'].getHtml('{applicantName}', '{jobTitle}'))
+            }
+        };
+    } else if (phase === 'P3') {
+        return {
+            passed: {
+                subject: emailTemplates['P3 - PASSED'].subject,
+                template: convertHtmlToPlainText(emailTemplates['P3 - PASSED'].getHtml('{applicantName}', '{jobTitle}'))
+            },
+            failed: {
+                subject: emailTemplates['P3 - FAILED'].subject,
+                template: convertHtmlToPlainText(emailTemplates['P3 - FAILED'].getHtml('{applicantName}', '{jobTitle}'))
+            }
+        };
+    } else {
+        // Default to P1 if unknown phase
+        return getEmailTemplateData('P1');
+    }
+};
 
-We are delighted to inform you that you have successfully passed the initial screening process for the {jobTitle} position at {companyName}.
+// Helper function to convert HTML template to plain text for Gmail
+const convertHtmlToPlainText = (html) => {
+    // Create a temporary div to parse HTML
+    const tempDiv = { innerHTML: html };
+    
+    // Simple HTML to text conversion
+    let plainText = html
+        // Remove HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Replace HTML entities
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        // Clean up extra whitespace
+        .replace(/\s+/g, ' ')
+        .replace(/\n\s*\n/g, '\n\n')
+        .trim();
+    
+    // Add some basic formatting for better readability
+    plainText = plainText
+        .replace(/Dear\s+/gi, '\nDear ')
+        .replace(/Best regards/gi, '\n\nBest regards')
+        .replace(/Thank you/gi, '\n\nThank you')
+        .replace(/Congratulations/gi, '\n\nCongratulations')
+        .replace(/🎯 Final Interview Details:/gi, '\n\n🎯 Final Interview Details:')
+        .replace(/📋 What to Expect:/gi, '\n\n📋 What to Expect:')
+        .replace(/⏰ Next Steps:/gi, '\n\n⏰ Next Steps:')
+        .replace(/🙏 Our Sincere Appreciation:/gi, '\n\n🙏 Our Sincere Appreciation:')
+        .replace(/🚀 Moving Forward:/gi, '\n\n🚀 Moving Forward:')
+        .replace(/P\.S\./gi, '\n\nP.S.')
+        .replace(/---/g, '\n\n---');
+    
+    return plainText;
+};
 
-This is an important milestone in your application journey with us. Your qualifications and responses have impressed our initial screening team.
+// NEW: Get raw email templates (for direct access to emailTemplates object)
+const getRawEmailTemplates = () => {
+    return emailTemplates;
+};
 
-What's Next?
-• You will receive a scheduling link for your interview shortly
-• Our HR team will contact you within 2-3 business days
-• Please log into your applicant portal for updates
-
-We look forward to the next step in our process together.
-
-Best regards,
-{companyName} Recruitment Team
-
----
-This is an automated message. Please do not reply to this email.`
-        },
-        failed: {
-            subject: 'Thank You for Your Interest - Prime Infrastructure',
-            template: `Dear {applicantName},
-
-Thank you for your interest in the {jobTitle} position at {companyName} and for taking the time to complete our application process.
-
-After careful consideration of your application and qualifications, we regret to inform you that we have decided to move forward with other candidates whose experience more closely matches our current needs.
-
-We want to emphasize that this decision does not reflect on your qualifications or potential. The competition for this position was exceptionally strong, and we had many qualified candidates to consider.
-
-What's Next?
-• We encourage you to apply for future openings that match your skills
-• Your information will remain in our talent database
-• Follow us on our careers page for new opportunities
-• We may contact you if a suitable position becomes available
-
-We wish you the very best in your career search and thank you again for considering {companyName} as a potential employer.
-
-Best regards,
-{companyName} Recruitment Team
-
----
-This is an automated message. Please do not reply to this email.`
-        }
-    };
+// NEW: Get specific template by status
+const getTemplateByStatus = (status) => {
+    return emailTemplates[status] || null;
 };
 
 module.exports = {
@@ -451,5 +463,7 @@ module.exports = {
     sendBatchStatusEmails,
     sendTestEmail,
     sendCustomEmail,
-    getEmailTemplateData
+    getEmailTemplateData,  // UNIFIED: Single function that handles all phases
+    getRawEmailTemplates,  // NEW: Direct access to emailTemplates object
+    getTemplateByStatus    // NEW: Get specific template by status
 };
