@@ -75,7 +75,7 @@ router.post('/hr/markAsP2Passed', hrController.markAsP2Passed);
 router.post('/hr/markAsP2Failed', hrController.markAsP2Failed);
 // Finalize P2 review and notify all applicants
 router.post('/hr/finalizeP2Review', hrController.finalizeP2Review);
-router.get('/getP2EmailTemplates', hrController.getP2EmailTemplates);
+router.get('/hr/getP2EmailTemplates', hrController.getP2EmailTemplates);
 router.get('/getEmailTemplates', hrController.getEmailTemplates);
 
 router.get('/hr/useraccount', hrController.getUserAccount);

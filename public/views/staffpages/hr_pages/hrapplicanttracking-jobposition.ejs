@@ -1054,20 +1054,20 @@
     </div>
 </div>
 
-<!-- ========== ADDED P2 NOTIFY MODAL ========== -->
+<!-- ========== UPDATED P2 NOTIFY MODAL ========== -->
 <!-- Modal for notifying P2 applicants -->
 <div id="notifyApplicantsModal" class="modal">
     <div class="modal-content">
         <span class="close-button" onclick="closeModal('notifyApplicantsModal')">&times;</span>
-        <h2>Confirm Finalization</h2>
-        <p>You are about to finalize the review process and notify all applicants who were not selected that they have not advanced to the next stage. This action is irreversible. Are you sure you want to proceed?</p>
+        <h2>Confirm P2 Review Finalization</h2>
+        <p>You are about to finalize the P2 review process using Gmail compose. This will prepare customizable email templates and open Gmail with pre-filled recipient information for both passed and failed applicants. Are you sure you want to proceed?</p>
         <div class="modal-buttons">
-            <button id="backButton" class="back-button" onclick="closeModal('notifyApplicantsModal')">Back</button>
-            <button id="confirmButton" class="confirm-button">Confirm</button>
+            <button id="backButtonP2Modal" class="back-button" onclick="closeModal('notifyApplicantsModal')">Back</button>
+            <button id="confirmP2Button" class="confirm-button" onclick="startP2GmailIntegrationFlow()">Start Gmail Process</button>
         </div>
     </div>
 </div>
-<!-- ========== END ADDED P2 NOTIFY MODAL ========== -->
+<!-- ========== END UPDATED P2 NOTIFY MODAL ========== -->
 
 
 <!-- P1 - HR Choosing Modal -->
@@ -1270,7 +1270,6 @@
         </div>
     </div>
 </div>
-
 <!-- P2 Gmail Compose Modal for Passed Applicants -->
 <div id="emailP2PassedModal" class="modal">
     <div class="modal-content" style="width: 85%; max-width: 900px;">
@@ -1342,196 +1341,127 @@
     </div>
 </div>
 
-    <!-- Updated P2 Gmail Compose Modal for Passed Applicants -->
-    <div id="emailP2PassedModal" class="modal">
-        <div class="modal-content" style="width: 85%; max-width: 900px;">
-            <span class="close-button" onclick="closeModal('emailP2PassedModal')">&times;</span>
-            <h2 style="color: #28a745;">✅ Gmail Compose - HR Interview Advancement Email</h2>
-            
-            <div style="background-color: #d4edda; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h4 style="color: #155724; margin-top: 0; display: flex; align-items: center;">
-                    <i class="fas fa-users" style="margin-right: 10px;"></i>
-                    Recipients (<span id="p2PassedRecipientsCount">0</span> applicants):
-                </h4>
-                <div id="p2PassedRecipientsList" style="color: #155724; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 15px; border-radius: 5px;">
-                    <!-- Will be populated dynamically -->
-                </div>
-            </div>
-            
-            <div style="margin: 25px 0;">
-                <label for="p2PassedEmailSubject" style="display: block; font-weight: bold; margin-bottom: 8px;">
-                    <i class="fas fa-tag" style="margin-right: 8px;"></i>Email Subject:
-                </label>
-                <input 
-                    type="text" 
-                    id="p2PassedEmailSubject" 
-                    style="width: 100%; padding: 12px; border: 2px solid #28a745; border-radius: 6px; font-size: 16px;"
-                    value="Great News! You've Advanced to Final Interview - Prime Infrastructure"
-                >
-            </div>
-            
-            <div style="margin: 25px 0;">
-                <label for="p2PassedEmailTemplate" style="display: block; font-weight: bold; margin-bottom: 8px;">
-                    <i class="fas fa-edit" style="margin-right: 8px;"></i>Email Template:
-                </label>
-                <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
-                    <small style="color: #6c757d;">
-                        <strong>Available placeholders:</strong> 
-                        <code>{applicantName}</code>, <code>{jobTitle}</code>, <code>{companyName}</code>
-                    </small>
-                </div>
-                <textarea 
-                    id="p2PassedEmailTemplate" 
-                    rows="14" 
-                    style="width: 100%; padding: 15px; border: 2px solid #28a745; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;"
-                    placeholder="Email template will be loaded here..."
-                ></textarea>
-            </div>
-
-            <div style="background: linear-gradient(135deg, #e7f3ff, #f0f8ff); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
-                <h4 style="color: #0066cc; margin-top: 0; display: flex; align-items: center;">
-                    <i class="fab fa-google" style="margin-right: 10px; font-size: 20px;"></i>
-                    Gmail Integration Ready
-                </h4>
-                <p style="color: #0066cc; margin-bottom: 0; line-height: 1.6;">
-                    Clicking "Open Gmail Compose" will open Gmail in a new tab with:<br>
-                    • <strong>All recipient emails</strong> automatically added to "To:" field<br>
-                    • <strong>Subject line</strong> pre-filled<br>
-                    • <strong>Email template</strong> ready in the message body
-                </p>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="back-button" onclick="closeModal('emailP2PassedModal')">
-                    <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
-                </button>
-                <button class="confirm-button" onclick="openGmailForP2Passed()" style="background: linear-gradient(135deg, #db4437, #c23321); border: none; font-size: 16px; padding: 12px 25px;">
-                    <i class="fab fa-google" style="margin-right: 8px;"></i>
-                    Open Gmail Compose
-                </button>
+<!-- P2 Gmail Compose Modal for Failed Applicants -->
+<div id="emailP2FailedModal" class="modal">
+    <div class="modal-content" style="width: 85%; max-width: 900px;">
+        <span class="close-button" onclick="closeModal('emailP2FailedModal')">&times;</span>
+        <h2 style="color: #dc3545;">❌ Gmail Compose - HR Interview Notification Email</h2>
+        
+        <div style="background-color: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4 style="color: #721c24; margin-top: 0; display: flex; align-items: center;">
+                <i class="fas fa-users" style="margin-right: 10px;"></i>
+                Recipients (<span id="p2FailedRecipientsCount">0</span> applicants):
+            </h4>
+            <div id="p2FailedRecipientsList" style="color: #721c24; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 15px; border-radius: 5px;">
+                <!-- Will be populated dynamically -->
             </div>
         </div>
-    </div>
+        
+        <div style="margin: 25px 0;">
+            <label for="p2FailedEmailSubject" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                <i class="fas fa-tag" style="margin-right: 8px;"></i>Email Subject:
+            </label>
+            <input 
+                type="text" 
+                id="p2FailedEmailSubject" 
+                style="width: 100%; padding: 12px; border: 2px solid #dc3545; border-radius: 6px; font-size: 16px;"
+                value="Thank You for Your Interview - Prime Infrastructure"
+            >
+        </div>
+        
+        <div style="margin: 25px 0;">
+            <label for="p2FailedEmailTemplate" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                <i class="fas fa-edit" style="margin-right: 8px;"></i>Email Template:
+            </label>
+            <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                <small style="color: #6c757d;">
+                    <strong>Available placeholders:</strong> 
+                    <code>{applicantName}</code>, <code>{jobTitle}</code>, <code>{companyName}</code>
+                </small>
+            </div>
+            <textarea 
+                id="p2FailedEmailTemplate" 
+                rows="14" 
+                style="width: 100%; padding: 15px; border: 2px solid #dc3545; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;"
+                placeholder="Email template will be loaded here..."
+            ></textarea>
+        </div>
 
-    <!-- Updated P2 Gmail Compose Modal for Failed Applicants -->
-    <div id="emailP2FailedModal" class="modal">
-        <div class="modal-content" style="width: 85%; max-width: 900px;">
-            <span class="close-button" onclick="closeModal('emailP2FailedModal')">&times;</span>
-            <h2 style="color: #dc3545;">❌ Gmail Compose - HR Interview Update Email</h2>
-            
-            <div style="background-color: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h4 style="color: #721c24; margin-top: 0; display: flex; align-items: center;">
-                    <i class="fas fa-users" style="margin-right: 10px;"></i>
-                    Recipients (<span id="p2FailedRecipientsCount">0</span> applicants):
-                </h4>
-                <div id="p2FailedRecipientsList" style="color: #721c24; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 15px; border-radius: 5px;">
-                    <!-- Will be populated dynamically -->
-                </div>
-            </div>
-            
-            <div style="margin: 25px 0;">
-                <label for="p2FailedEmailSubject" style="display: block; font-weight: bold; margin-bottom: 8px;">
-                    <i class="fas fa-tag" style="margin-right: 8px;"></i>Email Subject:
-                </label>
-                <input 
-                    type="text" 
-                    id="p2FailedEmailSubject" 
-                    style="width: 100%; padding: 12px; border: 2px solid #dc3545; border-radius: 6px; font-size: 16px;"
-                    value="Thank You for Your Interview - Prime Infrastructure"
-                >
-            </div>
-            
-            <div style="margin: 25px 0;">
-                <label for="p2FailedEmailTemplate" style="display: block; font-weight: bold; margin-bottom: 8px;">
-                    <i class="fas fa-edit" style="margin-right: 8px;"></i>Email Template:
-                </label>
-                <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
-                    <small style="color: #6c757d;">
-                        <strong>Available placeholders:</strong> 
-                        <code>{applicantName}</code>, <code>{jobTitle}</code>, <code>{companyName}</code>
-                    </small>
-                </div>
-                <textarea 
-                    id="p2FailedEmailTemplate" 
-                    rows="14" 
-                    style="width: 100%; padding: 15px; border: 2px solid #dc3545; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;"
-                    placeholder="Email template will be loaded here..."
-                ></textarea>
-            </div>
-
-            <div style="background: linear-gradient(135deg, #e7f3ff, #f0f8ff); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
-                <h4 style="color: #0066cc; margin-top: 0; display: flex; align-items: center;">
-                    <i class="fab fa-google" style="margin-right: 10px; font-size: 20px;"></i>
-                    Gmail Integration Ready
-                </h4>
-                <p style="color: #0066cc; margin-bottom: 0; line-height: 1.6;">
-                    Clicking "Open Gmail Compose" will open Gmail in a new tab with:<br>
-                    • <strong>All recipient emails</strong> automatically added to "To:" field<br>
-                    • <strong>Subject line</strong> pre-filled<br>
-                    • <strong>Email template</strong> ready in the message body
-                </p>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="back-button" onclick="closeModal('emailP2FailedModal')">
-                    <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
-                </button>
-                <button class="confirm-button" onclick="openGmailForP2Failed()" style="background: linear-gradient(135deg, #db4437, #c23321); border: none; font-size: 16px; padding: 12px 25px;">
-                    <i class="fab fa-google" style="margin-right: 8px;"></i>
-                    Open Gmail Compose
-                </button>
-            </div>
+        <div style="background: linear-gradient(135deg, #e7f3ff, #f0f8ff); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
+            <h4 style="color: #0066cc; margin-top: 0; display: flex; align-items: center;">
+                <i class="fab fa-google" style="margin-right: 10px; font-size: 20px;"></i>
+                Gmail Integration Ready
+            </h4>
+            <p style="color: #0066cc; margin-bottom: 0; line-height: 1.6;">
+                Clicking "Open Gmail Compose" will open Gmail in a new tab with:<br>
+                • <strong>All recipient emails</strong> automatically added to "To:" field<br>
+                • <strong>Subject line</strong> pre-filled<br>
+                • <strong>Email template</strong> ready in the message body
+            </p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="back-button" onclick="closeModal('emailP2FailedModal')">
+                <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
+            </button>
+            <button class="confirm-button" onclick="openGmailForP2Failed()" style="background: linear-gradient(135deg, #db4437, #c23321); border: none; font-size: 16px; padding: 12px 25px;">
+                <i class="fab fa-google" style="margin-right: 8px;"></i>
+                Open Gmail Compose
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- Updated P2 Status Update Modal -->
-    <div id="p2StatusUpdateModal" class="modal">
-        <div class="modal-content" style="width: 70%; max-width: 600px;">
-            <h2 style="text-align: center; color: #007bff;">
-                <i class="fab fa-google" style="color: #db4437; margin-right: 10px;"></i>
-                Gmail Compose Opened
-            </h2>
-            
-            <div style="margin: 30px 0; text-align: center;">
-                <div style="font-size: 64px; color: #db4437; margin-bottom: 20px;">
-                    <i class="fab fa-google"></i>
-                </div>
-                <p style="font-size: 18px; margin-bottom: 20px;">Gmail compose window has been opened in a new tab with your P2 HR interview emails pre-filled.</p>
-                
-                <div style="background-color: #e3f2fd; padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 5px solid #2196f3;">
-                    <h4 style="color: #1976d2; margin-top: 0;">📋 Next Steps:</h4>
-                    <ol style="text-align: left; margin: 15px 0; color: #1976d2; line-height: 1.8;">
-                        <li><strong>Switch to Gmail tab</strong> - Check if Gmail opened correctly</li>
-                        <li><strong>Review recipient list</strong> - Verify all emails are in "To:" field</li>
-                        <li><strong>Check subject line</strong> - Modify if needed</li>
-                        <li><strong>Review email content</strong> - Make final adjustments</li>
-                        <li><strong>Send emails</strong> - Click Gmail's send button</li>
-                        <li><strong>Return here</strong> - Click "Update Database" below</li>
-                    </ol>
-                </div>
+
+<!-- P2 Status Update Modal -->
+<div id="p2StatusUpdateModal" class="modal">
+    <div class="modal-content" style="width: 70%; max-width: 600px;">
+        <h2 style="text-align: center; color: #007bff;">
+            <i class="fab fa-google" style="color: #db4437; margin-right: 10px;"></i>
+            Gmail Compose Opened
+        </h2>
+        
+        <div style="margin: 30px 0; text-align: center;">
+            <div style="font-size: 64px; color: #db4437; margin-bottom: 20px;">
+                <i class="fab fa-google"></i>
             </div>
+            <p style="font-size: 18px; margin-bottom: 20px;">Gmail compose window has been opened in a new tab with your P2 HR interview emails pre-filled.</p>
             
-            <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #f39c12;">
-                <h4 style="color: #856404; margin-top: 0; display: flex; align-items: center;">
-                    <i class="fas fa-exclamation-triangle" style="margin-right: 10px;"></i>
-                    Important
-                </h4>
-                <p style="color: #856404; margin-bottom: 0; line-height: 1.6;">
-                    <strong>After sending emails in Gmail</strong>, return here and click "Update Database" to finalize the P2 applicant statuses in your system.
-                </p>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="back-button" onclick="closeModal('p2StatusUpdateModal')">
-                    <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel Process
-                </button>
-                <button class="confirm-button" onclick="updateP2ApplicantStatuses()" style="background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px; padding: 12px 25px;">
-                    <i class="fas fa-database" style="margin-right: 8px;"></i>
-                    Update Database
-                </button>
+            <div style="background-color: #e3f2fd; padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 5px solid #2196f3;">
+                <h4 style="color: #1976d2; margin-top: 0;">📋 Next Steps:</h4>
+                <ol style="text-align: left; margin: 15px 0; color: #1976d2; line-height: 1.8;">
+                    <li><strong>Switch to Gmail tab</strong> - Check if Gmail opened correctly</li>
+                    <li><strong>Review recipient list</strong> - Verify all emails are in "To:" field</li>
+                    <li><strong>Check subject line</strong> - Modify if needed</li>
+                    <li><strong>Review email content</strong> - Make final adjustments</li>
+                    <li><strong>Send emails</strong> - Click Gmail's send button</li>
+                    <li><strong>Return here</strong> - Click "Update Database" below</li>
+                </ol>
             </div>
         </div>
+        
+        <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #f39c12;">
+            <h4 style="color: #856404; margin-top: 0; display: flex; align-items: center;">
+                <i class="fas fa-exclamation-triangle" style="margin-right: 10px;"></i>
+                Important
+            </h4>
+            <p style="color: #856404; margin-bottom: 0; line-height: 1.6;">
+                <strong>After sending emails in Gmail</strong>, return here and click "Update Database" to finalize the P2 applicant statuses in your system.
+            </p>
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="back-button" onclick="closeModal('p2StatusUpdateModal')">
+                <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel Process
+            </button>
+            <button class="confirm-button" onclick="updateP2ApplicantStatuses()" style="background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px; padding: 12px 25px;">
+                <i class="fas fa-database" style="margin-right: 8px;"></i>
+                Update Database
+            </button>
+        </div>
     </div>
+</div>
+
 <!-- ========== ADDED APPLICANTS DATA SCRIPT ========== -->
 <script id="applicants-data" type="application/json">
     <% if (typeof applicants !== 'undefined') { %>
@@ -1544,7 +1474,7 @@
 
 
 <script>
-
+    
 // Global variables for P2 functionality
 let currentP2PassedApplicants = [];
 let currentP2FailedApplicants = [];
@@ -1553,6 +1483,17 @@ let pendingP2StatusChanges = {};
 // P2 Email Integration Global Variables
 let p2EmailTemplates = {};
 let p2EmailsToUpdate = { passed: [], failed: [] };
+
+// NEW: P2 Gmail Integration Flow Starter Function
+function startP2GmailIntegrationFlow() {
+    console.log("🚀 [P2 Gmail Flow] Starting P2 Gmail integration flow from modal...");
+    
+    // Close the existing confirmation modal
+    closeModal('notifyApplicantsModal');
+    
+    // Now start the P2 Gmail integration process
+    finalizeP2Review();
+}
 
 function p2passApplicant(applicantId) {
     console.log(`🟢 [P2 Pass] Starting pass action for applicantId: ${applicantId}`);
@@ -1849,13 +1790,6 @@ function finalizeP2Review() {
 
     console.log(`📊 [P2 Finalize] Preparing P2 Gmail compose for: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
 
-    // Show loading indicator
-    const confirmButton = document.getElementById('confirmButton');
-    if (confirmButton) {
-        confirmButton.textContent = "Loading email data...";
-        confirmButton.disabled = true;
-    }
-
     // Store the applicant IDs for database updates later
     p2EmailsToUpdate = {
         passed: passedApplicantIds,
@@ -1876,9 +1810,6 @@ function finalizeP2Review() {
         
         console.log(`📊 [P2 Finalize] Loaded ${currentP2PassedApplicants.length} passed and ${currentP2FailedApplicants.length} failed applicants`);
         
-        // Close the confirmation modal
-        closeModal('notifyApplicantsModal');
-        
         // Start the Gmail compose process
         if (currentP2PassedApplicants.length > 0) {
             console.log('📧 [P2 Finalize] Showing passed email modal');
@@ -1894,38 +1825,51 @@ function finalizeP2Review() {
     .catch(error => {
         console.error("❌ [P2 Finalize] Error preparing P2 email composition:", error);
         alert("Error preparing P2 email composition: " + error.message);
-        
-        // Reset button state
-        if (confirmButton) {
-            confirmButton.textContent = "Confirm";
-            confirmButton.disabled = false;
-        }
     });
 }
 
 // Fetch P2 applicant data for email composition
+
+// Enhanced fetchP2ApplicantDataForEmails function with better debugging
 async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicantIds) {
     try {
         console.log('📡 [P2 Data] Fetching P2 applicant data for emails...');
+        console.log('📊 [P2 Data] Request payload:', {
+            passedApplicantIds,
+            failedApplicantIds,
+            getEmailData: true
+        });
+        
+        const requestBody = {
+            passedApplicantIds: passedApplicantIds,
+            failedApplicantIds: failedApplicantIds,
+            getEmailData: true
+        };
+        
+        console.log('📡 [P2 Data] Sending request to /hr/finalizeP2Review with body:', JSON.stringify(requestBody, null, 2));
         
         const response = await fetch('/hr/finalizeP2Review', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                passedApplicantIds: passedApplicantIds,
-                failedApplicantIds: failedApplicantIds,
-                getEmailData: true // Flag to get email data instead of updating
-            }),
+            body: JSON.stringify(requestBody),
         });
         
+        console.log('📡 [P2 Data] Response status:', response.status);
+        console.log('📡 [P2 Data] Response headers:', response.headers);
+        
         const data = await response.json();
-        console.log('📡 [P2 Data] API response:', data);
+        console.log('📡 [P2 Data] API response data:', JSON.stringify(data, null, 2));
         
         if (!data.success) {
+            console.error('❌ [P2 Data] API returned error:', data.message);
             throw new Error(data.message || 'Failed to fetch P2 applicant data');
         }
+        
+        console.log('✅ [P2 Data] Successfully fetched applicant data');
+        console.log('📊 [P2 Data] Passed applicants:', data.passedApplicants);
+        console.log('📊 [P2 Data] Failed applicants:', data.failedApplicants);
         
         return {
             passedApplicants: data.passedApplicants || [],
@@ -1934,60 +1878,52 @@ async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicant
         
     } catch (error) {
         console.error("❌ [P2 Data] Error fetching P2 applicant data:", error);
+        console.error("❌ [P2 Data] Error stack:", error.stack);
         throw error;
     }
 }
 
-// Fetch P2 email templates from emailService.js
+// Updated fetchP2EmailTemplates function to use your existing endpoint
 async function fetchP2EmailTemplates() {
     try {
-        console.log("📧 [P2 Templates] Fetching P2 email templates from emailService.js...");
+        console.log("📧 [P2 Templates] Fetching P2 email templates from emailService.js via backend...");
         
-        // Primary method: Use the unified endpoint that pulls from emailService.js emailTemplates
-        const response = await fetch('/hr/getEmailTemplates?phase=P2');
+        // Use your existing P2-specific endpoint
+        const response = await fetch('/hr/getP2EmailTemplates');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('📡 [P2 Templates] Backend response:', data);
         
         if (!data.success) {
             throw new Error(data.message || 'Failed to fetch P2 email templates');
         }
         
-        console.log("✅ [P2 Templates] Successfully fetched P2 templates from emailService.js via unified endpoint");
+        console.log("✅ [P2 Templates] Successfully fetched P2 templates from emailService.js via backend");
+        console.log("📧 [P2 Templates] Templates received:", data.templates);
+        
         return data.templates;
         
     } catch (error) {
-        console.error("❌ [P2 Templates] Error fetching P2 email templates from unified endpoint:", error);
+        console.error("❌ [P2 Templates] Error fetching P2 email templates from backend:", error);
         
-        // Fallback method: Try the P2-specific endpoint
-        try {
-            console.log("📧 [P2 Templates] Trying P2-specific endpoint as fallback...");
-            const fallbackResponse = await fetch('/hr/getP2EmailTemplates');
-            const fallbackData = await fallbackResponse.json();
-            
-            if (fallbackData.success) {
-                console.log("✅ [P2 Templates] Successfully fetched P2 templates from P2-specific endpoint");
-                return fallbackData.templates;
-            }
-        } catch (fallbackError) {
-            console.error("❌ [P2 Templates] P2-specific endpoint also failed:", fallbackError);
-        }
-        
-        // Final fallback: This should never be reached since templates are now in emailService.js
-        // But keeping for safety
-        console.log("⚠️ [P2 Templates] Using minimal fallback templates (this should not happen if emailService.js is working)");
+        // Minimal fallback
+        console.log("⚠️ [P2 Templates] Backend failed, using minimal fallback");
         return {
             passed: {
                 subject: 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure',
-                template: 'Congratulations! You have advanced to the final interview stage. Please check your applicant portal for more details.'
+                template: 'Congratulations {applicantName}! You have advanced to the final interview stage for the {jobTitle} position. Our team will contact you soon.'
             },
             failed: {
                 subject: 'Thank You for Your Interview - Prime Infrastructure',
-                template: 'Thank you for your time and interest. We have decided to move forward with another candidate.'
+                template: 'Thank you {applicantName} for your interest in the {jobTitle} position. We have decided to move forward with another candidate.'
             }
         };
     }
 }
-
-
 // Show P2 passed applicants email modal
 function showP2PassedEmailModal() {
     console.log("📧 [P2 Passed Modal] Showing P2 passed applicants Gmail compose modal");
@@ -2407,11 +2343,11 @@ function updateSectionHeaderButtonsP2() {
             }
             
             // Update confirm button for P2 Gmail flow
-            const confirmButton = document.getElementById('confirmButton');
+            const confirmButton = document.getElementById('confirmP2Button');
             if (confirmButton) {
                 const newConfirmButton = confirmButton.cloneNode(true);
                 confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
-                newConfirmButton.addEventListener('click', finalizeP2Review);
+                newConfirmButton.addEventListener('click', startP2GmailIntegrationFlow);
                 console.log("🔧 [P2 Button] Updated confirm button for P2 flow");
             }
         } else {
@@ -2425,45 +2361,10 @@ function updateSectionHeaderButtonsP2() {
 }
 
 // =========================
-// ENHANCED EXISTING FUNCTIONS
+// EXISTING FUNCTIONS (KEEPING ALL ORIGINAL FUNCTIONALITY)
 // =========================
 
-// Add this to your existing updateSectionHeaderButtons function
-// This should be called when the "For Review" filter is activated and P2 data is detected
-function enhanceExistingUpdateSectionHeaderButtons() {
-    // Check if we're in P2 context by looking for P2 data
-    const declaredResultsTable = document.getElementById("declaredResultsTable");
-    if (!declaredResultsTable) return;
-    
-    const p2Rows = declaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
-    const hasP2Data = Array.from(p2Rows).some(row => {
-        const statusCell = row.querySelector('td:nth-child(6)');
-        return statusCell && statusCell.textContent.includes('P2');
-    });
-    
-    if (hasP2Data) {
-        console.log("📊 [Enhanced Header] Detected P2 data, updating header buttons");
-        updateSectionHeaderButtonsP2();
-    }
-}
-
-// Enhanced console logging for debugging
-console.log("✅ [P2 Integration] P2 Email Integration JavaScript loaded successfully");
-console.log("📧 [P2 Integration] Available P2 functions:", [
-    'p2passApplicant',
-    'p2rejectApplicant', 
-    'toggleP2ApplicantStatus',
-    'finalizeP2Review',
-    'showP2PassedEmailModal',
-    'showP2FailedEmailModal',
-    'openGmailForP2Passed',
-    'openGmailForP2Failed',
-    'updateP2ApplicantStatuses',
-    'checkAllP2ApplicantsMarked'
-]);
-
-
-// Function to handle rejecting an applicant
+// Function to handle rejection of an applicant
 function rejectApplicant(applicantId) {
     if (!confirm("Are you sure you want to reject this applicant? This action cannot be undone.")) {
         return;
@@ -2520,85 +2421,71 @@ function passApplicant(applicantId) {
 }
 
 function handleFailedAction(applicantId) {
-        alert('Action required for P2 - FAILED applicant: ' + applicantId);
-        // Implement logic for failed status (e.g., notify applicant, reject process)
-    }
+    alert('Action required for P2 - FAILED applicant: ' + applicantId);
+    // Implement logic for failed status (e.g., notify applicant, reject process)
+}
 
-    function handlePassedAction(applicantId) {
-        alert('Action required for P2 - PASSED applicant: ' + applicantId);
-        // Implement logic for passed status (e.g., schedule next steps, notify team)
-    }
+function handlePassedAction(applicantId) {
+    alert('Action required for P2 - PASSED applicant: ' + applicantId);
+    // Implement logic for passed status (e.g., schedule next steps, notify team)
+}
 
-    function handleP3FailedAction(applicantId) {
-        alert('Action required for P3 - FAILED applicant: ' + applicantId);
-        // Implement logic for P3 failed status
-    }
+function handleP3FailedAction(applicantId) {
+    alert('Action required for P3 - FAILED applicant: ' + applicantId);
+    // Implement logic for P3 failed status
+}
 
-    function handleP3PassedAction(applicantId) {
-        alert('Action required for P3 - PASSED applicant: ' + applicantId);
-        // Implement logic for P3 passed status
-    }
+function handleP3PassedAction(applicantId) {
+    alert('Action required for P3 - PASSED applicant: ' + applicantId);
+    // Implement logic for P3 passed status
+}
 
-    function handleJobOfferAction(applicantId) {
-        alert('Action required for Job Offer Sent applicant: ' + applicantId);
-        // Implement logic for job offer status (e.g., follow-up, onboarding)
-    }
-
-function handleFailedAction(applicantId) {
-        alert('Action required for FAILED applicant: ' + applicantId);
-        // Implement logic for failed status (e.g., notify applicant, reject process)
-    }
-
-    function handlePassedAction(applicantId) {
-        alert('Action required for PASSED applicant: ' + applicantId);
-        // Implement logic for passed status (e.g., schedule next steps, notify team)
-    }
+function handleJobOfferAction(applicantId) {
+    alert('Action required for Job Offer Sent applicant: ' + applicantId);
+    // Implement logic for job offer status (e.g., follow-up, onboarding)
+}
 
 function notifyLineManager(applicantId) {
-        fetch('/notify-line-manager', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ applicantId: applicantId }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);  // Success message
-            } else {
-                alert(data.error);    // Error message
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred.');
-        });
-    }
-    
-     // Function to extract applicantId from URL
-     function getApplicantIdFromURL() {
-            const path = window.location.pathname;
-            const parts = path.split('/'); // Split the URL into parts
-            const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
-            return applicantId;
+    fetch('/notify-line-manager', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId: applicantId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);  // Success message
+        } else {
+            alert(data.error);    // Error message
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred.');
+    });
+}
 
-       
+// Function to extract applicantId from URL
+function getApplicantIdFromURL() {
+    const path = window.location.pathname;
+    const parts = path.split('/'); // Split the URL into parts
+    const applicantId = parts[3]; // Assuming the URL is like /hr/evaluation-form/{applicantId}
+    return applicantId;
+}
 
-        // Display the applicantId from the URL (if any) when the page is loaded
-        document.addEventListener('DOMContentLoaded', function () {
-            const applicantId = getApplicantIdFromURL(); // Extract applicantId from the URL
-            if (applicantId) {
-                document.getElementById('applicantIdDisplay').textContent = `Applicant ID from URL: ${applicantId}`;
-            } else {
-                document.getElementById('applicantIdDisplay').textContent = 'No Applicant ID found in URL.';
-            }
-        });
+// Display the applicantId from the URL (if any) when the page is loaded
+document.addEventListener('DOMContentLoaded', function () {
+    const applicantId = getApplicantIdFromURL(); // Extract applicantId from the URL
+    if (applicantId) {
+        document.getElementById('applicantIdDisplay').textContent = `Applicant ID from URL: ${applicantId}`;
+    } else {
+        document.getElementById('applicantIdDisplay').textContent = 'No Applicant ID found in URL.';
+    }
+});
 
-
-
-        function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
+function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
     console.log('Opening Modal with Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl });
 
     if (!userId || userId === "undefined") {
@@ -2657,8 +2544,6 @@ function displayUploadedDocument(fileUrl, linkId, previewId) {
     }
 }
 
-
-
 function confirmHRInitialScreeningModal() {
     const userIdElement = document.getElementById("userId");
     if (!userIdElement) {
@@ -2703,391 +2588,387 @@ function confirmHRInitialScreeningModal() {
         alert("Failed to update applicant status.");
     });
 }
-    // Close the modal
-    document.querySelector('.review-close-button').addEventListener('click', function () {
-        document.getElementById('hrInitialScreeningModalHtml').style.display = 'none';
-    });
 
-    // Close modal if clicked outside the modal content
-    window.addEventListener('click', function (event) {
-        const modal = document.getElementById('hrInitialScreeningModalHtml');
-        if (event.target === modal) {
-            modal.style.display = 'none';
+// Close the modal
+document.querySelector('.review-close-button').addEventListener('click', function () {
+    document.getElementById('hrInitialScreeningModalHtml').style.display = 'none';
+});
+
+// Close modal if clicked outside the modal content
+window.addEventListener('click', function (event) {
+    const modal = document.getElementById('hrInitialScreeningModalHtml');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    // ========== MODIFIED FILTER FUNCTION TO INCLUDE P2 REVIEW ==========    
+    // Function to filter rows based on status
+    function filterRowsByStatus(status) {
+        const rows = document.querySelectorAll('.tracking-table tbody tr');
+        const mainTable = document.getElementById('mainApplicantTable');
+        const onboardingTable = document.getElementById('onboardingTable');
+        const applicantStatusSection = document.getElementById('applicantStatusSection');
+        
+        // Hide/show applicant status section based on filter
+        if (applicantStatusSection) {
+            applicantStatusSection.style.display = (status === 'review') ? 'block' : 'none';
         }
-    });
-    
-    document.addEventListener("DOMContentLoaded", function () {
-// ========== MODIFIED FILTER FUNCTION TO INCLUDE P2 REVIEW ==========    
-// Function to filter rows based on status
-function filterRowsByStatus(status) {
-    const rows = document.querySelectorAll('.tracking-table tbody tr');
-    const mainTable = document.getElementById('mainApplicantTable');
-    const onboardingTable = document.getElementById('onboardingTable');
-    const applicantStatusSection = document.getElementById('applicantStatusSection');
-    
-    // Hide/show applicant status section based on filter
-    if (applicantStatusSection) {
-        applicantStatusSection.style.display = (status === 'review') ? 'block' : 'none';
-    }
-    
-    // Show/hide main table based on filter
-    if (mainTable) {
-        mainTable.style.display = (status === 'review') ? 'none' : '';
-    }
-    
-    if (status === "all") {
-        // Show all rows in main table
-        rows.forEach(row => row.style.display = "");
         
-        // Show onboarding table
-        if (onboardingTable) onboardingTable.style.display = "";
+        // Show/hide main table based on filter
+        if (mainTable) {
+            mainTable.style.display = (status === 'review') ? 'none' : '';
+        }
         
-    } else if (status === "review") {
-        // Handle P2 Review filter
-        handleP2ReviewFilter();
-        
-    } else if (status === "for-evaluation") {
-        // Show only P2 evaluation rows
-        rows.forEach(row => {
-            const statusCell = row.querySelector('td:last-child');
-            const statusText = statusCell ? statusCell.textContent : '';
+        if (status === "all") {
+            // Show all rows in main table
+            rows.forEach(row => row.style.display = "");
             
-            if (statusText.includes('P2 - Awaiting for HR Evaluation')) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
+            // Show onboarding table
+            if (onboardingTable) onboardingTable.style.display = "";
+            
+        } else if (status === "review") {
+            // Handle P2 Review filter
+            handleP2ReviewFilter();
+            
+        } else if (status === "for-evaluation") {
+            // Show only P2 evaluation rows
+            rows.forEach(row => {
+                const statusCell = row.querySelector('td:last-child');
+                const statusText = statusCell ? statusCell.textContent : '';
+                
+                if (statusText.includes('P2 - Awaiting for HR Evaluation')) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+            
+            // Hide onboarding table
+            if (onboardingTable) onboardingTable.style.display = "none";
+            
+        } else if (status === "for-onboarding") {
+            // Show onboarding status rows
+            rows.forEach(row => {
+                const statusCell = row.querySelector('td:last-child');
+                const statusText = statusCell ? statusCell.textContent : '';
+                
+                if (statusText.includes('P3 - PASSED - Job Offer Sent')) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+            
+            // Show onboarding table
+            if (onboardingTable) onboardingTable.style.display = "";
+        }
+        
+        // Highlight the active filter button
+        highlightActiveFilter(status);
+    }
+
+    // Handle the "For Review" filter for P2
+    function handleP2ReviewFilter() {
+        const mainTable = document.getElementById('mainApplicantTable');
+        const applicantStatusSection = document.getElementById('applicantStatusSection');
+        const allMainRows = mainTable ? Array.from(mainTable.querySelectorAll('tbody tr')) : [];
+        
+        // Update the current phase
+        const phaseSpans = document.querySelectorAll('#currentPhase, #currentPhase2');
+        phaseSpans.forEach(span => span.textContent = "P2 Review");
+        
+        // Arrays to store rows
+        const awaitingRowsP2 = [];
+        const declaredRowsP2 = [];
+        
+        // Process each row and categorize it
+        allMainRows.forEach((row, index) => {
+            const lastCell = row.querySelector('td:last-child');
+            if (!lastCell) return;
+            
+            const statusSpan = lastCell.querySelector('span');
+            if (!statusSpan) return;
+            
+            const statusText = statusSpan.textContent.trim();
+            
+            // Extract row data
+            const rowData = extractRowData(row, index);
+            
+            // Check for P2 - HR Evaluation Accomplished
+            if (statusText.includes("P2 - HR Evaluation Accomplished")) {
+                awaitingRowsP2.push(rowData);
+            }
+            // Check for P2 - PASSED or P2 - FAILED (including pending)
+            else if (statusText.includes("P2 - PASSED") || statusText.includes("P2 - FAILED")) {
+                declaredRowsP2.push(rowData);
             }
         });
         
-        // Hide onboarding table
-        if (onboardingTable) onboardingTable.style.display = "none";
+        // Update tables
+        updateAwaitingActionTableP2(awaitingRowsP2);
+        updateDeclaredResultsTableP2(declaredRowsP2);
         
-    } else if (status === "for-onboarding") {
-        // Show onboarding status rows
-        rows.forEach(row => {
-            const statusCell = row.querySelector('td:last-child');
-            const statusText = statusCell ? statusCell.textContent : '';
+        // Update section header buttons
+        updateSectionHeaderButtonsP2();
+    }
+
+    // Extract row data for P2
+    function extractRowData(row, index) {
+        const cells = Array.from(row.querySelectorAll('td'));
+        const cellData = cells.map(cell => cell.innerHTML);
+        
+        // Get applicantId and score from row attributes
+        const applicantId = row.getAttribute('data-applicantid');
+        const totalScore = row.getAttribute('data-score') || 'N/A';
+        
+        // Get name and email
+        let applicantName = '';
+        let applicantEmail = '';
+        
+        if (cells.length > 1) {
+            const nameCell = cells[1];
+            const fullContent = nameCell.innerHTML;
+            const nameParts = fullContent.split('<br>');
             
-            if (statusText.includes('P3 - PASSED - Job Offer Sent')) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
+            if (nameParts.length > 0) {
+                applicantName = nameParts[0].trim();
             }
-        });
-        
-        // Show onboarding table
-        if (onboardingTable) onboardingTable.style.display = "";
-    }
-    
-    // Highlight the active filter button
-    highlightActiveFilter(status);
-}
-
-// Handle the "For Review" filter for P2
-function handleP2ReviewFilter() {
-    const mainTable = document.getElementById('mainApplicantTable');
-    const applicantStatusSection = document.getElementById('applicantStatusSection');
-    const allMainRows = mainTable ? Array.from(mainTable.querySelectorAll('tbody tr')) : [];
-    
-    // Update the current phase
-    const phaseSpans = document.querySelectorAll('#currentPhase, #currentPhase2');
-    phaseSpans.forEach(span => span.textContent = "P2 Review");
-    
-    // Arrays to store rows
-    const awaitingRowsP2 = [];
-    const declaredRowsP2 = [];
-    
-    // Process each row and categorize it
-    allMainRows.forEach((row, index) => {
-        const lastCell = row.querySelector('td:last-child');
-        if (!lastCell) return;
-        
-        const statusSpan = lastCell.querySelector('span');
-        if (!statusSpan) return;
-        
-        const statusText = statusSpan.textContent.trim();
-        
-        // Extract row data
-        const rowData = extractRowData(row, index);
-        
-        // Check for P2 - HR Evaluation Accomplished
-        if (statusText.includes("P2 - HR Evaluation Accomplished")) {
-            awaitingRowsP2.push(rowData);
-        }
-        // Check for P2 - PASSED or P2 - FAILED (including pending)
-        else if (statusText.includes("P2 - PASSED") || statusText.includes("P2 - FAILED")) {
-            declaredRowsP2.push(rowData);
-        }
-    });
-    
-    // Update tables
-    updateAwaitingActionTableP2(awaitingRowsP2);
-    updateDeclaredResultsTableP2(declaredRowsP2);
-    
-    // Update section header buttons
-    updateSectionHeaderButtonsP2();
-}
-
-// Extract row data for P2
-function extractRowData(row, index) {
-    const cells = Array.from(row.querySelectorAll('td'));
-    const cellData = cells.map(cell => cell.innerHTML);
-    
-    // Get applicantId and score from row attributes
-    const applicantId = row.getAttribute('data-applicantid');
-    const totalScore = row.getAttribute('data-score') || 'N/A';
-    
-    // Get name and email
-    let applicantName = '';
-    let applicantEmail = '';
-    
-    if (cells.length > 1) {
-        const nameCell = cells[1];
-        const fullContent = nameCell.innerHTML;
-        const nameParts = fullContent.split('<br>');
-        
-        if (nameParts.length > 0) {
-            applicantName = nameParts[0].trim();
+            
+            if (nameParts.length > 1) {
+                const emailHtml = nameParts[1];
+                applicantEmail = emailHtml.replace(/<[^>]*>/g, '').trim();
+            }
         }
         
-        if (nameParts.length > 1) {
-            const emailHtml = nameParts[1];
-            applicantEmail = emailHtml.replace(/<[^>]*>/g, '').trim();
+        return {
+            index: index + 1,
+            cells: cellData,
+            applicantId: applicantId,
+            totalScore: totalScore,
+            name: applicantName,
+            email: applicantEmail
+        };
+    }
+
+    // Update Awaiting Action table for P2
+    function updateAwaitingActionTableP2(awaitingRows) {
+        const awaitingActionTable = document.getElementById('awaitingActionTable');
+        if (!awaitingActionTable) return;
+        
+        const awaitingTbody = awaitingActionTable.querySelector('tbody');
+        if (!awaitingTbody) return;
+        
+        // Empty the tbody first
+        awaitingTbody.innerHTML = '';
+        
+        if (awaitingRows.length > 0) {
+            // Add the section header
+            const headerRow = document.createElement('tr');
+            headerRow.classList.add('section-header-row');
+            headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants Awaiting Review</td>`;
+            awaitingTbody.appendChild(headerRow);
+            
+            // Add each row with Pass/Reject buttons
+            awaitingRows.forEach((rowData) => {
+                const newRow = createTableRowP2(rowData, false, true); // third parameter for showing action buttons
+                awaitingTbody.appendChild(newRow);
+            });
+        } else {
+            // Display no data message
+            const messageRow = document.createElement('tr');
+            messageRow.innerHTML = `<td colspan="7" class="no-data-message">No applicants awaiting P2 review.</td>`;
+            awaitingTbody.appendChild(messageRow);
         }
     }
-    
-    return {
-        index: index + 1,
-        cells: cellData,
-        applicantId: applicantId,
-        totalScore: totalScore,
-        name: applicantName,
-        email: applicantEmail
-    };
-}
 
-// Update Awaiting Action table for P2
-function updateAwaitingActionTableP2(awaitingRows) {
-    const awaitingActionTable = document.getElementById('awaitingActionTable');
-    if (!awaitingActionTable) return;
-    
-    const awaitingTbody = awaitingActionTable.querySelector('tbody');
-    if (!awaitingTbody) return;
-    
-    // Empty the tbody first
-    awaitingTbody.innerHTML = '';
-    
-    if (awaitingRows.length > 0) {
-        // Add the section header
-        const headerRow = document.createElement('tr');
-        headerRow.classList.add('section-header-row');
-        headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants Awaiting Review</td>`;
-        awaitingTbody.appendChild(headerRow);
+    // Update Declared Results table for P2
+    function updateDeclaredResultsTableP2(declaredRows) {
+        const declaredResultsTable = document.getElementById('declaredResultsTable');
+        if (!declaredResultsTable) return;
         
-        // Add each row with Pass/Reject buttons
-        awaitingRows.forEach((rowData) => {
-            const newRow = createTableRowP2(rowData, false, true); // third parameter for showing action buttons
-            awaitingTbody.appendChild(newRow);
-        });
-    } else {
-        // Display no data message
-        const messageRow = document.createElement('tr');
-        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No applicants awaiting P2 review.</td>`;
-        awaitingTbody.appendChild(messageRow);
+        const declaredTbody = declaredResultsTable.querySelector('tbody');
+        if (!declaredTbody) return;
+        
+        // Empty the tbody first
+        declaredTbody.innerHTML = '';
+        
+        if (declaredRows.length > 0) {
+            // Add the section header
+            const headerRow = document.createElement('tr');
+            headerRow.classList.add('section-header-row');
+            headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants - Declared Results</td>`;
+            declaredTbody.appendChild(headerRow);
+            
+            // Add each row with Toggle Status button
+            declaredRows.forEach((rowData) => {
+                const newRow = createTableRowP2(rowData, true);
+                declaredTbody.appendChild(newRow);
+            });
+            
+            // Setup toggle buttons
+            setupToggleStatusButtonsP2();
+        } else {
+            // Display no data message
+            const messageRow = document.createElement('tr');
+            messageRow.innerHTML = `<td colspan="7" class="no-data-message">No P2 applicants with declared results.</td>`;
+            declaredTbody.appendChild(messageRow);
+        }
     }
-}
 
-// Update Declared Results table for P2
-function updateDeclaredResultsTableP2(declaredRows) {
-    const declaredResultsTable = document.getElementById('declaredResultsTable');
-    if (!declaredResultsTable) return;
-    
-    const declaredTbody = declaredResultsTable.querySelector('tbody');
-    if (!declaredTbody) return;
-    
-    // Empty the tbody first
-    declaredTbody.innerHTML = '';
-    
-    if (declaredRows.length > 0) {
-        // Add the section header
-        const headerRow = document.createElement('tr');
-        headerRow.classList.add('section-header-row');
-        headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants - Declared Results</td>`;
-        declaredTbody.appendChild(headerRow);
+    // Create table row for P2
+    function createTableRowP2(rowData, isForDeclaredResults = false, isForAwaitingAction = false) {
+        const newRow = document.createElement('tr');
         
-        // Add each row with Toggle Status button
-        declaredRows.forEach((rowData) => {
-            const newRow = createTableRowP2(rowData, true);
-            declaredTbody.appendChild(newRow);
-        });
+        // Add applicantId as data attribute
+        if (rowData.applicantId) {
+            newRow.setAttribute('data-applicantid', rowData.applicantId);
+        }
         
-        // Setup toggle buttons
-        setupToggleStatusButtonsP2();
-    } else {
-        // Display no data message
-        const messageRow = document.createElement('tr');
-        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No P2 applicants with declared results.</td>`;
-        declaredTbody.appendChild(messageRow);
-    }
-}
-
-// Create table row for P2
-function createTableRowP2(rowData, isForDeclaredResults = false, isForAwaitingAction = false) {
-    const newRow = document.createElement('tr');
-    
-    // Add applicantId as data attribute
-    if (rowData.applicantId) {
-        newRow.setAttribute('data-applicantid', rowData.applicantId);
-    }
-    
-    // Create cells from stored data
-    if (rowData.cells && rowData.cells.length >= 5) {
-        // Applicant No
-        const cell1 = document.createElement('td');
-        cell1.innerHTML = rowData.cells[0];
-        newRow.appendChild(cell1);
-        
-        // Name
-        const cell2 = document.createElement('td');
-        cell2.innerHTML = rowData.cells[1];
-        newRow.appendChild(cell2);
-        
-        // Department
-        const cell3 = document.createElement('td');
-        cell3.innerHTML = rowData.cells[2];
-        newRow.appendChild(cell3);
-        
-        // Position
-        const cell4 = document.createElement('td');
-        cell4.innerHTML = rowData.cells[3];
-        newRow.appendChild(cell4);
-        
-        // Total Score
-        const cell5 = document.createElement('td');
-        cell5.textContent = rowData.totalScore || 'N/A';
-        newRow.appendChild(cell5);
-        
-        // Status
-        const cell6 = document.createElement('td');
-        const statusMatch = rowData.cells[4].match(/<span><strong>Status:<\/strong>\s*([^<]+)<\/span>/);
-        const status = statusMatch ? statusMatch[1] : 'Unknown';
-        cell6.textContent = status;
-        newRow.appendChild(cell6);
-        
-        // Add action column based on table type
-        if (isForAwaitingAction) {
-            // Add View Evaluation and Pass/Reject buttons for awaiting action
-            const actionCell = document.createElement('td');
-            actionCell.innerHTML = `
-                <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <a href="/hr/view-evaluation/${rowData.applicantId}" target="_blank">
-                        <button class="btn-view-evaluation" style="background-color: white; color: black; border: 1px solid #124A5C; padding: 6px 12px; border-radius: 4px; width: 100%; font-size: 14px; transition: background-color 0.3s ease, color 0.3s ease; cursor: pointer;"
-                            onmouseover="this.style.backgroundColor='#124A5C'; this.style.color='white';"
-                            onmouseout="this.style.backgroundColor='white'; this.style.color='black';">
-                            View Evaluation
-                        </button>
-                    </a>
-                    <div style="display: flex; gap: 5px;">
-                        <button 
-                            class="btn-pass" 
-                            onclick="p2passApplicant('${rowData.applicantId}')"
-                            style="background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
-                            Pass
-                        </button>
-                        <button 
-                            class="btn-reject" 
-                            onclick="p2rejectApplicant('${rowData.applicantId}')"
-                            style="background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
-                            Reject
-                        </button>
+        // Create cells from stored data
+        if (rowData.cells && rowData.cells.length >= 5) {
+            // Applicant No
+            const cell1 = document.createElement('td');
+            cell1.innerHTML = rowData.cells[0];
+            newRow.appendChild(cell1);
+            
+            // Name
+            const cell2 = document.createElement('td');
+            cell2.innerHTML = rowData.cells[1];
+            newRow.appendChild(cell2);
+            
+            // Department
+            const cell3 = document.createElement('td');
+            cell3.innerHTML = rowData.cells[2];
+            newRow.appendChild(cell3);
+            
+            // Position
+            const cell4 = document.createElement('td');
+            cell4.innerHTML = rowData.cells[3];
+            newRow.appendChild(cell4);
+            
+            // Total Score
+            const cell5 = document.createElement('td');
+            cell5.textContent = rowData.totalScore || 'N/A';
+            newRow.appendChild(cell5);
+            
+            // Status
+            const cell6 = document.createElement('td');
+            const statusMatch = rowData.cells[4].match(/<span><strong>Status:<\/strong>\s*([^<]+)<\/span>/);
+            const status = statusMatch ? statusMatch[1] : 'Unknown';
+            cell6.textContent = status;
+            newRow.appendChild(cell6);
+            
+            // Add action column based on table type
+            if (isForAwaitingAction) {
+                // Add View Evaluation and Pass/Reject buttons for awaiting action
+                const actionCell = document.createElement('td');
+                actionCell.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <a href="/hr/view-evaluation/${rowData.applicantId}" target="_blank">
+                            <button class="btn-view-evaluation" style="background-color: white; color: black; border: 1px solid #124A5C; padding: 6px 12px; border-radius: 4px; width: 100%; font-size: 14px; transition: background-color 0.3s ease, color 0.3s ease; cursor: pointer;"
+                                onmouseover="this.style.backgroundColor='#124A5C'; this.style.color='white';"
+                                onmouseout="this.style.backgroundColor='white'; this.style.color='black';">
+                                View Evaluation
+                            </button>
+                        </a>
+                        <div style="display: flex; gap: 5px;">
+                            <button 
+                                class="btn-pass" 
+                                onclick="p2passApplicant('${rowData.applicantId}')"
+                                style="background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                                Pass
+                            </button>
+                            <button 
+                                class="btn-reject" 
+                                onclick="p2rejectApplicant('${rowData.applicantId}')"
+                                style="background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                                Reject
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `;
-            newRow.appendChild(actionCell);
-        } else if (isForDeclaredResults) {
-            // Add Toggle Status button for declared results
-            const toggleCell = document.createElement('td');
-            toggleCell.innerHTML = `
-                <button 
-                    class="btn-toggle-status" 
-                    data-applicantid="${rowData.applicantId}"
-                    onclick="toggleP2ApplicantStatus(this)"
-                >
-                    ${status.includes('PASSED') ? 'Passed' : 'Failed'}
-                </button>
-            `;
-            newRow.appendChild(toggleCell);
+                `;
+                newRow.appendChild(actionCell);
+            } else if (isForDeclaredResults) {
+                // Add Toggle Status button for declared results
+                const toggleCell = document.createElement('td');
+                toggleCell.innerHTML = `
+                    <button 
+                        class="btn-toggle-status" 
+                        data-applicantid="${rowData.applicantId}"
+                        onclick="toggleP2ApplicantStatus(this)"
+                    >
+                        ${status.includes('PASSED') ? 'Passed' : 'Failed'}
+                    </button>
+                `;
+                newRow.appendChild(toggleCell);
+            }
         }
-    }
-    
-    return newRow;
-}
-
-// Setup toggle status buttons for P2
-function setupToggleStatusButtonsP2() {
-    const buttons = document.querySelectorAll('.btn-toggle-status:not([data-has-listener])');
-    
-    buttons.forEach(button => {
-        button.setAttribute('data-has-listener', 'true');
         
-        // Set initial button state based on current status
-        const row = button.closest('tr');
-        if (row) {
-            const statusCell = row.querySelector('td:nth-child(6)');
-            if (statusCell) {
-                const currentStatus = statusCell.textContent.trim();
-                if (currentStatus.includes('PASSED')) {
-                    button.textContent = 'Passed';
-                    button.classList.add('status-passed');
-                    button.classList.remove('status-failed');
-                } else if (currentStatus.includes('FAILED')) {
-                    button.textContent = 'Failed';
-                    button.classList.add('status-failed');
-                    button.classList.remove('status-passed');
+        return newRow;
+    }
+
+    // Setup toggle status buttons for P2
+    function setupToggleStatusButtonsP2() {
+        const buttons = document.querySelectorAll('.btn-toggle-status:not([data-has-listener])');
+        
+        buttons.forEach(button => {
+            button.setAttribute('data-has-listener', 'true');
+            
+            // Set initial button state based on current status
+            const row = button.closest('tr');
+            if (row) {
+                const statusCell = row.querySelector('td:nth-child(6)');
+                if (statusCell) {
+                    const currentStatus = statusCell.textContent.trim();
+                    if (currentStatus.includes('PASSED')) {
+                        button.textContent = 'Passed';
+                        button.classList.add('status-passed');
+                        button.classList.remove('status-failed');
+                    } else if (currentStatus.includes('FAILED')) {
+                        button.textContent = 'Failed';
+                        button.classList.add('status-failed');
+                        button.classList.remove('status-passed');
+                    }
                 }
             }
-        }
-    });
-}
-
-// Update section header buttons for P2
-
-// ========== END MODIFIED FILTER FUNCTION ==========
-
-       // Function to filter table based on search input
-function filterTable() {
-    const searchValue = document.getElementById("searchBar").value.toLowerCase();
-    const rows = document.querySelectorAll('.tracking-table tbody tr');
-
-    rows.forEach(row => {
-        const cells = row.querySelectorAll("td");
-        const rowText = Array.from(cells)
-            .map(cell => cell.textContent.toLowerCase())
-            .join(" ");
-        
-        if (rowText.includes(searchValue)) {
-            row.style.display = ""; // Show if search term matches
-        } else {
-            row.style.display = "none"; // Hide otherwise
-        }
-    });
-}
-
- // Function to highlight the active filter button
-function highlightActiveFilter(status) {
-    const buttons = document.querySelectorAll(".filter-button");
-    buttons.forEach(button => {
-        button.classList.remove("active");
-    });
-    
-    const activeButton = document.getElementById(`filter-${status === "review" ? "review" : status}`);
-    if (activeButton) {
-        activeButton.classList.add("active");
+        });
     }
-}
 
-        // Initialize buttons for filtering by status
-        const buttons = {
+    // Function to filter table based on search input
+    function filterTable() {
+        const searchValue = document.getElementById("searchBar").value.toLowerCase();
+        const rows = document.querySelectorAll('.tracking-table tbody tr');
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            const rowText = Array.from(cells)
+                .map(cell => cell.textContent.toLowerCase())
+                .join(" ");
+            
+            if (rowText.includes(searchValue)) {
+                row.style.display = ""; // Show if search term matches
+            } else {
+                row.style.display = "none"; // Hide otherwise
+            }
+        });
+    }
+
+    function highlightActiveFilter(status) {
+        const buttons = document.querySelectorAll(".filter-button");
+        buttons.forEach(button => {
+            button.classList.remove("active");
+        });
+        
+        const activeButton = document.getElementById(`filter-${status === "review" ? "review" : status}`);
+        if (activeButton) {
+            activeButton.classList.add("active");
+        }
+    }
+
+    // Initialize buttons for filtering by status
+    const buttons = {
         all: document.getElementById("filter-all"),
         review: document.getElementById("filter-review"),
         evaluation: document.getElementById("filter-evaluation"),
@@ -3109,51 +2990,51 @@ function highlightActiveFilter(status) {
         }
     });
 
-        // Set button text dynamically based on row class
-        const rows = document.querySelectorAll('.tracking-table tbody tr');
-        rows.forEach(row => {
-            const statusCell = row.querySelector('td:last-child');
-            const button = statusCell.querySelector('button');
-            if (row.classList.contains('status-for-review')) {
-                button.textContent = "For Review";
-            } else if (row.classList.contains('status-for-onboarding')) {
-                button.textContent = "For Onboarding";
-            } else if (row.classList.contains('status-for-evaluation')) {
-                button.textContent = "For Evaluation";
-            }
-        });
-
-        // Display all rows initially
-        filterRowsByStatus("all");
+    // Set button text dynamically based on row class
+    const rows = document.querySelectorAll('.tracking-table tbody tr');
+    rows.forEach(row => {
+        const statusCell = row.querySelector('td:last-child');
+        const button = statusCell.querySelector('button');
+        if (row.classList.contains('status-for-review')) {
+            button.textContent = "For Review";
+        } else if (row.classList.contains('status-for-onboarding')) {
+            button.textContent = "For Onboarding";
+        } else if (row.classList.contains('status-for-evaluation')) {
+            button.textContent = "For Evaluation";
+        }
     });
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const evaluationButtons = document.querySelectorAll(".btn-evaluation");
+    // Display all rows initially
+    filterRowsByStatus("all");
+});
 
-        evaluationButtons.forEach(button => {
-            button.addEventListener("click", function () {
-                window.location.href = "/hr/evaluation-form";
-            });
+document.addEventListener("DOMContentLoaded", function () {
+    const evaluationButtons = document.querySelectorAll(".btn-evaluation");
+
+    evaluationButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            window.location.href = "/hr/evaluation-form";
         });
     });
+});
 
-    // Function to open the modal
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = "block";
-    }
+// Function to open the modal
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = "block";
+}
 
-    // Function to close the modal
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = "none";
-    }
+// Function to close the modal
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = "none";
+}
 
-    // Function for sending notification to the applicant
-    function sendNotification() {
-        alert("Sent notification to applicant");
-        closeModal('releaseJobOfferModal');
-    }
+// Function for sending notification to the applicant
+function sendNotification() {
+    alert("Sent notification to applicant");
+    closeModal('releaseJobOfferModal');
+}
 
-    function openOnboardingModal(userId, applicantId, firstName, lastName, birthDate, email, phoneNo, jobId, jobTitle) {
+function openOnboardingModal(userId, applicantId, firstName, lastName, birthDate, email, phoneNo, jobId, jobTitle) {
     // Set the hidden input values
     document.getElementById('onboarding-user-id').value = userId;
     document.getElementById('onboarding-applicant-id').value = applicantId;
@@ -3209,56 +3090,55 @@ function highlightActiveFilter(status) {
     // Display the modal
     document.getElementById('moveToOnboardingModal').style.display = 'block';
 }
+
+// Function for confirming onboarding - Updated version
+function confirmOnboarding() {
+    const userId = document.getElementById('onboarding-user-id').value;
+    const applicantId = document.getElementById('onboarding-applicant-id').value;
+    const jobId = document.getElementById('onboarding-job-id').value;
+    const startDate = document.getElementById('start-date-input').value;
     
-    // Function for confirming onboarding - Updated version
-    function confirmOnboarding() {
-        const userId = document.getElementById('onboarding-user-id').value;
-        const applicantId = document.getElementById('onboarding-applicant-id').value;
-        const jobId = document.getElementById('onboarding-job-id').value;
-        const startDate = document.getElementById('start-date-input').value;
-        
-        if (!userId || !applicantId || !jobId || !startDate) {
-            alert('Error: Missing required information. Please make sure all fields are filled.');
-            return;
+    if (!userId || !applicantId || !jobId || !startDate) {
+        alert('Error: Missing required information. Please make sure all fields are filled.');
+        return;
+    }
+    
+    // Send request to update applicant status and save start date
+    fetch('/hr/send-onboarding-checklist', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            userId: userId,
+            applicantId: applicantId,
+            jobId: jobId,
+            startDate: startDate
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Status updated and job offer sent successfully. Start date has been set for ' + startDate);
+            closeModal('moveToOnboardingModal');
+            location.reload(); // Reload to update the UI
+        } else {
+            alert('Error: ' + (data.message || 'Failed to update status.'));
         }
-        
-        // Send request to update applicant status and save start date
-        fetch('/hr/send-onboarding-checklist', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                userId: userId,
-                applicantId: applicantId,
-                jobId: jobId,
-                startDate: startDate
-            }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Status updated and job offer sent successfully. Start date has been set for ' + startDate);
-                closeModal('moveToOnboardingModal');
-                location.reload(); // Reload to update the UI
-            } else {
-                alert('Error: ' + (data.message || 'Failed to update status.'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while processing your request. Please try again.');
-        });
-    }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing your request. Please try again.');
+    });
+}
 
-    // Function for confirming account setup
-    function confirmAccountSetup() {
-        alert("Account setup confirmed");
-        closeModal('accountSetupReminderModal');
-    }
+// Function for confirming account setup
+function confirmAccountSetup() {
+    alert("Account setup confirmed");
+    closeModal('accountSetupReminderModal');
+}
 
-
-    document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function() {
     // Modal functionality for the notify applicants modal
     const notifyModal = document.getElementById("notifyApplicantsModal");
     
@@ -3334,39 +3214,39 @@ document.getElementById("confirmButton").addEventListener("click", function() {
 });
 
 document.querySelectorAll('.action-required-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const mrfId = this.getAttribute('data-mrfid');
-                    window.location.href = `/hr/view-mrf/${mrfId}`;  // Redirect to the MRF page
-                });
-            });
+    button.addEventListener('click', function() {
+        const mrfId = this.getAttribute('data-mrfid');
+        window.location.href = `/hr/view-mrf/${mrfId}`;  // Redirect to the MRF page
+    });
+});
 
-            // Toggle active class for sidebar links
-            document.querySelectorAll('.sidebar ul li a').forEach(link => {
-                link.addEventListener('click', function() {
-                    document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
+// Toggle active class for sidebar links
+document.querySelectorAll('.sidebar ul li a').forEach(link => {
+    link.addEventListener('click', function() {
+        document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
 
-            // Toggle collapsible content
-            document.querySelectorAll('.collapsible-header').forEach(header => {
-                header.addEventListener('click', function() {
-                    var content = this.nextElementSibling;
-                    if (content.style.display === 'block') {
-                        content.style.display = 'none';
-                    } else {
-                        // Hide all other collapsible contents
-                        document.querySelectorAll('.collapsible-content').forEach(item => {
-                            if (item !== content) {
-                                item.style.display = 'none';
-                            }
-                        });
-                        content.style.display = 'block';
-                    }
-                });
+// Toggle collapsible content
+document.querySelectorAll('.collapsible-header').forEach(header => {
+    header.addEventListener('click', function() {
+        var content = this.nextElementSibling;
+        if (content.style.display === 'block') {
+            content.style.display = 'none';
+        } else {
+            // Hide all other collapsible contents
+            document.querySelectorAll('.collapsible-content').forEach(item => {
+                if (item !== content) {
+                    item.style.display = 'none';
+                }
             });
+            content.style.display = 'block';
+        }
+    });
+});
 
-            function rejectHRInitialScreeningModal() {
+function rejectHRInitialScreeningModal() {
     const userIdElement = document.getElementById("userId");
     if (!userIdElement) {
         alert("Error: userId is missing. Please try again.");
@@ -3415,8 +3295,23 @@ document.querySelectorAll('.action-required-btn').forEach(button => {
     }
 }
 
+// Enhanced console logging for debugging
+console.log("✅ [P2 Integration] P2 Email Integration JavaScript loaded successfully");
+console.log("📧 [P2 Integration] Available P2 functions:", [
+    'p2passApplicant',
+    'p2rejectApplicant', 
+    'toggleP2ApplicantStatus',
+    'finalizeP2Review',
+    'showP2PassedEmailModal',
+    'showP2FailedEmailModal',
+    'openGmailForP2Passed',
+    'openGmailForP2Failed',
+    'updateP2ApplicantStatuses',
+    'checkAllP2ApplicantsMarked',
+    'startP2GmailIntegrationFlow'
+]);
 </script>
-
 
 </body>
 </html>
+

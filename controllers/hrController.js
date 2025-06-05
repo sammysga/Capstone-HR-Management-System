@@ -2996,25 +2996,27 @@ passApplicant: async function(req, res) {
 },
 
 getEmailTemplates: async function(req, res) {
-    try {
-        const phase = req.query.phase || 'P1'; // Default to P1 if no phase specified
-        console.log(`✅ [HR] Getting ${phase} email templates for Gmail integration`);
+ try {
+        const { phase } = req.query; // P1, P2, or P3
+        console.log(`📧 [Templates] Fetching email templates for phase: ${phase}`);
         
-        // Use the unified function from emailService.js
-        const templates = getEmailTemplateData(phase);
+        // This will use the actual templates from your emailService.js
+        const templates = getEmailTemplateData(phase || 'P1');
         
-        return res.status(200).json({
+        console.log(`✅ [Templates] Successfully fetched ${phase} templates from emailService.js`);
+        console.log('📧 [Templates] Template data:', templates);
+        
+        res.json({
             success: true,
-            templates: templates,
             phase: phase,
-            message: `${phase} email templates retrieved successfully`
+            templates: templates
         });
         
     } catch (error) {
-        console.error(`❌ [HR] Error getting ${phase} email templates:`, error);
-        return res.status(500).json({
+        console.error('❌ [Templates] Error fetching email templates from emailService.js:', error);
+        res.status(500).json({
             success: false,
-            message: `Error getting ${phase} email templates: ` + error.message
+            message: 'Error fetching email templates: ' + error.message
         });
     }
 },
@@ -3115,8 +3117,7 @@ getP2EmailTemplates: async function(req, res) {
             message: "Error getting P2 email templates: " + error.message
         });
     }
-},
-finalizeP2Review: async function(req, res) {
+},finalizeP2Review: async function(req, res) {
     try {
         console.log('🚀 [HR] Processing P2 review finalization request');
         
@@ -3133,88 +3134,149 @@ finalizeP2Review: async function(req, res) {
         if (getEmailData) {
             console.log('📧 [HR] Fetching P2 applicant data for email composition');
             
-            const passedApplicants = [];
-            const failedApplicants = [];
-            
-            // Fetch passed applicants data
-            for (const applicantId of passedApplicantIds) {
-                try {
-                    console.log(`📊 [HR] Fetching data for passed applicantId: ${applicantId}`);
+            // Fetch passed applicants data using the same pattern as getApplicantTrackerByJobPositions
+            let passedApplicants = [];
+            if (passedApplicantIds.length > 0) {
+                console.log('📊 [HR] Fetching passed applicants data...');
+                
+                // Get applicant data first
+                const { data: passedApplicantData, error: passedError } = await supabase
+                    .from('applicantaccounts')
+                    .select(`
+                        applicantId,
+                        userId,
+                        firstName,
+                        lastName,
+                        jobId
+                    `)
+                    .in('applicantId', passedApplicantIds);
                     
-                    const { data: applicantData, error: fetchError } = await supabase
-                        .from('applicantaccounts')
-                        .select(`
-                            applicantId,
-                            userId,
-                            firstName,
-                            lastName,
-                            userEmail,
-                            jobId,
-                            jobpositions!inner(jobTitle)
-                        `)
-                        .eq('applicantId', applicantId)
-                        .single();
+                if (passedError) {
+                    console.error('❌ [HR] Error fetching passed applicants:', passedError);
+                    return res.status(500).json({ success: false, message: "Error fetching passed applicants data" });
+                }
+                
+                console.log(`✅ [HR] Found ${passedApplicantData?.length || 0} passed applicants from applicantaccounts`);
+                
+                if (passedApplicantData && passedApplicantData.length > 0) {
+                    // Get user emails separately (like in your existing function)
+                    const { data: userAccounts, error: userError } = await supabase
+                        .from('useraccounts')
+                        .select('userId, userEmail');
                     
-                    if (!fetchError && applicantData) {
-                        passedApplicants.push({
-                            applicantId: applicantData.applicantId,
-                            userId: applicantData.userId,
-                            name: `${applicantData.firstName} ${applicantData.lastName}`,
-                            email: applicantData.userEmail,
-                            jobTitle: applicantData.jobpositions?.jobTitle || 'Position'
-                        });
-                        console.log(`✅ [HR] Added passed applicant: ${applicantData.firstName} ${applicantData.lastName}`);
+                    if (userError) {
+                        console.error('❌ [HR] Error fetching user accounts:', userError);
+                        return res.status(500).json({ success: false, message: "Error fetching user email data" });
                     }
-                } catch (error) {
-                    console.error(`❌ [HR] Error fetching passed applicant ${applicantId}:`, error);
+                    
+                    // Get job titles separately
+                    const { data: jobTitles, error: jobError } = await supabase
+                        .from('jobpositions')
+                        .select('jobId, jobTitle');
+                    
+                    if (jobError) {
+                        console.error('❌ [HR] Error fetching job titles:', jobError);
+                        return res.status(500).json({ success: false, message: "Error fetching job titles" });
+                    }
+                    
+                    // Combine data like in your existing function
+                    passedApplicants = passedApplicantData.map(applicant => {
+                        const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+                        const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'Position';
+                        
+                        return {
+                            applicantId: applicant.applicantId,
+                            userId: applicant.userId,
+                            name: `${applicant.firstName} ${applicant.lastName}`,
+                            email: userEmail,
+                            jobId: applicant.jobId,
+                            jobTitle: jobTitle
+                        };
+                    });
+                    
+                    console.log(`✅ [HR] Processed ${passedApplicants.length} passed applicants with emails`);
                 }
             }
             
-            // Fetch failed applicants data
-            for (const applicantId of failedApplicantIds) {
-                try {
-                    console.log(`📊 [HR] Fetching data for failed applicantId: ${applicantId}`);
+            // Fetch failed applicants data using the same pattern
+            let failedApplicants = [];
+            if (failedApplicantIds.length > 0) {
+                console.log('📊 [HR] Fetching failed applicants data...');
+                
+                // Get applicant data first
+                const { data: failedApplicantData, error: failedError } = await supabase
+                    .from('applicantaccounts')
+                    .select(`
+                        applicantId,
+                        userId,
+                        firstName,
+                        lastName,
+                        jobId
+                    `)
+                    .in('applicantId', failedApplicantIds);
                     
-                    const { data: applicantData, error: fetchError } = await supabase
-                        .from('applicantaccounts')
-                        .select(`
-                            applicantId,
-                            userId,
-                            firstName,
-                            lastName,
-                            userEmail,
-                            jobId,
-                            jobpositions!inner(jobTitle)
-                        `)
-                        .eq('applicantId', applicantId)
-                        .single();
+                if (failedError) {
+                    console.error('❌ [HR] Error fetching failed applicants:', failedError);
+                    return res.status(500).json({ success: false, message: "Error fetching failed applicants data" });
+                }
+                
+                console.log(`✅ [HR] Found ${failedApplicantData?.length || 0} failed applicants from applicantaccounts`);
+                
+                if (failedApplicantData && failedApplicantData.length > 0) {
+                    // Get user emails separately (reuse if already fetched, or fetch again)
+                    const { data: userAccounts, error: userError } = await supabase
+                        .from('useraccounts')
+                        .select('userId, userEmail');
                     
-                    if (!fetchError && applicantData) {
-                        failedApplicants.push({
-                            applicantId: applicantData.applicantId,
-                            userId: applicantData.userId,
-                            name: `${applicantData.firstName} ${applicantData.lastName}`,
-                            email: applicantData.userEmail,
-                            jobTitle: applicantData.jobpositions?.jobTitle || 'Position'
-                        });
-                        console.log(`✅ [HR] Added failed applicant: ${applicantData.firstName} ${applicantData.lastName}`);
+                    if (userError) {
+                        console.error('❌ [HR] Error fetching user accounts:', userError);
+                        return res.status(500).json({ success: false, message: "Error fetching user email data" });
                     }
-                } catch (error) {
-                    console.error(`❌ [HR] Error fetching failed applicant ${applicantId}:`, error);
+                    
+                    // Get job titles separately (reuse if already fetched, or fetch again)
+                    const { data: jobTitles, error: jobError } = await supabase
+                        .from('jobpositions')
+                        .select('jobId, jobTitle');
+                    
+                    if (jobError) {
+                        console.error('❌ [HR] Error fetching job titles:', jobError);
+                        return res.status(500).json({ success: false, message: "Error fetching job titles" });
+                    }
+                    
+                    // Combine data like in your existing function
+                    failedApplicants = failedApplicantData.map(applicant => {
+                        const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+                        const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'Position';
+                        
+                        return {
+                            applicantId: applicant.applicantId,
+                            userId: applicant.userId,
+                            name: `${applicant.firstName} ${applicant.lastName}`,
+                            email: userEmail,
+                            jobId: applicant.jobId,
+                            jobTitle: jobTitle
+                        };
+                    });
+                    
+                    console.log(`✅ [HR] Processed ${failedApplicants.length} failed applicants with emails`);
                 }
             }
             
             console.log(`📊 [HR] Email data fetch complete: ${passedApplicants.length} passed, ${failedApplicants.length} failed`);
+            console.log('📧 [HR] Passed applicants:', passedApplicants);
+            console.log('📧 [HR] Failed applicants:', failedApplicants);
             
+            // Return applicant data for Gmail compose
             return res.status(200).json({
                 success: true,
+                requiresGmailCompose: true,
                 passedApplicants: passedApplicants,
                 failedApplicants: failedApplicants,
                 message: "P2 applicant data fetched for email composition"
             });
         }
         
-        // Otherwise, proceed with the actual status updates (existing code)
+        // Otherwise, proceed with the actual status updates (existing code remains the same)
         console.log(`🔄 [HR] P2 Finalization: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
         
         let updateResults = {
