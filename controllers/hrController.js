@@ -3117,7 +3117,8 @@ getP2EmailTemplates: async function(req, res) {
             message: "Error getting P2 email templates: " + error.message
         });
     }
-},finalizeP2Review: async function(req, res) {
+},
+finalizeP2Review: async function(req, res) {
     try {
         console.log('🚀 [HR] Processing P2 review finalization request');
         
