@@ -130,6 +130,71 @@ const emailTemplates = {
         `
     },
 
+   'P2 - PASSED': {
+        subject: 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure',
+        getHtml: (applicantName, jobTitle) => `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background-color: #28a745; padding: 20px; text-align: center;">
+                    <h1 style="color: white;">🎯 Great News!</h1>
+                </div>
+                <div style="padding: 20px;">
+                    <p>Dear ${applicantName},</p>
+                    
+                    <p><strong>Congratulations!</strong> We are excited to inform you that you have successfully passed the HR interview stage for the <strong>${jobTitle}</strong> position at Prime Infrastructure.</p>
+                    
+                    <p>Your performance during the HR interview was impressive, and our team was particularly pleased with your responses, qualifications, and the enthusiasm you demonstrated for joining our organization.</p>
+                    
+                    <h3>🎯 Final Interview Details:</h3>
+                    <ul>
+                        <li><strong>Next Stage:</strong> Final interview with the Line Manager and senior team members</li>
+                        <li><strong>Focus Areas:</strong> Technical competencies, role-specific scenarios, and team fit assessment</li>
+                        <li><strong>Duration:</strong> Approximately 45-60 minutes</li>
+                        <li><strong>Format:</strong> In-person or virtual (details will be provided separately)</li>
+                    </ul>
+                    
+                    <h3>📋 What to Expect:</h3>
+                    <ul>
+                        <li>Discussion about your technical skills and experience relevant to the role</li>
+                        <li>Scenario-based questions related to the position</li>
+                        <li>Opportunity to meet your potential direct supervisor</li>
+                        <li>Q&A session about the role, team, and company culture</li>
+                        <li>Discussion about career growth opportunities</li>
+                    </ul>
+                    
+                    <h3>⏰ Next Steps:</h3>
+                    <ul>
+                        <li>Our scheduling team will contact you within <strong>2-3 business days</strong> to arrange your final interview</li>
+                        <li>Please keep your calendar flexible for the upcoming week</li>
+                        <li>Check your applicant portal regularly for updates</li>
+                        <li>Prepare questions about the role and our team dynamics</li>
+                    </ul>
+                    
+                    <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <h4 style="color: #155724; margin-top: 0;">💡 Interview Preparation Tips:</h4>
+                        <ul style="color: #155724; margin-bottom: 0;">
+                            <li>Review the job description and prepare specific examples from your experience</li>
+                            <li>Research our recent projects and company developments</li>
+                            <li>Think about how your skills align with our team's current goals</li>
+                            <li>Prepare thoughtful questions about the role and team structure</li>
+                        </ul>
+                    </div>
+                    
+                    <p>We're excited about the possibility of you joining our team and look forward to the final stage of our interview process.</p>
+                    
+                    <p>Best of luck with your preparation!</p>
+                    
+                    <p>Best regards,<br>
+                    <strong>Prime Infrastructure HR Team</strong></p>
+                    
+                    <p><em>P.S. If you have any questions or concerns before your final interview, please don't hesitate to reach out to our HR team.</em></p>
+                </div>
+                <div style="background-color: #f8f9fa; padding: 10px; text-align: center; font-size: 12px; color: #6c757d;">
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+        `
+    },
+
     'P2 - FAILED': {
         subject: 'Thank You for Your Interview - Prime Infrastructure',
         getHtml: (applicantName, jobTitle) => `
@@ -161,6 +226,11 @@ const emailTemplates = {
                         <li>Please feel free to apply for other positions with us that align with your skills and career interests</li>
                         <li>Follow our careers page and LinkedIn for new openings that might be a good fit for your profile</li>
                     </ul>
+                    
+                    <div style="background-color: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <h4 style="color: #0066cc; margin-top: 0;">🌟 Stay Connected:</h4>
+                        <p style="color: #0066cc; margin-bottom: 0;">We encourage you to connect with us on LinkedIn and follow our company updates. The talent and experience you bring to the table are valuable, and we believe you'll find an excellent opportunity that's the right fit for your career goals.</p>
+                    </div>
                     
                     <p>We recognize that job searching can be challenging, and we wish you continued success in your career endeavors. We hope our paths may cross again in the future, and we encourage you to stay connected with Prime Infrastructure.</p>
                     

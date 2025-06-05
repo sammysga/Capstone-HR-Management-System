@@ -2995,16 +2995,45 @@ passApplicant: async function(req, res) {
     }
 },
 
+getEmailTemplates: async function(req, res) {
+    try {
+        const phase = req.query.phase || 'P1'; // Default to P1 if no phase specified
+        console.log(`✅ [HR] Getting ${phase} email templates for Gmail integration`);
+        
+        // Use the unified function from emailService.js
+        const templates = getEmailTemplateData(phase);
+        
+        return res.status(200).json({
+            success: true,
+            templates: templates,
+            phase: phase,
+            message: `${phase} email templates retrieved successfully`
+        });
+        
+    } catch (error) {
+        console.error(`❌ [HR] Error getting ${phase} email templates:`, error);
+        return res.status(500).json({
+            success: false,
+            message: `Error getting ${phase} email templates: ` + error.message
+        });
+    }
+},
 
 
-// Mark applicant as P2 PASSED (Pending Finalization)
+
+
+// Enhanced markAsP2Passed function with better logging
 markAsP2Passed: async function(req, res) {
     try {
+        console.log('🟢 [HR] P2 Pass request received');
         const { applicantId } = req.body;
         
         if (!applicantId) {
+            console.error('❌ [HR] Missing applicantId in P2 pass request');
             return res.status(400).json({ success: false, message: "Missing applicant ID" });
         }
+        
+        console.log(`📊 [HR] Marking applicantId ${applicantId} as P2 PASSED (Pending Finalization)`);
         
         // Update the status for display purposes only
         const { data, error } = await supabase
@@ -3013,29 +3042,34 @@ markAsP2Passed: async function(req, res) {
             .eq('applicantId', applicantId);
             
         if (error) {
-            console.error('❌ [HR] Error marking applicant as P2 PASSED:', error);
+            console.error('❌ [HR] Database error marking applicant as P2 PASSED:', error);
             return res.status(500).json({ success: false, message: "Error updating applicant status" });
         }
         
+        console.log(`✅ [HR] Successfully marked applicantId ${applicantId} as P2 PASSED (Pending)`);
         return res.status(200).json({ 
             success: true, 
             message: "Applicant marked as P2 PASSED. Status will be finalized when review is complete."
         });
         
     } catch (error) {
-        console.error('❌ [HR] Error marking as P2 PASSED:', error);
+        console.error('❌ [HR] Error in markAsP2Passed:', error);
         return res.status(500).json({ success: false, message: "Error marking applicant as P2 PASSED: " + error.message });
     }
 },
 
-// Mark applicant as P2 FAILED (Pending Finalization)
+// Enhanced markAsP2Failed function with better logging
 markAsP2Failed: async function(req, res) {
     try {
+        console.log('🔴 [HR] P2 Failed request received');
         const { applicantId } = req.body;
         
         if (!applicantId) {
+            console.error('❌ [HR] Missing applicantId in P2 failed request');
             return res.status(400).json({ success: false, message: "Missing applicant ID" });
         }
+        
+        console.log(`📊 [HR] Marking applicantId ${applicantId} as P2 FAILED (Pending Finalization)`);
         
         // Update the status for display purposes only
         const { data, error } = await supabase
@@ -3044,17 +3078,18 @@ markAsP2Failed: async function(req, res) {
             .eq('applicantId', applicantId);
             
         if (error) {
-            console.error('❌ [HR] Error marking applicant as P2 FAILED:', error);
+            console.error('❌ [HR] Database error marking applicant as P2 FAILED:', error);
             return res.status(500).json({ success: false, message: "Error updating applicant status" });
         }
         
+        console.log(`✅ [HR] Successfully marked applicantId ${applicantId} as P2 FAILED (Pending)`);
         return res.status(200).json({ 
             success: true, 
             message: "Applicant marked as P2 FAILED. Status will be finalized when review is complete."
         });
         
     } catch (error) {
-        console.error('❌ [HR] Error marking as P2 FAILED:', error);
+        console.error('❌ [HR] Error in markAsP2Failed:', error);
         return res.status(500).json({ success: false, message: "Error marking applicant as P2 FAILED: " + error.message });
     }
 },
@@ -3081,21 +3116,22 @@ getP2EmailTemplates: async function(req, res) {
         });
     }
 },
-
-// Updated finalizeP2Review function to handle both email data fetching and status updates
 finalizeP2Review: async function(req, res) {
     try {
-        console.log('✅ [HR] Processing P2 review finalization request');
+        console.log('🚀 [HR] Processing P2 review finalization request');
         
         const { passedApplicantIds, failedApplicantIds, getEmailData } = req.body;
         
         if (!passedApplicantIds || !failedApplicantIds) {
+            console.error('❌ [HR] Missing applicant IDs in P2 finalize request');
             return res.status(400).json({ success: false, message: "Missing applicant IDs" });
         }
         
+        console.log(`📊 [HR] P2 Finalize request: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed, getEmailData: ${getEmailData}`);
+        
         // If this is just to get email data (not update statuses), fetch applicant info
         if (getEmailData) {
-            console.log('✅ [HR] Fetching P2 applicant data for email composition');
+            console.log('📧 [HR] Fetching P2 applicant data for email composition');
             
             const passedApplicants = [];
             const failedApplicants = [];
@@ -3103,6 +3139,8 @@ finalizeP2Review: async function(req, res) {
             // Fetch passed applicants data
             for (const applicantId of passedApplicantIds) {
                 try {
+                    console.log(`📊 [HR] Fetching data for passed applicantId: ${applicantId}`);
+                    
                     const { data: applicantData, error: fetchError } = await supabase
                         .from('applicantaccounts')
                         .select(`
@@ -3112,7 +3150,7 @@ finalizeP2Review: async function(req, res) {
                             lastName,
                             userEmail,
                             jobId,
-                            jobs!inner(jobTitle)
+                            jobpositions!inner(jobTitle)
                         `)
                         .eq('applicantId', applicantId)
                         .single();
@@ -3123,8 +3161,9 @@ finalizeP2Review: async function(req, res) {
                             userId: applicantData.userId,
                             name: `${applicantData.firstName} ${applicantData.lastName}`,
                             email: applicantData.userEmail,
-                            jobTitle: applicantData.jobs?.jobTitle || 'Position'
+                            jobTitle: applicantData.jobpositions?.jobTitle || 'Position'
                         });
+                        console.log(`✅ [HR] Added passed applicant: ${applicantData.firstName} ${applicantData.lastName}`);
                     }
                 } catch (error) {
                     console.error(`❌ [HR] Error fetching passed applicant ${applicantId}:`, error);
@@ -3134,6 +3173,8 @@ finalizeP2Review: async function(req, res) {
             // Fetch failed applicants data
             for (const applicantId of failedApplicantIds) {
                 try {
+                    console.log(`📊 [HR] Fetching data for failed applicantId: ${applicantId}`);
+                    
                     const { data: applicantData, error: fetchError } = await supabase
                         .from('applicantaccounts')
                         .select(`
@@ -3143,7 +3184,7 @@ finalizeP2Review: async function(req, res) {
                             lastName,
                             userEmail,
                             jobId,
-                            jobs!inner(jobTitle)
+                            jobpositions!inner(jobTitle)
                         `)
                         .eq('applicantId', applicantId)
                         .single();
@@ -3154,13 +3195,16 @@ finalizeP2Review: async function(req, res) {
                             userId: applicantData.userId,
                             name: `${applicantData.firstName} ${applicantData.lastName}`,
                             email: applicantData.userEmail,
-                            jobTitle: applicantData.jobs?.jobTitle || 'Position'
+                            jobTitle: applicantData.jobpositions?.jobTitle || 'Position'
                         });
+                        console.log(`✅ [HR] Added failed applicant: ${applicantData.firstName} ${applicantData.lastName}`);
                     }
                 } catch (error) {
                     console.error(`❌ [HR] Error fetching failed applicant ${applicantId}:`, error);
                 }
             }
+            
+            console.log(`📊 [HR] Email data fetch complete: ${passedApplicants.length} passed, ${failedApplicants.length} failed`);
             
             return res.status(200).json({
                 success: true,
@@ -3171,7 +3215,7 @@ finalizeP2Review: async function(req, res) {
         }
         
         // Otherwise, proceed with the actual status updates (existing code)
-        console.log(`✅ [HR] P2 Finalization: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
+        console.log(`🔄 [HR] P2 Finalization: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
         
         let updateResults = {
             passed: { updated: 0, errors: [] },
@@ -3200,6 +3244,7 @@ finalizeP2Review: async function(req, res) {
                 }
                 
                 updateResults.passed.updated++;
+                console.log(`✅ [HR] Successfully updated P2 PASSED for applicantId: ${applicantId}`);
                 
                 // Get userId for chatbot message
                 const { data: applicantData, error: fetchError } = await supabase
@@ -3224,6 +3269,8 @@ finalizeP2Review: async function(req, res) {
                         
                     if (chatError) {
                         console.error(`❌ [HR] Error adding chat message for ${applicantId}:`, chatError);
+                    } else {
+                        console.log(`💬 [HR] Added chatbot message for passed applicant ${applicantId}`);
                     }
                 }
                 
@@ -3236,7 +3283,7 @@ finalizeP2Review: async function(req, res) {
         // Update failed applicants
         for (const applicantId of failedApplicantIds) {
             try {
-                console.log(`✅ [HR] Updating P2 FAILED status for applicantId: ${applicantId}`);
+                console.log(`❌ [HR] Updating P2 FAILED status for applicantId: ${applicantId}`);
                 
                 // Update applicant status in the database
                 const { data: updateData, error: updateError } = await supabase
@@ -3254,6 +3301,7 @@ finalizeP2Review: async function(req, res) {
                 }
                 
                 updateResults.failed.updated++;
+                console.log(`✅ [HR] Successfully updated P2 FAILED for applicantId: ${applicantId}`);
                 
                 // Get userId for chatbot message
                 const { data: applicantData, error: fetchError } = await supabase
@@ -3278,6 +3326,8 @@ finalizeP2Review: async function(req, res) {
                         
                     if (chatError) {
                         console.error(`❌ [HR] Error adding chat message for ${applicantId}:`, chatError);
+                    } else {
+                        console.log(`💬 [HR] Added chatbot message for failed applicant ${applicantId}`);
                     }
                 }
                 
@@ -3290,6 +3340,8 @@ finalizeP2Review: async function(req, res) {
         // Prepare response
         const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
         const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
+        
+        console.log(`📊 [HR] P2 Update Results: ${totalUpdated} updated, ${totalErrors} errors`);
         
         if (totalErrors > 0) {
             console.warn(`⚠️ [HR] P2 status update completed with ${totalErrors} errors`);

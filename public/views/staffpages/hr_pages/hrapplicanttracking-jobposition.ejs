@@ -1545,12 +1545,6 @@
 
 <script>
 
-// Function to go to P2 Review filter
-function goToP2ReviewFilter() {
-    // Trigger the "For Review" filter
-    document.getElementById("filter-review").click();
-}
-
 // Global variables for P2 functionality
 let currentP2PassedApplicants = [];
 let currentP2FailedApplicants = [];
@@ -1560,9 +1554,11 @@ let pendingP2StatusChanges = {};
 let p2EmailTemplates = {};
 let p2EmailsToUpdate = { passed: [], failed: [] };
 
-// Function to handle P2 pass action from awaiting table
 function p2passApplicant(applicantId) {
+    console.log(`🟢 [P2 Pass] Starting pass action for applicantId: ${applicantId}`);
+    
     if (!applicantId) {
+        console.error('❌ [P2 Pass] Missing applicantId');
         alert("Error: Invalid Applicant ID");
         return;
     }
@@ -1575,8 +1571,13 @@ function p2passApplicant(applicantId) {
         },
         body: JSON.stringify({ applicantId: applicantId }),
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log(`📡 [P2 Pass] API response status: ${response.status}`);
+        return response.json();
+    })
     .then(data => {
+        console.log('📡 [P2 Pass] API response data:', data);
+        
         if (data.success) {
             // Record this in the pending changes
             if (!window.pendingP2StatusChanges) {
@@ -1587,21 +1588,26 @@ function p2passApplicant(applicantId) {
             // Move the row from awaiting to declared results
             moveP2RowToSection(applicantId, 'awaitingActionTable', 'declaredResultsTable');
             
+            console.log(`✅ [P2 Pass] Successfully marked applicant ${applicantId} as P2 PASSED!`);
             alert("Successfully marked applicant as P2 PASSED!");
             
         } else {
+            console.error(`❌ [P2 Pass] API error: ${data.message}`);
             alert("Error updating applicant status: " + (data.message || "Unknown error"));
         }
     })
     .catch(error => {
-        console.error("Error:", error);
+        console.error("❌ [P2 Pass] Network error:", error);
         alert("Failed to update applicant status.");
     });
 }
 
 // Function to handle P2 reject action from awaiting table
 function p2rejectApplicant(applicantId) {
+    console.log(`🔴 [P2 Reject] Starting reject action for applicantId: ${applicantId}`);
+    
     if (!applicantId) {
+        console.error('❌ [P2 Reject] Missing applicantId');
         alert("Error: Invalid Applicant ID");
         return;
     }
@@ -1614,8 +1620,13 @@ function p2rejectApplicant(applicantId) {
         },
         body: JSON.stringify({ applicantId: applicantId }),
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log(`📡 [P2 Reject] API response status: ${response.status}`);
+        return response.json();
+    })
     .then(data => {
+        console.log('📡 [P2 Reject] API response data:', data);
+        
         if (data.success) {
             // Record this in the pending changes
             if (!window.pendingP2StatusChanges) {
@@ -1626,24 +1637,30 @@ function p2rejectApplicant(applicantId) {
             // Move the row from awaiting to declared results
             moveP2RowToSection(applicantId, 'awaitingActionTable', 'declaredResultsTable');
             
+            console.log(`✅ [P2 Reject] Successfully marked applicant ${applicantId} as P2 FAILED!`);
             alert("Successfully marked applicant as P2 FAILED!");
             
         } else {
+            console.error(`❌ [P2 Reject] API error: ${data.message}`);
             alert("Error updating applicant status: " + (data.message || "Unknown error"));
         }
     })
     .catch(error => {
-        console.error("Error:", error);
+        console.error("❌ [P2 Reject] Network error:", error);
         alert("Failed to update applicant status.");
     });
 }
 
-// Move P2 row between sections
 function moveP2RowToSection(applicantId, fromTableId, toTableId) {
+    console.log(`🔄 [P2 Move] Moving applicantId ${applicantId} from ${fromTableId} to ${toTableId}`);
+    
     const fromTable = document.getElementById(fromTableId);
     const toTable = document.getElementById(toTableId);
     
-    if (!fromTable || !toTable) return;
+    if (!fromTable || !toTable) {
+        console.error(`❌ [P2 Move] Tables not found: ${fromTableId} or ${toTableId}`);
+        return;
+    }
     
     // Find the row in the source table
     const rows = fromTable.querySelectorAll('tbody tr');
@@ -1656,13 +1673,17 @@ function moveP2RowToSection(applicantId, fromTableId, toTableId) {
         }
     }
     
-    if (!rowToMove) return;
+    if (!rowToMove) {
+        console.error(`❌ [P2 Move] Row for applicant ${applicantId} not found in ${fromTableId}`);
+        return;
+    }
     
     // Update the status cell
     const statusCell = rowToMove.querySelector('td:nth-child(6)');
     if (statusCell) {
         const isPassed = window.pendingP2StatusChanges[applicantId] === 'PASSED';
         statusCell.textContent = isPassed ? 'P2 - PASSED (Pending Finalization)' : 'P2 - FAILED (Pending Finalization)';
+        console.log(`✅ [P2 Move] Updated status cell to: ${statusCell.textContent}`);
     }
     
     // Change the actions column to toggle button for declared results
@@ -1679,6 +1700,7 @@ function moveP2RowToSection(applicantId, fromTableId, toTableId) {
                     ${isPassed ? 'Passed' : 'Failed'}
                 </button>
             `;
+            console.log(`✅ [P2 Move] Added toggle button for applicant ${applicantId}`);
         }
     }
     
@@ -1705,6 +1727,8 @@ function moveP2RowToSection(applicantId, fromTableId, toTableId) {
     
     // Add the row after the header
     p2Header.insertAdjacentElement('afterend', rowToMove);
+    
+    console.log(`✅ [P2 Move] Successfully moved applicant ${applicantId} to ${toTableId}`);
 }
 
 // Toggle P2 applicant status between PASSED and FAILED
@@ -1714,7 +1738,7 @@ function toggleP2ApplicantStatus(button) {
     
     const applicantId = button.getAttribute('data-applicantid') || row.getAttribute('data-applicantid');
     if (!applicantId) {
-        console.error("Cannot toggle status: Missing applicantId");
+        console.error("❌ [P2 Toggle] Cannot toggle status: Missing applicantId");
         alert("Error: Cannot identify the applicant to update status");
         return;
     }
@@ -1724,7 +1748,7 @@ function toggleP2ApplicantStatus(button) {
     if (!statusCell) return;
     
     const currentStatus = statusCell.textContent.trim();
-    console.log(`Toggling P2 status for applicantId ${applicantId}, current status: ${currentStatus}`);
+    console.log(`🔄 [P2 Toggle] Toggling P2 status for applicantId ${applicantId}, current status: ${currentStatus}`);
     
     // Toggle between PASSED and FAILED
     let newStatus;
@@ -1756,7 +1780,7 @@ function toggleP2ApplicantStatus(button) {
     
     window.pendingP2StatusChanges[applicantId] = newStatus.includes('PASSED') ? 'PASSED' : 'FAILED';
     
-    console.log(`P2 status change for applicantId ${applicantId} to ${newStatus} is pending finalization`);
+    console.log(`✅ [P2 Toggle] P2 status change for applicantId ${applicantId} to ${newStatus} is pending finalization`);
     
     // Make API call to update the temporary status
     fetch(`/hr/${apiEndpoint}`, {
@@ -1769,18 +1793,19 @@ function toggleP2ApplicantStatus(button) {
     .then(response => response.json())
     .then(data => {
         if (!data.success) {
-            console.error(`Error updating P2 status: ${data.message || 'Unknown error'}`);
+            console.error(`❌ [P2 Toggle] Error updating P2 status: ${data.message || 'Unknown error'}`);
+        } else {
+            console.log(`✅ [P2 Toggle] Successfully updated temporary status for ${applicantId}`);
         }
     })
     .catch(error => {
-        console.error('Error calling P2 status API:', error);
+        console.error('❌ [P2 Toggle] Error calling P2 status API:', error);
     });
 }
 
 // Updated finalizeP2Review function to include Gmail integration
-
 function finalizeP2Review() {
-    console.log("Starting P2 review finalization with Gmail compose integration...");
+    console.log("🚀 [P2 Finalize] Starting P2 review finalization with Gmail compose integration...");
 
     // Extract status updates from rows in the declared results table
     const declaredResultsTable = document.getElementById("declaredResultsTable");
@@ -1805,10 +1830,10 @@ function finalizeP2Review() {
             if (statusText.includes('P2')) {
                 if (statusText.includes('PASSED')) {
                     passedApplicantIds.push(applicantId);
-                    console.log(`Added ${applicantId} to passed list (${statusText})`);
+                    console.log(`✅ [P2 Finalize] Added ${applicantId} to passed list (${statusText})`);
                 } else if (statusText.includes('FAILED')) {
                     failedApplicantIds.push(applicantId);
-                    console.log(`Added ${applicantId} to failed list (${statusText})`);
+                    console.log(`❌ [P2 Finalize] Added ${applicantId} to failed list (${statusText})`);
                 }
             }
         }
@@ -1816,12 +1841,13 @@ function finalizeP2Review() {
 
     // If no applicants are selected, show an error
     if (passedApplicantIds.length === 0 && failedApplicantIds.length === 0) {
+        console.warn("⚠️ [P2 Finalize] No P2 applicants found with PASSED or FAILED status");
         alert("No P2 applicants found with PASSED or FAILED status.");
         closeModal('notifyApplicantsModal');
         return;
     }
 
-    console.log(`Preparing P2 Gmail compose for: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
+    console.log(`📊 [P2 Finalize] Preparing P2 Gmail compose for: ${passedApplicantIds.length} passed, ${failedApplicantIds.length} failed`);
 
     // Show loading indicator
     const confirmButton = document.getElementById('confirmButton');
@@ -1842,24 +1868,31 @@ function finalizeP2Review() {
         fetchP2EmailTemplates()
     ])
     .then(([applicantData, templates]) => {
+        console.log('📧 [P2 Finalize] Successfully fetched applicant data and templates');
+        
         currentP2PassedApplicants = applicantData.passedApplicants || [];
         currentP2FailedApplicants = applicantData.failedApplicants || [];
         p2EmailTemplates = templates;
+        
+        console.log(`📊 [P2 Finalize] Loaded ${currentP2PassedApplicants.length} passed and ${currentP2FailedApplicants.length} failed applicants`);
         
         // Close the confirmation modal
         closeModal('notifyApplicantsModal');
         
         // Start the Gmail compose process
         if (currentP2PassedApplicants.length > 0) {
+            console.log('📧 [P2 Finalize] Showing passed email modal');
             showP2PassedEmailModal();
         } else if (currentP2FailedApplicants.length > 0) {
+            console.log('📧 [P2 Finalize] Showing failed email modal');
             showP2FailedEmailModal();
         } else {
+            console.warn("⚠️ [P2 Finalize] No applicant data found for email composition");
             alert("No applicant data found for P2 email composition.");
         }
     })
     .catch(error => {
-        console.error("Error preparing P2 email composition:", error);
+        console.error("❌ [P2 Finalize] Error preparing P2 email composition:", error);
         alert("Error preparing P2 email composition: " + error.message);
         
         // Reset button state
@@ -1870,10 +1903,11 @@ function finalizeP2Review() {
     });
 }
 
-
 // Fetch P2 applicant data for email composition
 async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicantIds) {
     try {
+        console.log('📡 [P2 Data] Fetching P2 applicant data for emails...');
+        
         const response = await fetch('/hr/finalizeP2Review', {
             method: 'POST',
             headers: {
@@ -1887,6 +1921,7 @@ async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicant
         });
         
         const data = await response.json();
+        console.log('📡 [P2 Data] API response:', data);
         
         if (!data.success) {
             throw new Error(data.message || 'Failed to fetch P2 applicant data');
@@ -1898,13 +1933,15 @@ async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicant
         };
         
     } catch (error) {
-        console.error("Error fetching P2 applicant data:", error);
+        console.error("❌ [P2 Data] Error fetching P2 applicant data:", error);
         throw error;
     }
 }
+
+// Fetch P2 email templates from emailService.js
 async function fetchP2EmailTemplates() {
     try {
-        console.log("Fetching P2 email templates from emailService.js...");
+        console.log("📧 [P2 Templates] Fetching P2 email templates from emailService.js...");
         
         // Primary method: Use the unified endpoint that pulls from emailService.js emailTemplates
         const response = await fetch('/hr/getEmailTemplates?phase=P2');
@@ -1914,29 +1951,29 @@ async function fetchP2EmailTemplates() {
             throw new Error(data.message || 'Failed to fetch P2 email templates');
         }
         
-        console.log("Successfully fetched P2 templates from emailService.js via unified endpoint");
+        console.log("✅ [P2 Templates] Successfully fetched P2 templates from emailService.js via unified endpoint");
         return data.templates;
         
     } catch (error) {
-        console.error("Error fetching P2 email templates from unified endpoint:", error);
+        console.error("❌ [P2 Templates] Error fetching P2 email templates from unified endpoint:", error);
         
         // Fallback method: Try the P2-specific endpoint
         try {
-            console.log("Trying P2-specific endpoint as fallback...");
+            console.log("📧 [P2 Templates] Trying P2-specific endpoint as fallback...");
             const fallbackResponse = await fetch('/hr/getP2EmailTemplates');
             const fallbackData = await fallbackResponse.json();
             
             if (fallbackData.success) {
-                console.log("Successfully fetched P2 templates from P2-specific endpoint");
+                console.log("✅ [P2 Templates] Successfully fetched P2 templates from P2-specific endpoint");
                 return fallbackData.templates;
             }
         } catch (fallbackError) {
-            console.error("P2-specific endpoint also failed:", fallbackError);
+            console.error("❌ [P2 Templates] P2-specific endpoint also failed:", fallbackError);
         }
         
         // Final fallback: This should never be reached since templates are now in emailService.js
         // But keeping for safety
-        console.log("Using minimal fallback templates (this should not happen if emailService.js is working)");
+        console.log("⚠️ [P2 Templates] Using minimal fallback templates (this should not happen if emailService.js is working)");
         return {
             passed: {
                 subject: 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure',
@@ -1950,8 +1987,10 @@ async function fetchP2EmailTemplates() {
     }
 }
 
+
+// Show P2 passed applicants email modal
 function showP2PassedEmailModal() {
-    console.log("Showing P2 passed applicants Gmail compose modal");
+    console.log("📧 [P2 Passed Modal] Showing P2 passed applicants Gmail compose modal");
     
     // Populate recipients list
     const recipientsList = document.getElementById('p2PassedRecipientsList');
@@ -1967,6 +2006,8 @@ function showP2PassedEmailModal() {
                 <div class="recipient-job">${applicant.jobTitle}</div>
             </div>
         `).join('');
+        
+        console.log(`📊 [P2 Passed Modal] Populated ${currentP2PassedApplicants.length} passed recipients`);
     }
     
     // Set default subject and template
@@ -1975,11 +2016,12 @@ function showP2PassedEmailModal() {
     
     // Show the modal
     document.getElementById('emailP2PassedModal').style.display = 'block';
+    console.log("✅ [P2 Passed Modal] P2 passed email modal displayed");
 }
 
-
+// Show P2 failed applicants email modal
 function showP2FailedEmailModal() {
-    console.log("Showing P2 failed applicants Gmail compose modal");
+    console.log("📧 [P2 Failed Modal] Showing P2 failed applicants Gmail compose modal");
     
     // Populate recipients list
     const recipientsList = document.getElementById('p2FailedRecipientsList');
@@ -1995,6 +2037,8 @@ function showP2FailedEmailModal() {
                 <div class="recipient-job">${applicant.jobTitle}</div>
             </div>
         `).join('');
+        
+        console.log(`📊 [P2 Failed Modal] Populated ${currentP2FailedApplicants.length} failed recipients`);
     }
     
     // Set default subject and template
@@ -2003,30 +2047,37 @@ function showP2FailedEmailModal() {
     
     // Show the modal
     document.getElementById('emailP2FailedModal').style.display = 'block';
+    console.log("✅ [P2 Failed Modal] P2 failed email modal displayed");
 }
 
+// Open Gmail for P2 passed applicants
 function openGmailForP2Passed() {
+    console.log("📧 [P2 Gmail] Opening Gmail for P2 passed applicants");
+    
     const subject = document.getElementById('p2PassedEmailSubject').value;
     const template = document.getElementById('p2PassedEmailTemplate').value;
     
     if (!subject || !template) {
+        console.warn("⚠️ [P2 Gmail] Missing subject or template");
         alert("Please fill in both subject and template fields.");
         return;
     }
     
     if (!confirm(`This will open Gmail with ${currentP2PassedApplicants.length} P2 passed applicants in the "To:" field. Continue?`)) {
+        console.log("📧 [P2 Gmail] User cancelled Gmail compose for passed applicants");
         return;
     }
     
     // Build Gmail compose URL
     const gmailUrl = buildP2GmailComposeUrl(currentP2PassedApplicants, subject, template);
     
-    console.log('Opening Gmail for P2 passed applicants:', gmailUrl);
+    console.log('🔗 [P2 Gmail] Opening Gmail for P2 passed applicants:', gmailUrl);
     
     // Open Gmail in new tab
     const gmailWindow = window.open(gmailUrl, '_blank');
     
     if (!gmailWindow) {
+        console.error("❌ [P2 Gmail] Failed to open Gmail window - popup blocked");
         alert('Please allow pop-ups for this site to open Gmail compose window.');
         return;
     }
@@ -2036,39 +2087,47 @@ function openGmailForP2Passed() {
     
     // If there are also failed applicants, show their modal next
     if (currentP2FailedApplicants.length > 0) {
+        console.log("📧 [P2 Gmail] Scheduling failed email modal to show next");
         setTimeout(() => {
             showP2FailedEmailModal();
         }, 1000);
     } else {
         // Show status update modal if no failed applicants
+        console.log("📧 [P2 Gmail] No failed applicants, showing status update modal");
         setTimeout(() => {
             showP2StatusUpdateModal();
         }, 2000);
     }
 }
 
+// Open Gmail for P2 failed applicants
 function openGmailForP2Failed() {
+    console.log("📧 [P2 Gmail] Opening Gmail for P2 failed applicants");
+    
     const subject = document.getElementById('p2FailedEmailSubject').value;
     const template = document.getElementById('p2FailedEmailTemplate').value;
     
     if (!subject || !template) {
+        console.warn("⚠️ [P2 Gmail] Missing subject or template");
         alert("Please fill in both subject and template fields.");
         return;
     }
     
     if (!confirm(`This will open Gmail with ${currentP2FailedApplicants.length} P2 failed applicants in the "To:" field. Continue?`)) {
+        console.log("📧 [P2 Gmail] User cancelled Gmail compose for failed applicants");
         return;
     }
     
     // Build Gmail compose URL
     const gmailUrl = buildP2GmailComposeUrl(currentP2FailedApplicants, subject, template);
     
-    console.log('Opening Gmail for P2 failed applicants:', gmailUrl);
+    console.log('🔗 [P2 Gmail] Opening Gmail for P2 failed applicants:', gmailUrl);
     
     // Open Gmail in new tab
     const gmailWindow = window.open(gmailUrl, '_blank');
     
     if (!gmailWindow) {
+        console.error("❌ [P2 Gmail] Failed to open Gmail window - popup blocked");
         alert('Please allow pop-ups for this site to open Gmail compose window.');
         return;
     }
@@ -2082,10 +2141,10 @@ function openGmailForP2Failed() {
     }, 2000);
 }
 
-
-
-// NEW: Build Gmail compose URL for P2 with pre-filled data
+// Build Gmail compose URL for P2 with pre-filled data
 function buildP2GmailComposeUrl(applicants, subject, template) {
+    console.log(`🔗 [P2 Gmail URL] Building Gmail URL for ${applicants.length} P2 applicants`);
+    
     // Extract all email addresses
     const emailAddresses = applicants.map(applicant => applicant.email).join(',');
     
@@ -2113,13 +2172,13 @@ function buildP2GmailComposeUrl(applicants, subject, template) {
     // Use account-specific subdomain approach
     const gmailUrl = `https://mail.google.com/mail/u/0/?authuser=${encodeURIComponent(specificAccount)}&view=cm&to=${encodeURIComponent(emailAddresses)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
     
-    console.log('🔥 P2 Gmail URL:', gmailUrl);
-    console.log('📧 Target account:', specificAccount);
+    console.log('🔥 [P2 Gmail URL] P2 Gmail URL:', gmailUrl);
+    console.log('📧 [P2 Gmail URL] Target account:', specificAccount);
     
     return gmailUrl;
 }
 
-// NEW: Convert HTML template to plain text for P2
+// Convert HTML template to plain text for P2
 function htmlToPlainText(html) {
     // Create a temporary div to parse HTML
     const tempDiv = document.createElement('div');
@@ -2151,21 +2210,22 @@ function htmlToPlainText(html) {
     return plainText;
 }
 
-// NEW: Show P2 status update modal
+// Show P2 status update modal
 function showP2StatusUpdateModal() {
-    console.log('Showing P2 status update modal');
+    console.log('📧 [P2 Status] Showing P2 status update modal');
     document.getElementById('p2StatusUpdateModal').style.display = 'block';
 }
 
-// NEW: Update P2 applicant statuses in database after emails are sent via Gmail
+// Update P2 applicant statuses in database after emails are sent via Gmail
 function updateP2ApplicantStatuses() {
     if (!confirm('Have you successfully sent the P2 emails via Gmail? This will update the applicant statuses in the database.')) {
+        console.log("📧 [P2 Status] User cancelled P2 status update");
         return;
     }
     
-    console.log('Updating P2 applicant statuses in database...');
-    console.log('Passed applicantIds:', p2EmailsToUpdate.passed);
-    console.log('Failed applicantIds:', p2EmailsToUpdate.failed);
+    console.log('📊 [P2 Status] Updating P2 applicant statuses in database...');
+    console.log('✅ [P2 Status] Passed applicantIds:', p2EmailsToUpdate.passed);
+    console.log('❌ [P2 Status] Failed applicantIds:', p2EmailsToUpdate.failed);
     
     // Show loading state
     const updateButton = document.querySelector('#p2StatusUpdateModal .confirm-button');
@@ -2184,8 +2244,13 @@ function updateP2ApplicantStatuses() {
             failedApplicantIds: p2EmailsToUpdate.failed
         }),
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log(`📡 [P2 Status] API response status: ${response.status}`);
+        return response.json();
+    })
     .then(data => {
+        console.log('📡 [P2 Status] API response data:', data);
+        
         if (data.success) {
             alert(`P2 applicant statuses updated successfully!\n\nUpdated:\n- ${data.passedCount || 0} passed applicants\n- ${data.failedCount || 0} failed applicants`);
             
@@ -2196,6 +2261,8 @@ function updateP2ApplicantStatuses() {
             currentP2PassedApplicants = [];
             currentP2FailedApplicants = [];
             p2EmailsToUpdate = { passed: [], failed: [] };
+            
+            console.log('✅ [P2 Status] P2 status update completed successfully');
             
             // Refresh the view
             setTimeout(() => {
@@ -2211,7 +2278,7 @@ function updateP2ApplicantStatuses() {
         }
     })
     .catch(error => {
-        console.error('Error updating P2 statuses:', error);
+        console.error('❌ [P2 Status] Error updating P2 statuses:', error);
         alert('Error updating P2 applicant statuses: ' + error.message);
         
         // Reset button state
@@ -2220,26 +2287,36 @@ function updateP2ApplicantStatuses() {
     });
 }
 
-
-
-
 // Check if all P2 applicants have been marked
 function checkAllP2ApplicantsMarked() {
+    console.log("🔍 [P2 Check] Checking if all P2 applicants have been marked");
+    
     const declaredResultsTable = document.getElementById("declaredResultsTable");
-    if (!declaredResultsTable) return true;
+    if (!declaredResultsTable) {
+        console.log("📊 [P2 Check] No declared results table found, returning true");
+        return true;
+    }
     
     const rows = declaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
-    if (rows.length === 0) return true; // No rows to check
+    if (rows.length === 0) {
+        console.log("📊 [P2 Check] No rows to check, returning true");
+        return true; // No rows to check
+    }
     
     let relevantRows = Array.from(rows).filter(row => {
         const statusCell = row.querySelector('td:nth-child(6)');
         return statusCell && statusCell.textContent.includes('P2');
     });
     
-    if (relevantRows.length === 0) return true; // No P2 rows
+    if (relevantRows.length === 0) {
+        console.log("📊 [P2 Check] No P2 rows found, returning true");
+        return true; // No P2 rows
+    }
+    
+    console.log(`📊 [P2 Check] Found ${relevantRows.length} P2 rows to check`);
     
     // Check each P2 row for PASSED/FAILED status
-    return relevantRows.every(row => {
+    const allMarked = relevantRows.every(row => {
         // Skip message rows
         if (row.querySelector('td[colspan]')) {
             return true;
@@ -2249,11 +2326,142 @@ function checkAllP2ApplicantsMarked() {
         if (!statusCell) return true;
         
         const statusText = statusCell.textContent;
-        return statusText.includes('PASSED') || statusText.includes('FAILED');
+        const isMarked = statusText.includes('PASSED') || statusText.includes('FAILED');
+        
+        if (!isMarked) {
+            console.log(`⚠️ [P2 Check] Found unmarked P2 row: ${statusText}`);
+        }
+        
+        return isMarked;
     });
+    
+    console.log(`📊 [P2 Check] All P2 applicants marked: ${allMarked}`);
+    return allMarked;
 }
 
-// ========== ADDED P2 FUNCTIONS END ==========
+// =========================
+// ENHANCED FILTER HANDLING FOR P2
+// =========================
+
+// Update the existing goToP2ReviewFilter function
+function goToP2ReviewFilter() {
+    console.log("🔄 [P2 Filter] Triggering P2 Review filter");
+    // Trigger the "For Review" filter
+    document.getElementById("filter-review").click();
+}
+
+// Update the existing handleP2ReviewFilter function to include finalize button
+function updateSectionHeaderButtonsP2() {
+    console.log("🔧 [P2 Header] Updating section header buttons for P2");
+    
+    const rightSection = document.querySelector('#finalizeButtonContainer');
+    
+    if (!rightSection) {
+        console.warn("⚠️ [P2 Header] No finalize button container found");
+        return;
+    }
+    
+    // Clear existing buttons
+    rightSection.innerHTML = '';
+    
+    // Add Finalize P2 Review button with Gmail integration
+    const p2Button = document.createElement('button');
+    p2Button.id = 'finalizeP2Button';
+    p2Button.textContent = 'Finalize P2 Review';
+    p2Button.style.padding = '10px 15px';
+    p2Button.style.fontSize = '16px';
+    p2Button.style.fontWeight = 'bold';
+    p2Button.style.border = 'none';
+    p2Button.style.backgroundColor = '#124A5C';
+    p2Button.style.color = 'white';
+    p2Button.style.borderRadius = '4px';
+    p2Button.style.cursor = 'pointer';
+    p2Button.style.transition = 'background-color 0.3s ease';
+    
+    p2Button.addEventListener('mouseover', function() {
+        this.style.backgroundColor = '#B4E3E3';
+        this.style.color = '#124A5C';
+    });
+    
+    p2Button.addEventListener('mouseout', function() {
+        this.style.backgroundColor = '#124A5C';
+        this.style.color = 'white';
+    });
+    
+    p2Button.addEventListener('click', function() {
+        console.log("🎯 [P2 Button] Finalize P2 Review button clicked");
+        
+        if (checkAllP2ApplicantsMarked()) {
+            console.log("✅ [P2 Button] All P2 applicants marked, showing modal");
+            document.getElementById('notifyApplicantsModal').style.display = 'block';
+            
+            // Update modal for P2 Gmail integration
+            const modalTitle = document.querySelector('#notifyApplicantsModal h2');
+            if (modalTitle) {
+                modalTitle.textContent = "Confirm P2 Review Finalization";
+            }
+            
+            const modalParagraph = document.querySelector('#notifyApplicantsModal p');
+            if (modalParagraph) {
+                modalParagraph.textContent = "You are about to finalize the P2 review process using Gmail compose. This will prepare customizable email templates and open Gmail with pre-filled recipient information for both passed and failed applicants. Are you sure you want to proceed?";
+            }
+            
+            // Update confirm button for P2 Gmail flow
+            const confirmButton = document.getElementById('confirmButton');
+            if (confirmButton) {
+                const newConfirmButton = confirmButton.cloneNode(true);
+                confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+                newConfirmButton.addEventListener('click', finalizeP2Review);
+                console.log("🔧 [P2 Button] Updated confirm button for P2 flow");
+            }
+        } else {
+            console.warn("⚠️ [P2 Button] Not all P2 applicants marked");
+            alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+        }
+    });
+    
+    rightSection.appendChild(p2Button);
+    console.log("✅ [P2 Header] Added Finalize P2 Review button");
+}
+
+// =========================
+// ENHANCED EXISTING FUNCTIONS
+// =========================
+
+// Add this to your existing updateSectionHeaderButtons function
+// This should be called when the "For Review" filter is activated and P2 data is detected
+function enhanceExistingUpdateSectionHeaderButtons() {
+    // Check if we're in P2 context by looking for P2 data
+    const declaredResultsTable = document.getElementById("declaredResultsTable");
+    if (!declaredResultsTable) return;
+    
+    const p2Rows = declaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
+    const hasP2Data = Array.from(p2Rows).some(row => {
+        const statusCell = row.querySelector('td:nth-child(6)');
+        return statusCell && statusCell.textContent.includes('P2');
+    });
+    
+    if (hasP2Data) {
+        console.log("📊 [Enhanced Header] Detected P2 data, updating header buttons");
+        updateSectionHeaderButtonsP2();
+    }
+}
+
+// Enhanced console logging for debugging
+console.log("✅ [P2 Integration] P2 Email Integration JavaScript loaded successfully");
+console.log("📧 [P2 Integration] Available P2 functions:", [
+    'p2passApplicant',
+    'p2rejectApplicant', 
+    'toggleP2ApplicantStatus',
+    'finalizeP2Review',
+    'showP2PassedEmailModal',
+    'showP2FailedEmailModal',
+    'openGmailForP2Passed',
+    'openGmailForP2Failed',
+    'updateP2ApplicantStatuses',
+    'checkAllP2ApplicantsMarked'
+]);
+
 
 // Function to handle rejecting an applicant
 function rejectApplicant(applicantId) {
@@ -2843,67 +3051,7 @@ function setupToggleStatusButtonsP2() {
 }
 
 // Update section header buttons for P2
-function updateSectionHeaderButtonsP2() {
-    const rightSection = document.querySelector('#finalizeButtonContainer');
-    
-    if (!rightSection) return;
-    
-    // Clear existing buttons
-    rightSection.innerHTML = '';
-    
-    // Add Finalize P2 Review button with Gmail integration
-    const p2Button = document.createElement('button');
-    p2Button.id = 'finalizeP2Button';
-    p2Button.textContent = 'Finalize P2 Review';
-    p2Button.style.padding = '10px 15px';
-    p2Button.style.fontSize = '16px';
-    p2Button.style.fontWeight = 'bold';
-    p2Button.style.border = 'none';
-    p2Button.style.backgroundColor = '#124A5C';
-    p2Button.style.color = 'white';
-    p2Button.style.borderRadius = '4px';
-    p2Button.style.cursor = 'pointer';
-    p2Button.style.transition = 'background-color 0.3s ease';
-    
-    p2Button.addEventListener('mouseover', function() {
-        this.style.backgroundColor = '#B4E3E3';
-        this.style.color = '#124A5C';
-    });
-    
-    p2Button.addEventListener('mouseout', function() {
-        this.style.backgroundColor = '#124A5C';
-        this.style.color = 'white';
-    });
-    
-    p2Button.addEventListener('click', function() {
-        if (checkAllP2ApplicantsMarked()) {
-            document.getElementById('notifyApplicantsModal').style.display = 'block';
-            
-            // Update modal for P2 Gmail integration
-            const modalTitle = document.querySelector('#notifyApplicantsModal h2');
-            if (modalTitle) {
-                modalTitle.textContent = "Confirm P2 Review Finalization";
-            }
-            
-            const modalParagraph = document.querySelector('#notifyApplicantsModal p');
-            if (modalParagraph) {
-                modalParagraph.textContent = "You are about to finalize the P2 review process using Gmail compose. This will prepare customizable email templates and open Gmail with pre-filled recipient information for both passed and failed applicants. Are you sure you want to proceed?";
-            }
-            
-            // Update confirm button for P2 Gmail flow
-            const confirmButton = document.getElementById('confirmButton');
-            if (confirmButton) {
-                const newConfirmButton = confirmButton.cloneNode(true);
-                confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
-                newConfirmButton.addEventListener('click', finalizeP2Review);
-            }
-        } else {
-            alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
-        }
-    });
-    
-    rightSection.appendChild(p2Button);
-}
+
 // ========== END MODIFIED FILTER FUNCTION ==========
 
        // Function to filter table based on search input
