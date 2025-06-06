@@ -166,6 +166,9 @@ router.get('/employee/leaverequest/latest', employeeController.getLatestLeaveBal
 
 router.get('/employee/viewtimeline', employeeController.getViewPerformanceTimeline);
 
+// Employee Training Routes
+router.get('/employee/training/home', employeeController.getEmployeeTrainingHome);
+
 
 router.get('/employee/attendance', employeeController.getAttendance);
 router.post('/employee/attendance', employeeController.postAttendance);
