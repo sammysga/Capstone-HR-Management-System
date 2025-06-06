@@ -3735,6 +3735,14 @@ checkFeedbackStatus: async function (req, res) {
         }
     },
 
+getEmployeeTrainingSpecific: function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'Employee') {
+            res.render('staffpages/employee_pages/training_pages/employee-specific-training');
+        } else {
+            req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
+            res.redirect('/staff/login');
+        }
+    },
 // get360FeedbackList: async function (req, res) {
 //     const currentUserId = req.session?.user?.userId;
 //     const selectedUserId = req.query.userId; // Get the userId from the query parameters

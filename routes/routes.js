@@ -168,6 +168,7 @@ router.get('/employee/viewtimeline', employeeController.getViewPerformanceTimeli
 
 // Employee Training Routes
 router.get('/employee/training/home', employeeController.getEmployeeTrainingHome);
+router.get('/employee/training/course', employeeController.getEmployeeTrainingSpecific);
 
 
 router.get('/employee/attendance', employeeController.getAttendance);

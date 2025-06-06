@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Progress - Prime Infra</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Import Inter font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+        /* Main content styling */
+        .main-content {
+            margin-left: 270px;
+            padding: 30px;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        /* Course header */
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .course-info h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 5px 0;
+        }
+
+        .course-info p {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .training-mode-badge {
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            margin-right: 50px;
+        }
+
+        .training-mode-label {
+            color: #64748b;
+            margin-right: 8px;
+        }
+
+        /* Course details section */
+        .course-details {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .detail-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            padding: 12px 16px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .focus-areas {
+            margin-bottom: 25px;
+        }
+
+        .focus-areas h3 {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+            margin: 0 0 12px 0;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Activities section */
+        .activities-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .activities-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .activities-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #0891b2;
+            margin: 0;
+        }
+
+        .total-duration {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .duration-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .duration-value {
+            color: #334155;
+            font-weight: 600;
+        }
+
+        /* Activities table */
+        .activities-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .activities-table th {
+            background-color: #f8fafc;
+            padding: 12px 16px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #374151;
+            font-size: 13px;
+        }
+
+        .activities-table td {
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            vertical-align: middle;
+        }
+
+        .activities-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Status badges */
+        .status-completed {
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-in-progress {
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Certificates section */
+        .certificates-section {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .certificates-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #0891b2;
+            margin: 0 0 20px 0;
+        }
+
+        .upload-btn {
+            background-color: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .upload-btn:hover {
+            background-color: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .course-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .activities-table {
+                font-size: 12px;
+            }
+
+            .activities-table th,
+            .activities-table td {
+                padding: 8px 10px;
+            }
+        }
+
+        /* Table responsiveness */
+        @media (max-width: 1024px) {
+            .activities-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../../partials/employee_partials') %>
+    
+    <!-- Main content area -->
+    <div class="main-content">
+        <!-- Course Header -->
+        <div class="course-header">
+            <div class="course-info">
+                <h1>Technical Skills Enhancement</h1>
+                <p>Professional Development Course</p>
+            </div>
+            <div class="training-mode-badge">
+                <span class="training-mode-label">Training Mode:</span>
+                <span>Online</span>
+            </div>
+        </div>
+
+        <!-- Course Details -->
+        <div class="course-details">
+            <div class="details-grid">
+                <div class="detail-group">
+                    <label class="detail-label">Set Start Date:</label>
+                    <div class="detail-value">02/15/2025</div>
+                </div>
+                <div class="detail-group">
+                    <label class="detail-label">Set End Date:</label>
+                    <div class="detail-value">03/15/2025</div>
+                </div>
+            </div>
+
+            <div class="focus-areas">
+                <h3>Focus Objective Areas:</h3>
+                <div class="tags-container">
+                    <span class="tag">Objective 1</span>
+                    <span class="tag">Objective 2</span>
+                </div>
+            </div>
+
+            <div class="focus-areas">
+                <h3>Focus Skill Areas:</h3>
+                <div class="tags-container">
+                    <span class="tag">Skill 1</span>
+                    <span class="tag">Skill 2</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activities Section -->
+        <div class="activities-section">
+            <div class="activities-header">
+                <h2 class="activities-title">Activities</h2>
+                <div class="total-duration">
+                    <span class="duration-label">Total Duration to Complete:</span>
+                    <span class="duration-value">1 Month</span>
+                </div>
+            </div>
+
+            <table class="activities-table">
+                <thead>
+                    <tr>
+                        <th>Activity Name</th>
+                        <th>Estimated Time</th>
+                        <th>Status</th>
+                        <th>Date Started</th>
+                        <th>Date Completed</th>
+                        <th>Type</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Variables & Data</td>
+                        <td>30 mins</td>
+                        <td>
+                            <span class="status-completed">
+                                ✓ Completed
+                            </span>
+                        </td>
+                        <td>2025-05-01</td>
+                        <td>2025-05-01</td>
+                        <td>Lecture</td>
+                        <td>Easy refresher</td>
+                    </tr>
+                    <tr>
+                        <td>Loops</td>
+                        <td>45 mins</td>
+                        <td>
+                            <span class="status-in-progress">
+                                ⏵ In Progress
+                            </span>
+                        </td>
+                        <td>2025-05-01</td>
+                        <td>——————</td>
+                        <td>Lecture</td>
+                        <td>Easy refresher</td>
+                    </tr>
+                    <tr>
+                        <td>Functions & Methods</td>
+                        <td>1 hour</td>
+                        <td>
+                            <span class="status-completed">
+                                ✓ Completed
+                            </span>
+                        </td>
+                        <td>2025-05-03</td>
+                        <td>2025-05-04</td>
+                        <td>Workshop</td>
+                        <td>Hands-on practice</td>
+                    </tr>
+                    <tr>
+                        <td>Data Structures</td>
+                        <td>2 hours</td>
+                        <td>
+                            <span class="status-completed">
+                                ✓ Completed
+                            </span>
+                        </td>
+                        <td>2025-05-05</td>
+                        <td>2025-05-08</td>
+                        <td>Project</td>
+                        <td>Complex implementation</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Certificates Section -->
+        <div class="certificates-section">
+            <h2 class="certificates-title">Certificate/s</h2>
+            <button class="upload-btn">
+                <i class="fas fa-plus"></i>
+                Upload Certificate
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript for interactions -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Upload certificate functionality
+            document.querySelector('.upload-btn').addEventListener('click', function() {
+                // Create file input
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.pdf,.jpg,.jpeg,.png';
+                fileInput.style.display = 'none';
+                
+                fileInput.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        alert(`Certificate "${this.files[0].name}" selected for upload.`);
+                        // Here you would typically handle the file upload
+                    }
+                });
+                
+                document.body.appendChild(fileInput);
+                fileInput.click();
+                document.body.removeChild(fileInput);
+            });
+
+            // Sidebar navigation
+            document.querySelectorAll('.sidebar ul li a').forEach(link => {
+                link.addEventListener('click', function() {
+                    document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Collapsible sections in sidebar
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    var content = this.nextElementSibling;
+                    if (content.style.display === 'block') {
+                        content.style.display = 'none';
+                    } else {
+                        // Hide all other collapsible contents
+                        document.querySelectorAll('.collapsible-content').forEach(item => {
+                            if (item !== content) {
+                                item.style.display = 'none';
+                            }
+                        });
+                        content.style.display = 'block';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
