@@ -29,6 +29,69 @@ function isValidQuarter(quarter) {
     return ['Q1', 'Q2', 'Q3', 'Q4'].includes(quarter);
 }
 
+// Helper function to calculate progression insights
+function calculateProgressionInsights(allFeedbackItems) {
+    const insights = {
+        improved: [],
+        maintained: [],
+        declined: [],
+        newInSecondHalf: [],
+        summary: {
+            totalImproved: 0,
+            totalDeclined: 0,
+            averageImprovement: 0
+        }
+    };
+    
+    allFeedbackItems.forEach(item => {
+        const q1q2Quarters = ['Q1', 'Q2'].filter(q => item.quarterRatings[q]);
+        const q3q4Quarters = ['Q3', 'Q4'].filter(q => item.quarterRatings[q]);
+        
+        if (q1q2Quarters.length > 0 && q3q4Quarters.length > 0) {
+            // Calculate average for first half and second half
+            const firstHalfAvg = q1q2Quarters.reduce((sum, q) => sum + item.quarterRatings[q], 0) / q1q2Quarters.length;
+            const secondHalfAvg = q3q4Quarters.reduce((sum, q) => sum + item.quarterRatings[q], 0) / q3q4Quarters.length;
+            
+            const improvement = secondHalfAvg - firstHalfAvg;
+            
+            if (Math.abs(improvement) < 0.2) {
+                insights.maintained.push({
+                    ...item,
+                    firstHalfAvg,
+                    secondHalfAvg,
+                    improvement: 0
+                });
+            } else if (improvement > 0) {
+                insights.improved.push({
+                    ...item,
+                    firstHalfAvg,
+                    secondHalfAvg,
+                    improvement
+                });
+                insights.summary.totalImproved++;
+            } else {
+                insights.declined.push({
+                    ...item,
+                    firstHalfAvg,
+                    secondHalfAvg,
+                    improvement
+                });
+                insights.summary.totalDeclined++;
+            }
+        } else if (q3q4Quarters.length > 0 && q1q2Quarters.length === 0) {
+            // New skills/objectives introduced in second half
+            insights.newInSecondHalf.push(item);
+        }
+    });
+    
+    // Calculate average improvement
+    const totalImprovements = [...insights.improved, ...insights.declined].map(item => item.improvement);
+    insights.summary.averageImprovement = totalImprovements.length > 0 ? 
+        totalImprovements.reduce((sum, imp) => sum + imp, 0) / totalImprovements.length : 0;
+    
+    return insights;
+}
+
 const lineManagerController = {
     
 
@@ -4856,6 +4919,298 @@ getFeedbackQuestionnaire: async function(req, res) {
         }
     },
 
+    // Aggregated Mid-Year Average 360 Degree Objective and Skills Feedback
+
+    getMidYearFeedbackAggregates: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        const selectedYear = req.query.year || new Date().getFullYear();
+        
+        console.log(`Fetching Mid-Year feedback aggregates for userId: ${userId}, year: ${selectedYear}`);
+        
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required."
+            });
+        }
+        
+        // Get user's job information
+        const { data: staffData, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('jobId')
+            .eq('userId', userId)
+            .single();
+            
+        if (staffError || !staffData) {
+            return res.status(404).json({
+                success: false,
+                message: "User job information not found."
+            });
+        }
+        
+        const jobId = staffData.jobId;
+        
+        // Get Q1 and Q2 feedback records
+        const { data: q1Feedback, error: q1Error } = await supabase
+            .from('feedbacks_Q1')
+            .select('feedbackq1_Id')
+            .eq('userId', userId)
+            .eq('jobId', jobId)
+            .eq('year', selectedYear)
+            .maybeSingle();
+            
+        const { data: q2Feedback, error: q2Error } = await supabase
+            .from('feedbacks_Q2')
+            .select('feedbackq2_Id')
+            .eq('userId', userId)
+            .eq('jobId', jobId)
+            .eq('year', selectedYear)
+            .maybeSingle();
+            
+        if ((q1Error && q1Error.code !== 'PGRST116') || (q2Error && q2Error.code !== 'PGRST116')) {
+            console.error('Error fetching feedback records:', { q1Error, q2Error });
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving feedback records."
+            });
+        }
+        
+        // Initialize aggregated data structures
+        const objectiveAggregates = [];
+        const skillAggregates = [];
+        
+        // Process Q1 and Q2 feedback data
+        const quarterData = [
+            { quarter: 'Q1', feedbackId: q1Feedback?.feedbackq1_Id, idField: 'feedbackq1_Id' },
+            { quarter: 'Q2', feedbackId: q2Feedback?.feedbackq2_Id, idField: 'feedbackq2_Id' }
+        ];
+        
+        // Get objectives data first
+        const { data: objectiveSettings, error: objSettingsError } = await supabase
+            .from('objectivesettings')
+            .select('objectiveSettingsId, performancePeriodYear')
+            .eq('userId', userId)
+            .order('created_at', { ascending: false });
+            
+        if (objSettingsError) {
+            console.error('Error fetching objective settings:', objSettingsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving objective settings."
+            });
+        }
+        
+        // Find objective setting for the selected year
+        const validObjectiveSetting = objectiveSettings?.find(setting => 
+            setting.performancePeriodYear === parseInt(selectedYear)
+        ) || objectiveSettings?.[0];
+        
+        if (!validObjectiveSetting) {
+            return res.status(404).json({
+                success: false,
+                message: "No objectives found for this user."
+            });
+        }
+        
+        // Get the actual objectives
+        const { data: objectives, error: objectivesError } = await supabase
+            .from('objectivesettings_objectives')
+            .select('*')
+            .eq('objectiveSettingsId', validObjectiveSetting.objectiveSettingsId);
+            
+        if (objectivesError) {
+            console.error('Error fetching objectives:', objectivesError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving objectives."
+            });
+        }
+        
+        // Get job skills
+        const { data: allSkills, error: skillsError } = await supabase
+            .from('jobreqskills')
+            .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
+            .eq('jobId', jobId);
+            
+        if (skillsError) {
+            console.error('Error fetching skills:', skillsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving skills data."
+            });
+        }
+        
+        // Process each quarter's feedback
+        for (const { quarter, feedbackId, idField } of quarterData) {
+            if (!feedbackId) {
+                console.log(`No ${quarter} feedback found, skipping...`);
+                continue;
+            }
+            
+            console.log(`Processing ${quarter} feedback with ID: ${feedbackId}`);
+            
+            // Process objectives for this quarter
+            const { data: objectiveQuestions, error: objQuestionsError } = await supabase
+                .from('feedbacks_questions-objectives')
+                .select(`
+                    feedback_qObjectivesId,
+                    objectiveId,
+                    ${idField}
+                `)
+                .eq(idField, feedbackId);
+                
+            if (!objQuestionsError && objectiveQuestions) {
+                for (const objQuestion of objectiveQuestions) {
+                    // Get answers for this objective question
+                    const { data: answers, error: answersError } = await supabase
+                        .from('feedbacks_answers-objectives')
+                        .select('objectiveQuantInput')
+                        .eq('feedback_qObjectivesId', objQuestion.feedback_qObjectivesId);
+                        
+                    if (!answersError && answers && answers.length > 0) {
+                        // Calculate average rating
+                        const validRatings = answers.filter(a => a.objectiveQuantInput).map(a => a.objectiveQuantInput);
+                        if (validRatings.length > 0) {
+                            const averageRating = validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length;
+                            
+                            // Find the objective details
+                            const objective = objectives.find(obj => obj.objectiveId === objQuestion.objectiveId);
+                            if (objective) {
+                                // Check if this objective already exists in aggregates
+                                let existingAggregate = objectiveAggregates.find(agg => agg.objectiveId === objective.objectiveId);
+                                if (!existingAggregate) {
+                                    existingAggregate = {
+                                        objectiveId: objective.objectiveId,
+                                        objectiveDescrpt: objective.objectiveDescrpt,
+                                        objectiveKPI: objective.objectiveKPI,
+                                        type: 'objective',
+                                        quarterRatings: {},
+                                        totalRating: 0,
+                                        quarterCount: 0
+                                    };
+                                    objectiveAggregates.push(existingAggregate);
+                                }
+                                
+                                existingAggregate.quarterRatings[quarter] = averageRating;
+                                existingAggregate.totalRating += averageRating;
+                                existingAggregate.quarterCount++;
+                                existingAggregate.averageRating = existingAggregate.totalRating / existingAggregate.quarterCount;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Process skills for this quarter
+            const { data: skillQuestions, error: skillQuestionsError } = await supabase
+                .from('feedbacks_questions-skills')
+                .select(`
+                    feedback_qSkillsId,
+                    jobReqSkillId,
+                    ${idField}
+                `)
+                .eq(idField, feedbackId);
+                
+            if (!skillQuestionsError && skillQuestions) {
+                for (const skillQuestion of skillQuestions) {
+                    // Get answers for this skill question
+                    const { data: answers, error: answersError } = await supabase
+                        .from('feedbacks_answers-skills')
+                        .select('skillsQuantInput')
+                        .eq('feedback_qSkillsId', skillQuestion.feedback_qSkillsId);
+                        
+                    if (!answersError && answers && answers.length > 0) {
+                        // Calculate average rating
+                        const validRatings = answers.filter(a => a.skillsQuantInput).map(a => a.skillsQuantInput);
+                        if (validRatings.length > 0) {
+                            const averageRating = validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length;
+                            
+                            // Find the skill details
+                            const skill = allSkills.find(s => s.jobReqSkillId === skillQuestion.jobReqSkillId);
+                            if (skill) {
+                                // Check if this skill already exists in aggregates
+                                let existingAggregate = skillAggregates.find(agg => agg.jobReqSkillId === skill.jobReqSkillId);
+                                if (!existingAggregate) {
+                                    existingAggregate = {
+                                        jobReqSkillId: skill.jobReqSkillId,
+                                        jobReqSkillName: skill.jobReqSkillName,
+                                        jobReqSkillType: skill.jobReqSkillType,
+                                        type: 'skill',
+                                        quarterRatings: {},
+                                        totalRating: 0,
+                                        quarterCount: 0
+                                    };
+                                    skillAggregates.push(existingAggregate);
+                                }
+                                
+                                existingAggregate.quarterRatings[quarter] = averageRating;
+                                existingAggregate.totalRating += averageRating;
+                                existingAggregate.quarterCount++;
+                                existingAggregate.averageRating = existingAggregate.totalRating / existingAggregate.quarterCount;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Categorize feedback into rating groups
+        const categorizedFeedback = {
+            strengths: [], // 4-5 stars
+            aboveAverage: [], // 4-5 stars (same as strengths for display purposes)
+            average: [], // 3 stars
+            belowAverage: [] // 1-2 stars
+        };
+        
+        // Combine objectives and skills for categorization
+        const allFeedbackItems = [...objectiveAggregates, ...skillAggregates];
+        
+        allFeedbackItems.forEach(item => {
+            if (item.averageRating >= 4) {
+                categorizedFeedback.strengths.push(item);
+                categorizedFeedback.aboveAverage.push(item);
+            } else if (item.averageRating >= 3) {
+                categorizedFeedback.average.push(item);
+            } else if (item.averageRating > 0) {
+                categorizedFeedback.belowAverage.push(item);
+            }
+        });
+        
+        console.log('Categorized feedback summary:', {
+            strengths: categorizedFeedback.strengths.length,
+            average: categorizedFeedback.average.length,
+            belowAverage: categorizedFeedback.belowAverage.length,
+            totalProcessed: allFeedbackItems.length
+        });
+        
+        return res.status(200).json({
+            success: true,
+            message: "Mid-Year feedback aggregates retrieved successfully",
+            data: {
+                objectives: objectiveAggregates,
+                skills: skillAggregates,
+                categorizedFeedback: categorizedFeedback,
+                meta: {
+                    userId: userId,
+                    jobId: jobId,
+                    year: selectedYear,
+                    quarters: ['Q1', 'Q2'],
+                    totalItems: allFeedbackItems.length
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error in getMidYearFeedbackAggregates:', error);
+        return res.status(500).json({
+            success: false,
+            message: "An unexpected error occurred while fetching Mid-Year feedback aggregates.",
+            error: error.message
+        });
+    }
+},
+
     saveFinalYearIDP: async function(req, res) {
         try {
             // Get the user ID from the route parameters or form submission
@@ -5170,6 +5525,307 @@ getFeedbackQuestionnaire: async function(req, res) {
             return res.redirect('/linemanager/records-performance-tracker');
         }
     },
+
+    getFinalYearFeedbackAggregates: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        const selectedYear = req.query.year || new Date().getFullYear();
+        
+        console.log(`Fetching Final-Year feedback aggregates for userId: ${userId}, year: ${selectedYear}`);
+        
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required."
+            });
+        }
+        
+        // Get user's job information
+        const { data: staffData, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('jobId')
+            .eq('userId', userId)
+            .single();
+            
+        if (staffError || !staffData) {
+            return res.status(404).json({
+                success: false,
+                message: "User job information not found."
+            });
+        }
+        
+        const jobId = staffData.jobId;
+        
+        // Get ALL four quarters' feedback records
+        const quarterPromises = [
+            supabase.from('feedbacks_Q1').select('feedbackq1_Id').eq('userId', userId).eq('jobId', jobId).eq('year', selectedYear).maybeSingle(),
+            supabase.from('feedbacks_Q2').select('feedbackq2_Id').eq('userId', userId).eq('jobId', jobId).eq('year', selectedYear).maybeSingle(),
+            supabase.from('feedbacks_Q3').select('feedbackq3_Id').eq('userId', userId).eq('jobId', jobId).eq('year', selectedYear).maybeSingle(),
+            supabase.from('feedbacks_Q4').select('feedbackq4_Id').eq('userId', userId).eq('jobId', jobId).eq('year', selectedYear).maybeSingle()
+        ];
+        
+        const quarterResults = await Promise.all(quarterPromises);
+        
+        // Check for errors in any quarter
+        for (let i = 0; i < quarterResults.length; i++) {
+            const { error } = quarterResults[i];
+            if (error && error.code !== 'PGRST116') {
+                console.error(`Error fetching Q${i+1} feedback:`, error);
+                return res.status(500).json({
+                    success: false,
+                    message: `Error retrieving Q${i+1} feedback records.`
+                });
+            }
+        }
+        
+        // Initialize aggregated data structures
+        const objectiveAggregates = [];
+        const skillAggregates = [];
+        
+        // Process all four quarters' feedback data
+        const quarterData = [
+            { quarter: 'Q1', feedbackId: quarterResults[0].data?.feedbackq1_Id, idField: 'feedbackq1_Id' },
+            { quarter: 'Q2', feedbackId: quarterResults[1].data?.feedbackq2_Id, idField: 'feedbackq2_Id' },
+            { quarter: 'Q3', feedbackId: quarterResults[2].data?.feedbackq3_Id, idField: 'feedbackq3_Id' },
+            { quarter: 'Q4', feedbackId: quarterResults[3].data?.feedbackq4_Id, idField: 'feedbackq4_Id' }
+        ];
+        
+        // Get objectives data
+        const { data: objectiveSettings, error: objSettingsError } = await supabase
+            .from('objectivesettings')
+            .select('objectiveSettingsId, performancePeriodYear')
+            .eq('userId', userId)
+            .order('created_at', { ascending: false });
+            
+        if (objSettingsError) {
+            console.error('Error fetching objective settings:', objSettingsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving objective settings."
+            });
+        }
+        
+        // Find objective setting for the selected year
+        const validObjectiveSetting = objectiveSettings?.find(setting => 
+            setting.performancePeriodYear === parseInt(selectedYear)
+        ) || objectiveSettings?.[0];
+        
+        if (!validObjectiveSetting) {
+            return res.status(404).json({
+                success: false,
+                message: "No objectives found for this user."
+            });
+        }
+        
+        // Get the actual objectives
+        const { data: objectives, error: objectivesError } = await supabase
+            .from('objectivesettings_objectives')
+            .select('*')
+            .eq('objectiveSettingsId', validObjectiveSetting.objectiveSettingsId);
+            
+        if (objectivesError) {
+            console.error('Error fetching objectives:', objectivesError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving objectives."
+            });
+        }
+        
+        // Get job skills
+        const { data: allSkills, error: skillsError } = await supabase
+            .from('jobreqskills')
+            .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
+            .eq('jobId', jobId);
+            
+        if (skillsError) {
+            console.error('Error fetching skills:', skillsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving skills data."
+            });
+        }
+        
+        // Process each quarter's feedback
+        for (const { quarter, feedbackId, idField } of quarterData) {
+            if (!feedbackId) {
+                console.log(`No ${quarter} feedback found, skipping...`);
+                continue;
+            }
+            
+            console.log(`Processing ${quarter} feedback with ID: ${feedbackId}`);
+            
+            // Process objectives for this quarter
+            const { data: objectiveQuestions, error: objQuestionsError } = await supabase
+                .from('feedbacks_questions-objectives')
+                .select(`
+                    feedback_qObjectivesId,
+                    objectiveId,
+                    ${idField}
+                `)
+                .eq(idField, feedbackId);
+                
+            if (!objQuestionsError && objectiveQuestions) {
+                for (const objQuestion of objectiveQuestions) {
+                    // Get answers for this objective question
+                    const { data: answers, error: answersError } = await supabase
+                        .from('feedbacks_answers-objectives')
+                        .select('objectiveQuantInput')
+                        .eq('feedback_qObjectivesId', objQuestion.feedback_qObjectivesId);
+                        
+                    if (!answersError && answers && answers.length > 0) {
+                        // Calculate average rating
+                        const validRatings = answers.filter(a => a.objectiveQuantInput).map(a => a.objectiveQuantInput);
+                        if (validRatings.length > 0) {
+                            const averageRating = validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length;
+                            
+                            // Find the objective details
+                            const objective = objectives.find(obj => obj.objectiveId === objQuestion.objectiveId);
+                            if (objective) {
+                                // Check if this objective already exists in aggregates
+                                let existingAggregate = objectiveAggregates.find(agg => agg.objectiveId === objective.objectiveId);
+                                if (!existingAggregate) {
+                                    existingAggregate = {
+                                        objectiveId: objective.objectiveId,
+                                        objectiveDescrpt: objective.objectiveDescrpt,
+                                        objectiveKPI: objective.objectiveKPI,
+                                        type: 'objective',
+                                        quarterRatings: {},
+                                        totalRating: 0,
+                                        quarterCount: 0
+                                    };
+                                    objectiveAggregates.push(existingAggregate);
+                                }
+                                
+                                existingAggregate.quarterRatings[quarter] = averageRating;
+                                existingAggregate.totalRating += averageRating;
+                                existingAggregate.quarterCount++;
+                                existingAggregate.averageRating = existingAggregate.totalRating / existingAggregate.quarterCount;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Process skills for this quarter
+            const { data: skillQuestions, error: skillQuestionsError } = await supabase
+                .from('feedbacks_questions-skills')
+                .select(`
+                    feedback_qSkillsId,
+                    jobReqSkillId,
+                    ${idField}
+                `)
+                .eq(idField, feedbackId);
+                
+            if (!skillQuestionsError && skillQuestions) {
+                for (const skillQuestion of skillQuestions) {
+                    // Get answers for this skill question
+                    const { data: answers, error: answersError } = await supabase
+                        .from('feedbacks_answers-skills')
+                        .select('skillsQuantInput')
+                        .eq('feedback_qSkillsId', skillQuestion.feedback_qSkillsId);
+                        
+                    if (!answersError && answers && answers.length > 0) {
+                        // Calculate average rating
+                        const validRatings = answers.filter(a => a.skillsQuantInput).map(a => a.skillsQuantInput);
+                        if (validRatings.length > 0) {
+                            const averageRating = validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length;
+                            
+                            // Find the skill details
+                            const skill = allSkills.find(s => s.jobReqSkillId === skillQuestion.jobReqSkillId);
+                            if (skill) {
+                                // Check if this skill already exists in aggregates
+                                let existingAggregate = skillAggregates.find(agg => agg.jobReqSkillId === skill.jobReqSkillId);
+                                if (!existingAggregate) {
+                                    existingAggregate = {
+                                        jobReqSkillId: skill.jobReqSkillId,
+                                        jobReqSkillName: skill.jobReqSkillName,
+                                        jobReqSkillType: skill.jobReqSkillType,
+                                        type: 'skill',
+                                        quarterRatings: {},
+                                        totalRating: 0,
+                                        quarterCount: 0
+                                    };
+                                    skillAggregates.push(existingAggregate);
+                                }
+                                
+                                existingAggregate.quarterRatings[quarter] = averageRating;
+                                existingAggregate.totalRating += averageRating;
+                                existingAggregate.quarterCount++;
+                                existingAggregate.averageRating = existingAggregate.totalRating / existingAggregate.quarterCount;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Categorize feedback into rating groups with more refined categories for year-end
+        const categorizedFeedback = {
+            excellent: [], // 4.5-5 stars
+            good: [], // 3.5-4.4 stars
+            satisfactory: [], // 2.5-3.4 stars
+            needsImprovement: [], // 1.5-2.4 stars
+            critical: [] // 0-1.4 stars
+        };
+        
+        // Combine objectives and skills for categorization
+        const allFeedbackItems = [...objectiveAggregates, ...skillAggregates];
+        
+        allFeedbackItems.forEach(item => {
+            if (item.averageRating >= 4.5) {
+                categorizedFeedback.excellent.push(item);
+            } else if (item.averageRating >= 3.5) {
+                categorizedFeedback.good.push(item);
+            } else if (item.averageRating >= 2.5) {
+                categorizedFeedback.satisfactory.push(item);
+            } else if (item.averageRating >= 1.5) {
+                categorizedFeedback.needsImprovement.push(item);
+            } else if (item.averageRating > 0) {
+                categorizedFeedback.critical.push(item);
+            }
+        });
+        
+        // Calculate progression insights (comparing Q1-Q2 vs Q3-Q4)
+        const progressionInsights = calculateProgressionInsights(allFeedbackItems);
+        
+        console.log('Final-Year categorized feedback summary:', {
+            excellent: categorizedFeedback.excellent.length,
+            good: categorizedFeedback.good.length,
+            satisfactory: categorizedFeedback.satisfactory.length,
+            needsImprovement: categorizedFeedback.needsImprovement.length,
+            critical: categorizedFeedback.critical.length,
+            totalProcessed: allFeedbackItems.length
+        });
+        
+        return res.status(200).json({
+            success: true,
+            message: "Final-Year feedback aggregates retrieved successfully",
+            data: {
+                objectives: objectiveAggregates,
+                skills: skillAggregates,
+                categorizedFeedback: categorizedFeedback,
+                progressionInsights: progressionInsights,
+                meta: {
+                    userId: userId,
+                    jobId: jobId,
+                    year: selectedYear,
+                    quarters: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    totalItems: allFeedbackItems.length,
+                    availableQuarters: quarterData.filter(q => q.feedbackId).map(q => q.quarter)
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error in getFinalYearFeedbackAggregates:', error);
+        return res.status(500).json({
+            success: false,
+            message: "An unexpected error occurred while fetching Final-Year feedback aggregates.",
+            error: error.message
+        });
+    }
+},
+
     
     // getUserProgressView: async function(req, res) {
     //     const user = req.user;
