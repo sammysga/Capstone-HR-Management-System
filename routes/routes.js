@@ -261,8 +261,11 @@ router.get('/linemanager/records-performance-tracker/:userId', lineManagerContro
 router.post('/linemanager/records-performance-tracker/:userId', lineManagerController.saveObjectiveSettings);
 // Route to get feedback questionnaire data
 router.get('/linemanager/get-feedback-questionnaire/:userId', lineManagerController.getFeedbackQuestionnaire);
+// Route for saving feedback questionnaire
+router.post('/linemanager/save-feedback-questionnaire/:userId', lineManagerController.save360Questionnaire);
 
-router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.save360DegreeFeedback);
+
+router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.save360Questionnaire);
 router.post('/linemanager/offboarding/update', lineManagerController.updateOffboardingRequest);
 
 // router.get('/linemanager/records-performance-tracker/stepper/:quarter', lineManagerController.getQuarterStepper);

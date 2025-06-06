@@ -1270,117 +1270,95 @@
             </button>
         </div>
         
-        <!-- Questionnaire content container -->
-        <div id="questionnaireContent">
-            <div class="form-header">
-                <h2><i class="fas fa-comment-dots"></i> 360 Degree Feedback Questionnaire</h2>
-                <div class="date-inputs" style="display: flex; gap: 20px; margin-bottom: 20px;">
-                    <!-- Start Date -->
-                    <div class="date-input" style="flex: 1;">
-                        <label for="startDate"><strong>Start Date:</strong></label>
-                        <% 
-                        const feedbackQ1 = viewState.feedbacks.feedbacks_Q1; // Access feedbacks for Q1
-                        const currentDate = new Date();
-                        let startDate = '';
-                        let endDate = '';
-                        let isViewOnly = false;
-    
-                        if (feedbackQ1 && feedbackQ1.length > 0) { 
-                            const feedback = feedbackQ1[0]; 
-                            startDate = feedback.setStartDate;
-                            endDate = feedback.setEndDate;
-                            isViewOnly = true; // Set to view only after submission
-                        } 
-                        %>
-                        <% if (isViewOnly) { %>
-                            <span class="date-display"><%= startDate %></span> <!-- Display as text if view-only -->
-                        <% } else { %>
-                            <input type="date" id="startDate" name="startDate" class="input-field" 
-                                   value="<%= startDate %>" required>
-                        <% } %>
-                    </div>
-    
-                    <!-- End Date -->
-                    <div class="date-input" style="flex: 1;">
-                        <label for="endDate"><strong>End Date:</strong></label>
-                        <% if (isViewOnly) { %>
-                            <span class="date-display"><%= endDate %></span> <!-- Display as text if view-only -->
-                        <% } else { %>
-                            <input type="date" id="endDate" name="endDate" class="input-field" 
-                                   value="<%= endDate %>" required>
-                        <% } %>
-                    </div>
-                </div>
+<!-- Questionnaire content container -->
+<div id="questionnaireContent">
+    <div class="form-header">
+        <h2><i class="fas fa-comment-dots"></i> 360 Degree Feedback Questionnaire</h2>
+        <div class="date-inputs" style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <!-- Start Date -->
+            <div class="date-input" style="flex: 1;">
+                <label for="startDate"><strong>Start Date:</strong></label>
+                <!-- REMOVED: Static Q1 hardcoding. Date fields will be populated by JavaScript -->
+                <input type="date" id="startDate" name="startDate" class="input-field" required>
             </div>
-    
-            <!-- Instructions Card -->
-            <div class="instructions-card" style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #124A5C;">
-                <h3 style="margin-top: 0;"><i class="fas fa-info-circle"></i> Instructions</h3>
-                <p><strong>Setting Start and End Date:</strong> When creating a 360-degree feedback questionnaire, it is essential to set a start and end date. This schedule will automatically notify employees through the system, ensuring that they are aware of the timeframe for providing feedback.</p>
-                
-                <p><strong>Setting of Guide Questions:</strong> The Line Manager should prepare guide questions that support co-employees in providing both qualitative and quantitative feedback for each role-specific objective. Additionally, employees will rate the hard and soft skills required for the job, offering qualitative comments and quantitative scores. These structured questions enable clear, measurable evaluations and ensure alignment with the objectives being tracked.</p>                    
-            </div>
-    
-            <div class="employee-details" style="background-color: rgba(18, 74, 92, 0.05); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div><strong>Employee:</strong> <%= user.lastName %>, <%= user.firstName %></div>
-                    <div><strong>Position:</strong> <%= user.jobTitle %></div>
-                    <div><strong>Company:</strong> Prime Infrastructure</div>
-                    <div><strong>Department:</strong> <%= user.departmentName %></div>
-                </div>
-            </div>
-            
-            <hr class="divider" style="border: 0; height: 1px; background-color: #ddd; margin: 20px 0;" />
-            
-            <h3 style="color: #124A5C;"><i class="fas fa-bullseye"></i> Objective Setting Questions</h3>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>KRA/Objectives</th>
-                        <th>KPI</th>
-                        <th>Target</th>
-                        <th>UOM</th>
-                        <th>Weight</th>
-                    </tr>
-                </thead>
-                <tbody id="feedback-table-body">
-                    <!-- Dynamic feedback rows will be added here by JavaScript -->
-                </tbody>
-            </table>
-    
-            <!-- Hard Skills Section -->
-            <h3 style="color: #124A5C; margin-top: 30px;"><i class="fas fa-cogs"></i> Hard Skills</h3>
-            <table id="hardSkillsTable">
-                <thead>
-                    <tr>
-                        <th>Skill Name</th>
-                    </tr>
-                </thead>
-                <tbody id="hard-skills-table-body">
-                    <!-- Hard skill rows will be dynamically inserted here -->
-                </tbody>
-            </table>
-            
-            <!-- Soft Skills Section -->
-            <h3 style="color: #124A5C; margin-top: 30px;"><i class="fas fa-comments"></i> Soft Skills</h3>
-            <table id="softSkillsTable">
-                <thead>
-                    <tr>
-                        <th>Skill Name</th>
-                    </tr>
-                </thead>
-                <tbody id="soft-skills-table-body">
-                    <!-- Soft skill rows will be dynamically inserted here -->
-                </tbody>
-            </table>
-            
-            <div style="margin-top: 30px; text-align: right;">
-                <button id="save360DegreeFeedback" type="submit" class="save-btn" <%= isViewOnly ? 'disabled' : '' %>>
-                    <i class="fas fa-save"></i> Save Questionnaire
-                </button>
+
+            <!-- End Date -->
+            <div class="date-input" style="flex: 1;">
+                <label for="endDate"><strong>End Date:</strong></label>
+                <!-- REMOVED: Static Q1 hardcoding. Date fields will be populated by JavaScript -->
+                <input type="date" id="endDate" name="endDate" class="input-field" required>
             </div>
         </div>
+    </div>
+
+    <!-- Instructions Card -->
+    <div class="instructions-card" style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #124A5C;">
+        <h3 style="margin-top: 0;"><i class="fas fa-info-circle"></i> Instructions</h3>
+        <p><strong>Setting Start and End Date:</strong> When creating a 360-degree feedback questionnaire, it is essential to set a start and end date. This schedule will automatically notify employees through the system, ensuring that they are aware of the timeframe for providing feedback.</p>
+        
+        <p><strong>Setting of Guide Questions:</strong> The Line Manager should prepare guide questions that support co-employees in providing both qualitative and quantitative feedback for each role-specific objective. Additionally, employees will rate the hard and soft skills required for the job, offering qualitative comments and quantitative scores. These structured questions enable clear, measurable evaluations and ensure alignment with the objectives being tracked.</p>                    
+    </div>
+
+    <div class="employee-details" style="background-color: rgba(18, 74, 92, 0.05); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div><strong>Employee:</strong> <%= user.lastName %>, <%= user.firstName %></div>
+            <div><strong>Position:</strong> <%= user.jobTitle %></div>
+            <div><strong>Company:</strong> Prime Infrastructure</div>
+            <div><strong>Department:</strong> <%= user.departmentName %></div>
+        </div>
+    </div>
+    
+    <hr class="divider" style="border: 0; height: 1px; background-color: #ddd; margin: 20px 0;" />
+    
+    <h3 style="color: #124A5C;"><i class="fas fa-bullseye"></i> Objective Setting Questions</h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>KRA/Objectives</th>
+                <th>KPI</th>
+                <th>Target</th>
+                <th>UOM</th>
+                <th>Weight</th>
+            </tr>
+        </thead>
+        <tbody id="feedback-table-body">
+            <!-- Dynamic feedback rows will be added here by JavaScript -->
+        </tbody>
+    </table>
+
+    <!-- Hard Skills Section -->
+    <h3 style="color: #124A5C; margin-top: 30px;"><i class="fas fa-cogs"></i> Hard Skills</h3>
+    <table id="hardSkillsTable">
+        <thead>
+            <tr>
+                <th>Skill Name</th>
+            </tr>
+        </thead>
+        <tbody id="hard-skills-table-body">
+            <!-- Hard skill rows will be dynamically inserted here -->
+        </tbody>
+    </table>
+    
+    <!-- Soft Skills Section -->
+    <h3 style="color: #124A5C; margin-top: 30px;"><i class="fas fa-comments"></i> Soft Skills</h3>
+    <table id="softSkillsTable">
+        <thead>
+            <tr>
+                <th>Skill Name</th>
+            </tr>
+        </thead>
+        <tbody id="soft-skills-table-body">
+            <!-- Soft skill rows will be dynamically inserted here -->
+        </tbody>
+    </table>
+    
+    <div style="margin-top: 30px; text-align: right;">
+        <button id="save360Questionnaire" type="submit" class="save-btn">
+            <i class="fas fa-save"></i> Save Questionnaire
+        </button>
+    </div>
+</div>
         
         <!-- Feedback responses container (initially hidden) -->
         <div id="feedbackContent" style="display: none;">
@@ -2038,7 +2016,6 @@ function initializeFormValues() {
     }
 }
 
-// NEW FUNCTION: Update Stepper Accessibility based on current state
 function updateStepperAccessibility() {
     // Get all stepper elements
     const objectivesButton = document.getElementById("objectivesButton");
@@ -2056,12 +2033,14 @@ function updateStepperAccessibility() {
     }
     
     // Helper function to update step appearance
-    function updateStepStatus(stepElement, isAccessible, isViewOnly) {
+    function updateStepStatus(stepElement, isAccessible, isViewOnly, statusText = null) {
         if (!stepElement) return;
+        
+        // Remove all previous classes
+        stepElement.classList.remove('accessible', 'disabled', 'view-only');
         
         if (isAccessible) {
             stepElement.classList.add('accessible');
-            stepElement.classList.remove('disabled');
             
             if (isViewOnly) {
                 stepElement.classList.add('view-only');
@@ -2070,67 +2049,93 @@ function updateStepperAccessibility() {
                 const statusBadge = stepElement.querySelector('.status-badge');
                 if (statusBadge) {
                     statusBadge.textContent = '(View-Only)';
+                    statusBadge.style.color = '#4CAF50';
                 }
             } else {
-                stepElement.classList.remove('view-only');
-                
                 // Update status badge
                 const statusBadge = stepElement.querySelector('.status-badge');
                 if (statusBadge) {
                     statusBadge.textContent = '(Editable)';
+                    statusBadge.style.color = '#2196F3';
                 }
             }
         } else {
-            stepElement.classList.remove('accessible');
             stepElement.classList.add('disabled');
             
+            // Update status badge for disabled steps
+            const statusBadge = stepElement.querySelector('.status-badge');
+            if (statusBadge) {
+                statusBadge.textContent = statusText || '(Locked)';
+                statusBadge.style.color = '#999';
+            }
+            
             // Update notice for disabled steps
-            const notice = stepElement.querySelector('.notice');
+            let notice = stepElement.querySelector('.notice');
             if (!notice && stepElement !== objectivesButton) {
-                const noticeElement = document.createElement('div');
-                noticeElement.className = 'notice';
-                noticeElement.textContent = 'Complete previous steps first';
-                stepElement.appendChild(noticeElement);
+                notice = document.createElement('div');
+                notice.className = 'notice';
+                notice.style.cssText = 'font-size: 0.8em; color: #999; margin-top: 5px; text-align: center;';
+                stepElement.appendChild(notice);
+            }
+            if (notice) {
+                notice.textContent = statusText || 'Complete previous steps first';
             }
         }
     }
     
-    // 1. Objective Setting - always accessible, viewOnly based on status
+    // FIXED: Proper stepper progression logic
     const hasObjectives = viewState.submittedObjectives && viewState.submittedObjectives.length > 0;
     const objectivesViewOnly = viewState.viewOnlyStatus['objectivesettings'];
+    
+    // 1. Objective Setting - always accessible first
     updateStepStatus(objectivesButton, true, objectivesViewOnly);
     
-    // 2. Q1 Feedback - accessible if objectives are submitted
+    // 2. Q1 Feedback - accessible only after objectives are submitted
     const q1Accessible = hasObjectives;
     const q1ViewOnly = viewState.viewOnlyStatus['feedbacks_Q1'];
-    updateStepStatus(feedbackQ1Button, q1Accessible, q1ViewOnly);
+    updateStepStatus(feedbackQ1Button, q1Accessible, q1ViewOnly, 
+        !hasObjectives ? 'Submit objectives first' : null);
     
-    // 3. Q2 Feedback - accessible if Q1 is completed (view-only)
+    // 3. Q2 Feedback - accessible after Q1 is completed
     const q2Accessible = hasObjectives && q1ViewOnly;
     const q2ViewOnly = viewState.viewOnlyStatus['feedbacks_Q2'];
-    updateStepStatus(feedbackQ2Button, q2Accessible, q2ViewOnly);
+    updateStepStatus(feedbackQ2Button, q2Accessible, q2ViewOnly,
+        !q1ViewOnly ? 'Complete Q1 feedback first' : null);
     
-    // 4. Mid-Year IDP - accessible if Q2 is completed (view-only)
-    const midYearIDPAccessible = hasObjectives && q2ViewOnly;
+    // 4. Mid-Year IDP - accessible after Q2 is completed
+    const midYearIDPAccessible = hasObjectives && q1ViewOnly && q2ViewOnly;
     const midYearIDPViewOnly = viewState.viewOnlyStatus['midyearidp'];
-    updateStepStatus(midYearIDPButton, midYearIDPAccessible, midYearIDPViewOnly);
+    updateStepStatus(midYearIDPButton, midYearIDPAccessible, midYearIDPViewOnly,
+        !q2ViewOnly ? 'Complete Q2 feedback first' : null);
     
-    // 5. Q3 Feedback - accessible if Mid-Year IDP is completed (view-only)
-    const q3Accessible = hasObjectives && midYearIDPViewOnly;
+    // 5. Q3 Feedback - accessible after Mid-Year IDP is completed
+    const q3Accessible = hasObjectives && q1ViewOnly && q2ViewOnly && midYearIDPViewOnly;
     const q3ViewOnly = viewState.viewOnlyStatus['feedbacks_Q3'];
-    updateStepStatus(feedbackQ3Button, q3Accessible, q3ViewOnly);
+    updateStepStatus(feedbackQ3Button, q3Accessible, q3ViewOnly,
+        !midYearIDPViewOnly ? 'Complete Mid-Year IDP first' : null);
     
-    // 6. Q4 Feedback - accessible if Q3 is completed (view-only)
-    const q4Accessible = hasObjectives && q3ViewOnly;
+    // 6. Q4 Feedback - accessible after Q3 is completed
+    const q4Accessible = hasObjectives && q1ViewOnly && q2ViewOnly && midYearIDPViewOnly && q3ViewOnly;
     const q4ViewOnly = viewState.viewOnlyStatus['feedbacks_Q4'];
-    updateStepStatus(feedbackQ4Button, q4Accessible, q4ViewOnly);
+    updateStepStatus(feedbackQ4Button, q4Accessible, q4ViewOnly,
+        !q3ViewOnly ? 'Complete Q3 feedback first' : null);
     
-    // 7. Final-Year IDP - accessible if Q4 is completed (view-only)
-    const finalYearIDPAccessible = hasObjectives && q4ViewOnly;
+    // 7. Final-Year IDP - accessible after Q4 is completed
+    const finalYearIDPAccessible = hasObjectives && q1ViewOnly && q2ViewOnly && midYearIDPViewOnly && q3ViewOnly && q4ViewOnly;
     const finalYearIDPViewOnly = viewState.viewOnlyStatus['finalyearidp'];
-    updateStepStatus(finalYearIDPButton, finalYearIDPAccessible, finalYearIDPViewOnly);
+    updateStepStatus(finalYearIDPButton, finalYearIDPAccessible, finalYearIDPViewOnly,
+        !q4ViewOnly ? 'Complete Q4 feedback first' : null);
     
     console.log("Updated stepper accessibility states");
+    console.log("Current progression:", {
+        objectives: objectivesViewOnly ? 'Complete' : 'Pending',
+        q1: q1ViewOnly ? 'Complete' : (q1Accessible ? 'Available' : 'Locked'),
+        q2: q2ViewOnly ? 'Complete' : (q2Accessible ? 'Available' : 'Locked'),
+        midYear: midYearIDPViewOnly ? 'Complete' : (midYearIDPAccessible ? 'Available' : 'Locked'),
+        q3: q3ViewOnly ? 'Complete' : (q3Accessible ? 'Available' : 'Locked'),
+        q4: q4ViewOnly ? 'Complete' : (q4Accessible ? 'Available' : 'Locked'),
+        finalYear: finalYearIDPViewOnly ? 'Complete' : (finalYearIDPAccessible ? 'Available' : 'Locked')
+    });
 }
 
 // Function to update total weight in the form
@@ -2249,101 +2254,239 @@ async function getFeedbackQuestionnaire(quarter) {
         // Format the quarter correctly
         const formattedQuarter = quarter.toString().startsWith('Q') ? quarter : `Q${quarter}`;
         
-        // Fetch the questionnaire data from the server
-        const response = await fetch(`/linemanager/get-feedback-questionnaire/${userId}?quarter=${formattedQuarter}`);
+        // FIXED: Get the selected year from the year dropdown or URL
+        let selectedYear = new Date().getFullYear(); // default to current year
         
-        if (!response.ok) {
-            throw new Error(`Failed to fetch questionnaire data: ${response.status}`);
+        // Try to get year from the year select dropdown
+        const yearSelect = document.getElementById('yearSelect');
+        if (yearSelect && yearSelect.value) {
+            selectedYear = yearSelect.value;
         }
         
-        const data = await response.json();
+        // Try to get year from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('year')) {
+            selectedYear = urlParams.get('year');
+        }
         
-        if (data.success) {
-            console.log("Fetched questionnaire data:", data);
+        // Try to get year from viewState
+        if (viewState && viewState.selectedYear) {
+            selectedYear = viewState.selectedYear;
+        }
+        
+        // FIXED: Construct the correct URL path with year parameter
+        const url = `/linemanager/get-feedback-questionnaire/${userId}?quarter=${formattedQuarter}&year=${selectedYear}`;
+        console.log(`Making request to: ${url}`);
+        console.log(`Using selectedYear: ${selectedYear}`);
+        
+        // Fetch the questionnaire data from the server
+        const response = await fetch(url);
+        
+        console.log(`Response status: ${response.status}`);
+        console.log(`Response headers:`, response.headers);
+        
+        // FIXED: Better error handling for different HTTP status codes
+        if (!response.ok) {
+            let errorMessage = `Server error: ${response.status}`;
             
-            // Clear existing content
-            if (feedbackTableBody) feedbackTableBody.innerHTML = '';
-            if (hardSkillsTableBody) hardSkillsTableBody.innerHTML = '';
-            if (softSkillsTableBody) softSkillsTableBody.innerHTML = '';
+            try {
+                const errorText = await response.text();
+                console.error(`Server response (${response.status}):`, errorText);
+                
+                // Try to parse as JSON for better error message
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.message || errorMessage;
+                } catch (e) {
+                    // If not JSON, use the text response
+                    if (errorText.length < 200) {
+                        errorMessage += `: ${errorText}`;
+                    }
+                }
+            } catch (e) {
+                console.error('Could not read error response:', e);
+            }
             
-            // Display objectives with their guide questions
-            if (data.objectives && data.objectives.length > 0) {
-                data.objectives.forEach(objective => {
+            throw new Error(errorMessage);
+        }
+        
+        let data;
+        try {
+            const responseText = await response.text();
+            console.log('Raw response text:', responseText.substring(0, 500) + '...');
+            data = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.error('Failed to parse response as JSON:', jsonError);
+            throw new Error('Invalid response format from server - expected JSON');
+        }
+        
+        // FIXED: Check success flag first
+        if (!data.success) {
+            console.error("API returned error:", data.message);
+            throw new Error(data.message || 'Unknown API error');
+        }
+        
+        console.log("Successfully fetched questionnaire data:", data);
+        
+        // Clear existing content
+        if (feedbackTableBody) feedbackTableBody.innerHTML = '';
+        if (hardSkillsTableBody) hardSkillsTableBody.innerHTML = '';
+        if (softSkillsTableBody) softSkillsTableBody.innerHTML = '';
+        
+        // FIXED: Properly handle date fields based on the fetched data
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        
+        if (startDateInput && endDateInput) {
+            // FIXED: Always clear first, then set values if they exist
+            startDateInput.value = '';
+            endDateInput.value = '';
+            
+            if (data.startDate && data.endDate) {
+                // If data exists, populate the fields
+                startDateInput.value = data.startDate;
+                endDateInput.value = data.endDate;
+                console.log(`Set dates - Start: ${data.startDate}, End: ${data.endDate}`);
+                
+                if (data.isViewOnly) {
+                    // View-only mode: disable and style as read-only
+                    startDateInput.disabled = true;
+                    endDateInput.disabled = true;
+                    startDateInput.style.backgroundColor = "#f5f5f5";
+                    endDateInput.style.backgroundColor = "#f5f5f5";
+                    startDateInput.style.border = "1px solid #e1e5eb";
+                    endDateInput.style.border = "1px solid #e1e5eb";
+                    console.log(`${formattedQuarter} is in view-only mode - dates disabled`);
+                } else {
+                    // Edit mode with existing data: enable for editing
+                    startDateInput.disabled = false;
+                    endDateInput.disabled = false;
+                    startDateInput.style.backgroundColor = "white";
+                    endDateInput.style.backgroundColor = "white";
+                    startDateInput.style.border = "1px solid #ddd";
+                    endDateInput.style.border = "1px solid #ddd";
+                    console.log(`${formattedQuarter} has existing data but is editable`);
+                }
+            } else {
+                // No existing data: enable for new input
+                startDateInput.disabled = false;
+                endDateInput.disabled = false;
+                startDateInput.style.backgroundColor = "white";
+                endDateInput.style.backgroundColor = "white";
+                startDateInput.style.border = "1px solid #ddd";
+                endDateInput.style.border = "1px solid #ddd";
+                console.log(`${formattedQuarter} has no existing data - fields enabled for new input`);
+            }
+        }
+        
+        // Display objectives with their guide questions
+        if (data.objectives && data.objectives.length > 0) {
+            data.objectives.forEach(objective => {
+                addQuestionnaireObjectiveRow(objective, formattedQuarter);
+            });
+            console.log(`Added ${data.objectives.length} objectives to the table`);
+        } else {
+            // Fall back to basic objectives if no questionnaire data
+            if (submittedObjectives && submittedObjectives.length > 0) {
+                submittedObjectives.forEach(objective => {
                     addQuestionnaireObjectiveRow(objective, formattedQuarter);
                 });
+                console.log(`Fell back to ${submittedObjectives.length} submitted objectives`);
             } else {
-                // Fall back to basic objectives if no questionnaire data
-                if (submittedObjectives && submittedObjectives.length > 0) {
-                    submittedObjectives.forEach(objective => {
-                        addQuestionnaireObjectiveRow(objective, formattedQuarter);
-                    });
+                // Show empty state
+                if (feedbackTableBody) {
+                    feedbackTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px;">
+                                No objectives available. Please complete objective setting first.
+                            </td>
+                        </tr>
+                    `;
                 }
             }
-            
-            // Display skills
-            if (data.hardSkills && data.hardSkills.length > 0) {
-                data.hardSkills.forEach(skill => {
-                    addQuestionnaireSkillRow(skill, 'hard');
-                });
-            } else if (hardSkills && hardSkills.length > 0) {
-                hardSkills.forEach(skill => {
-                    addQuestionnaireSkillRow(skill, 'hard');
-                });
-            }
-            
-            if (data.softSkills && data.softSkills.length > 0) {
-                data.softSkills.forEach(skill => {
-                    addQuestionnaireSkillRow(skill, 'soft');
-                });
-            } else if (softSkills && softSkills.length > 0) {
-                softSkills.forEach(skill => {
-                    addQuestionnaireSkillRow(skill, 'soft');
-                });
-            }
-            
-            // Set date fields if available
-            const startDateInput = document.getElementById('startDate');
-            const endDateInput = document.getElementById('endDate');
-            
-            if (startDateInput && data.startDate) {
-                startDateInput.value = data.startDate;
-            }
-            
-            if (endDateInput && data.endDate) {
-                endDateInput.value = data.endDate;
-            }
-            
-        } else {
-            console.error("Error fetching questionnaire data:", data.message);
-            
-            // Show error message
-            if (feedbackTableBody) {
-                feedbackTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 20px; color: #f44336;">
-                            <i class="fas fa-exclamation-triangle"></i> Error loading questionnaire data: ${data.message}
-                        </td>
-                    </tr>
-                `;
+        }
+        
+        // Display skills
+        if (data.hardSkills && data.hardSkills.length > 0) {
+            data.hardSkills.forEach(skill => {
+                addQuestionnaireSkillRow(skill, 'hard');
+            });
+            console.log(`Added ${data.hardSkills.length} hard skills`);
+        } else if (hardSkills && hardSkills.length > 0) {
+            hardSkills.forEach(skill => {
+                addQuestionnaireSkillRow(skill, 'hard');
+            });
+        }
+        
+        if (data.softSkills && data.softSkills.length > 0) {
+            data.softSkills.forEach(skill => {
+                addQuestionnaireSkillRow(skill, 'soft');
+            });
+            console.log(`Added ${data.softSkills.length} soft skills`);
+        } else if (softSkills && softSkills.length > 0) {
+            softSkills.forEach(skill => {
+                addQuestionnaireSkillRow(skill, 'soft');
+            });
+        }
+        
+        // Update the save button based on view mode
+        const saveButton = document.getElementById('save360Questionnaire');
+        if (saveButton) {
+            if (data.isViewOnly) {
+                saveButton.disabled = true;
+                saveButton.innerHTML = '<i class="fas fa-lock"></i> Questionnaire Submitted';
+                saveButton.style.backgroundColor = '#ccc';
+                console.log('Save button disabled - view only mode');
+            } else {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
+                saveButton.style.backgroundColor = 'var(--primary-color)';
+                console.log('Save button enabled - edit mode');
             }
         }
+        
+        // FIXED: Show additional debug information
+        console.log(`=== QUESTIONNAIRE FETCH SUCCESS ===`);
+        console.log(`Quarter: ${formattedQuarter}`);
+        console.log(`Selected Year: ${selectedYear}`);
+        console.log(`Objective Settings Year: ${data.meta?.objectiveSettingsYear || 'N/A'}`);
+        console.log(`Feedback Year: ${data.meta?.year || 'N/A'}`);
+        console.log(`Is View Only: ${data.isViewOnly}`);
+        console.log(`Is New Feedback: ${data.isNewFeedback}`);
+        console.log(`=== END QUESTIONNAIRE FETCH ===`);
+        
     } catch (error) {
         console.error("Error fetching questionnaire data:", error);
         
-        // Show error message
+        // Clear date fields on error
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        if (startDateInput && endDateInput) {
+            startDateInput.value = '';
+            endDateInput.value = '';
+            startDateInput.disabled = false;
+            endDateInput.disabled = false;
+            startDateInput.style.backgroundColor = "white";
+            endDateInput.style.backgroundColor = "white";
+            startDateInput.style.border = "1px solid #ddd";
+            endDateInput.style.border = "1px solid #ddd";
+        }
+        
+        // Show detailed error message
         const feedbackTableBody = document.getElementById('feedback-table-body');
         if (feedbackTableBody) {
             feedbackTableBody.innerHTML = `
                 <tr>
                     <td colspan="5" style="text-align: center; padding: 20px; color: #f44336;">
-                        <i class="fas fa-exclamation-triangle"></i> Error loading questionnaire data. Please try again.
+                        <i class="fas fa-exclamation-triangle"></i> Error loading questionnaire data: ${error.message}
+                        <br><small>Please check the console for more details and try again.</small>
+                        <br><small style="color: #666;">Debug info: User ID: ${userId}, Quarter: ${quarter}</small>
                     </td>
                 </tr>
             `;
         }
     }
 }
-
 // Function to add questionnaire objective row with guide question display
 function addQuestionnaireObjectiveRow(objective, quarter) {
     const tbody = document.getElementById('feedback-table-body');
@@ -2455,6 +2598,7 @@ function addQuestionnaireObjectiveRow(objective, quarter) {
     }
 }
 
+
 // Function to add questionnaire skill row
 function addQuestionnaireSkillRow(skill, skillType) {
     const skillTableBody = document.querySelector(`#${skillType}-skills-table-body`);
@@ -2538,7 +2682,7 @@ function addQuestionnaireSkillRow(skill, skillType) {
             });
         }, 100);
     }
-}// Add this function to handle clicking on feedback buttons  
+}
 function showFeedbackFormFromButton() {
     // Get the clicked element's quarter data
     const clickedElement = event.target.closest('[data-quarter]');
@@ -2598,8 +2742,14 @@ function showFeedbackForm(quarter) {
     // Update form action with the quarter parameter
     const feedbackForm = document.getElementById('feedbackForm');
     if (feedbackForm) {
-        feedbackForm.action = `/linemanager/records-performance-tracker/questionnaire/${userId}?quarter=Q${quarter}`;
-        console.log(`Updated form action with quarter=Q${quarter}`);
+        if (isViewOnly) {
+            // In view-only mode, we don't need to set form action for submission
+            feedbackForm.action = '#';
+        } else {
+            // In edit mode, set the correct action for saving
+            feedbackForm.action = `/linemanager/save-feedback-questionnaire/${userId}`;
+        }
+        console.log(`Updated form action for Q${quarter} (View-Only: ${isViewOnly})`);
     }
     
     // Show the questionnaire view by default
@@ -2608,14 +2758,62 @@ function showFeedbackForm(quarter) {
     // Fetch and display the questionnaire data
     getFeedbackQuestionnaire(`Q${quarter}`);
     
+    // Update buttons and form elements based on view mode
+    updateFeedbackFormForViewMode(isViewOnly, quarter);
+}
+
+// New function to update form elements based on view mode
+function updateFeedbackFormForViewMode(isViewOnly, quarter) {
+    console.log(`Updating feedback form for Q${quarter} (View-Only: ${isViewOnly})`);
+    
+    // Update the form header to indicate mode
+    const formHeader = document.querySelector('#questionnaireContent .form-header h2');
+    if (formHeader) {
+        if (isViewOnly) {
+            formHeader.innerHTML = `<i class="fas fa-comment-dots"></i> 360 Degree Feedback Questionnaire - Q${quarter} (View Only)`;
+        } else {
+            formHeader.innerHTML = `<i class="fas fa-comment-dots"></i> 360 Degree Feedback Questionnaire - Q${quarter}`;
+        }
+    }
+    
     // Update buttons based on view mode
     if (isViewOnly) {
-        console.log(`Feedback for Q${quarter} is in VIEW mode`);
+        console.log(`Q${quarter} feedback is in VIEW mode`);
         updateFeedbackButtons(false);
     } else {
-        console.log(`Feedback for Q${quarter} is in EDIT mode`);
+        console.log(`Q${quarter} feedback is in EDIT mode`);
         updateFeedbackButtons(true);
     }
+    
+    // REMOVED: Date field manipulation
+    // The date fields are already properly configured by getFeedbackQuestionnaire()
+    // Don't override those settings here as it will cause conflicts
+    
+    console.log(`Form mode updated for Q${quarter}. Date fields remain as configured by getFeedbackQuestionnaire.`);
+}
+
+function showFeedbackError(message) {
+    console.error('Showing feedback error:', message);
+    
+    const containers = [
+        document.getElementById('objectiveFeedbackContainer'),
+        document.getElementById('skillsFeedbackContainer'),
+        document.getElementById('individualAnswersContainer')
+    ];
+    
+    const errorHTML = `
+        <div class="error-state" style="text-align: center; padding: 30px; background-color: #ffebee; border-radius: 8px; border-left: 4px solid #f44336;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f44336; margin-bottom: 15px;"></i>
+            <p style="color: #f44336; margin: 0;">${message}</p>
+            <small style="color: #666; margin-top: 10px; display: block;">If this error persists, please check the browser console for more details.</small>
+        </div>
+    `;
+    
+    containers.forEach(container => {
+        if (container) {
+            container.innerHTML = errorHTML;
+        }
+    });
 }
 
 // Add event listeners for feedback view buttons
@@ -2637,26 +2835,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Helper function to show feedback error
-function showFeedbackError(message) {
-    const objectiveFeedbackContainer = document.getElementById('objectiveFeedbackContainer');
-    const skillsFeedbackContainer = document.getElementById('skillsFeedbackContainer');
-    
-    const errorHTML = `
-        <div class="error-state" style="text-align: center; padding: 30px; background-color: #ffebee; border-radius: 8px; border-left: 4px solid #f44336;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f44336; margin-bottom: 15px;"></i>
-            <p style="color: #f44336; margin: 0;">${message}</p>
-        </div>
-    `;
-    
-    if (objectiveFeedbackContainer) {
-        objectiveFeedbackContainer.innerHTML = errorHTML;
-    }
-    
-    if (skillsFeedbackContainer) {
-        skillsFeedbackContainer.innerHTML = errorHTML;
-    }
-}
 
 // Helper function to generate star rating HTML
 function generateStarRating(rating) {
@@ -3397,13 +3575,14 @@ function toggleFeedbackView(view) {
         loadFeedbackData(quarter);
     }
 }
-async function save360DegreeFeedback() {
+
+async function save360Questionnaire() {
     console.log("Saving 360 degree feedback...");
     
     // Get form values
     const startDateElement = document.getElementById('startDate');
     const endDateElement = document.getElementById('endDate');
-    const saveFeedbackButton = document.getElementById("save360DegreeFeedback");
+    const saveFeedbackButton = document.getElementById("save360Questionnaire");
     const activeQuarterField = document.getElementById('activeQuarterField');
 
     if (!startDateElement || !endDateElement || !activeQuarterField) {
@@ -3484,9 +3663,9 @@ async function save360DegreeFeedback() {
 
     console.log("Feedback data to save:", feedbackData);
 
-    // Send data to server using the new endpoint
+    // Send data to server using the correct endpoint for saving questionnaire
     try {
-        const response = await fetch(`/linemanager/get-feedback-questionnaire/${userId}`, {
+        const response = await fetch(`/linemanager/save-feedback-questionnaire/${userId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -3548,8 +3727,6 @@ async function save360DegreeFeedback() {
         }
     }
 }
-
-
 // Function to fetch year data
 function fetchYearData() {
     const yearSelect = document.getElementById('yearSelect');
@@ -5116,7 +5293,7 @@ function attachFormListeners() {
     if (feedbackForm) {
         feedbackForm.addEventListener('submit', function(event) {
             event.preventDefault();
-            save360DegreeFeedback();
+            save360Questionnaire();
         });
     }
     

@@ -4199,207 +4199,249 @@ console.log('Final applicants list:', applicants);
     },
 
     // code with midyearidp logic
-    getUserProgressView: async function(req, res) {
-        const user = req.user;
-        console.log('Fetching records for userId:', user?.userId);
-    
-        if (!user) {
-            req.flash('errors', { authError: 'Unauthorized. Please log in to access this view.' });
-            return res.redirect('/staff/login');
+   // Fixed getUserProgressView function - specifically the stepper logic section
+getUserProgressView: async function(req, res) {
+    const user = req.user;
+    console.log('Fetching records for userId:', user?.userId);
+
+    if (!user) {
+        req.flash('errors', { authError: 'Unauthorized. Please log in to access this view.' });
+        return res.redirect('/staff/login');
+    }
+
+    try {
+        const { data: jobData, error: jobError } = await supabase
+            .from('staffaccounts')
+            .select('jobId')
+            .eq('userId', user.userId)
+            .single();
+
+        if (jobError || !jobData) {
+            console.error('Error fetching jobId:', jobError);
+            req.flash('errors', { fetchError: 'Error fetching job information. Please try again.' });
+            return res.redirect('/linemanager/records-performance-tracker');
         }
-    
-        try {
-            const { data: jobData, error: jobError } = await supabase
-                .from('staffaccounts')
-                .select('jobId')
-                .eq('userId', user.userId)
-                .single();
-    
-            if (jobError || !jobData) {
-                console.error('Error fetching jobId:', jobError);
-                req.flash('errors', { fetchError: 'Error fetching job information. Please try again.' });
-                return res.redirect('/linemanager/records-performance-tracker');
-            }
-    
-            const jobId = jobData.jobId;
-            console.log('Fetched jobId:', jobId);
-    
-            const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4'];
-            const yearPromises = feedbackTables.map(table => 
-                supabase.from(table).select('year')
-            );
-    
-            const yearResults = await Promise.all(yearPromises);
-            const allYears = yearResults.flatMap(result => result.data || []);
-            const availableYears = [...new Set(allYears.map(year => year.year))].sort((a, b) => b - a);
-            const selectedYear = req.query.year || new Date().getFullYear();
-    
-            const feedbackData = {};
-            for (const table of feedbackTables) {
-                const { data, error } = await supabase
-                    .from(table)
-                    .select('*')
-                    .eq('userId', user.userId)
-                    .eq('jobId', jobId)
-                    .eq('year', selectedYear);
-    
-                if (error) {
-                    console.error(`Error fetching feedback data from ${table}:`, error);
-                    req.flash('errors', { fetchError: `Error fetching data for ${table}. Please try again.` });
-                    return res.redirect('/linemanager/records-performance-tracker');
-                }
-    
-                feedbackData[table] = data;
-            }
-    
-            console.log("Feedback Data:", feedbackData);
-    
-            // Fetch objectives settings
-            const { data: objectiveSettings, error: objectivesError } = await supabase
-                .from('objectivesettings')
-                .select('*')
-                .eq('userId', user.userId);
-    
-            if (objectivesError) {
-                console.error('Error fetching objectives settings:', objectivesError);
-                req.flash('errors', { fetchError: 'Error fetching objectives settings. Please try again.' });
-                return res.redirect('/linemanager/records-performance-tracker');
-            }
-    
-            let submittedObjectives = [];
-            let objectiveQuestions = [];
-    
-            if (objectiveSettings.length > 0) {
-                const objectiveSettingsIds = objectiveSettings.map(setting => setting.objectiveSettingsId);
-    
-                // Fetch the actual objectives related to the settings
-                const { data: objectivesData, error: objectivesFetchError } = await supabase
-                    .from('objectivesettings_objectives')
-                    .select('*')
-                    .in('objectiveSettingsId', objectiveSettingsIds);
-    
-                if (objectivesFetchError) {
-                    console.error('Error fetching objectives:', objectivesFetchError);
-                    req.flash('errors', { fetchError: 'Error fetching objectives. Please try again.' });
-                    return res.redirect('/linemanager/records-performance-tracker');
-                }
-    
-                submittedObjectives = objectivesData;
-    
-                // Fetch questions related to the objectives
-                const { data: objectiveQuestionData, error: questionError } = await supabase
-                    .from('feedbacks_questions-objectives')
-                    .select('objectiveId, objectiveQualiQuestion')
-                    .in('objectiveId', submittedObjectives.map(obj => obj.objectiveId));
-    
-                if (questionError) {
-                    console.error('Error fetching objective questions:', questionError);
-                    req.flash('errors', { fetchError: 'Error fetching objective questions. Please try again.' });
-                    return res.redirect('/linemanager/records-performance-tracker');
-                }
-    
-                objectiveQuestions = objectiveQuestionData;
-            }
-    
-            // Map the `objectiveQuestions` to `submittedObjectives`
-            submittedObjectives = submittedObjectives.map(obj => {
-                const questions = objectiveQuestions.filter(q => q.objectiveId === obj.objectiveId);
-                return {
-                    ...obj,
-                    objectiveQualiQuestion: questions.length > 0 ? questions.map(q => q.objectiveQualiQuestion).join(', ') : 'No questions available'
-                };
-            });
-    
-            // Fetch job requirements skills based on jobId
-            const { data: skillsData, error: skillsError } = await supabase
-                .from('jobreqskills')
-                .select('jobReqSkillType, jobReqSkillName')
-                .eq('jobId', jobId);
-    
-            if (skillsError) {
-                console.error('Error fetching job requirements skills:', skillsError);
-                req.flash('errors', { fetchError: 'Error fetching skills data. Please try again.' });
-                return res.redirect('/linemanager/records-performance-tracker');
-            }
-    
-            // Classify skills into Hard and Soft
-            const hardSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Hard') || [];
-            const softSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Soft') || [];
-    
-            // Check if Mid-Year IDP data exists to control access to 360 Degree Feedback steps
-            const { data: midYearData, error: midYearError } = await supabase
-                .from('midyearidps')
+
+        const jobId = jobData.jobId;
+        console.log('Fetched jobId:', jobId);
+
+        const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4'];
+        const yearPromises = feedbackTables.map(table => 
+            supabase.from(table).select('year')
+        );
+
+        const yearResults = await Promise.all(yearPromises);
+        const allYears = yearResults.flatMap(result => result.data || []);
+        const availableYears = [...new Set(allYears.map(year => year.year))].sort((a, b) => b - a);
+        const selectedYear = req.query.year || new Date().getFullYear();
+
+        const feedbackData = {};
+        for (const table of feedbackTables) {
+            const { data, error } = await supabase
+                .from(table)
                 .select('*')
                 .eq('userId', user.userId)
                 .eq('jobId', jobId)
-                .eq('year', selectedYear)
-                .single();
-    
-            if (midYearError) {
-                console.error('Error fetching mid-year IDP data:', midYearError);
+                .eq('year', selectedYear);
+
+            if (error) {
+                console.error(`Error fetching feedback data from ${table}:`, error);
+                req.flash('errors', { fetchError: `Error fetching data for ${table}. Please try again.` });
+                return res.redirect('/linemanager/records-performance-tracker');
             }
-    
-            // Define viewState based on Mid-Year IDP data availability
-            const viewState = {
-                success: true,
-                userId: user.userId,
-                jobId,
-                feedbacks: feedbackData,
-                hardSkills,
-                softSkills,
-                objectiveQuestions,
-                submittedObjectives,
-                years: availableYears,
-                selectedYear,
-                viewOnlyStatus: {
-                    objectivesettings: objectiveSettings.length > 0,
-                    midyearidp: midYearData ? true : false,  // Set view-only if mid-year data exists
-                    feedbacks_Q1: feedbackData['feedbacks_Q1']?.length > 0,
-                    feedbacks_Q2: feedbackData['feedbacks_Q2']?.length > 0,
-                    feedbacks_Q3: feedbackData['feedbacks_Q3']?.length > 0,
-                    feedbacks_Q4: feedbackData['feedbacks_Q4']?.length > 0,
-                },
-            };
-    
-            // Function to calculate nextStep
-// Function to calculate nextStep
-function calculateNextStep(viewState) {
-    let nextStep = null;
 
-    if (!viewState.viewOnlyStatus.midyearidp) {
-        nextStep = 1;  // Complete Mid-Year IDP
-    } else if (!viewState.viewOnlyStatus.feedbacks_Q1) {
-        nextStep = 2;  // Complete Q1 Feedback
-    } else if (!viewState.viewOnlyStatus.feedbacks_Q2) {
-        nextStep = 3;  // Complete Q2 Feedback
-    } else if (!viewState.viewOnlyStatus.feedbacks_Q3) {
-        nextStep = 4;  // Complete Q3 Feedback
-    } else if (!viewState.viewOnlyStatus.feedbacks_Q4) {
-        nextStep = 5;  // Complete Q4 Feedback
-    }
-
-    return nextStep;
-}
-
-// Add the nextStep to the viewState
-viewState.nextAccessibleStep = calculateNextStep(viewState);
-
-    
-            console.log("View State:", viewState);
-    
-            res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', { 
-                viewState: viewState, 
-                user, 
-                nextAccessibleStep: viewState.nextAccessibleStep  // Include nextAccessibleStep here
-
-            });
-    
-        } catch (error) {
-            console.error('Error fetching user progress:', error);
-            req.flash('errors', { fetchError: 'Error fetching user progress. Please try again.' });
-            res.redirect('/linemanager/records-performance-tracker');
+            feedbackData[table] = data;
         }
-    }, 
+
+        console.log("Feedback Data:", feedbackData);
+
+        // Fetch objectives settings
+        const { data: objectiveSettings, error: objectivesError } = await supabase
+            .from('objectivesettings')
+            .select('*')
+            .eq('userId', user.userId);
+
+        if (objectivesError) {
+            console.error('Error fetching objectives settings:', objectivesError);
+            req.flash('errors', { fetchError: 'Error fetching objectives settings. Please try again.' });
+            return res.redirect('/linemanager/records-performance-tracker');
+        }
+
+        let submittedObjectives = [];
+        let objectiveQuestions = [];
+
+        if (objectiveSettings.length > 0) {
+            const objectiveSettingsIds = objectiveSettings.map(setting => setting.objectiveSettingsId);
+
+            // Fetch the actual objectives related to the settings
+            const { data: objectivesData, error: objectivesFetchError } = await supabase
+                .from('objectivesettings_objectives')
+                .select('*')
+                .in('objectiveSettingsId', objectiveSettingsIds);
+
+            if (objectivesFetchError) {
+                console.error('Error fetching objectives:', objectivesFetchError);
+                req.flash('errors', { fetchError: 'Error fetching objectives. Please try again.' });
+                return res.redirect('/linemanager/records-performance-tracker');
+            }
+
+            submittedObjectives = objectivesData;
+
+            // Fetch questions related to the objectives
+            const { data: objectiveQuestionData, error: questionError } = await supabase
+                .from('feedbacks_questions-objectives')
+                .select('objectiveId, objectiveQualiQuestion')
+                .in('objectiveId', submittedObjectives.map(obj => obj.objectiveId));
+
+            if (questionError) {
+                console.error('Error fetching objective questions:', questionError);
+                req.flash('errors', { fetchError: 'Error fetching objective questions. Please try again.' });
+                return res.redirect('/linemanager/records-performance-tracker');
+            }
+
+            objectiveQuestions = objectiveQuestionData;
+        }
+
+        // Map the `objectiveQuestions` to `submittedObjectives`
+        submittedObjectives = submittedObjectives.map(obj => {
+            const questions = objectiveQuestions.filter(q => q.objectiveId === obj.objectiveId);
+            return {
+                ...obj,
+                objectiveQualiQuestion: questions.length > 0 ? questions.map(q => q.objectiveQualiQuestion).join(', ') : 'No questions available'
+            };
+        });
+
+        // Fetch job requirements skills based on jobId
+        const { data: skillsData, error: skillsError } = await supabase
+            .from('jobreqskills')
+            .select('jobReqSkillType, jobReqSkillName')
+            .eq('jobId', jobId);
+
+        if (skillsError) {
+            console.error('Error fetching job requirements skills:', skillsError);
+            req.flash('errors', { fetchError: 'Error fetching skills data. Please try again.' });
+            return res.redirect('/linemanager/records-performance-tracker');
+        }
+
+        // Classify skills into Hard and Soft
+        const hardSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Hard') || [];
+        const softSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Soft') || [];
+
+        // Check if Mid-Year IDP data exists to control access to steps
+        const { data: midYearData, error: midYearError } = await supabase
+            .from('midyearidps')
+            .select('*')
+            .eq('userId', user.userId)
+            .eq('jobId', jobId)
+            .eq('year', selectedYear)
+            .maybeSingle(); // FIXED: Use maybeSingle() instead of single()
+
+        if (midYearError) {
+            console.error('Error fetching mid-year IDP data:', midYearError);
+        }
+
+        // Check if Final-Year IDP data exists
+        const { data: finalYearData, error: finalYearError } = await supabase
+            .from('finalyearidps')
+            .select('*')
+            .eq('userId', user.userId)
+            .eq('jobId', jobId)
+            .eq('year', selectedYear)
+            .maybeSingle(); // FIXED: Use maybeSingle() instead of single()
+
+        if (finalYearError) {
+            console.error('Error fetching final-year IDP data:', finalYearError);
+        }
+
+        // FIXED: Define viewState with proper stepper logic
+        const viewState = {
+            success: true,
+            userId: user.userId,
+            jobId,
+            feedbacks: feedbackData,
+            hardSkills,
+            softSkills,
+            objectiveQuestions,
+            submittedObjectives,
+            years: availableYears,
+            selectedYear,
+            performancePeriodYear: selectedYear,
+            midYearData: midYearData,
+            finalYearData: finalYearData,
+            viewOnlyStatus: {
+                // Objective setting is view-only if objectives exist
+                objectivesettings: objectiveSettings.length > 0,
+                
+                // Feedback quarters are view-only if they have data
+                feedbacks_Q1: feedbackData['feedbacks_Q1']?.length > 0,
+                feedbacks_Q2: feedbackData['feedbacks_Q2']?.length > 0,
+                feedbacks_Q3: feedbackData['feedbacks_Q3']?.length > 0,
+                feedbacks_Q4: feedbackData['feedbacks_Q4']?.length > 0,
+                
+                // IDP sections are view-only if data exists
+                midyearidp: midYearData ? true : false,
+                finalyearidp: finalYearData ? true : false,
+            },
+        };
+
+        // FIXED: Function to calculate nextStep based on proper stepper progression
+        function calculateNextStep(viewState) {
+            let nextStep = null;
+
+            // Step 1: Objectives Setting (always accessible first)
+            if (!viewState.viewOnlyStatus.objectivesettings) {
+                nextStep = 1;  // Complete Objectives Setting
+            }
+            // Step 2: Q1 Feedback (accessible after objectives)
+            else if (!viewState.viewOnlyStatus.feedbacks_Q1) {
+                nextStep = 2;  // Complete Q1 Feedback
+            }
+            // Step 3: Q2 Feedback (accessible after Q1)
+            else if (!viewState.viewOnlyStatus.feedbacks_Q2) {
+                nextStep = 3;  // Complete Q2 Feedback
+            }
+            // Step 4: Mid-Year IDP (accessible after Q2)
+            else if (!viewState.viewOnlyStatus.midyearidp) {
+                nextStep = 4;  // Complete Mid-Year IDP
+            }
+            // Step 5: Q3 Feedback (accessible after Mid-Year IDP)
+            else if (!viewState.viewOnlyStatus.feedbacks_Q3) {
+                nextStep = 5;  // Complete Q3 Feedback
+            }
+            // Step 6: Q4 Feedback (accessible after Q3)
+            else if (!viewState.viewOnlyStatus.feedbacks_Q4) {
+                nextStep = 6;  // Complete Q4 Feedback
+            }
+            // Step 7: Final-Year IDP (accessible after Q4)
+            else if (!viewState.viewOnlyStatus.finalyearidp) {
+                nextStep = 7;  // Complete Final-Year IDP
+            }
+            // All steps completed
+            else {
+                nextStep = null;  // All steps completed
+            }
+
+            return nextStep;
+        }
+
+        // Add the nextStep to the viewState
+        viewState.nextAccessibleStep = calculateNextStep(viewState);
+
+        console.log("View State:", viewState);
+        console.log("Next accessible step:", viewState.nextAccessibleStep);
+
+        res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', { 
+            viewState: viewState, 
+            user, 
+            nextAccessibleStep: viewState.nextAccessibleStep
+        });
+
+    } catch (error) {
+        console.error('Error fetching user progress:', error);
+        req.flash('errors', { fetchError: 'Error fetching user progress. Please try again.' });
+        res.redirect('/linemanager/records-performance-tracker');
+    }
+},
 
 // Controller method to fetch feedback questionnaire data
 getFeedbackQuestionnaire: async function(req, res) {
@@ -4407,225 +4449,291 @@ getFeedbackQuestionnaire: async function(req, res) {
         const userId = req.params.userId;
         const quarter = req.query.quarter; // e.g., "Q1", "Q2", etc.
         
-    if (!userId || !quarter) {
-        return res.status(400).json({
-            success: false, 
-            message: "User ID and quarter are required."
-        });
-    }
-    
-    console.log(`Fetching ${quarter} questionnaire data for user ${userId}`);
-    
-    // 1. Determine which feedback table to query
-    let feedbackTable, feedbackIdField;
-    
-    switch (quarter) {
-        case 'Q1':
-            feedbackTable = 'feedbacks_Q1';
-            feedbackIdField = 'feedbackq1_Id';
-            break;
-        case 'Q2':
-            feedbackTable = 'feedbacks_Q2';
-            feedbackIdField = 'feedbackq2_Id';
-            break;
-        case 'Q3':
-            feedbackTable = 'feedbacks_Q3';
-            feedbackIdField = 'feedbackq3_Id';
-            break;
-        case 'Q4':
-            feedbackTable = 'feedbacks_Q4';
-            feedbackIdField = 'feedbackq4_Id';
-            break;
-        default:
+        console.log(`=== getFeedbackQuestionnaire START ===`);
+        console.log(`Received request - userId: ${userId}, quarter: ${quarter}`);
+        
+        if (!userId || !quarter) {
+            console.log('Missing required parameters');
             return res.status(400).json({
-                success: false,
-                message: "Invalid quarter specified."
+                success: false, 
+                message: "User ID and quarter are required."
             });
-    }
-    
-    // 2. First, get the user's job information
-    const { data: staffData, error: staffError } = await supabase
-        .from('staffaccounts')
-        .select('jobId')
-        .eq('userId', userId)
-        .single();
-        
-    if (staffError || !staffData) {
-        console.error('Error fetching staff data:', staffError);
-        return res.status(404).json({
-            success: false,
-            message: "User job information not found."
-        });
-    }
-    
-    const jobId = staffData.jobId;
-    
-    // 3. Try to get existing feedback record for this user and quarter
-    const { data: feedbackData, error: feedbackError } = await supabase
-        .from(feedbackTable)
-        .select(`
-            ${feedbackIdField},
-            userId,
-            jobId,
-            setStartDate,
-            setEndDate,
-            dateCreated,
-            year,
-            quarter
-        `)
-        .eq('userId', userId)
-        .eq('quarter', quarter)
-        .maybeSingle(); // Use maybeSingle() instead of single() to avoid error when no data exists
-        
-    // If no existing feedback data, we'll still proceed to show objectives and skills for new input
-    let feedbackId = null;
-    let startDate = null;
-    let endDate = null;
-    let feedbackYear = new Date().getFullYear();
-    
-    if (feedbackData) {
-        feedbackId = feedbackData[feedbackIdField];
-        startDate = feedbackData.setStartDate;
-        endDate = feedbackData.setEndDate;
-        feedbackYear = feedbackData.year;
-        console.log(`Found existing feedback record with ID: ${feedbackId}`);
-    } else {
-        console.log(`No existing ${quarter} feedback found for user ${userId}. Will allow new input.`);
-    }
-    
-    // 4. Get the objective settings for this user
-    const { data: objectiveSettings, error: objectivesSettingsError } = await supabase
-        .from('objectivesettings')
-        .select('objectiveSettingsId, performancePeriodYear')
-        .eq('userId', userId)
-        .eq('jobId', jobId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-        
-    if (objectivesSettingsError) {
-        console.error('Error fetching objective settings:', objectivesSettingsError);
-        return res.status(500).json({
-            success: false,
-            message: "Error retrieving objective settings."
-        });
-    }
-    
-    if (!objectiveSettings || objectiveSettings.length === 0) {
-        return res.status(404).json({
-            success: false,
-            message: "No objectives found for this user. Please complete objective setting first."
-        });
-    }
-    
-    const objectiveSettingsId = objectiveSettings[0].objectiveSettingsId;
-    
-    // 5. Get the actual objectives
-    const { data: objectives, error: objectivesError } = await supabase
-        .from('objectivesettings_objectives')
-        .select('*')
-        .eq('objectiveSettingsId', objectiveSettingsId);
-        
-    if (objectivesError) {
-        console.error('Error fetching objectives:', objectivesError);
-        return res.status(500).json({
-            success: false,
-            message: "Error retrieving objectives."
-        });
-    }
-    
-    // 6. Get the feedback questions for objectives (only if feedback record exists)
-    let objectiveQuestions = [];
-    if (feedbackId) {
-        const { data: questions, error: objectiveQuestionsError } = await supabase
-            .from('feedbacks_questions-objectives')
-            .select(`
-                feedback_qObjectivesId,
-                objectiveId,
-                objectiveQualiQuestion,
-                ${feedbackIdField}
-            `)
-            .eq(feedbackIdField, feedbackId);
-            
-        if (!objectiveQuestionsError && questions) {
-            objectiveQuestions = questions;
         }
-    }
-    
-    // 7. Combine objectives with their guide questions
-    const objectivesWithQuestions = objectives.map(objective => {
-        const question = objectiveQuestions.find(q => q.objectiveId === objective.objectiveId);
-        return {
-            ...objective,
-            guideQuestion: question ? question.objectiveQualiQuestion : '',
-            questionId: question ? question.feedback_qObjectivesId : null
+        
+        // 1. Determine which feedback table to query
+        let feedbackTable, feedbackIdField;
+        
+        switch (quarter) {
+            case 'Q1':
+                feedbackTable = 'feedbacks_Q1';
+                feedbackIdField = 'feedbackq1_Id';
+                break;
+            case 'Q2':
+                feedbackTable = 'feedbacks_Q2';
+                feedbackIdField = 'feedbackq2_Id';
+                break;
+            case 'Q3':
+                feedbackTable = 'feedbacks_Q3';
+                feedbackIdField = 'feedbackq3_Id';
+                break;
+            case 'Q4':
+                feedbackTable = 'feedbacks_Q4';
+                feedbackIdField = 'feedbackq4_Id';
+                break;
+            default:
+                console.log(`Invalid quarter: ${quarter}`);
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid quarter specified."
+                });
+        }
+        
+        console.log(`Using table: ${feedbackTable}, field: ${feedbackIdField}`);
+        
+        // 2. Get the user's job information
+        console.log('Fetching staff data...');
+        const { data: staffData, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('jobId')
+            .eq('userId', userId)
+            .single();
+            
+        if (staffError || !staffData) {
+            console.error('Error fetching staff data:', staffError);
+            return res.status(404).json({
+                success: false,
+                message: "User job information not found."
+            });
+        }
+        
+        const jobId = staffData.jobId;
+        
+        // FIXED: Use selectedYear from query parameter instead of hardcoded currentYear
+        const selectedYear = req.query.year || new Date().getFullYear();
+        console.log(`Found jobId: ${jobId}, selectedYear: ${selectedYear}`);
+        
+        // 3. Try to get existing feedback record - FIXED: Handle both null data and errors properly
+        console.log(`Checking for existing ${quarter} feedback record...`);
+        
+        const { data: feedbackData, error: feedbackError } = await supabase
+            .from(feedbackTable)
+            .select(`
+                ${feedbackIdField},
+                userId,
+                jobId,
+                setStartDate,
+                setEndDate,
+                dateCreated,
+                year,
+                quarter
+            `)
+            .eq('userId', userId)
+            .eq('jobId', jobId)
+            .eq('quarter', quarter)
+            .eq('year', selectedYear)
+            .maybeSingle();
+            
+        // FIXED: Only return error if there's an actual database error, not if data is null
+        if (feedbackError) {
+            console.error(`Database error querying ${feedbackTable}:`, feedbackError);
+            return res.status(500).json({
+                success: false,
+                message: `Database error checking existing feedback: ${feedbackError.message}`
+            });
+        }
+        
+        console.log(`Feedback query completed. Data found:`, !!feedbackData);
+        
+        // Initialize variables
+        let feedbackId = null;
+        let startDate = null;
+        let endDate = null;
+        let feedbackYear = selectedYear;
+        let isViewOnly = false;
+        
+        if (feedbackData) {
+            feedbackId = feedbackData[feedbackIdField];
+            // FIXED: Format dates properly for HTML date inputs
+            startDate = feedbackData.setStartDate ? new Date(feedbackData.setStartDate).toISOString().split('T')[0] : null;
+            endDate = feedbackData.setEndDate ? new Date(feedbackData.setEndDate).toISOString().split('T')[0] : null;
+            feedbackYear = feedbackData.year;
+            isViewOnly = true;
+            console.log(`✓ Found existing ${quarter} feedback:`);
+            console.log(`  - FeedbackId: ${feedbackId}`);
+            console.log(`  - StartDate: ${startDate}`);
+            console.log(`  - EndDate: ${endDate}`);
+            console.log(`  - Year: ${feedbackYear}`);
+            console.log(`  - Mode: View-Only`);
+        } else {
+            console.log(`✓ No existing ${quarter} feedback found for user ${userId} in year ${selectedYear}`);
+            console.log(`  - Mode: Edit (New questionnaire can be created)`);
+        }
+        
+        // 4. FIXED: Get the objective settings for this user - simplified query to match getUserProgressView
+        console.log('Fetching objective settings...');
+        const { data: objectiveSettings, error: objectivesSettingsError } = await supabase
+            .from('objectivesettings')
+            .select('objectiveSettingsId, performancePeriodYear')
+            .eq('userId', userId)
+            .order('created_at', { ascending: false });
+            
+        if (objectivesSettingsError) {
+            console.error('Error fetching objective settings:', objectivesSettingsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving objective settings."
+            });
+        }
+        
+        console.log(`Found ${objectiveSettings?.length || 0} objective settings records`);
+        
+        // FIXED: Look for objective settings for the selected year, or fall back to most recent
+        let validObjectiveSetting = null;
+        
+        if (objectiveSettings && objectiveSettings.length > 0) {
+            // First try to find objective setting for the selected year
+            validObjectiveSetting = objectiveSettings.find(setting => 
+                setting.performancePeriodYear === parseInt(selectedYear)
+            );
+            
+            // If no setting found for selected year, use the most recent one
+            if (!validObjectiveSetting) {
+                validObjectiveSetting = objectiveSettings[0];
+                console.log(`No objective setting found for year ${selectedYear}, using most recent from year ${validObjectiveSetting.performancePeriodYear}`);
+            } else {
+                console.log(`Found objective setting for year ${selectedYear}`);
+            }
+        }
+        
+        if (!validObjectiveSetting) {
+            console.log('No objective settings found at all');
+            return res.status(404).json({
+                success: false,
+                message: "No objectives found for this user. Please complete objective setting first."
+            });
+        }
+        
+        const objectiveSettingsId = validObjectiveSetting.objectiveSettingsId;
+        console.log(`Using objectiveSettingsId: ${objectiveSettingsId}`);
+        
+        // 5. Get the actual objectives
+        console.log('Fetching objectives...');
+        const { data: objectives, error: objectivesError } = await supabase
+            .from('objectivesettings_objectives')
+            .select('*')
+            .eq('objectiveSettingsId', objectiveSettingsId);
+            
+        if (objectivesError) {
+            console.error('Error fetching objectives:', objectivesError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving objectives."
+            });
+        }
+        
+        console.log(`Found ${objectives?.length || 0} objectives`);
+        
+        // 6. Get the feedback questions for objectives (only if feedback record exists)
+        let objectiveQuestions = [];
+        if (feedbackId) {
+            console.log(`Fetching existing questions for feedbackId: ${feedbackId}...`);
+            const { data: questions, error: objectiveQuestionsError } = await supabase
+                .from('feedbacks_questions-objectives')
+                .select(`
+                    feedback_qObjectivesId,
+                    objectiveId,
+                    objectiveQualiQuestion,
+                    ${feedbackIdField}
+                `)
+                .eq(feedbackIdField, feedbackId);
+                
+            if (!objectiveQuestionsError && questions) {
+                objectiveQuestions = questions;
+                console.log(`Found ${objectiveQuestions.length} existing questions for ${quarter}`);
+            } else if (objectiveQuestionsError) {
+                console.error('Error fetching objective questions:', objectiveQuestionsError);
+                // Continue without questions rather than failing
+            }
+        }
+        
+        // 7. Combine objectives with their guide questions
+        const objectivesWithQuestions = objectives.map(objective => {
+            const question = objectiveQuestions.find(q => q.objectiveId === objective.objectiveId);
+            return {
+                ...objective,
+                guideQuestion: question ? question.objectiveQualiQuestion : '',
+                questionId: question ? question.feedback_qObjectivesId : null
+            };
+        });
+        
+        console.log(`Created ${objectivesWithQuestions.length} objectives with questions`);
+        
+        // 8. Get skills data
+        console.log('Fetching job skills...');
+        const { data: allSkills, error: allSkillsError } = await supabase
+            .from('jobreqskills')
+            .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
+            .eq('jobId', jobId);
+            
+        if (allSkillsError) {
+            console.error('Error fetching job skills:', allSkillsError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving job skills data."
+            });
+        }
+        
+        // Separate hard and soft skills
+        const hardSkills = allSkills ? allSkills.filter(skill => skill.jobReqSkillType === 'Hard') : [];
+        const softSkills = allSkills ? allSkills.filter(skill => skill.jobReqSkillType === 'Soft') : [];
+        
+        console.log(`Found ${hardSkills.length} hard skills and ${softSkills.length} soft skills`);
+        
+        // 9. Prepare response data
+        const responseData = {
+            success: true,
+            message: `${quarter} questionnaire data retrieved successfully`,
+            quarter: quarter,
+            feedbackId: feedbackId,
+            startDate: startDate, // Will be null for new questionnaires
+            endDate: endDate,     // Will be null for new questionnaires
+            objectives: objectivesWithQuestions,
+            hardSkills: hardSkills,
+            softSkills: softSkills,
+            isNewFeedback: !feedbackId,
+            isViewOnly: isViewOnly,
+            meta: {
+                userId: userId,
+                jobId: jobId,
+                year: feedbackYear,
+                objectiveSettingsYear: validObjectiveSetting.performancePeriodYear,
+                dateCreated: feedbackData ? feedbackData.dateCreated : null
+            }
         };
-    });
-    
-    // 8. Get skills data (only if feedback record exists)
-    let skillQuestions = [];
-    if (feedbackId) {
-        const { data: questions, error: skillQuestionsError } = await supabase
-            .from('feedbacks_questions-skills')
-            .select(`
-                feedback_qSkillsId,
-                jobReqSkillId,
-                ${feedbackIdField}
-            `)
-            .eq(feedbackIdField, feedbackId);
-            
-        if (!skillQuestionsError && questions) {
-            skillQuestions = questions;
-        }
-    }
-    
-    // 9. Get all skills for this job (whether feedback exists or not)
-    const { data: allSkills, error: allSkillsError } = await supabase
-        .from('jobreqskills')
-        .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
-        .eq('jobId', jobId);
         
-    if (allSkillsError) {
-        console.error('Error fetching job skills:', allSkillsError);
+        console.log(`=== RESPONSE SUMMARY ===`);
+        console.log(`Quarter: ${quarter}`);
+        console.log(`FeedbackId: ${feedbackId || 'null'}`);
+        console.log(`StartDate: ${startDate || 'null'}`);
+        console.log(`EndDate: ${endDate || 'null'}`);
+        console.log(`IsNewFeedback: ${!feedbackId}`);
+        console.log(`IsViewOnly: ${isViewOnly}`);
+        console.log(`ObjectiveSettingsYear: ${validObjectiveSetting.performancePeriodYear}`);
+        console.log(`=== getFeedbackQuestionnaire END ===`);
+        
+        return res.status(200).json(responseData);
+        
+    } catch (error) {
+        console.error('=== ERROR in getFeedbackQuestionnaire ===');
+        console.error('Error details:', error);
+        console.error('Stack trace:', error.stack);
         return res.status(500).json({
             success: false,
-            message: "Error retrieving job skills data."
+            message: "An unexpected error occurred while fetching questionnaire data.",
+            error: error.message
         });
     }
-    
-    // Separate hard and soft skills
-    const hardSkills = allSkills ? allSkills.filter(skill => skill.jobReqSkillType === 'Hard') : [];
-    const softSkills = allSkills ? allSkills.filter(skill => skill.jobReqSkillType === 'Soft') : [];
-    
-    // 10. Return the questionnaire data
-    return res.status(200).json({
-        success: true,
-        message: `${quarter} questionnaire data retrieved successfully`,
-        quarter: quarter,
-        feedbackId: feedbackId,
-        startDate: startDate,
-        endDate: endDate,
-        objectives: objectivesWithQuestions,
-        hardSkills: hardSkills,
-        softSkills: softSkills,
-        isNewFeedback: !feedbackId, // Flag to indicate if this is a new feedback or existing
-        meta: {
-            userId: userId,
-            jobId: jobId,
-            year: feedbackYear,
-            dateCreated: feedbackData ? feedbackData.dateCreated : null
-        }
-    });
-    
-} catch (error) {
-    console.error('Error in getFeedbackQuestionnaire:', error);
-    return res.status(500).json({
-        success: false,
-        message: "An unexpected error occurred while fetching questionnaire data.",
-        error: error.message
-    });
-}
 },
-
     saveMidYearIDP: async function(req, res) {
         try {
             // Get the user ID from the route parameters or form submission
@@ -5711,7 +5819,7 @@ getFeedbackData: async function(req, res) {
         });
     }
 },
-    save360DegreeFeedback: async function(req, res) {
+    save360Questionnaire: async function(req, res) {
         const { userId, startDate, endDate, jobId, feedbackData, quarter } = req.body;
     
         try {
