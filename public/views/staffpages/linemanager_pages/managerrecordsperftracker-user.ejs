@@ -831,6 +831,295 @@
         font-weight: normal;
         color: #333;
     }
+
+    /* IDP Aggregated */
+/* Circular Feedback Display Styles */
+.feedback-insights-container {
+    margin-bottom: 20px;
+}
+
+.circular-feedback-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-height: 60px;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    border: 1px dashed #ddd;
+}
+
+.circular-feedback-item {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 2px solid #dee2e6;
+    border-radius: 25px;
+    padding: 8px 16px;
+    margin: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.circular-feedback-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
+}
+
+.circular-feedback-item.strength {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border-color: #28a745;
+    color: #155724;
+}
+
+.circular-feedback-item.average {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.circular-feedback-item.below-average {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.circular-feedback-item .rating-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 8px;
+    padding: 2px 6px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.circular-feedback-item.strength .rating-badge {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.circular-feedback-item.average .rating-badge {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #856404;
+}
+
+.circular-feedback-item.below-average .rating-badge {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.circular-feedback-item .item-type {
+    font-size: 10px;
+    opacity: 0.8;
+    margin-right: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.circular-feedback-item .star-display {
+    margin-left: 4px;
+    font-size: 10px;
+    color: #ffc107;
+}
+
+.no-feedback-message {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px dashed #dee2e6;
+}
+
+.loading-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px dashed #dee2e6;
+}
+
+.loading-placeholder i {
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive design for circular items */
+@media (max-width: 768px) {
+    .circular-feedback-display {
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    .circular-feedback-item {
+        font-size: 12px;
+        padding: 6px 12px;
+        margin: 2px;
+    }
+    
+    .circular-feedback-item .rating-badge {
+        font-size: 10px;
+        padding: 1px 4px;
+        margin-left: 6px;
+    }
+}
+
+/* Animation for items appearing */
+.circular-feedback-item {
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.circular-feedback-item:nth-child(1) { animation-delay: 0.1s; }
+.circular-feedback-item:nth-child(2) { animation-delay: 0.2s; }
+.circular-feedback-item:nth-child(3) { animation-delay: 0.3s; }
+.circular-feedback-item:nth-child(4) { animation-delay: 0.4s; }
+.circular-feedback-item:nth-child(5) { animation-delay: 0.5s; }
+.circular-feedback-item:nth-child(6) { animation-delay: 0.6s; }
+.circular-feedback-item:nth-child(7) { animation-delay: 0.7s; }
+.circular-feedback-item:nth-child(8) { animation-delay: 0.8s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tooltip for circular items */
+.circular-feedback-item[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 5px;
+}
+
+/* Enhanced insights header */
+.insights-header h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.insights-header p {
+    margin: 5px 0 0 0;
+    font-size: 12px;
+    color: #666;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive design for circular items */
+@media (max-width: 768px) {
+    .circular-feedback-display {
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    .circular-feedback-item {
+        font-size: 12px;
+        padding: 6px 12px;
+        margin: 2px;
+    }
+    
+    .circular-feedback-item .rating-badge {
+        font-size: 10px;
+        padding: 1px 4px;
+        margin-left: 6px;
+    }
+}
+
+/* Animation for items appearing */
+.circular-feedback-item {
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.circular-feedback-item:nth-child(1) { animation-delay: 0.1s; }
+.circular-feedback-item:nth-child(2) { animation-delay: 0.2s; }
+.circular-feedback-item:nth-child(3) { animation-delay: 0.3s; }
+.circular-feedback-item:nth-child(4) { animation-delay: 0.4s; }
+.circular-feedback-item:nth-child(5) { animation-delay: 0.5s; }
+.circular-feedback-item:nth-child(6) { animation-delay: 0.6s; }
+.circular-feedback-item:nth-child(7) { animation-delay: 0.7s; }
+.circular-feedback-item:nth-child(8) { animation-delay: 0.8s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tooltip for circular items */
+.circular-feedback-item[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 5px;
+}
+
+/* Enhanced insights header */
+.insights-header h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.insights-header p {
+    margin: 5px 0 0 0;
+    font-size: 12px;
+    color: #666;
+}
+
     
     /* Mobile responsiveness */
     @media (max-width: 768px) {
@@ -852,6 +1141,8 @@
             justify-content: center;
         }
     }
+
+    
     </style>
 </head>
 
@@ -1605,8 +1896,7 @@
             </div>
         </div>
     </section>
-</form>
-<!-- Mid-Year IDP Form with Improved Frontend -->
+</form><!-- Enhanced Mid-Year IDP Form with Circular Feedback Display -->
 <section id="midYearIDPForm" class="fade-out section" style="display: none;">
     <div class="idp-progress">
         <h3><i class="fas fa-chart-line"></i> Development Plan Progress</h3>
@@ -1628,6 +1918,12 @@
         </p>
     </div>
 
+    <!-- Loading indicator for feedback data -->
+    <div id="feedbackLoadingIndicator" style="display: none; text-align: center; padding: 20px; background-color: #f9f9f9; border-radius: 8px; margin-bottom: 20px;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary-color); margin-bottom: 10px;"></i>
+        <p>Loading feedback insights from Q1 and Q2...</p>
+    </div>
+
     <form id="midYearIDPFormDetails" method="POST" action="/linemanager/midyear-idp/<%= user.userId %>" class="idp-form">
         <!-- Professional Competences -->
         <fieldset>
@@ -1641,6 +1937,21 @@
                         <span class="tooltip-text">Identify technical skills and professional competencies where the employee has demonstrated excellence.</span>
                     </div>
                 </label>
+                
+                <!-- Circular display for strengths (4-5 star ratings) -->
+                <div id="profStrengthsInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #e8f5e8; border-radius: 6px; border-left: 4px solid #4CAF50;">
+                        <h4 style="margin: 0; color: #2e7d32; font-size: 14px;">
+                            <i class="fas fa-arrow-up" style="color: #4CAF50;"></i> 
+                            Mid-Year 360 Feedback Improvement Areas: Above Average Ratings
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Skills and objectives rated 4-5 stars in Q1 and Q2 feedback</p>
+                    </div>
+                    <div id="strengthsCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
                 <textarea id="profStrengths" name="profStrengths" rows="4" placeholder="Describe technical competences and areas where the employee has shown particular expertise" onkeyup="updateIDPProgress()"></textarea>
                 <div class="char-counter"><span id="profStrengthsCount">0</span> characters</div>
             </div>
@@ -1653,6 +1964,35 @@
                         <span class="tooltip-text">Note specific technical or professional skills that require further development.</span>
                     </div>
                 </label>
+                
+                <!-- Circular display for average ratings (3 stars) -->
+                <div id="profAverageInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+                        <h4 style="margin: 0; color: #856404; font-size: 14px;">
+                            <i class="fas fa-equals" style="color: #ffc107;"></i> 
+                            Mid-Year 360 Feedback Improvement Areas: Average Ratings
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Skills and objectives rated 3 stars in Q1 and Q2 feedback</p>
+                    </div>
+                    <div id="averageCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <!-- Circular display for below average ratings (1-2 stars) -->
+                <div id="profBelowAverageInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #f8d7da; border-radius: 6px; border-left: 4px solid #dc3545;">
+                        <h4 style="margin: 0; color: #721c24; font-size: 14px;">
+                            <i class="fas fa-arrow-down" style="color: #dc3545;"></i> 
+                            Mid-Year 360 Feedback Improvement Areas: Below Average Ratings
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Skills and objectives rated 1-2 stars in Q1 and Q2 feedback</p>
+                    </div>
+                    <div id="belowAverageCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
                 <textarea id="profAreasForDevelopment" name="profAreasForDevelopment" rows="4" placeholder="Describe technical or professional gaps identified during the first half of the year" onkeyup="updateIDPProgress()"></textarea>
                 <div class="char-counter"><span id="profAreasCount">0</span> characters</div>
             </div>
@@ -1699,9 +2039,21 @@
                         <span class="tooltip-text">Identify leadership qualities and behaviors where the employee excels.</span>
                     </div>
                 </label>
-                <div class="leadership-model" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
-                    <!-- Leadership tags area kept empty as requested -->
+                
+                <!-- Circular display for leadership strengths -->
+                <div id="leaderStrengthsInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #e8f5e8; border-radius: 6px; border-left: 4px solid #4CAF50;">
+                        <h4 style="margin: 0; color: #2e7d32; font-size: 14px;">
+                            <i class="fas fa-arrow-up" style="color: #4CAF50;"></i> 
+                            Leadership Skills: Above Average Ratings
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Leadership skills rated 4-5 stars in Q1 and Q2 feedback</p>
+                    </div>
+                    <div id="leadershipStrengthsCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
                 </div>
+                
                 <textarea id="leaderStrengths" name="leaderStrengths" rows="4" placeholder="Describe leadership competences where the employee shows strength" onkeyup="updateIDPProgress()"></textarea>
                 <div class="char-counter"><span id="leaderStrengthsCount">0</span> characters</div>
             </div>
@@ -1714,6 +2066,21 @@
                         <span class="tooltip-text">Note specific leadership behaviors or skills that need improvement.</span>
                     </div>
                 </label>
+                
+                <!-- Circular display for leadership development areas -->
+                <div id="leaderDevelopmentInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+                        <h4 style="margin: 0; color: #856404; font-size: 14px;">
+                            <i class="fas fa-equals" style="color: #ffc107;"></i> 
+                            Leadership Skills: Average & Below Average Ratings
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Leadership skills rated 1-3 stars needing development</p>
+                    </div>
+                    <div id="leadershipDevelopmentCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
                 <textarea id="leaderAreasForDevelopment" name="leaderAreasForDevelopment" rows="4" placeholder="Describe leadership gaps that should be addressed" onkeyup="updateIDPProgress()"></textarea>
                 <div class="char-counter"><span id="leaderAreasCount">0</span> characters</div>
             </div>
@@ -1767,9 +2134,6 @@
                         <span class="tooltip-text">Indicate willingness to relocate, travel, or work different schedules.</span>
                     </div>
                 </label>
-                <div class="mobility-options" style="margin-bottom: 10px;">
-                    <!-- Mobility checkboxes area kept empty as requested -->
-                </div>
                 <textarea id="nextRoleMobility" name="nextRoleMobility" rows="4" placeholder="Describe availability to work in different locations, willingness to travel, and flexibility with work schedules" onkeyup="updateIDPProgress()"></textarea>
                 <div class="char-counter"><span id="nextRoleMobilityCount">0</span> characters</div>
             </div>
@@ -1782,6 +2146,7 @@
         </div>
     </form>
 </section>
+
 
 <!-- Final-Year IDP Form with Improved Frontend -->
 <section id="finalYearIDPForm" class="fade-out section" style="display: none;">
@@ -1972,6 +2337,8 @@ let hardSkills = []; // Store hard skills
 let softSkills = []; // Store soft skills
 let midYearIDPData = null; // Store mid-year IDP data
 let finalYearIDPData = null; // Store final-year IDP data
+let midYearFeedbackData = null; // Global variable to store Mid-Year feedback data
+ 
 
 // Function to initialize all variables and setup from viewState
 function initializeFromViewState() {
@@ -2903,7 +3270,7 @@ function filterAnswers() {
 
 
 
-// Function to navigate to Mid-Year IDP
+// Enhanced function to navigate to Mid-Year IDP (update the existing one)
 function navigateToMidYearIDP() {
     const midYearIDPButton = document.getElementById("midYearIDP");
     
@@ -2927,6 +3294,9 @@ function navigateToMidYearIDP() {
     midYearIDPForm.classList.remove("fade-out");
     midYearIDPForm.classList.add("fade-in");
     
+    // Load feedback aggregates when form is shown
+    loadMidYearFeedbackAggregates();
+    
     // Check if in view-only mode
     const isViewOnly = viewState.viewOnlyStatus.midyearidp;
     
@@ -2946,6 +3316,17 @@ function navigateToMidYearIDP() {
     midYearIDPForm.scrollIntoView({ behavior: "smooth" });
     console.log("Navigated to the Mid-Year IDP form.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
 }
+
+
+// Add event listener for year change
+document.addEventListener('DOMContentLoaded', function() {
+    const yearSelect = document.getElementById('yearSelect');
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function() {
+            refreshFeedbackDataOnYearChange();
+        });
+    }
+});
 
 // Function to navigate to Final-Year IDP
 function navigateToFinalYearIDP() {
@@ -4530,6 +4911,293 @@ function loadMidYearIDPData(userId) {
     });
 }
 
+
+async function loadMidYearFeedbackAggregates() {
+    console.log("Loading Mid-Year feedback aggregates...");
+    
+    // Show loading indicator
+    const loadingIndicator = document.getElementById('feedbackLoadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'block';
+    }
+    
+    // Show loading placeholders in circular displays
+    showLoadingPlaceholders();
+    
+    try {
+        // Get the selected year from the year dropdown or URL
+        let selectedYear = new Date().getFullYear();
+        
+        const yearSelect = document.getElementById('yearSelect');
+        if (yearSelect && yearSelect.value) {
+            selectedYear = yearSelect.value;
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('year')) {
+            selectedYear = urlParams.get('year');
+        }
+        
+        // Fetch feedback aggregates from server
+        const response = await fetch(`/linemanager/midyear-feedback-aggregates/${userId}?year=${selectedYear}`);
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            midYearFeedbackData = result.data;
+            console.log("Mid-Year feedback data loaded:", midYearFeedbackData);
+            
+            // Display the feedback in circular format
+            displayFeedbackInCircularFormat(midYearFeedbackData);
+            
+        } else {
+            console.error("Error loading feedback aggregates:", result.message);
+            showNoFeedbackMessage();
+        }
+        
+    } catch (error) {
+        console.error("Error fetching Mid-Year feedback aggregates:", error);
+        showNoFeedbackMessage();
+    } finally {
+        // Hide loading indicator
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+    }
+}
+
+// Function to show loading placeholders
+function showLoadingPlaceholders() {
+    const containers = [
+        'strengthsCircularDisplay',
+        'averageCircularDisplay', 
+        'belowAverageCircularDisplay',
+        'leadershipStrengthsCircularDisplay',
+        'leadershipDevelopmentCircularDisplay'
+    ];
+    
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = `
+                <div class="loading-placeholder">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Loading feedback data...
+                </div>
+            `;
+        }
+    });
+}
+
+// Function to display feedback in circular format
+function displayFeedbackInCircularFormat(feedbackData) {
+    if (!feedbackData || !feedbackData.categorizedFeedback) {
+        console.error("No categorized feedback data available");
+        showNoFeedbackMessage();
+        return;
+    }
+    
+    const categorized = feedbackData.categorizedFeedback;
+    
+    // Display strengths (4-5 star ratings) in Professional Competences
+    displayCircularItems('strengthsCircularDisplay', categorized.strengths.filter(item => 
+        item.type === 'objective' || (item.type === 'skill' && item.jobReqSkillType === 'Hard')
+    ), 'strength');
+    
+    // Display average ratings (3 stars) in Professional Competences
+    displayCircularItems('averageCircularDisplay', categorized.average.filter(item => 
+        item.type === 'objective' || (item.type === 'skill' && item.jobReqSkillType === 'Hard')
+    ), 'average');
+    
+    // Display below average ratings (1-2 stars) in Professional Competences
+    displayCircularItems('belowAverageCircularDisplay', categorized.belowAverage.filter(item => 
+        item.type === 'objective' || (item.type === 'skill' && item.jobReqSkillType === 'Hard')
+    ), 'below-average');
+    
+    // Display leadership strengths (4-5 star ratings)
+    displayCircularItems('leadershipStrengthsCircularDisplay', categorized.strengths.filter(item => 
+        item.type === 'skill' && item.jobReqSkillType === 'Soft'
+    ), 'strength');
+    
+    // Display leadership development areas (1-3 stars)
+    const leadershipDevelopment = [
+        ...categorized.average.filter(item => item.type === 'skill' && item.jobReqSkillType === 'Soft'),
+        ...categorized.belowAverage.filter(item => item.type === 'skill' && item.jobReqSkillType === 'Soft')
+    ];
+    displayCircularItems('leadershipDevelopmentCircularDisplay', leadershipDevelopment, 'mixed');
+    
+    console.log("Feedback displayed in circular format successfully");
+}
+
+// Function to display circular items in a container
+function displayCircularItems(containerId, items, ratingType) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.error(`Container ${containerId} not found`);
+        return;
+    }
+    
+    // Clear existing content
+    container.innerHTML = '';
+    
+    if (!items || items.length === 0) {
+        container.innerHTML = `
+            <div class="no-feedback-message">
+                <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                No feedback data available for this category
+            </div>
+        `;
+        return;
+    }
+    
+    // Create circular items
+    items.forEach((item, index) => {
+        const circularItem = createCircularFeedbackItem(item, ratingType);
+        container.appendChild(circularItem);
+    });
+}
+
+// Function to create a single circular feedback item
+function createCircularFeedbackItem(item, ratingType) {
+    const div = document.createElement('div');
+    
+    // Determine the CSS class based on rating
+    let cssClass = 'circular-feedback-item';
+    if (ratingType === 'strength') {
+        cssClass += ' strength';
+    } else if (ratingType === 'average') {
+        cssClass += ' average';
+    } else if (ratingType === 'below-average') {
+        cssClass += ' below-average';
+    } else if (ratingType === 'mixed') {
+        // Mixed type - determine class based on actual rating
+        if (item.averageRating >= 4) {
+            cssClass += ' strength';
+        } else if (item.averageRating >= 3) {
+            cssClass += ' average';
+        } else {
+            cssClass += ' below-average';
+        }
+    }
+    
+    div.className = cssClass;
+    
+    // Generate title for tooltip
+    const title = generateItemTooltip(item);
+    div.setAttribute('title', title);
+    
+    // Generate star display
+    const starDisplay = generateStarDisplay(item.averageRating);
+    
+    // Determine item type label
+    const typeLabel = item.type === 'objective' ? 'OBJ' : 
+                     (item.jobReqSkillType === 'Hard' ? 'HARD' : 'SOFT');
+    
+    // Get item name
+    const itemName = item.type === 'objective' ? 
+                     (item.objectiveDescrpt || 'Objective') : 
+                     (item.jobReqSkillName || 'Skill');
+    
+    // Create the content
+    div.innerHTML = `
+        <span class="item-type">${typeLabel}</span>
+        <span class="item-name">${truncateText(itemName, 25)}</span>
+        <span class="rating-badge">
+            ${item.averageRating.toFixed(1)}
+            <span class="star-display">${starDisplay}</span>
+        </span>
+    `;
+    
+    return div;
+}
+
+// Function to generate tooltip text
+function generateItemTooltip(item) {
+    let tooltip = '';
+    
+    if (item.type === 'objective') {
+        tooltip = `Objective: ${item.objectiveDescrpt || 'N/A'}`;
+        if (item.objectiveKPI) {
+            tooltip += `\nKPI: ${item.objectiveKPI}`;
+        }
+    } else {
+        tooltip = `${item.jobReqSkillType} Skill: ${item.jobReqSkillName || 'N/A'}`;
+    }
+    
+    tooltip += `\nAverage Rating: ${item.averageRating.toFixed(1)}/5.0`;
+    
+    if (item.quarterRatings) {
+        tooltip += '\nQuarter Ratings:';
+        Object.entries(item.quarterRatings).forEach(([quarter, rating]) => {
+            tooltip += `\n${quarter}: ${rating.toFixed(1)}/5.0`;
+        });
+    }
+    
+    return tooltip;
+}
+
+// Function to generate star display
+function generateStarDisplay(rating) {
+    let stars = '';
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    for (let i = 0; i < fullStars; i++) {
+        stars += '★';
+    }
+    
+    if (hasHalfStar) {
+        stars += '☆';
+    }
+    
+    return stars;
+}
+
+// Function to truncate text
+function truncateText(text, maxLength) {
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return text.substring(0, maxLength - 3) + '...';
+}
+
+// Function to show "no feedback" message
+function showNoFeedbackMessage() {
+    const containers = [
+        'strengthsCircularDisplay',
+        'averageCircularDisplay', 
+        'belowAverageCircularDisplay',
+        'leadershipStrengthsCircularDisplay',
+        'leadershipDevelopmentCircularDisplay'
+    ];
+    
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = `
+                <div class="no-feedback-message">
+                    <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
+                    No Q1/Q2 feedback data available. Complete feedback sessions to see insights here.
+                </div>
+            `;
+        }
+    });
+}
+// Function to refresh feedback data when year changes
+function refreshFeedbackDataOnYearChange() {
+    // Check if Mid-Year IDP form is currently visible
+    const midYearIDPForm = document.getElementById("midYearIDPForm");
+    if (midYearIDPForm && midYearIDPForm.style.display === "block") {
+        // Reload feedback aggregates for the new year
+        loadMidYearFeedbackAggregates();
+    }
+}
+
+
 // Function to load Final-Year IDP data
 function loadFinalYearIDPData(userId, year) {
     console.log(`Loading Final-Year IDP data for user ${userId} and year ${year}...`);
@@ -4706,6 +5374,9 @@ function enableMidYearIDPForm() {
         updateIDPProgress();
     }
 }
+
+
+
 
 // Function to enable Final-Year IDP form for editing
 function enableFinalYearIDPForm() {
@@ -5214,7 +5885,16 @@ function setupStepperEvents() {
         finalYearIDPButton.addEventListener("click", navigateToFinalYearIDP);
     }
     
-    // Feedback view toggle buttons
+    // Year select - enhanced to refresh feedback data
+    const yearSelect = document.getElementById('yearSelect');
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function() {
+            fetchYearData();
+            refreshFeedbackDataOnYearChange();
+        });
+    }
+    
+    // Rest of the existing stepper events...
     const viewQuestionnaireBtn = document.getElementById('viewQuestionnaireBtn');
     const viewFeedbackBtn = document.getElementById('viewFeedbackBtn');
     
@@ -5226,12 +5906,6 @@ function setupStepperEvents() {
         viewFeedbackBtn.addEventListener('click', function() {
             toggleFeedbackView('feedback');
         });
-    }
-    
-    // Year select
-    const yearSelect = document.getElementById('yearSelect');
-    if (yearSelect) {
-        yearSelect.addEventListener('change', fetchYearData);
     }
     
     // Add row button

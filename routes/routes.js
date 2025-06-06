@@ -322,6 +322,15 @@ router.post('/linemanager/api/submitFeedback', lineManagerController.submitFeedb
 // Mid-year IDP routes
 router.get('/linemanager/midyear-idp/:userId', lineManagerController.getMidYearIDP);
 router.post('/linemanager/midyear-idp/:userId', lineManagerController.saveMidYearIDP);
+// Route for getting Mid-Year feedback aggregates
+router.get('/linemanager/midyear-feedback-aggregates/:userId', 
+    lineManagerController.getRecordsPerformanceTrackerByUserId,
+    lineManagerController.getMidYearFeedbackAggregates
+);
+// Alternative route structure if you prefer to include it in the main records route
+router.get('/linemanager/records-performance-tracker/:userId/midyear-aggregates', lineManagerController.getRecordsPerformanceTrackerByUserId,
+    lineManagerController.getMidYearFeedbackAggregates
+);
 
 // Final-year IDP routes
 router.get('/linemanager/finalyear-idp/:userId', lineManagerController.getFinalYearIDP);
