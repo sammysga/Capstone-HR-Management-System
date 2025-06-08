@@ -343,6 +343,8 @@ router.get('/linemanager/get-feedback-data/:userId', lineManagerController.getFe
 // Add this to your routes file (routes.js or similar)
 router.get('/linemanager/check-feedback-status', lineManagerController.checkFeedbackStatus);
 
+router.get('/linemanager/training-development-tracker', lineManagerController.getTrainingDevelopmentTracker);
+
 
 module.exports = router; 
 

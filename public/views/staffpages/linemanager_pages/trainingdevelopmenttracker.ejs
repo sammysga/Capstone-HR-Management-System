@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Training & Development Tracker</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Import Inter font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+        /* Main content styling */
+        .main-content {
+            margin-left: 270px;
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Dashboard header */
+        .dashboard-header {
+            margin-bottom: 25px;
+        }
+
+        .dashboard-header h2 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .dashboard-header p {
+            color: #666;
+            font-size: 0.95rem;
+            max-width: 800px;
+        }
+
+        /* Tabs styling */
+        .tabs-container {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .tabs-nav {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background-color: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tab-button i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .tab-button.active {
+            color: #07ACB9;
+            border-bottom: 3px solid #07ACB9;
+            background-color: #f8fdfd;
+        }
+
+        .tab-button:hover:not(.active) {
+            color: #124A5C;
+            border-bottom: 3px solid #ddd;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 25px 0;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Card styling */
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .card-header {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        /* Search and Filter Section */
+        .search-filter-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 45px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #07ACB9;
+            box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Filter dropdown */
+        .filter-dropdown {
+            position: relative;
+        }
+
+        .filter-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .filter-button:hover {
+            border-color: #07ACB9;
+        }
+
+        .filter-dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            padding: 10px;
+            min-width: 200px;
+        }
+
+        .filter-dropdown.open .filter-dropdown-content {
+            display: block;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .filter-option:hover {
+            background-color: #f8fafc;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin: 0;
+        }
+
+        /* Add training button */
+        .add-training-btn {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .add-training-btn:hover {
+            background-color: #0d3c4a;
+            transform: translateY(-2px);
+        }
+
+        /* Active filters display */
+        .active-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .filter-tag {
+            background-color: #07ACB9;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-tag .remove-filter {
+            cursor: pointer;
+            font-size: 10px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Training courses grid */
+        .training-courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .training-course-card {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .training-course-card:hover {
+            border-color: #07ACB9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .course-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 10px 0;
+        }
+
+        .course-description {
+            color: #475569;
+            font-size: 14px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .course-details {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        .course-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .course-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .course-badge.online {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .course-badge.onsite {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .course-badge.required {
+            background-color: #fecaca;
+            color: #dc2626;
+        }
+
+        /* Employee assignments list */
+        .assignments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .assignment-item {
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .assignment-item:hover {
+            border-color: #07ACB9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .assignment-info {
+            flex: 1;
+        }
+
+        .employee-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 4px 0;
+        }
+
+        .assignment-details {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .assignment-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-badge.completed {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.not-started {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        /* Modal styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #07ACB9;
+            box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .add-item-section {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .add-item-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .add-item-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .add-btn {
+            background-color: #07ACB9;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .add-btn:hover {
+            background-color: #059ca4;
+        }
+
+        .dynamic-list {
+            margin-top: 10px;
+        }
+
+        .dynamic-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+        }
+
+        .remove-btn {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-btn:hover {
+            background-color: #dc2626;
+        }
+
+        .activity-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-details strong {
+            color: #334155;
+        }
+
+        .activity-details span {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .duration-display {
+            background-color: #f0fdff;
+            border: 1px solid #07ACB9;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .duration-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .duration-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #07ACB9;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary {
+            background-color: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+        }
+
+        .btn-primary {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #0d3c4a;
+        }
+
+        /* Employee Training Details Modal */
+        .employee-info-section {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .employee-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .employee-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #07ACB9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .employee-details h3 {
+            margin: 0 0 5px 0;
+            color: #334155;
+            font-size: 1.2rem;
+        }
+
+        .employee-job-role {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .employee-email {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Training Statistics Cards */
+        .training-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-card.in-progress .stat-number {
+            color: #3b82f6;
+        }
+
+        .stat-card.completed .stat-number {
+            color: #10b981;
+        }
+
+        .stat-card.overdue .stat-number {
+            color: #ef4444;
+        }
+
+        /* Training Progress List */
+        .training-progress-list {
+            margin-top: 20px;
+        }
+
+        .training-progress-item {
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .training-progress-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .training-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 5px 0;
+        }
+
+        .training-meta {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-container {
+            background-color: #f1f5f9;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-fill.in-progress {
+            background-color: #3b82f6;
+        }
+
+        .progress-bar-fill.completed {
+            background-color: #10b981;
+        }
+
+        .progress-bar-fill.overdue {
+            background-color: #ef4444;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .progress-percentage {
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .progress-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .progress-status.in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .progress-status.completed {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .progress-status.overdue {
+            background-color: #fecaca;
+            color: #dc2626;
+        }
+
+        /* Training Description Styling */
+        .training-description {
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .training-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            .search-filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-container {
+                min-width: auto;
+            }
+
+            .training-courses-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .assignment-item {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/linemanager_partials') %>
+    
+    <!-- Main content area -->
+    <div class="main-content">
+        <div class="dashboard-header">
+            <h2>Employee Training & Development Tracker</h2>
+            <p>Manage training courses, track employee progress, and oversee professional development initiatives.</p>
+        </div>
+
+    <!-- Add New Training Modal -->
+    <div class="modal-overlay" id="addTrainingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Training Course</h2>
+            </div>
+            
+            <form id="addTrainingForm">
+                <!-- Training Course Name -->
+                <div class="form-group">
+                    <label class="form-label">Training Course Name:</label>
+                    <input type="text" class="form-input" id="courseName" placeholder="Enter training course name" required>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label class="form-label">Description:</label>
+                    <textarea class="form-textarea" id="courseDescription" placeholder="Enter detailed description of the training course" required></textarea>
+                </div>
+
+                <!-- Job Positions and Training Mode -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Job Positions Applicable:</label>
+                        <select class="form-select" id="jobPositions" required>
+                            <option value="">Select applicable positions</option>
+                            <option value="all">All Positions</option>
+                            <option value="management">Management</option>
+                            <option value="hr">Human Resources</option>
+                            <option value="it">Information Technology</option>
+                            <option value="operations">Operations</option>
+                            <option value="sales">Sales & Marketing</option>
+                            <option value="finance">Finance & Accounting</option>
+                            <option value="customer-service">Customer Service</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Training Mode:</label>
+                        <select class="form-select" id="trainingMode" required>
+                            <option value="">Select training mode</option>
+                            <option value="online">Online</option>
+                            <option value="onsite">Onsite</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cost -->
+                <div class="form-group">
+                    <label class="form-label">Cost:</label>
+                    <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost (USD)" min="0" step="0.01">
+                </div>
+
+                <!-- Focus on Objective Areas -->
+                <div class="form-group">
+                    <label class="form-label">Focus on Objective Areas:</label>
+                    <div class="add-item-section">
+                        <div class="add-item-header">
+                            <input type="text" class="add-item-input" id="newObjective" placeholder="Enter objective area">
+                            <button type="button" class="add-btn" onclick="addObjective()">Add Objective</button>
+                        </div>
+                        <div class="dynamic-list" id="objectivesList"></div>
+                    </div>
+                </div>
+
+                <!-- Focus Skill Areas -->
+                <div class="form-group">
+                    <label class="form-label">Focus Skill Areas:</label>
+                    <div class="add-item-section">
+                        <div class="add-item-header">
+                            <input type="text" class="add-item-input" id="newSkill" placeholder="Enter skill area">
+                            <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
+                        </div>
+                        <div class="dynamic-list" id="skillsList"></div>
+                    </div>
+                </div>
+
+                <!-- Total Duration Display -->
+                <div class="duration-display">
+                    <div class="duration-label">Total Duration to Complete</div>
+                    <div class="duration-value"><span id="totalDuration">0</span> hours</div>
+                </div>
+
+                <!-- Activities Needed -->
+                <div class="form-group">
+                    <label class="form-label">Activities Needed:</label>
+                    <div class="add-item-section">
+                        <div class="activity-form-grid">
+                            <input type="text" class="add-item-input" id="moduleName" placeholder="Module name">
+                            <input type="number" class="add-item-input" id="estimatedTime" placeholder="Estimated time (hours)" min="0" step="0.5">
+                        </div>
+                        <div class="activity-form-grid">
+                            <select class="form-select" id="activityType">
+                                <option value="">Select type</option>
+                                <option value="lecture">Lecture</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="practical">Practical Exercise</option>
+                                <option value="assessment">Assessment</option>
+                                <option value="discussion">Group Discussion</option>
+                                <option value="case-study">Case Study</option>
+                            </select>
+                            <input type="text" class="add-item-input" id="activityRemarks" placeholder="Remarks (optional)">
+                        </div>
+                        <button type="button" class="add-btn" onclick="addActivity()" style="width: 100%; margin-top: 10px;">Add Activity</button>
+                        <div class="dynamic-list" id="activitiesList"></div>
+                    </div>
+                </div>
+
+                <!-- Certificates -->
+                <div class="form-group">
+                    <label class="form-label">Certificate/s:</label>
+                    <div class="add-item-section">
+                        <div class="add-item-header">
+                            <input type="text" class="add-item-input" id="certificateTitle" placeholder="Enter certificate title">
+                            <button type="button" class="add-btn" onclick="addCertificate()">Add Certificate</button>
+                        </div>
+                        <div class="dynamic-list" id="certificatesList"></div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeAddTrainingModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Training Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee Training Details Modal -->
+    <div class="modal-overlay" id="employeeTrainingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Employee Training Details</h2>
+            </div>
+            
+            <!-- Employee Information Section -->
+            <div class="employee-info-section">
+                <div class="employee-header">
+                    <div class="employee-avatar" id="employeeAvatar">JD</div>
+                    <div class="employee-details">
+                        <h3 id="employeeName">John Doe</h3>
+                        <div class="employee-job-role" id="employeeJobRole">Software Engineer</div>
+                        <div class="employee-email" id="employeeEmail">john.doe@company.com</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Training Statistics -->
+            <div class="training-stats">
+                <div class="stat-card in-progress">
+                    <div class="stat-number" id="inProgressCount">2</div>
+                    <div class="stat-label">IN PROGRESS</div>
+                </div>
+                <div class="stat-card completed">
+                    <div class="stat-number" id="completedCount">5</div>
+                    <div class="stat-label">COMPLETED</div>
+                </div>
+                <div class="stat-card overdue">
+                    <div class="stat-number" id="overdueCount">1</div>
+                    <div class="stat-label">OVERDUE</div>
+                </div>
+            </div>
+
+            <!-- All Trainings Section -->
+            <div class="form-group">
+                <label class="form-label">All Trainings:</label>
+                <div class="training-progress-list" id="employeeTrainingList">
+                    <!-- Training progress items will be populated here -->
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeEmployeeTrainingModal()">Close</button>
+                <button type="button" class="btn-primary" onclick="visitPerformanceTracker()">
+                    <i class="fas fa-chart-line"></i>
+                    Visit Performance Tracker
+                </button>
+                <button type="button" class="btn-primary" onclick="assignNewTraining()">Assign New Training</button>
+            </div>
+        </div>
+    </div>
+
+        <!-- Tabs Container -->
+        <div class="tabs-container">
+            <ul class="tabs-nav">
+                <li><button class="tab-button active" data-tab="training-courses-tab">
+                    <i class="fas fa-graduation-cap"></i> Training Courses
+                </button></li>
+                <li><button class="tab-button" data-tab="employee-assignments-tab">
+                    <i class="fas fa-users"></i> View Employee Training Assignments
+                </button></li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-contents">
+                <!-- Training Courses Tab -->
+                <div id="training-courses-tab" class="tab-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Available Training Courses</h3>
+                        </div>
+                        
+                        <!-- Search and Filter Section -->
+                        <div class="search-filter-section">
+                            <div class="search-container">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="search-input" placeholder="Search training courses..." id="courseSearch">
+                            </div>
+                            
+                            <div class="filter-dropdown" id="filter-dropdown">
+                                <div class="filter-button" onclick="toggleFilterDropdown()">
+                                    <i class="fas fa-filter"></i>
+                                    <span>Filters</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="filter-dropdown-content">
+                                    <div class="filter-option">
+                                        <input type="checkbox" id="filter-online" value="online" onchange="updateFilters()">
+                                        <label for="filter-online">Online</label>
+                                    </div>
+                                    <div class="filter-option">
+                                        <input type="checkbox" id="filter-onsite" value="onsite" onchange="updateFilters()">
+                                        <label for="filter-onsite">Onsite</label>
+                                    </div>
+                                    <div class="filter-option">
+                                        <input type="checkbox" id="filter-required" value="required" onchange="updateFilters()">
+                                        <label for="filter-required">Required</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button class="add-training-btn" onclick="addNewTraining()">
+                                <i class="fas fa-plus"></i>
+                                Add New Training
+                            </button>
+                        </div>
+
+                        <!-- Active filters display -->
+                        <div class="active-filters" id="active-filters"></div>
+
+                        <!-- Training courses grid -->
+                        <div class="training-courses-grid">
+                            <!-- Sample Training Course 1 -->
+                            <div class="training-course-card" data-type="online">
+                                <h4 class="course-title">Leadership Development Program</h4>
+                                <div class="course-description">
+                                    Develop essential leadership skills including team management, strategic thinking, communication, and decision-making. This comprehensive program covers modern leadership techniques and best practices for managing diverse teams in today's workplace.
+                                </div>
+                                <div class="course-details">
+                                    Duration: 5 weeks • 20 lessons<br>
+                                    Instructor: Dr. Sarah Johnson<br>
+                                    Department: Management
+                                </div>
+                                <div class="course-badges">
+                                    <span class="course-badge online">Online</span>
+                                </div>
+                            </div>
+
+                            <!-- Sample Training Course 2 -->
+                            <div class="training-course-card" data-type="onsite required">
+                                <h4 class="course-title">Safety and Compliance Training</h4>
+                                <div class="course-description">
+                                    Essential workplace safety protocols, emergency procedures, and regulatory compliance requirements. Covers OSHA standards, hazard identification, incident reporting, and creating a culture of safety in the workplace.
+                                </div>
+                                <div class="course-details">
+                                    Duration: 2 days • 8 modules<br>
+                                    Location: Training Center B<br>
+                                    Department: Operations
+                                </div>
+                                <div class="course-badges">
+                                    <span class="course-badge onsite">Onsite</span>
+                                    <span class="course-badge required">Required</span>
+                                </div>
+                            </div>
+
+                            <!-- Sample Training Course 3 -->
+                            <div class="training-course-card" data-type="online">
+                                <h4 class="course-title">Advanced Excel Training</h4>
+                                <div class="course-description">
+                                    Master advanced Excel features including pivot tables, macros, data analysis tools, and complex formulas. Learn to create dynamic dashboards, automate repetitive tasks, and perform sophisticated data manipulation and reporting.
+                                </div>
+                                <div class="course-details">
+                                    Duration: 3 weeks • 15 lessons<br>
+                                    Instructor: Ms. Jennifer Lee<br>
+                                    Department: IT & Analytics
+                                </div>
+                                <div class="course-badges">
+                                    <span class="course-badge online">Online</span>
+                                </div>
+                            </div>
+
+                            <!-- Sample Training Course 4 -->
+                            <div class="training-course-card" data-type="onsite">
+                                <h4 class="course-title">Team Building Workshop</h4>
+                                <div class="course-description">
+                                    Interactive workshop focused on building stronger team relationships, improving collaboration, and enhancing group dynamics. Includes team exercises, communication activities, and conflict resolution strategies.
+                                </div>
+                                <div class="course-details">
+                                    Duration: 1 day • 4 sessions<br>
+                                    Location: Conference Room A<br>
+                                    Department: HR
+                                </div>
+                                <div class="course-badges">
+                                    <span class="course-badge onsite">Onsite</span>
+                                </div>
+                            </div>
+
+                            <!-- Sample Training Course 5 -->
+                            <div class="training-course-card" data-type="online required">
+                                <h4 class="course-title">Cybersecurity Awareness</h4>
+                                <div class="course-description">
+                                    Learn to identify and prevent cyber threats, understand data protection principles, and follow security best practices. Covers phishing prevention, password security, and safe internet browsing habits.
+                                </div>
+                                <div class="course-details">
+                                    Duration: 2 hours • 6 modules<br>
+                                    Instructor: IT Security Team<br>
+                                    Department: Information Technology
+                                </div>
+                                <div class="course-badges">
+                                    <span class="course-badge online">Online</span>
+                                    <span class="course-badge required">Required</span>
+                                </div>
+                            </div>
+
+                            <!-- Sample Training Course 6 -->
+                            <div class="training-course-card" data-type="onsite">
+                                <h4 class="course-title">Customer Service Excellence</h4>
+                                <div class="course-description">
+                                    Enhance customer interaction skills, learn effective problem-solving techniques, and understand customer psychology. Focus on creating positive customer experiences and handling difficult situations professionally.
+                                </div>
+                                <div class="course-details">
+                                    Duration: 1 day • 6 sessions<br>
+                                    Location: Training Room C<br>
+                                    Department: Customer Relations
+                                </div>
+                                <div class="course-badges">
+                                    <span class="course-badge onsite">Onsite</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Training Assignments Tab -->
+                <div id="employee-assignments-tab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Employee Training Assignments</h3>
+                        </div>
+                        
+                        <!-- Search and Filter Section -->
+                        <div class="search-filter-section">
+                            <div class="search-container">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="search-input" placeholder="Search employees..." id="employeeSearch">
+                            </div>
+                            
+                            <div class="filter-dropdown" id="status-filter-dropdown">
+                                <div class="filter-button" onclick="toggleStatusFilterDropdown()">
+                                    <i class="fas fa-filter"></i>
+                                    <span>Status</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="filter-dropdown-content">
+                                    <div class="filter-option">
+                                        <input type="checkbox" id="filter-in-progress" value="in-progress" onchange="updateStatusFilters()">
+                                        <label for="filter-in-progress">In Progress</label>
+                                    </div>
+                                    <div class="filter-option">
+                                        <input type="checkbox" id="filter-completed" value="completed" onchange="updateStatusFilters()">
+                                        <label for="filter-completed">Completed</label>
+                                    </div>
+                                    <div class="filter-option">
+                                        <input type="checkbox" id="filter-not-started" value="not-started" onchange="updateStatusFilters()">
+                                        <label for="filter-not-started">Not Started</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employee assignments list -->
+                        <div class="assignments-list">
+                            <!-- Sample Assignment 1 -->
+                            <div class="assignment-item" data-status="in-progress" onclick="openEmployeeModal('john-doe')">
+                                <div class="assignment-info">
+                                    <h4 class="employee-name">John Doe</h4>
+                                    <div class="assignment-details">
+                                        Training: Leadership Development Program<br>
+                                        Progress: 15/20 lessons • Started: March 1, 2025
+                                    </div>
+                                </div>
+                                <div class="assignment-status">
+                                    <span class="status-badge in-progress">In Progress</span>
+                                </div>
+                            </div>
+
+                            <!-- Sample Assignment 2 -->
+                            <div class="assignment-item" data-status="completed" onclick="openEmployeeModal('jane-smith')">
+                                <div class="assignment-info">
+                                    <h4 class="employee-name">Jane Smith</h4>
+                                    <div class="assignment-details">
+                                        Training: Safety and Compliance Training<br>
+                                        Completed: March 15, 2025 • Score: 95%
+                                    </div>
+                                </div>
+                                <div class="assignment-status">
+                                    <span class="status-badge completed">Completed</span>
+                                </div>
+                            </div>
+
+                            <!-- Sample Assignment 3 -->
+                            <div class="assignment-item" data-status="not-started" onclick="openEmployeeModal('mike-johnson')">
+                                <div class="assignment-info">
+                                    <h4 class="employee-name">Mike Johnson</h4>
+                                    <div class="assignment-details">
+                                        Training: Advanced Excel Training<br>
+                                        Assigned: March 20, 2025 • Due: April 20, 2025
+                                    </div>
+                                </div>
+                                <div class="assignment-status">
+                                    <span class="status-badge not-started">Not Started</span>
+                                </div>
+                            </div>
+
+                            <!-- Sample Assignment 4 -->
+                            <div class="assignment-item" data-status="in-progress" onclick="openEmployeeModal('sarah-wilson')">
+                                <div class="assignment-info">
+                                    <h4 class="employee-name">Sarah Wilson</h4>
+                                    <div class="assignment-details">
+                                        Training: Team Building Workshop<br>
+                                        Progress: 2/4 sessions • Started: March 10, 2025
+                                    </div>
+                                </div>
+                                <div class="assignment-status">
+                                    <span class="status-badge in-progress">In Progress</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Tab functionality
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+
+                    // Add active class to clicked button
+                    button.classList.add('active');
+
+                    // Show corresponding content
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // Search functionality for courses
+            document.getElementById('courseSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const courseCards = document.querySelectorAll('.training-course-card');
+                
+                courseCards.forEach(card => {
+                    const title = card.querySelector('.course-title').textContent.toLowerCase();
+                    const details = card.querySelector('.course-details').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || details.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+
+            // Search functionality for employees
+            document.getElementById('employeeSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const assignmentItems = document.querySelectorAll('.assignment-item');
+                
+                assignmentItems.forEach(item => {
+                    const name = item.querySelector('.employee-name').textContent.toLowerCase();
+                    const details = item.querySelector('.assignment-details').textContent.toLowerCase();
+                    
+                    if (name.includes(searchTerm) || details.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Filter dropdown functionality
+        function toggleFilterDropdown() {
+            const dropdown = document.getElementById('filter-dropdown');
+            dropdown.classList.toggle('open');
+        }
+
+        function toggleStatusFilterDropdown() {
+            const dropdown = document.getElementById('status-filter-dropdown');
+            dropdown.classList.toggle('open');
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            const filterDropdown = document.getElementById('filter-dropdown');
+            const statusFilterDropdown = document.getElementById('status-filter-dropdown');
+            
+            if (!filterDropdown.contains(event.target)) {
+                filterDropdown.classList.remove('open');
+            }
+            
+            if (!statusFilterDropdown.contains(event.target)) {
+                statusFilterDropdown.classList.remove('open');
+            }
+        });
+
+        // Update filters for training courses
+        function updateFilters() {
+            const activeFilters = [];
+            const checkboxes = document.querySelectorAll('#filter-dropdown input[type="checkbox"]:checked');
+            
+            checkboxes.forEach(checkbox => {
+                activeFilters.push(checkbox.value);
+            });
+            
+            updateActiveFiltersDisplay(activeFilters);
+            filterCourses(activeFilters);
+        }
+
+        // Update filters for employee assignments
+        function updateStatusFilters() {
+            const activeFilters = [];
+            const checkboxes = document.querySelectorAll('#status-filter-dropdown input[type="checkbox"]:checked');
+            
+            checkboxes.forEach(checkbox => {
+                activeFilters.push(checkbox.value);
+            });
+            
+            filterAssignments(activeFilters);
+        }
+
+        // Display active filters
+        function updateActiveFiltersDisplay(filters) {
+            const activeFiltersContainer = document.getElementById('active-filters');
+            activeFiltersContainer.innerHTML = '';
+            
+            filters.forEach(filter => {
+                const filterTag = document.createElement('div');
+                filterTag.className = 'filter-tag';
+                filterTag.innerHTML = `
+                    ${filter.charAt(0).toUpperCase() + filter.slice(1)}
+                    <span class="remove-filter" onclick="removeFilter('${filter}')">×</span>
+                `;
+                activeFiltersContainer.appendChild(filterTag);
+            });
+        }
+
+        // Remove individual filter
+        function removeFilter(filterToRemove) {
+            const checkbox = document.getElementById(`filter-${filterToRemove}`);
+            if (checkbox) {
+                checkbox.checked = false;
+                updateFilters();
+            }
+        }
+
+        // Filter courses based on selected filters
+        function filterCourses(activeFilters) {
+            const courseCards = document.querySelectorAll('.training-course-card');
+            
+            courseCards.forEach(card => {
+                if (activeFilters.length === 0) {
+                    card.style.display = 'block';
+                } else {
+                    const cardTypes = card.getAttribute('data-type') || '';
+                    const hasMatchingFilter = activeFilters.some(filter => 
+                        cardTypes.includes(filter)
+                    );
+                    
+                    card.style.display = hasMatchingFilter ? 'block' : 'none';
+                }
+            });
+        }
+
+        // Filter assignments based on status
+        function filterAssignments(activeFilters) {
+            const assignmentItems = document.querySelectorAll('.assignment-item');
+            
+            assignmentItems.forEach(item => {
+                if (activeFilters.length === 0) {
+                    item.style.display = 'flex';
+                } else {
+                    const itemStatus = item.getAttribute('data-status');
+                    const hasMatchingStatus = activeFilters.includes(itemStatus);
+                    
+                    item.style.display = hasMatchingStatus ? 'flex' : 'none';
+                }
+            });
+        }
+
+        // Add new training function
+        function addNewTraining() {
+            document.getElementById('addTrainingModal').classList.add('show');
+        }
+
+        // Close modal function
+        function closeAddTrainingModal() {
+            document.getElementById('addTrainingModal').classList.remove('show');
+        }
+
+        // Add objective function
+        function addObjective() {
+            const objectiveText = document.getElementById('newObjective').value.trim();
+            if (objectiveText) {
+                const objectivesList = document.getElementById('objectivesList');
+                const objectiveItem = document.createElement('div');
+                objectiveItem.className = 'dynamic-item';
+                objectiveItem.innerHTML = `
+                    <span>${objectiveText}</span>
+                    <button type="button" class="remove-btn" onclick="removeItem(this)">×</button>
+                `;
+                objectivesList.appendChild(objectiveItem);
+                document.getElementById('newObjective').value = '';
+            }
+        }
+
+        // Add skill function
+        function addSkill() {
+            const skillText = document.getElementById('newSkill').value.trim();
+            if (skillText) {
+                const skillsList = document.getElementById('skillsList');
+                const skillItem = document.createElement('div');
+                skillItem.className = 'dynamic-item';
+                skillItem.innerHTML = `
+                    <span>${skillText}</span>
+                    <button type="button" class="remove-btn" onclick="removeItem(this)">×</button>
+                `;
+                skillsList.appendChild(skillItem);
+                document.getElementById('newSkill').value = '';
+            }
+        }
+
+        // Add activity function
+        function addActivity() {
+            const moduleName = document.getElementById('moduleName').value.trim();
+            const estimatedTime = document.getElementById('estimatedTime').value.trim();
+            const activityType = document.getElementById('activityType').value;
+            const remarks = document.getElementById('activityRemarks').value.trim();
+            
+            if (moduleName && estimatedTime && activityType) {
+                const activitiesList = document.getElementById('activitiesList');
+                const activityItem = document.createElement('div');
+                activityItem.className = 'activity-item';
+                activityItem.innerHTML = `
+                    <div class="activity-details">
+                        <strong>${moduleName}</strong><br>
+                        <span>Time: ${estimatedTime} hours • Type: ${activityType}</span><br>
+                        ${remarks ? `<span>Remarks: ${remarks}</span>` : ''}
+                    </div>
+                    <button type="button" class="remove-btn" onclick="removeItem(this.parentElement)">×</button>
+                `;
+                activitiesList.appendChild(activityItem);
+                
+                // Clear fields
+                document.getElementById('moduleName').value = '';
+                document.getElementById('estimatedTime').value = '';
+                document.getElementById('activityType').value = '';
+                document.getElementById('activityRemarks').value = '';
+            }
+        }
+
+        // Add certificate function
+        function addCertificate() {
+            const certificateTitle = document.getElementById('certificateTitle').value.trim();
+            if (certificateTitle) {
+                const certificatesList = document.getElementById('certificatesList');
+                const certificateItem = document.createElement('div');
+                certificateItem.className = 'dynamic-item';
+                certificateItem.innerHTML = `
+                    <span>${certificateTitle}</span>
+                    <button type="button" class="remove-btn" onclick="removeItem(this)">×</button>
+                `;
+                certificatesList.appendChild(certificateItem);
+                document.getElementById('certificateTitle').value = '';
+            }
+        }
+
+        // Remove item function
+        function removeItem(element) {
+            element.remove();
+        }
+
+        // Calculate total duration
+        function calculateTotalDuration() {
+            const activities = document.querySelectorAll('.activity-item');
+            let totalHours = 0;
+            
+            activities.forEach(activity => {
+                const timeText = activity.querySelector('.activity-details span').textContent;
+                const timeMatch = timeText.match(/Time: (\d+\.?\d*) hours/);
+                if (timeMatch) {
+                    totalHours += parseFloat(timeMatch[1]);
+                }
+            });
+            
+            document.getElementById('totalDuration').textContent = totalHours.toFixed(1);
+        }
+
+        // Update total duration when activities change
+        document.addEventListener('DOMContentLoaded', function() {
+            const activitiesList = document.getElementById('activitiesList');
+            if (activitiesList) {
+                const observer = new MutationObserver(calculateTotalDuration);
+                observer.observe(activitiesList, { childList: true });
+            }
+        });
+
+        // Employee Training Modal Functions
+        function openEmployeeModal(employeeId) {
+            // Sample employee data - in real app, this would come from a database
+            const employeeData = {
+                'john-doe': {
+                    name: 'John Doe',
+                    jobRole: 'Software Engineer',
+                    email: 'john.doe@company.com',
+                    avatar: 'JD',
+                    stats: { inProgress: 2, completed: 5, overdue: 1 },
+                    trainings: [
+                        {
+                            title: 'Leadership Development Program',
+                            description: 'Develop essential leadership skills including team management, strategic thinking, communication, and decision-making.',
+                            types: ['online'],
+                            progress: 75,
+                            status: 'in-progress'
+                        },
+                        {
+                            title: 'Advanced JavaScript',
+                            description: 'Master advanced JavaScript concepts including ES6+, async programming, and modern development patterns.',
+                            types: ['online'],
+                            progress: 40,
+                            status: 'in-progress'
+                        },
+                        {
+                            title: 'Safety and Compliance Training',
+                            description: 'Essential workplace safety protocols, emergency procedures, and regulatory compliance requirements.',
+                            types: ['onsite', 'required'],
+                            progress: 100,
+                            status: 'completed'
+                        },
+                        {
+                            title: 'Technical Skills Enhancement',
+                            description: 'Enhance technical capabilities and stay updated with latest technologies and industry best practices.',
+                            types: ['online', 'required'],
+                            progress: 100,
+                            status: 'completed'
+                        },
+                        {
+                            title: 'Communication Excellence',
+                            description: 'Improve interpersonal and communication skills for better workplace interactions and team collaboration.',
+                            types: ['onsite'],
+                            progress: 100,
+                            status: 'completed'
+                        },
+                        {
+                            title: 'Time Management',
+                            description: 'Learn effective time management strategies, prioritization techniques, and productivity optimization methods.',
+                            types: ['online'],
+                            progress: 100,
+                            status: 'completed'
+                        },
+                        {
+                            title: 'Customer Service Training',
+                            description: 'Enhance customer interaction skills, learn problem-solving techniques, and understand customer psychology.',
+                            types: ['onsite'],
+                            progress: 100,
+                            status: 'completed'
+                        },
+                        {
+                            title: 'Project Management Fundamentals',
+                            description: 'Learn essential project management methodologies, tools, and techniques for successful project delivery.',
+                            types: ['online', 'required'],
+                            progress: 25,
+                            status: 'overdue'
+                        }
+                    ]
+                },
+                'jane-smith': {
+                    name: 'Jane Smith',
+                    jobRole: 'Operations Manager',
+                    email: 'jane.smith@company.com',
+                    avatar: 'JS',
+                    stats: { inProgress: 1, completed: 8, overdue: 0 },
+                    trainings: [
+                        {
+                            title: 'Advanced Leadership Skills',
+                            description: 'Advanced leadership techniques for senior managers including strategic planning and team development.',
+                            types: ['online'],
+                            progress: 60,
+                            status: 'in-progress'
+                        },
+                        {
+                            title: 'Safety and Compliance Training',
+                            description: 'Essential workplace safety protocols, emergency procedures, and regulatory compliance requirements.',
+                            types: ['onsite', 'required'],
+                            progress: 100,
+                            status: 'completed'
+                        },
+                        {
+                            title: 'Operations Management Excellence',
+                            description: 'Optimize operational processes, improve efficiency, and implement best practices in operations management.',
+                            types: ['online'],
+                            progress: 100,
+                            status: 'completed'
+                        }
+                    ]
+                },
+                'mike-johnson': {
+                    name: 'Mike Johnson',
+                    jobRole: 'Data Analyst',
+                    email: 'mike.johnson@company.com',
+                    avatar: 'MJ',
+                    stats: { inProgress: 0, completed: 3, overdue: 1 },
+                    trainings: [
+                        {
+                            title: 'Advanced Excel Training',
+                            description: 'Master advanced Excel features including pivot tables, macros, data analysis tools, and complex formulas.',
+                            types: ['online'],
+                            progress: 0,
+                            status: 'overdue'
+                        },
+                        {
+                            title: 'Data Visualization with Power BI',
+                            description: 'Learn to create compelling data visualizations and interactive dashboards using Power BI.',
+                            types: ['online'],
+                            progress: 100,
+                            status: 'completed'
+                        },
+                        {
+                            title: 'SQL Database Management',
+                            description: 'Master SQL queries, database design, and data manipulation techniques for effective data management.',
+                            types: ['online'],
+                            progress: 100,
+                            status: 'completed'
+                        }
+                    ]
+                },
+                'sarah-wilson': {
+                    name: 'Sarah Wilson',
+                    jobRole: 'HR Specialist',
+                    email: 'sarah.wilson@company.com',
+                    avatar: 'SW',
+                    stats: { inProgress: 2, completed: 6, overdue: 0 },
+                    trainings: [
+                        {
+                            title: 'Team Building Workshop',
+                            description: 'Interactive workshop focused on building stronger team relationships, improving collaboration, and enhancing group dynamics.',
+                            types: ['onsite'],
+                            progress: 50,
+                            status: 'in-progress'
+                        },
+                        {
+                            title: 'HR Management Certification',
+                            description: 'Comprehensive HR management program covering recruitment, performance management, and employee relations.',
+                            types: ['online', 'required'],
+                            progress: 80,
+                            status: 'in-progress'
+                        },
+                        {
+                            title: 'Employment Law and Compliance',
+                            description: 'Stay updated with employment laws, regulations, and compliance requirements for HR professionals.',
+                            types: ['online', 'required'],
+                            progress: 100,
+                            status: 'completed'
+                        }
+                    ]
+                }
+            };
+
+            const employee = employeeData[employeeId];
+            if (!employee) return;
+
+            // Update employee information
+            document.getElementById('employeeName').textContent = employee.name;
+            document.getElementById('employeeJobRole').textContent = employee.jobRole;
+            document.getElementById('employeeEmail').textContent = employee.email;
+            document.getElementById('employeeAvatar').textContent = employee.avatar;
+
+            // Update statistics
+            document.getElementById('inProgressCount').textContent = employee.stats.inProgress;
+            document.getElementById('completedCount').textContent = employee.stats.completed;
+            document.getElementById('overdueCount').textContent = employee.stats.overdue;
+
+            // Update training list
+            const trainingList = document.getElementById('employeeTrainingList');
+            trainingList.innerHTML = '';
+
+            employee.trainings.forEach(training => {
+                const trainingItem = document.createElement('div');
+                trainingItem.className = 'training-progress-item';
+                
+                // Generate badge HTML for training types
+                const badgesHTML = training.types.map(type => {
+                    const badgeClass = type === 'online' ? 'online' : 
+                                     type === 'onsite' ? 'onsite' : 'required';
+                    const badgeText = type.charAt(0).toUpperCase() + type.slice(1);
+                    return `<span class="course-badge ${badgeClass}">${badgeText}</span>`;
+                }).join('');
+                
+                trainingItem.innerHTML = `
+                    <div class="training-progress-header">
+                        <h4 class="training-title">${training.title}</h4>
+                    </div>
+                    <div class="training-description">${training.description}</div>
+                    <div class="training-badges" style="margin: 10px 0;">
+                        ${badgesHTML}
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill ${training.status}" style="width: ${training.progress}%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span class="progress-percentage">${training.progress}% Complete</span>
+                        <span class="progress-status ${training.status}">
+                            ${training.status.charAt(0).toUpperCase() + training.status.slice(1).replace('-', ' ')}
+                        </span>
+                    </div>
+                `;
+                trainingList.appendChild(trainingItem);
+            });
+
+            // Show modal
+            document.getElementById('employeeTrainingModal').classList.add('show');
+        }
+
+        function closeEmployeeTrainingModal() {
+            document.getElementById('employeeTrainingModal').classList.remove('show');
+        }
+
+        function assignNewTraining() {
+            // This would typically open another modal or navigate to assignment page
+            alert('Assign New Training functionality would be implemented here.');
+        }
+
+        function visitPerformanceTracker() {
+            // Get current employee name for context
+            const employeeName = document.getElementById('employeeName').textContent;
+            
+            // This would typically navigate to the performance tracker page
+            // You can customize this URL based on your routing structure
+            const performanceTrackerUrl = '/performance-tracker'; // or '/employee/performance-tracker'
+            
+            // Option 1: Navigate to performance tracker
+            window.location.href = performanceTrackerUrl;
+            
+            // Option 2: Open in new tab (uncomment if preferred)
+            // window.open(performanceTrackerUrl, '_blank');
+            
+            // Option 3: For demonstration - show alert (remove in production)
+            // alert(`Navigating to Performance Tracker for ${employeeName}...`);
+        }
+
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

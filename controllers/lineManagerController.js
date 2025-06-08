@@ -328,6 +328,8 @@ const lineManagerController = {
             return res.redirect('/staff/login');
         }
     },
+
+    
     
 getLeaveRequest: async function(req, res) {
     const leaveRequestId = req.query.leaveRequestId;
@@ -462,6 +464,34 @@ getLeaveRequest: async function(req, res) {
     }
 },
         
+// Function to render the training development tracker page
+getTrainingDevelopmentTracker: async function (req, res) {
+    try {
+        // You can add any data fetching logic here if needed
+        // For example, getting training courses, employee assignments, etc.
+        
+        // Optional: Fetch training data from database
+        // const trainingData = await getTrainingData();
+        // const employeeAssignments = await getEmployeeAssignments();
+        
+        // Render the training development tracker page
+        res.render('staffpages/linemanager_pages/trainingdevelopmenttracker', {
+            title: 'Employee Training & Development Tracker',
+            // You can pass additional data to the view here
+            // trainingCourses: trainingData,
+            // assignments: employeeAssignments,
+            user: req.user || null // if you have user authentication
+        });
+        
+    } catch (error) {
+        console.error('Error loading training development tracker:', error);
+        res.status(500).render('error', {
+            message: 'Error loading training development tracker',
+            error: error
+        });
+    }
+},
+
 updateLeaveRequest: async function(req, res) {
     const leaveRequestId = req.body.leaveRequestId || req.query.leaveRequestId;
     const { action, remarks } = req.body;
