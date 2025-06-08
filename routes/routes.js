@@ -344,7 +344,7 @@ router.get('/linemanager/get-feedback-data/:userId', lineManagerController.getFe
 router.get('/linemanager/check-feedback-status', lineManagerController.checkFeedbackStatus);
 
 router.get('/linemanager/training-development-tracker', lineManagerController.getTrainingDevelopmentTracker);
-
+router.get('/hr/training-development-tracker', hrController.getHrTrainingDevelopmentTracker);
 
 module.exports = router; 
 

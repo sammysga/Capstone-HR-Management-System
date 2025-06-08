@@ -271,6 +271,34 @@ const hrController = {
         }
     },
 
+    // Function to render the training development tracker page
+getHrTrainingDevelopmentTracker: async function (req, res) {
+    try {
+        // You can add any data fetching logic here if needed
+        // For example, getting training courses, employee assignments, etc.
+        
+        // Optional: Fetch training data from database
+        // const trainingData = await getTrainingData();
+        // const employeeAssignments = await getEmployeeAssignments();
+        
+        // Render the training development tracker page
+        res.render('staffpages/hr_pages/hrtrainingdevelopmenttracker', {
+            title: 'Employee Training & Development Tracker',
+            // You can pass additional data to the view here
+            // trainingCourses: trainingData,
+            // assignments: employeeAssignments,
+            user: req.user || null // if you have user authentication
+        });
+        
+    } catch (error) {
+        console.error('Error loading training development tracker:', error);
+        res.status(500).render('error', {
+            message: 'Error loading training development tracker',
+            error: error
+        });
+    }
+},
+
     getHRNotifications: async function(req, res) {
         // Check for authentication
         if (!req.session.user) {
