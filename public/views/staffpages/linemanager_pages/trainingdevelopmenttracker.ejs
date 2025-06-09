@@ -2841,23 +2841,36 @@ function populateJobPositions(jobPositions) {
 // Populate objectives dropdown with job title prefix - now properly linked
 function populateObjectives(objectives) {
     const objectiveDropdown = document.getElementById('objectiveDropdown');
-    objectiveDropdown.innerHTML = '<option value="">Select objective area</option>'; // reset first option
+    objectiveDropdown.innerHTML = ''; // Clear existing options
+
+    if (!objectives || objectives.length === 0) {
+        // If no objectives found
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Objectives are being fetched when set with an employee in Objective Settings. Please assign objectives to the employee first.';
+        objectiveDropdown.appendChild(option);
+        return;
+    }
 
     // Sort objectives by staffName alphabetically
     objectives.sort((a, b) => {
-        const nameA = a.staffName.toUpperCase(); // ignore case
-        const nameB = b.staffName.toUpperCase(); // ignore case
-        if (nameA < nameB) return -1;
-        if (nameA > nameB) return 1;
-        return 0; // names are equal
+        const nameA = a.staffName.toUpperCase();
+        const nameB = b.staffName.toUpperCase();
+        return nameA.localeCompare(nameB);
     });
+
+    // Default first option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Select objective area';
+    objectiveDropdown.appendChild(defaultOption);
 
     // Populate the dropdown with sorted objectives
     objectives.forEach(obj => {
         const option = document.createElement('option');
-        option.value = obj.objectiveId; // keep the ID as value
-        option.textContent = `${obj.staffName} - ${obj.objectiveDescrpt}`; // display staff name + objective
-        option.setAttribute('data-objective-desc', obj.objectiveDescrpt); // optional, for later usage
+        option.value = obj.objectiveId;
+        option.textContent = `${obj.staffName} - ${obj.objectiveDescrpt}`;
+        option.setAttribute('data-objective-desc', obj.objectiveDescrpt);
         objectiveDropdown.appendChild(option);
     });
 }
@@ -2865,8 +2878,23 @@ function populateObjectives(objectives) {
 // Populate skills dropdown with skill type and name
 function populateSkills(skills) {
     const skillDropdown = document.getElementById('skillDropdown');
-    skillDropdown.innerHTML = '<option value="">Select skill area</option>';
-    
+    skillDropdown.innerHTML = ''; // Clear existing options
+
+    if (!skills || skills.length === 0) {
+        // If no skills found
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No skills available. Please coordinate with HR to set up the skills for the respective job position.';
+        skillDropdown.appendChild(option);
+        return;
+    }
+
+    // Default first option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Select skill area';
+    skillDropdown.appendChild(defaultOption);
+
     // Group skills by type
     const groupedSkills = skills.reduce((acc, skill) => {
         if (!acc[skill.jobReqSkillType]) {
@@ -2875,12 +2903,12 @@ function populateSkills(skills) {
         acc[skill.jobReqSkillType].push(skill);
         return acc;
     }, {});
-    
+
     // Create optgroups for each skill type
     Object.entries(groupedSkills).forEach(([type, typeSkills]) => {
         const optgroup = document.createElement('optgroup');
         optgroup.label = `${type} Skills`;
-        
+
         typeSkills.forEach(skill => {
             const option = document.createElement('option');
             option.value = skill.jobReqSkillId;
@@ -2891,10 +2919,11 @@ function populateSkills(skills) {
             option.setAttribute('data-name', skill.jobReqSkillName);
             optgroup.appendChild(option);
         });
-        
+
         skillDropdown.appendChild(optgroup);
     });
 }
+
 
 // Function to populate activity types
 function populateActivityTypes(activityTypes) {
