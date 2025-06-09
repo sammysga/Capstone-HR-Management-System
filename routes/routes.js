@@ -343,7 +343,20 @@ router.get('/linemanager/get-feedback-data/:userId', lineManagerController.getFe
 // Add this to your routes file (routes.js or similar)
 router.get('/linemanager/check-feedback-status', lineManagerController.checkFeedbackStatus);
 
+
+// ============================
+// Line Manager - TRAINING MODULE CONTROLLER FUNCTIONS
+// ============================
+router.get('/linemanager/training-form-data', lineManagerController.getTrainingFormData);
+router.post('/linemanager/training', lineManagerController.createTraining);
+router.post('/linemanager/activity-type', lineManagerController.addActivityType);
+router.get('/linemanager/trainings', lineManagerController.getAllTrainings);
 router.get('/linemanager/training-development-tracker', lineManagerController.getTrainingDevelopmentTracker);
+
+// ============================
+// HR - TRAINING MODULE CONTROLLER FUNCTIONS
+// ============================
+
 router.get('/hr/training-development-tracker', hrController.getHrTrainingDevelopmentTracker);
 
 module.exports = router; 

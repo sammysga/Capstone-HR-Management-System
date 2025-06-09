@@ -8135,6 +8135,301 @@ submitFeedback: async function (req, res) {
         });
     }
 },
+
+// ============================
+// TRAINING MODULE CONTROLLER FUNCTIONS
+// ============================
+
+
+getTrainingFormData: async function(req, res) {
+        console.log(`[${new Date().toISOString()}] User ${req.session?.user?.userId || 'unknown'} requesting training form data`);
+
+        try {
+            // Fetch all required data in parallel for better performance
+            const [
+                jobPositionsResult,
+                objectivesResult,
+                skillsResult,
+                activityTypesResult
+            ] = await Promise.all([
+                // Job Positions query
+                supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle')
+                    .order('jobTitle', { ascending: true }),
+
+                // Objectives query
+                supabase
+                    .from('objectivesettings_objectives')
+                    .select('objectiveId, objectiveDescrpt')
+                    .order('objectiveDescrpt', { ascending: true }),
+
+                // Skills query
+                supabase
+                    .from('jobreqskills')
+                    .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
+                    .order('jobReqSkillName', { ascending: true }),
+
+                // Activity Types query
+                supabase
+                    .from('training_activities_types')
+                    .select('activityTypeId, activityType')
+                    .order('activityType', { ascending: true })
+            ]);
+
+            // Check for errors
+            const errors = [];
+            if (jobPositionsResult.error) errors.push({ type: 'jobPositions', error: jobPositionsResult.error });
+            if (objectivesResult.error) errors.push({ type: 'objectives', error: objectivesResult.error });
+            if (skillsResult.error) errors.push({ type: 'skills', error: skillsResult.error });
+            if (activityTypesResult.error) errors.push({ type: 'activityTypes', error: activityTypesResult.error });
+
+            if (errors.length > 0) {
+                console.error('Errors fetching training form data:', errors);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error fetching form data',
+                    errors: errors
+                });
+            }
+
+            // Format the job positions data
+            const jobPositions = jobPositionsResult.data.map(job => ({
+                id: job.jobId,
+                title: job.jobTitle,
+                value: job.jobId,             // For form compatibility
+                label: job.jobTitle           // For display
+            }));
+
+            // Format the objectives data
+            const objectives = objectivesResult.data.map(obj => ({
+                id: obj.objectiveId,
+                description: obj.objectiveDescrpt,
+                value: obj.objectiveId,       // For form compatibility
+                label: obj.objectiveDescrpt    // For display
+            }));
+
+            // Format and categorize skills data
+            const skills = {
+                all: skillsResult.data.map(skill => ({
+                    id: skill.jobReqSkillId,
+                    name: skill.jobReqSkillName,
+                    type: skill.jobReqSkillType,
+                    value: skill.jobReqSkillId,    // For form compatibility
+                    label: skill.jobReqSkillName    // For display
+                })),
+                hard: skillsResult.data
+                    .filter(skill => skill.jobReqSkillType === 'Hard')
+                    .map(skill => ({
+                        id: skill.jobReqSkillId,
+                        name: skill.jobReqSkillName,
+                        value: skill.jobReqSkillId,
+                        label: skill.jobReqSkillName
+                    })),
+                soft: skillsResult.data
+                    .filter(skill => skill.jobReqSkillType === 'Soft')
+                    .map(skill => ({
+                        id: skill.jobReqSkillId,
+                        name: skill.jobReqSkillName,
+                        value: skill.jobReqSkillId,
+                        label: skill.jobReqSkillName
+                    }))
+            };
+
+            // Format the activity types data
+            const activityTypes = activityTypesResult.data.map(type => ({
+                id: type.activityTypeId,
+                type: type.activityType,
+                value: type.activityTypeId,    // For form compatibility
+                label: type.activityType       // For display
+            }));
+
+            console.log(`[${new Date().toISOString()}] Successfully fetched training form data`);
+
+            // Return the formatted data
+            return res.status(200).json({
+                success: true,
+                data: {
+                    jobPositions,
+                    objectives,
+                    skills,
+                    activityTypes
+                },
+                metadata: {
+                    timestamp: new Date().toISOString(),
+                    counts: {
+                        jobPositions: jobPositions.length,
+                        objectives: objectives.length,
+                        totalSkills: skills.all.length,
+                        hardSkills: skills.hard.length,
+                        softSkills: skills.soft.length,
+                        activityTypes: activityTypes.length
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error('Error in getTrainingFormData:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'An unexpected error occurred while fetching form data',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    },
+
+    // Create new training with activities and certifications
+    createTraining: async function(req, res) {
+        const {
+            trainingName,
+            trainingDesc,
+            jobId,
+            objectiveId,
+            jobReqSkillId,
+            isOnlineArrangement,
+            country,
+            address,
+            cost,
+            totalDuration,
+            activities,
+            certifications
+        } = req.body;
+
+        try {
+            // Start a Supabase transaction
+            const { data: training, error: trainingError } = await supabase
+                .from('trainings')
+                .insert([{
+                    trainingName,
+                    trainingDesc,
+                    jobId,
+                    objectiveId,
+                    jobReqSkillId,
+                    userId: req.user.userId, // Assuming you have user data in request
+                    isOnlineArrangement,
+                    country,
+                    address,
+                    cost,
+                    totalDuration,
+                    isActive: true
+                }])
+                .select()
+                .single();
+
+            if (trainingError) throw trainingError;
+
+            // Insert activities if provided
+            if (activities && activities.length > 0) {
+                const formattedActivities = activities.map(activity => ({
+                    trainingId: training.trainingId,
+                    activityName: activity.name,
+                    estActivityDuration: activity.duration,
+                    status: 'Not Started',
+                    activityType: activity.type,
+                    activityRemarks: activity.remarks || ''
+                }));
+
+                const { error: activitiesError } = await supabase
+                    .from('training_activities')
+                    .insert(formattedActivities);
+
+                if (activitiesError) throw activitiesError;
+            }
+
+            // Insert certifications if provided
+            if (certifications && certifications.length > 0) {
+                const formattedCerts = certifications.map(cert => ({
+                    trainingId: training.trainingId,
+                    trainingTitle: cert.title,
+                    trainingDesc: cert.description
+                }));
+
+                const { error: certsError } = await supabase
+                    .from('training_certifications')
+                    .insert(formattedCerts);
+
+                if (certsError) throw certsError;
+            }
+
+            res.json({
+                success: true,
+                message: 'Training created successfully',
+                data: training
+            });
+
+        } catch (error) {
+            console.error('Error in createTraining:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to create training',
+                error: error.message
+            });
+        }
+    },
+
+    // Add new activity type
+    addActivityType: async function(req, res) {
+        const { activityType } = req.body;
+
+        try {
+            const { data, error } = await supabase
+                .from('training_activities_types')
+                .insert([{ activityType }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            res.json({
+                success: true,
+                message: 'Activity type added successfully',
+                data: data
+            });
+
+        } catch (error) {
+            console.error('Error in addActivityType:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to add activity type',
+                error: error.message
+            });
+        }
+    },
+
+    // Fetch all trainings with related data
+    getAllTrainings: async function(req, res) {
+        try {
+            const { data: trainings, error: trainingsError } = await supabase
+                .from('trainings')
+                .select(`
+                    *,
+                    jobpositions (jobTitle),
+                    objectivesettings_objectives (objectiveName),
+                    jobreqskills (skillName),
+                    useraccounts (firstName, lastName),
+                    training_activities (*),
+                    training_certifications (*)
+                `)
+                .eq('isActive', true)
+                .order('trainingId', { ascending: false });
+
+            if (trainingsError) throw trainingsError;
+
+            res.json({
+                success: true,
+                data: trainings
+            });
+
+        } catch (error) {
+            console.error('Error in getAllTrainings:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch trainings',
+                error: error.message
+            });
+        }
+    },
     
 };
 

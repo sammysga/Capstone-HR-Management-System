@@ -952,6 +952,151 @@
                 align-items: stretch;
             }
         }
+
+        /* ACTIVITY TYPE MODAL */
+
+        /* Activity type actions styling */
+    .activity-type-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .add-type-btn {
+        background-color: #07ACB9;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .add-type-btn:hover {
+        background-color: #059ca4;
+    }
+
+    .add-type-btn i {
+        font-size: 10px;
+    }
+
+    /* Mini modal styling */
+    .mini-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 20000; /* Higher than main modal */
+    }
+
+    .mini-modal-overlay.show {
+        display: flex;
+    }
+
+    .mini-modal-content {
+        background-color: white;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        animation: miniModalSlideIn 0.3s ease;
+    }
+
+    @keyframes miniModalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .mini-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .mini-modal-header h4 {
+        margin: 0;
+        color: #334155;
+        font-size: 1.1rem;
+    }
+
+    .close-mini-modal {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #64748b;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+
+    .close-mini-modal:hover {
+        background-color: #f1f5f9;
+        color: #334155;
+    }
+
+    .mini-modal-body {
+        margin-bottom: 0;
+    }
+
+    .mini-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .mini-modal-actions .btn-secondary,
+    .mini-modal-actions .btn-primary {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .activity-form-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .activity-type-actions {
+            justify-content: flex-start;
+        }
+
+        .add-type-btn {
+            font-size: 11px;
+            padding: 6px 10px;
+        }
+    }
+</style>
     </style>
 </head>
 <body>
@@ -964,7 +1109,7 @@
             <p>Manage training courses, track employee progress, and oversee professional development initiatives.</p>
         </div>
 
-    <!-- Add New Training Modal -->
+       <!-- Add New Training Modal -->
     <div class="modal-overlay" id="addTrainingModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -990,14 +1135,7 @@
                         <label class="form-label">Job Positions Applicable:</label>
                         <select class="form-select" id="jobPositions" required>
                             <option value="">Select applicable positions</option>
-                            <option value="all">All Positions</option>
-                            <option value="management">Management</option>
-                            <option value="hr">Human Resources</option>
-                            <option value="it">Information Technology</option>
-                            <option value="operations">Operations</option>
-                            <option value="sales">Sales & Marketing</option>
-                            <option value="finance">Finance & Accounting</option>
-                            <option value="customer-service">Customer Service</option>
+                            <!-- Options will be populated dynamically -->
                         </select>
                     </div>
                     
@@ -1019,25 +1157,12 @@
 
                 <!-- Focus on Objective Areas with Dropdown -->
                 <div class="form-group">
-                    <label class="form-label">Focus on Objective Areas:</label>
+                    <label class="form-label">Objective Focus Areas:</label>
                     <div class="add-item-section">
                         <div class="add-item-header">
                             <select class="add-item-input" id="objectiveDropdown">
                                 <option value="">Select objective area</option>
-                                <option value="Leadership Development">Leadership Development</option>
-                                <option value="Team Management">Team Management</option>
-                                <option value="Strategic Planning">Strategic Planning</option>
-                                <option value="Communication Skills">Communication Skills</option>
-                                <option value="Problem Solving">Problem Solving</option>
-                                <option value="Decision Making">Decision Making</option>
-                                <option value="Project Management">Project Management</option>
-                                <option value="Customer Service">Customer Service</option>
-                                <option value="Sales Performance">Sales Performance</option>
-                                <option value="Quality Assurance">Quality Assurance</option>
-                                <option value="Safety Compliance">Safety Compliance</option>
-                                <option value="Innovation">Innovation</option>
-                                <option value="Change Management">Change Management</option>
-                                <option value="Performance Improvement">Performance Improvement</option>
+                                <!-- Options will be populated dynamically -->
                             </select>
                             <button type="button" class="add-btn" onclick="addObjective()">Add Objective</button>
                         </div>
@@ -1047,36 +1172,12 @@
 
                 <!-- Focus Skill Areas with Dropdown -->
                 <div class="form-group">
-                    <label class="form-label">Focus Skill Areas:</label>
+                    <label class="form-label">Skill Focus Areas:</label>
                     <div class="add-item-section">
                         <div class="add-item-header">
                             <select class="add-item-input" id="skillDropdown">
                                 <option value="">Select skill area</option>
-                                <option value="Technical Skills">Technical Skills</option>
-                                <option value="Analytical Thinking">Analytical Thinking</option>
-                                <option value="Critical Thinking">Critical Thinking</option>
-                                <option value="Creative Problem Solving">Creative Problem Solving</option>
-                                <option value="Data Analysis">Data Analysis</option>
-                                <option value="Programming">Programming</option>
-                                <option value="Software Development">Software Development</option>
-                                <option value="Database Management">Database Management</option>
-                                <option value="Network Administration">Network Administration</option>
-                                <option value="Cybersecurity">Cybersecurity</option>
-                                <option value="Digital Marketing">Digital Marketing</option>
-                                <option value="Social Media Management">Social Media Management</option>
-                                <option value="Content Creation">Content Creation</option>
-                                <option value="Public Speaking">Public Speaking</option>
-                                <option value="Presentation Skills">Presentation Skills</option>
-                                <option value="Negotiation">Negotiation</option>
-                                <option value="Conflict Resolution">Conflict Resolution</option>
-                                <option value="Emotional Intelligence">Emotional Intelligence</option>
-                                <option value="Time Management">Time Management</option>
-                                <option value="Organizational Skills">Organizational Skills</option>
-                                <option value="Multitasking">Multitasking</option>
-                                <option value="Attention to Detail">Attention to Detail</option>
-                                <option value="Financial Analysis">Financial Analysis</option>
-                                <option value="Budgeting">Budgeting</option>
-                                <option value="Risk Management">Risk Management</option>
+                                <!-- Options will be populated dynamically -->
                             </select>
                             <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
                         </div>
@@ -1087,7 +1188,7 @@
                 <!-- Total Duration Display -->
                 <div class="duration-display">
                     <div class="duration-label">Total Duration to Complete</div>
-                    <div class="duration-value"><span id="totalDuration">0</span> hours</div>
+                    <div class="duration-value"><span id="totalDuration">0</span></div>
                 </div>
 
                 <!-- Activities Needed -->
@@ -1098,18 +1199,39 @@
                             <input type="text" class="add-item-input" id="moduleName" placeholder="Module name">
                             <input type="number" class="add-item-input" id="estimatedTime" placeholder="Estimated time (hours)" min="0" step="0.5">
                         </div>
-                        <div class="activity-form-grid">
-                            <select class="form-select" id="activityType">
-                                <option value="">Select type</option>
-                                <option value="lecture">Lecture</option>
-                                <option value="workshop">Workshop</option>
-                                <option value="practical">Practical Exercise</option>
-                                <option value="assessment">Assessment</option>
-                                <option value="discussion">Group Discussion</option>
-                                <option value="case-study">Case Study</option>
-                            </select>
-                            <input type="text" class="add-item-input" id="activityRemarks" placeholder="Remarks (optional)">
-                        </div>
+<div class="activity-form-grid">
+    <select class="form-select" id="activityType">
+        <option value="">Select type</option>
+        <!-- Options will be populated dynamically -->
+    </select>
+    <div class="activity-type-actions">
+        <button type="button" class="add-type-btn" onclick="showAddActivityTypeModal()">
+            <i class="fas fa-plus"></i> Add New Type
+        </button>
+    </div>
+</div>
+
+<!-- Add Activity Type Mini Modal -->
+<div class="mini-modal-overlay" id="addActivityTypeModal">
+    <div class="mini-modal-content">
+        <div class="mini-modal-header">
+            <h4>Add New Activity Type</h4>
+            <button type="button" class="close-mini-modal" onclick="closeAddActivityTypeModal()">×</button>
+        </div>
+        <div class="mini-modal-body">
+            <div class="form-group">
+                <label class="form-label">Activity Type Name:</label>
+                <input type="text" class="form-input" id="newActivityTypeName" placeholder="Enter activity type name" maxlength="50">
+            </div>
+            <div class="mini-modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeAddActivityTypeModal()">Cancel</button>
+                <button type="button" class="btn-primary" onclick="saveNewActivityType()">Add Type</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+                        <input type="text" class="add-item-input" id="activityRemarks" placeholder="Remarks (optional)">
                         <button type="button" class="add-btn" onclick="addActivity()" style="width: 100%; margin-top: 10px;">Add Activity</button>
                         <div class="dynamic-list" id="activitiesList"></div>
                     </div>
@@ -1133,60 +1255,6 @@
                     <button type="submit" class="btn-primary">Create Training Course</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Employee Training Details Modal -->
-    <div class="modal-overlay" id="employeeTrainingModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Employee Training Details</h2>
-            </div>
-            
-            <!-- Employee Information Section -->
-            <div class="employee-info-section">
-                <div class="employee-header">
-                    <div class="employee-avatar" id="employeeAvatar">JD</div>
-                    <div class="employee-details">
-                        <h3 id="employeeName">John Doe</h3>
-                        <div class="employee-job-role" id="employeeJobRole">Software Engineer</div>
-                        <div class="employee-email" id="employeeEmail">john.doe@company.com</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Training Statistics -->
-            <div class="training-stats">
-                <div class="stat-card in-progress">
-                    <div class="stat-number" id="inProgressCount">2</div>
-                    <div class="stat-label">IN PROGRESS</div>
-                </div>
-                <div class="stat-card completed">
-                    <div class="stat-number" id="completedCount">5</div>
-                    <div class="stat-label">COMPLETED</div>
-                </div>
-                <div class="stat-card overdue">
-                    <div class="stat-number" id="overdueCount">1</div>
-                    <div class="stat-label">OVERDUE</div>
-                </div>
-            </div>
-
-            <!-- All Trainings Section -->
-            <div class="form-group">
-                <label class="form-label">All Trainings:</label>
-                <div class="training-progress-list" id="employeeTrainingList">
-                    <!-- Training progress items will be populated here -->
-                </div>
-            </div>
-
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" onclick="closeEmployeeTrainingModal()">Close</button>
-                <button type="button" class="btn-primary" onclick="visitPerformanceTracker()">
-                    <i class="fas fa-chart-line"></i>
-                    Visit Performance Tracker
-                </button>
-                <button type="button" class="btn-primary" onclick="assignNewTraining()">Assign New Training</button>
-            </div>
         </div>
     </div>
 
@@ -1513,6 +1581,15 @@
                     }
                 });
             });
+
+
+// Get modal element
+const addTrainingModal = document.getElementById('addTrainingModal');
+
+// Load dropdown data when modal is opened
+document.querySelector('.add-training-btn').addEventListener('click', function() {
+    loadTrainingFormData();
+});
         });
 
         // Filter dropdown functionality
@@ -1624,23 +1701,191 @@
             });
         }
 
+        // ============================
+        // ADD TRAINING MODULE SCRIPTS
+        // ============================
+
+
         // Add new training function
-        function addNewTraining() {
-            // Reset form and arrays
-            selectedObjectives = [];
-            selectedSkills = [];
-            addedActivities = [];
-            addedCertificates = [];
-            
-            // Clear displayed items
-            document.getElementById('objectivesList').innerHTML = '';
-            document.getElementById('skillsList').innerHTML = '';
-            document.getElementById('activitiesList').innerHTML = '';
-            document.getElementById('certificatesList').innerHTML = '';
-            document.getElementById('totalDuration').textContent = '0';
-            
-            document.getElementById('addTrainingModal').classList.add('show');
+    
+
+// Update the addNewTraining function to load data
+function addNewTraining() {
+        // Reset form and arrays
+        selectedObjectives = [];
+        selectedSkills = [];
+        addedActivities = [];
+        addedCertificates = [];
+        
+        // Clear displayed items
+        document.getElementById('objectivesList').innerHTML = '';
+        document.getElementById('skillsList').innerHTML = '';
+        document.getElementById('activitiesList').innerHTML = '';
+        document.getElementById('certificatesList').innerHTML = '';
+        document.getElementById('totalDuration').textContent = '0';
+        
+        // Load dropdown data
+        loadTrainingFormData();
+        
+        document.getElementById('addTrainingModal').classList.add('show');
+    }
+
+
+// Update the addObjective function to work with IDs
+    function addObjective() {
+        const objectiveDropdown = document.getElementById('objectiveDropdown');
+        const selectedValue = objectiveDropdown.value;
+        const selectedText = objectiveDropdown.options[objectiveDropdown.selectedIndex].text;
+        
+        if (selectedValue && !selectedObjectives.find(obj => obj.id === selectedValue)) {
+            selectedObjectives.push({
+                id: selectedValue,
+                text: selectedText
+            });
+            updateObjectivesDisplay();
+            objectiveDropdown.value = ''; // Reset dropdown
         }
+    }
+
+    function updateObjectivesDisplay() {
+        const objectivesList = document.getElementById('objectivesList');
+        objectivesList.innerHTML = '';
+        
+        selectedObjectives.forEach(objective => {
+            const pillTag = document.createElement('div');
+            pillTag.className = 'pill-tag';
+            pillTag.innerHTML = `
+                ${objective.text}
+                <span class="remove-pill" onclick="removeObjective('${objective.id}')">×</span>
+            `;
+            objectivesList.appendChild(pillTag);
+        });
+    }
+
+    // Updated removeObjective function
+    function removeObjective(objectiveIdToRemove) {
+        selectedObjectives = selectedObjectives.filter(obj => obj.id !== objectiveIdToRemove);
+        updateObjectivesDisplay();
+    }
+
+// Update the addSkill function to work with IDs
+function addSkill() {
+        const skillDropdown = document.getElementById('skillDropdown');
+        const selectedValue = skillDropdown.value;
+        const selectedText = skillDropdown.options[skillDropdown.selectedIndex].text;
+        
+        if (selectedValue && !selectedSkills.find(skill => skill.id === selectedValue)) {
+            selectedSkills.push({
+                id: selectedValue,
+                text: selectedText
+            });
+            updateSkillsDisplay();
+            skillDropdown.value = ''; // Reset dropdown
+        }
+    }
+
+    // Updated skills display
+    function updateSkillsDisplay() {
+        const skillsList = document.getElementById('skillsList');
+        skillsList.innerHTML = '';
+        
+        selectedSkills.forEach(skill => {
+            const pillTag = document.createElement('div');
+            pillTag.className = 'pill-tag';
+            pillTag.innerHTML = `
+                ${skill.text}
+                <span class="remove-pill" onclick="removeSkill('${skill.id}')">×</span>
+            `;
+            skillsList.appendChild(pillTag);
+        });
+    }
+
+ function removeSkill(skillIdToRemove) {
+        selectedSkills = selectedSkills.filter(skill => skill.id !== skillIdToRemove);
+        updateSkillsDisplay();
+    }
+
+    // Close modal function
+    function closeAddTrainingModal() {
+        document.getElementById('addTrainingModal').classList.remove('show');
+    }
+// Submit training form
+async function submitTrainingForm(event) {
+    event.preventDefault();
+    
+    const formData = {
+        trainingName: document.getElementById('courseName').value,
+        trainingDesc: document.getElementById('courseDescription').value,
+        jobId: document.getElementById('jobPositions').value,
+        objectiveId: document.getElementById('objectives').value,
+        jobReqSkillId: document.getElementById('skills').value,
+        isOnlineArrangement: document.getElementById('trainingMode').value === 'online',
+        country: document.getElementById('country').value,
+        address: document.getElementById('address').value,
+        cost: parseFloat(document.getElementById('cost').value),
+        totalDuration: parseFloat(document.getElementById('duration').value),
+        activities: getActivitiesFromForm(),
+        certifications: getCertificationsFromForm()
+    };
+
+    try {
+        const response = await fetch('/line-manager/training', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            // Close modal and refresh training list
+            closeModal();
+            loadTrainings();
+            // Show success notification
+        }
+    } catch (error) {
+        console.error('Error submitting form:', error);
+        // Show error notification
+    }
+}
+
+// Helper function to get activities from form
+function getActivitiesFromForm() {
+    const activities = [];
+    const activityContainer = document.getElementById('activitiesList');
+    const activityItems = activityContainer.getElementsByClassName('activity-item');
+    
+    for (const item of activityItems) {
+        activities.push({
+            name: item.querySelector('[name="activityName"]').value,
+            duration: parseFloat(item.querySelector('[name="activityDuration"]').value),
+            type: item.querySelector('[name="activityType"]').value,
+            remarks: item.querySelector('[name="activityRemarks"]').value
+        });
+    }
+    
+    return activities;
+}
+
+// Helper function to get certifications from form
+function getCertificationsFromForm() {
+    const certifications = [];
+    const certContainer = document.getElementById('certificationsList');
+    const certItems = certContainer.getElementsByClassName('certificate-item');
+    
+    for (const item of certItems) {
+        certifications.push({
+            title: item.querySelector('[name="certTitle"]').value,
+            description: item.querySelector('[name="certDescription"]').value
+        });
+    }
+    
+    return certifications;
+}
+
+
 
         // Close modal function
         function closeAddTrainingModal() {
@@ -1716,58 +1961,58 @@
         }
 
         // Add activity function with persistent display
-        function addActivity() {
-            const moduleName = document.getElementById('moduleName').value.trim();
-            const estimatedTime = document.getElementById('estimatedTime').value.trim();
-            const activityType = document.getElementById('activityType').value;
-            const remarks = document.getElementById('activityRemarks').value.trim();
+        // Add activity function (unchanged)
+    function addActivity() {
+        const moduleName = document.getElementById('moduleName').value.trim();
+        const estimatedTime = document.getElementById('estimatedTime').value.trim();
+        const activityType = document.getElementById('activityType').value;
+        const remarks = document.getElementById('activityRemarks').value.trim();
+        
+        if (moduleName && estimatedTime && activityType) {
+            const activity = {
+                moduleName: moduleName,
+                estimatedTime: parseFloat(estimatedTime),
+                activityType: activityType,
+                remarks: remarks
+            };
             
-            if (moduleName && estimatedTime && activityType) {
-                const activity = {
-                    moduleName: moduleName,
-                    estimatedTime: parseFloat(estimatedTime),
-                    activityType: activityType,
-                    remarks: remarks
-                };
-                
-                addedActivities.push(activity);
-                updateActivitiesDisplay();
-                calculateTotalDuration();
-                
-                // Clear fields
-                document.getElementById('moduleName').value = '';
-                document.getElementById('estimatedTime').value = '';
-                document.getElementById('activityType').value = '';
-                document.getElementById('activityRemarks').value = '';
-            }
-        }
-
-        // Update activities display
-        function updateActivitiesDisplay() {
-            const activitiesList = document.getElementById('activitiesList');
-            activitiesList.innerHTML = '';
-            
-            addedActivities.forEach((activity, index) => {
-                const activityItem = document.createElement('div');
-                activityItem.className = 'activity-item';
-                activityItem.innerHTML = `
-                    <div class="activity-details">
-                        <strong>${activity.moduleName}</strong><br>
-                        <span>Time: ${activity.estimatedTime} hours • Type: ${activity.activityType}</span><br>
-                        ${activity.remarks ? `<span>Remarks: ${activity.remarks}</span>` : ''}
-                    </div>
-                    <button type="button" class="remove-btn" onclick="removeActivity(${index})">×</button>
-                `;
-                activitiesList.appendChild(activityItem);
-            });
-        }
-
-        // Remove activity
-        function removeActivity(index) {
-            addedActivities.splice(index, 1);
+            addedActivities.push(activity);
             updateActivitiesDisplay();
             calculateTotalDuration();
+            
+            // Clear fields
+            document.getElementById('moduleName').value = '';
+            document.getElementById('estimatedTime').value = '';
+            document.getElementById('activityType').value = '';
+            document.getElementById('activityRemarks').value = '';
         }
+    }
+        // Update activities display
+      function updateActivitiesDisplay() {
+        const activitiesList = document.getElementById('activitiesList');
+        activitiesList.innerHTML = '';
+        
+        addedActivities.forEach((activity, index) => {
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            activityItem.innerHTML = `
+                <div class="activity-details">
+                    <strong>${activity.moduleName}</strong><br>
+                    <span>Time: ${activity.estimatedTime} hours • Type: ${activity.activityType}</span><br>
+                    ${activity.remarks ? `<span>Remarks: ${activity.remarks}</span>` : ''}
+                </div>
+                <button type="button" class="remove-btn" onclick="removeActivity(${index})">×</button>
+            `;
+            activitiesList.appendChild(activityItem);
+        });
+    }
+
+    // Remove activity (unchanged)
+    function removeActivity(index) {
+        addedActivities.splice(index, 1);
+        updateActivitiesDisplay();
+        calculateTotalDuration();
+    }
 
         // Add certificate function with title and description
         function addCertificate() {
@@ -1820,15 +2065,246 @@
         }
 
         // Calculate total duration
-        function calculateTotalDuration() {
-            let totalHours = 0;
-            
-            addedActivities.forEach(activity => {
-                totalHours += activity.estimatedTime;
-            });
-            
-            document.getElementById('totalDuration').textContent = totalHours.toFixed(1);
+function calculateTotalDuration() {
+    let totalHours = 0;
+
+    addedActivities.forEach(activity => {
+        totalHours += activity.estimatedTime;
+    });
+
+    const totalHoursRounded = totalHours.toFixed(1);
+    const totalDays = (totalHours / 24).toFixed(1);
+
+    document.getElementById('totalDuration').textContent = `${totalHoursRounded} hours (${totalDays} days)`;
+}
+async function loadTrainingFormData() {
+    try {
+        console.log('Loading training form data...');
+        const response = await fetch('/linemanager/training-form-data');
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('Data received:', result.data);
+            populateJobPositions(result.data.jobPositions);
+            populateObjectives(result.data.objectives);
+            populateSkills(result.data.skills.all);
+            populateActivityTypes(result.data.activityTypes);
+        } else {
+            console.error('Failed to load form data:', result.message);
+            alert('Failed to load form data. Please try again.');
         }
+    } catch (error) {
+        console.error('Error loading form data:', error);
+        alert('Error loading form data. Please check your connection.');
+    }
+}
+// Show add activity type modal
+function showAddActivityTypeModal() {
+    document.getElementById('newActivityTypeName').value = '';
+    document.getElementById('addActivityTypeModal').classList.add('show');
+}
+
+// Close add activity type modal
+function closeAddActivityTypeModal() {
+    document.getElementById('addActivityTypeModal').classList.remove('show');
+}
+
+// Save new activity type
+async function saveNewActivityType() {
+    const activityTypeName = document.getElementById('newActivityTypeName').value.trim();
+    
+    if (!activityTypeName) {
+        alert('Please enter an activity type name.');
+        return;
+    }
+
+    // Check if activity type already exists
+    const activityTypeSelect = document.getElementById('activityType');
+    const existingOptions = Array.from(activityTypeSelect.options);
+    const exists = existingOptions.some(option => 
+        option.textContent.toLowerCase() === activityTypeName.toLowerCase()
+    );
+
+    if (exists) {
+        alert('This activity type already exists.');
+        return;
+    }
+
+    // Show loading state
+    const saveBtn = document.querySelector('#addActivityTypeModal .btn-primary');
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = 'Adding...';
+    saveBtn.disabled = true;
+
+    try {
+        const response = await fetch('/linemanager/activity-type', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                activityType: activityTypeName
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Add the new option to the dropdown
+            const newOption = document.createElement('option');
+            newOption.value = result.data.activityType;
+            newOption.textContent = result.data.activityType;
+            newOption.setAttribute('data-id', result.data.activityTypeId);
+            activityTypeSelect.appendChild(newOption);
+
+            // Select the newly added option
+            activityTypeSelect.value = result.data.activityType;
+
+            // Close modal
+            closeAddActivityTypeModal();
+
+            // Show success message
+            showSuccessToast('Activity type added successfully!');
+        } else {
+            alert('Error adding activity type: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error adding activity type:', error);
+        alert('Error adding activity type. Please try again.');
+    } finally {
+        // Reset button state
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+// Helper function to show success toast (optional)
+function showSuccessToast(message) {
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #10b981;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 30000;
+        font-size: 14px;
+        font-weight: 500;
+        animation: slideInRight 0.3s ease;
+    `;
+    toast.textContent = message;
+    
+    // Add animation keyframes
+    if (!document.getElementById('toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(toast);
+    
+    // Remove toast after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Close mini modal when clicking outside
+document.addEventListener('click', function(event) {
+    const miniModal = document.getElementById('addActivityTypeModal');
+    const miniModalContent = miniModal.querySelector('.mini-modal-content');
+    
+    if (miniModal.classList.contains('show') && 
+        !miniModalContent.contains(event.target) && 
+        !event.target.classList.contains('add-type-btn')) {
+        closeAddActivityTypeModal();
+    }
+});
+
+// Handle Enter key in the activity type input
+document.addEventListener('DOMContentLoaded', function() {
+    const newActivityTypeInput = document.getElementById('newActivityTypeName');
+    if (newActivityTypeInput) {
+        newActivityTypeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveNewActivityType();
+            }
+        });
+    }
+});
+
+
+function populateJobPositions(jobPositions) {
+    const jobPositionsSelect = document.getElementById('jobPositions');
+    // Clear existing options except the first one
+    jobPositionsSelect.innerHTML = '<option value="">Select applicable positions</option>';
+    
+    jobPositions.forEach(job => {
+        const option = document.createElement('option');
+        option.value = job.jobId;  // Use jobId as value
+        option.textContent = job.jobTitle;  // Use jobTitle for display
+        jobPositionsSelect.appendChild(option);
+    });
+}
+function populateObjectives(objectives) {
+    const objectiveDropdown = document.getElementById('objectiveDropdown');
+    // Clear existing options except the first one
+    objectiveDropdown.innerHTML = '<option value="">Select objective area</option>';
+    
+    objectives.forEach(obj => {
+        const option = document.createElement('option');
+        option.value = obj.objectiveId;  // Use objectiveId as value
+        option.textContent = obj.objectiveDescrpt;  // Use objectiveDescrpt for display
+        objectiveDropdown.appendChild(option);
+    });
+}
+function populateSkills(skills) {
+    const skillDropdown = document.getElementById('skillDropdown');
+    // Clear existing options except the first one
+    skillDropdown.innerHTML = '<option value="">Select skill area</option>';
+    
+    skills.forEach(skill => {
+        const option = document.createElement('option');
+        option.value = skill.jobReqSkillId;  // Use jobReqSkillId as value
+        option.textContent = skill.jobReqSkillName;  // Use jobReqSkillName for display
+        skillDropdown.appendChild(option);
+    });
+}
+// Function to populate activity types
+function populateActivityTypes(activityTypes) {
+    const activityTypeSelect = document.getElementById('activityType');
+    // Clear existing options except the first one
+    activityTypeSelect.innerHTML = '<option value="">Select type</option>';
+    
+    activityTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type.label; // Use the label as value for backward compatibility
+        option.textContent = type.label;
+        option.setAttribute('data-id', type.id); // Store the ID for future use
+        activityTypeSelect.appendChild(option);
+    });
+}
+
 
         // Employee Training Modal Functions
         function openEmployeeModal(employeeId) {
@@ -2099,34 +2575,49 @@
             });
         });
 
-        // Form submission handler
-        document.getElementById('addTrainingForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Collect all form data
-            const formData = {
-                courseName: document.getElementById('courseName').value,
-                courseDescription: document.getElementById('courseDescription').value,
-                jobPositions: document.getElementById('jobPositions').value,
-                trainingMode: document.getElementById('trainingMode').value,
-                trainingCost: document.getElementById('trainingCost').value,
-                objectives: selectedObjectives,
-                skills: selectedSkills,
-                activities: addedActivities,
-                certificates: addedCertificates,
-                totalDuration: document.getElementById('totalDuration').textContent
-            };
-            
-            // Here you would typically send the data to your backend
-            console.log('Training Course Data:', formData);
-            
-            // For demonstration, show success message
+        // Form submission handlers
+document.getElementById('addTrainingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Collect all form data with proper IDs
+    const formData = {
+        courseName: document.getElementById('courseName').value,
+        courseDescription: document.getElementById('courseDescription').value,
+        jobPositions: document.getElementById('jobPositions').value, // This will be the jobId
+        trainingMode: document.getElementById('trainingMode').value,
+        trainingCost: document.getElementById('trainingCost').value,
+        objectives: selectedObjectives.map(obj => obj.id), // Array of objective IDs
+        skills: selectedSkills.map(skill => skill.id), // Array of skill IDs
+        activities: addedActivities,
+        certificates: addedCertificates,
+        totalDuration: document.getElementById('totalDuration').textContent
+    };
+    
+    // Send to backend
+    fetch('/linemanager/training', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
             alert('Training course created successfully!');
-            
-            // Close modal and reset form
             closeAddTrainingModal();
             this.reset();
-        });
+            // Optionally reload the training courses list
+        } else {
+            alert('Error creating training course: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating training course. Please try again.');
+    });
+});
+
     </script>
 </body>
 </html>
