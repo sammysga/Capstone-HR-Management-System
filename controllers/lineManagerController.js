@@ -8306,7 +8306,7 @@ getTrainingFormData: async function(req, res) {
 },
 
     // Create new training with activities and certifications
-   // Updated createTraining function to handle multiple objectives and skills
+// Updated createTraining function to save only to trainings, training_activities, training_certifications
 createTraining: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Creating new training for user ${req.session?.user?.userId}`);
 
@@ -8314,13 +8314,15 @@ createTraining: async function(req, res) {
         trainingName,
         trainingDesc,
         jobId,
-        objectives,          // Array of objective IDs
-        skills,             // Array of skill IDs
+        objectiveId,        // Single objective ID for trainings table
+        jobReqSkillId,      // Single skill ID for trainings table
         isOnlineArrangement,
         cost,
         totalDuration,
         activities,
-        certifications
+        certifications,
+        allObjectives,      // All selected objectives (for reference/logging)
+        allSkills          // All selected skills (for reference/logging)
     } = req.body;
 
     const userId = req.session?.user?.userId;
@@ -8341,27 +8343,25 @@ createTraining: async function(req, res) {
             });
         }
 
-        if (!objectives || objectives.length === 0) {
+        if (!objectiveId || !jobReqSkillId) {
             return res.status(400).json({
                 success: false,
-                message: 'At least one objective must be selected'
+                message: 'At least one objective and one skill must be selected'
             });
         }
 
-        if (!skills || skills.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'At least one skill must be selected'
-            });
-        }
+        console.log('Selected objectives:', allObjectives);
+        console.log('Selected skills:', allSkills);
 
-        // Start transaction by creating the main training record
+        // 1. Create the main training record in trainings table
         const { data: training, error: trainingError } = await supabase
             .from('trainings')
             .insert([{
                 trainingName,
                 trainingDesc,
                 jobId: parseInt(jobId),
+                objectiveId: parseInt(objectiveId),
+                jobReqSkillId: parseInt(jobReqSkillId),
                 userId: userId,
                 isOnlineArrangement: isOnlineArrangement || false,
                 cost: parseFloat(cost) || 0,
@@ -8380,53 +8380,15 @@ createTraining: async function(req, res) {
         const trainingId = training.trainingId;
         console.log(`Training created with ID: ${trainingId}`);
 
-        // Insert training-objective relationships
-        if (objectives && objectives.length > 0) {
-            const trainingObjectives = objectives.map(objectiveId => ({
-                trainingId: trainingId,
-                objectiveId: parseInt(objectiveId)
-            }));
-
-            const { error: objectivesError } = await supabase
-                .from('training_objectives')
-                .insert(trainingObjectives);
-
-            if (objectivesError) {
-                console.error('Error inserting training objectives:', objectivesError);
-                // You might want to implement rollback logic here
-                throw new Error(`Failed to link objectives: ${objectivesError.message}`);
-            }
-            console.log(`Linked ${objectives.length} objectives to training`);
-        }
-
-        // Insert training-skill relationships
-        if (skills && skills.length > 0) {
-            const trainingSkills = skills.map(skillId => ({
-                trainingId: trainingId,
-                jobReqSkillId: parseInt(skillId)
-            }));
-
-            const { error: skillsError } = await supabase
-                .from('training_skills')
-                .insert(trainingSkills);
-
-            if (skillsError) {
-                console.error('Error inserting training skills:', skillsError);
-                // You might want to implement rollback logic here
-                throw new Error(`Failed to link skills: ${skillsError.message}`);
-            }
-            console.log(`Linked ${skills.length} skills to training`);
-        }
-
-        // Insert activities if provided
+        // 2. Insert activities into training_activities table
         if (activities && activities.length > 0) {
             const formattedActivities = activities.map((activity, index) => ({
                 trainingId: trainingId,
-                activityName: activity.name,
-                estActivityDuration: parseFloat(activity.duration) || 0,
-                status: 'Not Started',
-                activityType: activity.type,
-                activityRemarks: activity.remarks || '',
+                activityName: activity.activityName,
+                estActivityDuration: parseFloat(activity.estActivityDuration) || 0,
+                status: activity.status || 'Not Started',
+                activityType: activity.activityType,
+                activityRemarks: activity.activityRemarks || '',
                 sequenceOrder: index + 1,
                 createdAt: new Date().toISOString()
             }));
@@ -8442,12 +8404,12 @@ createTraining: async function(req, res) {
             console.log(`Created ${activities.length} activities for training`);
         }
 
-        // Insert certifications if provided
+        // 3. Insert certifications into training_certifications table
         if (certifications && certifications.length > 0) {
             const formattedCerts = certifications.map(cert => ({
                 trainingId: trainingId,
-                certificateTitle: cert.title,
-                certificateDesc: cert.description,
+                certificateTitle: cert.certificateTitle,
+                certificateDesc: cert.certificateDesc,
                 createdAt: new Date().toISOString()
             }));
 
@@ -8465,17 +8427,18 @@ createTraining: async function(req, res) {
         // Return success response with created training data
         const responseData = {
             ...training,
-            objectiveCount: objectives.length,
-            skillCount: skills.length,
             activityCount: activities ? activities.length : 0,
-            certificationCount: certifications ? certifications.length : 0
+            certificationCount: certifications ? certifications.length : 0,
+            selectedObjectives: allObjectives ? allObjectives.length : 1,
+            selectedSkills: allSkills ? allSkills.length : 1
         };
 
         console.log(`[${new Date().toISOString()}] Training created successfully: ${trainingId}`);
+        console.log(`Saved to tables: trainings, training_activities, training_certifications`);
 
         res.status(201).json({
             success: true,
-            message: 'Training created successfully',
+            message: 'Training created successfully and saved to trainings, training_activities, and training_certifications tables',
             data: responseData
         });
 

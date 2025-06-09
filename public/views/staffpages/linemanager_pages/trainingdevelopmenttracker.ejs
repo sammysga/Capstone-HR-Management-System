@@ -1149,11 +1149,11 @@
                     </div>
                 </div>
 
-                <!-- Cost -->
-                <div class="form-group">
-                    <label class="form-label">Cost:</label>
-                    <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost (USD)" min="0" step="0.01">
-                </div>
+<!-- Updated Cost section with PHP currency -->
+<div class="form-group">
+    <label class="form-label">Cost (PHP):</label>
+    <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost in Philippine Pesos (PHP)" min="0" step="0.01">
+</div>
 
                 <!-- Focus on Objective Areas with Dropdown -->
                 <div class="form-group">
@@ -1171,19 +1171,20 @@
                 </div>
 
                 <!-- Focus Skill Areas with Dropdown -->
-                <div class="form-group">
-                    <label class="form-label">Skill Focus Areas:</label>
-                    <div class="add-item-section">
-                        <div class="add-item-header">
-                            <select class="add-item-input" id="skillDropdown">
-                                <option value="">Select skill area</option>
-                                <!-- Options will be populated dynamically -->
-                            </select>
-                            <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
-                        </div>
-                        <div class="pills-container" id="skillsList"></div>
-                    </div>
-                </div>
+<div class="form-group">
+    <label class="form-label">Skill Focus Areas:</label>
+    <div class="add-item-section">
+        <div class="add-item-header">
+            <select class="add-item-input" id="skillDropdown">
+                <option value="">Select skill area</option>
+                <!-- Options will be populated dynamically with format: "Skill Name (Skill Type)" -->
+                <!-- Example: "JavaScript Programming (Hard)" or "Communication (Soft)" -->
+            </select>
+            <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
+        </div>
+        <div class="pills-container" id="skillsList"></div>
+    </div>
+</div>
 
                 <!-- Total Duration Display -->
                 <div class="duration-display">
@@ -1733,20 +1734,19 @@ function addNewTraining() {
 
 // Update the addObjective function to work with IDs
     function addObjective() {
-        const objectiveDropdown = document.getElementById('objectiveDropdown');
-        const selectedValue = objectiveDropdown.value;
-        const selectedText = objectiveDropdown.options[objectiveDropdown.selectedIndex].text;
-        
-        if (selectedValue && !selectedObjectives.find(obj => obj.id === selectedValue)) {
-            selectedObjectives.push({
-                id: selectedValue,
-                text: selectedText
-            });
-            updateObjectivesDisplay();
-            objectiveDropdown.value = ''; // Reset dropdown
-        }
+    const objectiveDropdown = document.getElementById('objectiveDropdown');
+    const selectedValue = objectiveDropdown.value;
+    const selectedText = objectiveDropdown.options[objectiveDropdown.selectedIndex].text;
+    
+    if (selectedValue && !selectedObjectives.find(obj => obj.id === selectedValue)) {
+        selectedObjectives.push({
+            id: selectedValue,
+            text: selectedText // This will be objectiveDescrpt
+        });
+        updateObjectivesDisplay();
+        objectiveDropdown.value = ''; // Reset dropdown
     }
-
+}
     function updateObjectivesDisplay() {
         const objectivesList = document.getElementById('objectivesList');
         objectivesList.innerHTML = '';
@@ -1768,42 +1768,43 @@ function addNewTraining() {
         updateObjectivesDisplay();
     }
 
-// Update the addSkill function to work with IDs
+
+// Add skill function with proper display
 function addSkill() {
-        const skillDropdown = document.getElementById('skillDropdown');
-        const selectedValue = skillDropdown.value;
-        const selectedText = skillDropdown.options[skillDropdown.selectedIndex].text;
-        
-        if (selectedValue && !selectedSkills.find(skill => skill.id === selectedValue)) {
-            selectedSkills.push({
-                id: selectedValue,
-                text: selectedText
-            });
-            updateSkillsDisplay();
-            skillDropdown.value = ''; // Reset dropdown
-        }
-    }
-
-    // Updated skills display
-    function updateSkillsDisplay() {
-        const skillsList = document.getElementById('skillsList');
-        skillsList.innerHTML = '';
-        
-        selectedSkills.forEach(skill => {
-            const pillTag = document.createElement('div');
-            pillTag.className = 'pill-tag';
-            pillTag.innerHTML = `
-                ${skill.text}
-                <span class="remove-pill" onclick="removeSkill('${skill.id}')">×</span>
-            `;
-            skillsList.appendChild(pillTag);
+    const skillDropdown = document.getElementById('skillDropdown');
+    const selectedValue = skillDropdown.value;
+    const selectedText = skillDropdown.options[skillDropdown.selectedIndex].text;
+    
+    if (selectedValue && !selectedSkills.find(skill => skill.id === selectedValue)) {
+        selectedSkills.push({
+            id: selectedValue,
+            text: selectedText // This will be jobReqSkillName
         });
-    }
-
- function removeSkill(skillIdToRemove) {
-        selectedSkills = selectedSkills.filter(skill => skill.id !== skillIdToRemove);
         updateSkillsDisplay();
+        skillDropdown.value = ''; // Reset dropdown
     }
+}
+
+function updateSkillsDisplay() {
+    const skillsList = document.getElementById('skillsList');
+    skillsList.innerHTML = '';
+    
+    selectedSkills.forEach(skill => {
+        const pillTag = document.createElement('div');
+        pillTag.className = 'pill-tag';
+        pillTag.innerHTML = `
+            ${skill.text}
+            <span class="remove-pill" onclick="removeSkill('${skill.id}')">×</span>
+        `;
+        skillsList.appendChild(pillTag);
+    });
+}
+
+function removeSkill(skillIdToRemove) {
+    selectedSkills = selectedSkills.filter(skill => skill.id !== skillIdToRemove);
+    updateSkillsDisplay();
+}
+
 
     // Close modal function
     function closeAddTrainingModal() {
@@ -1906,59 +1907,60 @@ function getCertificationsFromForm() {
 
         // Update objectives display with pill tags
         function updateObjectivesDisplay() {
-            const objectivesList = document.getElementById('objectivesList');
-            objectivesList.innerHTML = '';
-            
-            selectedObjectives.forEach(objective => {
-                const pillTag = document.createElement('div');
-                pillTag.className = 'pill-tag';
-                pillTag.innerHTML = `
-                    ${objective}
-                    <span class="remove-pill" onclick="removeObjective('${objective}')">×</span>
-                `;
-                objectivesList.appendChild(pillTag);
-            });
-        }
+    const objectivesList = document.getElementById('objectivesList');
+    objectivesList.innerHTML = '';
+    
+    selectedObjectives.forEach(objective => {
+        const pillTag = document.createElement('div');
+        pillTag.className = 'pill-tag';
+        pillTag.innerHTML = `
+            ${objective.text}
+            <span class="remove-pill" onclick="removeObjective('${objective.id}')">×</span>
+        `;
+        objectivesList.appendChild(pillTag);
+    });
+}
+       
+function removeObjective(objectiveIdToRemove) {
+    selectedObjectives = selectedObjectives.filter(obj => obj.id !== objectiveIdToRemove);
+    updateObjectivesDisplay();
+}
 
-        // Remove objective
-        function removeObjective(objectiveToRemove) {
-            selectedObjectives = selectedObjectives.filter(obj => obj !== objectiveToRemove);
-            updateObjectivesDisplay();
-        }
+// Add skill function with proper display
+function addSkill() {
+    const skillDropdown = document.getElementById('skillDropdown');
+    const selectedValue = skillDropdown.value;
+    const selectedText = skillDropdown.options[skillDropdown.selectedIndex].text;
+    
+    if (selectedValue && !selectedSkills.find(skill => skill.id === selectedValue)) {
+        selectedSkills.push({
+            id: selectedValue,
+            text: selectedText // This will be jobReqSkillName
+        });
+        updateSkillsDisplay();
+        skillDropdown.value = ''; // Reset dropdown
+    }
+}
 
-        // Add skill function with dropdown
-        function addSkill() {
-            const skillDropdown = document.getElementById('skillDropdown');
-            const selectedValue = skillDropdown.value.trim();
-            
-            if (selectedValue && !selectedSkills.includes(selectedValue)) {
-                selectedSkills.push(selectedValue);
-                updateSkillsDisplay();
-                skillDropdown.value = ''; // Reset dropdown
-            }
-        }
-
-        // Update skills display with pill tags
         function updateSkillsDisplay() {
-            const skillsList = document.getElementById('skillsList');
-            skillsList.innerHTML = '';
-            
-            selectedSkills.forEach(skill => {
-                const pillTag = document.createElement('div');
-                pillTag.className = 'pill-tag';
-                pillTag.innerHTML = `
-                    ${skill}
-                    <span class="remove-pill" onclick="removeSkill('${skill}')">×</span>
-                `;
-                skillsList.appendChild(pillTag);
-            });
-        }
+    const skillsList = document.getElementById('skillsList');
+    skillsList.innerHTML = '';
+    
+    selectedSkills.forEach(skill => {
+        const pillTag = document.createElement('div');
+        pillTag.className = 'pill-tag';
+        pillTag.innerHTML = `
+            ${skill.text}
+            <span class="remove-pill" onclick="removeSkill('${skill.id}')">×</span>
+        `;
+        skillsList.appendChild(pillTag);
+    });
+}
 
-        // Remove skill
-        function removeSkill(skillToRemove) {
-            selectedSkills = selectedSkills.filter(skill => skill !== skillToRemove);
-            updateSkillsDisplay();
-        }
+function removeSkill(skillIdToRemove) {
+    selectedSkills = selectedSkills.filter(skill => skill.id !== skillIdToRemove);
+    updateSkillsDisplay();
+}
 
         // Add activity function with persistent display
         // Add activity function (unchanged)
@@ -2253,7 +2255,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-
 // Populate job positions dropdown (filtered by user's department)
 function populateJobPositions(jobPositions) {
     const jobPositionsSelect = document.getElementById('jobPositions');
@@ -2283,7 +2284,7 @@ function populateObjectives(objectives) {
     });
 }
 
-// Populate skills dropdown
+// Populate skills dropdown with skill name and type
 function populateSkills(skills) {
     const skillDropdown = document.getElementById('skillDropdown');
     // Clear existing options except the first one
@@ -2292,11 +2293,13 @@ function populateSkills(skills) {
     skills.forEach(skill => {
         const option = document.createElement('option');
         option.value = skill.jobReqSkillId;  // Use jobReqSkillId as value
-        option.textContent = skill.jobReqSkillName;  // Use jobReqSkillName for display
+        option.textContent = `${skill.jobReqSkillName} (${skill.jobReqSkillType})`; // Display both name and type
         option.setAttribute('data-type', skill.jobReqSkillType); // Store skill type
+        option.setAttribute('data-name', skill.jobReqSkillName); // Store skill name
         skillDropdown.appendChild(option);
     });
 }
+
 
 // Function to populate activity types
 function populateActivityTypes(activityTypes) {
@@ -2313,119 +2316,122 @@ function populateActivityTypes(activityTypes) {
     });
 }
 
-// Updated form submission handler
-document.addEventListener('DOMContentLoaded', function() {
-    // Form submission handler
-    const addTrainingForm = document.getElementById('addTrainingForm');
-    if (addTrainingForm) {
-        addTrainingForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Validate required fields
-            const courseName = document.getElementById('courseName').value.trim();
-            const courseDescription = document.getElementById('courseDescription').value.trim();
-            const jobPosition = document.getElementById('jobPositions').value;
-            const trainingMode = document.getElementById('trainingMode').value;
-            
-            if (!courseName || !courseDescription || !jobPosition || !trainingMode) {
-                alert('Please fill in all required fields.');
-                return;
-            }
-            
-            if (selectedObjectives.length === 0) {
-                alert('Please select at least one objective focus area.');
-                return;
-            }
-            
-            if (selectedSkills.length === 0) {
-                alert('Please select at least one skill focus area.');
-                return;
-            }
-            
-            if (addedActivities.length === 0) {
-                alert('Please add at least one activity.');
-                return;
-            }
-            
-            // Collect all form data with proper structure
-            const formData = {
-                trainingName: courseName,
-                trainingDesc: courseDescription,
-                jobId: parseInt(jobPosition), // Ensure it's a number
-                objectives: selectedObjectives.map(obj => parseInt(obj.id)), // Array of objective IDs
-                skills: selectedSkills.map(skill => parseInt(skill.id)), // Array of skill IDs
-                isOnlineArrangement: trainingMode === 'online',
-                cost: parseFloat(document.getElementById('trainingCost').value) || 0,
-                activities: addedActivities.map(activity => ({
-                    name: activity.moduleName,
-                    duration: activity.estimatedTime,
-                    type: activity.activityType,
-                    remarks: activity.remarks || ''
-                })),
-                certifications: addedCertificates.map(cert => ({
-                    title: cert.title,
-                    description: cert.description
-                }))
-            };
-            
-            // Calculate total duration from activities
-            const totalDuration = addedActivities.reduce((sum, activity) => sum + activity.estimatedTime, 0);
-            formData.totalDuration = totalDuration;
-            
-            console.log('Submitting form data:', formData);
-            
-            // Show loading state
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Creating...';
-            submitBtn.disabled = true;
-            
-            // Send to backend
-            fetch('/linemanager/training', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Training course created successfully!');
-                    closeAddTrainingModal();
-                    this.reset();
-                    // Reset arrays
-                    selectedObjectives = [];
-                    selectedSkills = [];
-                    addedActivities = [];
-                    addedCertificates = [];
-                    // Clear displays
-                    document.getElementById('objectivesList').innerHTML = '';
-                    document.getElementById('skillsList').innerHTML = '';
-                    document.getElementById('activitiesList').innerHTML = '';
-                    document.getElementById('certificatesList').innerHTML = '';
-                    document.getElementById('totalDuration').textContent = '0';
-                    
-                    // Optionally reload the training courses list
-                    // loadTrainingCourses();
-                } else {
-                    alert('Error creating training course: ' + data.message);
-                    console.error('Server error:', data);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error creating training course. Please try again.');
-            })
-            .finally(() => {
-                // Reset button state
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            });
-        });
-    }
-});
 
+// Form submission handler
+document.getElementById('addTrainingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validate required fields
+    const courseName = document.getElementById('courseName').value.trim();
+    const courseDescription = document.getElementById('courseDescription').value.trim();
+    const jobPosition = document.getElementById('jobPositions').value;
+    const trainingMode = document.getElementById('trainingMode').value;
+    
+    if (!courseName || !courseDescription || !jobPosition || !trainingMode) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    if (selectedObjectives.length === 0) {
+        alert('Please select at least one objective focus area.');
+        return;
+    }
+    
+    if (selectedSkills.length === 0) {
+        alert('Please select at least one skill focus area.');
+        return;
+    }
+    
+    if (addedActivities.length === 0) {
+        alert('Please add at least one activity.');
+        return;
+    }
+    
+    // Calculate total duration from activities
+    const totalDuration = addedActivities.reduce((sum, activity) => sum + activity.estimatedTime, 0);
+    
+    // Collect form data for the three tables only
+    const formData = {
+        // For trainings table
+        trainingName: courseName,
+        trainingDesc: courseDescription,
+        jobId: parseInt(jobPosition),
+        // Store the first objective and skill for backward compatibility
+        // or modify your database to handle multiple objectives/skills differently
+        objectiveId: selectedObjectives.length > 0 ? parseInt(selectedObjectives[0].id) : null,
+        jobReqSkillId: selectedSkills.length > 0 ? parseInt(selectedSkills[0].id) : null,
+        isOnlineArrangement: trainingMode === 'online',
+        cost: parseFloat(document.getElementById('trainingCost').value) || 0,
+        totalDuration: totalDuration,
+        
+        // For training_activities table
+        activities: addedActivities.map(activity => ({
+            activityName: activity.moduleName,
+            estActivityDuration: activity.estimatedTime,
+            activityType: activity.activityType,
+            activityRemarks: activity.remarks || '',
+            status: 'Not Started'
+        })),
+        
+        // For training_certifications table
+        certifications: addedCertificates.map(cert => ({
+            certificateTitle: cert.title,
+            certificateDesc: cert.description
+        })),
+        
+        // Additional data for reference (not stored in main tables)
+        allObjectives: selectedObjectives.map(obj => ({ id: parseInt(obj.id), text: obj.text })),
+        allSkills: selectedSkills.map(skill => ({ id: parseInt(skill.id), text: skill.text }))
+    };
+    
+    console.log('Submitting form data:', formData);
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Creating...';
+    submitBtn.disabled = true;
+    
+    // Send to backend
+    fetch('/linemanager/training', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Training course created successfully!');
+            closeAddTrainingModal();
+            this.reset();
+            // Reset arrays
+            selectedObjectives = [];
+            selectedSkills = [];
+            addedActivities = [];
+            addedCertificates = [];
+            // Clear displays
+            document.getElementById('objectivesList').innerHTML = '';
+            document.getElementById('skillsList').innerHTML = '';
+            document.getElementById('activitiesList').innerHTML = '';
+            document.getElementById('certificatesList').innerHTML = '';
+            document.getElementById('totalDuration').textContent = '0';
+        } else {
+            alert('Error creating training course: ' + data.message);
+            console.error('Server error:', data);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating training course. Please try again.');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+});
 
         // Employee Training Modal Functions
         function openEmployeeModal(employeeId) {
