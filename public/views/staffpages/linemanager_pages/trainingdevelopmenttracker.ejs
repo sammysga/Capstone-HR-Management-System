@@ -1529,6 +1529,14 @@
         let addedActivities = [];
         let addedCertificates = [];
 
+        let allFormData = {
+    jobPositions: [],
+    objectives: [],
+    skills: [],
+    activityTypes: []
+};
+
+
         document.addEventListener('DOMContentLoaded', () => {
             // Tab functionality
             const tabButtons = document.querySelectorAll('.tab-button');
@@ -1708,83 +1716,120 @@ document.querySelector('.add-training-btn').addEventListener('click', function()
 
 
         // Add new training function
-    
-
-// Update the addNewTraining function to load data
+   // Open modal function
 function addNewTraining() {
-        // Reset form and arrays
-        selectedObjectives = [];
-        selectedSkills = [];
-        addedActivities = [];
-        addedCertificates = [];
-        
-        // Clear displayed items
-        document.getElementById('objectivesList').innerHTML = '';
-        document.getElementById('skillsList').innerHTML = '';
-        document.getElementById('activitiesList').innerHTML = '';
-        document.getElementById('certificatesList').innerHTML = '';
-        document.getElementById('totalDuration').textContent = '0';
-        
-        // Load dropdown data
-        loadTrainingFormData();
-        
-        document.getElementById('addTrainingModal').classList.add('show');
-    }
-
-
-// Update the addObjective function to work with IDs
-    function addObjective() {
-    const objectiveDropdown = document.getElementById('objectiveDropdown');
-    const selectedValue = objectiveDropdown.value;
-    const selectedText = objectiveDropdown.options[objectiveDropdown.selectedIndex].text;
+    // Reset form and arrays
+    selectedObjectives = [];
+    selectedSkills = [];
+    addedActivities = [];
+    addedCertificates = [];
     
-    if (selectedValue && !selectedObjectives.find(obj => obj.id === selectedValue)) {
-        selectedObjectives.push({
-            id: selectedValue,
-            text: selectedText // This will be objectiveDescrpt
-        });
-        updateObjectivesDisplay();
-        objectiveDropdown.value = ''; // Reset dropdown
+    // Clear form fields
+    const form = document.getElementById('addTrainingForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // Clear displayed items
+    updateObjectivesDisplay();
+    updateSkillsDisplay();
+    updateActivitiesDisplay();
+    updateCertificatesDisplay();
+    
+    const totalDurationElement = document.getElementById('totalDuration');
+    if (totalDurationElement) {
+        totalDurationElement.textContent = '0';
+    }
+    
+    // Load dropdown data
+    loadTrainingFormData();
+    
+    const modal = document.getElementById('addTrainingModal');
+    if (modal) {
+        modal.classList.add('show');
     }
 }
-    function updateObjectivesDisplay() {
-        const objectivesList = document.getElementById('objectivesList');
-        objectivesList.innerHTML = '';
-        
-        selectedObjectives.forEach(objective => {
-            const pillTag = document.createElement('div');
-            pillTag.className = 'pill-tag';
-            pillTag.innerHTML = `
-                ${objective.text}
-                <span class="remove-pill" onclick="removeObjective('${objective.id}')">×</span>
-            `;
-            objectivesList.appendChild(pillTag);
-        });
+// Enhanced objective addition with validation
+function addObjective() {
+    const objectiveDropdown = document.getElementById('objectiveDropdown');
+    const selectedValue = objectiveDropdown.value;
+    const selectedOption = objectiveDropdown.options[objectiveDropdown.selectedIndex];
+    
+    console.log('Adding objective:', selectedValue, selectedOption.text);
+    
+    if (!selectedValue) {
+        alert('Please select an objective from the dropdown.');
+        return;
     }
-
-    // Updated removeObjective function
-    function removeObjective(objectiveIdToRemove) {
-        selectedObjectives = selectedObjectives.filter(obj => obj.id !== objectiveIdToRemove);
-        updateObjectivesDisplay();
+    
+    if (selectedObjectives.find(obj => obj.id === selectedValue)) {
+        alert('This objective has already been added.');
+        return;
     }
+    
+    const objective = {
+        id: selectedValue,
+        text: selectedOption.getAttribute('data-objective-desc') || selectedOption.text
+    };
+    
+    selectedObjectives.push(objective);
+    updateObjectivesDisplay();
+    objectiveDropdown.value = ''; // Reset dropdown
+    
+    console.log('Objective added. Current objectives:', selectedObjectives);
+}
 
+// Update objectives display
+function updateObjectivesDisplay() {
+    const objectivesList = document.getElementById('objectivesList');
+    objectivesList.innerHTML = '';
+    
+    selectedObjectives.forEach(objective => {
+        const pillTag = document.createElement('div');
+        pillTag.className = 'pill-tag';
+        pillTag.innerHTML = `
+            ${objective.text}
+            <span class="remove-pill" onclick="removeObjective('${objective.id}')">×</span>
+        `;
+        objectivesList.appendChild(pillTag);
+    });
+}
 
-// Add skill function with proper display
+// Remove objective function
+function removeObjective(objectiveIdToRemove) {
+    selectedObjectives = selectedObjectives.filter(obj => obj.id !== objectiveIdToRemove);
+    updateObjectivesDisplay();
+}
+
+// Enhanced skill addition with validation
 function addSkill() {
     const skillDropdown = document.getElementById('skillDropdown');
     const selectedValue = skillDropdown.value;
-    const selectedText = skillDropdown.options[skillDropdown.selectedIndex].text;
+    const selectedOption = skillDropdown.options[skillDropdown.selectedIndex];
     
-    if (selectedValue && !selectedSkills.find(skill => skill.id === selectedValue)) {
-        selectedSkills.push({
-            id: selectedValue,
-            text: selectedText // This will be jobReqSkillName
-        });
-        updateSkillsDisplay();
-        skillDropdown.value = ''; // Reset dropdown
+    console.log('Adding skill:', selectedValue, selectedOption.text);
+    
+    if (!selectedValue) {
+        alert('Please select a skill from the dropdown.');
+        return;
     }
+    
+    if (selectedSkills.find(skill => skill.id === selectedValue)) {
+        alert('This skill has already been added.');
+        return;
+    }
+    
+    const skill = {
+        id: selectedValue,
+        text: selectedOption.getAttribute('data-name') + ' (' + selectedOption.getAttribute('data-type') + ')' || selectedOption.text
+    };
+    
+    selectedSkills.push(skill);
+    updateSkillsDisplay();
+    skillDropdown.value = ''; // Reset dropdown
+    
+    console.log('Skill added. Current skills:', selectedSkills);
 }
-
 function updateSkillsDisplay() {
     const skillsList = document.getElementById('skillsList');
     skillsList.innerHTML = '';
@@ -1800,16 +1845,64 @@ function updateSkillsDisplay() {
     });
 }
 
+// Remove skill function
 function removeSkill(skillIdToRemove) {
     selectedSkills = selectedSkills.filter(skill => skill.id !== skillIdToRemove);
     updateSkillsDisplay();
 }
 
-
-    // Close modal function
-    function closeAddTrainingModal() {
-        document.getElementById('addTrainingModal').classList.remove('show');
+// Add activity function
+function addActivity() {
+    const moduleName = document.getElementById('moduleName').value.trim();
+    const estimatedTime = document.getElementById('estimatedTime').value.trim();
+    const activityType = document.getElementById('activityType').value;
+    const remarks = document.getElementById('activityRemarks').value.trim();
+    
+    if (!moduleName || !estimatedTime || !activityType) {
+        alert('Please fill in module name, estimated time, and activity type.');
+        return;
     }
+    
+    const activity = {
+        name: moduleName,
+        duration: parseFloat(estimatedTime),
+        type: activityType,
+        remarks: remarks
+    };
+    
+    addedActivities.push(activity);
+    updateActivitiesDisplay();
+    calculateTotalDuration();
+    
+    // Clear fields
+    document.getElementById('moduleName').value = '';
+    document.getElementById('estimatedTime').value = '';
+    document.getElementById('activityType').value = '';
+    document.getElementById('activityRemarks').value = '';
+}
+
+// Update activities display
+function updateActivitiesDisplay() {
+    const activitiesList = document.getElementById('activitiesList');
+    if (!activitiesList) return;
+    
+    activitiesList.innerHTML = '';
+    
+    addedActivities.forEach((activity, index) => {
+        const activityItem = document.createElement('div');
+        activityItem.className = 'activity-item';
+        activityItem.innerHTML = `
+            <div class="activity-details">
+                <strong>${activity.name}</strong><br>
+                <span>Time: ${activity.duration} hours • Type: ${activity.type}</span><br>
+                ${activity.remarks ? `<span>Remarks: ${activity.remarks}</span>` : ''}
+            </div>
+            <button type="button" class="remove-btn" onclick="removeActivity(${index})">×</button>
+        `;
+        activitiesList.appendChild(activityItem);
+    });
+}
+
 // Submit training form
 async function submitTrainingForm(event) {
     event.preventDefault();
@@ -1893,213 +1986,329 @@ function getCertificationsFromForm() {
             document.getElementById('addTrainingModal').classList.remove('show');
         }
 
-        // Add objective function with dropdown
-        function addObjective() {
-            const objectiveDropdown = document.getElementById('objectiveDropdown');
-            const selectedValue = objectiveDropdown.value.trim();
-            
-            if (selectedValue && !selectedObjectives.includes(selectedValue)) {
-                selectedObjectives.push(selectedValue);
-                updateObjectivesDisplay();
-                objectiveDropdown.value = ''; // Reset dropdown
-            }
-        }
+      
 
-        // Update objectives display with pill tags
-        function updateObjectivesDisplay() {
-    const objectivesList = document.getElementById('objectivesList');
-    objectivesList.innerHTML = '';
+// Update activities display
+function updateActivitiesDisplay() {
+    const activitiesList = document.getElementById('activitiesList');
+    if (!activitiesList) return;
     
-    selectedObjectives.forEach(objective => {
-        const pillTag = document.createElement('div');
-        pillTag.className = 'pill-tag';
-        pillTag.innerHTML = `
-            ${objective.text}
-            <span class="remove-pill" onclick="removeObjective('${objective.id}')">×</span>
+    activitiesList.innerHTML = '';
+    
+    addedActivities.forEach((activity, index) => {
+        const activityItem = document.createElement('div');
+        activityItem.className = 'activity-item';
+        activityItem.innerHTML = `
+            <div class="activity-details">
+                <strong>${activity.name}</strong><br>
+                <span>Time: ${activity.duration} hours • Type: ${activity.type}</span><br>
+                ${activity.remarks ? `<span>Remarks: ${activity.remarks}</span>` : ''}
+            </div>
+            <button type="button" class="remove-btn" onclick="removeActivity(${index})">×</button>
         `;
-        objectivesList.appendChild(pillTag);
-    });
-}
-       
-function removeObjective(objectiveIdToRemove) {
-    selectedObjectives = selectedObjectives.filter(obj => obj.id !== objectiveIdToRemove);
-    updateObjectivesDisplay();
-}
-
-// Add skill function with proper display
-function addSkill() {
-    const skillDropdown = document.getElementById('skillDropdown');
-    const selectedValue = skillDropdown.value;
-    const selectedText = skillDropdown.options[skillDropdown.selectedIndex].text;
-    
-    if (selectedValue && !selectedSkills.find(skill => skill.id === selectedValue)) {
-        selectedSkills.push({
-            id: selectedValue,
-            text: selectedText // This will be jobReqSkillName
-        });
-        updateSkillsDisplay();
-        skillDropdown.value = ''; // Reset dropdown
-    }
-}
-
-        function updateSkillsDisplay() {
-    const skillsList = document.getElementById('skillsList');
-    skillsList.innerHTML = '';
-    
-    selectedSkills.forEach(skill => {
-        const pillTag = document.createElement('div');
-        pillTag.className = 'pill-tag';
-        pillTag.innerHTML = `
-            ${skill.text}
-            <span class="remove-pill" onclick="removeSkill('${skill.id}')">×</span>
-        `;
-        skillsList.appendChild(pillTag);
+        activitiesList.appendChild(activityItem);
     });
 }
 
-function removeSkill(skillIdToRemove) {
-    selectedSkills = selectedSkills.filter(skill => skill.id !== skillIdToRemove);
-    updateSkillsDisplay();
+// Remove activity
+function removeActivity(index) {
+    addedActivities.splice(index, 1);
+    updateActivitiesDisplay();
+    calculateTotalDuration();
 }
 
-        // Add activity function with persistent display
-        // Add activity function (unchanged)
-    function addActivity() {
-        const moduleName = document.getElementById('moduleName').value.trim();
-        const estimatedTime = document.getElementById('estimatedTime').value.trim();
-        const activityType = document.getElementById('activityType').value;
-        const remarks = document.getElementById('activityRemarks').value.trim();
-        
-        if (moduleName && estimatedTime && activityType) {
-            const activity = {
-                moduleName: moduleName,
-                estimatedTime: parseFloat(estimatedTime),
-                activityType: activityType,
-                remarks: remarks
-            };
-            
-            addedActivities.push(activity);
-            updateActivitiesDisplay();
-            calculateTotalDuration();
-            
-            // Clear fields
-            document.getElementById('moduleName').value = '';
-            document.getElementById('estimatedTime').value = '';
-            document.getElementById('activityType').value = '';
-            document.getElementById('activityRemarks').value = '';
-        }
+// Add certificate function
+function addCertificate() {
+    const certificateTitle = document.getElementById('certificateTitle').value.trim();
+    const certificateDescription = document.getElementById('certificateDescription').value.trim();
+    
+    if (!certificateTitle || !certificateDescription) {
+        alert('Please fill in both certificate title and description.');
+        return;
     }
-        // Update activities display
-      function updateActivitiesDisplay() {
-        const activitiesList = document.getElementById('activitiesList');
-        activitiesList.innerHTML = '';
-        
-        addedActivities.forEach((activity, index) => {
-            const activityItem = document.createElement('div');
-            activityItem.className = 'activity-item';
-            activityItem.innerHTML = `
-                <div class="activity-details">
-                    <strong>${activity.moduleName}</strong><br>
-                    <span>Time: ${activity.estimatedTime} hours • Type: ${activity.activityType}</span><br>
-                    ${activity.remarks ? `<span>Remarks: ${activity.remarks}</span>` : ''}
-                </div>
-                <button type="button" class="remove-btn" onclick="removeActivity(${index})">×</button>
-            `;
-            activitiesList.appendChild(activityItem);
-        });
-    }
+    
+    const certificate = {
+        title: certificateTitle,
+        description: certificateDescription
+    };
+    
+    addedCertificates.push(certificate);
+    updateCertificatesDisplay();
+    
+    // Clear fields
+    document.getElementById('certificateTitle').value = '';
+    document.getElementById('certificateDescription').value = '';
+}
 
-    // Remove activity (unchanged)
-    function removeActivity(index) {
-        addedActivities.splice(index, 1);
-        updateActivitiesDisplay();
-        calculateTotalDuration();
-    }
+// Update certificates display
+function updateCertificatesDisplay() {
+    const certificatesList = document.getElementById('certificatesList');
+    if (!certificatesList) return;
+    
+    certificatesList.innerHTML = '';
+    
+    addedCertificates.forEach((certificate, index) => {
+        const certificateItem = document.createElement('div');
+        certificateItem.className = 'certificate-item';
+        certificateItem.innerHTML = `
+            <div class="certificate-details">
+                <strong>${certificate.title}</strong>
+                <span>${certificate.description}</span>
+            </div>
+            <button type="button" class="remove-btn" onclick="removeCertificate(${index})">×</button>
+        `;
+        certificatesList.appendChild(certificateItem);
+    });
+}
 
-        // Add certificate function with title and description
-        function addCertificate() {
-            const certificateTitle = document.getElementById('certificateTitle').value.trim();
-            const certificateDescription = document.getElementById('certificateDescription').value.trim();
-            
-            if (certificateTitle && certificateDescription) {
-                const certificate = {
-                    title: certificateTitle,
-                    description: certificateDescription
-                };
-                
-                addedCertificates.push(certificate);
-                updateCertificatesDisplay();
-                
-                // Clear fields
-                document.getElementById('certificateTitle').value = '';
-                document.getElementById('certificateDescription').value = '';
-            }
-        }
+// Remove certificate
+function removeCertificate(index) {
+    addedCertificates.splice(index, 1);
+    updateCertificatesDisplay();
+}
 
-        // Update certificates display
-        function updateCertificatesDisplay() {
-            const certificatesList = document.getElementById('certificatesList');
-            certificatesList.innerHTML = '';
-            
-            addedCertificates.forEach((certificate, index) => {
-                const certificateItem = document.createElement('div');
-                certificateItem.className = 'certificate-item';
-                certificateItem.innerHTML = `
-                    <div class="certificate-details">
-                        <strong>${certificate.title}</strong>
-                        <span>${certificate.description}</span>
-                    </div>
-                    <button type="button" class="remove-btn" onclick="removeCertificate(${index})">×</button>
-                `;
-                certificatesList.appendChild(certificateItem);
-            });
-        }
-
-        // Remove certificate
-        function removeCertificate(index) {
-            addedCertificates.splice(index, 1);
-            updateCertificatesDisplay();
-        }
-
-        // Remove item function (legacy for other dynamic items)
-        function removeItem(element) {
-            element.remove();
-        }
-
-        // Calculate total duration
+// Calculate total duration
 function calculateTotalDuration() {
     let totalHours = 0;
-
+    
     addedActivities.forEach(activity => {
-        totalHours += activity.estimatedTime;
+        totalHours += activity.duration;
     });
-
+    
     const totalHoursRounded = totalHours.toFixed(1);
-    const totalDays = (totalHours / 24).toFixed(1);
-
-    document.getElementById('totalDuration').textContent = `${totalHoursRounded} hours (${totalDays} days)`;
+    const totalDays = (totalHours / 8).toFixed(1);
+    
+    const totalDurationElement = document.getElementById('totalDuration');
+    if (totalDurationElement) {
+        totalDurationElement.textContent = `${totalHoursRounded} hours (${totalDays} days)`;
+    }
 }
+
+
+// Load training form data from backend
 async function loadTrainingFormData() {
     try {
         console.log('Loading training form data...');
-        const response = await fetch('/linemanager/training-form-data');
+        
+        // Check if required DOM elements exist before proceeding
+        const requiredElements = [
+            'jobPositions',
+            'objectiveDropdown', 
+            'skillDropdown',
+            'activityType'
+        ];
+        
+        const missingElements = requiredElements.filter(id => !document.getElementById(id));
+        if (missingElements.length > 0) {
+            console.error('Missing required DOM elements:', missingElements);
+            return;
+        }
+        
+        // Fix the URL - it should match your backend route
+        const response = await fetch('/linemanager/training-form-data', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include' // Include session cookies
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`HTTP error! status: ${response.status}, response: ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
         
         if (result.success) {
             console.log('Data received:', result.data);
+            console.log('Metadata:', result.metadata);
+            
+            // Store all data globally
+            allFormData = result.data;
+            
+            // Log counts for debugging
+            console.log(`Found ${result.data.jobPositions.length} job positions`);
+            console.log(`Found ${result.data.objectives.length} objectives`);
+            console.log(`Found ${result.data.skills.all.length} total skills`);
+            console.log(`Found ${result.data.activityTypes.length} activity types`);
+            
+            // Populate all dropdowns - initially show all data
             populateJobPositions(result.data.jobPositions);
             populateObjectives(result.data.objectives);
             populateSkills(result.data.skills.all);
             populateActivityTypes(result.data.activityTypes);
+            
+            // Add event listener for job position changes (remove existing first)
+            const jobPositionsSelect = document.getElementById('jobPositions');
+            if (jobPositionsSelect) {
+                // Remove existing listeners to prevent duplicates
+                jobPositionsSelect.removeEventListener('change', onJobPositionChange);
+                jobPositionsSelect.addEventListener('change', onJobPositionChange);
+            }
+            
         } else {
             console.error('Failed to load form data:', result.message);
             alert('Failed to load form data: ' + result.message);
         }
     } catch (error) {
         console.error('Error loading form data:', error);
-        alert('Error loading form data. Please check your connection.');
+        alert('Error loading form data. Please check your connection and try again.\n\nError: ' + error.message);
     }
 }
+// ENHANCED: Form submission with better debugging
+document.addEventListener('DOMContentLoaded', function() {
+    const addTrainingForm = document.getElementById('addTrainingForm');
+    if (addTrainingForm) {
+        addTrainingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            console.log('=== FORM SUBMISSION DEBUG ===');
+            
+            // Collect all form data
+            const courseName = document.getElementById('courseName').value.trim();
+            const courseDescription = document.getElementById('courseDescription').value.trim();
+            const jobPosition = document.getElementById('jobPositions').value;
+            const trainingMode = document.getElementById('trainingMode').value;
+            const trainingCost = document.getElementById('trainingCost').value;
+            
+            console.log('Form field values:');
+            console.log('- Course Name:', courseName);
+            console.log('- Course Description:', courseDescription);
+            console.log('- Job Position:', jobPosition);
+            console.log('- Training Mode:', trainingMode);
+            console.log('- Training Cost:', trainingCost);
+            console.log('- Selected Objectives:', selectedObjectives);
+            console.log('- Selected Skills:', selectedSkills);
+            console.log('- Added Activities:', addedActivities);
+            console.log('- Added Certificates:', addedCertificates);
+            
+            // Enhanced validation with specific error messages
+            const errors = [];
+            
+            // Required fields validation
+            if (!courseName) errors.push('Course name is required');
+            if (!courseDescription) errors.push('Course description is required');
+            if (!jobPosition) errors.push('Job position must be selected');
+            if (!trainingMode) errors.push('Training mode must be selected');
+            
+            // Modified validation for objectives/skills - either one is required
+            if (selectedObjectives.length === 0 && selectedSkills.length === 0) {
+                errors.push('You must select at least one Objective Focus Area OR one Skill Focus Area');
+            }
+            
+            // Activities validation
+            if (addedActivities.length === 0) {
+                errors.push('At least one activity must be added');
+            }
+            
+            // Validate activities have required fields
+            const invalidActivities = addedActivities.filter(activity => 
+                !activity.name || !activity.duration || !activity.type
+            );
+            
+            if (invalidActivities.length > 0) {
+                errors.push(`${invalidActivities.length} activities are missing required information`);
+            }
+            
+            if (errors.length > 0) {
+                console.error('Validation errors:', errors);
+                alert('Please fix the following errors:\n\n' + errors.join('\n'));
+                return;
+            }
+            
+            console.log('All validations passed, preparing form data...');
+            
+            // Calculate total duration from activities
+            const calculatedTotalDuration = addedActivities.reduce((sum, activity) => {
+                return sum + (parseFloat(activity.duration) || 0);
+            }, 0);
+            
+            console.log('Calculated total duration:', calculatedTotalDuration);
+            
+            // Prepare the final form data object
+            const formData = {
+                trainingName: courseName,
+                trainingDesc: courseDescription,
+                jobId: parseInt(jobPosition),
+                objectives: selectedObjectives.map(obj => parseInt(obj.id)),
+                skills: selectedSkills.map(skill => parseInt(skill.id)),
+                isOnlineArrangement: trainingMode === 'online',
+                cost: parseFloat(trainingCost) || 0,
+                totalDuration: calculatedTotalDuration,
+                activities: addedActivities.map(activity => ({
+                    name: activity.name,
+                    duration: parseFloat(activity.duration),
+                    type: activity.type,
+                    remarks: activity.remarks || ''
+                })),
+                certifications: addedCertificates.map(cert => ({
+                    title: cert.title,
+                    description: cert.description
+                }))
+            };
+            
+            console.log('Final form data to submit:', JSON.stringify(formData, null, 2));
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating...';
+            submitBtn.disabled = true;
+            
+            // Send to backend
+            console.log('Sending request to /linemanager/training...');
+            fetch('/linemanager/training', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Server response:', data);
+                if (data.success) {
+                    alert('Training course created successfully!');
+                    closeAddTrainingModal();
+                    this.reset();
+                    // Reset arrays
+                    selectedObjectives = [];
+                    selectedSkills = [];
+                    addedActivities = [];
+                    addedCertificates = [];
+                    // Clear displays
+                    document.getElementById('objectivesList').innerHTML = '';
+                    document.getElementById('skillsList').innerHTML = '';
+                    document.getElementById('activitiesList').innerHTML = '';
+                    document.getElementById('certificatesList').innerHTML = '';
+                    document.getElementById('totalDuration').textContent = '0';
+                    
+                    // Optionally refresh the training courses display
+                    // loadTrainingCourses();
+                } else {
+                    console.error('Server returned error:', data);
+                    alert('Error creating training course:\n\n' + (data.message || 'Unknown error occurred'));
+                }
+            })
+            .catch(error => {
+                console.error('Network/Parse Error:', error);
+                alert('Error creating training course. Please check your connection and try again.\n\nError: ' + error.message);
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    }
+});
+
 // Show add activity type modal
 function showAddActivityTypeModal() {
     document.getElementById('newActivityTypeName').value = '';
@@ -2255,51 +2464,73 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Populate job positions dropdown (filtered by user's department)
+
 function populateJobPositions(jobPositions) {
     const jobPositionsSelect = document.getElementById('jobPositions');
     // Clear existing options except the first one
     jobPositionsSelect.innerHTML = '<option value="">Select applicable positions</option>';
     
+    console.log('Populating job positions:', jobPositions.length, 'positions found');
+    
     jobPositions.forEach(job => {
         const option = document.createElement('option');
         option.value = job.jobId;  // Use jobId as value
         option.textContent = job.jobTitle;  // Use jobTitle for display
-        option.setAttribute('data-department', job.departmentId); // Store department info if needed
+        option.setAttribute('data-job-title', job.jobTitle);
+        option.setAttribute('data-job-description', job.jobDescrpt);
+        option.setAttribute('data-department', job.departmentId);
         jobPositionsSelect.appendChild(option);
     });
 }
 
-// Populate objectives dropdown
+// Populate objectives dropdown with job title prefix - now properly linked
 function populateObjectives(objectives) {
     const objectiveDropdown = document.getElementById('objectiveDropdown');
-    // Clear existing options except the first one
-    objectiveDropdown.innerHTML = '<option value="">Select objective area</option>';
-    
+    objectiveDropdown.innerHTML = '<option value="">Select objective area</option>'; // reset first option
+
     objectives.forEach(obj => {
         const option = document.createElement('option');
-        option.value = obj.objectiveId;  // Use objectiveId as value
-        option.textContent = obj.objectiveDescrpt;  // Use objectiveDescrpt for display
+        option.value = obj.objectiveId; // keep the ID as value
+        option.textContent = `${obj.staffName} - ${obj.objectiveDescrpt}`; // display staff name + objective
+        option.setAttribute('data-objective-desc', obj.objectiveDescrpt); // optional, for later usage
         objectiveDropdown.appendChild(option);
     });
 }
 
-// Populate skills dropdown with skill name and type
+
+// Populate skills dropdown with skill type and name
 function populateSkills(skills) {
     const skillDropdown = document.getElementById('skillDropdown');
-    // Clear existing options except the first one
     skillDropdown.innerHTML = '<option value="">Select skill area</option>';
     
-    skills.forEach(skill => {
-        const option = document.createElement('option');
-        option.value = skill.jobReqSkillId;  // Use jobReqSkillId as value
-        option.textContent = `${skill.jobReqSkillName} (${skill.jobReqSkillType})`; // Display both name and type
-        option.setAttribute('data-type', skill.jobReqSkillType); // Store skill type
-        option.setAttribute('data-name', skill.jobReqSkillName); // Store skill name
-        skillDropdown.appendChild(option);
+    // Group skills by type
+    const groupedSkills = skills.reduce((acc, skill) => {
+        if (!acc[skill.jobReqSkillType]) {
+            acc[skill.jobReqSkillType] = [];
+        }
+        acc[skill.jobReqSkillType].push(skill);
+        return acc;
+    }, {});
+    
+    // Create optgroups for each skill type
+    Object.entries(groupedSkills).forEach(([type, typeSkills]) => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = `${type} Skills`;
+        
+        typeSkills.forEach(skill => {
+            const option = document.createElement('option');
+            option.value = skill.jobReqSkillId;
+            option.textContent = skill.jobReqSkillName;
+            option.setAttribute('data-job-id', skill.jobId);
+            option.setAttribute('data-job-title', skill.jobTitle);
+            option.setAttribute('data-type', skill.jobReqSkillType);
+            option.setAttribute('data-name', skill.jobReqSkillName);
+            optgroup.appendChild(option);
+        });
+        
+        skillDropdown.appendChild(optgroup);
     });
 }
-
 
 // Function to populate activity types
 function populateActivityTypes(activityTypes) {
@@ -2309,130 +2540,56 @@ function populateActivityTypes(activityTypes) {
     
     activityTypes.forEach(type => {
         const option = document.createElement('option');
-        option.value = type.label; // Use the label as value for backward compatibility
+        option.value = type.label;
         option.textContent = type.label;
-        option.setAttribute('data-id', type.id); // Store the ID for future use
+        option.setAttribute('data-id', type.id);
         activityTypeSelect.appendChild(option);
     });
 }
 
-
-// Form submission handler
-document.getElementById('addTrainingForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+// FIXED: Filter objectives and skills based on selected job position
+function onJobPositionChange() {
+    const jobPositionsSelect = document.getElementById('jobPositions');
+    const selectedJobId = jobPositionsSelect.value;
     
-    // Validate required fields
-    const courseName = document.getElementById('courseName').value.trim();
-    const courseDescription = document.getElementById('courseDescription').value.trim();
-    const jobPosition = document.getElementById('jobPositions').value;
-    const trainingMode = document.getElementById('trainingMode').value;
+    console.log('Job position changed to:', selectedJobId);
     
-    if (!courseName || !courseDescription || !jobPosition || !trainingMode) {
-        alert('Please fill in all required fields.');
+    // Clear current selections
+    selectedObjectives = [];
+    selectedSkills = [];
+    updateObjectivesDisplay();
+    updateSkillsDisplay();
+    
+    if (!selectedJobId) {
+        // Reset to show all objectives and skills
+        console.log('No job selected, showing all data');
+        populateObjectives(allFormData.objectives);
+        populateSkills(allFormData.skills.all);
         return;
     }
     
-    if (selectedObjectives.length === 0) {
-        alert('Please select at least one objective focus area.');
-        return;
-    }
+    // Filter objectives for the selected job
+    const filteredObjectives = allFormData.objectives.filter(obj => 
+        obj.jobId === parseInt(selectedJobId)
+    );
     
-    if (selectedSkills.length === 0) {
-        alert('Please select at least one skill focus area.');
-        return;
-    }
+    // Filter skills for the selected job
+    const filteredSkills = allFormData.skills.all.filter(skill => 
+        skill.jobId === parseInt(selectedJobId)
+    );
     
-    if (addedActivities.length === 0) {
-        alert('Please add at least one activity.');
-        return;
-    }
+    console.log(`Job ID ${selectedJobId} selected:`);
+    console.log(`- Found ${filteredObjectives.length} matching objectives`);
+    console.log(`- Found ${filteredSkills.length} matching skills`);
     
-    // Calculate total duration from activities
-    const totalDuration = addedActivities.reduce((sum, activity) => sum + activity.estimatedTime, 0);
+    // Update dropdowns with filtered data
+    populateObjectives(filteredObjectives);
+    populateSkills(filteredSkills);
     
-    // Collect form data for the three tables only
-    const formData = {
-        // For trainings table
-        trainingName: courseName,
-        trainingDesc: courseDescription,
-        jobId: parseInt(jobPosition),
-        // Store the first objective and skill for backward compatibility
-        // or modify your database to handle multiple objectives/skills differently
-        objectiveId: selectedObjectives.length > 0 ? parseInt(selectedObjectives[0].id) : null,
-        jobReqSkillId: selectedSkills.length > 0 ? parseInt(selectedSkills[0].id) : null,
-        isOnlineArrangement: trainingMode === 'online',
-        cost: parseFloat(document.getElementById('trainingCost').value) || 0,
-        totalDuration: totalDuration,
-        
-        // For training_activities table
-        activities: addedActivities.map(activity => ({
-            activityName: activity.moduleName,
-            estActivityDuration: activity.estimatedTime,
-            activityType: activity.activityType,
-            activityRemarks: activity.remarks || '',
-            status: 'Not Started'
-        })),
-        
-        // For training_certifications table
-        certifications: addedCertificates.map(cert => ({
-            certificateTitle: cert.title,
-            certificateDesc: cert.description
-        })),
-        
-        // Additional data for reference (not stored in main tables)
-        allObjectives: selectedObjectives.map(obj => ({ id: parseInt(obj.id), text: obj.text })),
-        allSkills: selectedSkills.map(skill => ({ id: parseInt(skill.id), text: skill.text }))
-    };
-    
-    console.log('Submitting form data:', formData);
-    
-    // Show loading state
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Creating...';
-    submitBtn.disabled = true;
-    
-    // Send to backend
-    fetch('/linemanager/training', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Training course created successfully!');
-            closeAddTrainingModal();
-            this.reset();
-            // Reset arrays
-            selectedObjectives = [];
-            selectedSkills = [];
-            addedActivities = [];
-            addedCertificates = [];
-            // Clear displays
-            document.getElementById('objectivesList').innerHTML = '';
-            document.getElementById('skillsList').innerHTML = '';
-            document.getElementById('activitiesList').innerHTML = '';
-            document.getElementById('certificatesList').innerHTML = '';
-            document.getElementById('totalDuration').textContent = '0';
-        } else {
-            alert('Error creating training course: ' + data.message);
-            console.error('Server error:', data);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error creating training course. Please try again.');
-    })
-    .finally(() => {
-        // Reset button state
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-    });
-});
-
+    // Log the filtered data for debugging
+    console.log('Filtered objectives:', filteredObjectives.map(o => o.objectiveDescrpt));
+    console.log('Filtered skills:', filteredSkills.map(s => s.jobReqSkillName));
+}
         // Employee Training Modal Functions
         function openEmployeeModal(employeeId) {
             // Sample employee data - in real app, this would come from a database
@@ -2702,48 +2859,6 @@ document.getElementById('addTrainingForm').addEventListener('submit', function(e
             });
         });
 
-        // Form submission handlers
-document.getElementById('addTrainingForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Collect all form data with proper IDs
-    const formData = {
-        courseName: document.getElementById('courseName').value,
-        courseDescription: document.getElementById('courseDescription').value,
-        jobPositions: document.getElementById('jobPositions').value, // This will be the jobId
-        trainingMode: document.getElementById('trainingMode').value,
-        trainingCost: document.getElementById('trainingCost').value,
-        objectives: selectedObjectives.map(obj => obj.id), // Array of objective IDs
-        skills: selectedSkills.map(skill => skill.id), // Array of skill IDs
-        activities: addedActivities,
-        certificates: addedCertificates,
-        totalDuration: document.getElementById('totalDuration').textContent
-    };
-    
-    // Send to backend
-    fetch('/linemanager/training', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Training course created successfully!');
-            closeAddTrainingModal();
-            this.reset();
-            // Optionally reload the training courses list
-        } else {
-            alert('Error creating training course: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error creating training course. Please try again.');
-    });
-});
 
     </script>
 </body>

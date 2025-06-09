@@ -8153,7 +8153,7 @@ getTrainingFormData: async function(req, res) {
             });
         }
 
-        // First, get the user's department from staffaccounts
+        // Get the user's department from staffaccounts
         const { data: staffAccount, error: staffError } = await supabase
             .from('staffaccounts')
             .select('departmentId')
@@ -8169,109 +8169,187 @@ getTrainingFormData: async function(req, res) {
             });
         }
 
-        if (!staffAccount || !staffAccount.departmentId) {
+        const userDepartmentId = staffAccount?.departmentId;
+        console.log('Fetched userDepartmentId:', userDepartmentId);
+
+        if (!userDepartmentId || isNaN(userDepartmentId)) {
             return res.status(400).json({
                 success: false,
-                message: 'User department not found'
+                message: 'Invalid user department ID'
             });
         }
 
-        const userDepartmentId = staffAccount.departmentId;
+        // Fetch all job positions for the user's department
+        const { data: jobPositionsData, error: jobPositionsError } = await supabase
+            .from('jobpositions')
+            .select('jobId, jobTitle, departmentId')
+            .eq('departmentId', userDepartmentId)
+            .order('jobTitle', { ascending: true });
 
-        // Fetch all required data in parallel for better performance
-        const [
-            jobPositionsResult,
-            objectivesResult,
-            skillsResult,
-            activityTypesResult
-        ] = await Promise.all([
-            // Job Positions query - filtered by user's department
-            supabase
-                .from('jobpositions')
-                .select('jobId, jobTitle, departmentId')
-                .eq('departmentId', userDepartmentId)
-                .order('jobTitle', { ascending: true }),
-
-            // Objectives query - all objectives
-            supabase
-                .from('objectivesettings_objectives')
-                .select('objectiveId, objectiveDescrpt')
-                .order('objectiveDescrpt', { ascending: true }),
-
-            // Skills query - all skills
-            supabase
-                .from('jobreqskills')
-                .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
-                .order('jobReqSkillName', { ascending: true }),
-
-            // Activity Types query - all activity types
-            supabase
-                .from('training_activities_types')
-                .select('activityTypeId, activityType')
-                .order('activityType', { ascending: true })
-        ]);
-
-        // Check for errors
-        const errors = [];
-        if (jobPositionsResult.error) errors.push({ type: 'jobPositions', error: jobPositionsResult.error });
-        if (objectivesResult.error) errors.push({ type: 'objectives', error: objectivesResult.error });
-        if (skillsResult.error) errors.push({ type: 'skills', error: skillsResult.error });
-        if (activityTypesResult.error) errors.push({ type: 'activityTypes', error: activityTypesResult.error });
-
-        if (errors.length > 0) {
-            console.error('Errors fetching training form data:', errors);
+        if (jobPositionsError) {
+            console.error('Error fetching job positions:', jobPositionsError);
             return res.status(500).json({
                 success: false,
-                message: 'Error fetching form data',
-                errors: errors
+                message: 'Error fetching job positions',
+                error: jobPositionsError.message
             });
         }
 
-        // Format the job positions data (filtered by department)
-        const jobPositions = jobPositionsResult.data.map(job => ({
+        const jobIds = jobPositionsData.map(job => job.jobId);
+
+        // Corrected objectives query - removed staffaccounts join and will fetch separately
+        const { data: objectivesData, error: objectivesError } = await supabase
+            .from('objectivesettings_objectives')
+            .select(`
+                objectiveId, 
+                objectiveDescrpt,
+                objectivesettings!inner(
+                    jobId,
+                    userId,
+                    jobpositions!inner(
+                        jobTitle,
+                        departmentId
+                    )
+                )
+            `)
+            .in('objectivesettings.jobId', jobIds)
+            .order('objectiveDescrpt', { ascending: true });
+
+        if (objectivesError) {
+            console.error('Error fetching objectives:', objectivesError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching objectives',
+                error: objectivesError.message
+            });
+        }
+
+        // Get all unique user IDs from objectives to fetch their staff info
+        const objectiveUserIds = [...new Set(objectivesData.map(obj => obj.objectivesettings.userId))];
+
+        // Fetch staff accounts for these users in one query
+        const { data: staffAccounts, error: staffAccountsError } = await supabase
+            .from('staffaccounts')
+            .select('userId, firstName, lastName')
+            .in('userId', objectiveUserIds);
+
+        if (staffAccountsError) {
+            console.error('Error fetching staff accounts:', staffAccountsError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching staff information',
+                error: staffAccountsError.message
+            });
+        }
+
+        // Create a map of userId to staff info for quick lookup
+        const staffMap = staffAccounts.reduce((acc, staff) => {
+            acc[staff.userId] = staff;
+            return acc;
+        }, {});
+
+        // Format the objectives data with staff information
+        const objectives = objectivesData.map(obj => {
+            const staffInfo = staffMap[obj.objectivesettings.userId] || {};
+            return {
+                objectiveId: obj.objectiveId,
+                objectiveDescrpt: obj.objectiveDescrpt,
+                jobId: obj.objectivesettings.jobId,
+                jobTitle: obj.objectivesettings.jobpositions.jobTitle,
+                firstName: staffInfo.firstName || 'Unknown',
+                lastName: staffInfo.lastName || 'Unknown',
+                staffName: `${staffInfo.firstName || 'Unknown'} ${staffInfo.lastName || ''}`.trim()
+            };
+        });
+
+        // Rest of your code remains the same for skills and activity types...
+        // Fetch job required skills where jobId is in the list of jobIds
+        const { data: skillsData, error: skillsError } = await supabase
+            .from('jobreqskills')
+            .select(`
+                jobReqSkillId, 
+                jobReqSkillName, 
+                jobReqSkillType,
+                jobId,
+                jobpositions!inner(
+                    jobTitle,
+                    departmentId
+                )
+            `)
+            .in('jobId', jobIds)
+            .order('jobReqSkillName', { ascending: true });
+
+        if (skillsError) {
+            console.error('Error fetching skills:', skillsError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching skills',
+                error: skillsError.message
+            });
+        }
+
+        // Fetch activity types
+        const { data: activityTypesData, error: activityTypesError } = await supabase
+            .from('training_activities_types')
+            .select('activityTypeId, activityType')
+            .order('activityType', { ascending: true });
+
+        if (activityTypesError) {
+            console.error('Error fetching activity types:', activityTypesError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching activity types',
+                error: activityTypesError.message
+            });
+        }
+
+        // Format the job positions data
+        const jobPositions = jobPositionsData.map(job => ({
             jobId: job.jobId,
             jobTitle: job.jobTitle,
             departmentId: job.departmentId
         }));
 
-        // Format the objectives data
-        const objectives = objectivesResult.data.map(obj => ({
-            objectiveId: obj.objectiveId,
-            objectiveDescrpt: obj.objectiveDescrpt
-        }));
-
         // Format and categorize skills data
         const skills = {
-            all: skillsResult.data.map(skill => ({
+            all: skillsData.map(skill => ({
                 jobReqSkillId: skill.jobReqSkillId,
                 jobReqSkillName: skill.jobReqSkillName,
-                jobReqSkillType: skill.jobReqSkillType
+                jobReqSkillType: skill.jobReqSkillType,
+                jobId: skill.jobId,
+                jobTitle: skill.jobpositions.jobTitle,
+                displayText: `${skill.jobReqSkillType} - ${skill.jobReqSkillName} (${skill.jobpositions.jobTitle})`
             })),
-            hard: skillsResult.data
+            hard: skillsData
                 .filter(skill => skill.jobReqSkillType === 'Hard')
                 .map(skill => ({
                     jobReqSkillId: skill.jobReqSkillId,
                     jobReqSkillName: skill.jobReqSkillName,
-                    jobReqSkillType: skill.jobReqSkillType
+                    jobReqSkillType: skill.jobReqSkillType,
+                    jobId: skill.jobId,
+                    jobTitle: skill.jobpositions.jobTitle,
+                    displayText: `${skill.jobReqSkillType} - ${skill.jobReqSkillName} (${skill.jobpositions.jobTitle})`
                 })),
-            soft: skillsResult.data
+            soft: skillsData
                 .filter(skill => skill.jobReqSkillType === 'Soft')
                 .map(skill => ({
                     jobReqSkillId: skill.jobReqSkillId,
                     jobReqSkillName: skill.jobReqSkillName,
-                    jobReqSkillType: skill.jobReqSkillType
+                    jobReqSkillType: skill.jobReqSkillType,
+                    jobId: skill.jobId,
+                    jobTitle: skill.jobpositions.jobTitle,
+                    displayText: `${skill.jobReqSkillType} - ${skill.jobReqSkillName} (${skill.jobpositions.jobTitle})`
                 }))
         };
 
-        // Format the activity types data
-        const activityTypes = activityTypesResult.data.map(type => ({
+        // Format activity types data
+        const activityTypes = activityTypesData.map(type => ({
             id: type.activityTypeId,
             label: type.activityType
         }));
 
         console.log(`[${new Date().toISOString()}] Successfully fetched training form data for department ${userDepartmentId}`);
 
-        // Return the formatted data
         return res.status(200).json({
             success: true,
             data: {
@@ -8305,24 +8383,22 @@ getTrainingFormData: async function(req, res) {
     }
 },
 
-    // Create new training with activities and certifications
-// Updated createTraining function to save only to trainings, training_activities, training_certifications
+// Updated createTraining function to handle multiple objectives and skills
 createTraining: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Creating new training for user ${req.session?.user?.userId}`);
+    console.log('Request body:', req.body);
 
     const {
         trainingName,
         trainingDesc,
         jobId,
-        objectiveId,        // Single objective ID for trainings table
-        jobReqSkillId,      // Single skill ID for trainings table
+        objectives,        // Array of objective IDs
+        skills,           // Array of skill IDs
         isOnlineArrangement,
         cost,
         totalDuration,
         activities,
-        certifications,
-        allObjectives,      // All selected objectives (for reference/logging)
-        allSkills          // All selected skills (for reference/logging)
+        certifications
     } = req.body;
 
     const userId = req.session?.user?.userId;
@@ -8343,32 +8419,41 @@ createTraining: async function(req, res) {
             });
         }
 
-        if (!objectiveId || !jobReqSkillId) {
+        // UPDATED VALIDATION: Allow either objectives OR skills (at least one from either)
+        if ((!objectives || !Array.isArray(objectives) || objectives.length === 0) && 
+            (!skills || !Array.isArray(skills) || skills.length === 0)) {
             return res.status(400).json({
                 success: false,
-                message: 'At least one objective and one skill must be selected'
+                message: 'At least one objective OR one skill must be selected'
             });
         }
 
-        console.log('Selected objectives:', allObjectives);
-        console.log('Selected skills:', allSkills);
+        console.log('Selected objectives:', objectives);
+        console.log('Selected skills:', skills);
+
+        // Use the first available objective and skill, or null if not provided
+        const primaryObjectiveId = (objectives && objectives.length > 0) ? objectives[0] : null;
+        const primarySkillId = (skills && skills.length > 0) ? skills[0] : null;
 
         // 1. Create the main training record in trainings table
+        const trainingData = {
+            trainingName,
+            trainingDesc,
+            jobId: parseInt(jobId),
+            userId: userId,
+            isOnlineArrangement: isOnlineArrangement || false,
+            cost: parseFloat(cost) || 0,
+            totalDuration: parseFloat(totalDuration) || 0,
+            isActive: true
+        };
+
+        // Add objective/skill IDs only if they exist
+        if (primaryObjectiveId) trainingData.objectiveId = parseInt(primaryObjectiveId);
+        if (primarySkillId) trainingData.jobReqSkillId = parseInt(primarySkillId);
+
         const { data: training, error: trainingError } = await supabase
             .from('trainings')
-            .insert([{
-                trainingName,
-                trainingDesc,
-                jobId: parseInt(jobId),
-                objectiveId: parseInt(objectiveId),
-                jobReqSkillId: parseInt(jobReqSkillId),
-                userId: userId,
-                isOnlineArrangement: isOnlineArrangement || false,
-                cost: parseFloat(cost) || 0,
-                totalDuration: parseFloat(totalDuration) || 0,
-                isActive: true,
-                createdAt: new Date().toISOString()
-            }])
+            .insert([trainingData])
             .select()
             .single();
 
@@ -8382,15 +8467,12 @@ createTraining: async function(req, res) {
 
         // 2. Insert activities into training_activities table
         if (activities && activities.length > 0) {
-            const formattedActivities = activities.map((activity, index) => ({
+            const formattedActivities = activities.map((activity) => ({
                 trainingId: trainingId,
-                activityName: activity.activityName,
-                estActivityDuration: parseFloat(activity.estActivityDuration) || 0,
-                status: activity.status || 'Not Started',
-                activityType: activity.activityType,
-                activityRemarks: activity.activityRemarks || '',
-                sequenceOrder: index + 1,
-                createdAt: new Date().toISOString()
+                activityName: activity.name,
+                estActivityDuration: parseFloat(activity.duration) || 0,
+                activityType: activity.type,
+                activityRemarks: activity.remarks || ''
             }));
 
             const { error: activitiesError } = await supabase
@@ -8404,13 +8486,12 @@ createTraining: async function(req, res) {
             console.log(`Created ${activities.length} activities for training`);
         }
 
-        // 3. Insert certifications into training_certifications table
+        // 3. FIXED: Insert certifications with correct column names
         if (certifications && certifications.length > 0) {
             const formattedCerts = certifications.map(cert => ({
                 trainingId: trainingId,
-                certificateTitle: cert.certificateTitle,
-                certificateDesc: cert.certificateDesc,
-                createdAt: new Date().toISOString()
+                trainingCertTitle: cert.title,        // ← FIXED: Now using correct column name
+                trainingCertDesc: cert.description    // ← FIXED: Now using correct column name
             }));
 
             const { error: certsError } = await supabase
@@ -8429,16 +8510,15 @@ createTraining: async function(req, res) {
             ...training,
             activityCount: activities ? activities.length : 0,
             certificationCount: certifications ? certifications.length : 0,
-            selectedObjectives: allObjectives ? allObjectives.length : 1,
-            selectedSkills: allSkills ? allSkills.length : 1
+            selectedObjectives: objectives ? objectives.length : 0,
+            selectedSkills: skills ? skills.length : 0
         };
 
         console.log(`[${new Date().toISOString()}] Training created successfully: ${trainingId}`);
-        console.log(`Saved to tables: trainings, training_activities, training_certifications`);
 
         res.status(201).json({
             success: true,
-            message: 'Training created successfully and saved to trainings, training_activities, and training_certifications tables',
+            message: 'Training created successfully',
             data: responseData
         });
 
@@ -8452,6 +8532,7 @@ createTraining: async function(req, res) {
         });
     }
 },
+
 
     // Add new activity type
     addActivityType: async function(req, res) {
