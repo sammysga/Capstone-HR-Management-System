@@ -2091,7 +2091,7 @@ async function loadTrainingFormData() {
             populateActivityTypes(result.data.activityTypes);
         } else {
             console.error('Failed to load form data:', result.message);
-            alert('Failed to load form data. Please try again.');
+            alert('Failed to load form data: ' + result.message);
         }
     } catch (error) {
         console.error('Error loading form data:', error);
@@ -2254,6 +2254,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+// Populate job positions dropdown (filtered by user's department)
 function populateJobPositions(jobPositions) {
     const jobPositionsSelect = document.getElementById('jobPositions');
     // Clear existing options except the first one
@@ -2263,9 +2264,12 @@ function populateJobPositions(jobPositions) {
         const option = document.createElement('option');
         option.value = job.jobId;  // Use jobId as value
         option.textContent = job.jobTitle;  // Use jobTitle for display
+        option.setAttribute('data-department', job.departmentId); // Store department info if needed
         jobPositionsSelect.appendChild(option);
     });
 }
+
+// Populate objectives dropdown
 function populateObjectives(objectives) {
     const objectiveDropdown = document.getElementById('objectiveDropdown');
     // Clear existing options except the first one
@@ -2278,6 +2282,8 @@ function populateObjectives(objectives) {
         objectiveDropdown.appendChild(option);
     });
 }
+
+// Populate skills dropdown
 function populateSkills(skills) {
     const skillDropdown = document.getElementById('skillDropdown');
     // Clear existing options except the first one
@@ -2287,9 +2293,11 @@ function populateSkills(skills) {
         const option = document.createElement('option');
         option.value = skill.jobReqSkillId;  // Use jobReqSkillId as value
         option.textContent = skill.jobReqSkillName;  // Use jobReqSkillName for display
+        option.setAttribute('data-type', skill.jobReqSkillType); // Store skill type
         skillDropdown.appendChild(option);
     });
 }
+
 // Function to populate activity types
 function populateActivityTypes(activityTypes) {
     const activityTypeSelect = document.getElementById('activityType');
@@ -2304,6 +2312,119 @@ function populateActivityTypes(activityTypes) {
         activityTypeSelect.appendChild(option);
     });
 }
+
+// Updated form submission handler
+document.addEventListener('DOMContentLoaded', function() {
+    // Form submission handler
+    const addTrainingForm = document.getElementById('addTrainingForm');
+    if (addTrainingForm) {
+        addTrainingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate required fields
+            const courseName = document.getElementById('courseName').value.trim();
+            const courseDescription = document.getElementById('courseDescription').value.trim();
+            const jobPosition = document.getElementById('jobPositions').value;
+            const trainingMode = document.getElementById('trainingMode').value;
+            
+            if (!courseName || !courseDescription || !jobPosition || !trainingMode) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            if (selectedObjectives.length === 0) {
+                alert('Please select at least one objective focus area.');
+                return;
+            }
+            
+            if (selectedSkills.length === 0) {
+                alert('Please select at least one skill focus area.');
+                return;
+            }
+            
+            if (addedActivities.length === 0) {
+                alert('Please add at least one activity.');
+                return;
+            }
+            
+            // Collect all form data with proper structure
+            const formData = {
+                trainingName: courseName,
+                trainingDesc: courseDescription,
+                jobId: parseInt(jobPosition), // Ensure it's a number
+                objectives: selectedObjectives.map(obj => parseInt(obj.id)), // Array of objective IDs
+                skills: selectedSkills.map(skill => parseInt(skill.id)), // Array of skill IDs
+                isOnlineArrangement: trainingMode === 'online',
+                cost: parseFloat(document.getElementById('trainingCost').value) || 0,
+                activities: addedActivities.map(activity => ({
+                    name: activity.moduleName,
+                    duration: activity.estimatedTime,
+                    type: activity.activityType,
+                    remarks: activity.remarks || ''
+                })),
+                certifications: addedCertificates.map(cert => ({
+                    title: cert.title,
+                    description: cert.description
+                }))
+            };
+            
+            // Calculate total duration from activities
+            const totalDuration = addedActivities.reduce((sum, activity) => sum + activity.estimatedTime, 0);
+            formData.totalDuration = totalDuration;
+            
+            console.log('Submitting form data:', formData);
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating...';
+            submitBtn.disabled = true;
+            
+            // Send to backend
+            fetch('/linemanager/training', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Training course created successfully!');
+                    closeAddTrainingModal();
+                    this.reset();
+                    // Reset arrays
+                    selectedObjectives = [];
+                    selectedSkills = [];
+                    addedActivities = [];
+                    addedCertificates = [];
+                    // Clear displays
+                    document.getElementById('objectivesList').innerHTML = '';
+                    document.getElementById('skillsList').innerHTML = '';
+                    document.getElementById('activitiesList').innerHTML = '';
+                    document.getElementById('certificatesList').innerHTML = '';
+                    document.getElementById('totalDuration').textContent = '0';
+                    
+                    // Optionally reload the training courses list
+                    // loadTrainingCourses();
+                } else {
+                    alert('Error creating training course: ' + data.message);
+                    console.error('Server error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating training course. Please try again.');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    }
+});
 
 
         // Employee Training Modal Functions
