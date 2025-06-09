@@ -570,6 +570,48 @@
             background-color: #dc2626;
         }
 
+        /* Updated pill-style tags for objectives and skills */
+        .pill-tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #07ACB9;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin: 4px;
+            gap: 6px;
+        }
+
+        .pill-tag .remove-pill {
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .pill-tag .remove-pill:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .pills-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            min-height: 30px;
+            padding: 5px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
         .activity-form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -599,6 +641,34 @@
         .activity-details span {
             color: #64748b;
             font-size: 13px;
+        }
+
+        /* Certificate item styling */
+        .certificate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .certificate-details {
+            flex: 1;
+        }
+
+        .certificate-details strong {
+            color: #334155;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .certificate-details span {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.4;
         }
 
         .duration-display {
@@ -856,6 +926,7 @@
             flex-wrap: wrap;
             margin: 10px 0;
         }
+
         @media (max-width: 768px) {
             .main-content {
                 margin-left: 0;
@@ -946,27 +1017,70 @@
                     <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost (USD)" min="0" step="0.01">
                 </div>
 
-                <!-- Focus on Objective Areas -->
+                <!-- Focus on Objective Areas with Dropdown -->
                 <div class="form-group">
                     <label class="form-label">Focus on Objective Areas:</label>
                     <div class="add-item-section">
                         <div class="add-item-header">
-                            <input type="text" class="add-item-input" id="newObjective" placeholder="Enter objective area">
+                            <select class="add-item-input" id="objectiveDropdown">
+                                <option value="">Select objective area</option>
+                                <option value="Leadership Development">Leadership Development</option>
+                                <option value="Team Management">Team Management</option>
+                                <option value="Strategic Planning">Strategic Planning</option>
+                                <option value="Communication Skills">Communication Skills</option>
+                                <option value="Problem Solving">Problem Solving</option>
+                                <option value="Decision Making">Decision Making</option>
+                                <option value="Project Management">Project Management</option>
+                                <option value="Customer Service">Customer Service</option>
+                                <option value="Sales Performance">Sales Performance</option>
+                                <option value="Quality Assurance">Quality Assurance</option>
+                                <option value="Safety Compliance">Safety Compliance</option>
+                                <option value="Innovation">Innovation</option>
+                                <option value="Change Management">Change Management</option>
+                                <option value="Performance Improvement">Performance Improvement</option>
+                            </select>
                             <button type="button" class="add-btn" onclick="addObjective()">Add Objective</button>
                         </div>
-                        <div class="dynamic-list" id="objectivesList"></div>
+                        <div class="pills-container" id="objectivesList"></div>
                     </div>
                 </div>
 
-                <!-- Focus Skill Areas -->
+                <!-- Focus Skill Areas with Dropdown -->
                 <div class="form-group">
                     <label class="form-label">Focus Skill Areas:</label>
                     <div class="add-item-section">
                         <div class="add-item-header">
-                            <input type="text" class="add-item-input" id="newSkill" placeholder="Enter skill area">
+                            <select class="add-item-input" id="skillDropdown">
+                                <option value="">Select skill area</option>
+                                <option value="Technical Skills">Technical Skills</option>
+                                <option value="Analytical Thinking">Analytical Thinking</option>
+                                <option value="Critical Thinking">Critical Thinking</option>
+                                <option value="Creative Problem Solving">Creative Problem Solving</option>
+                                <option value="Data Analysis">Data Analysis</option>
+                                <option value="Programming">Programming</option>
+                                <option value="Software Development">Software Development</option>
+                                <option value="Database Management">Database Management</option>
+                                <option value="Network Administration">Network Administration</option>
+                                <option value="Cybersecurity">Cybersecurity</option>
+                                <option value="Digital Marketing">Digital Marketing</option>
+                                <option value="Social Media Management">Social Media Management</option>
+                                <option value="Content Creation">Content Creation</option>
+                                <option value="Public Speaking">Public Speaking</option>
+                                <option value="Presentation Skills">Presentation Skills</option>
+                                <option value="Negotiation">Negotiation</option>
+                                <option value="Conflict Resolution">Conflict Resolution</option>
+                                <option value="Emotional Intelligence">Emotional Intelligence</option>
+                                <option value="Time Management">Time Management</option>
+                                <option value="Organizational Skills">Organizational Skills</option>
+                                <option value="Multitasking">Multitasking</option>
+                                <option value="Attention to Detail">Attention to Detail</option>
+                                <option value="Financial Analysis">Financial Analysis</option>
+                                <option value="Budgeting">Budgeting</option>
+                                <option value="Risk Management">Risk Management</option>
+                            </select>
                             <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
                         </div>
-                        <div class="dynamic-list" id="skillsList"></div>
+                        <div class="pills-container" id="skillsList"></div>
                     </div>
                 </div>
 
@@ -1005,10 +1119,11 @@
                 <div class="form-group">
                     <label class="form-label">Certificate/s:</label>
                     <div class="add-item-section">
-                        <div class="add-item-header">
+                        <div class="activity-form-grid">
                             <input type="text" class="add-item-input" id="certificateTitle" placeholder="Enter certificate title">
-                            <button type="button" class="add-btn" onclick="addCertificate()">Add Certificate</button>
+                            <textarea class="add-item-input" id="certificateDescription" placeholder="Enter certificate description" style="min-height: 60px; resize: vertical;"></textarea>
                         </div>
+                        <button type="button" class="add-btn" onclick="addCertificate()" style="width: 100%; margin-top: 10px;">Add Certificate</button>
                         <div class="dynamic-list" id="certificatesList"></div>
                     </div>
                 </div>
@@ -1339,6 +1454,12 @@
 
     <!-- JavaScript for functionality -->
     <script>
+        // Arrays to store selected objectives and skills
+        let selectedObjectives = [];
+        let selectedSkills = [];
+        let addedActivities = [];
+        let addedCertificates = [];
+
         document.addEventListener('DOMContentLoaded', () => {
             // Tab functionality
             const tabButtons = document.querySelectorAll('.tab-button');
@@ -1505,6 +1626,19 @@
 
         // Add new training function
         function addNewTraining() {
+            // Reset form and arrays
+            selectedObjectives = [];
+            selectedSkills = [];
+            addedActivities = [];
+            addedCertificates = [];
+            
+            // Clear displayed items
+            document.getElementById('objectivesList').innerHTML = '';
+            document.getElementById('skillsList').innerHTML = '';
+            document.getElementById('activitiesList').innerHTML = '';
+            document.getElementById('certificatesList').innerHTML = '';
+            document.getElementById('totalDuration').textContent = '0';
+            
             document.getElementById('addTrainingModal').classList.add('show');
         }
 
@@ -1513,39 +1647,75 @@
             document.getElementById('addTrainingModal').classList.remove('show');
         }
 
-        // Add objective function
+        // Add objective function with dropdown
         function addObjective() {
-            const objectiveText = document.getElementById('newObjective').value.trim();
-            if (objectiveText) {
-                const objectivesList = document.getElementById('objectivesList');
-                const objectiveItem = document.createElement('div');
-                objectiveItem.className = 'dynamic-item';
-                objectiveItem.innerHTML = `
-                    <span>${objectiveText}</span>
-                    <button type="button" class="remove-btn" onclick="removeItem(this)">×</button>
-                `;
-                objectivesList.appendChild(objectiveItem);
-                document.getElementById('newObjective').value = '';
+            const objectiveDropdown = document.getElementById('objectiveDropdown');
+            const selectedValue = objectiveDropdown.value.trim();
+            
+            if (selectedValue && !selectedObjectives.includes(selectedValue)) {
+                selectedObjectives.push(selectedValue);
+                updateObjectivesDisplay();
+                objectiveDropdown.value = ''; // Reset dropdown
             }
         }
 
-        // Add skill function
+        // Update objectives display with pill tags
+        function updateObjectivesDisplay() {
+            const objectivesList = document.getElementById('objectivesList');
+            objectivesList.innerHTML = '';
+            
+            selectedObjectives.forEach(objective => {
+                const pillTag = document.createElement('div');
+                pillTag.className = 'pill-tag';
+                pillTag.innerHTML = `
+                    ${objective}
+                    <span class="remove-pill" onclick="removeObjective('${objective}')">×</span>
+                `;
+                objectivesList.appendChild(pillTag);
+            });
+        }
+
+        // Remove objective
+        function removeObjective(objectiveToRemove) {
+            selectedObjectives = selectedObjectives.filter(obj => obj !== objectiveToRemove);
+            updateObjectivesDisplay();
+        }
+
+        // Add skill function with dropdown
         function addSkill() {
-            const skillText = document.getElementById('newSkill').value.trim();
-            if (skillText) {
-                const skillsList = document.getElementById('skillsList');
-                const skillItem = document.createElement('div');
-                skillItem.className = 'dynamic-item';
-                skillItem.innerHTML = `
-                    <span>${skillText}</span>
-                    <button type="button" class="remove-btn" onclick="removeItem(this)">×</button>
-                `;
-                skillsList.appendChild(skillItem);
-                document.getElementById('newSkill').value = '';
+            const skillDropdown = document.getElementById('skillDropdown');
+            const selectedValue = skillDropdown.value.trim();
+            
+            if (selectedValue && !selectedSkills.includes(selectedValue)) {
+                selectedSkills.push(selectedValue);
+                updateSkillsDisplay();
+                skillDropdown.value = ''; // Reset dropdown
             }
         }
 
-        // Add activity function
+        // Update skills display with pill tags
+        function updateSkillsDisplay() {
+            const skillsList = document.getElementById('skillsList');
+            skillsList.innerHTML = '';
+            
+            selectedSkills.forEach(skill => {
+                const pillTag = document.createElement('div');
+                pillTag.className = 'pill-tag';
+                pillTag.innerHTML = `
+                    ${skill}
+                    <span class="remove-pill" onclick="removeSkill('${skill}')">×</span>
+                `;
+                skillsList.appendChild(pillTag);
+            });
+        }
+
+        // Remove skill
+        function removeSkill(skillToRemove) {
+            selectedSkills = selectedSkills.filter(skill => skill !== skillToRemove);
+            updateSkillsDisplay();
+        }
+
+        // Add activity function with persistent display
         function addActivity() {
             const moduleName = document.getElementById('moduleName').value.trim();
             const estimatedTime = document.getElementById('estimatedTime').value.trim();
@@ -1553,18 +1723,16 @@
             const remarks = document.getElementById('activityRemarks').value.trim();
             
             if (moduleName && estimatedTime && activityType) {
-                const activitiesList = document.getElementById('activitiesList');
-                const activityItem = document.createElement('div');
-                activityItem.className = 'activity-item';
-                activityItem.innerHTML = `
-                    <div class="activity-details">
-                        <strong>${moduleName}</strong><br>
-                        <span>Time: ${estimatedTime} hours • Type: ${activityType}</span><br>
-                        ${remarks ? `<span>Remarks: ${remarks}</span>` : ''}
-                    </div>
-                    <button type="button" class="remove-btn" onclick="removeItem(this.parentElement)">×</button>
-                `;
-                activitiesList.appendChild(activityItem);
+                const activity = {
+                    moduleName: moduleName,
+                    estimatedTime: parseFloat(estimatedTime),
+                    activityType: activityType,
+                    remarks: remarks
+                };
+                
+                addedActivities.push(activity);
+                updateActivitiesDisplay();
+                calculateTotalDuration();
                 
                 // Clear fields
                 document.getElementById('moduleName').value = '';
@@ -1574,51 +1742,93 @@
             }
         }
 
-        // Add certificate function
+        // Update activities display
+        function updateActivitiesDisplay() {
+            const activitiesList = document.getElementById('activitiesList');
+            activitiesList.innerHTML = '';
+            
+            addedActivities.forEach((activity, index) => {
+                const activityItem = document.createElement('div');
+                activityItem.className = 'activity-item';
+                activityItem.innerHTML = `
+                    <div class="activity-details">
+                        <strong>${activity.moduleName}</strong><br>
+                        <span>Time: ${activity.estimatedTime} hours • Type: ${activity.activityType}</span><br>
+                        ${activity.remarks ? `<span>Remarks: ${activity.remarks}</span>` : ''}
+                    </div>
+                    <button type="button" class="remove-btn" onclick="removeActivity(${index})">×</button>
+                `;
+                activitiesList.appendChild(activityItem);
+            });
+        }
+
+        // Remove activity
+        function removeActivity(index) {
+            addedActivities.splice(index, 1);
+            updateActivitiesDisplay();
+            calculateTotalDuration();
+        }
+
+        // Add certificate function with title and description
         function addCertificate() {
             const certificateTitle = document.getElementById('certificateTitle').value.trim();
-            if (certificateTitle) {
-                const certificatesList = document.getElementById('certificatesList');
-                const certificateItem = document.createElement('div');
-                certificateItem.className = 'dynamic-item';
-                certificateItem.innerHTML = `
-                    <span>${certificateTitle}</span>
-                    <button type="button" class="remove-btn" onclick="removeItem(this)">×</button>
-                `;
-                certificatesList.appendChild(certificateItem);
+            const certificateDescription = document.getElementById('certificateDescription').value.trim();
+            
+            if (certificateTitle && certificateDescription) {
+                const certificate = {
+                    title: certificateTitle,
+                    description: certificateDescription
+                };
+                
+                addedCertificates.push(certificate);
+                updateCertificatesDisplay();
+                
+                // Clear fields
                 document.getElementById('certificateTitle').value = '';
+                document.getElementById('certificateDescription').value = '';
             }
         }
 
-        // Remove item function
+        // Update certificates display
+        function updateCertificatesDisplay() {
+            const certificatesList = document.getElementById('certificatesList');
+            certificatesList.innerHTML = '';
+            
+            addedCertificates.forEach((certificate, index) => {
+                const certificateItem = document.createElement('div');
+                certificateItem.className = 'certificate-item';
+                certificateItem.innerHTML = `
+                    <div class="certificate-details">
+                        <strong>${certificate.title}</strong>
+                        <span>${certificate.description}</span>
+                    </div>
+                    <button type="button" class="remove-btn" onclick="removeCertificate(${index})">×</button>
+                `;
+                certificatesList.appendChild(certificateItem);
+            });
+        }
+
+        // Remove certificate
+        function removeCertificate(index) {
+            addedCertificates.splice(index, 1);
+            updateCertificatesDisplay();
+        }
+
+        // Remove item function (legacy for other dynamic items)
         function removeItem(element) {
             element.remove();
         }
 
         // Calculate total duration
         function calculateTotalDuration() {
-            const activities = document.querySelectorAll('.activity-item');
             let totalHours = 0;
             
-            activities.forEach(activity => {
-                const timeText = activity.querySelector('.activity-details span').textContent;
-                const timeMatch = timeText.match(/Time: (\d+\.?\d*) hours/);
-                if (timeMatch) {
-                    totalHours += parseFloat(timeMatch[1]);
-                }
+            addedActivities.forEach(activity => {
+                totalHours += activity.estimatedTime;
             });
             
             document.getElementById('totalDuration').textContent = totalHours.toFixed(1);
         }
-
-        // Update total duration when activities change
-        document.addEventListener('DOMContentLoaded', function() {
-            const activitiesList = document.getElementById('activitiesList');
-            if (activitiesList) {
-                const observer = new MutationObserver(calculateTotalDuration);
-                observer.observe(activitiesList, { childList: true });
-            }
-        });
 
         // Employee Training Modal Functions
         function openEmployeeModal(employeeId) {
@@ -1887,6 +2097,35 @@
                     content.style.display = 'block';
                 }
             });
+        });
+
+        // Form submission handler
+        document.getElementById('addTrainingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect all form data
+            const formData = {
+                courseName: document.getElementById('courseName').value,
+                courseDescription: document.getElementById('courseDescription').value,
+                jobPositions: document.getElementById('jobPositions').value,
+                trainingMode: document.getElementById('trainingMode').value,
+                trainingCost: document.getElementById('trainingCost').value,
+                objectives: selectedObjectives,
+                skills: selectedSkills,
+                activities: addedActivities,
+                certificates: addedCertificates,
+                totalDuration: document.getElementById('totalDuration').textContent
+            };
+            
+            // Here you would typically send the data to your backend
+            console.log('Training Course Data:', formData);
+            
+            // For demonstration, show success message
+            alert('Training course created successfully!');
+            
+            // Close modal and reset form
+            closeAddTrainingModal();
+            this.reset();
         });
     </script>
 </body>
