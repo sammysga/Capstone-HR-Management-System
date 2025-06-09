@@ -416,33 +416,34 @@
         }
 
         /* Modal styling */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
+      .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
 
-        .modal-overlay.show {
-            display: flex;
-        }
-
+.modal-overlay.show {
+    display: flex;
+}
         .modal-content {
-            background-color: white;
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 800px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
+    background-color: white;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 900px; /* Increased from 800px */
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    font-family: 'Inter', sans-serif; /* Ensure modal uses Inter font */
+}
+
 
         .modal-header {
             text-align: center;
@@ -463,12 +464,14 @@
         }
 
         .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 8px;
-        }
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+    font-family: 'Inter', sans-serif; /* Consistent font */
+}
+
 
         .form-input, .form-select, .form-textarea {
             width: 100%;
@@ -490,20 +493,66 @@
             resize: vertical;
             min-height: 80px;
         }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px; /* Increased gap */
+}s
+        /* country add */
+label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
         }
-
-        .add-item-section {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
+        select, input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .location-fields {
+            display: none;
+            background: #f9f9f9;
             padding: 15px;
-            margin-bottom: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border-left: 4px solid #007bff;
         }
+        .location-fields.show {
+            display: block;
+        }
+        #countryDropdown {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+s
+.add-item-section {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px; /* Increased padding */
+    margin-bottom: 20px;
+}
+
 
         .add-item-header {
             display: flex;
@@ -612,12 +661,14 @@
             border-radius: 6px;
         }
 
-        .activity-form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
+       .activity-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px; /* Increased gap */
+    margin-bottom: 15px;
+}
+
+
 
         .activity-item {
             display: flex;
@@ -671,14 +722,18 @@
             line-height: 1.4;
         }
 
-        .duration-display {
-            background-color: #f0fdff;
-            border: 1px solid #07ACB9;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            margin: 15px 0;
-        }
+.duration-display {
+    background-color: #f0fdff;
+    border: 1px solid #07ACB9;
+    border-radius: 8px;
+    padding: 20px; /* Increased padding */
+    text-align: center;
+    margin: 20px 0; /* Increased margin */
+}
+
+.duration-value {
+    font-size: 28px; /* Slightly larger */
+}
 
         .duration-label {
             font-size: 14px;
@@ -686,11 +741,7 @@
             margin-bottom: 5px;
         }
 
-        .duration-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #07ACB9;
-        }
+        
 
         .modal-actions {
             display: flex;
@@ -986,44 +1037,84 @@
         font-size: 10px;
     }
 
-    /* Mini modal styling */
-    .mini-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.6);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        z-index: 20000; /* Higher than main modal */
-    }
+/* Mini modal styling */
+.mini-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 20000; /* Higher than main modal */
+}
 
-    .mini-modal-overlay.show {
-        display: flex;
-    }
+.mini-modal-overlay.show {
+    display: flex;
+}
 
-    .mini-modal-content {
-        background-color: white;
-        border-radius: 12px;
-        padding: 20px;
-        max-width: 400px;
-        width: 90%;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-        animation: miniModalSlideIn 0.3s ease;
-    }
+/* Mini modal adjustments */
+.mini-modal-content {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px; /* Increased padding */
+    max-width: 700px; /* Wider mini modal */
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    animation: miniModalSlideIn 0.3s ease;
+    font-family: 'Inter', sans-serif; /* Consistent font */
+}
 
-    @keyframes miniModalSlideIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9) translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
+
+/* Consistent form input styling */
+.form-input, 
+.form-select, 
+.form-textarea,
+.add-item-input,
+#countryDropdown,
+#addressField,
+#newActivityTypeName,
+#certificateTitle,
+#certificateDescription {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif; /* Consistent font */
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+    color: #334155; /* Consistent text color */
+}
+
+.form-input:focus, 
+.form-select:focus, 
+.form-textarea:focus,
+.add-item-input:focus,
+#countryDropdown:focus,
+#addressField:focus,
+#newActivityTypeName:focus,
+#certificateTitle:focus,
+#certificateDescription:focus {
+    outline: none;
+    border-color: #07ACB9;
+    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+}
+
+
+@keyframes miniModalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
     }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
 
     .mini-modal-header {
         display: flex;
@@ -1039,49 +1130,47 @@
         color: #334155;
         font-size: 1.1rem;
     }
+.close-mini-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
 
-    .close-mini-modal {
-        background: none;
-        border: none;
-        font-size: 24px;
-        color: #64748b;
-        cursor: pointer;
-        padding: 0;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: all 0.2s ease;
-    }
+.close-mini-modal:hover {
+    background-color: #f1f5f9;
+    color: #334155;
+}
 
-    .close-mini-modal:hover {
-        background-color: #f1f5f9;
-        color: #334155;
-    }
+.mini-modal-body {
+    margin-bottom: 0;
+}
 
-    .mini-modal-body {
-        margin-bottom: 0;
-    }
+.mini-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e2e8f0;
+}
 
-    .mini-modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
-        padding-top: 15px;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    .mini-modal-actions .btn-secondary,
-    .mini-modal-actions .btn-primary {
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-
+.mini-modal-actions .btn-secondary,
+.mini-modal-actions .btn-primary {
+    padding: 8px 16px;
+    font-size: 14px;
+}
     /* Responsive adjustments */
-    @media (max-width: 768px) {
+    @media (max-width: 1000px) {
         .activity-form-grid {
             grid-template-columns: 1fr;
             gap: 10px;
@@ -1139,14 +1228,30 @@
                         </select>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">Training Mode:</label>
-                        <select class="form-select" id="trainingMode" required>
-                            <option value="">Select training mode</option>
-                            <option value="online">Online</option>
-                            <option value="onsite">Onsite</option>
-                        </select>
-                    </div>
+                  <!-- Replace your existing training mode field with this -->
+<div class="form-group">
+    <label for="trainingMode">Training Mode <span style="color: red;">*</span></label>
+    <select id="trainingMode" name="trainingMode" required>
+        <option value="">Select Training Mode</option>
+        <option value="online">Online</option>
+        <option value="onsite">Onsite</option>
+    </select>
+</div>
+
+<!-- Add these location fields after the training mode field -->
+<div id="locationFields" class="location-fields">
+    <div class="form-group">
+        <label for="countryDropdown">Country <span style="color: red;">*</span></label>
+        <select id="countryDropdown" name="country">
+            <option value="">Loading countries...</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="addressField">Address <span style="color: red;">*</span></label>
+        <textarea id="addressField" name="address" rows="3" placeholder="Enter the full address for the training venue"></textarea>
+    </div>
+</div>
                 </div>
 
 <!-- Updated Cost section with PHP currency -->
@@ -1528,13 +1633,13 @@
         let selectedSkills = [];
         let addedActivities = [];
         let addedCertificates = [];
-
+        let countriesData = [];
         let allFormData = {
-    jobPositions: [],
-    objectives: [],
-    skills: [],
-    activityTypes: []
-};
+            jobPositions: [],
+            objectives: [],
+            skills: [],
+            activityTypes: []
+        };
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1749,6 +1854,9 @@ function addNewTraining() {
         modal.classList.add('show');
     }
 }
+
+
+
 // Enhanced objective addition with validation
 function addObjective() {
     const objectiveDropdown = document.getElementById('objectiveDropdown');
@@ -1907,20 +2015,52 @@ function updateActivitiesDisplay() {
 async function submitTrainingForm(event) {
     event.preventDefault();
     
-    const formData = {
-        trainingName: document.getElementById('courseName').value,
-        trainingDesc: document.getElementById('courseDescription').value,
-        jobId: document.getElementById('jobPositions').value,
-        objectiveId: document.getElementById('objectives').value,
-        jobReqSkillId: document.getElementById('skills').value,
-        isOnlineArrangement: document.getElementById('trainingMode').value === 'online',
-        country: document.getElementById('country').value,
-        address: document.getElementById('address').value,
-        cost: parseFloat(document.getElementById('cost').value),
-        totalDuration: parseFloat(document.getElementById('duration').value),
-        activities: getActivitiesFromForm(),
-        certifications: getCertificationsFromForm()
-    };
+    const locationData = getLocationData();
+
+    // Add this debug code right before you prepare the formData object:
+
+console.log('=== LOCATION DEBUG ===');
+console.log('Training mode:', trainingMode);
+
+if (trainingMode === 'onsite') {
+    const countryElement = document.getElementById('countryDropdown');
+    const addressElement = document.getElementById('addressField');
+    
+    console.log('Country element found:', !!countryElement);
+    console.log('Address element found:', !!addressElement);
+    
+    if (countryElement) {
+        console.log('Country value:', countryElement.value);
+        console.log('Country options count:', countryElement.options.length);
+    }
+    
+    if (addressElement) {
+        console.log('Address value:', addressElement.value);
+    }
+}
+
+const formData = {
+    trainingName: courseName,
+    trainingDesc: courseDescription,
+    jobId: parseInt(jobPosition),
+    objectives: selectedObjectives.map(obj => parseInt(obj.id)),
+    skills: selectedSkills.map(skill => parseInt(skill.id)),
+    isOnlineArrangement: trainingMode === 'online',
+    cost: parseFloat(trainingCost) || 0,
+    totalDuration: calculatedTotalDuration,
+    activities: addedActivities.map(activity => ({
+        name: activity.name,
+        duration: parseFloat(activity.duration),
+        type: activity.type,
+        remarks: activity.remarks || ''
+    })),
+    certifications: addedCertificates.map(cert => ({
+        title: cert.title,
+        description: cert.description
+    }))
+};
+
+
 
     try {
         const response = await fetch('/line-manager/training', {
@@ -2158,6 +2298,7 @@ async function loadTrainingFormData() {
     }
 }
 // ENHANCED: Form submission with better debugging
+// ENHANCED: Form submission with better debugging and location data
 document.addEventListener('DOMContentLoaded', function() {
     const addTrainingForm = document.getElementById('addTrainingForm');
     if (addTrainingForm) {
@@ -2211,6 +2352,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (invalidActivities.length > 0) {
                 errors.push(`${invalidActivities.length} activities are missing required information`);
             }
+
+            // NEW: Validate location fields for onsite training
+            if (trainingMode === 'onsite') {
+                const country = document.getElementById('countryDropdown').value;
+                const address = document.getElementById('addressField').value.trim();
+                
+                if (!country) {
+                    errors.push('Country must be selected for onsite training');
+                }
+                
+                if (!address) {
+                    errors.push('Address must be provided for onsite training');
+                }
+                
+                console.log('Onsite training location validation:', { 
+                    country: country || 'MISSING', 
+                    address: address || 'MISSING' 
+                });
+            }
             
             if (errors.length > 0) {
                 console.error('Validation errors:', errors);
@@ -2226,6 +2386,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 0);
             
             console.log('Calculated total duration:', calculatedTotalDuration);
+
+            // Add this debug code right before you prepare the formData object:
+            console.log('=== LOCATION DEBUG ===');
+            console.log('Training mode:', trainingMode);
+
+            if (trainingMode === 'onsite') {
+                const countryElement = document.getElementById('countryDropdown');
+                const addressElement = document.getElementById('addressField');
+                
+                console.log('Country element found:', !!countryElement);
+                console.log('Address element found:', !!addressElement);
+                
+                if (countryElement) {
+                    console.log('Country value:', countryElement.value);
+                    console.log('Country options count:', countryElement.options.length);
+                }
+                
+                if (addressElement) {
+                    console.log('Address value:', addressElement.value);
+                }
+            }
             
             // Prepare the final form data object
             const formData = {
@@ -2248,6 +2429,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     description: cert.description
                 }))
             };
+
+            // FIX: Add country and address for onsite training
+            if (trainingMode === 'onsite') {
+                const countryElement = document.getElementById('countryDropdown');
+                const addressElement = document.getElementById('addressField');
+                
+                formData.country = countryElement ? countryElement.value : null;
+                formData.address = addressElement ? addressElement.value.trim() : null;
+                
+                console.log('Added location data to form:', { 
+                    country: formData.country, 
+                    address: formData.address 
+                });
+            } else {
+                // Explicitly set to null for online training
+                formData.country = null;
+                formData.address = null;
+            }
             
             console.log('Final form data to submit:', JSON.stringify(formData, null, 2));
             
@@ -2288,6 +2487,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('activitiesList').innerHTML = '';
                     document.getElementById('certificatesList').innerHTML = '';
                     document.getElementById('totalDuration').textContent = '0';
+                    
+                    // Reset location fields
+                    document.getElementById('locationFields').classList.remove('show');
                     
                     // Optionally refresh the training courses display
                     // loadTrainingCourses();
@@ -2464,6 +2666,159 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+        // Function to fetch countries from REST API
+        async function fetchCountries() {
+            try {
+                console.log('Fetching countries from API...');
+                const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const countries = await response.json();
+                
+                // Sort countries alphabetically by common name
+                countriesData = countries
+                    .map(country => ({
+                        code: country.cca2,
+                        name: country.name.common
+                    }))
+                    .sort((a, b) => a.name.localeCompare(b.name));
+                
+                console.log(`Loaded ${countriesData.length} countries`);
+                populateCountryDropdown();
+                
+            } catch (error) {
+                console.error('Error fetching countries:', error);
+                // Fallback to basic country list
+                loadFallbackCountries();
+            }
+        }
+
+        // Function to populate the country dropdown
+        function populateCountryDropdown() {
+            const countryDropdown = document.getElementById('countryDropdown');
+            
+            // Clear existing options
+            countryDropdown.innerHTML = '<option value="">Select Country</option>';
+            
+            // Add countries to dropdown
+            countriesData.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.code;
+                option.textContent = country.name;
+                countryDropdown.appendChild(option);
+            });
+        }
+
+        // Fallback country list in case API fails
+        function loadFallbackCountries() {
+            const fallbackCountries = [
+                { code: 'PH', name: 'Philippines' },
+                { code: 'US', name: 'United States' },
+                { code: 'GB', name: 'United Kingdom' },
+                { code: 'CA', name: 'Canada' },
+                { code: 'AU', name: 'Australia' },
+                { code: 'SG', name: 'Singapore' },
+                { code: 'MY', name: 'Malaysia' },
+                { code: 'JP', name: 'Japan' },
+                { code: 'KR', name: 'South Korea' },
+                { code: 'CN', name: 'China' },
+                { code: 'IN', name: 'India' },
+                { code: 'DE', name: 'Germany' },
+                { code: 'FR', name: 'France' },
+                { code: 'IT', name: 'Italy' },
+                { code: 'ES', name: 'Spain' }
+            ].sort((a, b) => a.name.localeCompare(b.name));
+            
+            countriesData = fallbackCountries;
+            populateCountryDropdown();
+        }
+
+        // Function to toggle location fields based on training mode
+        function toggleLocationFields() {
+            const trainingMode = document.getElementById('trainingMode').value;
+            const locationFields = document.getElementById('locationFields');
+            
+            if (trainingMode === 'onsite') {
+                locationFields.classList.add('show');
+                // Make fields required when onsite is selected
+                document.getElementById('countryDropdown').required = true;
+                document.getElementById('addressField').required = true;
+            } else {
+                locationFields.classList.remove('show');
+                // Remove required when online is selected
+                document.getElementById('countryDropdown').required = false;
+                document.getElementById('addressField').required = false;
+                // Clear values
+                document.getElementById('countryDropdown').value = '';
+                document.getElementById('addressField').value = '';
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load countries when page loads
+            fetchCountries();
+            
+            // Add event listener to training mode dropdown
+            const trainingModeSelect = document.getElementById('trainingMode');
+            if (trainingModeSelect) {
+                trainingModeSelect.addEventListener('change', toggleLocationFields);
+            }
+        });
+
+        // Updated form validation function (add this to your existing validation)
+        function validateLocationFields() {
+            const trainingMode = document.getElementById('trainingMode').value;
+            const errors = [];
+            
+            if (trainingMode === 'onsite') {
+                const country = document.getElementById('countryDropdown').value;
+                const address = document.getElementById('addressField').value.trim();
+                
+                if (!country) {
+                    errors.push('Country is required for onsite training');
+                }
+                
+                if (!address) {
+                    errors.push('Address is required for onsite training');
+                }
+            }
+            
+            return errors;
+        }
+
+        // Function to get location data for form submission
+        function getLocationData() {
+            const trainingMode = document.getElementById('trainingMode').value;
+            
+            if (trainingMode === 'onsite') {
+                return {
+                    isOnlineArrangement: false,
+                    country: document.getElementById('countryDropdown').value,
+                    address: document.getElementById('addressField').value.trim()
+                };
+            } else {
+                return {
+                    isOnlineArrangement: true,
+                    country: null,
+                    address: null
+                };
+            }
+        }
+
+        // Demo function to show how data would be collected
+        function showFormData() {
+            const locationData = getLocationData();
+            const validationErrors = validateLocationFields();
+            
+            console.log('Location Data:', locationData);
+            console.log('Validation Errors:', validationErrors);
+            
+            alert('Check console for location data and validation results');
+        }
 
 function populateJobPositions(jobPositions) {
     const jobPositionsSelect = document.getElementById('jobPositions');

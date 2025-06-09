@@ -8384,6 +8384,7 @@ getTrainingFormData: async function(req, res) {
 },
 
 // Updated createTraining function to handle multiple objectives and skills
+// Updated createTraining function to handle multiple objectives, skills, country and address
 createTraining: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Creating new training for user ${req.session?.user?.userId}`);
     console.log('Request body:', req.body);
@@ -8395,6 +8396,8 @@ createTraining: async function(req, res) {
         objectives,        // Array of objective IDs
         skills,           // Array of skill IDs
         isOnlineArrangement,
+        country,          // NEW: Country code for onsite training
+        address,          // NEW: Address for onsite training
         cost,
         totalDuration,
         activities,
@@ -8428,8 +8431,21 @@ createTraining: async function(req, res) {
             });
         }
 
+        // NEW VALIDATION: Check if onsite training has required location fields
+        if (isOnlineArrangement === false) {
+            if (!country || !address) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Country and address are required for onsite training'
+                });
+            }
+        }
+
         console.log('Selected objectives:', objectives);
         console.log('Selected skills:', skills);
+        console.log('Training mode online:', isOnlineArrangement);
+        console.log('Country:', country);
+        console.log('Address:', address);
 
         // Use the first available objective and skill, or null if not provided
         const primaryObjectiveId = (objectives && objectives.length > 0) ? objectives[0] : null;
@@ -8450,6 +8466,18 @@ createTraining: async function(req, res) {
         // Add objective/skill IDs only if they exist
         if (primaryObjectiveId) trainingData.objectiveId = parseInt(primaryObjectiveId);
         if (primarySkillId) trainingData.jobReqSkillId = parseInt(primarySkillId);
+
+        // NEW: Add country and address for onsite training
+        if (isOnlineArrangement === false) {
+            trainingData.country = country;
+            trainingData.address = address;
+        } else {
+            // Set to null for online training
+            trainingData.country = null;
+            trainingData.address = null;
+        }
+
+        console.log('Training data to insert:', trainingData);
 
         const { data: training, error: trainingError } = await supabase
             .from('trainings')
@@ -8486,12 +8514,12 @@ createTraining: async function(req, res) {
             console.log(`Created ${activities.length} activities for training`);
         }
 
-        // 3. FIXED: Insert certifications with correct column names
+        // 3. Insert certifications with correct column names
         if (certifications && certifications.length > 0) {
             const formattedCerts = certifications.map(cert => ({
                 trainingId: trainingId,
-                trainingCertTitle: cert.title,        // ← FIXED: Now using correct column name
-                trainingCertDesc: cert.description    // ← FIXED: Now using correct column name
+                trainingCertTitle: cert.title,
+                trainingCertDesc: cert.description
             }));
 
             const { error: certsError } = await supabase
