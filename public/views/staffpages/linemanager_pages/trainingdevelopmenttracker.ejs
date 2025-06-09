@@ -2843,6 +2843,16 @@ function populateObjectives(objectives) {
     const objectiveDropdown = document.getElementById('objectiveDropdown');
     objectiveDropdown.innerHTML = '<option value="">Select objective area</option>'; // reset first option
 
+    // Sort objectives by staffName alphabetically
+    objectives.sort((a, b) => {
+        const nameA = a.staffName.toUpperCase(); // ignore case
+        const nameB = b.staffName.toUpperCase(); // ignore case
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+        return 0; // names are equal
+    });
+
+    // Populate the dropdown with sorted objectives
     objectives.forEach(obj => {
         const option = document.createElement('option');
         option.value = obj.objectiveId; // keep the ID as value
@@ -2851,7 +2861,6 @@ function populateObjectives(objectives) {
         objectiveDropdown.appendChild(option);
     });
 }
-
 
 // Populate skills dropdown with skill type and name
 function populateSkills(skills) {
