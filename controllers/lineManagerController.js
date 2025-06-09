@@ -8383,8 +8383,6 @@ getTrainingFormData: async function(req, res) {
     }
 },
 
-// Updated createTraining function to handle multiple objectives and skills
-// Updated createTraining function to handle multiple objectives, skills, country and address
 createTraining: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Creating new training for user ${req.session?.user?.userId}`);
     console.log('Request body:', req.body);
@@ -8396,8 +8394,8 @@ createTraining: async function(req, res) {
         objectives,        // Array of objective IDs
         skills,           // Array of skill IDs
         isOnlineArrangement,
-        country,          // NEW: Country code for onsite training
-        address,          // NEW: Address for onsite training
+        country,          // Country code for onsite training
+        address,          // Address for onsite training
         cost,
         totalDuration,
         activities,
@@ -8431,7 +8429,7 @@ createTraining: async function(req, res) {
             });
         }
 
-        // NEW VALIDATION: Check if onsite training has required location fields
+        // Validation: Check if onsite training has required location fields
         if (isOnlineArrangement === false) {
             if (!country || !address) {
                 return res.status(400).json({
@@ -8447,10 +8445,6 @@ createTraining: async function(req, res) {
         console.log('Country:', country);
         console.log('Address:', address);
 
-        // Use the first available objective and skill, or null if not provided
-        const primaryObjectiveId = (objectives && objectives.length > 0) ? objectives[0] : null;
-        const primarySkillId = (skills && skills.length > 0) ? skills[0] : null;
-
         // 1. Create the main training record in trainings table
         const trainingData = {
             trainingName,
@@ -8463,11 +8457,7 @@ createTraining: async function(req, res) {
             isActive: true
         };
 
-        // Add objective/skill IDs only if they exist
-        if (primaryObjectiveId) trainingData.objectiveId = parseInt(primaryObjectiveId);
-        if (primarySkillId) trainingData.jobReqSkillId = parseInt(primarySkillId);
-
-        // NEW: Add country and address for onsite training
+        // Add country and address for onsite training
         if (isOnlineArrangement === false) {
             trainingData.country = country;
             trainingData.address = address;
@@ -8493,7 +8483,43 @@ createTraining: async function(req, res) {
         const trainingId = training.trainingId;
         console.log(`Training created with ID: ${trainingId}`);
 
-        // 2. Insert activities into training_activities table
+        // 2. Insert objectives into training_objectives table
+        if (objectives && objectives.length > 0) {
+            const formattedObjectives = objectives.map(objectiveId => ({
+                trainingId: trainingId,
+                objectiveId: parseInt(objectiveId)
+            }));
+
+            const { error: objectivesError } = await supabase
+                .from('training_objectives')
+                .insert(formattedObjectives);
+
+            if (objectivesError) {
+                console.error('Error inserting training objectives:', objectivesError);
+                throw new Error(`Failed to create objectives: ${objectivesError.message}`);
+            }
+            console.log(`Created ${objectives.length} objectives for training`);
+        }
+
+        // 3. Insert skills into training_skills table
+        if (skills && skills.length > 0) {
+            const formattedSkills = skills.map(skillId => ({
+                trainingId: trainingId,
+                jobReqSkillId: parseInt(skillId)
+            }));
+
+            const { error: skillsError } = await supabase
+                .from('training_skills')
+                .insert(formattedSkills);
+
+            if (skillsError) {
+                console.error('Error inserting training skills:', skillsError);
+                throw new Error(`Failed to create skills: ${skillsError.message}`);
+            }
+            console.log(`Created ${skills.length} skills for training`);
+        }
+
+        // 4. Insert activities into training_activities table
         if (activities && activities.length > 0) {
             const formattedActivities = activities.map((activity) => ({
                 trainingId: trainingId,
@@ -8514,7 +8540,7 @@ createTraining: async function(req, res) {
             console.log(`Created ${activities.length} activities for training`);
         }
 
-        // 3. Insert certifications with correct column names
+        // 5. Insert certifications
         if (certifications && certifications.length > 0) {
             const formattedCerts = certifications.map(cert => ({
                 trainingId: trainingId,
@@ -8560,8 +8586,6 @@ createTraining: async function(req, res) {
         });
     }
 },
-
-
     // Add new activity type
     addActivityType: async function(req, res) {
         const { activityType } = req.body;
