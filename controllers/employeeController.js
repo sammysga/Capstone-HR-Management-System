@@ -3896,148 +3896,534 @@ getEmployeeTrainingSpecific: function(req, res) {
     },
 
     // Create training request from modal
-    createTrainingRequest: async function(req, res) {
-        console.log(`[${new Date().toISOString()}] Creating training request for user ${req.session?.user?.userId}`);
-        console.log('Request body:', req.body);
+   createTrainingRequest: async function(req, res) {
+    console.log(`[${new Date().toISOString()}] Creating training request for user ${req.session?.user?.userId}`);
+    console.log('Request body:', req.body);
 
-        try {
-            const userId = req.session?.user?.userId;
-            if (!userId) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'User not authenticated'
-                });
-            }
-
-            const { trainingId, startDate, endDate } = req.body;
-
-            // Validate required fields
-            if (!trainingId || !startDate || !endDate) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Training ID, start date, and end date are required'
-                });
-            }
-
-            // Validate dates
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            
-            if (end <= start) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'End date must be after start date'
-                });
-            }
-
-            // Check if training exists and is active
-            const { data: training, error: trainingError } = await supabase
-                .from('trainings')
-                .select('trainingId, trainingName')
-                .eq('trainingId', parseInt(trainingId))
-                .eq('isActive', true)
-                .single();
-
-            if (trainingError || !training) {
-                console.error('Training not found or inactive:', trainingError);
-                return res.status(404).json({
-                    success: false,
-                    message: 'Training not found or inactive'
-                });
-            }
-
-            // Check for existing active requests
-            const { data: existingRequest, error: existingError } = await supabase
-                .from('training_records')
-                .select('trainingRecordId')
-                .eq('userId', userId)
-                .eq('trainingId', parseInt(trainingId))
-                .in('trainingStatus', ['Not Started', 'In Progress']);
-
-            if (existingError && existingError.code !== 'PGRST116') {
-                console.error('Error checking existing requests:', existingError);
-                throw new Error(`Failed to check existing requests: ${existingError.message}`);
-            }
-
-            if (existingRequest && existingRequest.length > 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'You already have an active training request for this course'
-                });
-            }
-
-            // Create training record
-            const trainingRecordData = {
-                userId: userId,
-                trainingId: parseInt(trainingId),
-                setStartDate: startDate,
-                setEndDate: endDate,
-                trainingPercentage: 0,
-                trainingStatus: 'Not Started',
-                isApproved: false,
-                dateRequested: new Date().toISOString().split('T')[0]
-            };
-
-            const { data: trainingRecord, error: recordError } = await supabase
-                .from('training_records')
-                .insert([trainingRecordData])
-                .select()
-                .single();
-
-            if (recordError) {
-                console.error('Error creating training record:', recordError);
-                throw new Error(`Failed to create training record: ${recordError.message}`);
-            }
-
-            const trainingRecordId = trainingRecord.trainingRecordId;
-
-            // Get training activities and create activity records
-            const { data: activities, error: activitiesError } = await supabase
-                .from('training_activities')
-                .select('activityId')
-                .eq('trainingId', parseInt(trainingId));
-
-            let activitiesCreated = 0;
-            if (!activitiesError && activities && activities.length > 0) {
-                const activityRecords = activities.map(activity => ({
-                    trainingRecordId: trainingRecordId,
-                    activityId: activity.activityId,
-                    status: 'Not Started'
-                }));
-
-                const { error: activityInsertError } = await supabase
-                    .from('training_records_activities')
-                    .insert(activityRecords);
-
-                if (!activityInsertError) {
-                    activitiesCreated = activities.length;
-                }
-            }
-
-            console.log(`Training request created successfully: ${trainingRecordId}`);
-
-            res.status(201).json({
-                success: true,
-                message: 'Training request submitted successfully',
-                data: {
-                    trainingRecordId: trainingRecordId,
-                    trainingName: training.trainingName,
-                    status: 'Not Started',
-                    isApproved: false,
-                    activitiesCreated: activitiesCreated
-                }
-            });
-
-        } catch (error) {
-            console.error('Error in createTrainingRequest:', error);
-            res.status(500).json({
+    try {
+        const userId = req.session?.user?.userId;
+        if (!userId) {
+            return res.status(401).json({
                 success: false,
-                message: 'Failed to create training request',
-                error: error.message,
-                timestamp: new Date().toISOString()
+                message: 'User not authenticated'
             });
         }
-    },
+
+        const { trainingId, startDate, endDate } = req.body;
+
+        // Validate required fields
+        if (!trainingId || !startDate || !endDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'Training ID, start date, and end date are required'
+            });
+        }
+
+        // Validate dates
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (end <= start) {
+            return res.status(400).json({
+                success: false,
+                message: 'End date must be after start date'
+            });
+        }
+
+        // Check if training exists and is active
+        const { data: training, error: trainingError } = await supabase
+            .from('trainings')
+            .select('trainingId, trainingName')
+            .eq('trainingId', parseInt(trainingId))
+            .eq('isActive', true)
+            .single();
+
+        if (trainingError || !training) {
+            console.error('Training not found or inactive:', trainingError);
+            return res.status(404).json({
+                success: false,
+                message: 'Training not found or inactive'
+            });
+        }
+
+        // Simplified approach: Check for any active requests for the same training
+        // This is more reliable than complex date overlap queries
+        const { data: existingRequests, error: existingError } = await supabase
+            .from('training_records')
+            .select('trainingRecordId, setStartDate, setEndDate, trainingStatus')
+            .eq('userId', userId)
+            .eq('trainingId', parseInt(trainingId))
+            .in('trainingStatus', ['Not Started', 'In Progress']);
+
+        if (existingError && existingError.code !== 'PGRST116') {
+            console.error('Error checking existing requests:', existingError);
+            throw new Error(`Failed to check existing requests: ${existingError.message}`);
+        }
+
+        // Check for overlapping dates manually (more reliable than complex SQL)
+        if (existingRequests && existingRequests.length > 0) {
+            const hasOverlap = existingRequests.some(request => {
+                const requestStart = new Date(request.setStartDate);
+                const requestEnd = new Date(request.setEndDate);
+                
+                // Check if dates overlap
+                return (start <= requestEnd && end >= requestStart);
+            });
+
+            if (hasOverlap) {
+                const overlapping = existingRequests[0];
+                return res.status(400).json({
+                    success: false,
+                    message: `You already have an overlapping training request for this course (${overlapping.setStartDate} to ${overlapping.setEndDate}). Please choose different dates.`
+                });
+            }
+        }
+
+        // Create training record
+        const trainingRecordData = {
+            userId: userId,
+            trainingId: parseInt(trainingId),
+            setStartDate: startDate,
+            setEndDate: endDate,
+            trainingStatus: 'Not Started',
+            isApproved: null, // Changed from false to null to match your table structure
+            dateRequested: new Date().toISOString().split('T')[0]
+        };
+
+        console.log('Creating training record with data:', trainingRecordData);
+
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .insert([trainingRecordData])
+            .select()
+            .single();
+
+        if (recordError) {
+            console.error('Error creating training record:', recordError);
+            throw new Error(`Failed to create training record: ${recordError.message}`);
+        }
+
+        const trainingRecordId = trainingRecord.trainingRecordId;
+        console.log(`Training record created with ID: ${trainingRecordId}`);
+
+        // Get training activities - with better error handling
+        console.log(`Fetching activities for training ID: ${trainingId}`);
+        const { data: activities, error: activitiesError } = await supabase
+            .from('training_activities')
+            .select('activityId, activityName')
+            .eq('trainingId', parseInt(trainingId))
+            .order('activityId', { ascending: true });
+
+        if (activitiesError) {
+            console.error('Error fetching training activities:', activitiesError);
+            // Continue without failing - some trainings might not have activities
+            console.log('Continuing without activities...');
+        }
+
+        let activitiesCreated = 0;
+        let activitiesFailed = 0;
+        
+        if (activities && activities.length > 0) {
+            console.log(`Found ${activities.length} activities for training:`, activities);
+            
+            // Create activity records one by one for better error handling
+            for (const activity of activities) {
+                try {
+                    const activityRecordData = {
+                        trainingRecordId: trainingRecordId,
+                        activityId: activity.activityId,
+                        status: 'Not Started',
+                        dateStarted: null,
+                        dateCompleted: null
+                    };
+
+                    console.log('Creating activity record:', activityRecordData);
+
+                    const { data: activityRecord, error: activityInsertError } = await supabase
+                        .from('training_records_activities')
+                        .insert([activityRecordData])
+                        .select()
+                        .single();
+
+                    if (activityInsertError) {
+                        console.error(`Error creating activity record for activity ${activity.activityId}:`, activityInsertError);
+                        activitiesFailed++;
+                        // Continue with other activities instead of failing completely
+                    } else {
+                        activitiesCreated++;
+                        console.log(`Successfully created activity record: ${activityRecord.trainingRecordActivityId} for activity ${activity.activityId}`);
+                    }
+                } catch (activityError) {
+                    console.error(`Exception creating activity record for activity ${activity.activityId}:`, activityError);
+                    activitiesFailed++;
+                    // Continue with other activities
+                }
+            }
+            
+            // Verify the counts match
+            console.log(`Activity creation summary:`);
+            console.log(`- Total activities found: ${activities.length}`);
+            console.log(`- Activities successfully created: ${activitiesCreated}`);
+            console.log(`- Activities failed to create: ${activitiesFailed}`);
+            
+            // Warning if not all activities were created
+            if (activitiesCreated !== activities.length) {
+                console.warn(`⚠️  WARNING: Expected ${activities.length} activity records, but only created ${activitiesCreated}`);
+            } else {
+                console.log(`✅ SUCCESS: All ${activities.length} activities successfully created in training_records_activities`);
+            }
+        } else {
+            console.log('No activities found for this training');
+        }
+
+        console.log(`Training request created successfully: ${trainingRecordId} with ${activitiesCreated}/${activities ? activities.length : 0} activities`);
+
+        res.status(201).json({
+            success: true,
+            message: 'Training request submitted successfully',
+            data: {
+                trainingRecordId: trainingRecordId,
+                trainingName: training.trainingName,
+                status: 'Not Started',
+                isApproved: null,
+                activitiesCreated: activitiesCreated,
+                totalActivitiesAvailable: activities ? activities.length : 0,
+                activitiesFailed: activitiesFailed,
+                allActivitiesCreated: activitiesCreated === (activities ? activities.length : 0)
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in createTrainingRequest:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create training request',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
+
+
+// Training Progress
+getTrainingProgress: async function(req, res) {
+    const userId = req.session?.user?.userId;
+    if (!userId) {
+        return res.status(401).json({
+            success: false,
+            message: 'User not authenticated'
+        });
+    }
+
+    console.log(`[${new Date().toISOString()}] Fetching training progress for user ${userId}`);
+    
+    try {
+        const { data: trainingRecords, error: recordsError } = await supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                trainingId,
+                setStartDate,
+                setEndDate,
+                trainingStatus,
+                isApproved,
+                trainings (
+                    trainingName,
+                    trainingDesc,
+                    isOnlineArrangement,
+                    totalDuration,
+                    cost,
+                    address
+                )
+            `)
+            .eq('userId', userId)
+            .eq('isApproved', true)
+            .order('dateRequested', { ascending: false });
+
+        if (recordsError) {
+            console.error('Error fetching training records:', recordsError);
+            throw new Error(`Failed to fetch training records: ${recordsError.message}`);
+        }
+
+        const trainingProgressPromises = trainingRecords.map(async (record) => {
+            const { data: trainingActivities, error: activitiesError } = await supabase
+                .from('training_activities')
+                .select('activityId, activityName, estActivityDuration')
+                .eq('trainingId', record.trainingId);
+
+            if (activitiesError) {
+                return {
+                    ...record,
+                    totalActivities: 0,
+                    completedActivities: 0,
+                    status: record.trainingStatus || 'Not Started'
+                };
+            }
+
+            const { data: recordActivities, error: recordActivitiesError } = await supabase
+                .from('training_records_activities')
+                .select('activityId, status, dateCompleted')
+                .eq('trainingRecordId', record.trainingRecordId);
+
+            if (recordActivitiesError) {
+                return {
+                    ...record,
+                    totalActivities: trainingActivities?.length || 0,
+                    completedActivities: 0,
+                    status: record.trainingStatus || 'Not Started'
+                };
+            }
+
+            const totalActivities = trainingActivities?.length || 0;
+            const completedActivities = recordActivities?.filter(ra => ra.status === 'Completed')?.length || 0;
+            const inProgressActivities = recordActivities?.filter(ra => ra.status === 'In Progress')?.length || 0;
+
+            let progressPercentage = 0;
+            if (totalActivities > 0) {
+                progressPercentage = Math.round((completedActivities / totalActivities) * 100);
+            }
+
+            let status = 'Not Started';
+            const today = new Date();
+            const endDate = record.setEndDate ? new Date(record.setEndDate) : null;
+
+            if (completedActivities === totalActivities && totalActivities > 0) {
+                status = 'Completed';
+            } else if (endDate && today > endDate && progressPercentage < 100) {
+                status = 'Overdue';
+            } else if (inProgressActivities > 0 || completedActivities > 0) {
+                status = 'In Progress';
+            }
+
+            return {
+                ...record,
+                progress: progressPercentage,
+                totalActivities,
+                completedActivities,
+                status: status,
+                trainingName: record.trainings?.trainingName,
+                trainingDesc: record.trainings?.trainingDesc,
+                isOnlineArrangement: record.trainings?.isOnlineArrangement,
+                totalDuration: record.trainings?.totalDuration,
+                cost: record.trainings?.cost,
+                address: record.trainings?.address
+            };
+        });
+
+        const trainingsWithProgress = await Promise.all(trainingProgressPromises);
+
+        const counts = {
+            notStarted: trainingsWithProgress.filter(t => t.status === 'Not Started').length,
+            inProgress: trainingsWithProgress.filter(t => t.status === 'In Progress').length,
+            completed: trainingsWithProgress.filter(t => t.status === 'Completed').length,
+            overdue: trainingsWithProgress.filter(t => t.status === 'Overdue').length
+        };
+
+        res.json({
+            success: true,
+            data: {
+                counts,
+                trainings: trainingsWithProgress
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch training progress',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
+
+getAllCourses: async function(req, res) {
+    const userId = req.session?.user?.userId;
+    if (!userId) {
+        return res.status(401).json({
+            success: false,
+            message: 'User not authenticated'
+        });
+    }
+
+    console.log(`[${new Date().toISOString()}] Fetching all courses for user ${userId}`);
+    
+    try {
+        // Get user's jobId from staffaccounts (correct table)
+        const { data: staffData, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('jobId')
+            .eq('userId', userId)
+            .single();
+
+        if (staffError) throw staffError;
+        if (!staffData) throw new Error('User staff record not found');
+
+        // Get user's training records
+        const { data: userRecords, error: recordsError } = await supabase
+            .from('training_records')
+            .select('trainingId, trainingStatus, setStartDate, setEndDate')
+            .eq('userId', userId);
+
+        if (recordsError) throw recordsError;
+
+        // Get all trainings that match user's jobId or are null (available to all)
+        const { data: trainings, error: trainingsError } = await supabase
+            .from('trainings')
+            .select('*')
+            .or(`jobId.eq.${staffData.jobId},jobId.is.null`)
+            .order('trainingName', { ascending: true });
+
+        if (trainingsError) throw trainingsError;
+
+        // Merge data
+        const courses = trainings.map(training => {
+            const record = userRecords.find(r => r.trainingId === training.trainingId);
+            return {
+                ...training,
+                trainingStatus: record?.trainingStatus || null,
+                setStartDate: record?.setStartDate || null,
+                setEndDate: record?.setEndDate || null,
+                isEnrolled: !!record
+            };
+        });
+
+        res.json({
+            success: true,
+            data: courses
+        });
+
+    } catch (error) {
+        console.error('Error in getAllCourses:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch courses',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
+
+// Get Certificates
+getCertificates: async function(req, res) {
+    const userId = req.session?.user?.userId;
+    if (!userId) {
+        return res.status(401).json({
+            success: false,
+            message: 'User not authenticated'
+        });
+    }
+
+    console.log(`[${new Date().toISOString()}] Fetching certificates for user ${userId}`);
+    
+    try {
+        const { data: certificates, error: certificatesError } = await supabase
+            .from('training_certifications')
+            .select(`
+                trainingCertId,
+                trainingCertTitle,
+                trainingCertDesc,
+                trainingId,
+                trainings (
+                    trainingName,
+                    training_records!inner (
+                        userId,
+                        trainingStatus,
+                        isApproved
+                    )
+                )
+            `)
+            .eq('trainings.training_records.userId', userId)
+            .eq('trainings.training_records.isApproved', true)
+            .eq('trainings.training_records.trainingStatus', 'Completed')
+            .order('trainingCertId', { ascending: false });
+
+        if (certificatesError) {
+            throw new Error(`Failed to fetch certificates: ${certificatesError.message}`);
+        }
+
+        const formattedCertificates = certificates?.map(cert => ({
+            trainingCertId: cert.trainingCertId,
+            trainingCertTitle: cert.trainingCertTitle,
+            trainingCertDesc: cert.trainingCertDesc,
+            trainingId: cert.trainingId,
+            trainingName: cert.trainings?.trainingName
+        })) || [];
+
+        res.json({
+            success: true,
+            data: formattedCertificates
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch certificates',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
+
+// Download Certificate
+downloadCertificate: async function(req, res) {
+    const userId = req.session?.user?.userId;
+    if (!userId) {
+        return res.status(401).json({
+            success: false,
+            message: 'User not authenticated'
+        });
+    }
+
+    console.log(`[${new Date().toISOString()}] Downloading certificate ${req.params.certId} for user ${userId}`);
+    
+    try {
+        const { certId } = req.params;
+
+        const { data: certificate, error: certError } = await supabase
+            .from('training_certifications')
+            .select(`
+                trainingCertId,
+                trainingCertTitle,
+                trainingId,
+                trainings (
+                    trainingName,
+                    training_records!inner (
+                        userId,
+                        trainingStatus
+                    )
+                )
+            `)
+            .eq('trainingCertId', parseInt(certId))
+            .eq('trainings.training_records.userId', userId)
+            .single();
+
+        if (certError || !certificate) {
+            return res.status(404).json({
+                success: false,
+                message: 'Certificate not found or access denied'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Certificate download initiated',
+            data: {
+                certificateId: certificate.trainingCertId,
+                title: certificate.trainingCertTitle,
+                downloadUrl: `/certificates/${certificate.trainingCertId}.pdf`
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to download certificate',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
 
 
 

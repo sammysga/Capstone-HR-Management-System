@@ -362,10 +362,9 @@ router.get('/linemanager/trainings', lineManagerController.getAllTrainings);
 router.get('/linemanager/training-development-tracker', lineManagerController.getTrainingDevelopmentTracker);
 // Training request routes
 router.get('/linemanager/training-request/:userId', lineManagerController.getTrainingRequest);
-router.get('/api/training-request/:userId/details', lineManagerController.getTrainingRequestDetails);
-router.post('/training/approve', lineManagerController.approveTrainingRequest);
-router.post('/training/reject', lineManagerController.rejectTrainingRequest);
-
+router.get('/linemanager/api/training-request/:userId/details', lineManagerController.getTrainingRequestDetails); // Fixed path
+router.post('/linemanager/training/approve', lineManagerController.approveTrainingRequest); // Fixed path
+router.post('/linemanager/training/reject', lineManagerController.rejectTrainingRequest); // Fixed path
 
 // ============================
 // Employee - TRAINING MODULE CONTROLLER FUNCTIONS

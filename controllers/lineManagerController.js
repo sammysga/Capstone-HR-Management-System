@@ -9321,7 +9321,7 @@ getTrainingRequestDetails: async function(req, res) {
                 .update({
                     isApproved: true,
                     decisionDate: approvedDate,
-                    trainingStatus: 'approved'
+                    decisionRemarks:remarks,
                     // Note: Add these fields to your table if you want to track approval details:
                     // approvalRemarks: remarks,
                     // approvedBy: userId
@@ -9406,7 +9406,7 @@ getTrainingRequestDetails: async function(req, res) {
                 .update({
                     isApproved: false,
                     decisionDate: rejectedDate,
-                    trainingStatus: 'rejected'
+                    decisionRemarks: remarks,
                     // Note: Add these fields to your table if you want to track rejection details:
                     // rejectionRemarks: remarks,
                     // rejectedBy: userId

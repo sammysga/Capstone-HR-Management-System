@@ -190,273 +190,313 @@
     </div>
 
     <script>
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const userId = new URLSearchParams(window.location.pathname.split('/').pop()).get('userId') || window.location.pathname.split('/').pop();
-        const recordId = urlParams.get('recordId');
+// UPDATED FRONTEND JAVASCRIPT FOR view-training-request.ejs
 
-        // Global variables
-        let trainingRequestData = null;
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const messageContainer = document.getElementById('messageContainer');
-        const trainingRequestContent = document.getElementById('trainingRequestContent');
-        const remarksField = document.getElementById('remarks');
-        const approveBtn = document.getElementById('approveRequest');
-        const rejectBtn = document.getElementById('rejectRequest');
+// Get URL parameters - FIXED
+const urlParams = new URLSearchParams(window.location.search);
+const pathParts = window.location.pathname.split('/');
+const userId = pathParts[pathParts.length - 1]; // Get userId from URL path
+const recordId = urlParams.get('recordId');
 
-        // Utility functions
-        function showLoading() {
-            loadingOverlay.style.display = 'flex';
-        }
+console.log('URL Debug:', {
+    pathname: window.location.pathname,
+    pathParts: pathParts,
+    userId: userId,
+    recordId: recordId
+});
 
-        function hideLoading() {
-            loadingOverlay.style.display = 'none';
-        }
+// Global variables
+let trainingRequestData = null;
+const loadingOverlay = document.getElementById('loadingOverlay');
+const messageContainer = document.getElementById('messageContainer');
+const trainingRequestContent = document.getElementById('trainingRequestContent');
+const remarksField = document.getElementById('remarks');
+const approveBtn = document.getElementById('approveRequest');
+const rejectBtn = document.getElementById('rejectRequest');
 
-        function showMessage(message, type = 'error') {
-            const messageClass = type === 'success' ? 'success-message' : 'error-message';
-            messageContainer.innerHTML = `<div class="${messageClass}">${message}</div>`;
-            messageContainer.scrollIntoView({ behavior: 'smooth' });
-        }
+// Utility functions
+function showLoading() {
+    loadingOverlay.style.display = 'flex';
+}
 
-        function clearMessages() {
-            messageContainer.innerHTML = '';
-        }
+function hideLoading() {
+    loadingOverlay.style.display = 'none';
+}
 
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            return new Date(dateString).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        }
+function showMessage(message, type = 'error') {
+    const messageClass = type === 'success' ? 'success-message' : 'error-message';
+    messageContainer.innerHTML = `<div class="${messageClass}">${message}</div>`;
+    messageContainer.scrollIntoView({ behavior: 'smooth' });
+}
 
-        function formatDateForInput(dateString) {
-            if (!dateString) return '';
-            return new Date(dateString).toISOString().split('T')[0];
-        }
+function clearMessages() {
+    messageContainer.innerHTML = '';
+}
 
-        // Load training request data
-        async function loadTrainingRequest() {
-            if (!userId || !recordId) {
-                showMessage('Invalid request parameters. Missing user ID or record ID.');
-                return;
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    return new Date(dateString).toISOString().split('T')[0];
+}
+
+// Load training request data - FIXED API URL
+async function loadTrainingRequest() {
+    if (!userId || !recordId) {
+        showMessage('Invalid request parameters. Missing user ID or record ID.');
+        console.error('Missing parameters:', { userId, recordId });
+        return;
+    }
+
+    showLoading();
+    clearMessages();
+
+    try {
+        // FIXED: Updated API URL to match the route
+        const apiUrl = `/linemanager/api/training-request/${userId}/details?recordId=${recordId}`;
+        console.log('Fetching from API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+            headers: {
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
             }
-
-            showLoading();
-            clearMessages();
-
-            try {
-                const response = await fetch(`/linemanager/api/training-request/${userId}/details?recordId=${recordId}`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || `Server error: ${response.status}`);
-                }
-
-                const responseData = await response.json();
-                
-                if (responseData.success && responseData.data) {
-                    trainingRequestData = responseData.data;
-                    populateForm(trainingRequestData);
-                    trainingRequestContent.style.display = 'block';
-                } else {
-                    throw new Error(responseData.message || 'Failed to load training request data');
-                }
-
-            } catch (error) {
-                console.error('Error loading training request:', error);
-                showMessage(`Failed to load training request: ${error.message}`);
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Populate form with data
-        function populateForm(data) {
-            try {
-                // Basic request info
-                document.getElementById('requestId').textContent = data.trainingRecordId || 'N/A';
-                document.getElementById('dateRequested').textContent = formatDate(data.dateRequested);
-                
-                // User info
-                const userInfo = data.useraccounts || {};
-                document.getElementById('requestedBy').textContent = `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim() || 'N/A';
-                document.getElementById('requestedByEmail').textContent = userInfo.userEmail || 'N/A';
-                
-                // Staff info
-                const staffInfo = userInfo.staffaccounts || {};
-                document.getElementById('department').textContent = staffInfo.department || 'N/A';
-                document.getElementById('position').textContent = staffInfo.position || 'N/A';
-                
-                // Training info
-                const trainingInfo = data.trainings || {};
-                document.getElementById('trainingCourseName').value = trainingInfo.trainingName || '';
-                document.getElementById('trainingDescription').value = trainingInfo.trainingDesc || 'No description provided';
-                document.getElementById('duration').value = trainingInfo.totalDuration || 0;
-                document.getElementById('cost').value = trainingInfo.cost || 0;
-                
-                // Dates
-                document.getElementById('startDate').value = formatDateForInput(data.setStartDate);
-                document.getElementById('endDate').value = formatDateForInput(data.setEndDate);
-                
-                // Training mode and venue
-                const isOnline = trainingInfo.isOnlineArrangement;
-                document.getElementById('trainingMode').value = isOnline ? 'Online' : 'In-Person';
-                
-                if (!isOnline) {
-                    const venue = `${trainingInfo.address || 'TBD'}, ${trainingInfo.country || ''}`.trim();
-                    document.getElementById('venue').value = venue.endsWith(',') ? venue.slice(0, -1) : venue;
-                    document.getElementById('venueGroup').style.display = 'block';
-                }
-                
-                // Hidden fields
-                document.getElementById('trainingRecordId').value = data.trainingRecordId || '';
-                document.getElementById('userId').value = data.userId || '';
-                
-            } catch (error) {
-                console.error('Error populating form:', error);
-                showMessage('Error displaying training request data');
-            }
-        }
-
-        // Handle approval
-        async function approveRequest() {
-            const remarks = remarksField.value.trim();
-            if (!remarks) {
-                showMessage('Please provide remarks for your decision.');
-                remarksField.focus();
-                return;
-            }
-            
-            if (!confirm('Are you sure you want to approve this training request?')) {
-                return;
-            }
-            
-            const requestData = {
-                action: 'approve',
-                status: 'approved',
-                remarks: remarks,
-                trainingRecordId: document.getElementById('trainingRecordId').value,
-                userId: document.getElementById('userId').value
-            };
-
-            await submitDecision('/linemanager/training/approve', requestData, 'Approving');
-        }
-
-        // Handle rejection
-        async function rejectRequest() {
-            const remarks = remarksField.value.trim();
-            if (!remarks) {
-                showMessage('Please provide remarks for your decision.');
-                remarksField.focus();
-                return;
-            }
-            
-            if (!confirm('Are you sure you want to reject this training request?')) {
-                return;
-            }
-            
-            const requestData = {
-                action: 'reject',
-                status: 'rejected',
-                remarks: remarks,
-                trainingRecordId: document.getElementById('trainingRecordId').value,
-                userId: document.getElementById('userId').value
-            };
-
-            await submitDecision('/linemanager/training/reject', requestData, 'Rejecting');
-        }
-
-        // Submit decision (approve/reject)
-        async function submitDecision(url, requestData, actionText) {
-            console.log(`${actionText} training request:`, requestData);
-            clearMessages();
-
-            // Disable buttons and show loading state
-            approveBtn.disabled = true;
-            rejectBtn.disabled = true;
-            
-            const originalApproveText = approveBtn.innerHTML;
-            const originalRejectText = rejectBtn.innerHTML;
-            
-            if (url.includes('approve')) {
-                approveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            } else {
-                rejectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            }
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(requestData)
-                });
-
-                const responseData = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(responseData.message || `Server error: ${response.status}`);
-                }
-
-                if (responseData.success) {
-                    showMessage(responseData.message || `Training request ${requestData.status} successfully!`, 'success');
-                    
-                    // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.href = '/linemanager/dashboard';
-                    }, 2000);
-                } else {
-                    throw new Error(responseData.message || `${actionText} failed`);
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                showMessage(error.message || `Something went wrong while ${actionText.toLowerCase()} the request.`);
-                
-                // Re-enable buttons
-                approveBtn.disabled = false;
-                rejectBtn.disabled = false;
-                approveBtn.innerHTML = originalApproveText;
-                rejectBtn.innerHTML = originalRejectText;
-                
-                // Re-validate remarks
-                validateRemarks();
-            }
-        }
-
-        // Validate remarks and update button states
-        function validateRemarks() {
-            const remarks = remarksField.value.trim();
-            const hasRemarks = remarks.length > 0;
-            
-            approveBtn.disabled = !hasRemarks;
-            rejectBtn.disabled = !hasRemarks;
-            
-            approveBtn.style.opacity = hasRemarks ? '1' : '0.6';
-            rejectBtn.style.opacity = hasRemarks ? '1' : '0.6';
-        }
-
-        // Event listeners
-        approveBtn.addEventListener('click', approveRequest);
-        rejectBtn.addEventListener('click', rejectRequest);
-        remarksField.addEventListener('input', validateRemarks);
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Loading training request for user:', userId, 'record:', recordId);
-            loadTrainingRequest();
-            validateRemarks(); // Initial validation
         });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+
+        if (!response.ok) {
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
+            }
+            throw new Error(errorData.message || `Server error: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        console.log('API Response:', responseData);
+        
+        if (responseData.success && responseData.data) {
+            trainingRequestData = responseData.data;
+            populateForm(trainingRequestData);
+            trainingRequestContent.style.display = 'block';
+        } else {
+            throw new Error(responseData.message || 'Failed to load training request data');
+        }
+
+    } catch (error) {
+        console.error('Error loading training request:', error);
+        showMessage(`Failed to load training request: ${error.message}`);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Populate form with data - FIXED to handle staffaccounts properly
+function populateForm(data) {
+    try {
+        console.log('Populating form with data:', data);
+        
+        // Basic request info
+        document.getElementById('requestId').textContent = data.trainingRecordId || 'N/A';
+        document.getElementById('dateRequested').textContent = formatDate(data.dateRequested);
+        
+        // User info - FIXED to handle staffaccounts array
+        const userInfo = data.useraccounts || {};
+        const staffAccount = Array.isArray(userInfo.staffaccounts) 
+            ? userInfo.staffaccounts[0] 
+            : userInfo.staffaccounts;
+            
+        console.log('Staff account data:', staffAccount);
+        
+        const firstName = staffAccount?.firstName || 'N/A';
+        const lastName = staffAccount?.lastName || 'N/A';
+        
+        document.getElementById('requestedBy').textContent = `${firstName} ${lastName}`.trim();
+        document.getElementById('requestedByEmail').textContent = userInfo.userEmail || 'N/A';
+        
+        // Staff info
+        document.getElementById('department').textContent = staffAccount?.department || 'N/A';
+        document.getElementById('position').textContent = staffAccount?.position || 'N/A';
+        
+        // Training info - FIXED to handle trainings array
+        const trainingInfo = Array.isArray(data.trainings) ? data.trainings[0] : data.trainings;
+        console.log('Training info:', trainingInfo);
+        
+        document.getElementById('trainingCourseName').value = trainingInfo?.trainingName || '';
+        document.getElementById('trainingDescription').value = trainingInfo?.trainingDesc || 'No description provided';
+        document.getElementById('duration').value = trainingInfo?.totalDuration || 0;
+        document.getElementById('cost').value = trainingInfo?.cost || 0;
+        
+        // Dates
+        document.getElementById('startDate').value = formatDateForInput(data.setStartDate);
+        document.getElementById('endDate').value = formatDateForInput(data.setEndDate);
+        
+        // Training mode and venue
+        const isOnline = trainingInfo?.isOnlineArrangement;
+        document.getElementById('trainingMode').value = isOnline ? 'Online' : 'In-Person';
+        
+        if (!isOnline && trainingInfo) {
+            const venue = `${trainingInfo.address || 'TBD'}, ${trainingInfo.country || ''}`.trim();
+            document.getElementById('venue').value = venue.endsWith(',') ? venue.slice(0, -1) : venue;
+            document.getElementById('venueGroup').style.display = 'block';
+        }
+        
+        // Hidden fields
+        document.getElementById('trainingRecordId').value = data.trainingRecordId || '';
+        document.getElementById('userId').value = data.userId || '';
+        
+    } catch (error) {
+        console.error('Error populating form:', error);
+        showMessage('Error displaying training request data');
+    }
+}
+
+// Handle approval - UPDATED API URL
+async function approveRequest() {
+    const remarks = remarksField.value.trim();
+    if (!remarks) {
+        showMessage('Please provide remarks for your decision.');
+        remarksField.focus();
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to approve this training request?')) {
+        return;
+    }
+    
+    const requestData = {
+        action: 'approve',
+        status: 'approved',
+        remarks: remarks,
+        trainingRecordId: document.getElementById('trainingRecordId').value,
+        userId: document.getElementById('userId').value
+    };
+
+    // FIXED: Updated API URL
+    await submitDecision('/linemanager/training/approve', requestData, 'Approving');
+}
+
+// Handle rejection - UPDATED API URL
+async function rejectRequest() {
+    const remarks = remarksField.value.trim();
+    if (!remarks) {
+        showMessage('Please provide remarks for your decision.');
+        remarksField.focus();
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to reject this training request?')) {
+        return;
+    }
+    
+    const requestData = {
+        action: 'reject',
+        status: 'rejected',
+        remarks: remarks,
+        trainingRecordId: document.getElementById('trainingRecordId').value,
+        userId: document.getElementById('userId').value
+    };
+
+    // FIXED: Updated API URL
+    await submitDecision('/linemanager/training/reject', requestData, 'Rejecting');
+}
+
+// Submit decision (approve/reject) - NO CHANGES NEEDED
+async function submitDecision(url, requestData, actionText) {
+    console.log(`${actionText} training request:`, requestData);
+    clearMessages();
+
+    // Disable buttons and show loading state
+    approveBtn.disabled = true;
+    rejectBtn.disabled = true;
+    
+    const originalApproveText = approveBtn.innerHTML;
+    const originalRejectText = rejectBtn.innerHTML;
+    
+    if (url.includes('approve')) {
+        approveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    } else {
+        rejectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            throw new Error(responseData.message || `Server error: ${response.status}`);
+        }
+
+        if (responseData.success) {
+            showMessage(responseData.message || `Training request ${requestData.status} successfully!`, 'success');
+            
+            // Redirect after a short delay
+            setTimeout(() => {
+                window.location.href = '/linemanager/dashboard';
+            }, 2000);
+        } else {
+            throw new Error(responseData.message || `${actionText} failed`);
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage(error.message || `Something went wrong while ${actionText.toLowerCase()} the request.`);
+        
+        // Re-enable buttons
+        approveBtn.disabled = false;
+        rejectBtn.disabled = false;
+        approveBtn.innerHTML = originalApproveText;
+        rejectBtn.innerHTML = originalRejectText;
+        
+        // Re-validate remarks
+        validateRemarks();
+    }
+}
+
+// Validate remarks and update button states - NO CHANGES NEEDED
+function validateRemarks() {
+    const remarks = remarksField.value.trim();
+    const hasRemarks = remarks.length > 0;
+    
+    approveBtn.disabled = !hasRemarks;
+    rejectBtn.disabled = !hasRemarks;
+    
+    approveBtn.style.opacity = hasRemarks ? '1' : '0.6';
+    rejectBtn.style.opacity = hasRemarks ? '1' : '0.6';
+}
+
+// Event listeners - NO CHANGES NEEDED
+approveBtn.addEventListener('click', approveRequest);
+rejectBtn.addEventListener('click', rejectRequest);
+remarksField.addEventListener('input', validateRemarks);
+
+// Initialize page - NO CHANGES NEEDED
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Loading training request for user:', userId, 'record:', recordId);
+    loadTrainingRequest();
+    validateRemarks(); // Initial validation
+});
+
     </script>
 </body>
 </html>
