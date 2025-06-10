@@ -794,9 +794,6 @@ function updateLeaveRequestsSection(leaveRequests) {
         });
     }, 100);
 }
-
-
-// Function to update training requests section - FIXED
 function updateTrainingRequestsSection(trainingRequests) {
     const trainingSection = document.getElementById('section-training');
     trainingSection.innerHTML = '<h4>Training Requests</h4>';
@@ -814,33 +811,35 @@ function updateTrainingRequestsSection(trainingRequests) {
         return;
     }
 
-    // Normalize training request data - IMPROVED validation
-    const validateTrainingRequest = (request) => {
-        console.log('Validating training request:', request);
+    // Normalize training request data with better fallbacks
+    const normalizedRequests = trainingRequests.map(request => {
+        // Handle cases where names might be 'N/A' or missing
+        const firstName = request.firstName && request.firstName !== 'N/A' 
+            ? request.firstName 
+            : 'Employee';
+        const lastName = request.lastName && request.lastName !== 'N/A' 
+            ? request.lastName 
+            : '';
         
         return {
-            userId: request.userId || request.user_id || 'unknown',
-            trainingRecordId: request.trainingRecordId || request.training_record_id || 'unknown',
-            // FIXED: Handle firstName/lastName properly
-            firstName: request.firstName || request.first_name || 'Employee',
-            lastName: request.lastName || request.last_name || '',
-            trainingName: request.trainingName || request.training_name || 'Training',
-            dateRequested: request.dateRequested || request.date_requested || 'Recent',
+            userId: request.userId || 'unknown',
+            trainingRecordId: request.trainingRecordId || 'unknown',
+            firstName: firstName,
+            lastName: lastName,
+            trainingName: request.trainingName || 'Training',
+            dateRequested: request.dateRequested || 'Recent',
             status: request.status || 'Pending',
-            // Include the original date for sorting
             date: request.date || request.dateRequested || new Date().toISOString()
         };
-    };
+    });
 
-    // Map all training requests to normalized format
-    const normalizedRequests = trainingRequests.map(validateTrainingRequest);
     console.log('Normalized training requests:', normalizedRequests);
 
     // Sort training requests by date (oldest first for priority)
     normalizedRequests.sort((a, b) => {
         const dateA = new Date(a.date);
         const dateB = new Date(b.date);
-        return dateA - dateB; // Sort by oldest first (highest priority)
+        return dateA - dateB;
     });
 
     // Add training requests
@@ -848,10 +847,7 @@ function updateTrainingRequestsSection(trainingRequests) {
         const notificationItem = document.createElement('div');
         notificationItem.classList.add('notification-item');
         
-        // Handle empty lastName gracefully - IMPROVED
-        const fullName = request.lastName 
-            ? `${request.firstName} ${request.lastName}`.trim()
-            : request.firstName;
+        const fullName = `${request.firstName} ${request.lastName}`.trim();
             
         console.log(`Creating notification item for: ${fullName}, Training: ${request.trainingName}`);
             
@@ -868,19 +864,16 @@ function updateTrainingRequestsSection(trainingRequests) {
         trainingSection.appendChild(notificationItem);
     });
 
-    // Add click handlers for training buttons - IMPROVED with error handling
+    // Add click handlers for training buttons
     setTimeout(() => {
         document.querySelectorAll('.view-training-btn').forEach(button => {
             button.addEventListener('click', function() {
                 const userId = this.getAttribute('data-user-id');
                 const recordId = this.getAttribute('data-record-id');
                 
-                console.log('Training button clicked:', { userId, recordId });
-                
                 if (userId && recordId) {
                     window.location.href = `/linemanager/training-request/${userId}?recordId=${recordId}`;
                 } else {
-                    console.error('Missing data attributes for training request');
                     alert('Error: Missing request information. Please refresh and try again.');
                 }
             });

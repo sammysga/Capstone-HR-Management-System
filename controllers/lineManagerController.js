@@ -7475,58 +7475,56 @@ getLineManagerNotifications: async function (req, res) {
             type: 'Resignation Request'
         }));
 
-        // *** FIXED: Fetch pending training requests ***
-        const { data: trainingRequests, error: trainingError } = await supabase
-            .from('training_records')
-            .select(`
-                trainingRecordId,
-                userId,
-                trainingId,
-                dateRequested,
-                isApproved,
-                decisionDate,
-                trainingStatus,
-                useraccounts!inner(
-                    userEmail,
-                    staffaccounts!inner(
-                        departmentId,
-                        firstName,
-                        lastName
-                    )
-                ),
-                trainings!inner(
-                    trainingName,
-                    trainingDesc
-                )
-            `)
-            .is('isApproved', null) // Only get pending approvals
-            .is('decisionDate', null) // Only get requests without decision date
-            .not('trainingStatus', 'eq', 'cancelled') // Exclude cancelled requests
-            .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
-            .order('dateRequested', { ascending: true }); // Oldest first for priority
+const { data: trainingRequests, error: trainingError } = await supabase
+    .from('training_records')
+    .select(`
+        trainingRecordId,
+        userId,
+        trainingId,
+        dateRequested,
+        isApproved,
+        decisionDate,
+        trainingStatus,
+        useraccounts:userId (
+            userEmail,
+            staffaccounts (
+                departmentId,
+                firstName,
+                lastName
+            )
+        ),
+        trainings:trainingId (
+            trainingName,
+            trainingDesc
+        )
+    `)
+    .is('isApproved', null) // Only get pending approvals
+    .is('decisionDate', null) // Only get requests without decision date
+    .not('trainingStatus', 'eq', 'cancelled') // Exclude cancelled requests
+    .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
+    .order('dateRequested', { ascending: true }); // Oldest first for priority
 
         if (trainingError) {
             console.error('Error fetching training requests:', trainingError);
             // Don't throw error - just log it and continue with empty array
         }
 
-        // Format training requests
-        const formattedTrainingRequests = (trainingRequests || []).map(request => ({
-            userId: request.userId,
-            trainingRecordId: request.trainingRecordId,
-            firstName: request.useraccounts?.staffaccounts?.firstName || 'N/A',
-            lastName: request.useraccounts?.staffaccounts?.lastName || 'N/A',
-            trainingName: request.trainings?.trainingName || 'N/A',
-            dateRequested: new Date(request.dateRequested).toLocaleString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            }),
-            // Keep original date for frontend sorting
-            date: request.dateRequested
-        }));
-
+// In your getLineManagerNotifications function, update the training requests formatting:
+const formattedTrainingRequests = (trainingRequests || []).map(request => ({
+    userId: request.userId,
+    trainingRecordId: request.trainingRecordId,
+    firstName: request.useraccounts?.staffaccounts[0]?.firstName || request.useraccounts?.staffaccounts?.firstName || 'Employee',
+    lastName: request.useraccounts?.staffaccounts[0]?.lastName || request.useraccounts?.staffaccounts?.lastName || '',
+    trainingName: request.trainings?.trainingName || 'N/A',
+    dateRequested: request.dateRequested ? new Date(request.dateRequested).toLocaleString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    }) : 'Recent',
+    // Keep original date for frontend sorting
+    date: request.dateRequested
+}));
         // Calculate total notification count (now including training requests)
         const notificationCount = formattedApplicants.length + 
                                  formattedLeaveRequests.length + 
