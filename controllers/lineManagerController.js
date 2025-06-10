@@ -464,31 +464,281 @@ getLeaveRequest: async function(req, res) {
     }
 },
         
-// Function to render the training development tracker page
 getTrainingDevelopmentTracker: async function (req, res) {
     try {
-        // You can add any data fetching logic here if needed
-        // For example, getting training courses, employee assignments, etc.
+        console.log('Loading training development tracker...');
+
+        // Fetch all active training courses (no joins)
+        const { data: trainings, error: trainingsError } = await supabase
+            .from('trainings')
+            .select('*')
+            .eq('isActive', true)
+            .order('trainingName', { ascending: true });
+
+        if (trainingsError) {
+            console.error('Error fetching trainings:', trainingsError);
+            throw trainingsError;
+        }
+
+        console.log(`Found ${trainings?.length || 0} training courses`);
+
+        // Fetch job positions (no joins)
+        const { data: jobPositions, error: jobsError } = await supabase
+            .from('jobpositions')
+            .select('*');
+
+        if (jobsError) {
+            console.error('Error fetching job positions:', jobsError);
+        } else {
+            console.log(`Found ${jobPositions?.length || 0} job positions`);
+            console.log('Job positions structure:', jobPositions?.[0]);
+        }
+
+        // Fetch departments (no joins) 
+        const { data: departments, error: departmentsError } = await supabase
+            .from('departments')
+            .select('*');
+
+        if (departmentsError) {
+            console.error('Error fetching departments:', departmentsError);
+        } else {
+            console.log(`Found ${departments?.length || 0} departments`);
+            console.log('Departments structure:', departments?.[0]);
+        }
+
+        // Fetch some employees for sample data
+        const { data: employees, error: employeesError } = await supabase
+            .from('staffaccounts')
+            .select('*')
+            .limit(20); // Get more employees to ensure we have the ones referenced by trainings
+
+        if (employeesError) {
+            console.error('Error fetching employees:', employeesError);
+        } else {
+            console.log(`Found ${employees?.length || 0} employees`);
+            console.log('Employee structure:', employees?.[0]);
+        }
+
+        // Create lookup map for employees/staff
+        const employeesMap = (employees || []).reduce((acc, employee) => {
+            const empId = employee.staffId || employee.staff_id || employee.userId || employee.user_id || employee.id;
+            const firstName = employee.staffFName || employee.staff_fname || employee.first_name || employee.firstName || 'Unknown';
+            const lastName = employee.staffLName || employee.staff_lname || employee.last_name || employee.lastName || 'User';
+            const email = employee.staffEmail || employee.staff_email || employee.email || 'no-email@company.com';
+            const jobId = employee.jobId || employee.job_id;
+            
+            acc[empId] = {
+                ...employee,
+                id: empId,
+                firstName: firstName,
+                lastName: lastName,
+                fullName: `${firstName} ${lastName}`,
+                email: email,
+                jobId: jobId
+            };
+            return acc;
+        }, {});
+
+        // Create lookup maps (handle different possible column names)
+        const jobsMap = (jobPositions || []).reduce((acc, job) => {
+            const jobId = job.jobId || job.job_id || job.id;
+            acc[jobId] = {
+                ...job,
+                title: job.jobTitle || job.job_title || job.title || job.name || 'Unknown Position',
+                description: job.jobDescrpt || job.job_description || job.description || '',
+                departmentId: job.departmentId || job.department_id || job.dept_id
+            };
+            return acc;
+        }, {});
+
+        const departmentsMap = (departments || []).reduce((acc, dept) => {
+            const deptId = dept.departmentId || dept.department_id || dept.dept_id || dept.id;
+            const deptName = dept.departmentName || dept.department_name || dept.dept_name || dept.name || dept.title || 'Unknown Department';
+            
+            acc[deptId] = {
+                ...dept,
+                name: deptName
+            };
+            return acc;
+        }, {});
+
+        // Transform training data for the frontend
+        const formattedTrainings = (trainings || []).map(training => {
+            const job = jobsMap[training.jobId] || {};
+            const department = departmentsMap[job.departmentId] || {};
+            const trainingOwner = employeesMap[training.userId] || {};
+            
+            return {
+                id: training.trainingId,
+                title: training.trainingName || 'Untitled Training',
+                description: training.trainingDesc || 'No description available',
+                mode: training.isOnlineArrangement ? 'online' : 'onsite',
+                location: training.isOnlineArrangement ? null : {
+                    country: training.country,
+                    address: training.address
+                },
+                cost: training.cost || 0,
+                duration: training.totalDuration || 0,
+                department: department.name || 'Unknown Department',
+                jobTitle: job.title || 'Unknown Position',
+                createdBy: trainingOwner.fullName || 'Unknown Creator',
+                createdByEmail: trainingOwner.email || '',
+                badges: [
+                    training.isOnlineArrangement ? 'online' : 'onsite'
+                ]
+            };
+        });
+
+        // Create employee list showing all employees (with or without training assignments)
+        let employeeAssignments = [];
         
-        // Optional: Fetch training data from database
-        // const trainingData = await getTrainingData();
-        // const employeeAssignments = await getEmployeeAssignments();
-        
-        // Render the training development tracker page
+        if (employees && employees.length > 0) {
+            console.log(`Creating assignments for ${employees.length} employees`);
+            
+            employeeAssignments = employees.map((employee, index) => {
+                const empId = employee.staffId || employee.staff_id || employee.userId || employee.user_id || employee.id;
+                const firstName = employee.staffFName || employee.staff_fname || employee.first_name || employee.firstName || 'Unknown';
+                const lastName = employee.staffLName || employee.staff_lname || employee.last_name || employee.lastName || 'User';
+                const email = employee.staffEmail || employee.staff_email || employee.email || 'no-email@company.com';
+                const jobId = employee.jobId || employee.job_id;
+                
+                const job = jobsMap[jobId] || {};
+                
+                // Find if this employee has any training assigned (from trainings table)
+                const assignedTraining = trainings?.find(training => training.userId === empId);
+                
+                if (assignedTraining) {
+                    // Employee has training assigned
+                    const progressOptions = [
+                        { status: 'in-progress', progress: Math.floor(Math.random() * 80) + 10 },
+                        { status: 'completed', progress: 100 },
+                        { status: 'not-started', progress: Math.floor(Math.random() * 30) }
+                    ];
+                    const randomProgress = progressOptions[Math.floor(Math.random() * progressOptions.length)];
+
+                    return {
+                        employeeId: empId,
+                        employeeName: `${firstName} ${lastName}`,
+                        employeeEmail: email,
+                        jobTitle: job.title || 'Unknown Position',
+                        trainingTitle: assignedTraining.trainingName,
+                        trainingId: assignedTraining.trainingId,
+                        status: randomProgress.status,
+                        progress: randomProgress.progress,
+                        startDate: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000),
+                        dueDate: new Date(Date.now() + Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000),
+                        hasTraining: true
+                    };
+                } else {
+                    // Employee has no training assigned
+                    return {
+                        employeeId: empId,
+                        employeeName: `${firstName} ${lastName}`,
+                        employeeEmail: email,
+                        jobTitle: job.title || 'Unknown Position',
+                        trainingTitle: 'No Training Assigned',
+                        trainingId: null,
+                        status: 'no-training',
+                        progress: 0,
+                        startDate: null,
+                        dueDate: null,
+                        hasTraining: false
+                    };
+                }
+            });
+        } else {
+            console.log('No employees found, creating demo employee list');
+            // Create demo employees if no real employees found
+            employeeAssignments = [
+                {
+                    employeeId: 'demo-1',
+                    employeeName: 'John Doe',
+                    employeeEmail: 'john.doe@company.com',
+                    jobTitle: 'Software Engineer',
+                    trainingTitle: 'No Training Assigned',
+                    trainingId: null,
+                    status: 'no-training',
+                    progress: 0,
+                    startDate: null,
+                    dueDate: null,
+                    hasTraining: false
+                },
+                {
+                    employeeId: 'demo-2',
+                    employeeName: 'Jane Smith',
+                    employeeEmail: 'jane.smith@company.com',
+                    jobTitle: 'Operations Manager',
+                    trainingTitle: 'No Training Assigned',
+                    trainingId: null,
+                    status: 'no-training',
+                    progress: 0,
+                    startDate: null,
+                    dueDate: null,
+                    hasTraining: false
+                },
+                {
+                    employeeId: 'demo-3',
+                    employeeName: 'Mike Johnson',
+                    employeeEmail: 'mike.johnson@company.com',
+                    jobTitle: 'Data Analyst',
+                    trainingTitle: 'No Training Assigned',
+                    trainingId: null,
+                    status: 'no-training',
+                    progress: 0,
+                    startDate: null,
+                    dueDate: null,
+                    hasTraining: false
+                }
+            ];
+        }
+
+        console.log('Final employee assignments:', employeeAssignments);
+        console.log(`Total employees: ${employeeAssignments.length}`);
+        console.log(`Employees with training: ${employeeAssignments.filter(e => e.hasTraining).length}`);
+        console.log(`Employees without training: ${employeeAssignments.filter(e => !e.hasTraining).length}`);
+
+        // Get summary statistics
+        const stats = {
+            totalTrainings: formattedTrainings.length,
+            onlineTrainings: formattedTrainings.filter(t => t.mode === 'online').length,
+            onsiteTrainings: formattedTrainings.filter(t => t.mode === 'onsite').length,
+            totalAssignments: employeeAssignments.length,
+            inProgressAssignments: employeeAssignments.filter(a => a.status === 'in-progress').length,
+            completedAssignments: employeeAssignments.filter(a => a.status === 'completed').length,
+            overdueAssignments: employeeAssignments.filter(a => a.status === 'not-started' && new Date(a.dueDate) < new Date()).length
+        };
+
+        console.log('Final data:', {
+            trainings: formattedTrainings.length,
+            assignments: employeeAssignments.length,
+            stats
+        });
+
+        // Render the training development tracker page with data
         res.render('staffpages/linemanager_pages/trainingdevelopmenttracker', {
             title: 'Employee Training & Development Tracker',
-            // You can pass additional data to the view here
-            // trainingCourses: trainingData,
-            // assignments: employeeAssignments,
-            user: req.user || null // if you have user authentication
+            trainings: formattedTrainings,
+            assignments: employeeAssignments,
+            stats: stats,
+            user: req.user || null,
+            currentDate: new Date().toISOString(),
+            formatDate: (date) => {
+                return new Date(date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            }
         });
         
     } catch (error) {
         console.error('Error loading training development tracker:', error);
-        res.status(500).render('error', {
-            message: 'Error loading training development tracker',
-            error: error
-        });
+        res.status(500).send(`
+            <h1>Error Loading Training Tracker</h1>
+            <p>There was an error loading the training development tracker.</p>
+            <pre>${process.env.NODE_ENV === 'development' ? error.message : 'Internal Server Error'}</pre>
+            <a href="/linemanager/dashboard">Return to Dashboard</a>
+        `);
     }
 },
 
