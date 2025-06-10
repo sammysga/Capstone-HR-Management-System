@@ -362,6 +362,17 @@ router.get('/linemanager/trainings', lineManagerController.getAllTrainings);
 router.get('/linemanager/training-development-tracker', lineManagerController.getTrainingDevelopmentTracker);
 
 // ============================
+// Employee - TRAINING MODULE CONTROLLER FUNCTIONS
+// ============================
+// GET /api/trainings/dropdown - Get trainings for dropdown (uses user's job from session)
+router.get('/linemanager/trainings/dropdown', employeeController.getTrainingsByJobAndDept);
+// GET /api/trainings/:trainingId/details - Get training skills and objectives
+router.get('/linemanager/trainings/:trainingId/details', employeeController.getTrainingSkillsAndObjectives);
+// POST /api/training-requests - Create new training request
+router.post('/linemanager/training-requests', employeeController.createTrainingRequest);
+
+
+// ============================
 // HR - TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================
 

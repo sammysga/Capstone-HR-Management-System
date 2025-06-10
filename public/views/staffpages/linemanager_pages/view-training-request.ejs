@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Training Request</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> 
+    <link rel="stylesheet" href="/css/linemanager.css"> 
+    <style>
+        .main-content { margin-left: 290px; }
+        .account-info-header { margin-top: 40px; font-size: 1.5rem; font-weight: bold; color: #059ca4; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #555; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        .form-group textarea { resize: none; height: 150px; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #059ca4; outline: none; }
+        .training-btn { background-color: #124A5C; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s ease; margin-right: 10px; }
+        .training-btn:hover { background-color: #059ca4; }
+        .training-btn.approve { background-color: #28a745; }
+        .training-btn.approve:hover { background-color: #218838; }
+        .training-btn.reject { background-color: #dc3545; }
+        .training-btn.reject:hover { background-color: #c82333; }
+        .button-group { margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <%- include('../../partials/linemanager_partials') %>
+
+    <div class="main-content">
+        <h1 class="account-info-header">New Training Request</h1>
+
+        <form id="trainingRequestForm">
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <input type="text" id="department" name="department" value="IT Department" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" name="lastName" value="Smith" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" name="firstName" value="John" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="trainingCourseName">Training Course Name:</label>
+                <input type="text" id="trainingCourseName" name="trainingCourseName" value="Advanced JavaScript Development" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="objectiveFocusAreas">Objective Focus Areas:</label>
+                <textarea id="objectiveFocusAreas" name="objectiveFocusAreas" readonly>Enhance technical skills in modern JavaScript frameworks and improve code quality standards for upcoming project deliverables.</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="skillFocusAreas">Skill Focus Areas:</label>
+                <textarea id="skillFocusAreas" name="skillFocusAreas" readonly>React.js, Node.js, ES6+ features, Testing frameworks, Code optimization, and API development best practices.</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" name="startDate" value="2025-07-01" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate" name="endDate" value="2025-07-15" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="remarks">Remarks:</label>
+                <textarea id="remarks" name="remarks" placeholder="Enter your remarks for approval/rejection"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="training-btn approve" id="approveRequest">
+                    Approve
+                </button>
+                <button type="button" class="training-btn reject" id="rejectRequest">
+                    Reject
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Approve request
+        document.getElementById('approveRequest').addEventListener('click', function(event) {
+            event.preventDefault();
+            
+            const remarks = document.getElementById('remarks').value.trim();
+            if (!remarks) {
+                alert('Please provide remarks for your decision.');
+                document.getElementById('remarks').focus();
+                return;
+            }
+            
+            const requestData = {
+                action: 'approve',
+                status: 'approved',
+                remarks: remarks
+            };
+
+            console.log("Approving training request:", requestData);
+
+            fetch('/linemanager/training/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Approval response:", data);
+                alert(data.message || 'Training request approved successfully!');
+                window.location.href = '/linemanager/training-requests';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message || 'Something went wrong while approving the request.');
+            });
+        });
+
+        // Reject request
+        document.getElementById('rejectRequest').addEventListener('click', function(event) {
+            event.preventDefault();
+            
+            const remarks = document.getElementById('remarks').value.trim();
+            if (!remarks) {
+                alert('Please provide remarks for your decision.');
+                document.getElementById('remarks').focus();
+                return;
+            }
+            
+            const requestData = {
+                action: 'reject',
+                status: 'rejected',
+                remarks: remarks
+            };
+
+            console.log("Rejecting training request:", requestData);
+
+            fetch('/linemanager/training/reject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Rejection response:", data);
+                alert(data.message || 'Training request rejected successfully!');
+                window.location.href = '/linemanager/training-requests';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message || 'Something went wrong while rejecting the request.');
+            });
+        });
+    </script>
+</body>
+</html>

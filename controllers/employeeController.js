@@ -3724,6 +3724,11 @@ checkFeedbackStatus: async function (req, res) {
 },
 
 
+// ============================
+// TRAINING MODULE CONTROLLER FUNCTIONS
+// ============================
+
+
 // Employee Training Section
 
  getEmployeeTrainingHome: function(req, res) {
@@ -3743,6 +3748,320 @@ getEmployeeTrainingSpecific: function(req, res) {
             res.redirect('/staff/login');
         }
     },
+
+     getTrainingsByJobAndDept: async function(req, res) {
+        console.log(`[${new Date().toISOString()}] Fetching trainings for modal dropdown - user ${req.session?.user?.userId}`);
+        
+        try {
+            const userId = req.session?.user?.userId;
+            if (!userId) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'User not authenticated'
+                });
+            }
+
+            // Get user's job and department from staffaccounts
+            const { data: staff, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('jobId, departmentId')
+                .eq('userId', userId)
+                .single();
+
+            if (staffError || !staff) {
+                console.error('Error fetching staff details:', staffError);
+                return res.status(404).json({
+                    success: false,
+                    message: 'Staff information not found'
+                });
+            }
+
+            // Get trainings for user's job
+            const { data: trainings, error: trainingsError } = await supabase
+                .from('trainings')
+                .select('trainingId, trainingName, trainingDesc, isOnlineArrangement, cost, totalDuration, address, country')
+                .eq('jobId', staff.jobId)
+                .eq('isActive', true)
+                .order('trainingName', { ascending: true });
+
+            if (trainingsError) {
+                console.error('Error fetching trainings:', trainingsError);
+                throw new Error(`Failed to fetch trainings: ${trainingsError.message}`);
+            }
+
+            console.log(`Found ${trainings?.length || 0} trainings for user's job`);
+
+            res.json({
+                success: true,
+                data: trainings || [],
+                count: trainings?.length || 0
+            });
+
+        } catch (error) {
+            console.error('Error in getTrainingsByJobAndDept:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch trainings',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    },
+
+    // Get training skills and objectives for modal
+    getTrainingSkillsAndObjectives: async function(req, res) {
+        console.log(`[${new Date().toISOString()}] Fetching skills and objectives for training ${req.params.trainingId}`);
+
+        try {
+            const { trainingId } = req.params;
+
+            if (!trainingId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Training ID is required'
+                });
+            }
+
+            // Get training skills
+            const { data: trainingSkills, error: skillsError } = await supabase
+                .from('training_skills')
+                .select('jobReqSkillId')
+                .eq('trainingId', parseInt(trainingId));
+
+            if (skillsError) {
+                console.error('Error fetching training skills:', skillsError);
+                throw new Error(`Failed to fetch skills: ${skillsError.message}`);
+            }
+
+            // Get skill details if any skills exist
+            let skills = [];
+            if (trainingSkills && trainingSkills.length > 0) {
+                const skillIds = trainingSkills.map(ts => ts.jobReqSkillId);
+                const { data: skillDetails, error: skillDetailsError } = await supabase
+                    .from('jobreqskills')
+                    .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
+                    .in('jobReqSkillId', skillIds)
+                    .order('jobReqSkillName', { ascending: true });
+
+                if (!skillDetailsError && skillDetails) {
+                    skills = skillDetails;
+                }
+            }
+
+            // Get training objectives
+            const { data: trainingObjectives, error: objectivesError } = await supabase
+                .from('training_objectives')
+                .select('objectiveId')
+                .eq('trainingId', parseInt(trainingId));
+
+            if (objectivesError) {
+                console.error('Error fetching training objectives:', objectivesError);
+                throw new Error(`Failed to fetch objectives: ${objectivesError.message}`);
+            }
+
+            // Get objective details if any objectives exist
+            let objectives = [];
+            if (trainingObjectives && trainingObjectives.length > 0) {
+                const objectiveIds = trainingObjectives.map(to => to.objectiveId);
+                const { data: objectiveDetails, error: objectiveDetailsError } = await supabase
+                    .from('objectivesettings_objectives')
+                    .select('objectiveId, objectiveDescrpt, objectiveKPI, objectiveUOM')
+                    .in('objectiveId', objectiveIds)
+                    .order('objectiveDescrpt', { ascending: true });
+
+                if (!objectiveDetailsError && objectiveDetails) {
+                    objectives = objectiveDetails;
+                }
+            }
+
+            console.log(`Found ${skills.length} skills and ${objectives.length} objectives for training ${trainingId}`);
+
+            res.json({
+                success: true,
+                data: {
+                    skills: skills,
+                    objectives: objectives
+                }
+            });
+
+        } catch (error) {
+            console.error('Error in getTrainingSkillsAndObjectives:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch training details',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    },
+
+    // Create training request from modal
+    createTrainingRequest: async function(req, res) {
+        console.log(`[${new Date().toISOString()}] Creating training request for user ${req.session?.user?.userId}`);
+        console.log('Request body:', req.body);
+
+        try {
+            const userId = req.session?.user?.userId;
+            if (!userId) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'User not authenticated'
+                });
+            }
+
+            const { trainingId, startDate, endDate } = req.body;
+
+            // Validate required fields
+            if (!trainingId || !startDate || !endDate) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Training ID, start date, and end date are required'
+                });
+            }
+
+            // Validate dates
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (end <= start) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'End date must be after start date'
+                });
+            }
+
+            // Check if training exists and is active
+            const { data: training, error: trainingError } = await supabase
+                .from('trainings')
+                .select('trainingId, trainingName')
+                .eq('trainingId', parseInt(trainingId))
+                .eq('isActive', true)
+                .single();
+
+            if (trainingError || !training) {
+                console.error('Training not found or inactive:', trainingError);
+                return res.status(404).json({
+                    success: false,
+                    message: 'Training not found or inactive'
+                });
+            }
+
+            // Check for existing active requests
+            const { data: existingRequest, error: existingError } = await supabase
+                .from('training_records')
+                .select('trainingRecordId')
+                .eq('userId', userId)
+                .eq('trainingId', parseInt(trainingId))
+                .in('trainingStatus', ['Not Started', 'In Progress']);
+
+            if (existingError && existingError.code !== 'PGRST116') {
+                console.error('Error checking existing requests:', existingError);
+                throw new Error(`Failed to check existing requests: ${existingError.message}`);
+            }
+
+            if (existingRequest && existingRequest.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You already have an active training request for this course'
+                });
+            }
+
+            // Create training record
+            const trainingRecordData = {
+                userId: userId,
+                trainingId: parseInt(trainingId),
+                setStartDate: startDate,
+                setEndDate: endDate,
+                trainingPercentage: 0,
+                trainingStatus: 'Not Started',
+                isApproved: false,
+                dateRequested: new Date().toISOString().split('T')[0]
+            };
+
+            const { data: trainingRecord, error: recordError } = await supabase
+                .from('training_records')
+                .insert([trainingRecordData])
+                .select()
+                .single();
+
+            if (recordError) {
+                console.error('Error creating training record:', recordError);
+                throw new Error(`Failed to create training record: ${recordError.message}`);
+            }
+
+            const trainingRecordId = trainingRecord.trainingRecordId;
+
+            // Get training activities and create activity records
+            const { data: activities, error: activitiesError } = await supabase
+                .from('training_activities')
+                .select('activityId')
+                .eq('trainingId', parseInt(trainingId));
+
+            let activitiesCreated = 0;
+            if (!activitiesError && activities && activities.length > 0) {
+                const activityRecords = activities.map(activity => ({
+                    trainingRecordId: trainingRecordId,
+                    activityId: activity.activityId,
+                    status: 'Not Started'
+                }));
+
+                const { error: activityInsertError } = await supabase
+                    .from('training_records_activities')
+                    .insert(activityRecords);
+
+                if (!activityInsertError) {
+                    activitiesCreated = activities.length;
+                }
+            }
+
+            console.log(`Training request created successfully: ${trainingRecordId}`);
+
+            res.status(201).json({
+                success: true,
+                message: 'Training request submitted successfully',
+                data: {
+                    trainingRecordId: trainingRecordId,
+                    trainingName: training.trainingName,
+                    status: 'Not Started',
+                    isApproved: false,
+                    activitiesCreated: activitiesCreated
+                }
+            });
+
+        } catch (error) {
+            console.error('Error in createTrainingRequest:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to create training request',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    },
+
+
+
+getLogoutButton: function(req, res) {
+    req.session.destroy(err => {
+        if(err) {
+            console.error('Error destroying session', err);
+            return res.status(500).json({ error: 'Failed to log out. Please try again.' });
+        }
+        res.redirect('/staff/login');
+    });
+},
+
+
+
+};
+
+
+module.exports = employeeController;
+
+
+
+
+
 // get360FeedbackList: async function (req, res) {
 //     const currentUserId = req.session?.user?.userId;
 //     const selectedUserId = req.query.userId; // Get the userId from the query parameters
@@ -4062,19 +4381,8 @@ getEmployeeTrainingSpecific: function(req, res) {
 //         return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
 //     }
 // },
-getLogoutButton: function(req, res) {
-    req.session.destroy(err => {
-        if(err) {
-            console.error('Error destroying session', err);
-            return res.status(500).json({ error: 'Failed to log out. Please try again.' });
-        }
-        res.redirect('/staff/login');
-    });
-},
 
-};
 
-module.exports = employeeController;
            
 // get360FeedbackList: async function(currentUserId, todayString) {
 //     try {

@@ -1043,6 +1043,236 @@
                 flex-direction: row;
             }
         }
+
+         /* Searchable dropdown styling */
+        .dropdown-container {
+            position: relative;
+        }
+
+        .dropdown-input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .dropdown-input:focus {
+            outline: none;
+            border-color: #07ACB9;
+            box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+        }
+
+        .dropdown-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            pointer-events: none;
+            transition: transform 0.2s ease;
+        }
+
+        .dropdown-container.open .dropdown-icon {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .dropdown-container.open .dropdown-list {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .dropdown-item.selected {
+            background-color: #07ACB9;
+            color: white;
+        }
+
+        .dropdown-item-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .dropdown-item-meta {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .dropdown-item.selected .dropdown-item-meta {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .no-results {
+            padding: 16px;
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .loading {
+            padding: 16px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        /* Improved skills and objectives display */
+        .skills-objectives-container {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 10px;
+        }
+
+        .skills-objectives-container.empty {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 8px;
+            color: #07ACB9;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tag {
+            background-color: #07ACB9;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .tag.objective {
+            background-color: #3b82f6;
+        }
+
+        .tag.skill {
+            background-color: #10b981;
+        }
+
+        .date-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .confirmation-message {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .btn-secondary {
+            background-color: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+        }
+
+        .btn-primary {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #0d3c4a;
+        }
+
+        .btn-primary:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* Demo button */
+        .add-request-btn {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
     </style>
 </head>
 <body>
@@ -1576,57 +1806,40 @@
             <form id="trainingRequestForm">
                 <div class="form-group">
                     <label class="form-label">Select Suggested Training Course:</label>
-                    <input type="text" class="form-input" id="trainingCourse" placeholder="Enter training course name" required>
+                    <div class="dropdown-container" id="trainingDropdown">
+                        <input 
+                            type="text" 
+                            class="dropdown-input" 
+                            id="trainingCourseInput" 
+                            placeholder="Search and select a training course..."
+                            autocomplete="off"
+                            required
+                        >
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                        <div class="dropdown-list" id="trainingDropdownList">
+                            <div class="loading">Loading available trainings...</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="selectedTrainingId" name="selectedTrainingId">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Selected Training Course Focus Areas Reference:</label>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <strong style="color: #374151; font-size: 14px;">Objective Areas:</strong>
-                        <div class="checkbox-group" id="objectiveAreas">
-                            <div class="checkbox-item" onclick="toggleCheckbox('obj1')">
-                                <input type="checkbox" id="obj1" value="Objective 1">
-                                <span>Objective 1</span>
-                            </div>
-                            <div class="checkbox-item" onclick="toggleCheckbox('obj2')">
-                                <input type="checkbox" id="obj2" value="Objective 2">
-                                <span>Objective 2</span>
-                            </div>
-                            <div class="checkbox-item" onclick="toggleCheckbox('obj3')">
-                                <input type="checkbox" id="obj3" value="Objective 3">
-                            </div>
-                            <div class="checkbox-item" onclick="toggleCheckbox('obj4')">
-                                <input type="checkbox" id="obj4" value="Objective 4">
-                                <span>Objective 4</span>
-                            </div>
-                            <div class="checkbox-item" onclick="toggleCheckbox('obj5')">
-                                <input type="checkbox" id="obj5" value="Objective 5">
-                                <span>Objective 5</span>
-                            </div>
+                    <label class="form-label">Selected Training Course Focus Areas:</label>
+                    <div class="skills-objectives-container empty" id="skillsObjectivesContainer">
+                        <div class="section-title">
+                            <i class="fas fa-bullseye"></i>
+                            Objectives
                         </div>
+                        <div class="tags-container" id="objectivesContainer"></div>
+                        
+                        <div class="section-title">
+                            <i class="fas fa-cogs"></i>
+                            Skills
+                        </div>
+                        <div class="tags-container" id="skillsContainer"></div>
                     </div>
-
-                    <div>
-                        <strong style="color: #374151; font-size: 14px;">Focus Skill Areas:</strong>
-                        <div class="checkbox-group" id="skillAreas">
-                            <div class="checkbox-item" onclick="toggleCheckbox('skill1')">
-                                <input type="checkbox" id="skill1" value="Skill 1">
-                                <span>Skill 1</span>
-                            </div>
-                            <div class="checkbox-item" onclick="toggleCheckbox('skill2')">
-                                <input type="checkbox" id="skill2" value="Skill 2">
-                                <span>Skill 2</span>
-                            </div>
-                            <div class="checkbox-item" onclick="toggleCheckbox('skill3')">
-                                <input type="checkbox" id="skill3" value="Skill 3">
-                                <span>Skill 3</span>
-                            </div>
-                            <div class="checkbox-item" onclick="toggleCheckbox('skill4')">
-                                <input type="checkbox" id="skill4" value="Skill 4">
-                                <span>Skill 4</span>
-                            </div>
-                        </div>
+                    <div id="noSelectionMessage" style="color: #64748b; font-style: italic; margin-top: 8px;">
+                        Please select a training course to view its focus areas.
                     </div>
                 </div>
 
@@ -1644,12 +1857,12 @@
                 </div>
 
                 <div class="confirmation-message">
-                    Are you sure you want to add this training course record on your profile? Line Manager will be notified for approval. Take note that your selected training course matches your IDP.
+                    Are you sure you want to add this training course record to your profile? Your line manager will be notified for approval. Please ensure that your selected training course matches your Individual Development Plan (IDP).
                 </div>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeTrainingRequestModal()">Back</button>
-                    <button type="submit" class="btn-primary">Confirm</button>
+                    <button type="button" class="btn-secondary" onclick="closeTrainingRequestModal()">Cancel</button>
+                    <button type="submit" class="btn-primary" id="submitButton" disabled>Submit Request</button>
                 </div>
             </form>
         </div>
@@ -1668,6 +1881,10 @@
             { id: 7, title: "Cybersecurity Awareness", status: "available", type: ["online", "required"], progress: 0, lessons: "Not started" },
             { id: 8, title: "Team Building & Collaboration", status: "available", type: ["onsite"], progress: 0, lessons: "Not started" }
         ];
+
+        let selectedTraining = null;
+        let filteredTrainings = [];
+
 
         document.addEventListener('DOMContentLoaded', () => {
             // Tab functionality
@@ -1729,6 +1946,8 @@
                 });
             }
         });
+
+        
 
         // Filter dropdown functionality
         function toggleFilterDropdown() {
@@ -1815,6 +2034,571 @@
                     section.style.backgroundColor = '';
                 }, 2000);
             }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTrainingDropdown();
+            setupFormValidation();
+        });
+
+        function initializeTrainingDropdown() {
+            const dropdown = document.getElementById('trainingDropdown');
+            const input = document.getElementById('trainingCourseInput');
+            const dropdownList = document.getElementById('trainingDropdownList');
+
+            // Load trainings when modal opens
+            loadTrainings();
+
+            // Handle input events
+            input.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                filterTrainings(searchTerm);
+                dropdown.classList.add('open');
+            });
+
+            input.addEventListener('focus', function() {
+                dropdown.classList.add('open');
+                if (filteredTrainings.length === 0) {
+                    loadTrainings();
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!dropdown.contains(event.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
+
+        function loadTrainings() {
+            // Simulate API call - replace with actual implementation
+            setTimeout(() => {
+                filteredTrainings = [...mockTrainings];
+                renderTrainingOptions();
+            }, 500);
+        }
+
+        function filterTrainings(searchTerm) {
+            if (!searchTerm) {
+                // Show all trainings when no search term
+                renderTrainingOptions();
+            } else {
+                // Filter trainings based on search term
+                const filtered = filteredTrainings.filter(training => 
+                    training.trainingName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    training.trainingDesc.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                
+                // Temporarily store original list and show filtered results
+                const originalList = filteredTrainings;
+                filteredTrainings = filtered;
+                renderTrainingOptions();
+                filteredTrainings = originalList; // Restore original list
+            }
+        }
+
+        function renderTrainingOptions() {
+            const dropdownList = document.getElementById('trainingDropdownList');
+            
+            if (filteredTrainings.length === 0) {
+                dropdownList.innerHTML = '<div class="no-results">No trainings found</div>';
+                return;
+            }
+
+            const optionsHTML = filteredTrainings.map(training => `
+                <div class="dropdown-item" onclick="selectTraining(${training.trainingId})">
+                    <div class="dropdown-item-title">${training.trainingName}</div>
+                    <div class="dropdown-item-meta">
+                        ${training.isOnlineArrangement ? 'Online' : 'Onsite'} • 
+                        ${training.totalDuration}h • 
+                        $${training.cost.toFixed(2)}
+                    </div>
+                </div>
+            `).join('');
+
+            dropdownList.innerHTML = optionsHTML;
+        }
+
+        function selectTraining(trainingId) {
+            selectedTraining = mockTrainings.find(t => t.trainingId === trainingId);
+            
+            if (selectedTraining) {
+                // Update input field
+                document.getElementById('trainingCourseInput').value = selectedTraining.trainingName;
+                document.getElementById('selectedTrainingId').value = selectedTraining.trainingId;
+                
+                // Close dropdown
+                document.getElementById('trainingDropdown').classList.remove('open');
+                
+                // Display skills and objectives
+                displaySkillsAndObjectives(selectedTraining);
+                
+                // Enable submit button
+                validateForm();
+            }
+        }
+
+        function displaySkillsAndObjectives(training) {
+            const container = document.getElementById('skillsObjectivesContainer');
+            const objectivesContainer = document.getElementById('objectivesContainer');
+            const skillsContainer = document.getElementById('skillsContainer');
+            const noSelectionMessage = document.getElementById('noSelectionMessage');
+
+            // Clear existing content
+            objectivesContainer.innerHTML = '';
+            skillsContainer.innerHTML = '';
+
+            // Add objectives
+            training.objectives.forEach(objective => {
+                const tag = document.createElement('div');
+                tag.className = 'tag objective';
+                tag.innerHTML = `<i class="fas fa-bullseye" style="margin-right: 4px;"></i>${objective.objectiveDescrpt}`;
+                objectivesContainer.appendChild(tag);
+            });
+
+            // Add skills
+            training.skills.forEach(skill => {
+                const tag = document.createElement('div');
+                tag.className = 'tag skill';
+                tag.innerHTML = `<i class="fas fa-cogs" style="margin-right: 4px;"></i>${skill.jobReqSkillName}`;
+                skillsContainer.appendChild(tag);
+            });
+
+            // Show container and hide message
+            container.classList.remove('empty');
+            noSelectionMessage.style.display = 'none';
+        }
+
+        function setupFormValidation() {
+            const form = document.getElementById('trainingRequestForm');
+            const inputs = form.querySelectorAll('input[required]');
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', validateForm);
+                input.addEventListener('change', validateForm);
+            });
+
+            form.addEventListener('submit', handleFormSubmit);
+        }
+
+        function validateForm() {
+            const trainingSelected = document.getElementById('selectedTrainingId').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const submitButton = document.getElementById('submitButton');
+
+            const isValid = trainingSelected && startDate && endDate && new Date(endDate) > new Date(startDate);
+            
+            submitButton.disabled = !isValid;
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            if (!selectedTraining) {
+                alert('Please select a training course first.');
+                return;
+            }
+
+            const formData = {
+                trainingId: selectedTraining.trainingId,
+                trainingName: selectedTraining.trainingName,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                objectives: selectedTraining.objectives,
+                skills: selectedTraining.skills
+            };
+
+            console.log('Training Request Data:', formData);
+            
+            // Here you would make the API call to save the data
+            submitTrainingRequest(formData);
+        }
+
+        function submitTrainingRequest(formData) {
+            // Simulate API call
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+
+            // Replace this with actual API call
+            setTimeout(() => {
+                alert('Training request submitted successfully! Your line manager will be notified for approval.');
+                closeTrainingRequestModal();
+                
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Request';
+            }, 1500);
+        }
+
+        function openTrainingRequestModal() {
+    document.getElementById('trainingRequestModal').style.display = 'flex';
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').min = today;
+    document.getElementById('endDate').min = today;
+}
+
+function closeTrainingRequestModal() {
+    document.getElementById('trainingRequestModal').style.display = 'none';
+    resetModal();
+}
+        function resetModal() {
+            // Reset form
+            document.getElementById('trainingRequestForm').reset();
+            document.getElementById('selectedTrainingId').value = '';
+            
+            // Reset selected training
+            selectedTraining = null;
+            
+            // Hide skills and objectives
+            const container = document.getElementById('skillsObjectivesContainer');
+            const noSelectionMessage = document.getElementById('noSelectionMessage');
+            container.classList.add('empty');
+            noSelectionMessage.style.display = 'block';
+            
+            // Close dropdown
+            document.getElementById('trainingDropdown').classList.remove('open');
+            
+            // Disable submit button
+            document.getElementById('submitButton').disabled = true;
+        }
+
+        // API Functions - Simplified for Modal Only
+        async function fetchTrainingsDropdown() {
+            try {
+                const response = await fetch('/linemanager/trainings/dropdown', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include' // Include cookies for session
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                return result.success ? result.data : [];
+            } catch (error) {
+                console.error('Error fetching trainings dropdown:', error);
+                return [];
+            }
+        }
+
+        async function fetchTrainingDetails(trainingId) {
+            try {
+                const response = await fetch(`/linemanager/trainings/${trainingId}/details`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include' // Include cookies for session
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                return result.success ? result.data : { objectives: [], skills: [] };
+            } catch (error) {
+                console.error('Error fetching training details:', error);
+                return { objectives: [], skills: [] };
+            }
+        }
+
+        // Updated loadTrainings function - no need for job/dept params
+        function loadTrainings() {
+            // Show loading state
+            const dropdownList = document.getElementById('trainingDropdownList');
+            dropdownList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading available trainings...</div>';
+
+            // Fetch trainings from API (uses session data automatically)
+            fetchTrainingsDropdown()
+                .then(trainings => {
+                    filteredTrainings = trainings;
+                    if (trainings.length === 0) {
+                        renderNoTrainings('No trainings available for your job position.');
+                    } else {
+                        renderTrainingOptions();
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load trainings:', error);
+                    renderNoTrainings('Failed to load trainings. Please try again.');
+                });
+        }
+
+        function renderNoTrainings(message) {
+            const dropdownList = document.getElementById('trainingDropdownList');
+            dropdownList.innerHTML = `<div class="no-results"><i class="fas fa-info-circle"></i> ${message}</div>`;
+        }
+
+        // Updated selectTraining function
+        async function selectTraining(trainingId) {
+            selectedTraining = filteredTrainings.find(t => t.trainingId === trainingId);
+            
+            if (!selectedTraining) {
+                console.error('Training not found in filtered list');
+                return;
+            }
+
+            // Update input field
+            document.getElementById('trainingCourseInput').value = selectedTraining.trainingName;
+            document.getElementById('selectedTrainingId').value = selectedTraining.trainingId;
+            
+            // Close dropdown
+            document.getElementById('trainingDropdown').classList.remove('open');
+            
+            // Show loading state for skills and objectives
+            const container = document.getElementById('skillsObjectivesContainer');
+            const objectivesContainer = document.getElementById('objectivesContainer');
+            const skillsContainer = document.getElementById('skillsContainer');
+            
+            objectivesContainer.innerHTML = '<div style="color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i>Loading objectives...</div>';
+            skillsContainer.innerHTML = '<div style="color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i>Loading skills...</div>';
+            container.classList.remove('empty');
+            document.getElementById('noSelectionMessage').style.display = 'none';
+
+            try {
+                // Fetch skills and objectives from API
+                const trainingDetails = await fetchTrainingDetails(selectedTraining.trainingId);
+                
+                // Update selectedTraining with fetched data
+                selectedTraining.objectives = trainingDetails.objectives || [];
+                selectedTraining.skills = trainingDetails.skills || [];
+                
+                // Display skills and objectives
+                displaySkillsAndObjectives(selectedTraining);
+                
+                // Enable submit button
+                validateForm();
+            } catch (error) {
+                console.error('Failed to load training details:', error);
+                objectivesContainer.innerHTML = '<div style="color: #ef4444; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-triangle"></i>Failed to load objectives</div>';
+                skillsContainer.innerHTML = '<div style="color: #ef4444; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-triangle"></i>Failed to load skills</div>';
+            }
+        }
+
+        // Enhanced displaySkillsAndObjectives function
+        function displaySkillsAndObjectives(training) {
+            const container = document.getElementById('skillsObjectivesContainer');
+            const objectivesContainer = document.getElementById('objectivesContainer');
+            const skillsContainer = document.getElementById('skillsContainer');
+            const noSelectionMessage = document.getElementById('noSelectionMessage');
+
+            // Clear existing content
+            objectivesContainer.innerHTML = '';
+            skillsContainer.innerHTML = '';
+
+            // Check if we have any data
+            const hasObjectives = training.objectives && training.objectives.length > 0;
+            const hasSkills = training.skills && training.skills.length > 0;
+
+            if (!hasObjectives && !hasSkills) {
+                objectivesContainer.innerHTML = '<div style="color: #94a3b8; font-style: italic;">No specific objectives defined</div>';
+                skillsContainer.innerHTML = '<div style="color: #94a3b8; font-style: italic;">No specific skills defined</div>';
+            } else {
+                // Add objectives
+                if (hasObjectives) {
+                    training.objectives.forEach(objective => {
+                        const tag = document.createElement('div');
+                        tag.className = 'tag objective';
+                        tag.innerHTML = `<i class="fas fa-bullseye" style="margin-right: 4px;"></i>${objective.objectiveDescrpt}`;
+                        objectivesContainer.appendChild(tag);
+                    });
+                } else {
+                    objectivesContainer.innerHTML = '<div style="color: #94a3b8; font-style: italic;">No specific objectives defined</div>';
+                }
+
+                // Add skills
+                if (hasSkills) {
+                    training.skills.forEach(skill => {
+                        const tag = document.createElement('div');
+                        tag.className = 'tag skill';
+                        tag.innerHTML = `<i class="fas fa-cogs" style="margin-right: 4px;"></i>${skill.jobReqSkillName} <span style="opacity: 0.7; font-size: 10px;">(${skill.jobReqSkillType})</span>`;
+                        skillsContainer.appendChild(tag);
+                    });
+                } else {
+                    skillsContainer.innerHTML = '<div style="color: #94a3b8; font-style: italic;">No specific skills defined</div>';
+                }
+            }
+
+            // Show container and hide message
+            container.classList.remove('empty');
+            noSelectionMessage.style.display = 'none';
+        }
+
+        // Updated submitTrainingRequest function
+        async function submitTrainingRequest(formData) {
+            const submitButton = document.getElementById('submitButton');
+            const originalText = submitButton.textContent;
+            
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>Submitting...';
+
+            try {
+                const response = await fetch('/linemanager/training-requests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // Include cookies for session
+                    body: JSON.stringify({
+                        trainingId: formData.trainingId,
+                        startDate: formData.startDate,
+                        endDate: formData.endDate
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Success notification with more details
+                    const trainingName = selectedTraining ? selectedTraining.trainingName : 'Selected training';
+                    alert(`✅ Training request submitted successfully!\n\nTraining: ${trainingName}\nStart Date: ${formData.startDate}\nEnd Date: ${formData.endDate}\n\nYour line manager will be notified for approval.`);
+                    
+                    closeTrainingRequestModal();
+                    
+                    // Optionally trigger a refresh of the training progress section
+                    // if (typeof refreshTrainingProgress === 'function') {
+                    //     refreshTrainingProgress();
+                    // }
+                } else {
+                    throw new Error(result.message || 'Failed to submit training request');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting training request:', error);
+                
+                // More user-friendly error messages
+                let errorMessage = 'Failed to submit training request. ';
+                if (error.message.includes('already have an active')) {
+                    errorMessage += 'You already have an active training request for this course.';
+                } else if (error.message.includes('not authenticated')) {
+                    errorMessage += 'Please log in again and try again.';
+                } else if (error.message.includes('not found')) {
+                    errorMessage += 'The selected training is no longer available.';
+                } else {
+                    errorMessage += error.message || 'Please try again later.';
+                }
+                
+                alert('❌ ' + errorMessage);
+            } finally {
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        }
+
+        // Updated submitTrainingRequest function with better error handling
+        async function submitTrainingRequest(formData) {
+            const submitButton = document.getElementById('submitButton');
+            const originalText = submitButton.textContent;
+            
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>Submitting...';
+
+            try {
+                const response = await fetch('/linemanager/training-requests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // Include cookies for session
+                    body: JSON.stringify({
+                        trainingId: formData.trainingId,
+                        startDate: formData.startDate,
+                        endDate: formData.endDate
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Success notification with more details
+                    const trainingName = selectedTraining ? selectedTraining.trainingName : 'Selected training';
+                    alert(`✅ Training request submitted successfully!\n\nTraining: ${trainingName}\nStart Date: ${formData.startDate}\nEnd Date: ${formData.endDate}\n\nYour line manager will be notified for approval.`);
+                    
+                    closeTrainingRequestModal();
+                    
+                    // Optionally trigger a refresh of the training progress section
+                    // if (typeof refreshTrainingProgress === 'function') {
+                    //     refreshTrainingProgress();
+                    // }
+                } else {
+                    throw new Error(result.message || 'Failed to submit training request');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting training request:', error);
+                
+                // More user-friendly error messages
+                let errorMessage = 'Failed to submit training request. ';
+                if (error.message.includes('already have an active')) {
+                    errorMessage += 'You already have an active training request for this course.';
+                } else if (error.message.includes('not authenticated')) {
+                    errorMessage += 'Please log in again and try again.';
+                } else if (error.message.includes('not found')) {
+                    errorMessage += 'The selected training is no longer available.';
+                } else {
+                    errorMessage += error.message || 'Please try again later.';
+                }
+                
+                alert('❌ ' + errorMessage);
+            } finally {
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        }
+
+        // Helper functions - these should be implemented based on your user session/authentication
+        function getCurrentUserId() {
+            // Since you're using session-based auth, this might be available in a global variable
+            // or you might need to make an API call to get current user info
+            // Example: return window.currentUser?.userId;
+            return window.userSession?.userId || null; // Adjust based on your implementation
+        }
+
+        function getUserJobId() {
+            // Get from session or user profile
+            return window.userSession?.jobId || null; // Adjust based on your implementation
+        }
+
+        function getUserDeptId() {
+            // Get from session or user profile  
+            return window.userSession?.departmentId || null; // Adjust based on your implementation
+        }
+
+         function renderTrainingOptions() {
+            const dropdownList = document.getElementById('trainingDropdownList');
+            
+            if (filteredTrainings.length === 0) {
+                dropdownList.innerHTML = '<div class="no-results"><i class="fas fa-search"></i> No trainings found matching your search</div>';
+                return;
+            }
+
+            const optionsHTML = filteredTrainings.map(training => `
+                <div class="dropdown-item" onclick="selectTraining(${training.trainingId})">
+                    <div class="dropdown-item-title">${training.trainingName}</div>
+                    <div class="dropdown-item-meta">
+                        <i class="fas fa-${training.isOnlineArrangement ? 'laptop' : 'map-marker-alt'}"></i>
+                        ${training.isOnlineArrangement ? 'Online' : 'Onsite'} • 
+                        <i class="fas fa-clock"></i>
+                        ${training.totalDuration}h • 
+                        <i class="fas fa-dollar-sign"></i>
+                        ${training.cost ? training.cost.toFixed(2) : 'Free'}
+                    </div>
+                </div>
+            `).join('');
+
+            dropdownList.innerHTML = optionsHTML;
         }
 
         // Training request modal functionality
