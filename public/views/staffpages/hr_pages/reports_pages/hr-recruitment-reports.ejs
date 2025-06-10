@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruitment Dashboard & Reports</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+         .content {
+            margin-left: 220px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .recruitment-header {
+            background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(35, 133, 176, 0.3);
+        }
+        
+        .recruitment-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .recruitment-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .tab-button.active {
+            background: #2385B0;
+            color: white;
+        }
+        
+        .tab-button:hover:not(.active) {
+            background: #f8f9fa;
+            color: #2385B0;
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-card.primary { border-left-color: #2385B0; }
+        .stat-card.success { border-left-color: #28a745; }
+        .stat-card.warning { border-left-color: #ffc107; }
+        .stat-card.info { border-left-color: #17a2b8; }
+        .stat-card.danger { border-left-color: #dc3545; }
+        
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #6c757d;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        /* Reports Section */
+        .reports-container {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+        
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 35px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .report-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .report-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .report-icon.applicants { background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); }
+        .report-icon.hirees { background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%); }
+        .report-icon.status { background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%); }
+        .report-icon.timeline { background: linear-gradient(45deg, #43e97b 0%, #38f9d7 100%); }
+        
+        .report-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+        }
+        
+        .report-description {
+            color: #6c757d;
+            font-size: 16px;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .report-form {
+            margin-bottom: 30px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            align-items: end;
+        }
+        
+        .form-group {
+            flex: 1;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 15px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2385B0;
+            box-shadow: 0 0 0 0.2rem rgba(35, 133, 176, 0.25);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #2385B0, #1a5f78);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #1a5f78, #2385B0);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(35, 133, 176, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #2385B0;
+            color: #2385B0;
+        }
+        
+        .btn-outline:hover {
+            background: #2385B0;
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .loading::after {
+            content: "";
+            width: 16px;
+            height: 16px;
+            margin-left: 8px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Report Results */
+        .report-results {
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            display: none;
+        }
+        
+        .results-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .results-header h4 {
+            margin: 0;
+            font-size: 20px;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 20px 15px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2385B0;
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 15px 18px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 15px;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 700;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+        }
+        
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-passed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #00b894;
+        }
+        
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #e17055;
+        }
+        
+        .status-hired {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #00cec9;
+        }
+        
+        .applicant-info-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .applicant-info-card h4 {
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            color: #2c3e50;
+            font-weight: 700;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .applicant-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .applicant-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .applicant-info-item strong {
+            color: #495057;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .applicant-info-item span {
+            font-size: 15px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+         /* Charts */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-card h3 {
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        
+        .chart-card canvas {
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../../../partials/hr_partials') %>
+    
+    <div class="main-content">
+        <!-- Header -->
+        <div class="recruitment-header">
+            <h1><i class="fas fa-users"></i> Recruitment Dashboard & Reports</h1>
+            <p>Comprehensive recruitment analytics and detailed reporting for applicants, hirees, and recruitment processes</p>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" data-tab="dashboard">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </button>
+            <button class="tab-button" data-tab="reports">
+                <i class="fas fa-file-alt"></i> Reports
+            </button>
+        </div>
+        
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard-tab">
+            <!-- Statistics Overview -->
+            <div class="stats-container">
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <h3>Total Applicants</h3>
+                        <div class="stat-value" id="total-applicants">0</div>
+                        <div class="stat-label">All time applications received</div>
+                    </div>
+                    
+                    <div class="stat-card success">
+                        <h3>Total Hirees</h3>
+                        <div class="stat-value" id="total-hirees">0</div>
+                        <div class="stat-label">Successfully hired candidates</div>
+                    </div>
+                    
+                    <div class="stat-card warning">
+                        <h3>Pending Applications</h3>
+                        <div class="stat-value" id="pending-applications">0</div>
+                        <div class="stat-label">Applications awaiting review</div>
+                    </div>
+                    
+                    <div class="stat-card info">
+                        <h3>Active MRFs</h3>
+                        <div class="stat-value" id="active-mrfs">0</div>
+                        <div class="stat-label">Open manpower requisitions</div>
+                    </div>
+                    
+                    <div class="stat-card danger">
+                        <h3>Avg. Processing Time</h3>
+                        <div class="stat-value" id="avg-processing-time">0</div>
+                        <div class="stat-label">Average days to hire</div>
+                    </div>
+                    
+                    <div class="stat-card primary">
+                        <h3>This Month Applications</h3>
+                        <div class="stat-value" id="monthly-applicants">0</div>
+                        <div class="stat-label">New applications this month</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Application Status Distribution</h3>
+                    <canvas id="statusDistributionChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Monthly Application Trends</h3>
+                    <canvas id="monthlyTrendsChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Applications by Department</h3>
+                    <canvas id="departmentChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>MRF to Hire Timeline</h3>
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reports Tab -->
+        <div class="tab-content" id="reports-tab">
+            <div class="reports-container">
+                <!-- 1. Applicants Report -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon applicants">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">Applicants Report</h3>
+                            <p class="report-description">Comprehensive overview of all job applicants with detailed information, screening scores, and status tracking across all recruitment phases</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="applicants-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="applicants-start">Start Date</label>
+                                <input type="date" id="applicants-start" name="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="applicants-end">End Date</label>
+                                <input type="date" id="applicants-end" name="endDate">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateReport('applicants', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateReport('applicants', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="report-results" id="applicants-results"></div>
+                </div>
+                
+                <!-- 2. Hirees Report -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon hirees">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">Hirees Report</h3>
+                            <p class="report-description">Track successfully hired candidates with onboarding timelines, job types, department distribution, and employment details</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="hirees-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="hirees-start">Start Date</label>
+                                <input type="date" id="hirees-start" name="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="hirees-end">End Date</label>
+                                <input type="date" id="hirees-end" name="endDate">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateReport('hirees', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateReport('hirees', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="report-results" id="hirees-results"></div>
+                </div>
+                
+                <!-- 3. Individual Applicant Status Report -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon status">
+                            <i class="fas fa-user-cog"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">Individual Applicant Status</h3>
+                            <p class="report-description">Detailed status tracking and timeline for individual applicant progress through all recruitment stages with comprehensive history</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="status-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="applicant-name">Applicant Name</label>
+                                <input type="text" id="applicant-name" name="applicantName" placeholder="Enter applicant name (e.g., John Doe)" required>
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateReport('status', 'view')">
+                                    <i class="fas fa-eye"></i> View Status
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateReport('status', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="report-results" id="status-results"></div>
+                </div>
+                
+                <!-- 4. MRF to Onboarding Timeline -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon timeline">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">MRF to Onboarding Timeline</h3>
+                            <p class="report-description">Track manpower requisition forms from initial request through to successful onboarding completion with detailed timeline analysis</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="timeline-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="timeline-start">Start Date</label>
+                                <input type="date" id="timeline-start" name="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="timeline-end">End Date</label>
+                                <input type="date" id="timeline-end" name="endDate">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateReport('timeline', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateReport('timeline', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="report-results" id="timeline-results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <script>
+        // Global chart variables
+        let statusChart, trendsChart, departmentChart, timelineChart;
+
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    button.classList.add('active');
+                    const tabId = `${button.dataset.tab}-tab`;
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Load dashboard data when page loads
+            loadDashboardData();
+            loadChartsData();
+            setDefaultDates();
+        });
+        
+        // Load dashboard statistics
+        async function loadDashboardData() {
+            try {
+                console.log('🔄 [Frontend] Loading dashboard data...');
+                
+                const response = await fetch('/hr/recruitment/dashboard/stats');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('📊 [Frontend] Dashboard response:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to fetch dashboard stats');
+                }
+                
+                const stats = result.stats;
+                
+                // Update dashboard stats with real data
+                document.getElementById('total-applicants').textContent = stats.totalApplicants;
+                document.getElementById('total-hirees').textContent = stats.totalHirees;
+                document.getElementById('pending-applications').textContent = stats.pendingApplications;
+                document.getElementById('active-mrfs').textContent = stats.activeMRFs;
+                document.getElementById('avg-processing-time').textContent = stats.avgProcessingTime;
+                document.getElementById('monthly-applicants').textContent = stats.monthlyApplicants;
+                
+                console.log('✅ [Frontend] Dashboard updated successfully');
+                
+            } catch (error) {
+                console.error('❌ [Frontend] Error loading dashboard data:', error);
+                
+                // Show user-friendly error and keep defaults
+                alert('Could not load dashboard statistics. Please refresh the page.');
+                
+                // Fallback to default values on error
+                document.getElementById('total-applicants').textContent = '0';
+                document.getElementById('total-hirees').textContent = '0';
+                document.getElementById('pending-applications').textContent = '0';
+                document.getElementById('active-mrfs').textContent = '0';
+                document.getElementById('avg-processing-time').textContent = '0';
+                document.getElementById('monthly-applicants').textContent = '0';
+            }
+        }
+
+        // Load real chart data
+        async function loadChartsData() {
+            try {
+                console.log('🔄 [Frontend] Loading chart data...');
+                
+                const response = await fetch('/hr/recruitment/dashboard/charts');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('📊 [Frontend] Chart data response:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to fetch chart data');
+                }
+                
+                const chartData = result.chartData;
+                
+                // Initialize charts with real data
+                initializeChartsWithData(chartData);
+                
+                console.log('✅ [Frontend] Charts updated with real data');
+                
+            } catch (error) {
+                console.error('❌ [Frontend] Error loading chart data:', error);
+                
+                // Fall back to mock data if real data fails
+                console.log('📊 [Frontend] Falling back to mock data for charts');
+                initializeChartsWithMockData();
+            }
+        }
+        
+        // Initialize charts with real data
+        function initializeChartsWithData(chartData) {
+            // Destroy existing charts if they exist
+            if (statusChart) statusChart.destroy();
+            if (trendsChart) trendsChart.destroy();
+            if (departmentChart) departmentChart.destroy();
+            if (timelineChart) timelineChart.destroy();
+
+            // 1. Status Distribution Chart
+            const statusCtx = document.getElementById('statusDistributionChart').getContext('2d');
+            statusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.statusDistribution.labels,
+                    datasets: [{
+                        data: chartData.statusDistribution.data,
+                        backgroundColor: [
+                            '#ffc107', // Pending - Yellow
+                            '#17a2b8', // P1 Passed - Teal
+                            '#2385B0', // P2 Passed - Blue
+                            '#28a745', // Hired - Green
+                            '#dc3545'  // Failed - Red
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed * 100) / total).toFixed(1);
+                                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 2. Monthly Trends Chart
+            const trendsCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
+            trendsChart = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: chartData.monthlyTrends.labels,
+                    datasets: [{
+                        label: 'Applications',
+                        data: chartData.monthlyTrends.applications,
+                        borderColor: '#2385B0',
+                        backgroundColor: 'rgba(35, 133, 176, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Hires',
+                        data: chartData.monthlyTrends.hires,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+            
+            // 3. Department Chart
+            const deptCtx = document.getElementById('departmentChart').getContext('2d');
+            departmentChart = new Chart(deptCtx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.departmentDistribution.labels,
+                    datasets: [{
+                        label: 'Applications',
+                        data: chartData.departmentDistribution.data,
+                        backgroundColor: '#2385B0',
+                        borderColor: '#1a5f78',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed.y * 100) / total).toFixed(1);
+                                    return `${context.dataset.label}: ${context.parsed.y} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 4. Timeline Chart
+            const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+            timelineChart = new Chart(timelineCtx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.timeline.labels,
+                    datasets: [{
+                        label: 'Number of Hires',
+                        data: chartData.timeline.data,
+                        backgroundColor: '#28a745',
+                        borderColor: '#1e7e34',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y} candidate${context.parsed.y !== 1 ? 's' : ''}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // generateReport function
+        async function generateReport(reportType, format) {
+            const form = document.getElementById(`${reportType}-form`);
+            const button = event.target;
+            const resultsDiv = document.getElementById(`${reportType}-results`);
+            
+            // Add loading state
+            button.classList.add('loading');
+            button.disabled = true;
+            
+            try {
+                console.log(`🔄 [Frontend] Generating ${reportType} report...`);
+                
+                // Get form data
+                const formData = new FormData(form);
+                const params = new URLSearchParams();
+                
+                for (let [key, value] of formData.entries()) {
+                    if (value) params.append(key, value);
+                }
+                
+                if (format) params.append('format', format);
+                
+                console.log(`📋 [Frontend] Form parameters:`, Object.fromEntries(params));
+                
+                // Endpoint based on report type
+                let endpoint = '';
+                switch(reportType) {
+                    case 'applicants':
+                        endpoint = '/hr/recruitment/reports/applicants';
+                        break;
+                    case 'hirees':
+                        endpoint = '/hr/recruitment/reports/hirees';
+                        break;
+                    case 'status':
+                        endpoint = '/hr/recruitment/reports/applicant-status';
+                        break;
+                    case 'timeline':
+                        endpoint = '/hr/recruitment/reports/timeline';
+                        break;
+                    default:
+                        throw new Error('Unknown report type: ' + reportType);
+                }
+                
+                if (format === 'pdf') {
+                    console.log(`📄 [Frontend] PDF generation requested for ${reportType}`);
+                    
+                    // Fetch data first
+                    const response = await fetch(`${endpoint}?${params.toString()}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to generate report');
+                    }
+                    
+                    // Generate PDF directly here
+                    try {
+                        // Check if jsPDF is loaded
+                        if (typeof window.jspdf === 'undefined') {
+                            throw new Error('jsPDF library is not loaded. Please refresh the page and try again.');
+                        }
+                        
+                        // Import jsPDF
+                        let jsPDF;
+                        if (window.jspdf && window.jspdf.jsPDF) {
+                            jsPDF = window.jspdf.jsPDF;
+                        } else if (window.jsPDF) {
+                            jsPDF = window.jsPDF;
+                        } else {
+                            throw new Error('jsPDF not found. Please refresh the page.');
+                        }
+                        
+                        const doc = new jsPDF();
+                        
+                        // Set up document
+                        doc.setFontSize(20);
+                        doc.setTextColor(35, 133, 176);
+                        doc.text('Recruitment Management System', 20, 20);
+                        
+                        doc.setFontSize(16);
+                        doc.setTextColor(0, 0, 0);
+                        const reportTitles = {
+                            'applicants': 'Applicants Report',
+                            'hirees': 'Hirees Report',
+                            'status': 'Individual Applicant Status Report',
+                            'timeline': 'MRF to Onboarding Timeline Report'
+                        };
+                        doc.text(reportTitles[reportType], 20, 35);
+                        
+                        // Add generation date
+                        doc.setFontSize(10);
+                        doc.setTextColor(100, 100, 100);
+                        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
+                        
+                        let yPosition = 60;
+                        
+                        // Add summary
+                        if (data.summary && reportType !== 'timeline') {
+                            doc.setFontSize(14);
+                            doc.setTextColor(0, 0, 0);
+                            doc.text('Summary', 20, yPosition);
+                            yPosition += 10;
+                            
+                            doc.setFontSize(10);
+                            Object.entries(data.summary).forEach(([key, value]) => {
+                                const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                doc.text(`${label}: ${value}`, 25, yPosition);
+                                yPosition += 6;
+                            });
+                            yPosition += 10;
+                        }
+                        
+                        // Add data tables based on report type
+                        if (reportType === 'applicants' && data.data) {
+                            const tableData = data.data.map(applicant => [
+                                applicant.applicantId || '',
+                                `${applicant.firstName || ''} ${applicant.lastName || ''}`,
+                                applicant.email || '',
+                                applicant.appliedPosition || '',
+                                applicant.department || '',
+                                applicant.status || '',
+                                applicant.initialScreeningScore || 'N/A',
+                                applicant.hrInterviewScore || 'N/A'
+                            ]);
+                            
+                            doc.autoTable({
+                                startY: yPosition,
+                                head: [['ID', 'Name', 'Email', 'Position', 'Department', 'Status', 'Initial Score', 'HR Score']],
+                                body: tableData,
+                                styles: { fontSize: 8 },
+                                headStyles: { fillColor: [35, 133, 176] },
+                                margin: { top: 60 }
+                            });
+                        }
+                        else if (reportType === 'hirees' && data.data) {
+                            const tableData = data.data.map(hiree => [
+                                hiree.hireId || '',
+                                `${hiree.firstName || ''} ${hiree.lastName || ''}`,
+                                hiree.email || '',
+                                hiree.appliedPosition || '',
+                                hiree.department || '',
+                                hiree.jobType || '',
+                                hiree.hireDate || ''
+                            ]);
+                            
+                            doc.autoTable({
+                                startY: yPosition,
+                                head: [['Hire ID', 'Name', 'Email', 'Position', 'Department', 'Job Type', 'Hire Date']],
+                                body: tableData,
+                                styles: { fontSize: 8 },
+                                headStyles: { fillColor: [35, 133, 176] },
+                                margin: { top: 60 }
+                            });
+                        }
+                        else if (reportType === 'status' && data.applicant) {
+                            // Applicant info table
+                            const applicantInfo = [
+                                ['Applicant ID', data.applicant.applicantId || ''],
+                                ['Name', `${data.applicant.firstName || ''} ${data.applicant.lastName || ''}`],
+                                ['Email', data.applicant.email || ''],
+                                ['Phone', data.applicant.phoneNumber || ''],
+                                ['Position', data.applicant.appliedPosition || ''],
+                                ['Department', data.applicant.department || ''],
+                                ['Current Status', data.applicant.currentStatus || ''],
+                                ['Days in Process', `${data.applicant.daysInProcess || 0} days`]
+                            ];
+                            
+                            doc.autoTable({
+                                startY: yPosition,
+                                body: applicantInfo,
+                                styles: { fontSize: 9 },
+                                columnStyles: { 0: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+                                margin: { top: 60 }
+                            });
+                            
+                            yPosition = doc.lastAutoTable.finalY + 15;
+                            
+                            // Status history
+                            if (data.statusHistory && data.statusHistory.length > 0) {
+                                doc.setFontSize(12);
+                                doc.text('Status History', 20, yPosition);
+                                yPosition += 10;
+                                
+                                const historyData = data.statusHistory.map(history => [
+                                    history.status || '',
+                                    history.date || '',
+                                    history.notes || ''
+                                ]);
+                                
+                                doc.autoTable({
+                                    startY: yPosition,
+                                    head: [['Status', 'Date', 'Notes']],
+                                    body: historyData,
+                                    styles: { fontSize: 8 },
+                                    headStyles: { fillColor: [35, 133, 176] }
+                                });
+                            }
+                        }
+                        else if (reportType === 'timeline') {
+                            // Timeline summary
+                            if (data.summary) {
+                                const summaryInfo = [
+                                    ['Total Applications', data.summary.totalApplications || 0],
+                                    ['Avg Applications/Month', data.summary.avgApplicationsPerMonth || 0],
+                                    ['Conversion Rate', `${data.summary.conversionRate || 0}%`],
+                                    ['Recent Activity', data.summary.recentActivity || 0],
+                                    ['Date Range', data.summary.dateRange ? `${data.summary.dateRange.start} to ${data.summary.dateRange.end}` : 'N/A'],
+                                    ['Pending', data.summary.statusBreakdown ? data.summary.statusBreakdown.pending : 0],
+                                    ['Passed', data.summary.statusBreakdown ? data.summary.statusBreakdown.passed : 0],
+                                    ['Failed', data.summary.statusBreakdown ? data.summary.statusBreakdown.failed : 0],
+                                    ['Hired', data.summary.statusBreakdown ? data.summary.statusBreakdown.hired : 0]
+                                ];
+                                
+                                doc.autoTable({
+                                    startY: yPosition,
+                                    body: summaryInfo,
+                                    styles: { fontSize: 9 },
+                                    columnStyles: { 0: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+                                    margin: { top: 60 }
+                                });
+                                
+                                yPosition = doc.lastAutoTable.finalY + 15;
+                            }
+                            
+                            // Timeline data
+                            if (data.timelineData && data.timelineData.length > 0) {
+                                doc.setFontSize(12);
+                                doc.text('Monthly Timeline Data', 20, yPosition);
+                                yPosition += 10;
+                                
+                                const timelineTableData = data.timelineData.map(month => [
+                                    month.monthName || '',
+                                    month.applications || 0,
+                                    month.hired || 0,
+                                    month.passed || 0,
+                                    month.failed || 0,
+                                    month.pending || 0
+                                ]);
+                                
+                                doc.autoTable({
+                                    startY: yPosition,
+                                    head: [['Month', 'Applications', 'Hired', 'Passed', 'Failed', 'Pending']],
+                                    body: timelineTableData,
+                                    styles: { fontSize: 8 },
+                                    headStyles: { fillColor: [35, 133, 176] }
+                                });
+                            }
+                        }
+                        
+                        // Download the PDF
+                        const filename = `${reportType}_report_${new Date().toISOString().split('T')[0]}.pdf`;
+                        doc.save(filename);
+                        
+                        console.log(`✅ PDF generated and downloaded: ${filename}`);
+                        
+                    } catch (pdfError) {
+                        console.error('❌ Error generating PDF:', pdfError);
+                        alert('Error generating PDF: ' + pdfError.message);
+                    }
+                    
+                } else {
+                    console.log(`👁️ [Frontend] View mode requested for ${reportType}`);
+                    // Fetch actual data from backend for viewing
+                    const response = await fetch(`${endpoint}?${params.toString()}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log(`✅ [Frontend] Received data:`, data);
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to fetch report data');
+                    }
+                    
+                    // Display the real data
+                    displayReportResults(resultsDiv, data, reportType);
+                    console.log(`✅ [Frontend] ${reportType} report displayed successfully`);
+                }
+                
+            } catch (error) {
+                console.error(`❌ [Frontend] Error generating ${reportType} report:`, error);
+                alert('Error generating report: ' + error.message);
+            } finally {
+                // Remove loading state
+                button.classList.remove('loading');
+                button.disabled = false;
+            }
+        }
+        
+        // Display report results in the UI
+        function displayReportResults(resultsDiv, data, reportType) {
+        resultsDiv.style.display = 'block';
+        
+        let html = '<div class="results-header"><h4>Report Results</h4></div>';
+        
+        // Add summary if available (for non-timeline reports)
+        if (data.summary && reportType !== 'timeline') {
+            html += '<div class="results-summary">';
+            
+            Object.entries(data.summary).forEach(([key, value]) => {
+                html += `
+                    <div class="summary-item">
+                        <div class="summary-value">${value}</div>
+                        <div class="summary-label">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+        }
+        
+        // Add data table based on report type
+        if (reportType === 'applicants' && data.data && data.data.length > 0) {
+            html += `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Applicant ID</th>
+                                <th>Last Name</th>
+                                <th>First Name</th>
+                                <th>Email</th>
+                                <th>Position Applied</th>
+                                <th>Department</th>
+                                <th>Application Status</th>
+                                <th>Initial Score</th>
+                                <th>HR Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.data.forEach(applicant => {
+                const statusClass = getStatusClass(applicant.status);
+                html += `
+                    <tr>
+                        <td><strong>${applicant.applicantId}</strong></td>
+                        <td>${applicant.lastName}</td>
+                        <td>${applicant.firstName}</td>
+                        <td>${applicant.email}</td>
+                        <td>${applicant.appliedPosition}</td>
+                        <td>${applicant.department}</td>
+                        <td><span class="status-badge ${statusClass}">${applicant.status}</span></td>
+                        <td>${applicant.initialScreeningScore || 'N/A'}</td>
+                        <td>${applicant.hrInterviewScore || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+        }
+        
+        else if (reportType === 'hirees' && data.data && data.data.length > 0) {
+            html += `
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Hire ID</th>
+                                <th>Last Name</th>
+                                <th>First Name</th>
+                                <th>Position</th>
+                                <th>Department</th>
+                                <th>Job Type</th>
+                                <th>Hire Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.data.forEach(hiree => {
+                html += `
+                    <tr>
+                        <td><strong>${hiree.hireId}</strong></td>
+                        <td>${hiree.lastName}</td>
+                        <td>${hiree.firstName}</td>
+                        <td>${hiree.appliedPosition}</td>
+                        <td>${hiree.department}</td>
+                        <td>${hiree.jobType}</td>
+                        <td>${hiree.hireDate}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+        }
+        
+        else if (reportType === 'status' && data.applicant) {
+            html += `
+                <div class="applicant-info-card">
+                    <h4>Applicant Information</h4>
+                    <div class="applicant-info-grid">
+                        <div class="applicant-info-item">
+                            <strong>Applicant ID</strong>
+                            <span>${data.applicant.applicantId}</span>
+                        </div>
+                        <div class="applicant-info-item">
+                            <strong>Full Name</strong>
+                            <span>${data.applicant.firstName} ${data.applicant.lastName}</span>
+                        </div>
+                        <div class="applicant-info-item">
+                            <strong>Email Address</strong>
+                            <span>${data.applicant.email}</span>
+                        </div>
+                        <div class="applicant-info-item">
+                            <strong>Phone Number</strong>
+                            <span>${data.applicant.phoneNumber}</span>
+                        </div>
+                        <div class="applicant-info-item">
+                            <strong>Position Applied</strong>
+                            <span>${data.applicant.appliedPosition}</span>
+                        </div>
+                        <div class="applicant-info-item">
+                            <strong>Department</strong>
+                            <span>${data.applicant.department}</span>
+                        </div>
+                        <div class="applicant-info-item">
+                            <strong>Current Status</strong>
+                            <span class="status-badge ${getStatusClass(data.applicant.currentStatus)}">${data.applicant.currentStatus}</span>
+                        </div>
+                        <div class="applicant-info-item">
+                            <strong>Days in Process</strong>
+                            <span>${data.applicant.daysInProcess} days</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Status Update</th>
+                                <th>Date</th>
+                                <th>Notes & Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.statusHistory.forEach(history => {
+                html += `
+                    <tr>
+                        <td><span class="status-badge ${getStatusClass(history.status)}">${history.status}</span></td>
+                        <td>${history.date}</td>
+                        <td>${history.notes}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+        }
+        
+        else if (reportType === 'timeline') {
+            if (data.summary) {
+                html += '<div class="results-summary">';
+                
+                // Add individual summary items with proper formatting
+                html += `
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.totalApplications}</div>
+                        <div class="summary-label">Total Applications</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.avgApplicationsPerMonth}</div>
+                        <div class="summary-label">Avg Per Month</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.conversionRate}%</div>
+                        <div class="summary-label">Conversion Rate</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.recentActivity}</div>
+                        <div class="summary-label">Recent Activity</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.dateRange.start} to ${data.summary.dateRange.end}</div>
+                        <div class="summary-label">Date Range</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">P:${data.summary.statusBreakdown.pending} Pa:${data.summary.statusBreakdown.passed} F:${data.summary.statusBreakdown.failed} H:${data.summary.statusBreakdown.hired}</div>
+                        <div class="summary-label">Status Breakdown</div>
+                    </div>
+                `;
+                
+                html += '</div>';
+            }
+            
+            // Add timeline table
+            if (data.timelineData && data.timelineData.length > 0) {
+                html += `
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Applications</th>
+                                    <th>Hired</th>
+                                    <th>Passed</th>
+                                    <th>Failed</th>
+                                    <th>Pending</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                data.timelineData.forEach(month => {
+                    html += `
+                        <tr>
+                            <td><strong>${month.monthName}</strong></td>
+                            <td>${month.applications}</td>
+                            <td><span class="status-badge status-hired">${month.hired}</span></td>
+                            <td><span class="status-badge status-passed">${month.passed}</span></td>
+                            <td><span class="status-badge status-failed">${month.failed}</span></td>
+                            <td><span class="status-badge status-pending">${month.pending}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+            }
+            
+            // Add recent activity if available
+            if (data.recentActivity && data.recentActivity.length > 0) {
+                html += `
+                    <div style="margin-top: 30px;">
+                        <h4>Recent Activity (Last 30 Days)</h4>
+                        <div class="data-table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Position</th>
+                                        <th>Department</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                data.recentActivity.forEach(activity => {
+                    html += `
+                        <tr>
+                            <td>${activity.name}</td>
+                            <td>${activity.position}</td>
+                            <td>${activity.department}</td>
+                            <td>${activity.date}</td>
+                            <td><span class="status-badge status-pending">${activity.status}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div></div>';
+            }
+        }
+        
+        resultsDiv.innerHTML = html;
+    }
+        
+        // Get status CSS class
+        function getStatusClass(status) {
+            if (!status) return '';
+            
+            const statusLower = status.toLowerCase();
+            if (statusLower.includes('pending') || statusLower.includes('awaiting')) return 'status-pending';
+            if (statusLower.includes('passed') || statusLower.includes('approved') || statusLower.includes('completed')) return 'status-passed';
+            if (statusLower.includes('failed') || statusLower.includes('rejected')) return 'status-failed';
+            if (statusLower.includes('hired')) return 'status-hired';
+            if (statusLower.includes('progress')) return 'status-pending';
+            
+            return 'status-pending';
+        }
+        
+        // Set default dates
+        function setDefaultDates() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            // Set default date ranges for forms
+            const startDateInputs = document.querySelectorAll('input[name="startDate"]');
+            const endDateInputs = document.querySelectorAll('input[name="endDate"]');
+            
+            startDateInputs.forEach(input => {
+                input.value = firstDay.toISOString().split('T')[0];
+            });
+            
+            endDateInputs.forEach(input => {
+                input.value = lastDay.toISOString().split('T')[0];
+            });
+        }
+
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    // Hide all other collapsible contents
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -125,6 +125,14 @@ router.get('/hr/retirement-tracker', hrController.getRetirementTracker);
 router.post('/hr/approve-offboarding', hrController.approveOffboarding);
 router.post('/hr/applicant-tracker-jobposition/P1HRFailed', hrController.updateStatusToP1HRFailed);
 
+router.get('/hr/recruitment/reports', hrController.getRecruitmentReports);
+router.get('/hr/recruitment/dashboard/stats', hrController.getRecruitmentDashboardStats);
+router.get('/hr/recruitment/dashboard/charts', hrController.getChartData);
+router.get('/hr/recruitment/reports/applicants', hrController.getApplicantsReport);
+router.get('/hr/recruitment/reports/hirees', hrController.getHireesReport);
+router.get('/hr/recruitment/reports/applicant-status', hrController.getApplicantStatusReport);
+router.get('/hr/recruitment/reports/timeline', hrController.getTimelineReport);
+
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
 

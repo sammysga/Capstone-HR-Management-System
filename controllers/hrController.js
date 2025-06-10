@@ -4580,6 +4580,857 @@ viewEvaluation: async function(req, res) {
         }
     },
     
+       getRecruitmentReports: async function (req, res) {
+        if (req.session.user && req.session.user.userRole === 'HR') {
+                    res.render('staffpages/hr_pages/reports_pages/hr-recruitment-reports');
+                } else {
+                    req.flash('errors', { authError: 'Unauthorized. HR access only.' });
+                    res.redirect('/staff/login');
+                }
+    },
+
+    getRecruitmentDashboardStats: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            console.log('🔍 [Dashboard] Fetching dashboard statistics...');
+
+            // Get total applicants
+            const { data: allApplicants, error: applicantsError } = await supabase
+                .from('applicantaccounts')
+                .select('applicantId, applicantStatus, created_at');
+
+            if (applicantsError) {
+                console.error('❌ [Dashboard] Error fetching applicants:', applicantsError);
+                throw applicantsError;
+            }
+
+            console.log(`✅ [Dashboard] Found ${allApplicants.length} total applicants`);
+
+            // Get total hirees
+            const hirees = allApplicants.filter(a => 
+                a.applicantStatus?.includes('Hired') || a.applicantStatus?.includes('Onboarding')
+            );
+
+            // Get pending applications
+            const pendingApplications = allApplicants.filter(a => 
+                a.applicantStatus?.includes('Pending') || a.applicantStatus?.includes('Awaiting')
+            );
+
+            // Get active MRFs
+            const { data: activeMRFs, error: mrfError } = await supabase
+                .from('mrf')
+                .select('mrfId')
+                .in('status', ['Pending', 'Approved']);
+
+            if (mrfError) {
+                console.error('❌ [Dashboard] Error fetching MRFs:', mrfError);
+                // Don't throw - just log and continue with 0
+                console.log('📊 [Dashboard] Continuing with 0 active MRFs due to error');
+            }
+
+            // Calculate average processing time (from application to hire)
+            let avgProcessingTime = 0;
+            if (hirees.length > 0) {
+                const processingTimes = hirees.map(h => {
+                    const applicationDate = new Date(h.created_at);
+                    const currentDate = new Date();
+                    return Math.floor((currentDate - applicationDate) / (1000 * 60 * 60 * 24));
+                });
+                avgProcessingTime = Math.round(processingTimes.reduce((sum, time) => sum + time, 0) / processingTimes.length);
+            }
+
+            // Get this month's applications
+            const currentDate = new Date();
+            const monthlyApplicants = allApplicants.filter(a => {
+                const appDate = new Date(a.created_at);
+                return appDate.getMonth() === currentDate.getMonth() && 
+                       appDate.getFullYear() === currentDate.getFullYear();
+            });
+
+            const stats = {
+                totalApplicants: allApplicants.length,
+                totalHirees: hirees.length,
+                pendingApplications: pendingApplications.length,
+                activeMRFs: activeMRFs ? activeMRFs.length : 0,
+                avgProcessingTime: avgProcessingTime,
+                monthlyApplicants: monthlyApplicants.length
+            };
+
+            console.log('📊 [Dashboard] Final stats:', stats);
+
+            return res.json({
+                success: true,
+                stats: stats
+            });
+
+        } catch (error) {
+            console.error('❌ [Dashboard] Error fetching dashboard stats:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching dashboard statistics: ' + error.message 
+            });
+        }
+    },
+
+    getChartData: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            console.log('🔍 [Chart Data] Fetching chart data...');
+
+            // Get all applicants with related data
+            const { data: allApplicants, error: applicantsError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    applicantStatus,
+                    created_at,
+                    departmentId,
+                    departments!inner(deptName)
+                `);
+
+            if (applicantsError) {
+                console.error('❌ [Chart Data] Error fetching applicants:', applicantsError);
+                throw applicantsError;
+            }
+
+            console.log(`✅ [Chart Data] Found ${allApplicants.length} applicants`);
+
+            // 1. Status Distribution Data
+            const statusCounts = {
+                pending: 0,
+                p1Passed: 0,
+                p2Passed: 0,
+                hired: 0,
+                failed: 0
+            };
+
+            allApplicants.forEach(applicant => {
+                const status = applicant.applicantStatus || '';
+                const statusLower = status.toLowerCase();
+                
+                if (statusLower.includes('hired') || statusLower.includes('onboarding')) {
+                    statusCounts.hired++;
+                } else if (statusLower.includes('p2') && statusLower.includes('passed')) {
+                    statusCounts.p2Passed++;
+                } else if (statusLower.includes('p1') && statusLower.includes('passed') || statusLower.includes('passed')) {
+                    statusCounts.p1Passed++;
+                } else if (statusLower.includes('failed') || statusLower.includes('rejected')) {
+                    statusCounts.failed++;
+                } else {
+                    statusCounts.pending++;
+                }
+            });
+
+            // 2. Monthly Trends Data (last 6 months)
+            const monthlyData = {};
+            const currentDate = new Date();
+            
+            // Initialize last 6 months
+            for (let i = 5; i >= 0; i--) {
+                const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+                const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+                monthlyData[monthKey] = {
+                    month: monthDate.toLocaleDateString('en-US', { month: 'short' }),
+                    applications: 0,
+                    hires: 0
+                };
+            }
+
+            // Count applications and hires by month
+            allApplicants.forEach(applicant => {
+                const appDate = new Date(applicant.created_at);
+                const monthKey = `${appDate.getFullYear()}-${String(appDate.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (monthlyData[monthKey]) {
+                    monthlyData[monthKey].applications++;
+                    
+                    // Count as hire if status indicates hired
+                    const status = applicant.applicantStatus || '';
+                    if (status.toLowerCase().includes('hired') || status.toLowerCase().includes('onboarding')) {
+                        monthlyData[monthKey].hires++;
+                    }
+                }
+            });
+
+            const monthlyTrends = Object.values(monthlyData);
+
+            // 3. Department Distribution
+            const deptCounts = {};
+            allApplicants.forEach(applicant => {
+                const deptName = applicant.departments?.deptName || 'Unknown';
+                deptCounts[deptName] = (deptCounts[deptName] || 0) + 1;
+            });
+
+            // 4. Timeline/Processing Time Distribution
+            const timelineCounts = {
+                '0-7 days': 0,
+                '8-14 days': 0,
+                '15-21 days': 0,
+                '22-30 days': 0,
+                '30+ days': 0
+            };
+
+            // Calculate processing time for hired applicants
+            const hiredApplicants = allApplicants.filter(a => {
+                const status = a.applicantStatus || '';
+                return status.toLowerCase().includes('hired') || status.toLowerCase().includes('onboarding');
+            });
+
+            hiredApplicants.forEach(applicant => {
+                const appDate = new Date(applicant.created_at);
+                const currentDate = new Date();
+                const daysDiff = Math.floor((currentDate - appDate) / (1000 * 60 * 60 * 24));
+
+                if (daysDiff <= 7) {
+                    timelineCounts['0-7 days']++;
+                } else if (daysDiff <= 14) {
+                    timelineCounts['8-14 days']++;
+                } else if (daysDiff <= 21) {
+                    timelineCounts['15-21 days']++;
+                } else if (daysDiff <= 30) {
+                    timelineCounts['22-30 days']++;
+                } else {
+                    timelineCounts['30+ days']++;
+                }
+            });
+
+            const chartData = {
+                statusDistribution: {
+                    labels: ['Pending', 'P1 - Passed', 'P2 - Passed', 'Hired', 'Failed'],
+                    data: [
+                        statusCounts.pending,
+                        statusCounts.p1Passed,
+                        statusCounts.p2Passed,
+                        statusCounts.hired,
+                        statusCounts.failed
+                    ]
+                },
+                monthlyTrends: {
+                    labels: monthlyTrends.map(m => m.month),
+                    applications: monthlyTrends.map(m => m.applications),
+                    hires: monthlyTrends.map(m => m.hires)
+                },
+                departmentDistribution: {
+                    labels: Object.keys(deptCounts),
+                    data: Object.values(deptCounts)
+                },
+                timeline: {
+                    labels: Object.keys(timelineCounts),
+                    data: Object.values(timelineCounts)
+                }
+            };
+
+            console.log('📊 [Chart Data] Chart data prepared:', chartData);
+
+            return res.json({
+                success: true,
+                chartData: chartData
+            });
+
+        } catch (error) {
+            console.error('❌ [Chart Data] Error fetching chart data:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching chart data: ' + error.message 
+            });
+        }
+    },
+
+    getApplicantsReport: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            const { startDate, endDate, format } = req.query;
+            
+            console.log('🔍 [Applicants Report] Fetching applicants data...');
+            console.log('📅 [Applicants Report] Date filters:', { startDate, endDate, format });
+            
+            // Build query with date filters if provided
+            let query = supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    lastName,
+                    firstName,
+                    phoneNo,
+                    birthDate,
+                    applicantStatus,
+                    initialScreeningScore,
+                    hrInterviewFormScore,
+                    created_at,
+                    userId,
+                    jobId,
+                    departmentId,
+                    useraccounts!inner(userEmail),
+                    jobpositions!inner(jobTitle),
+                    departments!inner(deptName)
+                `)
+                .order('created_at', { ascending: false });
+
+            // Apply date filters if provided
+            if (startDate) {
+                query = query.gte('created_at', startDate);
+                console.log('📅 [Applicants Report] Applied start date filter:', startDate);
+            }
+            if (endDate) {
+                const endDateTime = new Date(endDate);
+                endDateTime.setHours(23, 59, 59, 999);
+                query = query.lte('created_at', endDateTime.toISOString());
+                console.log('📅 [Applicants Report] Applied end date filter:', endDateTime.toISOString());
+            }
+
+            const { data: applicants, error } = await query;
+
+            if (error) {
+                console.error('❌ [Applicants Report] Error fetching applicants:', error);
+                return res.status(500).json({ success: false, message: 'Error fetching applicants data: ' + error.message });
+            }
+
+            console.log(`✅ [Applicants Report] Found ${applicants.length} applicants`);
+
+            // Calculate summary statistics
+            const summary = {
+                total: applicants.length,
+                pending: applicants.filter(a => a.applicantStatus?.includes('Pending') || a.applicantStatus?.includes('Awaiting')).length,
+                passed: applicants.filter(a => a.applicantStatus?.includes('PASSED')).length,
+                failed: applicants.filter(a => a.applicantStatus?.includes('FAILED')).length,
+                hired: applicants.filter(a => a.applicantStatus?.includes('Hired') || a.applicantStatus?.includes('Onboarding')).length
+            };
+
+            console.log('📊 [Applicants Report] Summary stats:', summary);
+
+            // Process applicants data for display
+            const processedApplicants = applicants.map(applicant => ({
+                applicantId: applicant.applicantId,
+                lastName: applicant.lastName,
+                firstName: applicant.firstName,
+                email: applicant.useraccounts?.userEmail || 'N/A',
+                phoneNumber: applicant.phoneNo || 'N/A',
+                appliedPosition: applicant.jobpositions?.jobTitle || 'N/A',
+                department: applicant.departments?.deptName || 'N/A',
+                applicationDate: applicant.created_at ? new Date(applicant.created_at).toISOString().split('T')[0] : 'N/A',
+                status: applicant.applicantStatus || 'Pending',
+                initialScreeningScore: applicant.initialScreeningScore || 'N/A',
+                hrInterviewScore: applicant.hrInterviewFormScore || 'N/A'
+            }));
+
+            console.log(`✅ [Applicants Report] Processed ${processedApplicants.length} applicants for display`);
+
+            if (format === 'pdf') {
+                console.log('📄 [Applicants Report] PDF format requested');
+                // For PDF generation, return structured data
+                return res.json({
+                    success: true,
+                    reportType: 'applicants',
+                    format: 'pdf',
+                    data: processedApplicants,
+                    summary: summary,
+                    generatedOn: new Date().toISOString(),
+                    dateRange: { startDate, endDate }
+                });
+            }
+
+            // Return data for view display
+            return res.json({
+                success: true,
+                data: processedApplicants,
+                summary: summary
+            });
+
+        } catch (error) {
+            console.error('❌ [Applicants Report] Error in getApplicantsReport:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+        }
+    },
+
+    getHireesReport: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            const { startDate, endDate, format } = req.query;
+            
+            console.log('🔍 [Hirees Report] Fetching hirees data...');
+            console.log('📅 [Hirees Report] Date filters:', { startDate, endDate, format });
+            
+            // First, get ALL applicants with their related data
+            let query = supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    lastName,
+                    firstName,
+                    phoneNo,
+                    applicantStatus,
+                    created_at,
+                    userId,
+                    jobId,
+                    departmentId,
+                    useraccounts!inner(userEmail),
+                    jobpositions!inner(jobTitle, jobType),
+                    departments!inner(deptName)
+                `)
+                .order('created_at', { ascending: false });
+
+            // Apply date filters if provided
+            if (startDate) {
+                query = query.gte('created_at', startDate);
+                console.log('📅 [Hirees Report] Applied start date filter:', startDate);
+            }
+            if (endDate) {
+                const endDateTime = new Date(endDate);
+                endDateTime.setHours(23, 59, 59, 999);
+                query = query.lte('created_at', endDateTime.toISOString());
+                console.log('📅 [Hirees Report] Applied end date filter:', endDateTime.toISOString());
+            }
+
+            const { data: allApplicants, error } = await query;
+
+            if (error) {
+                console.error('❌ [Hirees Report] Error fetching applicants:', error);
+                return res.status(500).json({ success: false, message: 'Error fetching applicants data: ' + error.message });
+            }
+
+            console.log(`✅ [Hirees Report] Found ${allApplicants.length} total applicants`);
+
+            // Filter for hired applicants in JavaScript 
+            const hirees = allApplicants.filter(applicant => {
+                const status = applicant.applicantStatus || '';
+                return status.toLowerCase().includes('hired') || 
+                    status.toLowerCase().includes('onboarding');
+            });
+
+            console.log(`✅ [Hirees Report] Filtered to ${hirees.length} hirees`);
+
+            // Calculate summary statistics
+            const summary = {
+                total: hirees.length,
+                fullTime: hirees.filter(h => h.jobpositions?.jobType === 'Full-time').length,
+                partTime: hirees.filter(h => h.jobpositions?.jobType === 'Part-time').length,
+                contract: hirees.filter(h => h.jobpositions?.jobType === 'Contract').length,
+                thisMonth: hirees.filter(h => {
+                    const hireDate = new Date(h.created_at);
+                    const currentDate = new Date();
+                    return hireDate.getMonth() === currentDate.getMonth() && 
+                        hireDate.getFullYear() === currentDate.getFullYear();
+                }).length
+            };
+
+            console.log('📊 [Hirees Report] Summary stats:', summary);
+
+            // Process hirees data for display
+            const processedHirees = hirees.map((hiree, index) => ({
+                hireId: `HIR${String(index + 1).padStart(3, '0')}`,
+                lastName: hiree.lastName,
+                firstName: hiree.firstName,
+                email: hiree.useraccounts?.userEmail || 'N/A',
+                phoneNumber: hiree.phoneNo || 'N/A',
+                appliedPosition: hiree.jobpositions?.jobTitle || 'N/A',
+                department: hiree.departments?.deptName || 'N/A',
+                jobType: hiree.jobpositions?.jobType || 'Full-time',
+                hireDate: hiree.created_at ? new Date(hiree.created_at).toISOString().split('T')[0] : 'N/A'
+            }));
+
+            console.log(`✅ [Hirees Report] Processed ${processedHirees.length} hirees for display`);
+
+            if (format === 'pdf') {
+                console.log('📄 [Hirees Report] PDF format requested');
+                return res.json({
+                    success: true,
+                    reportType: 'hirees',
+                    format: 'pdf',
+                    data: processedHirees,
+                    summary: summary,
+                    generatedOn: new Date().toISOString(),
+                    dateRange: { startDate, endDate }
+                });
+            }
+
+            return res.json({
+                success: true,
+                data: processedHirees,
+                summary: summary
+            });
+
+        } catch (error) {
+            console.error('❌ [Hirees Report] Error in getHireesReport:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+        }
+    },
+
+    getApplicantStatusReport: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            const { applicantName, format } = req.query;
+            
+            console.log('🔍 [Status Report] Searching applicant by name...');
+            console.log('📋 [Status Report] Applicant Name:', applicantName, 'Format:', format);
+            
+            if (!applicantName || applicantName.trim().length < 2) {
+                console.log('❌ [Status Report] Invalid applicant name provided');
+                return res.status(400).json({ success: false, message: 'Applicant name is required (minimum 2 characters)' });
+            }
+
+            const searchName = applicantName.trim().toLowerCase();
+            console.log('🔍 [Status Report] Searching for:', searchName);
+
+            // Search for applicants by name (first name, last name, or full name)
+            const { data: applicants, error: searchError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    lastName,
+                    firstName,
+                    phoneNo,
+                    birthDate,
+                    applicantStatus,
+                    created_at,
+                    userId,
+                    jobId,
+                    departmentId,
+                    useraccounts!inner(userEmail),
+                    jobpositions!inner(jobTitle),
+                    departments!inner(deptName)
+                `)
+                .order('created_at', { ascending: false });
+
+            if (searchError) {
+                console.error('❌ [Status Report] Error searching applicants:', searchError);
+                return res.status(500).json({ success: false, message: 'Error searching applicants: ' + searchError.message });
+            }
+
+            console.log(`✅ [Status Report] Found ${applicants.length} total applicants to search through`);
+
+            // Filter applicants by name in JavaScript for flexible matching
+            const matchingApplicants = applicants.filter(applicant => {
+                const firstName = (applicant.firstName || '').toLowerCase();
+                const lastName = (applicant.lastName || '').toLowerCase();
+                const fullName = `${firstName} ${lastName}`;
+                const reverseName = `${lastName} ${firstName}`;
+                
+                return firstName.includes(searchName) || 
+                    lastName.includes(searchName) || 
+                    fullName.includes(searchName) ||
+                    reverseName.includes(searchName);
+            });
+
+            console.log(`🎯 [Status Report] Found ${matchingApplicants.length} matching applicants`);
+
+            if (matchingApplicants.length === 0) {
+                return res.json({
+                    success: false,
+                    message: `No applicants found matching "${applicantName}". Please check the spelling and try again.`,
+                    searchSuggestion: true
+                });
+            }
+
+            // If multiple matches, return list for user to choose from
+            if (matchingApplicants.length > 1) {
+                console.log('📋 [Status Report] Multiple matches found, returning selection list');
+                
+                const suggestions = matchingApplicants.map(applicant => ({
+                    applicantId: applicant.applicantId,
+                    name: `${applicant.firstName} ${applicant.lastName}`,
+                    email: applicant.useraccounts?.userEmail || 'N/A',
+                    position: applicant.jobpositions?.jobTitle || 'N/A',
+                    status: applicant.applicantStatus || 'Pending',
+                    applicationDate: new Date(applicant.created_at).toISOString().split('T')[0]
+                }));
+
+                return res.json({
+                    success: false,
+                    message: `Found ${matchingApplicants.length} applicants matching "${applicantName}". Please be more specific:`,
+                    multipleMatches: true,
+                    suggestions: suggestions
+                });
+            }
+
+            // Exactly one match found - proceed with status report
+            const applicant = matchingApplicants[0];
+            console.log(`✅ [Status Report] Exact match found: ${applicant.firstName} ${applicant.lastName}`);
+
+            // Calculate days in process
+            const applicationDate = new Date(applicant.created_at);
+            const currentDate = new Date();
+            const daysInProcess = Math.floor((currentDate - applicationDate) / (1000 * 60 * 60 * 24));
+
+            console.log(`📅 [Status Report] Application date: ${applicationDate.toISOString().split('T')[0]}, Days in process: ${daysInProcess}`);
+
+            // Fetch status history from chatbot interactions
+            const { data: statusHistory, error: historyError } = await supabase
+                .from('chatbot_history')
+                .select('message, timestamp, applicantStage')
+                .eq('userId', applicant.userId)
+                .order('timestamp', { ascending: true });
+
+            let processedHistory = [];
+            if (statusHistory && statusHistory.length > 0) {
+                console.log(`✅ [Status Report] Found ${statusHistory.length} status history entries`);
+                
+                processedHistory = statusHistory.map(history => {
+                    // Handle different message formats
+                    let messageText = '';
+                    if (typeof history.message === 'string') {
+                        try {
+                            const parsed = JSON.parse(history.message);
+                            messageText = parsed.text || history.message;
+                        } catch (e) {
+                            messageText = history.message;
+                        }
+                    } else if (typeof history.message === 'object' && history.message.text) {
+                        messageText = history.message.text;
+                    } else {
+                        messageText = 'Status updated';
+                    }
+
+                    return {
+                        status: history.applicantStage || 'Status Update',
+                        date: new Date(history.timestamp).toISOString().split('T')[0],
+                        notes: messageText.substring(0, 100) + (messageText.length > 100 ? '...' : '')
+                    };
+                });
+            } else {
+                console.log('📋 [Status Report] No chatbot history found, creating default history');
+                
+                // Create default status history based on current status
+                processedHistory = [
+                    {
+                        status: 'Application Submitted',
+                        date: new Date(applicant.created_at).toISOString().split('T')[0],
+                        notes: 'Initial application received'
+                    }
+                ];
+
+                // Add current status if different from initial
+                if (applicant.applicantStatus && applicant.applicantStatus !== 'Application Submitted') {
+                    processedHistory.push({
+                        status: applicant.applicantStatus,
+                        date: new Date().toISOString().split('T')[0],
+                        notes: 'Current status'
+                    });
+                }
+            }
+
+            const applicantDetails = {
+                applicantId: applicant.applicantId,
+                lastName: applicant.lastName,
+                firstName: applicant.firstName,
+                email: applicant.useraccounts?.userEmail || 'N/A',
+                phoneNumber: applicant.phoneNo || 'N/A',
+                appliedPosition: applicant.jobpositions?.jobTitle || 'N/A',
+                department: applicant.departments?.deptName || 'N/A',
+                birthDate: applicant.birthDate || 'N/A',
+                applicationDate: new Date(applicant.created_at).toISOString().split('T')[0],
+                currentStatus: applicant.applicantStatus || 'Pending',
+                daysInProcess: daysInProcess
+            };
+
+            console.log('✅ [Status Report] Processed applicant details and history');
+
+            if (format === 'pdf') {
+                console.log('📄 [Status Report] PDF format requested');
+                return res.json({
+                    success: true,
+                    reportType: 'applicant-status',
+                    format: 'pdf',
+                    applicant: applicantDetails,
+                    statusHistory: processedHistory,
+                    generatedOn: new Date().toISOString()
+                });
+            }
+
+            return res.json({
+                success: true,
+                applicant: applicantDetails,
+                statusHistory: processedHistory
+            });
+
+        } catch (error) {
+            console.error('❌ [Status Report] Error in getApplicantStatusReport:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+        }
+    },
+    
+    getTimelineReport: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            const { startDate, endDate, department, format } = req.query;
+            
+            console.log('🔍 [Timeline Report] Fetching recruitment timeline data...');
+            console.log('📅 [Timeline Report] Filters:', { startDate, endDate, department, format });
+            
+            // Build query for applicants
+            let query = supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    lastName,
+                    firstName,
+                    applicantStatus,
+                    created_at,
+                    userId,
+                    jobId,
+                    departmentId,
+                    useraccounts!inner(userEmail),
+                    jobpositions!inner(jobTitle),
+                    departments!inner(deptName)
+                `)
+                .order('created_at', { ascending: true });
+
+            // Apply date filters
+            if (startDate) {
+                query = query.gte('created_at', startDate);
+                console.log('📅 [Timeline Report] Applied start date filter:', startDate);
+            }
+            if (endDate) {
+                const endDateTime = new Date(endDate);
+                endDateTime.setHours(23, 59, 59, 999);
+                query = query.lte('created_at', endDateTime.toISOString());
+                console.log('📅 [Timeline Report] Applied end date filter:', endDateTime.toISOString());
+            }
+
+            // Apply department filter
+            if (department && department !== 'all') {
+                query = query.eq('departmentId', department);
+                console.log('🏢 [Timeline Report] Applied department filter:', department);
+            }
+
+            const { data: applicants, error } = await query;
+
+            if (error) {
+                console.error('❌ [Timeline Report] Error fetching applicants:', error);
+                return res.status(500).json({ success: false, message: 'Error fetching timeline data: ' + error.message });
+            }
+
+            console.log(`✅ [Timeline Report] Found ${applicants.length} applicants for timeline`);
+
+            // Group applicants by month for timeline visualization
+            const timelineData = {};
+            const statusCounts = {
+                pending: 0,
+                passed: 0,
+                failed: 0,
+                hired: 0
+            };
+
+            applicants.forEach(applicant => {
+                const applicationDate = new Date(applicant.created_at);
+                const monthKey = `${applicationDate.getFullYear()}-${String(applicationDate.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!timelineData[monthKey]) {
+                    timelineData[monthKey] = {
+                        month: monthKey,
+                        monthName: applicationDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }),
+                        applications: 0,
+                        hired: 0,
+                        passed: 0,
+                        failed: 0,
+                        pending: 0
+                    };
+                }
+
+                timelineData[monthKey].applications++;
+
+                // Categorize status
+                const status = applicant.applicantStatus || '';
+                if (status.toLowerCase().includes('hired') || status.toLowerCase().includes('onboarding')) {
+                    timelineData[monthKey].hired++;
+                    statusCounts.hired++;
+                } else if (status.toLowerCase().includes('passed')) {
+                    timelineData[monthKey].passed++;
+                    statusCounts.passed++;
+                } else if (status.toLowerCase().includes('failed') || status.toLowerCase().includes('rejected')) {
+                    timelineData[monthKey].failed++;
+                    statusCounts.failed++;
+                } else {
+                    timelineData[monthKey].pending++;
+                    statusCounts.pending++;
+                }
+            });
+
+            // Convert to array and sort by month
+            const timelineArray = Object.values(timelineData).sort((a, b) => a.month.localeCompare(b.month));
+
+            console.log(`📊 [Timeline Report] Processed ${timelineArray.length} months of data`);
+            console.log('📈 [Timeline Report] Status counts:', statusCounts);
+
+            // Calculate summary metrics
+            const totalApplications = applicants.length;
+            const avgApplicationsPerMonth = timelineArray.length > 0 ? Math.round(totalApplications / timelineArray.length) : 0;
+            const conversionRate = totalApplications > 0 ? Math.round((statusCounts.hired / totalApplications) * 100) : 0;
+
+            // Recent activity (last 30 days)
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const recentActivity = applicants.filter(applicant => 
+                new Date(applicant.created_at) >= thirtyDaysAgo
+            );
+
+            const summary = {
+                totalApplications: totalApplications,
+                avgApplicationsPerMonth: avgApplicationsPerMonth,
+                conversionRate: conversionRate,
+                recentActivity: recentActivity.length,
+                dateRange: {
+                    start: applicants.length > 0 ? new Date(applicants[0].created_at).toISOString().split('T')[0] : 'N/A',
+                    end: applicants.length > 0 ? new Date(applicants[applicants.length - 1].created_at).toISOString().split('T')[0] : 'N/A'
+                },
+                statusBreakdown: statusCounts
+            };
+
+            // Process recent activity details
+            const recentActivityDetails = recentActivity.slice(0, 10).map(applicant => ({
+                name: `${applicant.firstName} ${applicant.lastName}`,
+                position: applicant.jobpositions?.jobTitle || 'N/A',
+                department: applicant.departments?.deptName || 'N/A',
+                date: new Date(applicant.created_at).toISOString().split('T')[0],
+                status: applicant.applicantStatus || 'Pending'
+            }));
+
+            console.log('✅ [Timeline Report] Summary calculated:', summary);
+
+            if (format === 'pdf') {
+                console.log('📄 [Timeline Report] PDF format requested');
+                return res.json({
+                    success: true,
+                    reportType: 'timeline',
+                    format: 'pdf',
+                    timelineData: timelineArray,
+                    summary: summary,
+                    recentActivity: recentActivityDetails,
+                    generatedOn: new Date().toISOString(),
+                    filters: { startDate, endDate, department }
+                });
+            }
+
+            return res.json({
+                success: true,
+                timelineData: timelineArray,
+                summary: summary,
+                recentActivity: recentActivityDetails
+            });
+
+        } catch (error) {
+            console.error('❌ [Timeline Report] Error in getTimelineReport:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+        }
+    },
     
     
 };
