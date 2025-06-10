@@ -510,7 +510,7 @@ getTrainingDevelopmentTracker: async function (req, res) {
         const { data: employees, error: employeesError } = await supabase
             .from('staffaccounts')
             .select('*')
-            .limit(20); // Get more employees to ensure we have the ones referenced by trainings
+            //.limit(20); // Get more employees to ensure we have the ones referenced by trainings
 
         if (employeesError) {
             console.error('Error fetching employees:', employeesError);
