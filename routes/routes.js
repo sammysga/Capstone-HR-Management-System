@@ -360,16 +360,26 @@ router.post('/linemanager/training', lineManagerController.createTraining);
 router.post('/linemanager/activity-type', lineManagerController.addActivityType);
 router.get('/linemanager/trainings', lineManagerController.getAllTrainings);
 router.get('/linemanager/training-development-tracker', lineManagerController.getTrainingDevelopmentTracker);
+// Training request routes
+router.get('/linemanager/training-request/:userId', lineManagerController.getTrainingRequest);
+router.get('/api/training-request/:userId/details', lineManagerController.getTrainingRequestDetails);
+router.post('/training/approve', lineManagerController.approveTrainingRequest);
+router.post('/training/reject', lineManagerController.rejectTrainingRequest);
+
 
 // ============================
 // Employee - TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================
 // GET /api/trainings/dropdown - Get trainings for dropdown (uses user's job from session)
-router.get('/linemanager/trainings/dropdown', employeeController.getTrainingsByJobAndDept);
+router.get('/employee/trainings/dropdown', employeeController.getTrainingsByJobAndDept);
 // GET /api/trainings/:trainingId/details - Get training skills and objectives
-router.get('/linemanager/trainings/:trainingId/details', employeeController.getTrainingSkillsAndObjectives);
+router.get('/employee/trainings/:trainingId/details', employeeController.getTrainingSkillsAndObjectives);
 // POST /api/training-requests - Create new training request
-router.post('/linemanager/training-requests', employeeController.createTrainingRequest);
+router.post('/employee/training-requests', employeeController.createTrainingRequest);
+router.get('/employee/training-progress', employeeController.getTrainingProgress);
+router.get('/employee/all-courses', employeeController.getAllCourses);
+router.get('/employee/certificates', employeeController.getCertificates);
+router.get('/employee/:certId/download', employeeController.downloadCertificate);
 
 
 // ============================

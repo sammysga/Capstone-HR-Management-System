@@ -237,74 +237,127 @@
             transform: translateY(-2px);
         }
 
-        /* Modal styling */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
 
-        .modal-overlay.show {
-            display: flex;
-        }
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+}
 
-        .modal-content {
-            background-color: white;
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
+.modal-overlay.show {
+    display: flex;
+    animation: modalFadeIn 0.3s ease-out;
+}
 
-        .modal-header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 95vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    position: relative;
+    animation: modalSlideIn 0.3s ease-out;
+}
 
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #334155;
-            margin: 0;
-        }
+@keyframes modalSlideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+.modal-header {
+    padding: 30px 30px 20px 30px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background:  #07ACB9 100%;
+    color: white;
+    border-radius: 20px 20px 0 0;
+}
 
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 8px;
-        }
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
 
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s ease;
-            box-sizing: border-box;
-        }
+.modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
 
-        .form-input:focus {
-            outline: none;
-            border-color: #07ACB9;
-            box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
-        }
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+     
+/* Form Sections */
+.form-section {
+    padding: 25px 30px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-header h3 i {
+    color: #07ACB9;
+}
+
+.duration-info {
+    background: #f0f9ff;
+    color: #0369a1;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
 
         .checkbox-group {
             display: flex;
@@ -1044,234 +1097,572 @@
             }
         }
 
-         /* Searchable dropdown styling */
-        .dropdown-container {
-            position: relative;
-        }
+         /* ADD REQUEST MODAL CSS */
+       
 
-        .dropdown-input {
-            width: 100%;
-            padding: 12px 40px 12px 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s ease;
-            box-sizing: border-box;
-            cursor: pointer;
-        }
+/* Training Details Card */
+.training-details-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+}
 
-        .dropdown-input:focus {
-            outline: none;
-            border-color: #07ACB9;
-            box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
-        }
+.training-card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-        .dropdown-icon {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #64748b;
-            pointer-events: none;
-            transition: transform 0.2s ease;
-        }
+.training-icon {
+    background: linear-gradient(135deg, #124A5C 0%, #07ACB9 100%);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
 
-        .dropdown-container.open .dropdown-icon {
-            transform: translateY(-50%) rotate(180deg);
-        }
+.training-info h4 {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
 
-        .dropdown-list {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background-color: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            display: none;
-            max-height: 200px;
-            overflow-y: auto;
-        }
+.training-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
 
-        .dropdown-container.open .dropdown-list {
-            display: block;
-        }
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #64748b;
+}
 
-        .dropdown-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f5f9;
-            transition: background-color 0.2s ease;
-        }
+.meta-item i {
+    color: #07ACB9;
+}
 
-        .dropdown-item:last-child {
-            border-bottom: none;
-        }
+/* Focus Areas */
+.focus-areas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
 
-        .dropdown-item:hover {
-            background-color: #f8fafc;
-        }
+.focus-area-column {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+}
 
-        .dropdown-item.selected {
-            background-color: #07ACB9;
-            color: white;
-        }
+.focus-area-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #374151;
+}
 
-        .dropdown-item-title {
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
+.focus-area-header i {
+    color: #07ACB9;
+}
 
-        .dropdown-item-meta {
-            font-size: 12px;
-            color: #64748b;
-        }
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 40px;
+}
 
-        .dropdown-item.selected .dropdown-item-meta {
-            color: rgba(255, 255, 255, 0.8);
-        }
+.tag {
+    background: linear-gradient(135deg, #07ACB9 0%, #059ca4 100%);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(7, 172, 185, 0.2);
+}
 
-        .no-results {
-            padding: 16px;
-            text-align: center;
-            color: #64748b;
-            font-style: italic;
-        }
+.tag.objective {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
 
-        .loading {
-            padding: 16px;
-            text-align: center;
-            color: #64748b;
-        }
+.tag.skill {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
 
-        /* Improved skills and objectives display */
-        .skills-objectives-container {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 10px;
-        }
+.empty-state {
+    color: #94a3b8;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    background: white;
+}
 
-        .skills-objectives-container.empty {
-            display: none;
-        }
+/* Schedule Options */
+.schedule-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
 
-        .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-        }
+.schedule-option {
+    position: relative;
+    cursor: pointer;
+}
 
-        .section-title i {
-            margin-right: 8px;
-            color: #07ACB9;
-        }
+.schedule-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
 
-        .tags-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
+.schedule-option label {
+    display: block;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 100%;
+}
 
-        .tag {
-            background-color: #07ACB9;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-        }
+.schedule-option:hover label {
+    border-color: #07ACB9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(7, 172, 185, 0.15);
+}
 
-        .tag.objective {
-            background-color: #3b82f6;
-        }
+.schedule-option input[type="radio"]:checked + label {
+    border-color: #07ACB9;
+    background: linear-gradient(135deg, #f0fdff 0%, #e6fffa 100%);
+    box-shadow: 0 4px 12px rgba(7, 172, 185, 0.2);
+}
 
-        .tag.skill {
-            background-color: #10b981;
-        }
+.option-icon {
+    background: linear-gradient(135deg, #124A5C 0%, #07ACB9 100%);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
 
-        .date-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
+.option-content h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+}
 
-        .confirmation-message {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 20px 0;
-            font-size: 14px;
-            color: #64748b;
-            text-align: center;
-        }
+.option-content p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #64748b;
+}
 
-        .modal-actions {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 25px;
-        }
+.schedule-preview {
+    font-size: 12px;
+    color: #07ACB9;
+    font-weight: 500;
+}
 
-        .btn-secondary {
-            background-color: #f8fafc;
-            color: #64748b;
-            border: 1px solid #e2e8f0;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
+/* Date Selection */
+.date-selection {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+}
 
-        .btn-secondary:hover {
-            background-color: #e2e8f0;
-        }
+.date-input-group {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: end;
+    margin-bottom: 20px;
+}
 
-        .btn-primary {
-            background-color: #124A5C;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
+.date-arrow {
+    color: #07ACB9;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
 
-        .btn-primary:hover {
-            background-color: #0d3c4a;
-        }
+.date-field {
+    position: relative;
+}
 
-        .btn-primary:disabled {
-            background-color: #94a3b8;
-            cursor: not-allowed;
-        }
+.date-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
 
-        /* Demo button */
-        .add-request-btn {
-            background-color: #124A5C;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 20px;
-        }
+.date-input:focus {
+    outline: none;
+    border-color: #07ACB9;
+    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+}
+
+.date-input:read-only {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.date-helper {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.custom-schedule {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 20px;
+}
+
+.custom-input-group {
+    margin-bottom: 15px;
+}
+
+.custom-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.custom-note i {
+    color: #07ACB9;
+}
+
+/* Schedule Summary */
+.schedule-summary {
+    margin-top: 25px;
+}
+
+.summary-card {
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+    border: 2px solid #10b981;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.summary-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #065f46;
+}
+
+.summary-header i {
+    color: #10b981;
+}
+
+.summary-content {
+    display: grid;
+    gap: 10px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.summary-row span {
+    color: #374151;
+}
+
+.summary-row strong {
+    color: #065f46;
+}
+
+/* Confirmation Note */
+.confirmation-note {
+    display: flex;
+    gap: 15px;
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.note-icon {
+    color: #d97706;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.note-content {
+    color: #92400e;
+    line-height: 1.5;
+}
+
+/* Form Controls */
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-label i {
+    color: #07ACB9;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #07ACB9;
+    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+}
+
+/* Dropdown */
+.dropdown-container {
+    position: relative;
+}
+
+.dropdown-input {
+    width: 100%;
+    padding: 12px 40px 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.dropdown-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-container.open .dropdown-icon {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: none;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.dropdown-container.open .dropdown-list {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 15px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background: #f8fafc;
+}
+
+.dropdown-item-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.dropdown-item-meta {
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.loading, .no-results {
+    padding: 20px;
+    text-align: center;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Action Buttons */
+.modal-actions {
+    padding: 25px 30px;
+    background: #f8fafc;
+    border-radius: 0 0 20px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.btn-secondary, .btn-primary {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.btn-secondary {
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #124A5C 0%, #07ACB9 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(18, 74, 92, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(18, 74, 92, 0.4);
+}
+
+.btn-primary:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal-content {
+        margin: 10px;
+        max-height: calc(100vh - 20px);
+        border-radius: 15px;
+    }
+    
+    .modal-header {
+        padding: 20px 20px 15px 20px;
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .form-section {
+        padding: 20px;
+    }
+    
+    .focus-areas-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .schedule-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .date-input-group {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .date-arrow {
+        display: none;
+    }
+    
+    .modal-actions {
+        padding: 20px;
+        flex-direction: column;
+    }
+    
+    .btn-secondary, .btn-primary {
+        width: 100%;
+    }
+    .peso-symbol {
+    font-weight: bold;
+    margin-right: 4px;
+}
+}
+/* MODAL FOR ADD REQUEST */
 
     </style>
 </head>
@@ -1293,7 +1684,7 @@
             </p>
         </div>
 
-        <!-- Tabs Container -->
+       <!-- Tabs Container -->
         <div class="tabs-container">
             <ul class="tabs-nav">
                 <li><button class="tab-button active" data-tab="progress-tab">
@@ -1321,220 +1712,18 @@
                         </div>
                         <p>Track your training progress across different categories. Click on a category to filter your training courses below.</p>
                         
-                        <div class="progress-categories">
-                            <div class="progress-category in-progress" data-filter="in-progress">
-                                <div class="count">3</div>
-                                <h3>In Progress</h3>
-                                <p>Currently ongoing training sessions</p>
-                            </div>
-                            <div class="progress-category completed" data-filter="completed">
-                                <div class="count">8</div>
-                                <h3>Completed</h3>
-                                <p>Successfully finished trainings</p>
-                            </div>
-                            <div class="progress-category overdue" data-filter="overdue">
-                                <div class="count">1</div>
-                                <h3>Overdue</h3>
-                                <p>Training sessions past due date</p>
+                        <div class="progress-categories" id="progressCategories">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                Loading training progress...
                             </div>
                         </div>
 
-                        <!-- In Progress Courses Section -->
-                        <div class="progress-section" id="in-progress-section">
-                            <h4 class="section-title">
-                                <i class="fas fa-play-circle" style="color: #3b82f6; margin-right: 8px;"></i>
-                                In Progress Courses (3)
-                            </h4>
-                            <div class="courses-list">
-                                <div class="course-list-item enrolled">
-                                    <div class="course-list-info">
-                                        <h5 class="course-list-title">Leadership Development Program</h5>
-                                        <div class="course-list-details">
-                                            5 weeks • 20 lessons • Dr. Sarah Johnson
-                                        </div>
-                                    </div>
-                                    <div class="course-list-meta">
-                                        <div class="course-list-badges">
-                                            <span class="course-list-badge online">Online</span>
-                                        </div>
-                                        <div class="course-list-progress">
-                                            <div class="course-list-progress-bar">
-                                                <div class="course-list-progress-fill" style="width: 75%;"></div>
-                                            </div>
-                                            <div class="course-list-progress-text">15/20 lessons</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="course-list-item enrolled">
-                                    <div class="course-list-info">
-                                        <h5 class="course-list-title">Safety and Compliance Training</h5>
-                                        <div class="course-list-details">
-                                            2 days • 8 modules • Training Center B
-                                        </div>
-                                    </div>
-                                    <div class="course-list-meta">
-                                        <div class="course-list-badges">
-                                            <span class="course-list-badge onsite">Onsite</span>
-                                            <span class="course-list-badge required">Required</span>
-                                        </div>
-                                        <div class="course-list-progress">
-                                            <div class="course-list-progress-bar">
-                                                <div class="course-list-progress-fill" style="width: 60%;"></div>
-                                            </div>
-                                            <div class="course-list-progress-text">5/8 modules</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="course-list-item enrolled">
-                                    <div class="course-list-info">
-                                        <h5 class="course-list-title">Advanced Excel Training</h5>
-                                        <div class="course-list-details">
-                                            3 weeks • 15 lessons • Ms. Jennifer Lee
-                                        </div>
-                                    </div>
-                                    <div class="course-list-meta">
-                                        <div class="course-list-badges">
-                                            <span class="course-list-badge online">Online</span>
-                                        </div>
-                                        <div class="course-list-progress">
-                                            <div class="course-list-progress-bar">
-                                                <div class="course-list-progress-fill" style="width: 40%;"></div>
-                                            </div>
-                                            <div class="course-list-progress-text">6/15 lessons</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Completed Courses Section -->
-                        <div class="progress-section" id="completed-section">
-                            <h4 class="section-title">
-                                <i class="fas fa-check-circle" style="color: #10b981; margin-right: 8px;"></i>
-                                Completed Courses (8)
-                            </h4>
-                            <div class="courses-list">
-                                <div class="course-list-item completed">
-                                    <div class="course-list-info">
-                                        <h5 class="course-list-title">Technical Skills Enhancement</h5>
-                                        <div class="course-list-details">
-                                            3 weeks • 12 lessons • Completed: March 15, 2025
-                                        </div>
-                                    </div>
-                                    <div class="course-list-meta">
-                                        <div class="course-list-badges">
-                                            <span class="course-list-badge online">Online</span>
-                                            <span class="course-list-badge required">Required</span>
-                                        </div>
-                                        <div class="course-list-progress">
-                                            <div class="course-list-progress-bar">
-                                                <div class="course-list-progress-fill" style="width: 100%;"></div>
-                                            </div>
-                                            <div class="course-list-progress-text">Complete</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="course-list-item completed">
-                                    <div class="course-list-info">
-                                        <h5 class="course-list-title">Communication Excellence</h5>
-                                        <div class="course-list-details">
-                                            1 day • 4 sessions • Completed: March 10, 2025
-                                        </div>
-                                    </div>
-                                    <div class="course-list-meta">
-                                        <div class="course-list-badges">
-                                            <span class="course-list-badge onsite">Onsite</span>
-                                        </div>
-                                        <div class="course-list-progress">
-                                            <div class="course-list-progress-bar">
-                                                <div class="course-list-progress-fill" style="width: 100%;"></div>
-                                            </div>
-                                            <div class="course-list-progress-text">Complete</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="course-list-item completed">
-                                    <div class="course-list-info">
-                                        <h5 class="course-list-title">Time Management Essentials</h5>
-                                        <div class="course-list-details">
-                                            2 weeks • 8 lessons • Completed: February 28, 2025
-                                        </div>
-                                    </div>
-                                    <div class="course-list-meta">
-                                        <div class="course-list-badges">
-                                            <span class="course-list-badge online">Online</span>
-                                        </div>
-                                        <div class="course-list-progress">
-                                            <div class="course-list-progress-bar">
-                                                <div class="course-list-progress-fill" style="width: 100%;"></div>
-                                            </div>
-                                            <div class="course-list-progress-text">Complete</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="course-list-item completed">
-                                    <div class="course-list-info">
-                                        <h5 class="course-list-title">Customer Service Excellence</h5>
-                                        <div class="course-list-details">
-                                            1 week • 6 modules • Completed: February 15, 2025
-                                        </div>
-                                    </div>
-                                    <div class="course-list-meta">
-                                        <div class="course-list-badges">
-                                            <span class="course-list-badge online">Online</span>
-                                            <span class="course-list-badge required">Required</span>
-                                        </div>
-                                        <div class="course-list-progress">
-                                            <div class="course-list-progress-bar">
-                                                <div class="course-list-progress-fill" style="width: 100%;"></div>
-                                            </div>
-                                            <div class="course-list-progress-text">Complete</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Show more link for remaining completed courses -->
-                                <div class="show-more-item" onclick="showMoreCompleted()">
-                                    <div>
-                                        <i class="fas fa-plus-circle" style="font-size: 1.2rem; margin-right: 8px;"></i>
-                                        Show 4 more completed courses
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Overdue Courses Section -->
-                        <div class="progress-section" id="overdue-section">
-                            <h4 class="section-title">
-                                <i class="fas fa-exclamation-circle" style="color: #ef4444; margin-right: 8px;"></i>
-                                Overdue Courses (1)
-                            </h4>
-                            <div class="courses-list">
-                                <div class="course-list-item overdue">
-                                    <div class="course-list-info">
-                                        <h5 class="course-list-title">Project Management Fundamentals</h5>
-                                        <div class="course-list-details">
-                                            4 weeks • 16 lessons • <strong style="color: #ef4444;">Deadline: March 1, 2025</strong>
-                                        </div>
-                                    </div>
-                                    <div class="course-list-meta">
-                                        <div class="course-list-badges">
-                                            <span class="course-list-badge online">Online</span>
-                                            <span class="course-list-badge required">Required</span>
-                                        </div>
-                                        <div class="course-list-progress">
-                                            <div class="course-list-progress-bar">
-                                                <div class="course-list-progress-fill" style="width: 25%;"></div>
-                                            </div>
-                                            <div class="course-list-progress-text">4/16 lessons</div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <!-- Training Sections Container -->
+                        <div id="trainingSections">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                Loading your training courses...
                             </div>
                         </div>
                     </div>
@@ -1546,167 +1735,18 @@
                         <div class="card-header">
                             <h3>All Training Courses</h3>
                             <div class="courses-header-actions">
-                                <div class="filter-section">
-                                    <div class="filter-dropdown" id="filter-dropdown">
-                                        <div class="filter-button" onclick="toggleFilterDropdown()">
-                                            <i class="fas fa-filter"></i>
-                                            <span>Filters</span>
-                                            <i class="fas fa-chevron-down"></i>
-                                        </div>
-                                        <div class="filter-dropdown-content">
-                                            <div class="filter-option">
-                                                <input type="checkbox" id="filter-online" value="online" onchange="updateFilters()">
-                                                <label for="filter-online">Online</label>
-                                            </div>
-                                            <div class="filter-option">
-                                                <input type="checkbox" id="filter-onsite" value="onsite" onchange="updateFilters()">
-                                                <label for="filter-onsite">Onsite</label>
-                                            </div>
-                                            <div class="filter-option">
-                                                <input type="checkbox" id="filter-required" value="required" onchange="updateFilters()">
-                                                <label for="filter-required">Required</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="active-filters" id="active-filters"></div>
-                                </div>
                                 <button class="add-request-btn" onclick="openTrainingRequestModal()">
                                     <i class="fas fa-plus"></i>
                                     Request New Training
                                 </button>
                             </div>
                         </div>
-                        <p>Browse all available training courses that you can enroll in. Your current enrolled and completed courses can be found in the Training Progress tab.</p>
+                        <p>Browse all available training courses. Use "Update Progress" for active trainings you're enrolled in.</p>
                         
-                        <div class="courses-grid">
-                            <!-- Available Course 1 -->
-                            <div class="course-card" data-status="available" data-type="online">
-                                <div class="course-header">
-                                    <h3 class="course-title">Advanced Data Analytics</h3>
-                                    <div class="course-badges">
-                                        <span class="course-type online">Online</span>
-                                    </div>
-                                </div>
-                                <div class="course-description">
-                                    Professional Development<br>
-                                    Duration: 6 weeks • 24 lessons<br>
-                                    Instructor: Prof. Michael Chen
-                                </div>
-                                <button class="enroll-btn">Enroll Now</button>
-                            </div>
-
-                            <!-- Available Course 2 -->
-                            <div class="course-card" data-status="available" data-type="onsite">
-                                <div class="course-header">
-                                    <h3 class="course-title">Communication Excellence Workshop</h3>
-                                    <div class="course-badges">
-                                        <span class="course-type onsite">Onsite</span>
-                                    </div>
-                                </div>
-                                <div class="course-description">
-                                    Soft Skills Development<br>
-                                    Duration: 1 day • 4 sessions<br>
-                                    Location: Conference Room A
-                                </div>
-                                <button class="enroll-btn">Enroll Now</button>
-                            </div>
-
-                            <!-- Available Course 3 -->
-                            <div class="course-card" data-status="available" data-type="online required">
-                                <div class="course-header">
-                                    <h3 class="course-title">Cybersecurity Awareness</h3>
-                                    <div class="course-badges">
-                                        <span class="course-type online">Online</span>
-                                        <span class="course-type required">Required</span>
-                                    </div>
-                                </div>
-                                <div class="course-description">
-                                    Security & Compliance<br>
-                                    Duration: 2 hours • 6 modules<br>
-                                    Annual requirement
-                                </div>
-                                <button class="enroll-btn">Enroll Now</button>
-                            </div>
-
-                            <!-- Available Course 4 -->
-                            <div class="course-card" data-status="available" data-type="onsite">
-                                <div class="course-header">
-                                    <h3 class="course-title">Team Building & Collaboration</h3>
-                                    <div class="course-badges">
-                                        <span class="course-type onsite">Onsite</span>
-                                    </div>
-                                </div>
-                                <div class="course-description">
-                                    Leadership Development<br>
-                                    Duration: 2 days • Outdoor activities<br>
-                                    Location: Retreat Center
-                                </div>
-                                <button class="enroll-btn">Enroll Now</button>
-                            </div>
-
-                            <!-- Available Course 5 -->
-                            <div class="course-card" data-status="available" data-type="online">
-                                <div class="course-header">
-                                    <h3 class="course-title">Digital Marketing Fundamentals</h3>
-                                    <div class="course-badges">
-                                        <span class="course-type online">Online</span>
-                                    </div>
-                                </div>
-                                <div class="course-description">
-                                    Marketing & Business<br>
-                                    Duration: 4 weeks • 16 lessons<br>
-                                    Instructor: Ms. Sarah Williams
-                                </div>
-                                <button class="enroll-btn">Enroll Now</button>
-                            </div>
-
-                            <!-- Available Course 6 -->
-                            <div class="course-card" data-status="available" data-type="onsite required">
-                                <div class="course-header">
-                                    <h3 class="course-title">Emergency Response Training</h3>
-                                    <div class="course-badges">
-                                        <span class="course-type onsite">Onsite</span>
-                                        <span class="course-type required">Required</span>
-                                    </div>
-                                </div>
-                                <div class="course-description">
-                                    Safety & Emergency<br>
-                                    Duration: 1 day • 6 modules<br>
-                                    Location: Training Center A
-                                </div>
-                                <button class="enroll-btn">Enroll Now</button>
-                            </div>
-
-                            <!-- Available Course 7 -->
-                            <div class="course-card" data-status="available" data-type="online">
-                                <div class="course-header">
-                                    <h3 class="course-title">Financial Planning & Budgeting</h3>
-                                    <div class="course-badges">
-                                        <span class="course-type online">Online</span>
-                                    </div>
-                                </div>
-                                <div class="course-description">
-                                    Finance & Accounting<br>
-                                    Duration: 3 weeks • 12 lessons<br>
-                                    Instructor: Mr. David Brown
-                                </div>
-                                <button class="enroll-btn">Enroll Now</button>
-                            </div>
-
-                            <!-- Available Course 8 -->
-                            <div class="course-card" data-status="available" data-type="online">
-                                <div class="course-header">
-                                    <h3 class="course-title">Creative Problem Solving</h3>
-                                    <div class="course-badges">
-                                        <span class="course-type online">Online</span>
-                                    </div>
-                                </div>
-                                <div class="course-description">
-                                    Innovation & Creativity<br>
-                                    Duration: 2 weeks • 10 lessons<br>
-                                    Instructor: Dr. Lisa Martinez
-                                </div>
-                                <button class="enroll-btn">Enroll Now</button>
+                        <div class="courses-grid" id="allCoursesGrid">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                Loading available courses...
                             </div>
                         </div>
                     </div>
@@ -1724,70 +1764,10 @@
                         </div>
                         <p>Manage your training certificates and upload new certifications you've earned.</p>
                         
-                        <div class="certificates-list">
-                            <!-- Sample uploaded certificate -->
-                            <div class="certificate-list-item uploaded">
-                                <div class="certificate-list-info">
-                                    <div class="certificate-list-icon">
-                                        <i class="fas fa-certificate"></i>
-                                    </div>
-                                    <div class="certificate-list-details">
-                                        <h4 class="certificate-list-title">Technical Skills Enhancement</h4>
-                                        <div class="certificate-list-meta">
-                                            <strong>Date Completed:</strong> March 15, 2025 • <strong>Topics:</strong> 12 modules • <strong>Score:</strong> 95%
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="certificate-list-actions">
-                                    <div class="certificate-list-id">TSE-2025-001</div>
-                                    <i class="fas fa-download certificate-download"></i>
-                                </div>
-                            </div>
-
-                            <!-- Sample uploaded certificate 2 -->
-                            <div class="certificate-list-item uploaded">
-                                <div class="certificate-list-info">
-                                    <div class="certificate-list-icon">
-                                        <i class="fas fa-award"></i>
-                                    </div>
-                                    <div class="certificate-list-details">
-                                        <h4 class="certificate-list-title">Leadership Development Program</h4>
-                                        <div class="certificate-list-meta">
-                                            <strong>Date Issued:</strong> February 28, 2025 • <strong>Lessons:</strong> 20 lessons • <strong>Duration:</strong> 5 weeks
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="certificate-list-actions">
-                                    <div class="certificate-list-id">LDP-2025-045</div>
-                                    <i class="fas fa-download certificate-download"></i>
-                                </div>
-                            </div>
-
-                            <!-- Sample uploaded certificate 3 -->
-                            <div class="certificate-list-item uploaded">
-                                <div class="certificate-list-info">
-                                    <div class="certificate-list-icon">
-                                        <i class="fas fa-shield-alt"></i>
-                                    </div>
-                                    <div class="certificate-list-details">
-                                        <h4 class="certificate-list-title">Safety and Compliance Training</h4>
-                                        <div class="certificate-list-meta">
-                                            <strong>Date Completed:</strong> January 20, 2025 • <strong>Modules:</strong> 8 modules • <strong>Valid Until:</strong> January 2026
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="certificate-list-actions">
-                                    <div class="certificate-list-id">SCT-2025-012</div>
-                                    <i class="fas fa-download certificate-download"></i>
-                                </div>
-                            </div>
-
-                            <!-- Placeholder for new uploads -->
-                            <div class="show-more-item">
-                                <div>
-                                    <i class="fas fa-plus-circle" style="font-size: 1.2rem; margin-right: 8px;"></i>
-                                    Upload a new certificate
-                                </div>
+                        <div class="certificates-list" id="certificatesList">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                Loading certificates...
                             </div>
                         </div>
                     </div>
@@ -1796,16 +1776,24 @@
         </div>
     </div>
 
-    <!-- Training Request Modal -->
-    <div class="modal-overlay" id="trainingRequestModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Add a New Training Course Request</h2>
-            </div>
-            
-            <form id="trainingRequestForm">
+<!-- Training Request Modal -->
+<div class="modal-overlay" id="trainingRequestModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Request New Training</h2>
+            <button class="modal-close" onclick="closeTrainingRequestModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="trainingRequestForm">
+            <!-- Training Selection -->
+            <div class="form-section">
                 <div class="form-group">
-                    <label class="form-label">Select Suggested Training Course:</label>
+                    <label class="form-label">
+                        <i class="fas fa-graduation-cap"></i>
+                        Select Training Course
+                    </label>
                     <div class="dropdown-container" id="trainingDropdown">
                         <input 
                             type="text" 
@@ -1823,50 +1811,221 @@
                     <input type="hidden" id="selectedTrainingId" name="selectedTrainingId">
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Selected Training Course Focus Areas:</label>
-                    <div class="skills-objectives-container empty" id="skillsObjectivesContainer">
-                        <div class="section-title">
+                <!-- Training Details Card -->
+                <div class="training-details-card" id="trainingDetailsCard" style="display: none;">
+                    <div class="training-card-header">
+                        <div class="training-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="training-info">
+                            <h4 id="selectedTrainingName">Selected Training</h4>
+                            <div class="training-meta">
+                                <span id="trainingDuration" class="meta-item">
+                                    <i class="fas fa-clock"></i> 0 hours
+                                </span>
+                                <span id="trainingType" class="meta-item">
+                                    <i class="fas fa-laptop"></i> Online
+                                </span>
+                              <span id="trainingCost" class="meta-item">
+    <span class="peso-symbol">Php</span> Free
+</span>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Focus Areas -->
+            <div class="form-section" id="focusAreasSection" style="display: none;">
+                <div class="section-header">
+                    <h3><i class="fas fa-target"></i> Training Focus Areas</h3>
+                </div>
+                
+                <div class="focus-areas-grid">
+                    <div class="focus-area-column">
+                        <div class="focus-area-header">
                             <i class="fas fa-bullseye"></i>
-                            Objectives
+                            <span>Objectives</span>
                         </div>
-                        <div class="tags-container" id="objectivesContainer"></div>
-                        
-                        <div class="section-title">
+                        <div class="tags-container" id="objectivesContainer">
+                            <div class="empty-state">No objectives defined</div>
+                        </div>
+                    </div>
+                    
+                    <div class="focus-area-column">
+                        <div class="focus-area-header">
                             <i class="fas fa-cogs"></i>
-                            Skills
+                            <span>Skills</span>
                         </div>
-                        <div class="tags-container" id="skillsContainer"></div>
-                    </div>
-                    <div id="noSelectionMessage" style="color: #64748b; font-style: italic; margin-top: 8px;">
-                        Please select a training course to view its focus areas.
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="date-inputs">
-                        <div>
-                            <label class="form-label">Set Start Date:</label>
-                            <input type="date" class="form-input" id="startDate" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Set End Date:</label>
-                            <input type="date" class="form-input" id="endDate" required>
+                        <div class="tags-container" id="skillsContainer">
+                            <div class="empty-state">No skills defined</div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="confirmation-message">
-                    Are you sure you want to add this training course record to your profile? Your line manager will be notified for approval. Please ensure that your selected training course matches your Individual Development Plan (IDP).
+            <!-- Schedule Selection -->
+            <div class="form-section" id="scheduleSection" style="display: none;">
+                <div class="section-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Training Schedule</h3>
+                    <div class="duration-info" id="durationInfo">
+                        Duration: <span id="totalHours">0</span> hours
+                    </div>
                 </div>
 
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeTrainingRequestModal()">Cancel</button>
-                    <button type="submit" class="btn-primary" id="submitButton" disabled>Submit Request</button>
+                <!-- Schedule Options -->
+                <div class="schedule-options">
+                    <div class="schedule-option" onclick="selectScheduleType('intensive')">
+                        <input type="radio" name="scheduleType" value="intensive" id="intensive">
+                        <label for="intensive">
+                            <div class="option-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="option-content">
+                                <h4>Intensive Schedule</h4>
+                                <p>8 hours per day</p>
+                                <div class="schedule-preview" id="intensivePreview">0 days</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="schedule-option" onclick="selectScheduleType('regular')">
+                        <input type="radio" name="scheduleType" value="regular" id="regular">
+                        <label for="regular">
+                            <div class="option-icon">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="option-content">
+                                <h4>Regular Schedule</h4>
+                                <p>4 hours per day</p>
+                                <div class="schedule-preview" id="regularPreview">0 days</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="schedule-option" onclick="selectScheduleType('flexible')">
+                        <input type="radio" name="scheduleType" value="flexible" id="flexible">
+                        <label for="flexible">
+                            <div class="option-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="option-content">
+                                <h4>Flexible Schedule</h4>
+                                <p>2 hours per day</p>
+                                <div class="schedule-preview" id="flexiblePreview">0 days</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="schedule-option" onclick="selectScheduleType('custom')">
+                        <input type="radio" name="scheduleType" value="custom" id="custom">
+                        <label for="custom">
+                            <div class="option-icon">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="option-content">
+                                <h4>Custom Schedule</h4>
+                                <p>Set your own pace</p>
+                                <div class="schedule-preview">Manual dates</div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
-            </form>
-        </div>
+
+                <!-- Date Selection -->
+                <div class="date-selection">
+                    <div class="date-input-group">
+                        <div class="date-field">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-input date-input" id="startDate" required>
+                        </div>
+                        <div class="date-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="date-field">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-input date-input" id="endDate" required readonly>
+                            <div class="date-helper" id="endDateHelper">
+                                End date will be calculated automatically
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Schedule Options -->
+                    <div class="custom-schedule" id="customScheduleOptions" style="display: none;">
+                        <div class="custom-input-group">
+                            <label class="form-label">Hours per day</label>
+                            <input type="number" class="form-input" id="customHoursPerDay" min="1" max="12" step="0.5" placeholder="2.0">
+                        </div>
+                        <div class="custom-note">
+                            <i class="fas fa-info-circle"></i>
+                            End date will be calculated based on your custom hours per day
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule Summary -->
+                <div class="schedule-summary" id="scheduleSummary" style="display: none;">
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Training Schedule Summary</span>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-row">
+                                <span>Training Duration:</span>
+                                <strong id="summaryDuration">0 hours</strong>
+                            </div>
+                            <div class="summary-row">
+                                <span>Schedule Type:</span>
+                                <strong id="summaryScheduleType">-</strong>
+                            </div>
+                            <div class="summary-row">
+                                <span>Hours per Day:</span>
+                                <strong id="summaryHoursPerDay">-</strong>
+                            </div>
+                            <div class="summary-row">
+                                <span>Training Period:</span>
+                                <strong id="summaryDateRange">-</strong>
+                            </div>
+                            <div class="summary-row">
+                                <span>Total Days:</span>
+                                <strong id="summaryTotalDays">-</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation -->
+            <div class="form-section">
+                <div class="confirmation-note">
+                    <div class="note-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="note-content">
+                        <strong>Important:</strong> Please ensure your training request aligns with your Individual Development Plan (IDP). 
+                        Your line manager will review and approve this request.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeTrainingRequestModal()">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary" id="submitButton" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Request
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- JavaScript for tabs and interactions -->
     <script>
@@ -1884,6 +2043,7 @@
 
         let selectedTraining = null;
         let filteredTrainings = [];
+        let selectedScheduleType = null;
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -2037,584 +2197,1130 @@
         }
 
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeTrainingDropdown();
-            setupFormValidation();
+// Initialize modal when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTrainingModal();
+
+
+    
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize tabs
+            initializeTabs();
+            
+            // Load initial data
+            await Promise.all([
+                loadTrainingProgress(),
+                loadAllCourses(),
+                loadCertificates()
+            ]);
         });
 
-        function initializeTrainingDropdown() {
-            const dropdown = document.getElementById('trainingDropdown');
-            const input = document.getElementById('trainingCourseInput');
-            const dropdownList = document.getElementById('trainingDropdownList');
 
-            // Load trainings when modal opens
+function initializeTrainingModal() {
+    setupTrainingDropdown();
+    setupScheduleHandlers();
+    setupDateHandlers();
+    setupFormValidation();
+}
+
+// Training dropdown functionality
+function setupTrainingDropdown() {
+    const dropdown = document.getElementById('trainingDropdown');
+    const input = document.getElementById('trainingCourseInput');
+    const dropdownList = document.getElementById('trainingDropdownList');
+
+    input.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        filterTrainings(searchTerm);
+        dropdown.classList.add('open');
+    });
+
+    input.addEventListener('focus', function() {
+        dropdown.classList.add('open');
+        if (filteredTrainings.length === 0) {
             loadTrainings();
-
-            // Handle input events
-            input.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                filterTrainings(searchTerm);
-                dropdown.classList.add('open');
-            });
-
-            input.addEventListener('focus', function() {
-                dropdown.classList.add('open');
-                if (filteredTrainings.length === 0) {
-                    loadTrainings();
-                }
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(event) {
-                if (!dropdown.contains(event.target)) {
-                    dropdown.classList.remove('open');
-                }
-            });
         }
+    });
 
-        function loadTrainings() {
-            // Simulate API call - replace with actual implementation
-            setTimeout(() => {
-                filteredTrainings = [...mockTrainings];
-                renderTrainingOptions();
-            }, 500);
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!dropdown.contains(event.target)) {
+            dropdown.classList.remove('open');
         }
+    });
+}
 
-        function filterTrainings(searchTerm) {
-            if (!searchTerm) {
-                // Show all trainings when no search term
-                renderTrainingOptions();
-            } else {
-                // Filter trainings based on search term
-                const filtered = filteredTrainings.filter(training => 
-                    training.trainingName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    training.trainingDesc.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-                
-                // Temporarily store original list and show filtered results
-                const originalList = filteredTrainings;
-                filteredTrainings = filtered;
-                renderTrainingOptions();
-                filteredTrainings = originalList; // Restore original list
-            }
+// Schedule type handlers
+function setupScheduleHandlers() {
+    // Start date change handler
+    document.getElementById('startDate').addEventListener('change', function() {
+        if (selectedScheduleType && selectedTraining) {
+            calculateEndDate();
         }
+        validateForm();
+    });
 
-        function renderTrainingOptions() {
-            const dropdownList = document.getElementById('trainingDropdownList');
-            
-            if (filteredTrainings.length === 0) {
-                dropdownList.innerHTML = '<div class="no-results">No trainings found</div>';
-                return;
-            }
-
-            const optionsHTML = filteredTrainings.map(training => `
-                <div class="dropdown-item" onclick="selectTraining(${training.trainingId})">
-                    <div class="dropdown-item-title">${training.trainingName}</div>
-                    <div class="dropdown-item-meta">
-                        ${training.isOnlineArrangement ? 'Online' : 'Onsite'} • 
-                        ${training.totalDuration}h • 
-                        $${training.cost.toFixed(2)}
-                    </div>
-                </div>
-            `).join('');
-
-            dropdownList.innerHTML = optionsHTML;
+    // Custom hours per day handler
+    document.getElementById('customHoursPerDay').addEventListener('input', function() {
+        if (selectedScheduleType === 'custom' && selectedTraining) {
+            calculateEndDate();
         }
+        validateForm();
+    });
+}
 
-        function selectTraining(trainingId) {
-            selectedTraining = mockTrainings.find(t => t.trainingId === trainingId);
-            
-            if (selectedTraining) {
-                // Update input field
-                document.getElementById('trainingCourseInput').value = selectedTraining.trainingName;
-                document.getElementById('selectedTrainingId').value = selectedTraining.trainingId;
-                
-                // Close dropdown
-                document.getElementById('trainingDropdown').classList.remove('open');
-                
-                // Display skills and objectives
-                displaySkillsAndObjectives(selectedTraining);
-                
-                // Enable submit button
-                validateForm();
-            }
-        }
-
-        function displaySkillsAndObjectives(training) {
-            const container = document.getElementById('skillsObjectivesContainer');
-            const objectivesContainer = document.getElementById('objectivesContainer');
-            const skillsContainer = document.getElementById('skillsContainer');
-            const noSelectionMessage = document.getElementById('noSelectionMessage');
-
-            // Clear existing content
-            objectivesContainer.innerHTML = '';
-            skillsContainer.innerHTML = '';
-
-            // Add objectives
-            training.objectives.forEach(objective => {
-                const tag = document.createElement('div');
-                tag.className = 'tag objective';
-                tag.innerHTML = `<i class="fas fa-bullseye" style="margin-right: 4px;"></i>${objective.objectiveDescrpt}`;
-                objectivesContainer.appendChild(tag);
-            });
-
-            // Add skills
-            training.skills.forEach(skill => {
-                const tag = document.createElement('div');
-                tag.className = 'tag skill';
-                tag.innerHTML = `<i class="fas fa-cogs" style="margin-right: 4px;"></i>${skill.jobReqSkillName}`;
-                skillsContainer.appendChild(tag);
-            });
-
-            // Show container and hide message
-            container.classList.remove('empty');
-            noSelectionMessage.style.display = 'none';
-        }
-
-        function setupFormValidation() {
-            const form = document.getElementById('trainingRequestForm');
-            const inputs = form.querySelectorAll('input[required]');
-            
-            inputs.forEach(input => {
-                input.addEventListener('input', validateForm);
-                input.addEventListener('change', validateForm);
-            });
-
-            form.addEventListener('submit', handleFormSubmit);
-        }
-
-        function validateForm() {
-            const trainingSelected = document.getElementById('selectedTrainingId').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            const submitButton = document.getElementById('submitButton');
-
-            const isValid = trainingSelected && startDate && endDate && new Date(endDate) > new Date(startDate);
-            
-            submitButton.disabled = !isValid;
-        }
-
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            
-            if (!selectedTraining) {
-                alert('Please select a training course first.');
-                return;
-            }
-
-            const formData = {
-                trainingId: selectedTraining.trainingId,
-                trainingName: selectedTraining.trainingName,
-                startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value,
-                objectives: selectedTraining.objectives,
-                skills: selectedTraining.skills
-            };
-
-            console.log('Training Request Data:', formData);
-            
-            // Here you would make the API call to save the data
-            submitTrainingRequest(formData);
-        }
-
-        function submitTrainingRequest(formData) {
-            // Simulate API call
-            const submitButton = document.getElementById('submitButton');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-
-            // Replace this with actual API call
-            setTimeout(() => {
-                alert('Training request submitted successfully! Your line manager will be notified for approval.');
-                closeTrainingRequestModal();
-                
-                // Reset button
-                submitButton.disabled = false;
-                submitButton.textContent = 'Submit Request';
-            }, 1500);
-        }
-
-        function openTrainingRequestModal() {
-    document.getElementById('trainingRequestModal').style.display = 'flex';
+function setupDateHandlers() {
     // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('startDate').min = today;
-    document.getElementById('endDate').min = today;
+}
+
+function selectScheduleType(type) {
+    selectedScheduleType = type;
+    
+    // Update radio button
+    document.querySelectorAll('input[name="scheduleType"]').forEach(radio => {
+        radio.checked = radio.value === type;
+    });
+    
+    // Show/hide custom schedule options
+    const customOptions = document.getElementById('customScheduleOptions');
+    const endDateInput = document.getElementById('endDate');
+    
+    if (type === 'custom') {
+        customOptions.style.display = 'block';
+        endDateInput.readOnly = false;
+        document.getElementById('endDateHelper').textContent = 'You can manually set the end date or specify hours per day';
+    } else {
+        customOptions.style.display = 'none';
+        endDateInput.readOnly = true;
+        document.getElementById('endDateHelper').textContent = 'End date will be calculated automatically';
+        
+        if (selectedTraining) {
+            calculateEndDate();
+        }
+    }
+    
+    updateScheduleSummary();
+    validateForm();
+}
+
+function calculateEndDate() {
+    if (!selectedTraining || !selectedScheduleType) return;
+    
+    const startDateValue = document.getElementById('startDate').value;
+    if (!startDateValue) return;
+    
+    const startDate = new Date(startDateValue);
+    const totalHours = selectedTraining.totalDuration;
+    let hoursPerDay;
+    
+    // Determine hours per day based on schedule type
+    switch (selectedScheduleType) {
+        case 'intensive':
+            hoursPerDay = 8;
+            break;
+        case 'regular':
+            hoursPerDay = 4;
+            break;
+        case 'flexible':
+            hoursPerDay = 2;
+            break;
+        case 'custom':
+            hoursPerDay = parseFloat(document.getElementById('customHoursPerDay').value) || 2;
+            break;
+        default:
+            return;
+    }
+    
+    // Calculate working days needed (excluding weekends)
+    const totalDays = Math.ceil(totalHours / hoursPerDay);
+    let currentDate = new Date(startDate);
+    let workingDaysAdded = 0;
+    
+    // Add working days (skip weekends)
+    while (workingDaysAdded < totalDays - 1) {
+        currentDate.setDate(currentDate.getDate() + 1);
+        // Skip weekends (0 = Sunday, 6 = Saturday)
+        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+            workingDaysAdded++;
+        }
+    }
+    
+    // Set the calculated end date
+    const endDateFormatted = currentDate.toISOString().split('T')[0];
+    document.getElementById('endDate').value = endDateFormatted;
+    
+    updateScheduleSummary();
+}
+
+function updateScheduleSummary() {
+    if (!selectedTraining || !selectedScheduleType) {
+        document.getElementById('scheduleSummary').style.display = 'none';
+        return;
+    }
+    
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (!startDate) {
+        document.getElementById('scheduleSummary').style.display = 'none';
+        return;
+    }
+    
+    let hoursPerDay;
+    let scheduleTypeName;
+    
+    switch (selectedScheduleType) {
+        case 'intensive':
+            hoursPerDay = 8;
+            scheduleTypeName = 'Intensive (8 hours/day)';
+            break;
+        case 'regular':
+            hoursPerDay = 4;
+            scheduleTypeName = 'Regular (4 hours/day)';
+            break;
+        case 'flexible':
+            hoursPerDay = 2;
+            scheduleTypeName = 'Flexible (2 hours/day)';
+            break;
+        case 'custom':
+            hoursPerDay = parseFloat(document.getElementById('customHoursPerDay').value) || 2;
+            scheduleTypeName = `Custom (${hoursPerDay} hours/day)`;
+            break;
+        default:
+            return;
+    }
+    
+    // Calculate total days
+    let totalDays = 0;
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        let current = new Date(start);
+        
+        while (current <= end) {
+            // Count only working days
+            if (current.getDay() !== 0 && current.getDay() !== 6) {
+                totalDays++;
+            }
+            current.setDate(current.getDate() + 1);
+        }
+    }
+    
+    // Update summary content
+    document.getElementById('summaryDuration').textContent = `${selectedTraining.totalDuration} hours`;
+    document.getElementById('summaryScheduleType').textContent = scheduleTypeName;
+    document.getElementById('summaryHoursPerDay').textContent = `${hoursPerDay} hours`;
+    document.getElementById('summaryDateRange').textContent = endDate ? 
+        `${formatDate(startDate)} - ${formatDate(endDate)}` : 
+        formatDate(startDate);
+    document.getElementById('summaryTotalDays').textContent = `${totalDays} working days`;
+    
+    document.getElementById('scheduleSummary').style.display = 'block';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+}
+
+// Training selection and display
+function loadTrainings() {
+    const dropdownList = document.getElementById('trainingDropdownList');
+    dropdownList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading available trainings...</div>';
+
+    // Fetch trainings from your API
+    fetch('/employee/trainings/dropdown', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(result => {
+        if (result.success) {
+            filteredTrainings = result.data || [];
+            if (filteredTrainings.length === 0) {
+                renderNoTrainings('No trainings available for your job position.');
+            } else {
+                renderTrainingOptions();
+            }
+        } else {
+            throw new Error(result.message || 'Failed to fetch trainings');
+        }
+    })
+    .catch(error => {
+        console.error('Failed to load trainings:', error);
+        renderNoTrainings('Failed to load trainings. Please try again.');
+    });
+}
+
+function renderNoTrainings(message) {
+    const dropdownList = document.getElementById('trainingDropdownList');
+    dropdownList.innerHTML = `<div class="no-results"><i class="fas fa-info-circle"></i> ${message}</div>`;
+}
+
+function filterTrainings(searchTerm) {
+    if (!searchTerm) {
+        renderTrainingOptions();
+    } else {
+        const filtered = filteredTrainings.filter(training => 
+            training.trainingName.toLowerCase().includes(searchTerm) ||
+            training.trainingDesc.toLowerCase().includes(searchTerm)
+        );
+        
+        const originalList = filteredTrainings;
+        filteredTrainings = filtered;
+        renderTrainingOptions();
+        filteredTrainings = originalList;
+    }
+}
+
+function renderTrainingOptions() {
+    const dropdownList = document.getElementById('trainingDropdownList');
+    
+    if (filteredTrainings.length === 0) {
+        dropdownList.innerHTML = '<div class="no-results"><i class="fas fa-search"></i> No trainings found</div>';
+        return;
+    }
+
+    const optionsHTML = filteredTrainings.map(training => `
+        <div class="dropdown-item" onclick="selectTraining(${training.trainingId})">
+            <div class="dropdown-item-title">${training.trainingName}</div>
+            <div class="dropdown-item-meta">
+                <span><i class="fas fa-${training.isOnlineArrangement ? 'laptop' : 'map-marker-alt'}"></i> ${training.isOnlineArrangement ? 'Online' : 'Onsite'}</span>
+                <span><i class="fas fa-clock"></i> ${training.totalDuration}h</span>
+                <span><i class="peso-symbol"></i> ${training.cost ? training.cost.toFixed(2) : '0.00'}</span>
+            </div>
+        </div>
+    `).join('');
+
+    dropdownList.innerHTML = optionsHTML;
+}
+
+async function selectTraining(trainingId) {
+    selectedTraining = filteredTrainings.find(t => t.trainingId === trainingId);
+    
+    if (!selectedTraining) return;
+
+    // Update input field
+    document.getElementById('trainingCourseInput').value = selectedTraining.trainingName;
+    document.getElementById('selectedTrainingId').value = selectedTraining.trainingId;
+    
+    // Close dropdown
+    document.getElementById('trainingDropdown').classList.remove('open');
+    
+    // Show training details
+    displayTrainingDetails(selectedTraining);
+    
+    // Load skills and objectives from API
+    await loadTrainingSkillsAndObjectives(selectedTraining.trainingId);
+    
+    // Show schedule section
+    document.getElementById('scheduleSection').style.display = 'block';
+    
+    // Update schedule previews
+    updateSchedulePreviews();
+    
+    // Recalculate end date if schedule is already selected
+    if (selectedScheduleType) {
+        calculateEndDate();
+    }
+    
+    validateForm();
+}
+
+async function loadTrainingSkillsAndObjectives(trainingId) {
+    const objectivesContainer = document.getElementById('objectivesContainer');
+    const skillsContainer = document.getElementById('skillsContainer');
+    
+    // Show loading state
+    objectivesContainer.innerHTML = '<div style="color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i>Loading objectives...</div>';
+    skillsContainer.innerHTML = '<div style="color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i>Loading skills...</div>';
+    
+    document.getElementById('focusAreasSection').style.display = 'block';
+
+    try {
+        const response = await fetch(`/employee/trainings/${trainingId}/details`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update selectedTraining with fetched data
+            selectedTraining.objectives = result.data.objectives || [];
+            selectedTraining.skills = result.data.skills || [];
+            
+            // Display the data
+            displayFocusAreas(selectedTraining);
+        } else {
+            throw new Error(result.message || 'Failed to fetch training details');
+        }
+        
+    } catch (error) {
+        console.error('Failed to load training details:', error);
+        objectivesContainer.innerHTML = '<div style="color: #ef4444; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-triangle"></i>Failed to load objectives</div>';
+        skillsContainer.innerHTML = '<div style="color: #ef4444; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-triangle"></i>Failed to load skills</div>';
+        
+        // Still show the section with empty data
+        selectedTraining.objectives = [];
+        selectedTraining.skills = [];
+    }
+}
+
+function displayTrainingDetails(training) {
+    document.getElementById('selectedTrainingName').textContent = training.trainingName;
+    document.getElementById('trainingDuration').innerHTML = `<i class="fas fa-clock"></i> ${training.totalDuration} hours`;
+    document.getElementById('trainingType').innerHTML = `<i class="fas fa-${training.isOnlineArrangement ? 'laptop' : 'map-marker-alt'}"></i> ${training.isOnlineArrangement ? 'Online' : 'Onsite'}`;
+    document.getElementById('trainingCost').innerHTML = `<i class="peso-symbol"></i> ${training.cost ? training.cost.toFixed(2) : 'Free'}`;
+    document.getElementById('totalHours').textContent = training.totalDuration;
+    
+    document.getElementById('trainingDetailsCard').style.display = 'block';
+}
+
+function displayFocusAreas(training) {
+    const objectivesContainer = document.getElementById('objectivesContainer');
+    const skillsContainer = document.getElementById('skillsContainer');
+    
+    // Clear existing content
+    objectivesContainer.innerHTML = '';
+    skillsContainer.innerHTML = '';
+    
+    // Add objectives
+    if (training.objectives && training.objectives.length > 0) {
+        training.objectives.forEach(objective => {
+            const tag = document.createElement('div');
+            tag.className = 'tag objective';
+            tag.innerHTML = `<i class="fas fa-bullseye"></i>${objective.objectiveDescrpt}`;
+            tag.title = objective.objectiveKPI ? `KPI: ${objective.objectiveKPI}` : '';
+            objectivesContainer.appendChild(tag);
+        });
+    } else {
+        objectivesContainer.innerHTML = '<div class="empty-state">No objectives defined</div>';
+    }
+    
+    // Add skills
+    if (training.skills && training.skills.length > 0) {
+        training.skills.forEach(skill => {
+            const tag = document.createElement('div');
+            tag.className = 'tag skill';
+            tag.innerHTML = `<i class="fas fa-cogs"></i>${skill.jobReqSkillName}`;
+            tag.title = `Type: ${skill.jobReqSkillType}`;
+            skillsContainer.appendChild(tag);
+        });
+    } else {
+        skillsContainer.innerHTML = '<div class="empty-state">No skills defined</div>';
+    }
+    
+    document.getElementById('focusAreasSection').style.display = 'block';
+}
+
+function updateSchedulePreviews() {
+    if (!selectedTraining) return;
+    
+    const totalHours = selectedTraining.totalDuration;
+    
+    // Calculate days for each schedule type
+    const intensiveDays = Math.ceil(totalHours / 8);
+    const regularDays = Math.ceil(totalHours / 4);
+    const flexibleDays = Math.ceil(totalHours / 2);
+    
+    document.getElementById('intensivePreview').textContent = `${intensiveDays} working days`;
+    document.getElementById('regularPreview').textContent = `${regularDays} working days`;
+    document.getElementById('flexiblePreview').textContent = `${flexibleDays} working days`;
+}
+
+function setupFormValidation() {
+    const form = document.getElementById('trainingRequestForm');
+    form.addEventListener('submit', handleFormSubmit);
+}
+
+function validateForm() {
+    const trainingSelected = document.getElementById('selectedTrainingId').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const scheduleSelected = selectedScheduleType;
+    
+    let isValid = trainingSelected && startDate && scheduleSelected;
+    
+    // Additional validation for custom schedule
+    if (scheduleSelected === 'custom') {
+        const customHours = document.getElementById('customHoursPerDay').value;
+        isValid = isValid && customHours && parseFloat(customHours) > 0;
+    }
+    
+    // Date validation
+    if (startDate && endDate) {
+        isValid = isValid && new Date(endDate) >= new Date(startDate);
+    }
+    
+    document.getElementById('submitButton').disabled = !isValid;
+    return isValid;
+}
+
+function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+        alert('Please fill in all required fields correctly.');
+        return;
+    }
+    
+    const formData = {
+        trainingId: selectedTraining.trainingId,
+        trainingName: selectedTraining.trainingName,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        scheduleType: selectedScheduleType,
+        hoursPerDay: getHoursPerDay(),
+        totalDuration: selectedTraining.totalDuration
+    };
+    
+    submitTrainingRequest(formData);
+}
+
+function getHoursPerDay() {
+    switch (selectedScheduleType) {
+        case 'intensive': return 8;
+        case 'regular': return 4;
+        case 'flexible': return 2;
+        case 'custom': return parseFloat(document.getElementById('customHoursPerDay').value) || 2;
+        default: return 4;
+    }
+}
+async function submitTrainingRequest(formData) {
+    const submitButton = document.getElementById('submitButton');
+    const originalText = submitButton.innerHTML;
+    
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+        const response = await fetch('/employee/training-requests', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                trainingId: formData.trainingId,
+                startDate: formData.startDate,
+                endDate: formData.endDate
+            })
+        });
+
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            alert(`✅ Training request submitted successfully!\n\nTraining: ${formData.trainingName}\nSchedule: ${formData.scheduleType} (${formData.hoursPerDay} hours/day)\nPeriod: ${formatDate(formData.startDate)} - ${formatDate(formData.endDate)}\nTotal Duration: ${formData.totalDuration} hours\n\nYour line manager will be notified for approval.`);
+            
+            closeTrainingRequestModal();
+        } else {
+            // Handle server rejection (e.g., duplicate request) gracefully
+            if (result.message && result.message.includes('already have an active')) {
+                alert('⚠️ You already have an active training request for this course. If you wish to request again, please contact your administrator.');
+                closeTrainingRequestModal();
+            } else {
+                throw new Error(result.message || 'Failed to submit training request');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error submitting training request:', error);
+
+        let errorMessage = 'Failed to submit training request. ';
+        if (error.message.includes('not authenticated')) {
+            errorMessage += 'Please log in again and try again.';
+        } else if (error.message.includes('not found')) {
+            errorMessage += 'The selected training is no longer available.';
+        } else if (error.message.includes('End date must be after start date')) {
+            errorMessage += 'Please check your selected dates.';
+        } else {
+            errorMessage += error.message || 'Please try again later.';
+        }
+        alert('❌ ' + errorMessage);
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+    }
+}
+
+
+// Modal control functions
+function openTrainingRequestModal() {
+    document.getElementById('trainingRequestModal').classList.add('show');
+    
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').min = today;
+    
+    // Load trainings if not already loaded
+    if (filteredTrainings.length === 0) {
+        loadTrainings();
+    }
 }
 
 function closeTrainingRequestModal() {
-    document.getElementById('trainingRequestModal').style.display = 'none';
+    document.getElementById('trainingRequestModal').classList.remove('show');
     resetModal();
 }
-        function resetModal() {
-            // Reset form
-            document.getElementById('trainingRequestForm').reset();
-            document.getElementById('selectedTrainingId').value = '';
-            
-            // Reset selected training
-            selectedTraining = null;
-            
-            // Hide skills and objectives
-            const container = document.getElementById('skillsObjectivesContainer');
-            const noSelectionMessage = document.getElementById('noSelectionMessage');
-            container.classList.add('empty');
-            noSelectionMessage.style.display = 'block';
-            
-            // Close dropdown
-            document.getElementById('trainingDropdown').classList.remove('open');
-            
-            // Disable submit button
-            document.getElementById('submitButton').disabled = true;
+
+function resetModal() {
+    // Reset form
+    document.getElementById('trainingRequestForm').reset();
+    document.getElementById('selectedTrainingId').value = '';
+    
+    // Reset global variables
+    selectedTraining = null;
+    selectedScheduleType = null;
+    
+    // Hide sections
+    document.getElementById('trainingDetailsCard').style.display = 'none';
+    document.getElementById('focusAreasSection').style.display = 'none';
+    document.getElementById('scheduleSection').style.display = 'none';
+    document.getElementById('scheduleSummary').style.display = 'none';
+    document.getElementById('customScheduleOptions').style.display = 'none';
+    
+    // Close dropdown
+    document.getElementById('trainingDropdown').classList.remove('open');
+    
+    // Reset schedule options
+    document.querySelectorAll('input[name="scheduleType"]').forEach(radio => {
+        radio.checked = false;
+    });
+    
+    // Reset end date to readonly
+    document.getElementById('endDate').readOnly = true;
+    
+    // Disable submit button
+    document.getElementById('submitButton').disabled = true;
+}
+
+function resetModal() {
+    // Reset form
+    document.getElementById('trainingRequestForm').reset();
+    document.getElementById('selectedTrainingId').value = '';
+    
+    // Reset global variables
+    selectedTraining = null;
+    selectedScheduleType = null;
+    
+    // Hide sections
+    document.getElementById('trainingDetailsCard').style.display = 'none';
+    document.getElementById('focusAreasSection').style.display = 'none';
+    document.getElementById('scheduleSection').style.display = 'none';
+    document.getElementById('scheduleSummary').style.display = 'none';
+    document.getElementById('customScheduleOptions').style.display = 'none';
+    
+    // Close dropdown
+    document.getElementById('trainingDropdown').classList.remove('open');
+    
+    // Reset schedule options
+    document.querySelectorAll('input[name="scheduleType"]').forEach(radio => {
+        radio.checked = false;
+    });
+    
+    // Reset end date to readonly
+    document.getElementById('endDate').readOnly = true;
+    
+    // Disable submit button
+    document.getElementById('submitButton').disabled = true;
+}
+
+
+
+ function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+
+                    button.classList.add('active');
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
         }
 
-        // API Functions - Simplified for Modal Only
-        async function fetchTrainingsDropdown() {
+        async function loadTrainingProgress() {
             try {
-                const response = await fetch('/linemanager/trainings/dropdown', {
+                const response = await fetch('/employee/training-progress', {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include' // Include cookies for session
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const result = await response.json();
-                return result.success ? result.data : [];
+                
+                if (result.success) {
+                    trainingProgressData = result.data;
+                    renderProgressCategories();
+                    renderTrainingSections();
+                } else {
+                    throw new Error(result.message || 'Failed to fetch training progress');
+                }
             } catch (error) {
-                console.error('Error fetching trainings dropdown:', error);
-                return [];
+                console.error('Error loading training progress:', error);
+                document.getElementById('progressCategories').innerHTML = 
+                    `<div class="loading-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load training progress. Please refresh the page.
+                    </div>`;
             }
         }
 
-        async function fetchTrainingDetails(trainingId) {
-            try {
-                const response = await fetch(`/linemanager/trainings/${trainingId}/details`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include' // Include cookies for session
+        function renderProgressCategories() {
+            const container = document.getElementById('progressCategories');
+            const counts = trainingProgressData.counts;
+            
+            container.innerHTML = `
+                <div class="progress-category not-started" data-filter="not-started">
+                    <div class="count">${counts.notStarted}</div>
+                    <h3>Not Started</h3>
+                    <p>Training courses not yet begun</p>
+                </div>
+                <div class="progress-category in-progress" data-filter="in-progress">
+                    <div class="count">${counts.inProgress}</div>
+                    <h3>In Progress</h3>
+                    <p>Currently ongoing training sessions</p>
+                </div>
+                <div class="progress-category completed" data-filter="completed">
+                    <div class="count">${counts.completed}</div>
+                    <h3>Completed</h3>
+                    <p>Successfully finished trainings</p>
+                </div>
+                <div class="progress-category overdue" data-filter="overdue">
+                    <div class="count">${counts.overdue}</div>
+                    <h3>Overdue</h3>
+                    <p>Training sessions past due date</p>
+                </div>
+            `;
+
+            // Add click handlers for filtering
+            container.querySelectorAll('.progress-category').forEach(category => {
+                category.addEventListener('click', function() {
+                    const filterType = this.getAttribute('data-filter');
+                    scrollToSection(filterType + '-section');
                 });
-                
+            });
+        }
+
+        function renderTrainingSections() {
+            const container = document.getElementById('trainingSections');
+            const trainings = trainingProgressData.trainings;
+            
+            const groupedTrainings = {
+                'not-started': trainings.filter(t => t.status === 'Not Started'),
+                'in-progress': trainings.filter(t => t.status === 'In Progress'),
+                'completed': trainings.filter(t => t.status === 'Completed'),
+                'overdue': trainings.filter(t => t.status === 'Overdue')
+            };
+
+            let sectionsHTML = '';
+
+            // Render each section
+            Object.entries(groupedTrainings).forEach(([status, statusTrainings]) => {
+                if (statusTrainings.length > 0) {
+                    const statusLabels = {
+                        'not-started': { title: 'Not Started Courses', icon: 'fas fa-circle', color: '#6b7280' },
+                        'in-progress': { title: 'In Progress Courses', icon: 'fas fa-play-circle', color: '#3b82f6' },
+                        'completed': { title: 'Completed Courses', icon: 'fas fa-check-circle', color: '#10b981' },
+                        'overdue': { title: 'Overdue Courses', icon: 'fas fa-exclamation-circle', color: '#ef4444' }
+                    };
+
+                    const statusInfo = statusLabels[status];
+                    
+                    sectionsHTML += `
+                        <div class="progress-section" id="${status}-section">
+                            <h4 class="section-title">
+                                <i class="${statusInfo.icon}" style="color: ${statusInfo.color}; margin-right: 8px;"></i>
+                                ${statusInfo.title} (${statusTrainings.length})
+                            </h4>
+                            <div class="courses-list">
+                                ${statusTrainings.map(training => renderTrainingListItem(training, status)).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = sectionsHTML || '<p style="text-align: center; color: #64748b; padding: 40px;">No training records found.</p>';
+        }
+
+        function renderTrainingListItem(training, status) {
+            const progressPercentage = training.progress || 0;
+            const totalActivities = training.totalActivities || 0;
+            const completedActivities = training.completedActivities || 0;
+            
+            return `
+                <div class="course-list-item ${status}">
+                    <div class="course-list-info">
+                        <h5 class="course-list-title">${training.trainingName}</h5>
+                        <div class="course-list-details">
+                            Duration: ${training.totalDuration || 0} hours • 
+                            ${formatDateRange(training.setStartDate, training.setEndDate)} • 
+                            Activities: ${completedActivities}/${totalActivities}
+                        </div>
+                    </div>
+                    <div class="course-list-meta">
+                        <div class="course-list-badges">
+                            <span class="course-list-badge ${training.isOnlineArrangement ? 'online' : 'onsite'}">
+                                ${training.isOnlineArrangement ? 'Online' : 'Onsite'}
+                            </span>
+                            <span class="course-list-badge status">${training.status}</span>
+                        </div>
+                        <div class="course-list-progress">
+                            <div class="course-list-progress-bar">
+                                <div class="course-list-progress-fill" style="width: ${progressPercentage}%;"></div>
+                            </div>
+                            <div class="course-list-progress-text">${Math.round(progressPercentage)}%</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadAllCourses() {
+            try {
+                const response = await fetch('/employee/all-courses', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const result = await response.json();
-                return result.success ? result.data : { objectives: [], skills: [] };
+                
+                if (result.success) {
+                    allCoursesData = result.data;
+                    renderAllCourses();
+                } else {
+                    throw new Error(result.message || 'Failed to fetch courses');
+                }
             } catch (error) {
-                console.error('Error fetching training details:', error);
-                return { objectives: [], skills: [] };
+                console.error('Error loading all courses:', error);
+                document.getElementById('allCoursesGrid').innerHTML = 
+                    `<div class="loading-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load courses. Please refresh the page.
+                    </div>`;
             }
         }
 
-        // Updated loadTrainings function - no need for job/dept params
-        function loadTrainings() {
-            // Show loading state
-            const dropdownList = document.getElementById('trainingDropdownList');
-            dropdownList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading available trainings...</div>';
+        function renderAllCourses() {
+            const container = document.getElementById('allCoursesGrid');
+            
+            if (allCoursesData.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No courses available.</p>';
+                return;
+            }
 
-            // Fetch trainings from API (uses session data automatically)
-            fetchTrainingsDropdown()
-                .then(trainings => {
-                    filteredTrainings = trainings;
-                    if (trainings.length === 0) {
-                        renderNoTrainings('No trainings available for your job position.');
-                    } else {
-                        renderTrainingOptions();
+            const coursesHTML = allCoursesData.map(course => `
+                <div class="course-card">
+                    <div class="course-header">
+                        <h3 class="course-title">${course.trainingName}</h3>
+                        <div class="course-badges">
+                            <span class="course-status ${course.isActive ? 'active' : 'inactive'}">
+                                ${course.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                            <span class="course-type ${course.isOnlineArrangement ? 'online' : 'onsite'}">
+                                ${course.isOnlineArrangement ? 'Online' : 'Onsite'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="course-description">
+                        ${course.trainingDesc || 'No description available'}<br>
+                        Duration: ${course.totalDuration || 0} hours<br>
+                        Cost: ₱${course.cost ? course.cost.toFixed(2) : '0.00'}
+                        ${course.address ? `<br>Location: ${course.address}` : ''}
+                    </div>
+                    ${course.isActive ? 
+                        `<button class="action-btn update-progress-btn" onclick="updateProgress(${course.trainingId})">Update Progress</button>` :
+                        `<button class="action-btn completed-btn" disabled>Completed</button>`
                     }
-                })
-                .catch(error => {
-                    console.error('Failed to load trainings:', error);
-                    renderNoTrainings('Failed to load trainings. Please try again.');
-                });
+                </div>
+            `).join('');
+
+            container.innerHTML = coursesHTML;
         }
 
-        function renderNoTrainings(message) {
-            const dropdownList = document.getElementById('trainingDropdownList');
-            dropdownList.innerHTML = `<div class="no-results"><i class="fas fa-info-circle"></i> ${message}</div>`;
-        }
-
-        // Updated selectTraining function
-        async function selectTraining(trainingId) {
-            selectedTraining = filteredTrainings.find(t => t.trainingId === trainingId);
-            
-            if (!selectedTraining) {
-                console.error('Training not found in filtered list');
-                return;
-            }
-
-            // Update input field
-            document.getElementById('trainingCourseInput').value = selectedTraining.trainingName;
-            document.getElementById('selectedTrainingId').value = selectedTraining.trainingId;
-            
-            // Close dropdown
-            document.getElementById('trainingDropdown').classList.remove('open');
-            
-            // Show loading state for skills and objectives
-            const container = document.getElementById('skillsObjectivesContainer');
-            const objectivesContainer = document.getElementById('objectivesContainer');
-            const skillsContainer = document.getElementById('skillsContainer');
-            
-            objectivesContainer.innerHTML = '<div style="color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i>Loading objectives...</div>';
-            skillsContainer.innerHTML = '<div style="color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i>Loading skills...</div>';
-            container.classList.remove('empty');
-            document.getElementById('noSelectionMessage').style.display = 'none';
-
+       async function loadCertificates() {
             try {
-                // Fetch skills and objectives from API
-                const trainingDetails = await fetchTrainingDetails(selectedTraining.trainingId);
-                
-                // Update selectedTraining with fetched data
-                selectedTraining.objectives = trainingDetails.objectives || [];
-                selectedTraining.skills = trainingDetails.skills || [];
-                
-                // Display skills and objectives
-                displaySkillsAndObjectives(selectedTraining);
-                
-                // Enable submit button
-                validateForm();
-            } catch (error) {
-                console.error('Failed to load training details:', error);
-                objectivesContainer.innerHTML = '<div style="color: #ef4444; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-triangle"></i>Failed to load objectives</div>';
-                skillsContainer.innerHTML = '<div style="color: #ef4444; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-triangle"></i>Failed to load skills</div>';
-            }
-        }
-
-        // Enhanced displaySkillsAndObjectives function
-        function displaySkillsAndObjectives(training) {
-            const container = document.getElementById('skillsObjectivesContainer');
-            const objectivesContainer = document.getElementById('objectivesContainer');
-            const skillsContainer = document.getElementById('skillsContainer');
-            const noSelectionMessage = document.getElementById('noSelectionMessage');
-
-            // Clear existing content
-            objectivesContainer.innerHTML = '';
-            skillsContainer.innerHTML = '';
-
-            // Check if we have any data
-            const hasObjectives = training.objectives && training.objectives.length > 0;
-            const hasSkills = training.skills && training.skills.length > 0;
-
-            if (!hasObjectives && !hasSkills) {
-                objectivesContainer.innerHTML = '<div style="color: #94a3b8; font-style: italic;">No specific objectives defined</div>';
-                skillsContainer.innerHTML = '<div style="color: #94a3b8; font-style: italic;">No specific skills defined</div>';
-            } else {
-                // Add objectives
-                if (hasObjectives) {
-                    training.objectives.forEach(objective => {
-                        const tag = document.createElement('div');
-                        tag.className = 'tag objective';
-                        tag.innerHTML = `<i class="fas fa-bullseye" style="margin-right: 4px;"></i>${objective.objectiveDescrpt}`;
-                        objectivesContainer.appendChild(tag);
-                    });
-                } else {
-                    objectivesContainer.innerHTML = '<div style="color: #94a3b8; font-style: italic;">No specific objectives defined</div>';
-                }
-
-                // Add skills
-                if (hasSkills) {
-                    training.skills.forEach(skill => {
-                        const tag = document.createElement('div');
-                        tag.className = 'tag skill';
-                        tag.innerHTML = `<i class="fas fa-cogs" style="margin-right: 4px;"></i>${skill.jobReqSkillName} <span style="opacity: 0.7; font-size: 10px;">(${skill.jobReqSkillType})</span>`;
-                        skillsContainer.appendChild(tag);
-                    });
-                } else {
-                    skillsContainer.innerHTML = '<div style="color: #94a3b8; font-style: italic;">No specific skills defined</div>';
-                }
-            }
-
-            // Show container and hide message
-            container.classList.remove('empty');
-            noSelectionMessage.style.display = 'none';
-        }
-
-        // Updated submitTrainingRequest function
-        async function submitTrainingRequest(formData) {
-            const submitButton = document.getElementById('submitButton');
-            const originalText = submitButton.textContent;
-            
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>Submitting...';
-
-            try {
-                const response = await fetch('/linemanager/training-requests', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include', // Include cookies for session
-                    body: JSON.stringify({
-                        trainingId: formData.trainingId,
-                        startDate: formData.startDate,
-                        endDate: formData.endDate
-                    })
+                const response = await fetch('/employee/certificates', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const result = await response.json();
                 
-                if (response.ok && result.success) {
-                    // Success notification with more details
-                    const trainingName = selectedTraining ? selectedTraining.trainingName : 'Selected training';
-                    alert(`✅ Training request submitted successfully!\n\nTraining: ${trainingName}\nStart Date: ${formData.startDate}\nEnd Date: ${formData.endDate}\n\nYour line manager will be notified for approval.`);
-                    
-                    closeTrainingRequestModal();
-                    
-                    // Optionally trigger a refresh of the training progress section
-                    // if (typeof refreshTrainingProgress === 'function') {
-                    //     refreshTrainingProgress();
-                    // }
+                if (result.success) {
+                    renderCertificates(result.data);
                 } else {
-                    throw new Error(result.message || 'Failed to submit training request');
+                    throw new Error(result.message || 'Failed to fetch certificates');
                 }
                 
             } catch (error) {
-                console.error('Error submitting training request:', error);
-                
-                // More user-friendly error messages
-                let errorMessage = 'Failed to submit training request. ';
-                if (error.message.includes('already have an active')) {
-                    errorMessage += 'You already have an active training request for this course.';
-                } else if (error.message.includes('not authenticated')) {
-                    errorMessage += 'Please log in again and try again.';
-                } else if (error.message.includes('not found')) {
-                    errorMessage += 'The selected training is no longer available.';
-                } else {
-                    errorMessage += error.message || 'Please try again later.';
-                }
-                
-                alert('❌ ' + errorMessage);
-            } finally {
-                // Reset button
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalText;
+                console.error('Error loading certificates:', error);
+                document.getElementById('certificatesList').innerHTML = 
+                    `<div class="loading-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load certificates. Please refresh the page.
+                    </div>`;
             }
         }
 
-        // Updated submitTrainingRequest function with better error handling
-        async function submitTrainingRequest(formData) {
-            const submitButton = document.getElementById('submitButton');
-            const originalText = submitButton.textContent;
+        function renderCertificates(certificates) {
+            const container = document.getElementById('certificatesList');
             
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>Submitting...';
-
-            try {
-                const response = await fetch('/linemanager/training-requests', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include', // Include cookies for session
-                    body: JSON.stringify({
-                        trainingId: formData.trainingId,
-                        startDate: formData.startDate,
-                        endDate: formData.endDate
-                    })
-                });
-
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    // Success notification with more details
-                    const trainingName = selectedTraining ? selectedTraining.trainingName : 'Selected training';
-                    alert(`✅ Training request submitted successfully!\n\nTraining: ${trainingName}\nStart Date: ${formData.startDate}\nEnd Date: ${formData.endDate}\n\nYour line manager will be notified for approval.`);
-                    
-                    closeTrainingRequestModal();
-                    
-                    // Optionally trigger a refresh of the training progress section
-                    // if (typeof refreshTrainingProgress === 'function') {
-                    //     refreshTrainingProgress();
-                    // }
-                } else {
-                    throw new Error(result.message || 'Failed to submit training request');
-                }
-                
-            } catch (error) {
-                console.error('Error submitting training request:', error);
-                
-                // More user-friendly error messages
-                let errorMessage = 'Failed to submit training request. ';
-                if (error.message.includes('already have an active')) {
-                    errorMessage += 'You already have an active training request for this course.';
-                } else if (error.message.includes('not authenticated')) {
-                    errorMessage += 'Please log in again and try again.';
-                } else if (error.message.includes('not found')) {
-                    errorMessage += 'The selected training is no longer available.';
-                } else {
-                    errorMessage += error.message || 'Please try again later.';
-                }
-                
-                alert('❌ ' + errorMessage);
-            } finally {
-                // Reset button
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalText;
-            }
-        }
-
-        // Helper functions - these should be implemented based on your user session/authentication
-        function getCurrentUserId() {
-            // Since you're using session-based auth, this might be available in a global variable
-            // or you might need to make an API call to get current user info
-            // Example: return window.currentUser?.userId;
-            return window.userSession?.userId || null; // Adjust based on your implementation
-        }
-
-        function getUserJobId() {
-            // Get from session or user profile
-            return window.userSession?.jobId || null; // Adjust based on your implementation
-        }
-
-        function getUserDeptId() {
-            // Get from session or user profile  
-            return window.userSession?.departmentId || null; // Adjust based on your implementation
-        }
-
-         function renderTrainingOptions() {
-            const dropdownList = document.getElementById('trainingDropdownList');
-            
-            if (filteredTrainings.length === 0) {
-                dropdownList.innerHTML = '<div class="no-results"><i class="fas fa-search"></i> No trainings found matching your search</div>';
+            if (certificates.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #64748b; padding: 40px;">
+                        <i class="fas fa-certificate" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>No certificates available yet.</p>
+                        <p>Complete your training courses to earn certificates.</p>
+                    </div>
+                `;
                 return;
             }
 
-            const optionsHTML = filteredTrainings.map(training => `
-                <div class="dropdown-item" onclick="selectTraining(${training.trainingId})">
-                    <div class="dropdown-item-title">${training.trainingName}</div>
-                    <div class="dropdown-item-meta">
-                        <i class="fas fa-${training.isOnlineArrangement ? 'laptop' : 'map-marker-alt'}"></i>
-                        ${training.isOnlineArrangement ? 'Online' : 'Onsite'} • 
-                        <i class="fas fa-clock"></i>
-                        ${training.totalDuration}h • 
-                        <i class="fas fa-dollar-sign"></i>
-                        ${training.cost ? training.cost.toFixed(2) : 'Free'}
+            const certificatesHTML = certificates.map(cert => `
+                <div class="certificate-list-item uploaded">
+                    <div class="certificate-list-info">
+                        <div class="certificate-list-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <div class="certificate-list-details">
+                            <h4 class="certificate-list-title">${cert.trainingCertTitle}</h4>
+                            <div class="certificate-list-meta">
+                                <strong>Description:</strong> ${cert.trainingCertDesc || 'No description'}<br>
+                                <strong>Training:</strong> ${cert.trainingName || 'Unknown Training'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="certificate-list-actions">
+                        <div class="certificate-list-id">CERT-${cert.trainingCertId}</div>
+                        <i class="fas fa-download certificate-download" onclick="downloadCertificate(${cert.trainingCertId})" title="Download Certificate"></i>
                     </div>
                 </div>
             `).join('');
 
-            dropdownList.innerHTML = optionsHTML;
+            container.innerHTML = certificatesHTML;
         }
 
-        // Training request modal functionality
+        // Utility functions
+        function formatDateRange(startDate, endDate) {
+            if (!startDate) return 'No dates set';
+            
+            const start = new Date(startDate).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            
+            if (!endDate) return start;
+            
+            const end = new Date(endDate).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            
+            return `${start} - ${end}`;
+        }
+
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                // Add a subtle highlight effect
+                section.style.backgroundColor = '#f0fdff';
+                setTimeout(() => {
+                    section.style.backgroundColor = '';
+                }, 2000);
+            }
+        }
+
+        // Action handlers
+        function updateProgress(trainingId) {
+            // Redirect to training progress update page or open modal
+            window.location.href = `/employee/training/${trainingId}/progress`;
+        }
+
+        function downloadCertificate(certId) {
+            // Handle certificate download
+            window.open(`/employee/certificates/${certId}/download`, '_blank');
+        }
+
         function openTrainingRequestModal() {
-            document.getElementById('trainingRequestModal').classList.add('show');
+            // This function would open the training request modal
+            // Implementation depends on your existing modal system
+            alert('Training request modal would open here. Please implement the modal functionality.');
         }
 
-        function closeTrainingRequestModal() {
-            document.getElementById('trainingRequestModal').classList.remove('show');
-            // Reset form
-            document.getElementById('trainingRequestForm').reset();
-            // Reset checkboxes
-            document.querySelectorAll('.checkbox-item').forEach(item => {
-                item.classList.remove('selected');
+        // Upload certificate functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadBtn = document.querySelector('.upload-certificate-btn');
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', function() {
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = '.pdf,.jpg,.jpeg,.png';
+                    fileInput.style.display = 'none';
+                    
+                    fileInput.addEventListener('change', function() {
+                        if (this.files.length > 0) {
+                            uploadCertificateFile(this.files[0]);
+                        }
+                    });
+                    
+                    document.body.appendChild(fileInput);
+                    fileInput.click();
+                    document.body.removeChild(fileInput);
+                });
+            }
+        });
+
+        async function uploadCertificateFile(file) {
+            const formData = new FormData();
+            formData.append('certificate', file);
+            
+            try {
+                const response = await fetch('/employee/certificates/upload', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Certificate uploaded successfully!');
+                    loadCertificates(); // Reload certificates
+                } else {
+                    throw new Error(result.message || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Error uploading certificate:', error);
+                alert('Failed to upload certificate. Please try again.');
+            }
+        }
+
+        // View toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // You can implement different view logic here
+                    // For example, switching between list and calendar view
+                    const isCalendarView = this.textContent.includes('Calendar');
+                    if (isCalendarView) {
+                        // Switch to calendar view logic
+                        console.log('Switching to calendar view');
+                    } else {
+                        // Switch to list view logic
+                        console.log('Switching to list view');
+                    }
+                });
+            });
+        });
+
+        // Progress category click handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // This will be set up when progress categories are rendered
+            // The actual event listeners are added in renderProgressCategories()
+        });
+
+        // Error handling for fetch requests
+        function handleFetchError(error, context) {
+            console.error(`Error in ${context}:`, error);
+            
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                return 'Network error. Please check your connection and try again.';
+            } else if (error.message.includes('401') || error.message.includes('unauthorized')) {
+                return 'Session expired. Please log in again.';
+            } else if (error.message.includes('403') || error.message.includes('forbidden')) {
+                return 'Access denied. You do not have permission to perform this action.';
+            } else if (error.message.includes('404') || error.message.includes('not found')) {
+                return 'The requested resource was not found.';
+            } else if (error.message.includes('500') || error.message.includes('internal server')) {
+                return 'Server error. Please try again later.';
+            } else {
+                return error.message || 'An unexpected error occurred.';
+            }
+        }
+
+        // Refresh data functionality
+        function refreshAllData() {
+            Promise.all([
+                loadTrainingProgress(),
+                loadAllCourses(),
+                loadCertificates()
+            ]).then(() => {
+                console.log('All data refreshed successfully');
+            }).catch(error => {
+                console.error('Error refreshing data:', error);
+                alert('Failed to refresh some data. Please check your connection and try again.');
             });
         }
+
+        // Add refresh button functionality if you want to include one
+        function addRefreshButton() {
+            const refreshBtn = document.createElement('button');
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            refreshBtn.className = 'btn btn-outline-secondary btn-sm';
+            refreshBtn.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 1000;';
+            refreshBtn.addEventListener('click', refreshAllData);
+            document.body.appendChild(refreshBtn);
+        }
+
+        // Initialize refresh button (optional)
+        // addRefreshButton();
+
+
+
 
         function toggleCheckbox(checkboxId) {
             const checkbox = document.getElementById(checkboxId);

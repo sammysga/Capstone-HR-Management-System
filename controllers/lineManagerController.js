@@ -7304,7 +7304,6 @@ getLeaveTypeName: async function(leaveTypeId) {
         return 'Leave';
     }
 },
-
 getLineManagerNotifications: async function (req, res) {
     // Check for authentication
     if (!req.session.user) {
@@ -7476,8 +7475,63 @@ getLineManagerNotifications: async function (req, res) {
             type: 'Resignation Request'
         }));
 
-        // Calculate total notification count
-        const notificationCount = formattedApplicants.length + formattedLeaveRequests.length + formattedOffboardingRequests.length;
+        // *** FIXED: Fetch pending training requests ***
+        const { data: trainingRequests, error: trainingError } = await supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                userId,
+                trainingId,
+                dateRequested,
+                isApproved,
+                decisionDate,
+                trainingStatus,
+                useraccounts!inner(
+                    userEmail,
+                    staffaccounts!inner(
+                        departmentId,
+                        firstName,
+                        lastName
+                    )
+                ),
+                trainings!inner(
+                    trainingName,
+                    trainingDesc
+                )
+            `)
+            .is('isApproved', null) // Only get pending approvals
+            .is('decisionDate', null) // Only get requests without decision date
+            .not('trainingStatus', 'eq', 'cancelled') // Exclude cancelled requests
+            .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
+            .order('dateRequested', { ascending: true }); // Oldest first for priority
+
+        if (trainingError) {
+            console.error('Error fetching training requests:', trainingError);
+            // Don't throw error - just log it and continue with empty array
+        }
+
+        // Format training requests
+        const formattedTrainingRequests = (trainingRequests || []).map(request => ({
+            userId: request.userId,
+            trainingRecordId: request.trainingRecordId,
+            firstName: request.useraccounts?.staffaccounts?.firstName || 'N/A',
+            lastName: request.useraccounts?.staffaccounts?.lastName || 'N/A',
+            trainingName: request.trainings?.trainingName || 'N/A',
+            dateRequested: new Date(request.dateRequested).toLocaleString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }),
+            // Keep original date for frontend sorting
+            date: request.dateRequested
+        }));
+
+        // Calculate total notification count (now including training requests)
+        const notificationCount = formattedApplicants.length + 
+                                 formattedLeaveRequests.length + 
+                                 formattedOffboardingRequests.length +
+                                 formattedTrainingRequests.length;
 
         // If it's an API request, return JSON
         if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
@@ -7487,6 +7541,7 @@ getLineManagerNotifications: async function (req, res) {
                     applicants: formattedApplicants,
                     leaveRequests: formattedLeaveRequests,
                     offboardingRequests: formattedOffboardingRequests,
+                    trainingRequests: formattedTrainingRequests, // Add training requests to response
                     notificationCount: notificationCount
                 });
         }
@@ -7496,6 +7551,7 @@ getLineManagerNotifications: async function (req, res) {
             applicants: formattedApplicants,
             leaveRequests: formattedLeaveRequests,
             offboardingRequests: formattedOffboardingRequests,
+            trainingRequests: formattedTrainingRequests, // Add training requests to template
             notificationCount: notificationCount
         });
     } catch (err) {
@@ -7515,6 +7571,7 @@ getLineManagerNotifications: async function (req, res) {
         return res.status(500).send('Error loading notifications');
     }
 },
+
 // Updated function to handle missing tables gracefully
 get360FeedbackToast: async function(req, res) {
     try {
@@ -8898,6 +8955,619 @@ createTraining: async function(req, res) {
             });
         }
     },
+
+getTrainingRequestsForNotifications: async function(lineManagerUserId) {
+    console.log(`[${new Date().toISOString()}] Fetching training requests for line manager ${lineManagerUserId}`);
+    
+    try {
+        // First, get the line manager's department ID
+        const { data: lineManagerData, error: lineManagerError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', lineManagerUserId)
+            .single();
+
+        if (lineManagerError) {
+            console.error(`[${new Date().toISOString()}] Error fetching line manager department:`, lineManagerError);
+            return [];
+        }
+
+        const lineManagerDepartmentId = lineManagerData?.departmentId;
+
+        if (!lineManagerDepartmentId) {
+            console.error(`[${new Date().toISOString()}] Line manager has no department assigned`);
+            return [];
+        }
+
+        // Query to get training requests that need approval (isApproved = null)
+        // Join with useraccounts and staffaccounts to get staff names and filter by department
+        const { data: trainingRequests, error } = await supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                userId,
+                trainingId,
+                dateRequested,
+                isApproved,
+                trainingStatus,
+                useraccounts!inner(
+                    userEmail,
+                    staffaccounts!inner(
+                        firstName,
+                        lastName,
+                        departmentId
+                    )
+                ),
+                trainings!inner(
+                    trainingName,
+                    trainingDesc
+                )
+            `)
+            .is('isApproved', null) // Only get pending approvals
+            .not('trainingStatus', 'eq', 'cancelled') // Exclude cancelled requests
+            .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
+            .order('dateRequested', { ascending: true }); // Oldest first for priority
+
+        if (error) {
+            console.error(`[${new Date().toISOString()}] Error fetching training requests:`, error);
+            return [];
+        }
+
+        // Transform the data to match frontend expectations
+        const transformedRequests = trainingRequests.map(request => ({
+            userId: request.userId,
+            trainingRecordId: request.trainingRecordId,
+            firstName: request.useraccounts.staffaccounts.firstName,
+            lastName: request.useraccounts.staffaccounts.lastName,
+            trainingName: request.trainings.trainingName,
+            dateRequested: new Date(request.dateRequested).toLocaleDateString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }),
+            // Keep original date for frontend sorting
+            date: request.dateRequested
+        }));
+
+        console.log(`[${new Date().toISOString()}] Found ${transformedRequests.length} pending training requests for department ${lineManagerDepartmentId}`);
+        return transformedRequests;
+
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] Error in getTrainingRequestsForNotifications:`, error);
+        return [];
+    }
+},
+getTrainingRequest: async function(req, res) {
+    const userId = req.session?.user?.userId;
+    const userRole = req.session?.user?.userRole;
+
+    if (!userId || userRole !== 'Line Manager') {
+        req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+        return res.redirect('/staff/login');
+    }
+
+    const requestUserId = req.params.userId;
+    const recordId = req.query.recordId;
+
+    console.log(`[${new Date().toISOString()}] Line manager ${userId} accessing training request view for user ${requestUserId}, record ${recordId}`);
+
+    try {
+        // If we have both userId and recordId, fetch the specific request data
+        if (requestUserId && recordId) {
+            const { data: trainingRequest, error } = await supabase
+                .from('training_records')
+                .select(`
+                    *,
+                    useraccounts!inner(
+                        userEmail,
+                        staffaccounts(
+                            firstName,
+                            lastName,
+                            departmentId,
+                            jobId
+                        )
+                    ),
+                    trainings!inner(
+                        trainingName,
+                        trainingDesc,
+                        cost,
+                        totalDuration,
+                        address,
+                        country,
+                        isOnlineArrangement
+                    )
+                `)
+                .eq('userId', requestUserId)
+                .eq('trainingRecordId', recordId)
+                .is('isApproved', null)
+                .single();
+
+            if (error || !trainingRequest) {
+                console.log(`[${new Date().toISOString()}] Training request not found or already processed`);
+                req.flash('errors', { notFound: 'Training request not found or already processed.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+
+            // Render the view with the training request data
+            res.render('staffpages/linemanager_pages/view-training-request', {
+                trainingRequest,
+                user: req.session.user,
+                title: 'Training Request Review'
+            });
+
+        } else {
+            // If missing parameters, just render the page (it will load data via AJAX)
+            console.log(`[${new Date().toISOString()}] Rendering training request view page without pre-loaded data`);
+            res.render('staffpages/linemanager_pages/view-training-request', {
+                user: req.session.user,
+                title: 'Training Request Review'
+            });
+        }
+
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] Error in getTrainingRequest:`, error);
+        req.flash('errors', { serverError: 'Error loading training request.' });
+        res.redirect('/linemanager/dashboard');
+    }
+},
+
+getTrainingRequestsForNotifications: async function(lineManagerUserId) {
+    console.log(`[${new Date().toISOString()}] Fetching training requests for line manager ${lineManagerUserId}`);
+    
+    try {
+        // First, get the line manager's department ID
+        const { data: lineManagerData, error: lineManagerError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', lineManagerUserId)
+            .single();
+
+        if (lineManagerError) {
+            console.error(`[${new Date().toISOString()}] Error fetching line manager department:`, lineManagerError);
+            return [];
+        }
+
+        const lineManagerDepartmentId = lineManagerData?.departmentId;
+
+        if (!lineManagerDepartmentId) {
+            console.error(`[${new Date().toISOString()}] Line manager has no department assigned`);
+            return [];
+        }
+
+        // Query to get training requests that need approval (isApproved = null)
+        // Join with useraccounts and staffaccounts to get staff names and filter by department
+        const { data: trainingRequests, error } = await supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                userId,
+                trainingId,
+                dateRequested,
+                isApproved,
+                trainingStatus,
+                useraccounts!inner(
+                    userEmail,
+                    staffaccounts!inner(
+                        firstName,
+                        lastName,
+                        departmentId
+                    )
+                ),
+                trainings!inner(
+                    trainingName,
+                    trainingDesc
+                )
+            `)
+            .is('isApproved', null) // Only get pending approvals
+            .not('trainingStatus', 'eq', 'cancelled') // Exclude cancelled requests
+            .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
+            .order('dateRequested', { ascending: true }); // Oldest first for priority
+
+        if (error) {
+            console.error(`[${new Date().toISOString()}] Error fetching training requests:`, error);
+            return [];
+        }
+
+        // Transform the data to match frontend expectations
+        const transformedRequests = trainingRequests.map(request => ({
+            userId: request.userId,
+            trainingRecordId: request.trainingRecordId,
+            firstName: request.useraccounts.staffaccounts.firstName,
+            lastName: request.useraccounts.staffaccounts.lastName,
+            trainingName: request.trainings.trainingName,
+            dateRequested: new Date(request.dateRequested).toLocaleDateString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }),
+            // Keep original date for frontend sorting
+            date: request.dateRequested
+        }));
+
+        console.log(`[${new Date().toISOString()}] Found ${transformedRequests.length} pending training requests for department ${lineManagerDepartmentId}`);
+        return transformedRequests;
+
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] Error in getTrainingRequestsForNotifications:`, error);
+        return [];
+    }
+},
+
+getTrainingRequestDetails: async function(req, res) {
+    const userId = req.session?.user?.userId;
+    const userRole = req.session?.user?.userRole;
+
+    if (!userId || userRole !== 'Line Manager') {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized. Line Manager access only.',
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    const requestUserId = req.params.userId;
+    const recordId = req.query.recordId;
+
+    console.log(`[${new Date().toISOString()}] Fetching training request details for user ${requestUserId}, record ${recordId}`);
+
+    try {
+        if (!requestUserId || !recordId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required parameters: userId and recordId',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Fetch the specific training request details
+        const { data: trainingRequest, error } = await supabase
+            .from('training_records')
+            .select(`
+                *,
+                useraccounts!inner(
+                    userEmail,
+                    staffaccounts(
+                        firstName,
+                        lastName,
+                        departmentId,
+                        jobId
+                    )
+                ),
+                trainings!inner(
+                    trainingName,
+                    trainingDesc,
+                    cost,
+                    totalDuration,
+                    address,
+                    country,
+                    isOnlineArrangement
+                )
+            `)
+            .eq('userId', requestUserId)
+            .eq('trainingRecordId', recordId)
+            .is('isApproved', null)
+            .single();
+
+        if (error || !trainingRequest) {
+            console.log(`[${new Date().toISOString()}] Training request not found:`, error?.message);
+            return res.status(404).json({
+                success: false,
+                message: 'Training request not found or already processed.',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        console.log(`[${new Date().toISOString()}] Successfully fetched training request details`);
+
+        res.json({
+            success: true,
+            message: 'Training request details retrieved successfully',
+            data: trainingRequest,
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] Error fetching training request:`, error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch training request details',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
+
+    // Approve training request
+    approveTrainingRequest: async function(req, res) {
+        const userId = req.session?.user?.userId;
+        const userRole = req.session?.user?.userRole;
+
+        if (!userId || userRole !== 'Line Manager') {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized. Line Manager access only.',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        console.log(`[${new Date().toISOString()}] Line manager ${userId} approving training request`);
+
+        try {
+            const { remarks, trainingRecordId, userId: requestUserId } = req.body;
+
+            if (!remarks || !remarks.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Remarks are required for approval',
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            if (!trainingRecordId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Training record ID is required',
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            const approvedDate = new Date().toISOString().split('T')[0]; // Today's date
+
+            // Update the training record
+            const { error } = await supabase
+                .from('training_records')
+                .update({
+                    isApproved: true,
+                    decisionDate: approvedDate,
+                    trainingStatus: 'approved'
+                    // Note: Add these fields to your table if you want to track approval details:
+                    // approvalRemarks: remarks,
+                    // approvedBy: userId
+                })
+                .eq('trainingRecordId', trainingRecordId)
+                .is('isApproved', null); // Only update if still pending
+
+            if (error) {
+                console.error(`[${new Date().toISOString()}] Error approving training request:`, error);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to approve training request',
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            console.log(`[${new Date().toISOString()}] Training request ${trainingRecordId} approved successfully`);
+
+            res.json({
+                success: true,
+                message: 'Training request approved successfully!',
+                data: {
+                    trainingRecordId,
+                    status: 'approved',
+                    approvedBy: userId,
+                    approvedDate
+                },
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error(`[${new Date().toISOString()}] Error in training approval:`, error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error during approval',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    },
+
+    // Reject training request
+    rejectTrainingRequest: async function(req, res) {
+        const userId = req.session?.user?.userId;
+        const userRole = req.session?.user?.userRole;
+
+        if (!userId || userRole !== 'Line Manager') {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized. Line Manager access only.',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        console.log(`[${new Date().toISOString()}] Line manager ${userId} rejecting training request`);
+
+        try {
+            const { remarks, trainingRecordId, userId: requestUserId } = req.body;
+
+            if (!remarks || !remarks.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Remarks are required for rejection',
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            if (!trainingRecordId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Training record ID is required',
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            const rejectedDate = new Date().toISOString().split('T')[0]; // Today's date
+
+            // Update the training record
+            const { error } = await supabase
+                .from('training_records')
+                .update({
+                    isApproved: false,
+                    decisionDate: rejectedDate,
+                    trainingStatus: 'rejected'
+                    // Note: Add these fields to your table if you want to track rejection details:
+                    // rejectionRemarks: remarks,
+                    // rejectedBy: userId
+                })
+                .eq('trainingRecordId', trainingRecordId)
+                .is('isApproved', null); // Only update if still pending
+
+            if (error) {
+                console.error(`[${new Date().toISOString()}] Error rejecting training request:`, error);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to reject training request',
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            console.log(`[${new Date().toISOString()}] Training request ${trainingRecordId} rejected successfully`);
+
+            res.json({
+                success: true,
+                message: 'Training request rejected successfully!',
+                data: {
+                    trainingRecordId,
+                    status: 'rejected',
+                    rejectedBy: userId,
+                    rejectedDate
+                },
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error(`[${new Date().toISOString()}] Error in training rejection:`, error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error during rejection',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    //  getTrainingRequestsForNotifications: function(req, res) {
+    //      try {
+    //     // Query to get training requests that need approval (isApproved = null)
+    //     // Join with useraccounts to get staff names and trainings to get training details
+    //     const { data: trainingRequests, error } = await supabase
+    //         .from('training_records')
+    //         .select(`
+    //             trainingRecordId,
+    //             userId,
+    //             trainingId,
+    //             dateRequested,
+    //             isApproved,
+    //             trainingStatus,
+    //             useraccounts!inner(
+    //                 firstName,
+    //                 lastName,
+    //                 userEmail
+    //             ),
+    //             trainings!inner(
+    //                 trainingName,
+    //                 trainingDesc
+    //             )
+    //         `)
+    //         .is('isApproved', null) // Only get pending approvals
+    //         .not('trainingStatus', 'eq', 'cancelled') // Exclude cancelled requests
+    //         .order('dateRequested', { ascending: true }); // Oldest first for priority
+
+    //     if (error) {
+    //         console.error('Error fetching training requests:', error);
+    //         return [];
+    //     }
+
+    //     // Transform the data to match frontend expectations
+    //     const transformedRequests = trainingRequests.map(request => ({
+    //         userId: request.userId,
+    //         trainingRecordId: request.trainingRecordId,
+    //         firstName: request.useraccounts.firstName,
+    //         lastName: request.useraccounts.lastName,
+    //         trainingName: request.trainings.trainingName,
+    //         dateRequested: new Date(request.dateRequested).toLocaleDateString('en-US', {
+    //             weekday: 'short',
+    //             year: 'numeric',
+    //             month: 'short',
+    //             day: 'numeric'
+    //         }),
+    //         // Keep original date for frontend sorting
+    //         date: request.dateRequested
+    //     }));
+
+    //     return transformedRequests;
+    // } catch (error) {
+    //     console.error('Error in getTrainingRequestsForNotifications:', error);
+    //     return [];
+    // }
+    // },
+
+    // getTrainingRequest: function(req, res) {
+
+    //     try {
+    //     if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+    //         req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+    //         return res.redirect('/staff/login');
+    //     }
+
+    //     const userId = req.params.userId;
+    //     const recordId = req.query.recordId;
+
+    //     // Fetch the specific training request details
+    //     const { data: trainingRequest, error } = await supabase
+    //         .from('training_records')
+    //         .select(`
+    //             *,
+    //             useraccounts!inner(
+    //                 firstName,
+    //                 lastName,
+    //                 userEmail,
+    //                 staffaccounts(
+    //                     department,
+    //                     position
+    //                 )
+    //             ),
+    //             trainings!inner(
+    //                 trainingName,
+    //                 trainingDesc,
+    //                 cost,
+    //                 totalDuration,
+    //                 address,
+    //                 country,
+    //                 isOnlineArrangement
+    //             )
+    //         `)
+    //         .eq('userId', userId)
+    //         .eq('trainingRecordId', recordId)
+    //         .is('isApproved', null)
+    //         .single();
+
+    //     if (error || !trainingRequest) {
+    //         req.flash('errors', { notFound: 'Training request not found or already processed.' });
+    //         return res.redirect('/linemanager/dashboard');
+    //     }
+
+    //     // Render the training request view page with the data
+    //     res.render('staffpages/linemanager_pages/training_pages/view-trainingrequest', {
+    //         trainingRequest,
+    //         user: req.session.user
+    //     });
+
+    // } catch (error) {
+    //     console.error('Error fetching training request:', error);
+    //     req.flash('errors', { serverError: 'Error loading training request.' });
+    //     res.redirect('/linemanager/dashboard');
+    // }
+
+    // },
+
+
+
+
+
     
 };
 
