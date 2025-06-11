@@ -174,10 +174,6 @@ router.get('/employee/leaverequest/latest', employeeController.getLatestLeaveBal
 
 router.get('/employee/viewtimeline', employeeController.getViewPerformanceTimeline);
 
-// Employee Training Routes
-router.get('/employee/training/home', employeeController.getEmployeeTrainingHome);
-router.get('/employee/training/course', employeeController.getEmployeeTrainingSpecific);
-
 
 router.get('/employee/attendance', employeeController.getAttendance);
 router.post('/employee/attendance', employeeController.postAttendance);
@@ -369,6 +365,23 @@ router.post('/linemanager/training/reject', lineManagerController.rejectTraining
 // ============================
 // Employee - TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================
+router.get('/employee/training/home', employeeController.getEmployeeTrainingHome);
+router.get('/employee/training/course/:trainingRecordId', employeeController.getEmployeeTrainingSpecific);
+router.get('/employee/training-records', employeeController.getEmployeeTrainingRecords);
+router.get('/employee/training-progress', employeeController.getEmployeeTrainingProgress);
+router.get('/employee/training/:trainingRecordId/details', employeeController.getTrainingRecordDetails);
+router.get('/employee/trainings/dropdown', employeeController.getTrainingDropdown);
+router.get('/employee/trainings/:trainingId/details', employeeController.getTrainingDetails);
+router.post('/employee/certificates/upload', employeeController.uploadTrainingCertificate);
+router.put('/employee/training/:trainingRecordId/activity/:activityId', employeeController.updateSingleActivity);
+
+
+// helper functions
+router.get('/employee/user-job-info', employeeController.getUserJobInfo);
+router.get('/employee/job/:jobId/skills', employeeController.getJobSkills);
+router.get('/employee/user/objectives', employeeController.getUserObjectives);
+
+
 // GET /api/trainings/dropdown - Get trainings for dropdown (uses user's job from session)
 router.get('/employee/trainings/dropdown', employeeController.getTrainingsByJobAndDept);
 // GET /api/trainings/:trainingId/details - Get training skills and objectives
@@ -377,9 +390,13 @@ router.get('/employee/trainings/:trainingId/details', employeeController.getTrai
 router.post('/employee/training-requests', employeeController.createTrainingRequest);
 router.get('/employee/training-progress', employeeController.getTrainingProgress);
 router.get('/employee/all-courses', employeeController.getAllCourses);
+router.get('/employee/training/:trainingRecordId/certificates', employeeController.getCertificatesForTraining);
+router.post('/employee/certificates/upload', employeeController.uploadTrainingCertificate);
 router.get('/employee/certificates', employeeController.getCertificates);
-router.get('/employee/:certId/download', employeeController.downloadCertificate);
 
+
+
+// router.get('/employee/:certId/download', employeeController.downloadCertificate);
 
 // ============================
 // HR - TRAINING MODULE CONTROLLER FUNCTIONS

@@ -165,6 +165,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
+            margin-bottom: 20px;
         }
 
         .activities-table th {
@@ -188,29 +189,89 @@
             background-color: #f8fafc;
         }
 
-        /* Status badges */
-        .status-completed {
-            background-color: #dcfce7;
-            color: #166534;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+        /* Editable fields highlighting */
+        .editable-field {
+            position: relative;
+            transition: all 0.3s ease;
         }
 
-        .status-in-progress {
-            background-color: #fef3c7;
-            color: #92400e;
-            padding: 4px 8px;
-            border-radius: 12px;
+        .editable-field::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #07ACB9, #124A5C);
+            border-radius: 8px;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .editable-field:hover::before {
+            opacity: 0.2;
+        }
+
+        .editable-field.changed::before {
+            opacity: 0.3;
+            animation: pulse 1s ease-in-out;
+        }
+
+        /* Status dropdown styling */
+        .status-select {
+            padding: 8px 12px;
+            border: 2px solid #07ACB9;
+            border-radius: 8px;
             font-size: 12px;
+            font-weight: 600;
+            background-color: white;
+            cursor: pointer;
+            min-width: 130px;
+            box-shadow: 0 2px 4px rgba(7, 172, 185, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .status-select:focus {
+            outline: none;
+            border-color: #124A5C;
+            box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.2);
+        }
+
+        .status-select.not-started {
+            background-color: #f8fafc;
+            color: #64748b;
+            border-color: #64748b;
+        }
+
+        .status-select.in-progress {
+            background-color: #f0fdff;
+            color: #0891b2;
+            border-color: #07ACB9;
+        }
+
+        .status-select.completed {
+            background-color: #ecfdf5;
+            color: #059669;
+            border-color: #10b981;
+        }
+
+        /* Timestamp display styling */
+        .timestamp-display {
+            padding: 8px 12px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #64748b;
+            min-width: 140px;
+            text-align: center;
+        }
+
+        .timestamp-display.has-value {
+            background-color: #ecfdf5;
+            border-color: #10b981;
+            color: #059669;
             font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
         }
 
         /* Certificates section */
@@ -228,23 +289,338 @@
             margin: 0 0 20px 0;
         }
 
-        .upload-btn {
+        .certificates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .certificate-card {
             background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .certificate-card:hover {
+            border-color: #07ACB9;
+            background-color: #f0fdff;
+        }
+
+        .certificate-card.uploaded {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+        }
+
+        .certificate-card.disabled {
+            opacity: 0.6;
+            pointer-events: none;
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .certificate-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .certificate-icon {
+            background-color: #07ACB9;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .certificate-icon.disabled {
+            background-color: #94a3b8;
+        }
+
+        .certificate-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #334155;
+            margin: 0;
+        }
+
+        .certificate-desc {
             color: #64748b;
-            border: 1px solid #e2e8f0;
-            padding: 10px 16px;
-            border-radius: 6px;
             font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .certificate-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Upload area styling */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .upload-area.disabled {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            cursor: not-allowed;
+            color: #94a3b8;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .upload-btn:hover {
+            background-color: #0d3c4a;
+        }
+
+        .upload-btn:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .download-btn {
+            background-color: #07ACB9;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #059ca4;
+        }
+
+        .replace-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .replace-btn:hover {
+            background-color: #545b62;
+        }
+
+        .success-indicator {
+            color: #28a745;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .uploaded-file {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 8px;
+            color: #155724;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .completion-requirement {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            color: #92400e;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Loading states */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            z-index: 10;
+        }
+
+        .loading-spinner {
+            color: #07ACB9;
+            font-size: 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Save all button */
+        .save-all-btn {
+            background-color: #059669;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             transition: all 0.2s ease;
+            margin-bottom: 20px;
         }
 
-        .upload-btn:hover {
-            background-color: #e2e8f0;
-            border-color: #cbd5e1;
+        .save-all-btn:hover {
+            background-color: #047857;
+            transform: translateY(-2px);
+        }
+
+        .save-all-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Activity update feedback */
+        .updating {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .updating::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 5px;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            transform: translateY(-50%);
+        }
+
+        .success {
+            border-color: #28a745 !important;
+            background-color: #d4edda !important;
+        }
+
+        .error {
+            border-color: #dc3545 !important;
+            background-color: #f8d7da !important;
+        }
+
+        /* Instructions banner */
+        .instructions-banner {
+            background: #e0f2fe;
+            border: 1px solid #0891b2;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #0c4a6e;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .instructions-banner strong {
+            color: #0891b2;
+        }
+
+        .instructions-banner ul {
+            margin: 8px 0 0 20px;
+            padding: 0;
+        }
+
+        .instructions-banner li {
+            margin: 4px 0;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.3; }
         }
 
         /* Mobile responsive */
@@ -273,6 +649,10 @@
             .activities-table td {
                 padding: 8px 10px;
             }
+
+            .certificates-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Table responsiveness */
@@ -293,12 +673,12 @@
         <!-- Course Header -->
         <div class="course-header">
             <div class="course-info">
-                <h1>Technical Skills Enhancement</h1>
+                <h1 id="trainingName">Loading...</h1>
                 <p>Professional Development Course</p>
             </div>
             <div class="training-mode-badge">
                 <span class="training-mode-label">Training Mode:</span>
-                <span>Online</span>
+                <span id="trainingMode">Loading...</span>
             </div>
         </div>
 
@@ -307,27 +687,25 @@
             <div class="details-grid">
                 <div class="detail-group">
                     <label class="detail-label">Set Start Date:</label>
-                    <div class="detail-value">02/15/2025</div>
+                    <div class="detail-value" id="startDate">Loading...</div>
                 </div>
                 <div class="detail-group">
                     <label class="detail-label">Set End Date:</label>
-                    <div class="detail-value">03/15/2025</div>
+                    <div class="detail-value" id="endDate">Loading...</div>
                 </div>
             </div>
 
-            <div class="focus-areas">
+            <div class="focus-areas" id="objectivesSection">
                 <h3>Focus Objective Areas:</h3>
-                <div class="tags-container">
-                    <span class="tag">Objective 1</span>
-                    <span class="tag">Objective 2</span>
+                <div class="tags-container" id="objectivesTags">
+                    <div class="tag">Loading...</div>
                 </div>
             </div>
 
-            <div class="focus-areas">
+            <div class="focus-areas" id="skillsSection">
                 <h3>Focus Skill Areas:</h3>
-                <div class="tags-container">
-                    <span class="tag">Skill 1</span>
-                    <span class="tag">Skill 2</span>
+                <div class="tags-container" id="skillsTags">
+                    <div class="tag">Loading...</div>
                 </div>
             </div>
         </div>
@@ -337,139 +715,871 @@
             <div class="activities-header">
                 <h2 class="activities-title">Activities</h2>
                 <div class="total-duration">
-                    <span class="duration-label">Total Duration to Complete:</span>
-                    <span class="duration-value">1 Month</span>
+                    <span class="duration-label">Total Duration:</span>
+                    <span class="duration-value" id="totalDuration">Loading...</span>
                 </div>
             </div>
 
-            <table class="activities-table">
-                <thead>
-                    <tr>
-                        <th>Activity Name</th>
-                        <th>Estimated Time</th>
-                        <th>Status</th>
-                        <th>Date Started</th>
-                        <th>Date Completed</th>
-                        <th>Type</th>
-                        <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Variables & Data</td>
-                        <td>30 mins</td>
-                        <td>
-                            <span class="status-completed">
-                                ✓ Completed
-                            </span>
-                        </td>
-                        <td>2025-05-01</td>
-                        <td>2025-05-01</td>
-                        <td>Lecture</td>
-                        <td>Easy refresher</td>
-                    </tr>
-                    <tr>
-                        <td>Loops</td>
-                        <td>45 mins</td>
-                        <td>
-                            <span class="status-in-progress">
-                                ⏵ In Progress
-                            </span>
-                        </td>
-                        <td>2025-05-01</td>
-                        <td>——————</td>
-                        <td>Lecture</td>
-                        <td>Easy refresher</td>
-                    </tr>
-                    <tr>
-                        <td>Functions & Methods</td>
-                        <td>1 hour</td>
-                        <td>
-                            <span class="status-completed">
-                                ✓ Completed
-                            </span>
-                        </td>
-                        <td>2025-05-03</td>
-                        <td>2025-05-04</td>
-                        <td>Workshop</td>
-                        <td>Hands-on practice</td>
-                    </tr>
-                    <tr>
-                        <td>Data Structures</td>
-                        <td>2 hours</td>
-                        <td>
-                            <span class="status-completed">
-                                ✓ Completed
-                            </span>
-                        </td>
-                        <td>2025-05-05</td>
-                        <td>2025-05-08</td>
-                        <td>Project</td>
-                        <td>Complex implementation</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="instructions-banner">
+                <strong><i class="fas fa-info-circle"></i> Activity Tracking Instructions:</strong>
+                <ul>
+                    <li><strong>Not Started → In Progress:</strong> Automatically records the start timestamp</li>
+                    <li><strong>In Progress → Completed:</strong> Automatically records the completion timestamp</li>
+                    <li><strong>Status changes are saved immediately</strong> - no need to click save buttons</li>
+                    <li><strong>Timestamps are read-only</strong> and managed automatically by the system</li>
+                </ul>
+            </div>
+
+            <div class="table-container">
+                <table class="activities-table" id="activitiesTable">
+                    <thead>
+                        <tr>
+                            <th>Activity Name</th>
+                            <th>Estimated Time</th>
+                            <th style="background-color: #f0fdff; color: #124A5C; font-weight: 700;">
+                                <i class="fas fa-edit" style="margin-right: 5px;"></i>Status
+                            </th>
+                            <th style="background-color: #f8fafc; color: #64748b; font-weight: 600;">
+                                <i class="fas fa-clock" style="margin-right: 5px;"></i>Time Started
+                            </th>
+                            <th style="background-color: #f8fafc; color: #64748b; font-weight: 600;">
+                                <i class="fas fa-check-circle" style="margin-right: 5px;"></i>Time Completed
+                            </th>
+                            <th>Type</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                Loading activities...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- <div class="bulk-actions-section" style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h4 style="margin: 0 0 10px 0; color: #374151; font-size: 14px;">
+                    <i class="fas fa-layer-group" style="margin-right: 8px; color: #07ACB9;"></i>
+                    Bulk Actions (Optional)
+                </h4>
+                <p style="margin: 0 0 15px 0; font-size: 13px; color: #64748b;">
+                    Use this only if you need to apply changes to multiple activities at once or if individual auto-save fails.
+                </p>
+                <button class="save-all-btn" id="saveAllBtnBottom" onclick="saveAllActivities()" disabled style="margin: 0;">
+                    <i class="fas fa-save"></i>
+                    Save All Changes
+                </button>
+            </div> -->
         </div>
 
         <!-- Certificates Section -->
         <div class="certificates-section">
-            <h2 class="certificates-title">Certificate/s</h2>
-            <button class="upload-btn">
-                <i class="fas fa-plus"></i>
-                Upload Certificate
-            </button>
+            <h2 class="certificates-title">Training Certificates</h2>
+            <div class="completion-requirement" id="completionRequirement" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Complete all activities before uploading certificates</span>
+            </div>
+            <div class="certificates-grid" id="certificatesGrid">
+                <div class="certificate-card">
+                    <div class="loading-overlay">
+                        <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                    </div>
+                    <div class="certificate-header">
+                        <div class="certificate-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <h3 class="certificate-title">Loading...</h3>
+                    </div>
+                    <div class="certificate-desc">Loading certificates...</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- JavaScript for interactions -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Upload certificate functionality
-            document.querySelector('.upload-btn').addEventListener('click', function() {
-                // Create file input
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = '.pdf,.jpg,.jpeg,.png';
-                fileInput.style.display = 'none';
-                
-                fileInput.addEventListener('change', function() {
-                    if (this.files.length > 0) {
-                        alert(`Certificate "${this.files[0].name}" selected for upload.`);
-                        // Here you would typically handle the file upload
-                    }
-                });
-                
-                document.body.appendChild(fileInput);
-                fileInput.click();
-                document.body.removeChild(fileInput);
-            });
+        let trainingData = null;
+        let hasUnsavedChanges = false;
+        let allActivitiesCompleted = false;
+        const trainingRecordId = window.location.pathname.split('/').pop();
 
-            // Sidebar navigation
-            document.querySelectorAll('.sidebar ul li a').forEach(link => {
-                link.addEventListener('click', function() {
-                    document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-
-            // Collapsible sections in sidebar
-            document.querySelectorAll('.collapsible-header').forEach(header => {
-                header.addEventListener('click', function() {
-                    var content = this.nextElementSibling;
-                    if (content.style.display === 'block') {
-                        content.style.display = 'none';
-                    } else {
-                        // Hide all other collapsible contents
-                        document.querySelectorAll('.collapsible-content').forEach(item => {
-                            if (item !== content) {
-                                item.style.display = 'none';
-                            }
-                        });
-                        content.style.display = 'block';
-                    }
-                });
-            });
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadTrainingData();
+            await loadCertificates();
+            setupEventListeners();
         });
+
+        async function loadTrainingData() {
+            try {
+                const response = await fetch(`/employee/training/${trainingRecordId}/details`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    trainingData = result.data;
+                    await loadSkillsAndObjectives(); // Load skills and objectives from job
+                    displayTrainingData();
+                } else {
+                    throw new Error(result.message || 'Failed to fetch training data');
+                }
+            } catch (error) {
+                console.error('Error loading training data:', error);
+                showError('Failed to load training data. Please refresh the page.');
+            }
+        }
+
+        async function loadSkillsAndObjectives() {
+            try {
+                // Get user's job ID from staff data
+                const userResponse = await fetch('/employee/user-job-info', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (userResponse.ok) {
+                    const userResult = await userResponse.json();
+                    if (userResult.success && userResult.data.jobId) {
+                        // Fetch skills for this job
+                        const skillsResponse = await fetch(`/employee/job/${userResult.data.jobId}/skills`);
+                        if (skillsResponse.ok) {
+                            const skillsResult = await skillsResponse.json();
+                            if (skillsResult.success) {
+                                trainingData.jobSkills = skillsResult.data;
+                            }
+                        }
+
+                        // Fetch objectives for this user
+                        const objectivesResponse = await fetch(`/employee/user/objectives`);
+                        if (objectivesResponse.ok) {
+                            const objectivesResult = await objectivesResponse.json();
+                            if (objectivesResult.success) {
+                                trainingData.userObjectives = objectivesResult.data;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading skills and objectives:', error);
+                // Continue without this data
+            }
+        }
+
+        async function loadCertificates() {
+            try {
+                const response = await fetch(`/employee/training/${trainingRecordId}/certificates`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayCertificates(result.data);
+                } else {
+                    console.error('Failed to load certificates:', result.message);
+                }
+            } catch (error) {
+                console.error('Error loading certificates:', error);
+            }
+        }
+
+        function displayTrainingData() {
+            if (!trainingData) return;
+
+            // Update header information
+            document.getElementById('trainingName').textContent = trainingData.trainingName || 'Unknown Training';
+            document.getElementById('trainingMode').textContent = trainingData.isOnlineArrangement ? 'Online' : 'Onsite';
+            
+            // Update dates
+            document.getElementById('startDate').textContent = formatDate(trainingData.setStartDate) || 'Not set';
+            document.getElementById('endDate').textContent = formatDate(trainingData.setEndDate) || 'Not set';
+            
+            // Update total duration
+            document.getElementById('totalDuration').textContent = `${trainingData.totalDuration || 0} hours`;
+
+            // Display objectives and skills from job data
+            displayObjectives();
+            displaySkills();
+            
+            // Display activities
+            displayActivities();
+        }
+
+        function displayObjectives() {
+            const container = document.getElementById('objectivesTags');
+            
+            if (trainingData.userObjectives && trainingData.userObjectives.length > 0) {
+                container.innerHTML = trainingData.userObjectives.map(obj => 
+                    `<span class="tag">${obj.objectiveDescrpt || obj.description}</span>`
+                ).join('');
+            } else {
+                container.innerHTML = '<span class="tag">No objectives set for your role</span>';
+            }
+        }
+
+        function displaySkills() {
+            const container = document.getElementById('skillsTags');
+            
+            if (trainingData.jobSkills && trainingData.jobSkills.length > 0) {
+                container.innerHTML = trainingData.jobSkills.map(skill => 
+                    `<span class="tag">${skill.jobReqSkillName}</span>`
+                ).join('');
+            } else {
+                container.innerHTML = '<span class="tag">No skills defined for your role</span>';
+            }
+        }
+
+        function displayActivities() {
+            const tableBody = document.querySelector('#activitiesTable tbody');
+            
+            if (!trainingData.activities || trainingData.activities.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
+                            No activities found for this training.
+                        </td>
+                    </tr>
+                `;
+                allActivitiesCompleted = false;
+                return;
+            }
+
+            // Check if all activities are completed
+            allActivitiesCompleted = trainingData.activities.every(activity => activity.status === 'Completed');
+            updateCompletionRequirement();
+
+            tableBody.innerHTML = trainingData.activities.map(activity => `
+                <tr data-activity-id="${activity.activityId}">
+                    <td>${activity.activityName || 'Unknown Activity'}</td>
+                    <td>${activity.estActivityDuration || 0} minutes</td>
+                    <td class="editable-field">
+                        <select class="status-select ${getStatusClass(activity.status)}" 
+                                onchange="updateActivityStatus(${activity.activityId}, this.value)"
+                                data-activity-id="${activity.activityId}" 
+                                data-field="status">
+                            <option value="Not Started" ${activity.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                            <option value="In Progress" ${activity.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="Completed" ${activity.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="timestamp-display ${activity.timestampzStarted ? 'has-value' : ''}">
+                            ${activity.timestampzStarted ? formatTimestamp(activity.timestampzStarted) : 'Not started'}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="timestamp-display ${activity.timestampzCompleted ? 'has-value' : ''}">
+                            ${activity.timestampzCompleted ? formatTimestamp(activity.timestampzCompleted) : 'Not completed'}
+                        </div>
+                    </td>
+                    <td>${activity.activityType || 'N/A'}</td>
+                    <td>${activity.activityRemarks || 'No remarks'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateCompletionRequirement() {
+            const completionReq = document.getElementById('completionRequirement');
+            if (allActivitiesCompleted) {
+                completionReq.style.display = 'none';
+            } else {
+                completionReq.style.display = 'flex';
+            }
+        }
+
+        function displayCertificates(certificates) {
+            const container = document.getElementById('certificatesGrid');
+            container.innerHTML = '';
+            
+            if (!certificates || certificates.length === 0) {
+                container.innerHTML = `
+                    <div class="certificate-card ${!allActivitiesCompleted ? 'disabled' : ''}">
+                        <div class="certificate-header">
+                            <div class="certificate-icon ${!allActivitiesCompleted ? 'disabled' : ''}">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <h3 class="certificate-title">No Certificates Available</h3>
+                        </div>
+                        <div class="certificate-desc">
+                            No certificates are configured for this training.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            certificates.forEach(cert => {
+                const certElement = createCertificateElement(cert);
+                container.appendChild(certElement);
+            });
+        }
+
+        function createCertificateElement(cert) {
+            const div = document.createElement('div');
+            const isDisabled = !allActivitiesCompleted && !cert.isUploaded;
+            div.className = `certificate-card ${cert.isUploaded ? 'uploaded' : ''} ${isDisabled ? 'disabled' : ''}`;
+            div.innerHTML = cert.isUploaded ? createUploadedView(cert) : createUploadView(cert, isDisabled);
+            return div;
+        }
+
+        function createUploadedView(cert) {
+            return `
+                <div class="certificate-header">
+                    <div class="certificate-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h3 class="certificate-title">${cert.trainingCertTitle}</h3>
+                </div>
+                <div class="certificate-desc">${cert.trainingCertDesc}</div>
+                <div class="uploaded-file">
+                    <div class="success-indicator">
+                        ✓ Certificate uploaded successfully
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <small>Uploaded: ${new Date(cert.uploadedAt).toLocaleString()}</small>
+                    </div>
+                    <div class="certificate-actions">
+                        <button class="download-btn" onclick="downloadCertificate('${cert.certificate_url}')">
+                            <i class="fas fa-download"></i>
+                            Download
+                        </button>
+                        <button class="replace-btn" onclick="reuploadCertificate(${cert.trainingCertId})" ${!allActivitiesCompleted ? 'disabled' : ''}>
+                            <i class="fas fa-redo"></i>
+                            Replace
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createUploadView(cert, isDisabled) {
+            return `
+                <div class="certificate-header">
+                    <div class="certificate-icon ${isDisabled ? 'disabled' : ''}">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <h3 class="certificate-title">${cert.trainingCertTitle}</h3>
+                </div>
+                <div class="certificate-desc">${cert.trainingCertDesc}</div>
+                ${!allActivitiesCompleted ? `
+                    <div class="completion-requirement">
+                        <i class="fas fa-lock"></i>
+                        Complete all activities to unlock certificate upload
+                    </div>
+                ` : ''}
+                <div class="upload-area ${isDisabled ? 'disabled' : ''}" onclick="${!isDisabled ? `triggerFileInput(${cert.trainingCertId})` : ''}">
+                    <div>📄 ${!isDisabled ? 'Click to upload' : 'Upload locked'} ${cert.trainingCertTitle}</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        ${!isDisabled ? 'Supported formats: PDF, JPG, PNG, Word (Max 10MB)' : 'Complete all activities first'}
+                    </div>
+                    <input type="file" id="fileInput_${cert.trainingCertId}" class="file-input" 
+                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
+                           onchange="handleFileSelect(${cert.trainingCertId}, this.files[0])"
+                           ${isDisabled ? 'disabled' : ''}>
+                    <div id="uploadProgress_${cert.trainingCertId}" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill_${cert.trainingCertId}"></div>
+                        </div>
+                        <div id="uploadStatus_${cert.trainingCertId}">Uploading...</div>
+                    </div>
+                    <div id="uploadError_${cert.trainingCertId}" class="error-message" style="display: none;"></div>
+                </div>
+            `;
+        }
+
+        function getStatusClass(status) {
+            if (!status) return 'not-started';
+            return status.toLowerCase().replace(' ', '-');
+        }
+
+        // Updated activity status change with timestamp handling
+        async function updateActivityStatus(activityId, newStatus) {
+            console.log('Updating activity status:', { activityId, newStatus });
+            
+            // Find the activity in our data
+            const activity = trainingData.activities.find(a => a.activityId === activityId);
+            if (!activity) {
+                console.error('Activity not found:', activityId);
+                return;
+            }
+
+            const oldStatus = activity.status;
+            
+            // Show loading state
+            const fieldElement = document.querySelector(`[data-activity-id="${activityId}"][data-field="status"]`);
+            if (fieldElement) {
+                fieldElement.classList.add('updating');
+                fieldElement.disabled = true;
+            }
+
+            try {
+                // Prepare request data
+                const requestData = { status: newStatus };
+                
+                // Determine which timestamp to update based on status change
+                const now = new Date().toISOString();
+                if (oldStatus === 'Not Started' && newStatus === 'In Progress') {
+                    requestData.timestampzStarted = now;
+                } else if (newStatus === 'Completed') {
+                    requestData.timestampzCompleted = now;
+                    if (!activity.timestampzStarted) {
+                        requestData.timestampzStarted = now; // Also set start time if not set
+                    }
+                }
+
+                // Update local data
+                activity.status = newStatus;
+                if (requestData.timestampzStarted) activity.timestampzStarted = requestData.timestampzStarted;
+                if (requestData.timestampzCompleted) activity.timestampzCompleted = requestData.timestampzCompleted;
+
+                // Update visual state
+                const selectElement = document.querySelector(`tr[data-activity-id="${activityId}"] .status-select`);
+                if (selectElement) {
+                    selectElement.className = `status-select ${getStatusClass(newStatus)}`;
+                }
+
+                // Save to database
+                await saveActivityChange(activityId, requestData);
+                
+                // Update timestamps in UI
+                updateTimestampDisplays(activityId, activity);
+                
+                // Check if all activities are completed
+                allActivitiesCompleted = trainingData.activities.every(act => act.status === 'Completed');
+                updateCompletionRequirement();
+                
+                // Reload certificates to update enabled/disabled state
+                if (allActivitiesCompleted) {
+                    await loadCertificates();
+                }
+
+                // Show success state
+                if (fieldElement) {
+                    fieldElement.classList.remove('updating');
+                    fieldElement.classList.add('success');
+                    fieldElement.disabled = false;
+                    
+                    setTimeout(() => {
+                        fieldElement.classList.remove('success');
+                    }, 2000);
+                }
+
+                const statusText = newStatus === 'In Progress' ? 'started' : newStatus.toLowerCase();
+                showSuccess(`Activity ${statusText} successfully! ${requestData.timestampzStarted ? 'Start time recorded.' : ''} ${requestData.timestampzCompleted ? 'Completion time recorded.' : ''}`);
+                
+            } catch (error) {
+                console.error('Error saving activity change:', error);
+                
+                // Revert the change if save failed
+                activity.status = oldStatus;
+                const selectElement = document.querySelector(`tr[data-activity-id="${activityId}"] .status-select`);
+                if (selectElement) {
+                    selectElement.value = oldStatus;
+                    selectElement.className = `status-select ${getStatusClass(oldStatus)}`;
+                }
+
+                // Show error state
+                if (fieldElement) {
+                    fieldElement.classList.remove('updating');
+                    fieldElement.classList.add('error');
+                    fieldElement.disabled = false;
+                    
+                    setTimeout(() => {
+                        fieldElement.classList.remove('error');
+                    }, 3000);
+                }
+
+                showError('Failed to save status change. Please try again.');
+            }
+        }
+
+        function updateTimestampDisplays(activityId, activity) {
+            const row = document.querySelector(`tr[data-activity-id="${activityId}"]`);
+            if (!row) return;
+
+            // Update start timestamp
+            const startDisplay = row.children[3].querySelector('.timestamp-display');
+            if (startDisplay) {
+                if (activity.timestampzStarted) {
+                    startDisplay.textContent = formatTimestamp(activity.timestampzStarted);
+                    startDisplay.classList.add('has-value');
+                } else {
+                    startDisplay.textContent = 'Not started';
+                    startDisplay.classList.remove('has-value');
+                }
+            }
+
+            // Update completion timestamp
+            const completionDisplay = row.children[4].querySelector('.timestamp-display');
+            if (completionDisplay) {
+                if (activity.timestampzCompleted) {
+                    completionDisplay.textContent = formatTimestamp(activity.timestampzCompleted);
+                    completionDisplay.classList.add('has-value');
+                } else {
+                    completionDisplay.textContent = 'Not completed';
+                    completionDisplay.classList.remove('has-value');
+                }
+            }
+        }
+
+        // Save individual activity changes
+        async function saveActivityChange(activityId, requestData) {
+            console.log('Saving activity change:', { activityId, requestData });
+
+            const response = await fetch(`/employee/training/${trainingRecordId}/activity/${activityId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(requestData)
+            });
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to save activity change');
+            }
+
+            console.log('Activity change saved successfully:', result);
+            return result;
+        }
+
+        // Batch save function (for bulk operations)
+        async function saveAllActivities() {
+            if (!hasUnsavedChanges) {
+                showInfo('All changes have been saved automatically.');
+                return;
+            }
+
+            const saveBtn = document.getElementById('saveAllBtnBottom');
+            const originalText = saveBtn.innerHTML;
+            
+            try {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+                const response = await fetch(`/employee/training/${trainingRecordId}/activities`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        activities: trainingData.activities.map(activity => ({
+                            activityId: activity.activityId,
+                            status: activity.status || 'Not Started',
+                            timestampzStarted: activity.timestampzStarted || null,
+                            timestampzCompleted: activity.timestampzCompleted || null
+                        }))
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    hasUnsavedChanges = false;
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<i class="fas fa-check"></i> All Saved!';
+                    
+                    setTimeout(() => {
+                        saveBtn.innerHTML = originalText;
+                    }, 2000);
+                    
+                    showSuccess(`All activities updated successfully! ${result.updatedCount || 0} activities saved.`);
+                } else {
+                    throw new Error(result.message || 'Failed to save activities');
+                }
+            } catch (error) {
+                console.error('Error saving activities:', error);
+                showError('Failed to save some changes. Individual changes are still saved automatically.');
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Certificate functions
+        function triggerFileInput(trainingCertId) {
+            if (!allActivitiesCompleted) {
+                showError('Please complete all activities before uploading certificates.');
+                return;
+            }
+            document.getElementById(`fileInput_${trainingCertId}`).click();
+        }
+
+        function reuploadCertificate(trainingCertId) {
+            if (!allActivitiesCompleted) {
+                showError('Please complete all activities before uploading certificates.');
+                return;
+            }
+            triggerFileInput(trainingCertId);
+        }
+
+        async function handleFileSelect(trainingCertId, file) {
+            if (!file) return;
+            
+            if (!allActivitiesCompleted) {
+                showError('Please complete all activities before uploading certificates.');
+                return;
+            }
+            
+            // Validate file
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            
+            if (file.size > maxSize) {
+                showCertError(trainingCertId, 'File size exceeds 10MB limit');
+                return;
+            }
+            
+            if (!allowedTypes.includes(file.type)) {
+                showCertError(trainingCertId, 'Invalid file type. Please upload PDF, image, or Word document.');
+                return;
+            }
+            
+            // Show upload progress
+            showUploadProgress(trainingCertId);
+            
+            try {
+                await uploadCertificate(trainingCertId, file);
+            } catch (error) {
+                showCertError(trainingCertId, error.message);
+                hideUploadProgress(trainingCertId);
+            }
+        }
+
+        async function uploadCertificate(trainingCertId, file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('trainingRecordId', trainingRecordId);
+            formData.append('trainingCertId', trainingCertId);
+            
+            const xhr = new XMLHttpRequest();
+            
+            return new Promise((resolve, reject) => {
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        updateProgress(trainingCertId, percentComplete);
+                    }
+                });
+                
+                xhr.addEventListener('load', () => {
+                    hideUploadProgress(trainingCertId);
+                    
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            showSuccess(`Certificate "${response.data.trainingCertTitle}" uploaded successfully!`);
+                            // Reload certificates to show updated status
+                            setTimeout(() => {
+                                loadCertificates();
+                            }, 2000);
+                            resolve(response);
+                        } else {
+                            reject(new Error(response.message || 'Upload failed'));
+                        }
+                    } else {
+                        reject(new Error(`Upload failed with status ${xhr.status}`));
+                    }
+                });
+                
+                xhr.addEventListener('error', () => {
+                    hideUploadProgress(trainingCertId);
+                    reject(new Error('Network error occurred during upload'));
+                });
+                
+                xhr.open('POST', '/employee/certificates/upload');
+                xhr.send(formData);
+            });
+        }
+
+        function showUploadProgress(trainingCertId) {
+            const progressElement = document.getElementById(`uploadProgress_${trainingCertId}`);
+            const errorElement = document.getElementById(`uploadError_${trainingCertId}`);
+            
+            if (progressElement) progressElement.style.display = 'block';
+            if (errorElement) errorElement.style.display = 'none';
+        }
+
+        function hideUploadProgress(trainingCertId) {
+            const progressElement = document.getElementById(`uploadProgress_${trainingCertId}`);
+            if (progressElement) progressElement.style.display = 'none';
+        }
+
+        function updateProgress(trainingCertId, percentage) {
+            const progressFill = document.getElementById(`progressFill_${trainingCertId}`);
+            const statusElement = document.getElementById(`uploadStatus_${trainingCertId}`);
+            
+            if (progressFill) {
+                progressFill.style.width = `${percentage}%`;
+            }
+            
+            if (statusElement) {
+                statusElement.textContent = `Uploading... ${Math.round(percentage)}%`;
+            }
+        }
+
+        function showCertError(trainingCertId, message) {
+            const errorElement = document.getElementById(`uploadError_${trainingCertId}`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        function downloadCertificate(url) {
+            window.open(url, '_blank');
+        }
+
+        function setupEventListeners() {
+            // Drag and drop functionality
+            document.addEventListener('dragover', handleDragOver);
+            document.addEventListener('dragleave', handleDragLeave);
+            document.addEventListener('drop', handleDrop);
+
+            // Warn user about unsaved changes
+            window.addEventListener('beforeunload', (e) => {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const uploadArea = e.target.closest('.upload-area');
+            if (uploadArea && !uploadArea.classList.contains('disabled')) {
+                uploadArea.classList.add('dragover');
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            const uploadArea = e.target.closest('.upload-area');
+            if (uploadArea) {
+                uploadArea.classList.remove('dragover');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const uploadArea = e.target.closest('.upload-area');
+            if (uploadArea && !uploadArea.classList.contains('disabled')) {
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const fileInput = uploadArea.querySelector('.file-input');
+                    if (fileInput) {
+                        const trainingCertId = fileInput.id.split('_')[1];
+                        handleFileSelect(parseInt(trainingCertId), files[0]);
+                    }
+                }
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Not set';
+            return new Date(dateString).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function formatTimestamp(timestampString) {
+            if (!timestampString) return 'Not set';
+            return new Date(timestampString).toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        }
+
+        function showSuccess(message) {
+            createToast('success', message);
+        }
+
+        function showError(message) {
+            createToast('error', message);
+        }
+
+        function showInfo(message) {
+            createToast('info', message);
+        }
+
+        function createToast(type, message) {
+            // Remove existing toasts
+            const existingToasts = document.querySelectorAll('.toast');
+            existingToasts.forEach(toast => toast.remove());
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+            const color = type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#0891b2';
+            
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-${icon}" style="color: ${color};"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+                border-left: 4px solid ${color};
+                z-index: 10000;
+                font-size: 14px;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Add toast animations to head
+        if (!document.querySelector('#toast-styles')) {
+            const style = document.createElement('style');
+            style.id = 'toast-styles';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     </script>
 </body>
 </html>

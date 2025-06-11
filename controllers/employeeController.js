@@ -3730,8 +3730,7 @@ checkFeedbackStatus: async function (req, res) {
 
 
 // Employee Training Section
-
- getEmployeeTrainingHome: function(req, res) {
+getEmployeeTrainingHome: function(req, res) {
         if (req.session.user && req.session.user.userRole === 'Employee') {
             res.render('staffpages/employee_pages/training_pages/employee-training-home');
         } else {
@@ -3739,15 +3738,694 @@ checkFeedbackStatus: async function (req, res) {
             res.redirect('/staff/login');
         }
     },
+getEmployeeTrainingSpecific: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
+        return res.redirect('/staff/login');
+    }
 
-getEmployeeTrainingSpecific: function(req, res) {
-    if (req.session.user && req.session.user.userRole === 'Employee') {
-            res.render('staffpages/employee_pages/training_pages/employee-specific-training');
-        } else {
-            req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
-            res.redirect('/staff/login');
+    try {
+        const trainingRecordId = req.params.trainingRecordId;
+        const userId = req.session.user.userId;
+        
+        console.log('Fetching training details for record:', trainingRecordId);
+        
+        // Fetch training record with complete training details
+        const { data: trainingRecord, error: trainingError } = await supabase
+            .from('training_records')
+            .select(`
+                *,
+                trainings!inner (
+                    trainingId,
+                    trainingName,
+                    trainingDesc,
+                    isOnlineArrangement,
+                    totalDuration,
+                    address,
+                    cost,
+                    country
+                )
+            `)
+            .eq('trainingRecordId', trainingRecordId)
+            .eq('userId', userId)
+            .single();
+
+        if (trainingError || !trainingRecord) {
+            console.error('Training record error:', trainingError);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Training record not found' 
+            });
+        }
+
+        // Fetch all training activities with their completion status
+        const { data: activitiesData, error: activitiesError } = await supabase
+            .from('training_activities')
+            .select(`
+                activityId,
+                activityName,
+                activityType,
+                activityRemarks,
+                estActivityDuration,
+                trainingId
+            `)
+            .eq('trainingId', trainingRecord.trainings.trainingId);
+
+        if (activitiesError) {
+            console.error('Error fetching activities:', activitiesError);
+        }
+
+        // Fetch activity completion status for this training record
+        const { data: activityStatus, error: statusError } = await supabase
+            .from('training_records_activities')
+            .select('*')
+            .eq('trainingRecordId', trainingRecordId);
+
+        if (statusError) {
+            console.error('Error fetching activity status:', statusError);
+        }
+
+        // Merge activities with their status
+        const activities = (activitiesData || []).map(activity => {
+            const status = (activityStatus || []).find(s => s.activityId === activity.activityId);
+            return {
+                ...activity,
+                status: status?.status || 'Not Started',
+                dateStarted: status?.dateStarted || null,
+                dateCompleted: status?.dateCompleted || null,
+                trainingRecordActivityId: status?.trainingRecordActivityId || null
+            };
+        });
+
+        // Fetch certificates for this training record (updated structure)
+        const { data: certificateRecords, error: certificatesError } = await supabase
+            .from('training_records_certificates')
+            .select(`
+                *,
+                training_certifications!inner (
+                    trainingCertTitle,
+                    trainingCertDesc
+                )
+            `)
+            .eq('trainingRecordId', trainingRecordId);
+
+        if (certificatesError) {
+            console.error('Error fetching certificates:', certificatesError);
+        }
+
+        // Process certificates data
+        const certificates = (certificateRecords || []).map(cert => ({
+            trainingRecordCertificateId: cert.trainingRecordCertificateId,
+            certificate_url: cert.certificate_url,
+            created_at: cert.created_at,
+            trainingCertTitle: cert.training_certifications?.trainingCertTitle || 'Training Certificate',
+            trainingCertDesc: cert.training_certifications?.trainingCertDesc || 'No description available'
+        }));
+
+        // Fetch objectives
+        const { data: objectivesData, error: objectivesError } = await supabase
+            .from('training_objectives')
+            .select(`
+                trainingObjectiveId,
+                objectiveId,
+                objectives!inner (
+                    objectiveId,
+                    objectiveDescrpt,
+                    objectiveKPI
+                )
+            `)
+            .eq('trainingId', trainingRecord.trainings.trainingId);
+
+        if (objectivesError) {
+            console.error('Error fetching objectives:', objectivesError);
+        }
+
+        // Fetch skills
+        const { data: skillsData, error: skillsError } = await supabase
+            .from('training_skills')
+            .select(`
+                trainingSkillsId,
+                jobReqSkillId,
+                jobreqskills!inner (
+                    jobReqSkillId,
+                    jobReqSkillName,
+                    jobReqSkillType
+                )
+            `)
+            .eq('trainingId', trainingRecord.trainings.trainingId);
+
+        if (skillsError) {
+            console.error('Error fetching skills:', skillsError);
+        }
+
+        const data = {
+            trainingRecord: {
+                ...trainingRecord,
+                trainingName: trainingRecord.trainings.trainingName,
+                trainingDesc: trainingRecord.trainings.trainingDesc,
+                isOnlineArrangement: trainingRecord.trainings.isOnlineArrangement,
+                totalDuration: trainingRecord.trainings.totalDuration,
+                address: trainingRecord.trainings.address,
+                cost: trainingRecord.trainings.cost,
+                country: trainingRecord.trainings.country
+            },
+            activities: activities || [],
+            objectives: objectivesData?.map(obj => obj.objectives) || [],
+            skills: skillsData?.map(skill => skill.jobreqskills) || [],
+            certificates: certificates || []
+        };
+
+        console.log('Training data prepared:', {
+            trainingName: data.trainingRecord.trainingName,
+            activitiesCount: data.activities.length,
+            certificatesCount: data.certificates.length
+        });
+
+        res.render('staffpages/employee_pages/training_pages/employee-specific-training', { data });
+    } catch (error) {
+        console.error('Error fetching training details:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch training details',
+            error: error.message 
+        });
+    }
+},
+
+    getEmployeeTrainingRecords: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'Employee') {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized. Employee access only.' 
+            });
+        }
+
+        try {
+            const userId = req.session.user.userId;
+            
+            // Fetch training records with complete training details
+            const { data: trainingRecords, error: recordsError } = await supabase
+                .from('training_records')
+                .select(`
+                    *,
+                    trainings!inner (
+                        trainingId,
+                        trainingName,
+                        trainingDesc,
+                        isOnlineArrangement,
+                        totalDuration,
+                        cost,
+                        address,
+                        country
+                    )
+                `)
+                .eq('userId', userId)
+                .eq('isApproved', true)
+                .order('setStartDate', { ascending: false });
+
+            if (recordsError) {
+                console.error('Error fetching training records:', recordsError);
+                throw recordsError;
+            }
+
+            // For each training record, get activity counts
+            const enrichedRecords = await Promise.all(
+                (trainingRecords || []).map(async (record) => {
+                    try {
+                        // Get total activities count for this training
+                        const { count: totalActivities, error: totalError } = await supabase
+                            .from('training_activities')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('trainingId', record.trainings.trainingId);
+
+                        // Get completed activities count for this specific training record
+                        const { count: completedActivities, error: completedError } = await supabase
+                            .from('training_records_activities')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('trainingRecordId', record.trainingRecordId)
+                            .eq('status', 'Completed');
+
+                        if (totalError || completedError) {
+                            console.error('Error counting activities:', totalError || completedError);
+                        }
+
+                        // Calculate training percentage based on completed activities
+                        const percentage = totalActivities > 0 ? 
+                            Math.round((completedActivities / totalActivities) * 100) : 0;
+
+                        return {
+                            ...record,
+                            // Flatten training data for easier access
+                            trainingName: record.trainings.trainingName,
+                            trainingDesc: record.trainings.trainingDesc,
+                            isOnlineArrangement: record.trainings.isOnlineArrangement,
+                            totalDuration: record.trainings.totalDuration,
+                            cost: record.trainings.cost,
+                            address: record.trainings.address,
+                            country: record.trainings.country,
+                            // Activity counts
+                            totalActivities: totalActivities || 0,
+                            completedActivities: completedActivities || 0,
+                            trainingPercentage: percentage
+                        };
+                    } catch (error) {
+                        console.error('Error processing training record:', error);
+                        return {
+                            ...record,
+                            trainingName: record.trainings?.trainingName || 'Unknown Training',
+                            trainingDesc: record.trainings?.trainingDesc || '',
+                            isOnlineArrangement: record.trainings?.isOnlineArrangement || false,
+                            totalDuration: record.trainings?.totalDuration || 0,
+                            cost: record.trainings?.cost || 0,
+                            address: record.trainings?.address || '',
+                            country: record.trainings?.country || '',
+                            totalActivities: 0,
+                            completedActivities: 0,
+                            trainingPercentage: 0
+                        };
+                    }
+                })
+            );
+            
+            res.json({
+                success: true,
+                data: enrichedRecords
+            });
+        } catch (error) {
+            console.error('Error fetching training records:', error);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Failed to fetch training records',
+                error: error.message 
+            });
         }
     },
+
+    getTrainingRecordDetails: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'Employee') {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized. Employee access only.' 
+            });
+        }
+
+        try {
+            const trainingRecordId = req.params.trainingRecordId;
+            const userId = req.session.user.userId;
+            
+            // Fetch training record with training details
+            const { data: trainingRecord, error: recordError } = await supabase
+                .from('training_records')
+                .select(`
+                    *,
+                    trainings!inner (
+                        trainingId,
+                        trainingName,
+                        trainingDesc,
+                        isOnlineArrangement,
+                        totalDuration,
+                        cost,
+                        address,
+                        country
+                    )
+                `)
+                .eq('trainingRecordId', trainingRecordId)
+                .eq('userId', userId)
+                .single();
+
+            if (recordError || !trainingRecord) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Training record not found' 
+                });
+            }
+
+            // Fetch activities with completion status
+            const { data: activitiesData, error: activitiesError } = await supabase
+                .from('training_activities')
+                .select(`
+                    activityId,
+                    activityName,
+                    activityType,
+                    activityRemarks,
+                    estActivityDuration,
+                    trainingId
+                `)
+                .eq('trainingId', trainingRecord.trainings.trainingId)
+                .order('activityId');
+
+            if (activitiesError) {
+                console.error('Error fetching activities:', activitiesError);
+            }
+
+            // Fetch activity completion status
+            const { data: activityStatus, error: statusError } = await supabase
+                .from('training_records_activities')
+                .select('*')
+                .eq('trainingRecordId', trainingRecordId);
+
+            if (statusError) {
+                console.error('Error fetching activity status:', statusError);
+            }
+
+            // Merge activities with their status
+            const activities = (activitiesData || []).map(activity => {
+                const status = (activityStatus || []).find(s => s.activityId === activity.activityId);
+                return {
+                    ...activity,
+                    status: status?.status || 'Not Started',
+                    dateStarted: status?.dateStarted || null,
+                    dateCompleted: status?.dateCompleted || null,
+                    trainingRecordActivityId: status?.trainingRecordActivityId || null
+                };
+            });
+
+            // Get activity counts
+            const totalActivities = activities?.length || 0;
+            const completedActivities = activities?.filter(
+                activity => activity.status === 'Completed'
+            ).length || 0;
+
+            // Calculate percentage
+            const percentage = totalActivities > 0 ? 
+                Math.round((completedActivities / totalActivities) * 100) : 0;
+
+            const enrichedRecord = {
+                ...trainingRecord,
+                trainingName: trainingRecord.trainings.trainingName,
+                trainingDesc: trainingRecord.trainings.trainingDesc,
+                isOnlineArrangement: trainingRecord.trainings.isOnlineArrangement,
+                totalDuration: trainingRecord.trainings.totalDuration,
+                cost: trainingRecord.trainings.cost,
+                address: trainingRecord.trainings.address,
+                country: trainingRecord.trainings.country,
+                totalActivities,
+                completedActivities,
+                trainingPercentage: percentage,
+                activities: activities || []
+            };
+            
+            res.json({
+                success: true,
+                data: enrichedRecord
+            });
+        } catch (error) {
+            console.error('Error fetching training record details:', error);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Failed to fetch training record details',
+                error: error.message 
+            });
+        }
+    },
+
+    // Additional helper method for training dropdown in modal
+    getTrainingDropdown: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'Employee') {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized. Employee access only.' 
+            });
+        }
+
+        try {
+            const userId = req.session.user.userId;
+
+            // Get user's job position
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('jobId')
+                .eq('userId', userId)
+                .single();
+
+            if (staffError || !staffData) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Staff account not found' 
+                });
+            }
+
+            // Fetch available trainings for the user's job position
+            const { data: trainings, error: trainingsError } = await supabase
+                .from('trainings')
+                .select('*')
+                .eq('jobId', staffData.jobId)
+                .eq('isActive', true);
+
+            if (trainingsError) {
+                throw trainingsError;
+            }
+
+            res.json({
+                success: true,
+                data: trainings || []
+            });
+        } catch (error) {
+            console.error('Error fetching training dropdown:', error);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Failed to fetch available trainings',
+                error: error.message 
+            });
+        }
+    },
+
+    // Method to get training skills and objectives for modal
+    getTrainingDetails: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'Employee') {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized. Employee access only.' 
+            });
+        }
+
+        try {
+            const trainingId = req.params.trainingId;
+
+            // Fetch objectives
+            const { data: objectivesData, error: objectivesError } = await supabase
+                .from('training_objectives')
+                .select(`
+                    trainingObjectiveId,
+                    objectiveId,
+                    objectives!inner (
+                        objectiveId,
+                        objectiveDescrpt,
+                        objectiveKPI
+                    )
+                `)
+                .eq('trainingId', trainingId);
+
+            // Fetch skills
+            const { data: skillsData, error: skillsError } = await supabase
+                .from('training_skills')
+                .select(`
+                    trainingSkillsId,
+                    jobReqSkillId,
+                    jobreqskills!inner (
+                        jobReqSkillId,
+                        jobReqSkillName,
+                        jobReqSkillType
+                    )
+                `)
+                .eq('trainingId', trainingId);
+
+            if (objectivesError || skillsError) {
+                console.error('Error fetching training details:', objectivesError || skillsError);
+            }
+
+            const objectives = objectivesData?.map(item => item.objectives) || [];
+            const skills = skillsData?.map(item => item.jobreqskills) || [];
+
+            res.json({
+                success: true,
+                data: {
+                    objectives,
+                    skills
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching training details:', error);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Failed to fetch training details',
+                error: error.message 
+            });
+        }
+    },
+
+    // Method to get certificates
+    getCertificates: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'Employee') {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized. Employee access only.' 
+            });
+        }
+
+        try {
+            const userId = req.session.user.userId;
+
+            // Get all training records for this user
+            const { data: userTrainingRecords, error: recordsError } = await supabase
+                .from('training_records')
+                .select('trainingRecordId')
+                .eq('userId', userId)
+                .eq('isApproved', true);
+
+            if (recordsError) {
+                throw recordsError;
+            }
+
+            if (!userTrainingRecords || userTrainingRecords.length === 0) {
+                return res.json({
+                    success: true,
+                    data: []
+                });
+            }
+
+            const trainingRecordIds = userTrainingRecords.map(record => record.trainingRecordId);
+
+            // Fetch certificates for user's training records
+            const { data: certificates, error: certificatesError } = await supabase
+                .from('training_records_certificates')
+                .select(`
+                    *,
+                    training_records!inner (
+                        trainingRecordId,
+                        trainings!inner (
+                            trainingName
+                        )
+                    )
+                `)
+                .in('trainingRecordId', trainingRecordIds);
+
+            if (certificatesError) {
+                throw certificatesError;
+            }
+
+            // Format the response
+            const formattedCertificates = (certificates || []).map(cert => ({
+                trainingRecordCertificateId: cert.trainingRecordCertificateId,
+                certificate_url: cert.certificate_url,
+                created_at: cert.created_at,
+                trainingRecordId: cert.trainingRecordId,
+                trainingName: cert.training_records?.trainings?.trainingName || 'Unknown Training'
+            }));
+
+            res.json({
+                success: true,
+                data: formattedCertificates
+            });
+        } catch (error) {
+            console.error('Error fetching certificates:', error);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Failed to fetch certificates',
+                error: error.message 
+            });
+        }
+    },
+
+    getEmployeeTrainingProgress: async function(req, res) {
+    // Authentication check
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
+        });
+    }
+
+    try {
+        const userId = req.session.user.userId;
+        
+        // Fetch training records with training details
+        const { data: trainingRecords, error: recordsError } = await supabase
+            .from('training_records')
+            .select(`
+                *,
+                trainings!inner (
+                    trainingId,
+                    trainingName,
+                    trainingDesc,
+                    isOnlineArrangement,
+                    totalDuration
+                )
+            `)
+            .eq('userId', userId)
+            .eq('isApproved', true)
+            .order('setStartDate', { ascending: false });
+
+        if (recordsError) {
+            console.error('Error fetching training progress:', recordsError);
+            throw recordsError;
+        }
+
+        // Process each training record to get activity counts
+        const enrichedRecords = await Promise.all(
+            (trainingRecords || []).map(async (record) => {
+                try {
+                    // Get total activities count
+                    const { count: totalActivities, error: totalError } = await supabase
+                        .from('training_activities')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('trainingId', record.trainings.trainingId);
+
+                    // Get completed activities count
+                    const { count: completedActivities, error: completedError } = await supabase
+                        .from('training_records_activities')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('trainingRecordId', record.trainingRecordId)
+                        .eq('status', 'Completed');
+
+                    if (totalError || completedError) {
+                        console.error('Error counting activities:', totalError || completedError);
+                    }
+
+                    // Calculate training percentage
+                    const percentage = totalActivities > 0 ? 
+                        Math.round((completedActivities / totalActivities) * 100) : 0;
+
+                    return {
+                        ...record,
+                        trainingName: record.trainings.trainingName,
+                        trainingDesc: record.trainings.trainingDesc,
+                        isOnlineArrangement: record.trainings.isOnlineArrangement,
+                        totalDuration: record.trainings.totalDuration,
+                        totalActivities: totalActivities || 0,
+                        completedActivities: completedActivities || 0,
+                        trainingPercentage: percentage
+                    };
+                } catch (error) {
+                    console.error('Error processing training progress:', error);
+                    return {
+                        ...record,
+                        trainingName: record.trainings?.trainingName || 'Unknown Training',
+                        trainingDesc: record.trainings?.trainingDesc || '',
+                        isOnlineArrangement: record.trainings?.isOnlineArrangement || false,
+                        totalDuration: record.trainings?.totalDuration || 0,
+                        totalActivities: 0,
+                        completedActivities: 0,
+                        trainingPercentage: 0
+                    };
+                }
+            })
+        );
+        
+        res.json({
+            success: true,
+            data: enrichedRecords
+        });
+    } catch (error) {
+        console.error('Error fetching training progress:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch training progress',
+            error: error.message 
+        });
+    }
+        }, 
+
 
      getTrainingsByJobAndDept: async function(req, res) {
         console.log(`[${new Date().toISOString()}] Fetching trainings for modal dropdown - user ${req.session?.user?.userId}`);
@@ -3894,9 +4572,8 @@ getEmployeeTrainingSpecific: function(req, res) {
             });
         }
     },
-
-    // Create training request from modal
-   createTrainingRequest: async function(req, res) {
+// Create training request from modal
+createTrainingRequest: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Creating training request for user ${req.session?.user?.userId}`);
     console.log('Request body:', req.body);
 
@@ -3946,8 +4623,7 @@ getEmployeeTrainingSpecific: function(req, res) {
             });
         }
 
-        // Simplified approach: Check for any active requests for the same training
-        // This is more reliable than complex date overlap queries
+        // Check for existing active requests for the same training
         const { data: existingRequests, error: existingError } = await supabase
             .from('training_records')
             .select('trainingRecordId, setStartDate, setEndDate, trainingStatus')
@@ -3960,13 +4636,12 @@ getEmployeeTrainingSpecific: function(req, res) {
             throw new Error(`Failed to check existing requests: ${existingError.message}`);
         }
 
-        // Check for overlapping dates manually (more reliable than complex SQL)
+        // Check for overlapping dates manually
         if (existingRequests && existingRequests.length > 0) {
             const hasOverlap = existingRequests.some(request => {
                 const requestStart = new Date(request.setStartDate);
                 const requestEnd = new Date(request.setEndDate);
                 
-                // Check if dates overlap
                 return (start <= requestEnd && end >= requestStart);
             });
 
@@ -3986,7 +4661,7 @@ getEmployeeTrainingSpecific: function(req, res) {
             setStartDate: startDate,
             setEndDate: endDate,
             trainingStatus: 'Not Started',
-            isApproved: null, // Changed from false to null to match your table structure
+            isApproved: null,
             dateRequested: new Date().toISOString().split('T')[0]
         };
 
@@ -4006,7 +4681,7 @@ getEmployeeTrainingSpecific: function(req, res) {
         const trainingRecordId = trainingRecord.trainingRecordId;
         console.log(`Training record created with ID: ${trainingRecordId}`);
 
-        // Get training activities - with better error handling
+        // Get training activities
         console.log(`Fetching activities for training ID: ${trainingId}`);
         const { data: activities, error: activitiesError } = await supabase
             .from('training_activities')
@@ -4016,7 +4691,6 @@ getEmployeeTrainingSpecific: function(req, res) {
 
         if (activitiesError) {
             console.error('Error fetching training activities:', activitiesError);
-            // Continue without failing - some trainings might not have activities
             console.log('Continuing without activities...');
         }
 
@@ -4026,7 +4700,7 @@ getEmployeeTrainingSpecific: function(req, res) {
         if (activities && activities.length > 0) {
             console.log(`Found ${activities.length} activities for training:`, activities);
             
-            // Create activity records one by one for better error handling
+            // Create activity records
             for (const activity of activities) {
                 try {
                     const activityRecordData = {
@@ -4048,7 +4722,6 @@ getEmployeeTrainingSpecific: function(req, res) {
                     if (activityInsertError) {
                         console.error(`Error creating activity record for activity ${activity.activityId}:`, activityInsertError);
                         activitiesFailed++;
-                        // Continue with other activities instead of failing completely
                     } else {
                         activitiesCreated++;
                         console.log(`Successfully created activity record: ${activityRecord.trainingRecordActivityId} for activity ${activity.activityId}`);
@@ -4056,17 +4729,14 @@ getEmployeeTrainingSpecific: function(req, res) {
                 } catch (activityError) {
                     console.error(`Exception creating activity record for activity ${activity.activityId}:`, activityError);
                     activitiesFailed++;
-                    // Continue with other activities
                 }
             }
             
-            // Verify the counts match
             console.log(`Activity creation summary:`);
             console.log(`- Total activities found: ${activities.length}`);
             console.log(`- Activities successfully created: ${activitiesCreated}`);
             console.log(`- Activities failed to create: ${activitiesFailed}`);
             
-            // Warning if not all activities were created
             if (activitiesCreated !== activities.length) {
                 console.warn(`⚠️  WARNING: Expected ${activities.length} activity records, but only created ${activitiesCreated}`);
             } else {
@@ -4076,7 +4746,66 @@ getEmployeeTrainingSpecific: function(req, res) {
             console.log('No activities found for this training');
         }
 
-        console.log(`Training request created successfully: ${trainingRecordId} with ${activitiesCreated}/${activities ? activities.length : 0} activities`);
+        // NEW: Get training certifications and create certificate records
+        console.log(`Fetching certifications for training ID: ${trainingId}`);
+        const { data: certifications, error: certificationsError } = await supabase
+            .from('training_certifications')
+            .select('trainingCertId')
+            .eq('trainingId', parseInt(trainingId));
+
+        let certificatesCreated = 0;
+        let certificatesFailed = 0;
+
+        if (certificationsError) {
+            console.error('Error fetching training certifications:', certificationsError);
+            console.log('Continuing without certifications...');
+        } else if (certifications && certifications.length > 0) {
+            console.log(`Found ${certifications.length} certifications for training`);
+
+            // Create certificate records
+            for (const cert of certifications) {
+                try {
+                    const certificateRecordData = {
+                        trainingRecordId: trainingRecordId,
+                        certificate_url: null // Initially null, to be updated when certificate is issued
+                    };
+
+                    console.log('Creating certificate record:', certificateRecordData);
+
+                    const { data: certificateRecord, error: certInsertError } = await supabase
+                        .from('training_records_certificates')
+                        .insert([certificateRecordData])
+                        .select()
+                        .single();
+
+                    if (certInsertError) {
+                        console.error(`Error creating certificate record for training ${trainingId}:`, certInsertError);
+                        certificatesFailed++;
+                    } else {
+                        certificatesCreated++;
+                        console.log(`Successfully created certificate record: ${certificateRecord.trainingRecordCertificateId}`);
+                    }
+                } catch (certError) {
+                    console.error(`Exception creating certificate record for training ${trainingId}:`, certError);
+                    certificatesFailed++;
+                }
+            }
+
+            console.log(`Certificate creation summary:`);
+            console.log(`- Total certifications found: ${certifications.length}`);
+            console.log(`- Certificates successfully created: ${certificatesCreated}`);
+            console.log(`- Certificates failed to create: ${certificatesFailed}`);
+
+            if (certificatesCreated !== certifications.length) {
+                console.warn(`⚠️  WARNING: Expected ${certifications.length} certificate records, but only created ${certificatesCreated}`);
+            } else {
+                console.log(`✅ SUCCESS: All ${certifications.length} certificates successfully created in training_records_certificates`);
+            }
+        } else {
+            console.log('No certifications found for this training');
+        }
+
+        console.log(`Training request created successfully: ${trainingRecordId} with ${activitiesCreated}/${activities ? activities.length : 0} activities and ${certificatesCreated}/${certifications ? certifications.length : 0} certificates`);
 
         res.status(201).json({
             success: true,
@@ -4089,7 +4818,11 @@ getEmployeeTrainingSpecific: function(req, res) {
                 activitiesCreated: activitiesCreated,
                 totalActivitiesAvailable: activities ? activities.length : 0,
                 activitiesFailed: activitiesFailed,
-                allActivitiesCreated: activitiesCreated === (activities ? activities.length : 0)
+                allActivitiesCreated: activitiesCreated === (activities ? activities.length : 0),
+                certificatesCreated: certificatesCreated,
+                totalCertificatesAvailable: certifications ? certifications.length : 0,
+                certificatesFailed: certificatesFailed,
+                allCertificatesCreated: certificatesCreated === (certifications ? certifications.length : 0)
             }
         });
 
@@ -4103,7 +4836,6 @@ getEmployeeTrainingSpecific: function(req, res) {
         });
     }
 },
-
 
 // Training Progress
 getTrainingProgress: async function(req, res) {
@@ -4365,66 +5097,864 @@ getCertificates: async function(req, res) {
     }
 },
 
-// Download Certificate
-downloadCertificate: async function(req, res) {
-    const userId = req.session?.user?.userId;
-    if (!userId) {
-        return res.status(401).json({
-            success: false,
-            message: 'User not authenticated'
+
+// UPDATED: Get certificates for training with completion check
+getCertificatesForTraining: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
         });
     }
 
-    console.log(`[${new Date().toISOString()}] Downloading certificate ${req.params.certId} for user ${userId}`);
-    
     try {
-        const { certId } = req.params;
+        const trainingRecordId = req.params.trainingRecordId;
+        const userId = req.session.user.userId;
 
-        const { data: certificate, error: certError } = await supabase
-            .from('training_certifications')
-            .select(`
-                trainingCertId,
-                trainingCertTitle,
-                trainingId,
-                trainings (
-                    trainingName,
-                    training_records!inner (
-                        userId,
-                        trainingStatus
-                    )
-                )
-            `)
-            .eq('trainingCertId', parseInt(certId))
-            .eq('trainings.training_records.userId', userId)
+        console.log(`Fetching certificates for training record: ${trainingRecordId}`);
+
+        // Verify training record belongs to user
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .select('trainingRecordId, trainingId')
+            .eq('trainingRecordId', trainingRecordId)
+            .eq('userId', userId)
             .single();
 
-        if (certError || !certificate) {
+        if (recordError || !trainingRecord) {
             return res.status(404).json({
                 success: false,
-                message: 'Certificate not found or access denied'
+                message: 'Training record not found'
+            });
+        }
+
+        // Check if all activities are completed
+        const { data: activities, error: activitiesError } = await supabase
+            .from('training_records_activities')
+            .select('status')
+            .eq('trainingRecordId', trainingRecordId);
+
+        let allCompleted = false;
+        if (!activitiesError && activities) {
+            allCompleted = activities.length > 0 && activities.every(activity => activity.status === 'Completed');
+        }
+
+        // Get all certificates assigned to this training
+        const { data: trainingCertifications, error: certificationsError } = await supabase
+            .from('training_certifications')
+            .select('trainingCertId, trainingCertTitle, trainingCertDesc')
+            .eq('trainingId', trainingRecord.trainingId)
+            .order('trainingCertId', { ascending: true });
+
+        if (certificationsError) {
+            console.error('Error fetching training certifications:', certificationsError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch training certifications'
+            });
+        }
+
+        // Get uploaded certificates for this training record
+        const { data: uploadedCertificates, error: uploadedError } = await supabase
+            .from('training_records_certificates')
+            .select('trainingCertId, certificate_url, created_at, trainingRecordCertificateId')
+            .eq('trainingRecordId', trainingRecordId);
+
+        if (uploadedError) {
+            console.error('Error fetching uploaded certificates:', uploadedError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch uploaded certificates'
+            });
+        }
+
+        // Combine certification requirements with upload status
+        const certificatesWithStatus = trainingCertifications.map(cert => {
+            const uploaded = uploadedCertificates.find(upload => upload.trainingCertId === cert.trainingCertId);
+            return {
+                trainingCertId: cert.trainingCertId,
+                trainingCertTitle: cert.trainingCertTitle,
+                trainingCertDesc: cert.trainingCertDesc,
+                isUploaded: !!uploaded,
+                certificate_url: uploaded?.certificate_url || null,
+                uploadedAt: uploaded?.created_at || null,
+                trainingRecordCertificateId: uploaded?.trainingRecordCertificateId || null,
+                canUpload: allCompleted // Add completion check
+            };
+        });
+
+        res.json({
+            success: true,
+            data: certificatesWithStatus,
+            allActivitiesCompleted: allCompleted
+        });
+
+    } catch (error) {
+        console.error('Error fetching certificates for training:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch certificates',
+            error: error.message
+        });
+    }
+},
+
+// Updated certificate upload method
+uploadTrainingCertificate: async function(req, res) {
+    console.log('📂 [Certificate Upload] Initiating certificate upload process...');
+
+    try {
+        const userId = req.session.user?.userId;
+        if (!userId) {
+            console.error('❌ [Certificate Upload] No user session found.');
+            return res.status(400).json({ success: false, message: 'User session not found.' });
+        }
+
+        if (!req.files || !req.files.file) {
+            console.log('❌ [Certificate Upload] No file uploaded.');
+            return res.status(400).json({ success: false, message: 'No file uploaded.' });
+        }
+
+        const file = req.files.file;
+        const trainingRecordId = req.body.trainingRecordId;
+        const trainingCertId = req.body.trainingCertId;
+
+        if (!trainingRecordId || !trainingCertId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Training record ID and certificate ID are required.' 
+            });
+        }
+
+        console.log(`📎 [Certificate Upload] File received: ${file.name} (Type: ${file.mimetype}, Size: ${file.size} bytes)`);
+        console.log(`📋 [Certificate Upload] Training Record ID: ${trainingRecordId}, Certificate ID: ${trainingCertId}`);
+
+        // File validation
+        const allowedTypes = [
+            'application/pdf', 'image/jpeg', 'image/png', 'image/jpg',
+            'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        const maxSize = 10 * 1024 * 1024; // 10 MB
+
+        if (!allowedTypes.includes(file.mimetype)) {
+            console.log('❌ [Certificate Upload] Invalid file type.');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid file type. Please upload PDF, image, or Word document.' 
+            });
+        }
+
+        if (file.size > maxSize) {
+            console.log('❌ [Certificate Upload] File size exceeds the 10 MB limit.');
+            return res.status(400).json({ 
+                success: false, 
+                message: 'File size exceeds the 10 MB limit.' 
+            });
+        }
+
+        // Verify training record belongs to user
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .select('trainingRecordId, trainingId')
+            .eq('trainingRecordId', trainingRecordId)
+            .eq('userId', userId)
+            .single();
+
+        if (recordError || !trainingRecord) {
+            console.error('❌ [Certificate Upload] Training record not found:', recordError);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Training record not found or access denied.' 
+            });
+        }
+
+        // Verify certificate exists for this training
+        const { data: certificationExists, error: certError } = await supabase
+            .from('training_certifications')
+            .select('trainingCertId, trainingCertTitle, trainingCertDesc')
+            .eq('trainingCertId', trainingCertId)
+            .eq('trainingId', trainingRecord.trainingId)
+            .single();
+
+        if (certError || !certificationExists) {
+            console.error('❌ [Certificate Upload] Certificate not found for this training:', certError);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Certificate not found for this training.' 
+            });
+        }
+
+        // Check if certificate already uploaded
+        const { data: existingUpload, error: existingError } = await supabase
+            .from('training_records_certificates')
+            .select('trainingRecordCertificateId, certificate_url')
+            .eq('trainingRecordId', trainingRecordId)
+            .eq('trainingCertId', trainingCertId)
+            .maybeSingle();
+
+        if (existingError && existingError.code !== 'PGRST116') {
+            console.error('❌ [Certificate Upload] Error checking existing upload:', existingError);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error checking existing upload.' 
+            });
+        }
+
+        // Generate unique file name
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const timestamp = Date.now();
+        const uniqueName = `cert_${trainingRecordId}_${trainingCertId}_${timestamp}.${fileExtension}`;
+        const filePath = path.join(__dirname, '../uploads', uniqueName);
+
+        // Ensure uploads directory exists
+        const uploadsDir = path.join(__dirname, '../uploads');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        // Save file locally first
+        await file.mv(filePath);
+        console.log('📂 [Certificate Upload] File successfully saved locally. Uploading to Supabase...');
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+            .from('training-certificates')
+            .upload(uniqueName, fs.readFileSync(filePath), {
+                contentType: file.mimetype,
+                cacheControl: '3600',
+                upsert: false,
+            });
+
+        // Remove local file after upload attempt
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log('📂 [Certificate Upload] Local file deleted after upload attempt.');
+        }
+
+        if (uploadError) {
+            console.error('❌ [Certificate Upload] Error uploading file to Supabase:', uploadError);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error uploading file to storage.' 
+            });
+        }
+
+        const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/training-certificates/${uniqueName}`;
+        console.log(`✅ [Certificate Upload] File uploaded successfully: ${fileUrl}`);
+
+        let result;
+        if (existingUpload) {
+            // Update existing record
+            console.log('📝 [Certificate Upload] Updating existing certificate record...');
+            
+            // Delete old file from storage if it exists
+            if (existingUpload.certificate_url) {
+                try {
+                    const oldFileName = existingUpload.certificate_url.split('/').pop();
+                    await supabase.storage
+                        .from('training-certificates')
+                        .remove([oldFileName]);
+                    console.log('🗑️ [Certificate Upload] Old file deleted from storage.');
+                } catch (deleteError) {
+                    console.warn('⚠️ [Certificate Upload] Failed to delete old file:', deleteError);
+                }
+            }
+
+            const { data: updatedCert, error: updateError } = await supabase
+                .from('training_records_certificates')
+                .update({
+                    certificate_url: fileUrl,
+                    created_at: new Date().toISOString()
+                })
+                .eq('trainingRecordCertificateId', existingUpload.trainingRecordCertificateId)
+                .select()
+                .single();
+
+            if (updateError) {
+                console.error('❌ [Certificate Upload] Error updating certificate record:', updateError);
+                // Try to clean up uploaded file
+                try {
+                    await supabase.storage.from('training-certificates').remove([uniqueName]);
+                } catch (cleanupError) {
+                    console.error('❌ [Certificate Upload] Failed to clean up uploaded file:', cleanupError);
+                }
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error updating certificate record.' 
+                });
+            }
+
+            result = updatedCert;
+            console.log('✅ [Certificate Upload] Certificate record updated successfully.');
+        } else {
+            // Insert new record
+            console.log('📝 [Certificate Upload] Creating new certificate record...');
+            
+            const { data: insertedCert, error: insertError } = await supabase
+                .from('training_records_certificates')
+                .insert([{
+                    trainingRecordId: parseInt(trainingRecordId),
+                    trainingCertId: parseInt(trainingCertId),
+                    certificate_url: fileUrl,
+                    created_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
+
+            if (insertError) {
+                console.error('❌ [Certificate Upload] Error inserting certificate record:', insertError);
+                // Try to clean up uploaded file
+                try {
+                    await supabase.storage.from('training-certificates').remove([uniqueName]);
+                } catch (cleanupError) {
+                    console.error('❌ [Certificate Upload] Failed to clean up uploaded file:', cleanupError);
+                }
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error saving certificate record.' 
+                });
+            }
+
+            result = insertedCert;
+            console.log('✅ [Certificate Upload] Certificate record created successfully.');
+        }
+
+        res.json({
+            success: true,
+            message: `Certificate "${certificationExists.trainingCertTitle}" uploaded successfully`,
+            data: {
+                certificateUrl: fileUrl,
+                certificateId: result.trainingRecordCertificateId,
+                trainingCertTitle: certificationExists.trainingCertTitle,
+                trainingCertDesc: certificationExists.trainingCertDesc,
+                uploadedAt: result.created_at
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ [Certificate Upload] Unexpected error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'An unexpected error occurred during upload.',
+            error: error.message 
+        });
+    }
+},
+
+
+// NEW: Get user's job information
+getUserJobInfo: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
+        });
+    }
+
+    try {
+        const userId = req.session.user.userId;
+
+        const { data: staffData, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('jobId, departmentId')
+            .eq('userId', userId)
+            .single();
+
+        if (staffError || !staffData) {
+            return res.status(404).json({
+                success: false,
+                message: 'Staff information not found'
             });
         }
 
         res.json({
             success: true,
-            message: 'Certificate download initiated',
-            data: {
-                certificateId: certificate.trainingCertId,
-                title: certificate.trainingCertTitle,
-                downloadUrl: `/certificates/${certificate.trainingCertId}.pdf`
-            }
+            data: staffData
         });
-
     } catch (error) {
+        console.error('Error fetching user job info:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to download certificate',
-            error: error.message,
-            timestamp: new Date().toISOString()
+            message: 'Failed to fetch user job information',
+            error: error.message
         });
     }
 },
 
+// NEW: Get job skills
+getJobSkills: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
+        });
+    }
+
+    try {
+        const { jobId } = req.params;
+
+        const { data: skills, error: skillsError } = await supabase
+            .from('jobreqskills')
+            .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
+            .eq('jobId', parseInt(jobId))
+            .order('jobReqSkillName', { ascending: true });
+
+        if (skillsError) {
+            console.error('Error fetching job skills:', skillsError);
+            throw skillsError;
+        }
+
+        res.json({
+            success: true,
+            data: skills || []
+        });
+    } catch (error) {
+        console.error('Error in getJobSkills:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch job skills',
+            error: error.message
+        });
+    }
+},
+
+// NEW: Get user objectives
+getUserObjectives: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
+        });
+    }
+
+    try {
+        const userId = req.session.user.userId;
+
+        // Get user's objective settings
+        const { data: objectiveSettings, error: settingsError } = await supabase
+            .from('objectivesettings')
+            .select('objectiveSettingsId')
+            .eq('userId', userId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (settingsError) {
+            console.error('Error fetching objective settings:', settingsError);
+            throw settingsError;
+        }
+
+        if (!objectiveSettings || objectiveSettings.length === 0) {
+            return res.json({
+                success: true,
+                data: []
+            });
+        }
+
+        // Get objectives for the latest settings
+        const { data: objectives, error: objectivesError } = await supabase
+            .from('objectivesettings_objectives')
+            .select('objectiveId, objectiveDescrpt, objectiveKPI, objectiveUOM, objectiveTarget, objectiveAssignedWeight')
+            .eq('objectiveSettingsId', objectiveSettings[0].objectiveSettingsId)
+            .order('objectiveDescrpt', { ascending: true });
+
+        if (objectivesError) {
+            console.error('Error fetching objectives:', objectivesError);
+            throw objectivesError;
+        }
+
+        res.json({
+            success: true,
+            data: objectives || []
+        });
+    } catch (error) {
+        console.error('Error in getUserObjectives:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch user objectives',
+            error: error.message
+        });
+    }
+},
+
+// UPDATED: Single activity update with timestamp handling
+updateSingleActivity: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
+        });
+    }
+
+    try {
+        const { trainingRecordId, activityId } = req.params;
+        const { status, timestampzStarted, timestampzCompleted } = req.body;
+        const userId = req.session.user.userId;
+
+        console.log('Updating single activity with timestamps:', {
+            trainingRecordId,
+            activityId,
+            status,
+            timestampzStarted,
+            timestampzCompleted,
+            userId
+        });
+
+        // Verify training record belongs to user
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .select('trainingRecordId, trainingId')
+            .eq('trainingRecordId', trainingRecordId)
+            .eq('userId', userId)
+            .single();
+
+        if (recordError || !trainingRecord) {
+            return res.status(404).json({
+                success: false,
+                message: 'Training record not found'
+            });
+        }
+
+        // Prepare update data
+        const updateData = {
+            trainingRecordId: parseInt(trainingRecordId),
+            activityId: parseInt(activityId)
+        };
+
+        if (status !== undefined) updateData.status = status;
+        if (timestampzStarted !== undefined) updateData.timestampzStarted = timestampzStarted;
+        if (timestampzCompleted !== undefined) updateData.timestampzCompleted = timestampzCompleted;
+
+        // Upsert the activity record
+        const { data: updatedActivity, error: updateError } = await supabase
+            .from('training_records_activities')
+            .upsert(updateData, {
+                onConflict: 'trainingRecordId,activityId'
+            })
+            .select()
+            .single();
+
+        if (updateError) {
+            console.error('Error updating activity:', updateError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to update activity: ' + updateError.message
+            });
+        }
+
+        // Update training progress
+        try {
+            await updateTrainingProgress(trainingRecordId);
+        } catch (progressError) {
+            console.error('Failed to update training progress:', progressError);
+        }
+
+        console.log('Activity updated successfully:', updatedActivity);
+
+        res.json({
+            success: true,
+            message: 'Activity updated successfully',
+            data: updatedActivity
+        });
+
+    } catch (error) {
+        console.error('Error updating single activity:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update activity',
+            error: error.message
+        });
+    }
+},
+
+// UPDATED: Batch activities update with timestamp handling
+updateTrainingActivities: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
+        });
+    }
+
+    try {
+        const trainingRecordId = req.params.trainingRecordId;
+        const userId = req.session.user.userId;
+        const { activities } = req.body;
+
+        console.log('Batch updating activities with timestamps for training record:', trainingRecordId);
+        console.log('Activities to update:', activities);
+
+        if (!activities || !Array.isArray(activities)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Activities array is required'
+            });
+        }
+
+        // Verify training record belongs to user
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .select('trainingRecordId, trainingId')
+            .eq('trainingRecordId', trainingRecordId)
+            .eq('userId', userId)
+            .single();
+
+        if (recordError || !trainingRecord) {
+            console.error('Training record not found:', recordError);
+            return res.status(404).json({
+                success: false,
+                message: 'Training record not found'
+            });
+        }
+
+        const updateResults = [];
+        
+        // Process each activity update
+        for (const activity of activities) {
+            try {
+                console.log(`Processing activity ${activity.activityId}:`, activity);
+
+                const updateData = {
+                    trainingRecordId: parseInt(trainingRecordId),
+                    activityId: activity.activityId,
+                    status: activity.status || 'Not Started',
+                    timestampzStarted: activity.timestampzStarted || null,
+                    timestampzCompleted: activity.timestampzCompleted || null
+                };
+
+                // Upsert activity record
+                const { data: upsertedRecord, error: upsertError } = await supabase
+                    .from('training_records_activities')
+                    .upsert(updateData, {
+                        onConflict: 'trainingRecordId,activityId'
+                    })
+                    .select()
+                    .single();
+
+                if (upsertError) {
+                    console.error('Error upserting activity:', upsertError);
+                    updateResults.push({ 
+                        success: false, 
+                        activityId: activity.activityId, 
+                        error: upsertError.message 
+                    });
+                    continue;
+                }
+
+                updateResults.push({ 
+                    success: true, 
+                    activityId: activity.activityId,
+                    data: upsertedRecord
+                });
+
+            } catch (error) {
+                console.error('Error processing activity:', error);
+                updateResults.push({ 
+                    success: false, 
+                    activityId: activity.activityId, 
+                    error: error.message 
+                });
+            }
+        }
+
+        // Update overall training progress
+        try {
+            await updateTrainingProgress(trainingRecordId);
+        } catch (progressError) {
+            console.error('Failed to update training progress:', progressError);
+        }
+
+        const successfulUpdates = updateResults.filter(result => result.success);
+        const failedUpdates = updateResults.filter(result => !result.success);
+
+        console.log('Batch update completed:', {
+            successful: successfulUpdates.length,
+            failed: failedUpdates.length
+        });
+
+        res.json({
+            success: successfulUpdates.length > 0,
+            message: failedUpdates.length === 0 ? 
+                `Updated ${successfulUpdates.length} activities successfully` :
+                `Updated ${successfulUpdates.length} activities successfully, ${failedUpdates.length} failed`,
+            updatedCount: successfulUpdates.length,
+            failedCount: failedUpdates.length,
+            details: updateResults
+        });
+
+    } catch (error) {
+        console.error('Error in batch update:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update activities',
+            error: error.message
+        });
+    }
+},
+
+// UPDATED: Helper function to update training progress
+updateTrainingProgress: async function(trainingRecordId) {
+    try {
+        // Get all activities for this training record
+        const { data: activities, error: activitiesError } = await supabase
+            .from('training_records_activities')
+            .select('status')
+            .eq('trainingRecordId', trainingRecordId);
+
+        if (activitiesError) {
+            console.error('Error fetching activities for progress update:', activitiesError);
+            return;
+        }
+
+        if (!activities || activities.length === 0) {
+            return;
+        }
+
+        const totalActivities = activities.length;
+        const completedActivities = activities.filter(activity => activity.status === 'Completed').length;
+        const inProgressActivities = activities.filter(activity => activity.status === 'In Progress').length;
+
+        let trainingStatus = 'Not Started';
+        
+        if (completedActivities === totalActivities) {
+            trainingStatus = 'Completed';
+        } else if (completedActivities > 0 || inProgressActivities > 0) {
+            trainingStatus = 'In Progress';
+        }
+
+        // Update training record status
+        const { error: updateError } = await supabase
+            .from('training_records')
+            .update({ trainingStatus })
+            .eq('trainingRecordId', trainingRecordId);
+
+        if (updateError) {
+            console.error('Error updating training status:', updateError);
+        } else {
+            console.log(`Training ${trainingRecordId} status updated to: ${trainingStatus}`);
+        }
+
+    } catch (error) {
+        console.error('Error in updateTrainingProgress:', error);
+    }
+},
+
+// UPDATED: Get training record details with timestamp fields
+getTrainingRecordDetails: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
+        });
+    }
+
+    try {
+        const trainingRecordId = req.params.trainingRecordId;
+        const userId = req.session.user.userId;
+        
+        // Fetch training record with training details
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .select(`
+                *,
+                trainings!inner (
+                    trainingId,
+                    trainingName,
+                    trainingDesc,
+                    isOnlineArrangement,
+                    totalDuration,
+                    cost,
+                    address,
+                    country
+                )
+            `)
+            .eq('trainingRecordId', trainingRecordId)
+            .eq('userId', userId)
+            .single();
+
+        if (recordError || !trainingRecord) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Training record not found' 
+            });
+        }
+
+        // Fetch activities with completion status (updated field names)
+        const { data: activitiesData, error: activitiesError } = await supabase
+            .from('training_activities')
+            .select(`
+                activityId,
+                activityName,
+                activityType,
+                activityRemarks,
+                estActivityDuration,
+                trainingId
+            `)
+            .eq('trainingId', trainingRecord.trainings.trainingId);
+
+        if (activitiesError) {
+            console.error('Error fetching activities:', activitiesError);
+        }
+
+        // Fetch activity completion status with timestamp fields
+        const { data: activityStatus, error: statusError } = await supabase
+            .from('training_records_activities')
+            .select('*')
+            .eq('trainingRecordId', trainingRecordId);
+
+        if (statusError) {
+            console.error('Error fetching activity status:', statusError);
+        }
+
+        // Merge activities with their status
+        const activities = (activitiesData || []).map(activity => {
+            const status = (activityStatus || []).find(s => s.activityId === activity.activityId);
+            return {
+                ...activity,
+                status: status?.status || 'Not Started',
+                timestampzStarted: status?.timestampzStarted || null,
+                timestampzCompleted: status?.timestampzCompleted || null,
+                trainingRecordActivityId: status?.trainingRecordActivityId || null
+            };
+        });
+
+        // Get activity counts
+        const totalActivities = activities?.length || 0;
+        const completedActivities = activities?.filter(
+            activity => activity.status === 'Completed'
+        ).length || 0;
+
+        // Calculate percentage
+        const percentage = totalActivities > 0 ? 
+            Math.round((completedActivities / totalActivities) * 100) : 0;
+
+        const enrichedRecord = {
+            ...trainingRecord,
+            trainingName: trainingRecord.trainings.trainingName,
+            trainingDesc: trainingRecord.trainings.trainingDesc,
+            isOnlineArrangement: trainingRecord.trainings.isOnlineArrangement,
+            totalDuration: trainingRecord.trainings.totalDuration,
+            cost: trainingRecord.trainings.cost,
+            address: trainingRecord.trainings.address,
+            country: trainingRecord.trainings.country,
+            totalActivities,
+            completedActivities,
+            trainingPercentage: percentage,
+            activities: activities || []
+        };
+        
+        res.json({
+            success: true,
+            data: enrichedRecord
+        });
+    } catch (error) {
+        console.error('Error fetching training record details:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch training record details',
+            error: error.message 
+        });
+    }
+},
 
 
 getLogoutButton: function(req, res) {

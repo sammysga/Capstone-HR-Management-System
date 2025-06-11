@@ -181,32 +181,41 @@
             margin-bottom: 5px;
         }
 
-        .progress-category.in-progress {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-        }
+       .progress-category.not-started {
+    border-color: #64748b;
+    background-color: #f8fafc;
+}
 
-        .progress-category.in-progress .count {
-            color: #3b82f6;
-        }
+.progress-category.not-started .count {
+    color: #64748b;
+}
 
-        .progress-category.completed {
-            border-color: #10b981;
-            background-color: #ecfdf5;
-        }
+.progress-category.in-progress {
+    border-color: #07ACB9;
+    background-color: #f0fdff;
+}
 
-        .progress-category.completed .count {
-            color: #10b981;
-        }
+.progress-category.in-progress .count {
+    color: #07ACB9;
+}
 
-        .progress-category.overdue {
-            border-color: #ef4444;
-            background-color: #fef2f2;
-        }
+.progress-category.completed {
+    border-color: #124A5C;
+    background-color: #f1f5f9;
+}
 
-        .progress-category.overdue .count {
-            color: #ef4444;
-        }
+.progress-category.completed .count {
+    color: #124A5C;
+}
+
+.progress-category.overdue {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+}
+
+.progress-category.overdue .count {
+    color: #dc2626;
+}
 
         /* Courses header actions */
         .courses-header-actions {
@@ -561,17 +570,6 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
 
-        .course-card.enrolled {
-            border-left: 4px solid #07ACB9;
-        }
-
-        .course-card.completed {
-            border-left: 4px solid #10b981;
-        }
-
-        .course-card.overdue {
-            border-left: 4px solid #ef4444;
-        }
 
         .course-header {
             display: flex;
@@ -666,6 +664,296 @@
         .enroll-btn:hover {
             background-color: #059ca4;
         }
+
+        /* Status badges for course list items */
+/* Enhanced Course Card Styling - No Ribbon Version */
+.course-card.enhanced {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.course-card.enhanced:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+    border-color: #07ACB9;
+}
+
+.course-card.enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #07ACB9 0%, #124A5C 100%);
+}
+
+/* Remove ribbon styles */
+.course-status-ribbon {
+    display: none;
+}
+
+/* Status indicator near progress */
+.progress-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.progress-status-indicator.not-started {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.progress-status-indicator.in-progress {
+    background: #f0fdff;
+    color: #07ACB9;
+}
+
+.progress-status-indicator.completed {
+    background: #f1f5f9;
+    color: #124A5C;
+}
+
+.progress-status-indicator.overdue {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* Card content sections */
+.course-card.enhanced .course-header {
+    padding: 20px 20px 15px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 0;
+}
+
+.course-card.enhanced .course-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.course-card.enhanced .course-badges {
+    margin: 0;
+}
+
+.course-card.enhanced .course-type {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.course-card.enhanced .course-type.online {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.course-card.enhanced .course-type.onsite {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.course-card.enhanced .course-description {
+    padding: 0 20px;
+    margin: 15px 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Meta grid */
+.course-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.course-meta-grid .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.course-meta-grid .meta-item i {
+    color: #07ACB9;
+    font-size: 10px;
+    width: 12px;
+    text-align: center;
+}
+
+/* Progress section with status indicator */
+.course-progress-section {
+    padding: 0 20px 15px 20px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.progress-label-with-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.progress-percentage {
+    font-size: 12px;
+    font-weight: 700;
+    color: #07ACB9;
+}
+
+.course-progress-bar {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.course-progress-bar .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #07ACB9 0%, #124A5C 100%);
+    border-radius: 4px;
+    position: relative;
+    transition: width 0.6s ease;
+}
+
+.progress-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shine 2s infinite;
+}
+
+@keyframes shine {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+}
+
+/* Footer */
+.course-footer {
+    padding: 15px 20px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.course-dates {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.course-dates small {
+    color: #64748b;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.course-dates i {
+    color: #07ACB9;
+    width: 10px;
+}
+
+.click-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #07ACB9;
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+}
+
+.course-card.enhanced:hover .click-indicator {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.click-indicator i {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+}
+
+.course-card.enhanced:hover .click-indicator i {
+    transform: translateX(3px);
+}
+
+/* Remove old styles that conflict */
+.course-card.enhanced::after {
+    display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .course-meta-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .course-footer {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .click-indicator {
+        align-self: flex-end;
+    }
+}
+
 
         /* Progress bar styling - matching the performance dashboard */
         .course-progress {
@@ -1561,6 +1849,32 @@
     gap: 8px;
 }
 
+/* Loading state improvements */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #64748b;
+    grid-column: 1 / -1;
+}
+
+.loading-state i {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    opacity: 0.6;
+}
+
+.loading-state .loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* Action Buttons */
 .modal-actions {
     padding: 25px 30px;
@@ -1729,28 +2043,28 @@
                     </div>
                 </div>
 
-                <!-- All Courses Tab -->
-                <div id="courses-tab" class="tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>All Training Courses</h3>
-                            <div class="courses-header-actions">
-                                <button class="add-request-btn" onclick="openTrainingRequestModal()">
-                                    <i class="fas fa-plus"></i>
-                                    Request New Training
-                                </button>
-                            </div>
-                        </div>
-                        <p>Browse all available training courses. Use "Update Progress" for active trainings you're enrolled in.</p>
-                        
-                        <div class="courses-grid" id="allCoursesGrid">
-                            <div class="loading-state">
-                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
-                                Loading available courses...
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+<!-- Update the courses tab content -->
+<div id="courses-tab" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h3>Manage Training Courses</h3>
+            <div class="courses-header-actions">
+                <button class="add-request-btn" onclick="openTrainingRequestModal()">
+                    <i class="fas fa-plus"></i>
+                    Request New Training
+                </button>
+            </div>
+      </div>
+<p style="margin-bottom: 20px;">Manage your assigned training courses. Click on any course to view details and update progress.</p>
+<div class="courses-grid" id="allCoursesGrid">
+    <div class="loading-state">
+        <i class="fas fa-spinner fa-spin loading-spinner"></i>
+        Loading your training courses...
+    </div>
+</div>
+    </div>
+</div>
 
                 <!-- Certificates Tab -->
                 <div id="certificates-tab" class="tab-content">
@@ -2867,36 +3181,81 @@ function resetModal() {
             });
         }
 
-        async function loadTrainingProgress() {
-            try {
-                const response = await fetch('/employee/training-progress', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                });
+        // Initialize global variables to prevent undefined errors
+let trainingProgressData = { counts: { notStarted: 0, inProgress: 0, completed: 0, overdue: 0 }, trainings: [] };
+let allCoursesData = [];
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+// Improved error handling for loadTrainingProgress
+async function loadTrainingProgress() {
+    try {
+        const response = await fetch('/employee/training-progress', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
 
-                const result = await response.json();
-                
-                if (result.success) {
-                    trainingProgressData = result.data;
-                    renderProgressCategories();
-                    renderTrainingSections();
-                } else {
-                    throw new Error(result.message || 'Failed to fetch training progress');
-                }
-            } catch (error) {
-                console.error('Error loading training progress:', error);
-                document.getElementById('progressCategories').innerHTML = 
-                    `<div class="loading-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Failed to load training progress. Please refresh the page.
-                    </div>`;
-            }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            // Process the data and determine statuses
+            const processedData = {
+                counts: {
+                    notStarted: 0,
+                    inProgress: 0,
+                    completed: 0,
+                    overdue: 0
+                },
+                trainings: result.data.map(training => {
+                    const status = determineTrainingStatus(training);
+                    return { ...training, status };
+                })
+            };
+            
+            // Count statuses
+            processedData.trainings.forEach(training => {
+                switch (training.status) {
+                    case 'Not Started':
+                        processedData.counts.notStarted++;
+                        break;
+                    case 'In Progress':
+                        processedData.counts.inProgress++;
+                        break;
+                    case 'Completed':
+                        processedData.counts.completed++;
+                        break;
+                    case 'Overdue':
+                        processedData.counts.overdue++;
+                        break;
+                }
+            });
+            
+            trainingProgressData = processedData;
+            renderProgressCategories();
+            renderTrainingSections();
+        } else {
+            throw new Error(result.message || 'No training data available');
+        }
+    } catch (error) {
+        console.error('Error loading training progress:', error);
+        document.getElementById('progressCategories').innerHTML = 
+            `<div class="loading-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 10px;"></i>
+                <p style="margin: 0; color: #64748b;">Failed to load training progress</p>
+                <button onclick="loadTrainingProgress()" style="margin-top: 10px; padding: 8px 16px; background: #07ACB9; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    <i class="fas fa-retry"></i> Retry
+                </button>
+            </div>`;
+        
+        document.getElementById('trainingSections').innerHTML = 
+            `<div style="text-align: center; color: #64748b; padding: 40px;">
+                <p>Unable to load training courses. Please try refreshing the page.</p>
+            </div>`;
+    }
+}
 
         function renderProgressCategories() {
             const container = document.getElementById('progressCategories');
@@ -2976,135 +3335,226 @@ function resetModal() {
             container.innerHTML = sectionsHTML || '<p style="text-align: center; color: #64748b; padding: 40px;">No training records found.</p>';
         }
 
-        function renderTrainingListItem(training, status) {
-            const progressPercentage = training.progress || 0;
-            const totalActivities = training.totalActivities || 0;
-            const completedActivities = training.completedActivities || 0;
-            
-            return `
-                <div class="course-list-item ${status}">
-                    <div class="course-list-info">
-                        <h5 class="course-list-title">${training.trainingName}</h5>
-                        <div class="course-list-details">
-                            Duration: ${training.totalDuration || 0} hours • 
-                            ${formatDateRange(training.setStartDate, training.setEndDate)} • 
-                            Activities: ${completedActivities}/${totalActivities}
-                        </div>
+
+function renderTrainingListItem(training, status) {
+    const progressPercentage = training.trainingPercentage || 0;
+    const totalActivities = training.totalActivities || 0;
+    const completedActivities = training.completedActivities || 0;
+    
+    return `
+        <div class="course-list-item ${status}" onclick="navigateToTrainingDetails(${training.trainingRecordId})" style="cursor: pointer;">
+            <div class="course-list-info">
+                <h5 class="course-list-title">${training.trainingName}</h5>
+                <div class="course-list-details">
+                    Duration: ${training.totalDuration || 0} hours • 
+                    ${formatDateRange(training.setStartDate, training.setEndDate)} • 
+                    Activities: ${completedActivities}/${totalActivities}
+                </div>
+            </div>
+            <div class="course-list-meta">
+                <div class="course-list-badges">
+                    <span class="course-list-badge ${training.isOnlineArrangement ? 'online' : 'onsite'}">
+                        ${training.isOnlineArrangement ? 'Online' : 'Onsite'}
+                    </span>
+                    <span class="course-list-badge ${status}">${training.status}</span>
+                </div>
+                <div class="course-list-progress">
+                    <div class="course-list-progress-bar">
+                        <div class="course-list-progress-fill" style="width: ${progressPercentage}%;"></div>
                     </div>
-                    <div class="course-list-meta">
-                        <div class="course-list-badges">
-                            <span class="course-list-badge ${training.isOnlineArrangement ? 'online' : 'onsite'}">
-                                ${training.isOnlineArrangement ? 'Online' : 'Onsite'}
+                    <div class="course-list-progress-text">${Math.round(progressPercentage)}%</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+
+// Add the missing formatDateRange function
+function formatDateRange(startDate, endDate) {
+    if (!startDate) return 'No dates set';
+    
+    const start = new Date(startDate).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+    
+    if (!endDate) return start;
+    
+    const end = new Date(endDate).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+    
+    return `${start} - ${end}`;
+}s
+
+
+// Navigation function to training details page
+function navigateToTrainingDetails(trainingRecordId) {
+    if (trainingRecordId) {
+        window.location.href = `/employee/training/course/${trainingRecordId}`;
+    }
+}
+
+
+
+// Updated status determination function
+function determineTrainingStatus(training) {
+    const now = new Date();
+    const startDate = training.setStartDate ? new Date(training.setStartDate) : null;
+    const endDate = training.setEndDate ? new Date(training.setEndDate) : null;
+    const percentage = training.trainingPercentage || 0;
+    
+    // Check if completed
+    if (percentage >= 100) {
+        return 'Completed';
+    }
+    
+    // Check if overdue
+    if (endDate && now > endDate && percentage < 100) {
+        return 'Overdue';
+    }
+    
+    // Check if in progress
+    if (startDate && now >= startDate && percentage > 0 && percentage < 100) {
+        return 'In Progress';
+    }
+    
+    // Check if not started but within date range
+    if (startDate && now >= startDate && percentage === 0) {
+        return 'In Progress'; // Should have started
+    }
+    
+    // Default to not started
+    return 'Not Started';
+}
+
+
+      async function loadAllCourses() {
+    try {
+        const response = await fetch('/employee/training-records', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            // Process data with status determination
+            allCoursesData = result.data.map(training => {
+                const status = determineTrainingStatus(training);
+                return { ...training, status };
+            });
+            renderAllCourses();
+        } else {
+            throw new Error(result.message || 'Failed to fetch training records');
+        }
+    } catch (error) {
+        console.error('Error loading training records:', error);
+        document.getElementById('allCoursesGrid').innerHTML = 
+            `<div class="loading-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                Failed to load training records. Please refresh the page.
+            </div>`;
+    }
+}
+
+// Updated renderAllCourses function without ribbon
+function renderAllCourses() {
+    const container = document.getElementById('allCoursesGrid');
+    
+    if (!allCoursesData || allCoursesData.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #64748b; padding: 40px; grid-column: 1 / -1;">
+                <i class="fas fa-graduation-cap" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p style="font-size: 1.1rem; margin-bottom: 8px;">No training courses assigned</p>
+                <p style="font-size: 0.9rem;">You don't have any training courses assigned to you yet.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const coursesHTML = allCoursesData.map(course => {
+        const progressPercentage = course.trainingPercentage || 0;
+        const statusClass = course.status ? course.status.toLowerCase().replace(' ', '-') : 'not-started';
+        
+        return `
+            <div class="course-card enhanced ${statusClass}" onclick="navigateToTrainingDetails(${course.trainingRecordId})" data-training-id="${course.trainingRecordId}">
+                
+                <div class="course-header">
+                    <h3 class="course-title">${course.trainings?.trainingName || course.trainingName || 'Unknown Training'}</h3>
+                    <div class="course-badges">
+                        <span class="course-type ${course.trainings?.isOnlineArrangement || course.isOnlineArrangement ? 'online' : 'onsite'}">
+                            <i class="fas fa-${course.trainings?.isOnlineArrangement || course.isOnlineArrangement ? 'laptop' : 'map-marker-alt'}"></i>
+                            ${course.trainings?.isOnlineArrangement || course.isOnlineArrangement ? 'Online' : 'Onsite'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="course-description">
+                    ${course.trainings?.trainingDesc || course.trainingDesc || 'No description available'}
+                </div>
+                
+                <div class="course-meta-grid">
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Duration: ${course.trainings?.totalDuration || course.totalDuration || 0} hours</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-tasks"></i>
+                        <span>Activities: ${course.completedActivities || 0}/${course.totalActivities || 0}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>${formatDateRange(course.setStartDate, course.setEndDate)}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Progress: ${Math.round(progressPercentage)}%</span>
+                    </div>
+                </div>
+                
+                <div class="course-progress-section">
+                    <div class="progress-header">
+                        <div class="progress-label-with-status">
+                            <span class="progress-label">Training Progress</span>
+                            <span class="progress-status-indicator ${statusClass}">
+                                ${course.status || 'Not Started'}
                             </span>
-                            <span class="course-list-badge status">${training.status}</span>
                         </div>
-                        <div class="course-list-progress">
-                            <div class="course-list-progress-bar">
-                                <div class="course-list-progress-fill" style="width: ${progressPercentage}%;"></div>
-                            </div>
-                            <div class="course-list-progress-text">${Math.round(progressPercentage)}%</div>
+                        <span class="progress-percentage">${Math.round(progressPercentage)}%</span>
+                    </div>
+                    <div class="course-progress-bar">
+                        <div class="progress-fill" style="width: ${progressPercentage}%;">
+                            <div class="progress-shine"></div>
                         </div>
                     </div>
                 </div>
-            `;
-        }
-
-        async function loadAllCourses() {
-            try {
-                const response = await fetch('/employee/all-courses', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
                 
-                if (result.success) {
-                    allCoursesData = result.data;
-                    renderAllCourses();
-                } else {
-                    throw new Error(result.message || 'Failed to fetch courses');
-                }
-            } catch (error) {
-                console.error('Error loading all courses:', error);
-                document.getElementById('allCoursesGrid').innerHTML = 
-                    `<div class="loading-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Failed to load courses. Please refresh the page.
-                    </div>`;
-            }
-        }
-
-        function renderAllCourses() {
-            const container = document.getElementById('allCoursesGrid');
-            
-            if (allCoursesData.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #64748b; padding: 40px;">No courses available.</p>';
-                return;
-            }
-
-            const coursesHTML = allCoursesData.map(course => `
-                <div class="course-card">
-                    <div class="course-header">
-                        <h3 class="course-title">${course.trainingName}</h3>
-                        <div class="course-badges">
-                            <span class="course-status ${course.isActive ? 'active' : 'inactive'}">
-                                ${course.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                            <span class="course-type ${course.isOnlineArrangement ? 'online' : 'onsite'}">
-                                ${course.isOnlineArrangement ? 'Online' : 'Onsite'}
-                            </span>
-                        </div>
+                <div class="course-footer">
+                    <div class="course-dates">
+                        ${course.setStartDate ? `<small><i class="fas fa-play"></i> Started: ${formatDate(course.setStartDate)}</small>` : ''}
+                        ${course.setEndDate ? `<small><i class="fas fa-flag-checkered"></i> Deadline: ${formatDate(course.setEndDate)}</small>` : ''}
                     </div>
-                    <div class="course-description">
-                        ${course.trainingDesc || 'No description available'}<br>
-                        Duration: ${course.totalDuration || 0} hours<br>
-                        Cost: ₱${course.cost ? course.cost.toFixed(2) : '0.00'}
-                        ${course.address ? `<br>Location: ${course.address}` : ''}
+                    <div class="click-indicator">
+                        <i class="fas fa-arrow-right"></i>
+                        View Details
                     </div>
-                    ${course.isActive ? 
-                        `<button class="action-btn update-progress-btn" onclick="updateProgress(${course.trainingId})">Update Progress</button>` :
-                        `<button class="action-btn completed-btn" disabled>Completed</button>`
-                    }
                 </div>
-            `).join('');
+            </div>
+        `;
+    }).join('');
 
-            container.innerHTML = coursesHTML;
-        }
-
-       async function loadCertificates() {
-            try {
-                const response = await fetch('/employee/certificates', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    renderCertificates(result.data);
-                } else {
-                    throw new Error(result.message || 'Failed to fetch certificates');
-                }
-                
-            } catch (error) {
-                console.error('Error loading certificates:', error);
-                document.getElementById('certificatesList').innerHTML = 
-                    `<div class="loading-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Failed to load certificates. Please refresh the page.
-                    </div>`;
-            }
-        }
+    container.innerHTML = coursesHTML;
+}
 
         function renderCertificates(certificates) {
             const container = document.getElementById('certificatesList');
@@ -3144,26 +3594,15 @@ function resetModal() {
             container.innerHTML = certificatesHTML;
         }
 
-        // Utility functions
-        function formatDateRange(startDate, endDate) {
-            if (!startDate) return 'No dates set';
-            
-            const start = new Date(startDate).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            });
-            
-            if (!endDate) return start;
-            
-            const end = new Date(endDate).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            });
-            
-            return `${start} - ${end}`;
-        }
+// Utility function to format dates
+function formatDate(dateString) {
+    if (!dateString) return 'Not set';
+    return new Date(dateString).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+}
 
         function scrollToSection(sectionId) {
             const section = document.getElementById(sectionId);
@@ -3184,7 +3623,7 @@ function resetModal() {
         // Action handlers
         function updateProgress(trainingId) {
             // Redirect to training progress update page or open modal
-            window.location.href = `/employee/training/${trainingId}/progress`;
+            window.location.href = `/employee/training/course/${trainingId}`;
         }
 
         function downloadCertificate(certId) {
