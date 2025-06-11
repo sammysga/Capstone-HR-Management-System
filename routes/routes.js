@@ -363,36 +363,42 @@ router.get('/linemanager/api/training-request/:userId/details', lineManagerContr
 router.post('/linemanager/training/approve', lineManagerController.approveTrainingRequest); // Fixed path
 router.post('/linemanager/training/reject', lineManagerController.rejectTrainingRequest); // Fixed path
 
+
 // ============================
 // Employee - TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================
 router.get('/employee/training/home', employeeController.getEmployeeTrainingHome);
 router.get('/employee/training/course/:trainingRecordId', employeeController.getEmployeeTrainingSpecific);
+
+// Training records and progress (CONSOLIDATED - removed duplicates)
 router.get('/employee/training-records', employeeController.getEmployeeTrainingRecords);
-router.get('/employee/training-progress', employeeController.getEmployeeTrainingProgress);
+router.get('/employee/training-progress', employeeController.getTrainingProgress); // Use the newer function
 router.get('/employee/training/:trainingRecordId/details', employeeController.getTrainingRecordDetails);
-router.get('/employee/trainings/dropdown', employeeController.getTrainingDropdown);
-router.get('/employee/trainings/:trainingId/details', employeeController.getTrainingDetails);
-router.post('/employee/certificates/upload', employeeController.uploadTrainingCertificate);
+
+// Training management
+router.get('/employee/trainings/dropdown', employeeController.getTrainingsByJobAndDept); // Use the newer function
+router.get('/employee/trainings/:trainingId/details', employeeController.getTrainingSkillsAndObjectives); // Use the newer function
+router.post('/employee/training-requests', employeeController.createTrainingRequest);
+
+// Activity updates
 router.put('/employee/training/:trainingRecordId/activity/:activityId', employeeController.updateSingleActivity);
+router.put('/employee/training/:trainingRecordId/activities', employeeController.updateTrainingActivities);
 
+// Certificates
+router.get('/employee/certificates', employeeController.getCertificates);
+router.get('/employee/training/:trainingRecordId/certificates', employeeController.getCertificatesForTraining);
+router.post('/employee/certificates/upload', employeeController.uploadTrainingCertificate);
 
-// helper functions
+// Helper functions
 router.get('/employee/user-job-info', employeeController.getUserJobInfo);
 router.get('/employee/job/:jobId/skills', employeeController.getJobSkills);
 router.get('/employee/user/objectives', employeeController.getUserObjectives);
-
-
-// GET /api/trainings/dropdown - Get trainings for dropdown (uses user's job from session)
-router.get('/employee/trainings/dropdown', employeeController.getTrainingsByJobAndDept);
 // GET /api/trainings/:trainingId/details - Get training skills and objectives
 router.get('/employee/trainings/:trainingId/details', employeeController.getTrainingSkillsAndObjectives);
 // POST /api/training-requests - Create new training request
-router.post('/employee/training-requests', employeeController.createTrainingRequest);
 router.get('/employee/training-progress', employeeController.getTrainingProgress);
 router.get('/employee/all-courses', employeeController.getAllCourses);
 router.get('/employee/training/:trainingRecordId/certificates', employeeController.getCertificatesForTraining);
-router.post('/employee/certificates/upload', employeeController.uploadTrainingCertificate);
 router.get('/employee/certificates', employeeController.getCertificates);
 
 
