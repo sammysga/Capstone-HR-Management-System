@@ -876,20 +876,224 @@
             }
         }
 
-        async function loadCertificates() {
-            try {
-                const response = await fetch(`/employee/training/${trainingRecordId}/certificates`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    displayCertificates(result.data);
-                } else {
-                    console.error('Failed to load certificates:', result.message);
-                }
-            } catch (error) {
-                console.error('Error loading certificates:', error);
+     async function loadCertificates() {
+    try {
+        console.log('📂 [Frontend] Loading certificates for training record:', trainingRecordId);
+        
+        const response = await fetch(`/employee/training/${trainingRecordId}/certificates`);
+        const result = await response.json();
+        
+        console.log('📂 [Frontend] Certificates API response:', result);
+        
+        if (result.success) {
+            // Validate that we actually have data
+            if (result.data && Array.isArray(result.data)) {
+                displayCertificates(result.data);
+            } else {
+                console.error('❌ [Frontend] Invalid certificates data:', result.data);
+                showError('Failed to load certificates: Invalid data format');
             }
+        } else {
+            console.error('❌ [Frontend] Failed to load certificates:', result.message);
+            showError('Failed to load certificates: ' + (result.message || 'Unknown error'));
         }
+    } catch (error) {
+        console.error('❌ [Frontend] Error loading certificates:', error);
+        showError('Error loading certificates. Please refresh the page.');
+    }
+}
+
+function displayCertificates(certificates) {
+    const container = document.getElementById('certificatesGrid');
+    container.innerHTML = '';
+    
+    console.log('📊 [Frontend] Displaying certificates:', certificates);
+    
+    if (!certificates || certificates.length === 0) {
+        container.innerHTML = `
+            <div class="certificate-card ${!allActivitiesCompleted ? 'disabled' : ''}">
+                <div class="certificate-header">
+                    <div class="certificate-icon ${!allActivitiesCompleted ? 'disabled' : ''}">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <h3 class="certificate-title">No Certificates Available</h3>
+                </div>
+                <div class="certificate-desc">
+                    No certificates are configured for this training.
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    certificates.forEach((cert, index) => {
+        console.log(`📊 [Frontend] Processing certificate ${index + 1}:`, cert);
+        const certElement = createCertificateElement(cert);
+        container.appendChild(certElement);
+    });
+}
+
+function createCertificateElement(cert) {
+    const div = document.createElement('div');
+    const isDisabled = !allActivitiesCompleted && !cert.isUploaded;
+    
+    // ENHANCED: More thorough validation of upload status
+    const isActuallyUploaded = cert.isUploaded && 
+                              cert.certificate_url && 
+                              cert.certificate_url !== null && 
+                              cert.certificate_url !== '' &&
+                              cert.certificate_url.includes('http');
+    
+    console.log('📊 [Frontend] Certificate validation:', {
+        trainingCertId: cert.trainingCertId,
+        isUploaded: cert.isUploaded,
+        certificate_url: cert.certificate_url,
+        isActuallyUploaded: isActuallyUploaded
+    });
+    
+    div.className = `certificate-card ${isActuallyUploaded ? 'uploaded' : ''} ${isDisabled ? 'disabled' : ''}`;
+    
+    if (isActuallyUploaded) {
+        div.innerHTML = createUploadedView(cert);
+    } else {
+        div.innerHTML = createUploadView(cert, isDisabled);
+    }
+    
+    return div;
+}
+
+function createUploadedView(cert) {
+    return `
+        <div class="certificate-header">
+            <div class="certificate-icon">
+                <i class="fas fa-certificate"></i>
+            </div>
+            <h3 class="certificate-title">${cert.trainingCertTitle}</h3>
+        </div>
+        <div class="certificate-desc">${cert.trainingCertDesc}</div>
+        <div class="uploaded-file">
+            <div class="success-indicator">
+                <i class="fas fa-check-circle"></i>
+                Certificate uploaded successfully
+            </div>
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                <strong>File:</strong> ${cert.certificate_url ? cert.certificate_url.split('/').pop() : 'Unknown file'}
+            </div>
+            <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                <strong>Uploaded:</strong> ${cert.uploadedAt ? new Date(cert.uploadedAt).toLocaleString() : 'Unknown date'}
+            </div>
+            <div class="certificate-actions">
+                <button class="download-btn" onclick="downloadCertificate('${cert.certificate_url}')">
+                    <i class="fas fa-download"></i>
+                    Download
+                </button>
+                <button class="replace-btn" onclick="reuploadCertificate(${cert.trainingCertId})" ${!allActivitiesCompleted ? 'disabled' : ''}>
+                    <i class="fas fa-redo"></i>
+                    Replace
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function createUploadView(cert, isDisabled) {
+    return `
+        <div class="certificate-header">
+            <div class="certificate-icon ${isDisabled ? 'disabled' : ''}">
+                <i class="fas fa-upload"></i>
+            </div>
+            <h3 class="certificate-title">${cert.trainingCertTitle}</h3>
+        </div>
+        <div class="certificate-desc">${cert.trainingCertDesc}</div>
+        ${!allActivitiesCompleted ? `
+            <div class="completion-requirement">
+                <i class="fas fa-lock"></i>
+                Complete all activities to unlock certificate upload
+            </div>
+        ` : ''}
+        <div class="upload-area ${isDisabled ? 'disabled' : ''}" onclick="${!isDisabled ? `triggerFileInput(${cert.trainingCertId})` : ''}">
+            <div><i class="fas fa-cloud-upload-alt"></i> ${!isDisabled ? 'Click to upload' : 'Upload locked'} ${cert.trainingCertTitle}</div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                ${!isDisabled ? 'Supported formats: PDF, JPG, PNG, Word (Max 10MB)' : 'Complete all activities first'}
+            </div>
+            <input type="file" id="fileInput_${cert.trainingCertId}" class="file-input" 
+                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
+                   onchange="handleFileSelect(${cert.trainingCertId}, this.files[0])"
+                   ${isDisabled ? 'disabled' : ''}>
+            <div id="uploadProgress_${cert.trainingCertId}" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill_${cert.trainingCertId}"></div>
+                </div>
+                <div id="uploadStatus_${cert.trainingCertId}">Uploading...</div>
+            </div>
+            <div id="uploadError_${cert.trainingCertId}" class="error-message" style="display: none;"></div>
+        </div>
+    `;
+}
+
+function triggerFileInput(trainingCertId) {
+    if (!allActivitiesCompleted) {
+        showError('Please complete all activities before uploading certificates.');
+        return;
+    }
+    console.log('Triggering file input for certificate:', trainingCertId);
+    document.getElementById(`fileInput_${trainingCertId}`).click();
+}
+
+function reuploadCertificate(trainingCertId) {
+    if (!allActivitiesCompleted) {
+        showError('Please complete all activities before uploading certificates.');
+        return;
+    }
+    console.log('Reuploading certificate:', trainingCertId);
+    triggerFileInput(trainingCertId);
+}
+
+async function handleFileSelect(trainingCertId, file) {
+    if (!file) {
+        console.log('No file selected');
+        return;
+    }
+    
+    console.log('File selected:', { trainingCertId, fileName: file.name, fileSize: file.size, fileType: file.type });
+    
+    if (!allActivitiesCompleted) {
+        showError('Please complete all activities before uploading certificates.');
+        return;
+    }
+    
+    // Validate file
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = [
+        'application/pdf', 
+        'image/jpeg', 
+        'image/jpg', 
+        'image/png', 
+        'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    if (file.size > maxSize) {
+        showCertError(trainingCertId, 'File size exceeds 10MB limit');
+        return;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+        showCertError(trainingCertId, 'Invalid file type. Please upload PDF, image, or Word document.');
+        return;
+    }
+    
+    // Show upload progress
+    showUploadProgress(trainingCertId);
+    
+    try {
+        await uploadCertificate(trainingCertId, file);
+    } catch (error) {
+        console.error('Upload failed:', error);
+        showCertError(trainingCertId, error.message);
+        hideUploadProgress(trainingCertId);
+    }
+}
 
         function displayTrainingData() {
             if (!trainingData) return;
@@ -1356,89 +1560,401 @@
             }
         }
 
-        async function uploadCertificate(trainingCertId, file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('trainingRecordId', trainingRecordId);
-            formData.append('trainingCertId', trainingCertId);
+       async function uploadCertificate(trainingCertId, file) {
+    console.log('📂 [Frontend] Starting certificate upload:', { trainingCertId, file: file.name });
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('trainingRecordId', trainingRecordId);
+    formData.append('trainingCertId', trainingCertId);
+    
+    // Debug: Log FormData contents
+    console.log('📂 [Frontend] FormData contents:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
+    }
+    
+    const xhr = new XMLHttpRequest();
+    
+    return new Promise((resolve, reject) => {
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                console.log('📂 [Frontend] Upload progress:', percentComplete + '%');
+                updateProgress(trainingCertId, percentComplete);
+            }
+        });
+        
+        xhr.addEventListener('load', () => {
+            console.log('📂 [Frontend] Upload response status:', xhr.status);
+            console.log('📂 [Frontend] Upload response text:', xhr.responseText);
             
-            const xhr = new XMLHttpRequest();
+            hideUploadProgress(trainingCertId);
             
-            return new Promise((resolve, reject) => {
-                xhr.upload.addEventListener('progress', (e) => {
-                    if (e.lengthComputable) {
-                        const percentComplete = (e.loaded / e.total) * 100;
-                        updateProgress(trainingCertId, percentComplete);
-                    }
-                });
-                
-                xhr.addEventListener('load', () => {
-                    hideUploadProgress(trainingCertId);
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    console.log('📂 [Frontend] Upload response parsed:', response);
                     
-                    if (xhr.status === 200) {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response.success) {
+                    // ENHANCED: Validate response more thoroughly
+                    if (response.success) {
+                        // Check if we actually have certificate data
+                        if (response.data && response.data.certificateUrl) {
+                            console.log('✅ [Frontend] Upload verified successful with URL:', response.data.certificateUrl);
                             showSuccess(`Certificate "${response.data.trainingCertTitle}" uploaded successfully!`);
+                            
                             // Reload certificates to show updated status
                             setTimeout(() => {
                                 loadCertificates();
-                            }, 2000);
+                            }, 1000);
+                            
                             resolve(response);
                         } else {
-                            reject(new Error(response.message || 'Upload failed'));
+                            // Success response but no certificate URL - this is suspicious
+                            console.error('❌ [Frontend] Success response but missing certificate URL:', response);
+                            reject(new Error('Upload completed but certificate URL is missing. Please try again.'));
                         }
                     } else {
-                        reject(new Error(`Upload failed with status ${xhr.status}`));
+                        // Server returned success: false
+                        console.error('❌ [Frontend] Server returned failure:', response.message);
+                        reject(new Error(response.message || 'Upload failed on server'));
                     }
-                });
-                
-                xhr.addEventListener('error', () => {
-                    hideUploadProgress(trainingCertId);
-                    reject(new Error('Network error occurred during upload'));
-                });
-                
-                xhr.open('POST', '/employee/certificates/upload');
-                xhr.send(formData);
+                } catch (parseError) {
+                    console.error('❌ [Frontend] Failed to parse response:', parseError);
+                    console.error('❌ [Frontend] Raw response:', xhr.responseText);
+                    reject(new Error('Invalid response from server. Please try again.'));
+                }
+            } else {
+                // HTTP error status
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    console.error('❌ [Frontend] HTTP error with parsed response:', errorResponse);
+                    reject(new Error(errorResponse.message || `Upload failed with status ${xhr.status}`));
+                } catch (parseError) {
+                    console.error('❌ [Frontend] HTTP error with unparseable response:', xhr.responseText);
+                    reject(new Error(`Upload failed with status ${xhr.status}`));
+                }
+            }
+        });
+        
+        xhr.addEventListener('error', () => {
+            console.error('❌ [Frontend] Network error during upload');
+            hideUploadProgress(trainingCertId);
+            reject(new Error('Network error occurred during upload. Please check your connection and try again.'));
+        });
+        
+        xhr.addEventListener('timeout', () => {
+            console.error('❌ [Frontend] Upload timeout');
+            hideUploadProgress(trainingCertId);
+            reject(new Error('Upload timed out. Please try again.'));
+        });
+        
+        // Set timeout (10 minutes for large files)
+        xhr.timeout = 10 * 60 * 1000;
+        
+        console.log('📂 [Frontend] Sending request to /employee/certificates/upload');
+        xhr.open('POST', '/employee/certificates/upload');
+        xhr.send(formData);
+    });
+}
+
+
+function showUploadProgress(trainingCertId) {
+    const progressElement = document.getElementById(`uploadProgress_${trainingCertId}`);
+    const errorElement = document.getElementById(`uploadError_${trainingCertId}`);
+    
+    if (progressElement) {
+        progressElement.style.display = 'block';
+        console.log('Progress element shown for:', trainingCertId);
+    }
+    if (errorElement) {
+        errorElement.style.display = 'none';
+    }
+}
+
+function hideUploadProgress(trainingCertId) {
+    const progressElement = document.getElementById(`uploadProgress_${trainingCertId}`);
+    if (progressElement) {
+        progressElement.style.display = 'none';
+        console.log('Progress element hidden for:', trainingCertId);
+    }
+}
+
+function showCertError(trainingCertId, message) {
+    const errorElement = document.getElementById(`uploadError_${trainingCertId}`);
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        console.error('❌ [Frontend] Certificate error:', { trainingCertId, message });
+    }
+    
+    // Also show global error
+    showError(message);
+    
+    // Clear any success states
+    const uploadArea = document.querySelector(`#fileInput_${trainingCertId}`).closest('.certificate-card');
+    if (uploadArea) {
+        uploadArea.classList.remove('uploaded');
+    }
+}
+
+// ENHANCED: Better progress display
+function updateProgress(trainingCertId, percentage) {
+    const progressFill = document.getElementById(`progressFill_${trainingCertId}`);
+    const statusElement = document.getElementById(`uploadStatus_${trainingCertId}`);
+    
+    if (progressFill) {
+        progressFill.style.width = `${percentage}%`;
+    }
+    
+    if (statusElement) {
+        if (percentage < 100) {
+            statusElement.textContent = `Uploading... ${Math.round(percentage)}%`;
+        } else {
+            statusElement.textContent = 'Processing... Please wait';
+        }
+    }
+}
+
+function downloadCertificate(url) {
+    console.log('Downloading certificate from:', url);
+    if (url) {
+        window.open(url, '_blank');
+    } else {
+        showError('Certificate URL not found');
+    }
+}
+
+
+// 1. Check database schema for training_records_certificates table
+async function debugDatabaseSchema() {
+    try {
+        const { data, error } = await supabase
+            .from('training_records_certificates')
+            .select('*')
+            .limit(1);
+        
+        console.log('🔍 [Debug] Table schema check:', { data, error });
+        
+        if (data && data.length > 0) {
+            console.log('🔍 [Debug] Sample record structure:', Object.keys(data[0]));
+        }
+    } catch (error) {
+        console.error('❌ [Debug] Schema check failed:', error);
+    }
+}
+
+// 2. Check if the specific record exists after upload
+async function debugSpecificRecord(trainingRecordId, trainingCertId) {
+    try {
+        console.log(`🔍 [Debug] Checking record for trainingRecordId: ${trainingRecordId}, trainingCertId: ${trainingCertId}`);
+        
+        const { data, error } = await supabase
+            .from('training_records_certificates')
+            .select('*')
+            .eq('trainingRecordId', trainingRecordId)
+            .eq('trainingCertId', trainingCertId);
+        
+        console.log('🔍 [Debug] Specific record query result:', { data, error });
+        
+        if (data && data.length > 0) {
+            console.log('🔍 [Debug] Found records:', data.length);
+            data.forEach((record, index) => {
+                console.log(`🔍 [Debug] Record ${index + 1}:`, record);
             });
         }
+    } catch (error) {
+        console.error('❌ [Debug] Specific record check failed:', error);
+    }
+}
 
-        function showUploadProgress(trainingCertId) {
-            const progressElement = document.getElementById(`uploadProgress_${trainingCertId}`);
-            const errorElement = document.getElementById(`uploadError_${trainingCertId}`);
+// 3. Enhanced completion check function
+function checkActivitiesCompletion(activities) {
+    console.log('📊 [Activity Check] Starting completion check...');
+    console.log('📊 [Activity Check] Raw activities:', activities);
+    
+    if (!activities || !Array.isArray(activities)) {
+        console.log('📊 [Activity Check] No activities or invalid format');
+        return {
+            completed: false,
+            total: 0,
+            incomplete: 0,
+            reason: 'No activities found or invalid format',
+            incompleteList: []
+        };
+    }
+
+    if (activities.length === 0) {
+        console.log('📊 [Activity Check] No activities to check');
+        return {
+            completed: true,
+            total: 0,
+            incomplete: 0,
+            reason: 'No activities to complete',
+            incompleteList: []
+        };
+    }
+
+    const incompleteActivities = [];
+    let completedCount = 0;
+
+    activities.forEach((activity, index) => {
+        const status = activity.status ? activity.status.trim() : '';
+        const activityName = activity.activityName || activity.training_activities?.activityName || `Activity ${index + 1}`;
+        
+        console.log(`📊 [Activity Check] Activity "${activityName}": status = "${status}" (type: ${typeof status})`);
+        
+        if (status !== 'Completed') {
+            incompleteActivities.push({
+                activityId: activity.activityId,
+                activityName: activityName,
+                currentStatus: status || 'Unknown'
+            });
+        } else {
+            completedCount++;
+        }
+    });
+
+    const allCompleted = incompleteActivities.length === 0;
+    
+    const result = {
+        completed: allCompleted,
+        total: activities.length,
+        incomplete: incompleteActivities.length,
+        completedCount: completedCount,
+        reason: allCompleted ? 'All activities completed' : `${incompleteActivities.length} activities not completed`,
+        incompleteList: incompleteActivities
+    };
+
+    console.log('📊 [Activity Check] Final result:', result);
+    return result;
+}
+
+// 4. Database validation query
+async function validateDatabaseState(trainingRecordId, trainingCertId) {
+    console.log('🔍 [Validation] Starting database state validation...');
+    
+    try {
+        // Check training_records table
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .select('*')
+            .eq('trainingRecordId', trainingRecordId)
+            .single();
+        
+        console.log('🔍 [Validation] Training record:', { data: trainingRecord, error: recordError });
+        
+        // Check training_certifications table
+        const { data: certification, error: certError } = await supabase
+            .from('training_certifications')
+            .select('*')
+            .eq('trainingCertId', trainingCertId)
+            .single();
+        
+        console.log('🔍 [Validation] Training certification:', { data: certification, error: certError });
+        
+        // Check if certificate matches training
+        if (trainingRecord && certification) {
+            const matches = trainingRecord.trainingId === certification.trainingId;
+            console.log(`🔍 [Validation] Training ID match: ${matches} (${trainingRecord.trainingId} vs ${certification.trainingId})`);
+        }
+        
+        // Check existing certificate records
+        const { data: existingCerts, error: existingError } = await supabase
+            .from('training_records_certificates')
+            .select('*')
+            .eq('trainingRecordId', trainingRecordId);
+        
+        console.log('🔍 [Validation] Existing certificate records:', { data: existingCerts, error: existingError });
+        
+    } catch (error) {
+        console.error('❌ [Validation] Database validation failed:', error);
+    }
+}
+
+// 5. Test file upload to Supabase storage
+async function testSupabaseStorageUpload(fileName, fileBuffer, mimeType) {
+    console.log('🧪 [Storage Test] Testing Supabase storage upload...');
+    
+    try {
+        const testFileName = `test-${Date.now()}-${fileName}`;
+        
+        // Test upload
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('uploads')
+            .upload(testFileName, fileBuffer, {
+                contentType: mimeType,
+                cacheControl: '3600',
+                upsert: false,
+            });
+        
+        console.log('🧪 [Storage Test] Upload result:', { data: uploadData, error: uploadError });
+        
+        if (!uploadError) {
+            // Test public URL generation
+            const { data: publicUrlData } = supabase.storage
+                .from('uploads')
+                .getPublicUrl(testFileName);
             
-            if (progressElement) progressElement.style.display = 'block';
-            if (errorElement) errorElement.style.display = 'none';
-        }
-
-        function hideUploadProgress(trainingCertId) {
-            const progressElement = document.getElementById(`uploadProgress_${trainingCertId}`);
-            if (progressElement) progressElement.style.display = 'none';
-        }
-
-        function updateProgress(trainingCertId, percentage) {
-            const progressFill = document.getElementById(`progressFill_${trainingCertId}`);
-            const statusElement = document.getElementById(`uploadStatus_${trainingCertId}`);
+            console.log('🧪 [Storage Test] Public URL:', publicUrlData);
             
-            if (progressFill) {
-                progressFill.style.width = `${percentage}%`;
-            }
+            // Test file exists
+            const { data: listData, error: listError } = await supabase.storage
+                .from('uploads')
+                .list('', {
+                    search: testFileName
+                });
             
-            if (statusElement) {
-                statusElement.textContent = `Uploading... ${Math.round(percentage)}%`;
-            }
+            console.log('🧪 [Storage Test] File list check:', { data: listData, error: listError });
+            
+            // Clean up test file
+            const { error: deleteError } = await supabase.storage
+                .from('uploads')
+                .remove([testFileName]);
+            
+            console.log('🧪 [Storage Test] Cleanup result:', { error: deleteError });
         }
+        
+    } catch (error) {
+        console.error('❌ [Storage Test] Test failed:', error);
+    }
+}
 
-        function showCertError(trainingCertId, message) {
-            const errorElement = document.getElementById(`uploadError_${trainingCertId}`);
-            if (errorElement) {
-                errorElement.textContent = message;
-                errorElement.style.display = 'block';
-            }
-        }
+// 6. Alternative database update approach
+async function alternativeUpdateApproach(trainingRecordId, trainingCertId, fileUrl) {
+    console.log('🔄 [Alternative] Trying alternative database update approach...');
+    
+    try {
+        // First, try direct insert with conflict resolution
+        const insertData = {
+            trainingRecordId: parseInt(trainingRecordId),
+            trainingCertId: parseInt(trainingCertId),
+            certificate_url: fileUrl,
+            created_at: new Date().toISOString()
+        };
+        
+        console.log('🔄 [Alternative] Insert data:', insertData);
+        
+        // Try upsert approach
+        const { data: upsertResult, error: upsertError } = await supabase
+            .from('training_records_certificates')
+            .upsert(insertData, { 
+                onConflict: 'trainingRecordId,trainingCertId',
+                ignoreDuplicates: false 
+            })
+            .select()
+            .single();
+        
+        console.log('🔄 [Alternative] Upsert result:', { data: upsertResult, error: upsertError });
+        
+        return { data: upsertResult, error: upsertError };
+        
+    } catch (error) {
+        console.error('❌ [Alternative] Alternative approach failed:', error);
+        return { data: null, error: error };
+    }
+}
 
-        function downloadCertificate(url) {
-            window.open(url, '_blank');
-        }
 
         function setupEventListeners() {
             // Drag and drop functionality

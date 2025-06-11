@@ -302,8 +302,7 @@ async function loadTrainingRequest() {
         hideLoading();
     }
 }
-
-// Populate form with data - FIXED to handle staffaccounts properly
+// Populate form with data - UPDATED to handle department and job position
 function populateForm(data) {
     try {
         console.log('Populating form with data:', data);
@@ -312,7 +311,7 @@ function populateForm(data) {
         document.getElementById('requestId').textContent = data.trainingRecordId || 'N/A';
         document.getElementById('dateRequested').textContent = formatDate(data.dateRequested);
         
-        // User info - FIXED to handle staffaccounts array
+        // User info - UPDATED to handle staffaccounts array
         const userInfo = data.useraccounts || {};
         const staffAccount = Array.isArray(userInfo.staffaccounts) 
             ? userInfo.staffaccounts[0] 
@@ -326,11 +325,14 @@ function populateForm(data) {
         document.getElementById('requestedBy').textContent = `${firstName} ${lastName}`.trim();
         document.getElementById('requestedByEmail').textContent = userInfo.userEmail || 'N/A';
         
-        // Staff info
-        document.getElementById('department').textContent = staffAccount?.department || 'N/A';
-        document.getElementById('position').textContent = staffAccount?.position || 'N/A';
+        // Staff info - UPDATED to get department and position from joined tables
+        const departmentName = staffAccount?.departments?.deptName || 'N/A';
+        const jobTitle = staffAccount?.jobpositions?.jobTitle || 'N/A';
         
-        // Training info - FIXED to handle trainings array
+        document.getElementById('department').textContent = departmentName;
+        document.getElementById('position').textContent = jobTitle;
+        
+        // Training info - UPDATED to handle trainings array
         const trainingInfo = Array.isArray(data.trainings) ? data.trainings[0] : data.trainings;
         console.log('Training info:', trainingInfo);
         
