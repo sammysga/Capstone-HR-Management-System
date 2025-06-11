@@ -9219,7 +9219,7 @@ getTrainingRequestDetails: async function(req, res) {
             });
         }
 
-        // Fetch the specific training request details
+        // Fetch the specific training request details with department and job position info
         const { data: trainingRequest, error } = await supabase
             .from('training_records')
             .select(`
@@ -9230,7 +9230,13 @@ getTrainingRequestDetails: async function(req, res) {
                         firstName,
                         lastName,
                         departmentId,
-                        jobId
+                        jobId,
+                        departments(
+                            deptName
+                        ),
+                        jobpositions(
+                            jobTitle
+                        )
                     )
                 ),
                 trainings!inner(
