@@ -5326,67 +5326,59 @@ const userId = req.session?.user?.userId;
     console.log(`[${new Date().toISOString()}] Fetching issued certificates for user ${userId}`);
     
     try {
-        // First, get all training records for the user
-        const { data: userTrainingRecords, error: recordsError } = await supabase
+        // Get user's training records with certificate records that have URLs
+        const { data: certificateData, error: certificatesError } = await supabase
             .from('training_records')
-            .select('trainingRecordId')
-            .eq('userId', userId);
-
-        if (recordsError) {
-            throw new Error(`Failed to fetch user training records: ${recordsError.message}`);
-        }
-
-        if (!userTrainingRecords || userTrainingRecords.length === 0) {
-            return res.json({
-                success: true,
-                data: [],
-                message: 'No training records found for user'
-            });
-        }
-
-        // Extract training record IDs
-        const trainingRecordIds = userTrainingRecords.map(record => record.trainingRecordId);
-
-        // Fetch certificates from training_records_certificates for user's training records
-        const { data: certificates, error: certificatesError } = await supabase
-            .from('training_records_certificates')
             .select(`
-                trainingRecordCertificateId,
-                certificate_url,
-                created_at,
-                trainingCertId,
                 trainingRecordId,
-                training_certifications!inner (
-                    trainingCertTitle,
-                    trainingCertDesc
+                userId,
+                training_records_certificates!inner (
+                    trainingRecordCertificateId,
+                    certificate_url,
+                    created_at,
+                    trainingCertId,
+                    training_certifications!inner (
+                        trainingCertId,
+                        trainingCertTitle,
+                        trainingCertDesc
+                    )
                 )
             `)
-            .in('trainingRecordId', trainingRecordIds)
-            .order('created_at', { ascending: false });
+            .eq('userId', userId)
+            .not('training_records_certificates.certificate_url', 'is', null)
+            .neq('training_records_certificates.certificate_url', '')
+            .order('training_records_certificates.created_at', { ascending: false });
 
         if (certificatesError) {
             console.error('Error fetching certificates:', certificatesError);
             throw new Error(`Failed to fetch certificates: ${certificatesError.message}`);
         }
 
-        console.log('Raw certificates data:', JSON.stringify(certificates, null, 2));
+        console.log('Raw certificate data:', JSON.stringify(certificateData, null, 2));
 
-        // Filter to only include certificates that have a certificate_url (actual issued certificates)
-        const issuedCertificates = certificates?.filter(cert => 
-            cert.certificate_url && cert.certificate_url.trim() !== ''
-        ) || [];
+        // Flatten and format the certificate data
+        const formattedCertificates = [];
+        
+        if (certificateData && certificateData.length > 0) {
+            certificateData.forEach(record => {
+                if (record.training_records_certificates && record.training_records_certificates.length > 0) {
+                    record.training_records_certificates.forEach(cert => {
+                        if (cert.certificate_url && cert.training_certifications) {
+                            formattedCertificates.push({
+                                trainingRecordCertificateId: cert.trainingRecordCertificateId,
+                                trainingCertId: cert.trainingCertId,
+                                certificateUrl: cert.certificate_url,
+                                issuedDate: cert.created_at,
+                                trainingCertTitle: cert.training_certifications.trainingCertTitle || 'Untitled Certificate',
+                                trainingCertDesc: cert.training_certifications.trainingCertDesc || 'No description available'
+                            });
+                        }
+                    });
+                }
+            });
+        }
 
-        // Format the issued certificates data - only include title and description
-        const formattedCertificates = issuedCertificates.map(cert => ({
-            trainingRecordCertificateId: cert.trainingRecordCertificateId,
-            trainingCertId: cert.trainingCertId,
-            certificateUrl: cert.certificate_url,
-            issuedDate: cert.created_at,
-            trainingCertTitle: cert.training_certifications?.trainingCertTitle || 'Untitled Certificate',
-            trainingCertDesc: cert.training_certifications?.trainingCertDesc || 'No description available'
-        }));
-
-        console.log(`Found ${certificates?.length || 0} total certificate records, ${formattedCertificates.length} issued certificates for user ${userId}`);
+        console.log(`Found ${formattedCertificates.length} issued certificates for user ${userId}`);
         console.log('Formatted certificates:', JSON.stringify(formattedCertificates, null, 2));
 
         res.json({

@@ -141,7 +141,7 @@
         }
 
         /* Progress categories grid */
-        .progress-categories {
+       .progress-categories {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
@@ -181,42 +181,60 @@
             margin-bottom: 5px;
         }
 
-       .progress-category.not-started {
-    border-color: #64748b;
-    background-color: #f8fafc;
-}
+        .progress-category.not-started {
+            border-color: #64748b;
+            background-color: #f8fafc;
+        }
 
-.progress-category.not-started .count {
-    color: #64748b;
-}
+        .progress-category.not-started .count {
+            color: #64748b;
+        }
 
-.progress-category.in-progress {
-    border-color: #07ACB9;
-    background-color: #f0fdff;
-}
+        .progress-category.in-progress {
+            border-color: #07ACB9;
+            background-color: #f0fdff;
+        }
 
-.progress-category.in-progress .count {
-    color: #07ACB9;
-}
+        .progress-category.in-progress .count {
+            color: #07ACB9;
+        }
 
-.progress-category.completed {
-    border-color: #124A5C;
-    background-color: #f1f5f9;
-}
+        .progress-category.completed {
+            border-color: #124A5C;
+            background-color: #f1f5f9;
+        }
 
-.progress-category.completed .count {
-    color: #124A5C;
-}
+        .progress-category.completed .count {
+            color: #124A5C;
+        }
 
-.progress-category.overdue {
-    border-color: #dc2626;
-    background-color: #fef2f2;
-}
+        .progress-category.overdue {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+        }
 
-.progress-category.overdue .count {
-    color: #dc2626;
-}
+        .progress-category.overdue .count {
+            color: #dc2626;
+        }
 
+        /* New approval status categories */
+        .progress-category.awaiting-approval {
+            border-color: #f59e0b;
+            background-color: #fef3c7;
+        }
+
+        .progress-category.awaiting-approval .count {
+            color: #d97706;
+        }
+
+        .progress-category.rejected {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+
+        .progress-category.rejected .count {
+            color: #dc2626;
+        }
         /* Courses header actions */
         .courses-header-actions {
             display: flex;
@@ -734,37 +752,66 @@
         }
 
 /* Status indicator near progress */
-.progress-status-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+        /* Progress status indicators */
+        .progress-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-.progress-status-indicator.not-started {
-    background: #f1f5f9;
-    color: #64748b;
-}
+        .progress-status-indicator.not-started {
+            background: #f1f5f9;
+            color: #64748b;
+        }
 
-.progress-status-indicator.in-progress {
-    background: #f0fdff;
-    color: #07ACB9;
-}
+        .progress-status-indicator.in-progress {
+            background: #f0fdff;
+            color: #07ACB9;
+        }
 
-.progress-status-indicator.completed {
-    background: #f1f5f9;
-    color: #124A5C;
-}
+        .progress-status-indicator.completed {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
 
-.progress-status-indicator.overdue {
-    background: #fef2f2;
-    color: #dc2626;
-}
+        .progress-status-indicator.overdue {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .progress-status-indicator.awaiting-approval {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .progress-status-indicator.rejected {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        /* Course list item enhancements */
+        .course-list-item.awaiting-approval {
+            border-left: 4px solid #f59e0b;
+            background-color: #fefcf0;
+        }
+
+        .course-list-item.rejected {
+            border-left: 4px solid #ef4444;
+            background-color: #fef2f2;
+        }
+
+        /* Disabled state for unapproved courses */
+        .course-card.enhanced.awaiting-approval:hover,
+        .course-card.enhanced.rejected:hover {
+            transform: translateY(-2px);
+            cursor: default;
+        }
 
 /* Card content sections */
 .course-card.enhanced .course-header {
@@ -2030,9 +2077,7 @@
                 [SETTING OF 2025 MID-YEAR/FINAL YEAR TRAININGS] Please set the Mid-Year/Final-Year Individual Development Plan (IDP) in the Records and Performance Tracker before adding a new entry.
             </p>
         </div> -->
-
-       <!-- Tabs Container -->
-        <div class="tabs-container">
+<div class="tabs-container">
             <ul class="tabs-nav">
                 <li><button class="tab-button active" data-tab="progress-tab">
                     <i class="fas fa-chart-line"></i> Training Progress
@@ -3277,6 +3322,16 @@ async function loadTrainingProgress() {
             };
             
             container.innerHTML = `
+                <div class="progress-category awaiting-approval" data-filter="awaiting-approval">
+                    <div class="count">${counts.awaitingApproval}</div>
+                    <h3>Awaiting Approval</h3>
+                    <p>Training requests pending approval</p>
+                </div>
+                <div class="progress-category rejected" data-filter="rejected">
+                    <div class="count">${counts.rejected}</div>
+                    <h3>Rejected</h3>
+                    <p>Training requests that were declined</p>
+                </div>
                 <div class="progress-category not-started" data-filter="not-started">
                     <div class="count">${counts.notStarted}</div>
                     <h3>Not Started</h3>
@@ -3296,16 +3351,6 @@ async function loadTrainingProgress() {
                     <div class="count">${counts.overdue}</div>
                     <h3>Overdue</h3>
                     <p>Training sessions past due date</p>
-                </div>
-                <div class="progress-category awaiting-approval" data-filter="awaiting-approval">
-                    <div class="count">${counts.awaitingApproval}</div>
-                    <h3>Awaiting Approval</h3>
-                    <p>Training requests pending approval</p>
-                </div>
-                <div class="progress-category rejected" data-filter="rejected">
-                    <div class="count">${counts.rejected}</div>
-                    <h3>Rejected</h3>
-                    <p>Training requests that were declined</p>
                 </div>
             `;
 
@@ -3627,22 +3672,35 @@ async function loadAllCourses() {
                             <i class="fas fa-certificate"></i>
                         </div>
                         <div class="certificate-list-details">
-                            <h4 class="certificate-list-title">${cert.trainingCertTitle}</h4>
+                            <h4 class="certificate-list-title">${cert.trainingCertTitle || 'Untitled Certificate'}</h4>
                             <div class="certificate-list-meta">
-                                <strong>Description:</strong> ${cert.trainingCertDesc || 'No description'}<br>
-                                <strong>Training:</strong> ${cert.trainingName || 'Unknown Training'}
+                                <strong>Description:</strong> ${cert.trainingCertDesc || 'No description available'}
                             </div>
                         </div>
                     </div>
                     <div class="certificate-list-actions">
                         <div class="certificate-list-id">CERT-${cert.trainingCertId}</div>
-                        <i class="fas fa-download certificate-download" onclick="downloadCertificate(${cert.trainingCertId})" title="Download Certificate"></i>
+                        <i class="fas fa-external-link-alt certificate-view" onclick="viewCertificate('${cert.certificateUrl}')" title="View Certificate"></i>
                     </div>
                 </div>
             `).join('');
 
             container.innerHTML = certificatesHTML;
         }
+
+        function viewCertificate(certificateUrl) {
+            if (certificateUrl) {
+                // Open certificate in new tab/window
+                window.open(certificateUrl, '_blank');
+            } else {
+                alert('Certificate URL not available');
+            }
+        }
+
+        function downloadCertificate(certId) {
+            window.open(`/employee/certificates/${certId}/download`, '_blank');
+        }
+
 
 // Utility function to format dates
 function formatDate(dateString) {
@@ -3675,13 +3733,6 @@ function formatDate(dateString) {
             // Redirect to training progress update page or open modal
             window.location.href = `/employee/training/course/${trainingId}`;
         }
-
-        function downloadCertificate(certId) {
-            // Handle certificate download
-            window.open(`/employee/certificates/${certId}/download`, '_blank');
-        }
-
-
 
         // Upload certificate functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -3731,7 +3782,7 @@ function formatDate(dateString) {
             }
         }
 
-        async function loadCertificates() {
+async function loadCertificates() {
             try {
                 const response = await fetch('/employee/certificates', {
                     method: 'GET',
@@ -3755,6 +3806,42 @@ function formatDate(dateString) {
             }
         }
 
+        function renderCertificates(certificates) {
+            const container = document.getElementById('certificatesList');
+            
+            if (certificates.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #64748b; padding: 40px;">
+                        <i class="fas fa-certificate" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>No certificates available yet.</p>
+                        <p>Complete your training courses to earn certificates.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const certificatesHTML = certificates.map(cert => `
+                <div class="certificate-list-item uploaded">
+                    <div class="certificate-list-info">
+                        <div class="certificate-list-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <div class="certificate-list-details">
+                            <h4 class="certificate-list-title">${cert.trainingCertTitle || 'Untitled Certificate'}</h4>
+                            <div class="certificate-list-meta">
+                                <strong>Description:</strong> ${cert.trainingCertDesc || 'No description available'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="certificate-list-actions">
+                        <div class="certificate-list-id">CERT-${cert.trainingCertId}</div>
+                        <i class="fas fa-external-link-alt certificate-view" onclick="viewCertificate('${cert.certificateUrl}')" title="View Certificate"></i>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = certificatesHTML;
+        }
         // View toggle functionality
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.view-btn').forEach(btn => {
