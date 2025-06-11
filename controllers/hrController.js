@@ -4831,7 +4831,7 @@ viewEvaluation: async function(req, res) {
         }
     },
     
-       getRecruitmentReports: async function (req, res) {
+    getRecruitmentReports: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
                     res.render('staffpages/hr_pages/reports_pages/hr-recruitment-reports');
                 } else {
@@ -5511,6 +5511,96 @@ viewEvaluation: async function(req, res) {
         } catch (error) {
             console.error('❌ [Status Report] Error in getApplicantStatusReport:', error);
             return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+        }
+    },
+
+    getSearchApplicants: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            const { query, loadAll } = req.query;
+            
+            console.log('🔍 [Search Applicants] Query:', query, 'LoadAll:', loadAll);
+            
+            // If loadAll is requested or query is "all", return all applicants
+            const shouldLoadAll = loadAll === 'true' || query === 'all';
+            
+            if (!shouldLoadAll && (!query || query.trim().length < 2)) {
+                return res.json({ success: true, applicants: [] });
+            }
+
+            // Search for applicants
+            const { data: applicants, error } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    lastName,
+                    firstName,
+                    applicantStatus,
+                    created_at,
+                    userId,
+                    jobId,
+                    departmentId,
+                    useraccounts!inner(userEmail),
+                    jobpositions!inner(jobTitle),
+                    departments!inner(deptName)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(shouldLoadAll ? 200 : 50); // Limit for performance
+
+            if (error) {
+                console.error('❌ [Search Applicants] Error:', error);
+                return res.status(500).json({ success: false, message: 'Error searching applicants' });
+            }
+
+            let filteredApplicants = applicants;
+
+            // If not loading all, filter by search term
+            if (!shouldLoadAll) {
+                const searchTerm = query.trim().toLowerCase();
+                
+                filteredApplicants = applicants.filter(applicant => {
+                    const firstName = (applicant.firstName || '').toLowerCase();
+                    const lastName = (applicant.lastName || '').toLowerCase();
+                    const fullName = `${firstName} ${lastName}`;
+                    const reverseName = `${lastName} ${firstName}`;
+                    const email = (applicant.useraccounts?.userEmail || '').toLowerCase();
+                    const position = (applicant.jobpositions?.jobTitle || '').toLowerCase();
+                    const department = (applicant.departments?.deptName || '').toLowerCase();
+                    
+                    return firstName.includes(searchTerm) || 
+                        lastName.includes(searchTerm) || 
+                        fullName.includes(searchTerm) ||
+                        reverseName.includes(searchTerm) ||
+                        email.includes(searchTerm) ||
+                        position.includes(searchTerm) ||
+                        department.includes(searchTerm);
+                });
+            }
+
+            // Format results for dropdown
+            const formattedResults = filteredApplicants.map(applicant => ({
+                applicantId: applicant.applicantId,
+                name: `${applicant.firstName} ${applicant.lastName}`,
+                email: applicant.useraccounts?.userEmail || 'N/A',
+                position: applicant.jobpositions?.jobTitle || 'N/A',
+                department: applicant.departments?.deptName || 'N/A',
+                status: applicant.applicantStatus || 'Pending',
+                applicationDate: new Date(applicant.created_at).toISOString().split('T')[0]
+            }));
+
+            console.log(`✅ [Search Applicants] Returning ${formattedResults.length} applicants`);
+
+            return res.json({
+                success: true,
+                applicants: formattedResults
+            });
+
+        } catch (error) {
+            console.error('❌ [Search Applicants] Error:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error' });
         }
     },
     

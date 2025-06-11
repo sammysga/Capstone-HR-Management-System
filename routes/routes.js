@@ -132,6 +132,7 @@ router.get('/hr/recruitment/reports/applicants', hrController.getApplicantsRepor
 router.get('/hr/recruitment/reports/hirees', hrController.getHireesReport);
 router.get('/hr/recruitment/reports/applicant-status', hrController.getApplicantStatusReport);
 router.get('/hr/recruitment/reports/timeline', hrController.getTimelineReport);
+router.get('/hr/recruitment/reports/search-applicants', hrController.getSearchApplicants);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);

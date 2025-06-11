@@ -186,8 +186,19 @@
                     <form class="report-form" id="status-form">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="applicant-name">Applicant Name</label>
-                                <input type="text" id="applicant-name" name="applicantName" placeholder="Enter applicant name (e.g., John Doe)" required>
+                                <label for="applicant-search">Select Applicant</label>
+                                <div class="searchable-dropdown" id="applicant-dropdown">
+                                    <input 
+                                        type="text" 
+                                        id="applicant-search" 
+                                        name="applicantName" 
+                                        placeholder="Type applicant name to search..."
+                                        autocomplete="off"
+                                        required
+                                    >
+                                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                                    <div class="dropdown-menu" id="applicant-dropdown-menu"></div>
+                                </div>
                             </div>
                             <div class="btn-group">
                                 <button type="button" class="btn btn-primary" onclick="generateReport('status', 'view')">
@@ -250,6 +261,8 @@
     <script>
         // Global chart variables
         let statusChart, trendsChart, departmentChart, timelineChart;
+        let applicantDropdown;
+
 
         // Tab functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -273,6 +286,9 @@
             loadDashboardData();
             loadChartsData();
             setDefaultDates();
+
+            // Initialize the searchable dropdown
+            applicantDropdown = new SearchableApplicantDropdown();
         });
         
         // Load dashboard statistics
@@ -522,6 +538,18 @@
         
         // generateReport function
         async function generateReport(reportType, format) {
+
+            // Special handling for status report with dropdown 
+            if (reportType === 'status') {
+                const selectedApplicant = applicantDropdown?.getSelectedApplicant();
+
+                if (!selectedApplicant) {
+                    alert('Please select an applicant from the dropdown first.');
+                    return;
+                }
+            }
+
+            
             const form = document.getElementById(`${reportType}-form`);
             const button = event.target;
             const resultsDiv = document.getElementById(`${reportType}-results`);
@@ -536,9 +564,13 @@
                 // Get form data
                 const formData = new FormData(form);
                 const params = new URLSearchParams();
-                
-                for (let [key, value] of formData.entries()) {
-                    if (value) params.append(key, value);
+
+                if (reportType === 'status' && applicantDropdown?.getSelectedApplicant()) {
+                    params.append('applicantName', applicantDropdown.getSelectedApplicant().name);
+                } else {
+                    for (let [key, value] of formData.entries()) {
+                        if (value) params.append(key, value);
+                    }
                 }
                 
                 if (format) params.append('format', format);
@@ -1117,6 +1149,331 @@
             endDateInputs.forEach(input => {
                 input.value = lastDay.toISOString().split('T')[0];
             });
+        }
+
+        // Searchable Dropdown Class
+        class SearchableApplicantDropdown {
+            constructor() {
+                this.container = document.getElementById('applicant-dropdown');
+                this.input = document.getElementById('applicant-search');
+                this.menu = document.getElementById('applicant-dropdown-menu');
+                this.icon = this.container?.querySelector('.dropdown-icon');
+                
+                this.searchTimeout = null;
+                this.currentRequest = null;
+                this.selectedApplicant = null;
+                this.highlightedIndex = -1;
+                this.applicants = [];
+                this.allApplicants = []; // Store all applicants for filtering
+                this.isLoaded = false; // Track if we've loaded all applicants
+                
+                if (this.container && this.input && this.menu) {
+                    this.init();
+                }
+            }
+            
+            init() {
+                this.bindEvents();
+                // Load all applicants when initialized
+                this.loadAllApplicants();
+            }
+            
+            bindEvents() {
+                // Input events
+                this.input.addEventListener('input', (e) => this.handleInput(e));
+                this.input.addEventListener('focus', (e) => this.handleFocus(e));
+                this.input.addEventListener('keydown', (e) => this.handleKeydown(e));
+                
+                // Click on dropdown icon to show all applicants
+                if (this.icon) {
+                    this.icon.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.input.focus();
+                        if (this.isMenuVisible()) {
+                            this.hideMenu();
+                        } else {
+                            this.showAllApplicants();
+                        }
+                    });
+                }
+                
+                // Click outside to close
+                document.addEventListener('click', (e) => {
+                    if (!this.container.contains(e.target)) {
+                        this.hideMenu();
+                    }
+                });
+            }
+            
+            async loadAllApplicants() {
+                try {
+                    console.log('🔄 Loading all applicants for dropdown...');
+                    
+                    const response = await fetch('/hr/recruitment/reports/search-applicants?query=all&loadAll=true');
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load applicants');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.allApplicants = data.applicants;
+                        this.isLoaded = true;
+                        console.log(`✅ Loaded ${this.allApplicants.length} applicants for dropdown`);
+                    } else {
+                        console.error('❌ Failed to load applicants:', data.message);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error loading all applicants:', error);
+                }
+            }
+            
+            handleInput(e) {
+                const query = e.target.value.trim();
+                
+                // Clear previous timeout
+                if (this.searchTimeout) {
+                    clearTimeout(this.searchTimeout);
+                }
+                
+                // Reset selection if input changes
+                if (this.selectedApplicant && this.selectedApplicant.name !== query) {
+                    this.selectedApplicant = null;
+                }
+                
+                // If input is empty, show all applicants
+                if (query.length === 0) {
+                    this.showAllApplicants();
+                    return;
+                }
+                
+                // Filter applicants based on input
+                this.searchTimeout = setTimeout(() => {
+                    this.filterApplicants(query);
+                }, 150); // Reduced debounce for better responsiveness
+            }
+            
+            handleFocus(e) {
+                // Show all applicants when focused
+                if (this.isLoaded) {
+                    this.showAllApplicants();
+                } else {
+                    this.showLoading();
+                    // Wait for loading to complete, then show
+                    const checkLoaded = setInterval(() => {
+                        if (this.isLoaded) {
+                            clearInterval(checkLoaded);
+                            this.showAllApplicants();
+                        }
+                    }, 100);
+                }
+            }
+            
+            handleKeydown(e) {
+                if (!this.isMenuVisible()) return;
+                
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.highlightNext();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.highlightPrevious();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (this.highlightedIndex >= 0 && this.applicants[this.highlightedIndex]) {
+                            this.selectApplicant(this.applicants[this.highlightedIndex]);
+                        }
+                        break;
+                    case 'Escape':
+                        this.hideMenu();
+                        this.input.blur();
+                        break;
+                }
+            }
+            
+            showAllApplicants() {
+                if (!this.isLoaded) {
+                    this.showLoading();
+                    return;
+                }
+                
+                this.applicants = this.allApplicants;
+                this.displayResults(this.applicants);
+            }
+            
+            filterApplicants(query) {
+                if (!this.isLoaded) {
+                    this.showLoading();
+                    return;
+                }
+                
+                const searchTerm = query.toLowerCase();
+                
+                // Filter from all applicants
+                const filtered = this.allApplicants.filter(applicant => {
+                    const name = applicant.name.toLowerCase();
+                    const email = applicant.email.toLowerCase();
+                    const position = applicant.position.toLowerCase();
+                    const department = applicant.department.toLowerCase();
+                    
+                    return name.includes(searchTerm) || 
+                        email.includes(searchTerm) || 
+                        position.includes(searchTerm) ||
+                        department.includes(searchTerm);
+                });
+                
+                this.applicants = filtered;
+                this.displayResults(this.applicants);
+            }
+            
+            showLoading() {
+                this.menu.innerHTML = `
+                    <div class="dropdown-loading">
+                        <span class="search-loading-spinner"></span>
+                        Loading applicants...
+                    </div>
+                `;
+                this.showMenu();
+            }
+            
+            displayResults(applicants) {
+                this.highlightedIndex = -1;
+                
+                if (applicants.length === 0) {
+                    this.showNoResults();
+                    return;
+                }
+                
+                // Limit display to first 50 for performance
+                const displayApplicants = applicants.slice(0, 50);
+                
+                const html = displayApplicants.map((applicant, index) => `
+                    <div class="dropdown-item" data-index="${index}">
+                        <div class="applicant-name">${applicant.name}</div>
+                        <div class="applicant-details">
+                            ${applicant.email} • ${applicant.position} • ${applicant.department}
+                            <span class="applicant-status-badge ${this.getStatusClass(applicant.status)}">${applicant.status}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Add "showing X of Y" if there are more results
+                let footerHtml = '';
+                if (applicants.length > 50) {
+                    footerHtml = `
+                        <div class="dropdown-footer">
+                            Showing 50 of ${applicants.length} applicants. Type to narrow results.
+                        </div>
+                    `;
+                }
+                
+                this.menu.innerHTML = html + footerHtml;
+                
+                // Add click listeners
+                this.menu.querySelectorAll('.dropdown-item').forEach((item, index) => {
+                    item.addEventListener('click', () => this.selectApplicant(displayApplicants[index]));
+                    item.addEventListener('mouseenter', () => this.highlightItem(index));
+                });
+                
+                this.showMenu();
+            }
+            
+            showNoResults() {
+                const query = this.input.value.trim();
+                this.menu.innerHTML = `
+                    <div class="dropdown-no-results">
+                        ${query ? `No applicants found for "${query}".` : 'No applicants found.'} 
+                        <br><small>Try a different search term.</small>
+                    </div>
+                `;
+                this.showMenu();
+            }
+            
+            showError() {
+                this.menu.innerHTML = `
+                    <div class="dropdown-no-results">
+                        Error loading applicants. Please try again.
+                    </div>
+                `;
+                this.showMenu();
+            }
+            
+            selectApplicant(applicant) {
+                this.selectedApplicant = applicant;
+                this.input.value = applicant.name;
+                this.hideMenu();
+                
+                console.log('Selected applicant:', applicant);
+            }
+            
+            highlightNext() {
+                const maxIndex = Math.min(this.applicants.length - 1, 49); // Max 50 displayed items
+                if (this.highlightedIndex < maxIndex) {
+                    this.highlightItem(this.highlightedIndex + 1);
+                }
+            }
+            
+            highlightPrevious() {
+                if (this.highlightedIndex > 0) {
+                    this.highlightItem(this.highlightedIndex - 1);
+                }
+            }
+            
+            highlightItem(index) {
+                // Remove previous highlight
+                this.menu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                
+                // Add new highlight
+                const items = this.menu.querySelectorAll('.dropdown-item');
+                if (items[index]) {
+                    items[index].classList.add('selected');
+                    this.highlightedIndex = index;
+                    
+                    // Scroll into view if needed
+                    items[index].scrollIntoView({
+                        block: 'nearest',
+                        behavior: 'smooth'
+                    });
+                }
+            }
+            
+            showMenu() {
+                this.menu.classList.add('show');
+                this.container.classList.add('open');
+            }
+            
+            hideMenu() {
+                this.menu.classList.remove('show');
+                this.container.classList.remove('open');
+                this.highlightedIndex = -1;
+            }
+            
+            isMenuVisible() {
+                return this.menu.classList.contains('show');
+            }
+            
+            getStatusClass(status) {
+                if (!status) return 'status-pending';
+                
+                const statusLower = status.toLowerCase();
+                if (statusLower.includes('pending') || statusLower.includes('awaiting')) return 'status-pending';
+                if (statusLower.includes('passed') || statusLower.includes('approved')) return 'status-passed';
+                if (statusLower.includes('failed') || statusLower.includes('rejected')) return 'status-failed';
+                if (statusLower.includes('hired')) return 'status-hired';
+                
+                return 'status-pending';
+            }
+            
+            getSelectedApplicant() {
+                return this.selectedApplicant;
+            }
         }
 
         // Toggle active class for sidebar links
