@@ -1452,6 +1452,18 @@ s
                 <input type="text" class="form-input" id="courseName" placeholder="Enter training course name" required>
             </div>
 
+            <!-- In your modal, add this right after the Training Course Name field -->
+<div class="form-group">
+    <label class="form-label">Select Existing Training (Optional):</label>
+    <select class="form-select" id="existingTrainingDropdown" onchange="loadExistingTraining()">
+        <option value="">Create new training course</option>
+        <!-- Options will be populated by JavaScript -->
+    </select>
+    <p style="font-size: 12px; color: #64748b; margin-top: 5px;">
+        Select an existing training to use as template, or leave blank to create new
+    </p>
+</div>
+
             <!-- Description -->
             <div class="form-group">
                 <label class="form-label">Description:</label>
@@ -1992,14 +2004,256 @@ s
     <!-- JavaScript for functionality -->
     <script>
 
+        // Function to populate existing trainings dropdown
+function populateExistingTrainings() {
+    const dropdown = document.getElementById('existingTrainingDropdown');
+    if (!dropdown) return;
+    
+    // Clear existing options except the first one
+    dropdown.innerHTML = '<option value="">Create new training course</option>';
+    
+    // Get trainings data from the page (you can also fetch from API)
+    const trainings = getTrainingsFromPage(); // We'll implement this
+    
+    if (trainings && trainings.length > 0) {
+        trainings.forEach(training => {
+            const option = document.createElement('option');
+            option.value = training.id;
+            option.textContent = `${training.title} (${training.mode})`;
+            option.setAttribute('data-training', JSON.stringify(training));
+            dropdown.appendChild(option);
+        });
+    }
+}
+
+// Function to get trainings from the existing page data
+function getTrainingsFromPage() {
+    // Extract training data from the existing training cards on the page
+    const trainingCards = document.querySelectorAll('.training-course-card');
+    const trainings = [];
+    
+    trainingCards.forEach((card, index) => {
+        const title = card.querySelector('.course-title')?.textContent.trim();
+        const description = card.querySelector('.course-description')?.textContent.trim();
+        const details = card.querySelector('.course-details')?.textContent;
+        const badges = Array.from(card.querySelectorAll('.course-badge')).map(badge => badge.textContent.toLowerCase());
+        
+        if (title) {
+            // Parse details to extract information
+            const duration = details?.match(/Duration:\s*(\d+)/)?.[1] || '0';
+            const department = details?.match(/Department:\s*([^\n]+)/)?.[1]?.trim() || '';
+            const jobPosition = details?.match(/Job Position:\s*([^\n]+)/)?.[1]?.trim() || '';
+            const cost = details?.match(/Cost:\s*₱([0-9,]+)/)?.[1]?.replace(',', '') || '0';
+            const location = details?.match(/Location:\s*([^\n]+)/)?.[1]?.trim() || '';
+            
+            trainings.push({
+                id: `existing_${index}`,
+                title: title,
+                description: description || '',
+                duration: parseInt(duration) || 0,
+                department: department,
+                jobPosition: jobPosition,
+                cost: parseFloat(cost) || 0,
+                mode: badges.includes('online') ? 'online' : 'onsite',
+                location: location,
+                badges: badges
+            });
+        }
+    });
+    
+    return trainings;
+}
+
+// Function to load selected existing training data into form
+function loadExistingTraining() {
+    const dropdown = document.getElementById('existingTrainingDropdown');
+    const selectedOption = dropdown.options[dropdown.selectedIndex];
+    
+    if (!selectedOption.value) {
+        // Clear form if "Create new" is selected
+        clearTrainingForm();
+        return;
+    }
+    
+    try {
+        const trainingData = JSON.parse(selectedOption.getAttribute('data-training'));
+        
+        // Populate form fields with existing training data
+        document.getElementById('courseName').value = trainingData.title;
+        document.getElementById('courseDescription').value = trainingData.description;
+        document.getElementById('trainingCost').value = trainingData.cost || '';
+        
+        // Set training mode
+        const trainingModeSelect = document.getElementById('trainingMode');
+        trainingModeSelect.value = trainingData.mode;
+        
+        // Trigger location fields update
+        toggleLocationFields();
+        
+        // If onsite training, try to populate location fields
+        if (trainingData.mode === 'onsite' && trainingData.location) {
+            const addressField = document.getElementById('addressField');
+            if (addressField) {
+                addressField.value = trainingData.location;
+            }
+        }
+        
+        // Show notification that template was loaded
+        showNotification('Training template loaded! You can modify the details as needed.', 'info');
+        
+    } catch (error) {
+        console.error('Error loading training data:', error);
+        showNotification('Error loading training template', 'error');
+    }
+}
+
+// Function to clear training form
+function clearTrainingForm() {
+    const form = document.getElementById('addTrainingForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // Clear arrays
+    selectedObjectives = [];
+    selectedSkills = [];
+    addedActivities = [];
+    addedCertificates = [];
+    assignedEmployees = [];
+    
+    // Clear displays
+    updateObjectivesDisplay();
+    updateSkillsDisplay();
+    updateActivitiesDisplay();
+    updateCertificatesDisplay();
+    updateAssignedEmployeesDisplay();
+    
+    document.getElementById('totalDuration').textContent = '0';
+    
+    // Hide location fields
+    document.getElementById('locationFields').classList.remove('show');
+}
+
+// Simple notification function
+// Enhanced notification function
+function showNotification(message, type = 'info') {
+    // Remove any existing notifications
+    const existingNotification = document.querySelector('.custom-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = 'custom-notification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        z-index: 30000;
+        max-width: 350px;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    `;
+    
+    // Set background color based on type
+    const colors = {
+        info: '#3b82f6',
+        success: '#10b981',
+        error: '#ef4444',
+        warning: '#f59e0b'
+    };
+    notification.style.backgroundColor = colors[type] || colors.info;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 5000);
+}
+
+// Add CSS for animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Update your existing addNewTraining function to populate the dropdown
+const originalAddNewTraining = window.addNewTraining;
+window.addNewTraining = function() {
+    // Reset form and arrays
+    selectedObjectives = [];
+    selectedSkills = [];
+    addedActivities = [];
+    addedCertificates = [];
+    assignedEmployees = [];
+    
+    // Clear form fields
+    const form = document.getElementById('addTrainingForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // Clear displayed items
+    updateObjectivesDisplay();
+    updateSkillsDisplay();
+    updateActivitiesDisplay();
+    updateCertificatesDisplay();
+    updateAssignedEmployeesDisplay();
+    
+    const totalDurationElement = document.getElementById('totalDuration');
+    if (totalDurationElement) {
+        totalDurationElement.textContent = '0';
+    }
+    
+    // Load existing trainings dropdown
+    populateExistingTrainings();
+    
+    // Load dropdown data
+    loadTrainingFormData();
+    
+    // Load employees
+    loadEmployees();
+    
+    const modal = document.getElementById('addTrainingModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+};
+
         // Employee assignment functionality
 let assignedEmployees = [];
 let allEmployees = [];
 
 // Function to load employees from backend
+// Enhanced loadEmployees function with better error handling
 async function loadEmployees() {
     try {
         console.log('Loading employees...');
+        
+        // Show loading state in dropdown
+        const employeeDropdown = document.getElementById('employeeDropdown');
+        if (employeeDropdown) {
+            employeeDropdown.innerHTML = '<option value="">Loading employees...</option>';
+        }
         
         const response = await fetch('/hr/employees', {
             method: 'GET',
@@ -2009,23 +2263,40 @@ async function loadEmployees() {
             credentials: 'include'
         });
         
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const result = await response.json();
+        console.log('Server response:', result);
         
-        if (result.success) {
+        if (result.success && result.data) {
             allEmployees = result.data;
             populateEmployeeDropdown(allEmployees);
-            console.log(`Loaded ${allEmployees.length} employees`);
+            console.log(`✅ Successfully loaded ${allEmployees.length} employees`);
+            
+            // Show notification if using demo data
+            if (result.isDemoData) {
+                console.warn('⚠️ Using demo data due to database connection issues');
+                showNotification('Using demo employee data (database connection failed)', 'warning');
+            }
         } else {
-            console.error('Failed to load employees:', result.message);
-            // Fallback to demo data
+            console.error('❌ Failed to load employees:', result.message);
             loadDemoEmployees();
         }
     } catch (error) {
-        console.error('Error loading employees:', error);
+        console.error('❌ Error loading employees:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
+        
+        // Show user-friendly error message
+        showNotification('Failed to load employees. Using demo data.', 'error');
+        
         // Fallback to demo data
         loadDemoEmployees();
     }
@@ -2086,12 +2357,25 @@ function loadDemoEmployees() {
 }
 
 // Populate employee dropdown
+// Enhanced populateEmployeeDropdown function
 function populateEmployeeDropdown(employees) {
     const employeeDropdown = document.getElementById('employeeDropdown');
-    if (!employeeDropdown) return;
+    if (!employeeDropdown) {
+        console.error('Employee dropdown element not found');
+        return;
+    }
     
-    // Clear existing options except the first one
+    // Clear existing options
     employeeDropdown.innerHTML = '<option value="">Select employee to assign</option>';
+    
+    if (!employees || employees.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No employees available';
+        option.disabled = true;
+        employeeDropdown.appendChild(option);
+        return;
+    }
     
     // Sort employees alphabetically by name
     const sortedEmployees = employees.sort((a, b) => {
@@ -2100,6 +2384,8 @@ function populateEmployeeDropdown(employees) {
         return nameA.localeCompare(nameB);
     });
     
+    console.log('Populating dropdown with employees:', sortedEmployees.map(emp => emp.fullName));
+    
     sortedEmployees.forEach(employee => {
         const option = document.createElement('option');
         option.value = employee.id;
@@ -2107,9 +2393,12 @@ function populateEmployeeDropdown(employees) {
         option.setAttribute('data-employee-name', employee.fullName || `${employee.firstName} ${employee.lastName}`);
         option.setAttribute('data-employee-email', employee.email || '');
         option.setAttribute('data-job-title', employee.jobTitle || '');
+        option.setAttribute('data-job-id', employee.jobId || '');
         option.setAttribute('data-department', employee.department || '');
         employeeDropdown.appendChild(option);
     });
+    
+    console.log(`✅ Dropdown populated with ${sortedEmployees.length} employees`);
 }
 
 // Filter employees based on selected job position
@@ -2144,18 +2433,30 @@ function assignEmployee() {
     const employeeDropdown = document.getElementById('employeeDropdown');
     const dueDateInput = document.getElementById('assignmentDueDate');
     
+    if (!employeeDropdown || !dueDateInput) {
+        console.error('Required form elements not found');
+        showNotification('Form elements not found', 'error');
+        return;
+    }
+    
     const selectedEmployeeId = employeeDropdown.value;
     const selectedOption = employeeDropdown.options[employeeDropdown.selectedIndex];
     const dueDate = dueDateInput.value;
     
+    console.log('Assigning employee:', {
+        selectedEmployeeId,
+        optionText: selectedOption?.textContent,
+        dueDate
+    });
+    
     if (!selectedEmployeeId) {
-        alert('Please select an employee to assign.');
+        showNotification('Please select an employee to assign.', 'warning');
         return;
     }
     
     // Check if employee is already assigned
     if (assignedEmployees.find(emp => emp.id === selectedEmployeeId)) {
-        alert('This employee has already been assigned to this training.');
+        showNotification('This employee has already been assigned to this training.', 'warning');
         return;
     }
     
@@ -2170,6 +2471,7 @@ function assignEmployee() {
         name: selectedOption.getAttribute('data-employee-name'),
         email: selectedOption.getAttribute('data-employee-email'),
         jobTitle: selectedOption.getAttribute('data-job-title'),
+        jobId: selectedOption.getAttribute('data-job-id'),
         department: selectedOption.getAttribute('data-department'),
         dueDate: dueDate || null,
         assignedDate: new Date().toISOString().split('T')[0]
@@ -2182,8 +2484,34 @@ function assignEmployee() {
     employeeDropdown.value = '';
     dueDateInput.value = '';
     
-    console.log('Employee assigned:', employee);
+    console.log('✅ Employee assigned successfully:', employee);
     console.log('Total assigned employees:', assignedEmployees.length);
+    
+    showNotification(`${employee.name} assigned successfully!`, 'success');
+}
+
+// Test function to check if employees are loading
+function testEmployeeLoading() {
+    console.log('=== TESTING EMPLOYEE LOADING ===');
+    console.log('Current allEmployees:', allEmployees);
+    console.log('Assigned employees:', assignedEmployees);
+    
+    const dropdown = document.getElementById('employeeDropdown');
+    console.log('Dropdown element:', dropdown);
+    console.log('Dropdown options count:', dropdown?.options.length);
+    
+    // Test the API call directly
+    fetch('/hr/employees')
+        .then(response => {
+            console.log('Direct API test - Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Direct API test - Response data:', data);
+        })
+        .catch(error => {
+            console.error('Direct API test - Error:', error);
+        });
 }
 
 // Update assigned employees display

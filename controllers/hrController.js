@@ -391,73 +391,123 @@ getHrTrainingDevelopmentTracker: async function (req, res) {
         }
     },
 
-    // Get employees for dropdown
-    getEmployees: async function (req, res) {
-        try {
-            const { data: employees, error } = await supabase
-                .from('staffaccounts')
-                .select(`
-                    staffId, lastName, firstName, jobId,
-                    jobpositions(jobTitle),
-                    departments(deptName)
-                `)
-                .order('firstName', { ascending: true });
+getEmployees: async function (req, res) {
+    try {
+        console.log('Fetching employees from database...');
+        
+        const { data: employees, error } = await supabase
+            .from('staffaccounts')
+            .select(`
+                staffId, 
+                lastName, 
+                firstName, 
+                userId,
+                jobId,
+                jobpositions(jobTitle),
+                departments(deptName),
+                useraccounts(userEmail)
+            `)
+            .order('firstName', { ascending: true });
 
-            if (error) throw error;
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
 
-            const formattedEmployees = (employees || []).map(emp => ({
+        console.log(`Found ${employees?.length || 0} employees in database`);
+
+        // Format the employees data
+        const formattedEmployees = (employees || []).map(emp => {
+            const fullName = `${emp.firstName || 'Unknown'} ${emp.lastName || 'User'}`;
+            
+            return {
                 id: emp.staffId,
                 firstName: emp.firstName || 'Unknown',
                 lastName: emp.lastName || 'User',
-                fullName: `${emp.firstName || 'Unknown'} ${emp.lastName || 'User'}`,
-                email: emp.staffEmail || 'no-email@company.com',
+                fullName: fullName,
+                email: emp.useraccounts?.userEmail || 'no-email@company.com', // Get email from useraccounts table
                 jobId: emp.jobId,
                 jobTitle: emp.jobpositions?.jobTitle || 'Unknown Position',
-                department: emp.departments?.departmentName || 'Unknown Department'
-            }));
+                department: emp.departments?.deptName || 'Unknown Department'
+            };
+        });
 
-            res.json({
-                success: true,
-                data: formattedEmployees
-            });
+        console.log('Formatted employees:', formattedEmployees.length);
+        console.log('Sample employee data:', formattedEmployees[0]); // Log first employee for debugging
 
-        } catch (error) {
-            console.error('Error fetching employees:', error);
-            // Return demo data if database fails
-            res.json({
-                success: true,
-                data: [
-                    {
-                        id: 'emp1',
-                        firstName: 'John',
-                        lastName: 'Doe',
-                        fullName: 'John Doe',
-                        email: 'john.doe@company.com',
-                        jobTitle: 'Software Engineer',
-                        department: 'IT'
-                    },
-                    {
-                        id: 'emp2',
-                        firstName: 'Jane',
-                        lastName: 'Smith',
-                        fullName: 'Jane Smith',
-                        email: 'jane.smith@company.com',
-                        jobTitle: 'Operations Manager',
-                        department: 'Operations'
-                    },
-                    {
-                        id: 'emp3',
-                        firstName: 'Mike',
-                        lastName: 'Johnson',
-                        fullName: 'Mike Johnson',
-                        email: 'mike.johnson@company.com',
-                        jobTitle: 'Data Analyst',
-                        department: 'Analytics'
-                    }
-                ]
-            });
-        }
-    },
+        res.json({
+            success: true,
+            data: formattedEmployees,
+            message: `Successfully fetched ${formattedEmployees.length} employees`
+        });
+
+    } catch (error) {
+        console.error('Error fetching employees:', error);
+        
+        // Return demo data if database fails (for development/testing)
+        const demoEmployees = [
+            {
+                id: 'emp1',
+                firstName: 'John',
+                lastName: 'Doe',
+                fullName: 'John Doe',
+                email: 'john.doe@company.com',
+                jobId: 1,
+                jobTitle: 'Software Engineer',
+                department: 'IT'
+            },
+            {
+                id: 'emp2',
+                firstName: 'Jane',
+                lastName: 'Smith',
+                fullName: 'Jane Smith',
+                email: 'jane.smith@company.com',
+                jobId: 2,
+                jobTitle: 'Operations Manager',
+                department: 'Operations'
+            },
+            {
+                id: 'emp3',
+                firstName: 'Mike',
+                lastName: 'Johnson',
+                fullName: 'Mike Johnson',
+                email: 'mike.johnson@company.com',
+                jobId: 3,
+                jobTitle: 'Data Analyst',
+                department: 'Analytics'
+            },
+            {
+                id: 'emp4',
+                firstName: 'Sarah',
+                lastName: 'Wilson',
+                fullName: 'Sarah Wilson',
+                email: 'sarah.wilson@company.com',
+                jobId: 4,
+                jobTitle: 'HR Specialist',
+                department: 'Human Resources'
+            },
+            {
+                id: 'emp5',
+                firstName: 'David',
+                lastName: 'Brown',
+                fullName: 'David Brown',
+                email: 'david.brown@company.com',
+                jobId: 5,
+                jobTitle: 'Marketing Manager',
+                department: 'Marketing'
+            }
+        ];
+
+        console.log('Returning demo data due to database error');
+        
+        res.json({
+            success: true,
+            data: demoEmployees,
+            message: 'Using demo data (database connection failed)',
+            isDemoData: true
+        });
+    }
+},
 
     // Create training with employee assignments
     createTraining: async function (req, res) {

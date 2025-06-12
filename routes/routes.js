@@ -411,7 +411,7 @@ router.get('/employee/certificates', employeeController.getCertificates);
 // ============================
 // HR - TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================
-
+router.get('/hr/employees', hrController.getEmployees);
 router.get('/hr/training-development-tracker', hrController.getHrTrainingDevelopmentTracker);
 
 module.exports = router; 
