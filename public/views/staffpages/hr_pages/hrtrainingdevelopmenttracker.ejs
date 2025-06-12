@@ -1311,8 +1311,122 @@ s
     }
 }
 
+/* Additional CSS for employee assignment section */
+.employee-assignment-header {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.assigned-employees-container {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.assigned-employees-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.assigned-employee-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.assigned-employee-item:hover {
+    border-color: #07ACB9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.assigned-employee-info {
+    flex: 1;
+}
+
+.assigned-employee-name {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 2px;
+}
+
+.assigned-employee-details {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.assigned-employee-due {
+    font-size: 12px;
+    color: #07ACB9;
+    font-weight: 500;
+    margin-right: 10px;
+}
+
+.remove-assignment-btn {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.remove-assignment-btn:hover {
+    background-color: #dc2626;
+}
+
+.no-assignments-message {
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+    padding: 20px;
+    background-color: #f1f5f9;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e1;
+}
+
+/* Enhanced form styling */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .employee-assignment-header .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .employee-assignment-header .form-input {
+        margin-left: 0 !important;
+        margin-top: 10px;
+    }
+}
+
 </style>
-    </style>
+
 </head>
 <body>
     <%- include('../../partials/linemanager_partials') %>
@@ -1324,171 +1438,174 @@ s
             <p>Manage training courses, track employee progress, and oversee professional development initiatives.</p>
         </div>
 
-       <!-- Add New Training Modal -->
-    <div class="modal-overlay" id="addTrainingModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Add New Training Course</h2>
+       <!-- Enhanced Add New Training Modal with Employee Assignment -->
+<div class="modal-overlay" id="addTrainingModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Add New Training Course</h2>
+        </div>
+        
+        <form id="addTrainingForm">
+            <!-- Training Course Name -->
+            <div class="form-group">
+                <label class="form-label">Training Course Name:</label>
+                <input type="text" class="form-input" id="courseName" placeholder="Enter training course name" required>
             </div>
-            
-            <form id="addTrainingForm">
-                <!-- Training Course Name -->
+
+            <!-- Description -->
+            <div class="form-group">
+                <label class="form-label">Description:</label>
+                <textarea class="form-textarea" id="courseDescription" placeholder="Enter detailed description of the training course" required></textarea>
+            </div>
+
+            <!-- Job Positions and Training Mode -->
+            <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Training Course Name:</label>
-                    <input type="text" class="form-input" id="courseName" placeholder="Enter training course name" required>
+                    <label class="form-label">Job Positions Applicable:</label>
+                    <select class="form-select" id="jobPositions" required>
+                        <option value="">Select applicable positions</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
                 </div>
-
-                <!-- Description -->
+                
                 <div class="form-group">
-                    <label class="form-label">Description:</label>
-                    <textarea class="form-textarea" id="courseDescription" placeholder="Enter detailed description of the training course" required></textarea>
+                    <label for="trainingMode">Training Mode <span style="color: red;">*</span></label>
+                    <select id="trainingMode" name="trainingMode" required>
+                        <option value="">Select Training Mode</option>
+                        <option value="online">Online</option>
+                        <option value="onsite">Onsite</option>
+                    </select>
                 </div>
+            </div>
 
-                <!-- Job Positions and Training Mode -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Job Positions Applicable:</label>
-                        <select class="form-select" id="jobPositions" required>
-                            <option value="">Select applicable positions</option>
-                            <!-- Options will be populated dynamically -->
-                        </select>
-                    </div>
-                    
-                  <!-- Replace your existing training mode field with this -->
-<div class="form-group">
-    <label for="trainingMode">Training Mode <span style="color: red;">*</span></label>
-    <select id="trainingMode" name="trainingMode" required>
-        <option value="">Select Training Mode</option>
-        <option value="online">Online</option>
-        <option value="onsite">Onsite</option>
-    </select>
-</div>
-
-<!-- Add these location fields after the training mode field -->
-<div id="locationFields" class="location-fields">
-    <div class="form-group">
-        <label for="countryDropdown">Country <span style="color: red;">*</span></label>
-        <select id="countryDropdown" name="country">
-            <option value="">Loading countries...</option>
-        </select>
-    </div>
-    
-    <div class="form-group">
-        <label for="addressField">Address <span style="color: red;">*</span></label>
-        <textarea id="addressField" name="address" rows="3" placeholder="Enter the full address for the training venue"></textarea>
-    </div>
-</div>
-                </div>
-
-<!-- Updated Cost section with PHP currency -->
-<div class="form-group">
-    <label class="form-label">Cost (PHP):</label>
-    <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost in Philippine Pesos (PHP)" min="0" step="0.01">
-</div>
-
-                <!-- Focus on Objective Areas with Dropdown -->
+            <!-- Location fields for onsite training -->
+            <div id="locationFields" class="location-fields">
                 <div class="form-group">
-                    <label class="form-label">Objective Focus Areas:</label>
-                    <div class="add-item-section">
-                        <div class="add-item-header">
-                            <select class="add-item-input" id="objectiveDropdown">
-                                <option value="">Select objective area</option>
+                    <label for="countryDropdown">Country <span style="color: red;">*</span></label>
+                    <select id="countryDropdown" name="country">
+                        <option value="">Loading countries...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="addressField">Address <span style="color: red;">*</span></label>
+                    <textarea id="addressField" name="address" rows="3" placeholder="Enter the full address for the training venue"></textarea>
+                </div>
+            </div>
+
+            <!-- Cost -->
+            <div class="form-group">
+                <label class="form-label">Cost (PHP):</label>
+                <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost in Philippine Pesos (PHP)" min="0" step="0.01">
+            </div>
+
+            <!-- Employee Assignment Section -->
+            <div class="form-group">
+                <label class="form-label">Assign to Employees:</label>
+                <div class="add-item-section">
+                    <div class="employee-assignment-header">
+                        <div class="form-row" style="margin-bottom: 15px;">
+                            <select class="form-select" id="employeeDropdown" style="flex: 2;">
+                                <option value="">Select employee to assign</option>
                                 <!-- Options will be populated dynamically -->
                             </select>
-                            <button type="button" class="add-btn" onclick="addObjective()">Add Objective</button>
+                            <input type="date" class="form-input" id="assignmentDueDate" style="flex: 1; margin-left: 10px;" title="Due date for this assignment">
                         </div>
-                        <div class="pills-container" id="objectivesList"></div>
+                        <button type="button" class="add-btn" onclick="assignEmployee()" style="width: 100%;">
+                            <i class="fas fa-user-plus"></i> Assign Employee
+                        </button>
+                    </div>
+                    
+                    <!-- Assigned Employees List -->
+                    <div class="assigned-employees-container">
+                        <div class="assigned-employees-header" style="margin: 15px 0 10px 0; font-weight: 600; color: #334155;">
+                            Assigned Employees (<span id="assignedCount">0</span>):
+                        </div>
+                        <div class="assigned-employees-list" id="assignedEmployeesList">
+                            <!-- Assigned employees will appear here -->
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Focus Skill Areas with Dropdown -->
-<div class="form-group">
-    <label class="form-label">Skill Focus Areas:</label>
-    <div class="add-item-section">
-        <div class="add-item-header">
-            <select class="add-item-input" id="skillDropdown">
-                <option value="">Select skill area</option>
-                <!-- Options will be populated dynamically with format: "Skill Name (Skill Type)" -->
-                <!-- Example: "JavaScript Programming (Hard)" or "Communication (Soft)" -->
-            </select>
-            <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
-        </div>
-        <div class="pills-container" id="skillsList"></div>
-    </div>
-</div>
-
-                <!-- Total Duration Display -->
-                <div class="duration-display">
-                    <div class="duration-label">Total Duration to Complete</div>
-                    <div class="duration-value"><span id="totalDuration">0</span></div>
-                </div>
-
-                <!-- Activities Needed -->
-                <div class="form-group">
-                    <label class="form-label">Activities Needed:</label>
-                    <div class="add-item-section">
-                        <div class="activity-form-grid">
-                            <input type="text" class="add-item-input" id="moduleName" placeholder="Module name">
-                            <input type="number" class="add-item-input" id="estimatedTime" placeholder="Estimated time (hours)" min="0" step="0.5">
-                        </div>
-<div class="activity-form-grid">
-    <select class="form-select" id="activityType">
-        <option value="">Select type</option>
-        <!-- Options will be populated dynamically -->
-    </select>
-    <div class="activity-type-actions">
-        <button type="button" class="add-type-btn" onclick="showAddActivityTypeModal()">
-            <i class="fas fa-plus"></i> Add New Type
-        </button>
-    </div>
-</div>
-
-<!-- Add Activity Type Mini Modal -->
-<div class="mini-modal-overlay" id="addActivityTypeModal">
-    <div class="mini-modal-content">
-        <div class="mini-modal-header">
-            <h4>Add New Activity Type</h4>
-            <button type="button" class="close-mini-modal" onclick="closeAddActivityTypeModal()">×</button>
-        </div>
-        <div class="mini-modal-body">
+            <!-- Focus on Objective Areas -->
             <div class="form-group">
-                <label class="form-label">Activity Type Name:</label>
-                <input type="text" class="form-input" id="newActivityTypeName" placeholder="Enter activity type name" maxlength="50">
+                <label class="form-label">Objective Focus Areas:</label>
+                <div class="add-item-section">
+                    <div class="add-item-header">
+                        <select class="add-item-input" id="objectiveDropdown">
+                            <option value="">Select objective area</option>
+                        </select>
+                        <button type="button" class="add-btn" onclick="addObjective()">Add Objective</button>
+                    </div>
+                    <div class="pills-container" id="objectivesList"></div>
+                </div>
             </div>
-            <div class="mini-modal-actions">
-                <button type="button" class="btn-secondary" onclick="closeAddActivityTypeModal()">Cancel</button>
-                <button type="button" class="btn-primary" onclick="saveNewActivityType()">Add Type</button>
+
+            <!-- Focus Skill Areas -->
+            <div class="form-group">
+                <label class="form-label">Skill Focus Areas:</label>
+                <div class="add-item-section">
+                    <div class="add-item-header">
+                        <select class="add-item-input" id="skillDropdown">
+                            <option value="">Select skill area</option>
+                        </select>
+                        <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
+                    </div>
+                    <div class="pills-container" id="skillsList"></div>
+                </div>
             </div>
-        </div>
+
+            <!-- Total Duration Display -->
+            <div class="duration-display">
+                <div class="duration-label">Total Duration to Complete</div>
+                <div class="duration-value"><span id="totalDuration">0</span></div>
+            </div>
+
+            <!-- Activities Needed -->
+            <div class="form-group">
+                <label class="form-label">Activities Needed:</label>
+                <div class="add-item-section">
+                    <div class="activity-form-grid">
+                        <input type="text" class="add-item-input" id="moduleName" placeholder="Module name">
+                        <input type="number" class="add-item-input" id="estimatedTime" placeholder="Estimated time (hours)" min="0" step="0.5">
+                    </div>
+                    <div class="activity-form-grid">
+                        <select class="form-select" id="activityType">
+                            <option value="">Select type</option>
+                        </select>
+                        <div class="activity-type-actions">
+                            <button type="button" class="add-type-btn" onclick="showAddActivityTypeModal()">
+                                <i class="fas fa-plus"></i> Add New Type
+                            </button>
+                        </div>
+                    </div>
+                    <input type="text" class="add-item-input" id="activityRemarks" placeholder="Remarks (optional)">
+                    <button type="button" class="add-btn" onclick="addActivity()" style="width: 100%; margin-top: 10px;">Add Activity</button>
+                    <div class="dynamic-list" id="activitiesList"></div>
+                </div>
+            </div>
+
+            <!-- Certificates -->
+            <div class="form-group">
+                <label class="form-label">Certificate/s:</label>
+                <div class="add-item-section">
+                    <div class="activity-form-grid">
+                        <input type="text" class="add-item-input" id="certificateTitle" placeholder="Enter certificate title">
+                        <textarea class="add-item-input" id="certificateDescription" placeholder="Enter certificate description" style="min-height: 60px; resize: vertical;"></textarea>
+                    </div>
+                    <button type="button" class="add-btn" onclick="addCertificate()" style="width: 100%; margin-top: 10px;">Add Certificate</button>
+                    <div class="dynamic-list" id="certificatesList"></div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeAddTrainingModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Create Training Course</button>
+            </div>
+        </form>
     </div>
 </div>
-
-                        <input type="text" class="add-item-input" id="activityRemarks" placeholder="Remarks (optional)">
-                        <button type="button" class="add-btn" onclick="addActivity()" style="width: 100%; margin-top: 10px;">Add Activity</button>
-                        <div class="dynamic-list" id="activitiesList"></div>
-                    </div>
-                </div>
-
-                <!-- Certificates -->
-                <div class="form-group">
-                    <label class="form-label">Certificate/s:</label>
-                    <div class="add-item-section">
-                        <div class="activity-form-grid">
-                            <input type="text" class="add-item-input" id="certificateTitle" placeholder="Enter certificate title">
-                            <textarea class="add-item-input" id="certificateDescription" placeholder="Enter certificate description" style="min-height: 60px; resize: vertical;"></textarea>
-                        </div>
-                        <button type="button" class="add-btn" onclick="addCertificate()" style="width: 100%; margin-top: 10px;">Add Certificate</button>
-                        <div class="dynamic-list" id="certificatesList"></div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeAddTrainingModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Create Training Course</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
 <!-- Tabs Container -->
         <div class="tabs-container">
@@ -1874,6 +1991,442 @@ s
 
     <!-- JavaScript for functionality -->
     <script>
+
+        // Employee assignment functionality
+let assignedEmployees = [];
+let allEmployees = [];
+
+// Function to load employees from backend
+async function loadEmployees() {
+    try {
+        console.log('Loading employees...');
+        
+        const response = await fetch('/hr/employees', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            allEmployees = result.data;
+            populateEmployeeDropdown(allEmployees);
+            console.log(`Loaded ${allEmployees.length} employees`);
+        } else {
+            console.error('Failed to load employees:', result.message);
+            // Fallback to demo data
+            loadDemoEmployees();
+        }
+    } catch (error) {
+        console.error('Error loading employees:', error);
+        // Fallback to demo data
+        loadDemoEmployees();
+    }
+}
+
+// Fallback demo employees
+function loadDemoEmployees() {
+    allEmployees = [
+        {
+            id: 'emp1',
+            firstName: 'John',
+            lastName: 'Doe',
+            fullName: 'John Doe',
+            email: 'john.doe@company.com',
+            jobTitle: 'Software Engineer',
+            department: 'IT'
+        },
+        {
+            id: 'emp2',
+            firstName: 'Jane',
+            lastName: 'Smith',
+            fullName: 'Jane Smith',
+            email: 'jane.smith@company.com',
+            jobTitle: 'Operations Manager',
+            department: 'Operations'
+        },
+        {
+            id: 'emp3',
+            firstName: 'Mike',
+            lastName: 'Johnson',
+            fullName: 'Mike Johnson',
+            email: 'mike.johnson@company.com',
+            jobTitle: 'Data Analyst',
+            department: 'Analytics'
+        },
+        {
+            id: 'emp4',
+            firstName: 'Sarah',
+            lastName: 'Wilson',
+            fullName: 'Sarah Wilson',
+            email: 'sarah.wilson@company.com',
+            jobTitle: 'HR Specialist',
+            department: 'Human Resources'
+        },
+        {
+            id: 'emp5',
+            firstName: 'David',
+            lastName: 'Brown',
+            fullName: 'David Brown',
+            email: 'david.brown@company.com',
+            jobTitle: 'Marketing Manager',
+            department: 'Marketing'
+        }
+    ];
+    
+    populateEmployeeDropdown(allEmployees);
+    console.log('Loaded demo employees data');
+}
+
+// Populate employee dropdown
+function populateEmployeeDropdown(employees) {
+    const employeeDropdown = document.getElementById('employeeDropdown');
+    if (!employeeDropdown) return;
+    
+    // Clear existing options except the first one
+    employeeDropdown.innerHTML = '<option value="">Select employee to assign</option>';
+    
+    // Sort employees alphabetically by name
+    const sortedEmployees = employees.sort((a, b) => {
+        const nameA = (a.fullName || `${a.firstName} ${a.lastName}`).toUpperCase();
+        const nameB = (b.fullName || `${b.firstName} ${b.lastName}`).toUpperCase();
+        return nameA.localeCompare(nameB);
+    });
+    
+    sortedEmployees.forEach(employee => {
+        const option = document.createElement('option');
+        option.value = employee.id;
+        option.textContent = `${employee.fullName || `${employee.firstName} ${employee.lastName}`} - ${employee.jobTitle || 'No Title'}`;
+        option.setAttribute('data-employee-name', employee.fullName || `${employee.firstName} ${employee.lastName}`);
+        option.setAttribute('data-employee-email', employee.email || '');
+        option.setAttribute('data-job-title', employee.jobTitle || '');
+        option.setAttribute('data-department', employee.department || '');
+        employeeDropdown.appendChild(option);
+    });
+}
+
+// Filter employees based on selected job position
+function filterEmployeesByJob() {
+    const jobPositionSelect = document.getElementById('jobPositions');
+    const selectedJobId = jobPositionSelect.value;
+    
+    if (!selectedJobId) {
+        // Show all employees if no job position selected
+        populateEmployeeDropdown(allEmployees);
+        return;
+    }
+    
+    // Filter employees by job position
+    const filteredEmployees = allEmployees.filter(employee => 
+        employee.jobId === parseInt(selectedJobId) || employee.job_id === parseInt(selectedJobId)
+    );
+    
+    console.log(`Filtering employees by job ID ${selectedJobId}: found ${filteredEmployees.length} employees`);
+    
+    if (filteredEmployees.length === 0) {
+        // If no employees found for this job position, show all with a message
+        populateEmployeeDropdown(allEmployees);
+        console.log('No employees found for selected job position, showing all employees');
+    } else {
+        populateEmployeeDropdown(filteredEmployees);
+    }
+}
+
+// Assign employee function
+function assignEmployee() {
+    const employeeDropdown = document.getElementById('employeeDropdown');
+    const dueDateInput = document.getElementById('assignmentDueDate');
+    
+    const selectedEmployeeId = employeeDropdown.value;
+    const selectedOption = employeeDropdown.options[employeeDropdown.selectedIndex];
+    const dueDate = dueDateInput.value;
+    
+    if (!selectedEmployeeId) {
+        alert('Please select an employee to assign.');
+        return;
+    }
+    
+    // Check if employee is already assigned
+    if (assignedEmployees.find(emp => emp.id === selectedEmployeeId)) {
+        alert('This employee has already been assigned to this training.');
+        return;
+    }
+    
+    // Validate due date (optional, but if provided should be in the future)
+    if (dueDate && new Date(dueDate) < new Date()) {
+        const proceed = confirm('The due date is in the past. Do you want to continue?');
+        if (!proceed) return;
+    }
+    
+    const employee = {
+        id: selectedEmployeeId,
+        name: selectedOption.getAttribute('data-employee-name'),
+        email: selectedOption.getAttribute('data-employee-email'),
+        jobTitle: selectedOption.getAttribute('data-job-title'),
+        department: selectedOption.getAttribute('data-department'),
+        dueDate: dueDate || null,
+        assignedDate: new Date().toISOString().split('T')[0]
+    };
+    
+    assignedEmployees.push(employee);
+    updateAssignedEmployeesDisplay();
+    
+    // Reset dropdowns
+    employeeDropdown.value = '';
+    dueDateInput.value = '';
+    
+    console.log('Employee assigned:', employee);
+    console.log('Total assigned employees:', assignedEmployees.length);
+}
+
+// Update assigned employees display
+function updateAssignedEmployeesDisplay() {
+    const assignedEmployeesList = document.getElementById('assignedEmployeesList');
+    const assignedCount = document.getElementById('assignedCount');
+    
+    if (!assignedEmployeesList || !assignedCount) return;
+    
+    assignedCount.textContent = assignedEmployees.length;
+    
+    if (assignedEmployees.length === 0) {
+        assignedEmployeesList.innerHTML = `
+            <div class="no-assignments-message">
+                <i class="fas fa-users" style="margin-bottom: 8px; font-size: 18px;"></i><br>
+                No employees assigned yet. Select employees from the dropdown above.
+            </div>
+        `;
+        return;
+    }
+    
+    assignedEmployeesList.innerHTML = '';
+    
+    assignedEmployees.forEach((employee, index) => {
+        const employeeItem = document.createElement('div');
+        employeeItem.className = 'assigned-employee-item';
+        
+        const dueDateText = employee.dueDate 
+            ? `Due: ${new Date(employee.dueDate).toLocaleDateString()}`
+            : 'No due date set';
+        
+        employeeItem.innerHTML = `
+            <div class="assigned-employee-info">
+                <div class="assigned-employee-name">${employee.name}</div>
+                <div class="assigned-employee-details">
+                    ${employee.jobTitle} • ${employee.department || 'N/A'} • ${employee.email}
+                </div>
+            </div>
+            <div class="assigned-employee-due">${dueDateText}</div>
+            <button type="button" class="remove-assignment-btn" onclick="removeAssignedEmployee(${index})" title="Remove assignment">
+                ×
+            </button>
+        `;
+        
+        assignedEmployeesList.appendChild(employeeItem);
+    });
+}
+
+// Remove assigned employee
+function removeAssignedEmployee(index) {
+    const employee = assignedEmployees[index];
+    const confirmRemove = confirm(`Remove ${employee.name} from this training assignment?`);
+    
+    if (confirmRemove) {
+        assignedEmployees.splice(index, 1);
+        updateAssignedEmployeesDisplay();
+        console.log('Employee removed from assignment');
+    }
+}
+
+// Enhanced form submission to include assigned employees
+document.addEventListener('DOMContentLoaded', function() {
+    // Load employees when modal opens
+    const addTrainingModal = document.getElementById('addTrainingModal');
+    const originalAddNewTraining = window.addNewTraining;
+    
+    window.addNewTraining = function() {
+        // Reset assigned employees
+        assignedEmployees = [];
+        updateAssignedEmployeesDisplay();
+        
+        // Load employees
+        loadEmployees();
+        
+        // Call original function
+        if (originalAddNewTraining) {
+            originalAddNewTraining();
+        }
+    };
+    
+    // Add event listener for job position changes to filter employees
+    const jobPositionsSelect = document.getElementById('jobPositions');
+    if (jobPositionsSelect) {
+        jobPositionsSelect.addEventListener('change', function() {
+            // Call existing job position change handler
+            if (window.onJobPositionChange) {
+                window.onJobPositionChange();
+            }
+            // Filter employees by job position
+            filterEmployeesByJob();
+        });
+    }
+    
+    // Enhanced form submission
+    const addTrainingForm = document.getElementById('addTrainingForm');
+    if (addTrainingForm) {
+        addTrainingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get all existing form data
+            const courseName = document.getElementById('courseName').value.trim();
+            const courseDescription = document.getElementById('courseDescription').value.trim();
+            const jobPosition = document.getElementById('jobPositions').value;
+            const trainingMode = document.getElementById('trainingMode').value;
+            const trainingCost = document.getElementById('trainingCost').value;
+            
+            // Enhanced validation including employee assignments
+            const errors = [];
+            
+            if (!courseName) errors.push('Course name is required');
+            if (!courseDescription) errors.push('Course description is required');
+            if (!jobPosition) errors.push('Job position must be selected');
+            if (!trainingMode) errors.push('Training mode must be selected');
+            
+            if (selectedObjectives.length === 0 && selectedSkills.length === 0) {
+                errors.push('You must select at least one Objective Focus Area OR one Skill Focus Area');
+            }
+            
+            if (addedActivities.length === 0) {
+                errors.push('At least one activity must be added');
+            }
+            
+            // Validate employee assignments
+            if (assignedEmployees.length === 0) {
+                errors.push('You must assign at least one employee to this training');
+            }
+            
+            // Location validation for onsite training
+            if (trainingMode === 'onsite') {
+                const country = document.getElementById('countryDropdown').value;
+                const address = document.getElementById('addressField').value.trim();
+                
+                if (!country) errors.push('Country must be selected for onsite training');
+                if (!address) errors.push('Address must be provided for onsite training');
+            }
+            
+            if (errors.length > 0) {
+                alert('Please fix the following errors:\n\n' + errors.join('\n'));
+                return;
+            }
+            
+            // Calculate total duration
+            const calculatedTotalDuration = addedActivities.reduce((sum, activity) => {
+                return sum + (parseFloat(activity.duration) || 0);
+            }, 0);
+            
+            // Prepare form data including assigned employees
+            const formData = {
+                trainingName: courseName,
+                trainingDesc: courseDescription,
+                jobId: parseInt(jobPosition),
+                objectives: selectedObjectives.map(obj => parseInt(obj.id)),
+                skills: selectedSkills.map(skill => parseInt(skill.id)),
+                isOnlineArrangement: trainingMode === 'online',
+                cost: parseFloat(trainingCost) || 0,
+                totalDuration: calculatedTotalDuration,
+                activities: addedActivities.map(activity => ({
+                    name: activity.name,
+                    duration: parseFloat(activity.duration),
+                    type: activity.type,
+                    remarks: activity.remarks || ''
+                })),
+                certifications: addedCertificates.map(cert => ({
+                    title: cert.title,
+                    description: cert.description
+                })),
+                // Include assigned employees
+                assignedEmployees: assignedEmployees.map(emp => ({
+                    employeeId: emp.id,
+                    dueDate: emp.dueDate,
+                    assignedDate: emp.assignedDate
+                }))
+            };
+            
+            // Add location data for onsite training
+            if (trainingMode === 'onsite') {
+                formData.country = document.getElementById('countryDropdown').value;
+                formData.address = document.getElementById('addressField').value.trim();
+            } else {
+                formData.country = null;
+                formData.address = null;
+            }
+            
+            console.log('Final form data with assignments:', formData);
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating...';
+            submitBtn.disabled = true;
+            
+            // Submit to backend
+            fetch('/linemanager/training', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Training course created successfully!\n\nAssigned to ${assignedEmployees.length} employee(s).`);
+                    closeAddTrainingModal();
+                    
+                    // Reset form and arrays
+                    this.reset();
+                    selectedObjectives = [];
+                    selectedSkills = [];
+                    addedActivities = [];
+                    addedCertificates = [];
+                    assignedEmployees = [];
+                    
+                    // Clear displays
+                    document.getElementById('objectivesList').innerHTML = '';
+                    document.getElementById('skillsList').innerHTML = '';
+                    document.getElementById('activitiesList').innerHTML = '';
+                    document.getElementById('certificatesList').innerHTML = '';
+                    document.getElementById('totalDuration').textContent = '0';
+                    updateAssignedEmployeesDisplay();
+                    
+                    // Reset location fields
+                    document.getElementById('locationFields').classList.remove('show');
+                    
+                    // Refresh page to show new training and assignments
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    alert('Error creating training course:\n\n' + (data.message || 'Unknown error occurred'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating training course. Please try again.\n\nError: ' + error.message);
+            })
+            .finally(() => {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    }
+});
 
         // Function to update statistics based on current assignments
 function updateTrainingStats() {

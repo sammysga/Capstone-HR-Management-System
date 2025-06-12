@@ -411,5 +411,14 @@ router.get('/employee/certificates', employeeController.getCertificates);
 
 router.get('/hr/training-development-tracker', hrController.getHrTrainingDevelopmentTracker);
 
+// Get employees for assignment dropdown
+router.get('/hr/employees', hrController.getEmployees);
+
+// Create training with employee assignments
+router.post('/hr/training', hrController.createTraining);
+
+// Get form data (objectives, skills, etc.)
+router.get('/hr/training-form-data', hrController.getTrainingFormData);
+
 module.exports = router; 
 
