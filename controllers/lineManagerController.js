@@ -824,6 +824,77 @@ ${process.env.NODE_ENV === 'development' ?
     }
 },
 
+getTrainingObjectives: async function(req, res) {
+    try {
+        const trainingId = req.params.trainingId;
+        
+        // Get objectives for this training
+        const { data: trainingObjectives, error } = await supabase
+            .from('training_objectives')
+            .select(`
+                objectiveId,
+                objectivesettings_objectives(objectiveDescrpt)
+            `)
+            .eq('trainingId', trainingId);
+
+        if (error) {
+            console.error('Error fetching training objectives:', error);
+            return res.json({ success: false, message: 'Error fetching objectives' });
+        }
+
+        // Format the objectives
+        const objectives = (trainingObjectives || []).map(item => ({
+            id: item.objectiveId,
+            description: item.objectivesettings_objectives?.objectiveDescrpt || 'No description'
+        }));
+
+        res.json({ 
+            success: true, 
+            objectives: objectives 
+        });
+
+    } catch (error) {
+        console.error('Error in getTrainingObjectives:', error);
+        res.json({ success: false, message: 'Server error' });
+    }
+},
+
+getTrainingSkills: async function(req, res) {
+    try {
+        const trainingId = req.params.trainingId;
+        
+        // Get skills for this training
+        const { data: trainingSkills, error } = await supabase
+            .from('training_skills')
+            .select(`
+                jobReqSkillId,
+                jobreqskills(jobReqSkillName, jobReqSkillType)
+            `)
+            .eq('trainingId', trainingId);
+
+        if (error) {
+            console.error('Error fetching training skills:', error);
+            return res.json({ success: false, message: 'Error fetching skills' });
+        }
+
+        // Format the skills
+        const skills = (trainingSkills || []).map(item => ({
+            id: item.jobReqSkillId,
+            name: item.jobreqskills?.jobReqSkillName || 'Unknown Skill',
+            type: item.jobreqskills?.jobReqSkillType || 'Unknown Type'
+        }));
+
+        res.json({ 
+            success: true, 
+            skills: skills 
+        });
+
+    } catch (error) {
+        console.error('Error in getTrainingSkills:', error);
+        res.json({ success: false, message: 'Server error' });
+    }
+},
+
 updateLeaveRequest: async function(req, res) {
     const leaveRequestId = req.body.leaveRequestId || req.query.leaveRequestId;
     const { action, remarks } = req.body;
