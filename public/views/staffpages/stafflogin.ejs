@@ -78,12 +78,65 @@
             font-size: 0.9em;
             margin-top: 10px;
         }
+
+        /* Specific styling for disabled account notice */
+        .disabled-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .disabled-notice .icon {
+            font-size: 1.5em;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .disabled-notice .message {
+            color: #856404;
+            font-size: 0.95em;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .disabled-notice .sub-message {
+            color: #6c757d;
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        /* General error styling for other login errors */
+        .login-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 15px;
+            color: #721c24;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        /* Debug styling */
+        .debug-info {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 11px;
+            text-align: left;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <img src="/images/prime_assets/company-logo-text.png" alt="Company Logo" style="width: 100px;">
+       <img src="/images/prime_assets/company-logo-text.png" alt="Company Logo" style="width: 100px;">
         <h2 style="color: #07ACB9;">Login as Staff</h2>
+
         <form action="/staff/login" method="post">
             <div class="form-group">
                 <label for="email">Email</label>
@@ -98,11 +151,27 @@
             <div class="form-group">
                 <input type="submit" value="Login">
             </div>
-
-            <% if (errors && errors.loginError) { %>
-                <p class="error-message"><%= errors.loginError %></p>
-            <% } %>
         </form>
+
+        <!-- Error messages placed outside and below the form -->
+        <% if (typeof errors !== 'undefined' && errors && errors.loginError) { %>
+            <% if (errors.loginError.includes('Account is disabled')) { %>
+                <!-- Special notice for disabled accounts -->
+                <div class="disabled-notice">
+                    <div class="icon">⚠️</div>
+                    <div class="message">Account Disabled</div>
+                    <div class="sub-message">
+                        Your account has been temporarily disabled.<br>
+                        Please contact your system administrator or HR department for assistance.
+                    </div>
+                </div>
+            <% } else { %>
+                <!-- Regular error message for other login errors -->
+                <div class="login-error">
+                    <%= errors.loginError %>
+                </div>
+            <% } %>
+        <% } %>
     </div>
 </body>
 </html>
