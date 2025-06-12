@@ -1903,13 +1903,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Add this JavaScript function to handle the suggested training selection
 // UPDATE your fillFromSuggested function to handle more training data
-function fillFromSuggested() {
+// Updated fillFromSuggested function with objective fetching
+// Updated fillFromSuggested function with both objective and skill fetching
+async function fillFromSuggested() {
     const suggestedSelect = document.getElementById('suggestedTrainings');
     const selectedValue = suggestedSelect.value;
     const selectedOption = suggestedSelect.options[suggestedSelect.selectedIndex];
     
     // Check if it's a database training (starts with 'db_')
     if (selectedValue.startsWith('db_')) {
+        const trainingId = selectedValue.replace('db_', ''); // Remove 'db_' prefix
+        
         // Use data from database training
         const trainingName = selectedOption.getAttribute('data-name');
         const trainingDescription = selectedOption.getAttribute('data-description');
@@ -1948,6 +1952,77 @@ function fillFromSuggested() {
                     document.getElementById('addressField').value = trainingAddress;
                 }
             }
+        }
+        
+        // Fetch both objectives and skills concurrently
+        try {
+            console.log('Fetching objectives and skills for training ID:', trainingId);
+            
+            // Fetch objectives and skills at the same time
+            const [objectivesResponse, skillsResponse] = await Promise.all([
+                fetch(`/linemanager/training/${trainingId}/objectives`),
+                fetch(`/linemanager/training/${trainingId}/skills`)
+            ]);
+            
+            const objectivesResult = await objectivesResponse.json();
+            const skillsResult = await skillsResponse.json();
+            
+            console.log('Objectives fetch result:', objectivesResult);
+            console.log('Skills fetch result:', skillsResult);
+            
+            // Handle objectives
+            if (objectivesResult.success && objectivesResult.objectives && objectivesResult.objectives.length > 0) {
+                // Clear existing objectives
+                selectedObjectives = [];
+                
+                // Add fetched objectives
+                objectivesResult.objectives.forEach(objective => {
+                    selectedObjectives.push({
+                        id: objective.id,
+                        text: objective.description
+                    });
+                });
+                
+                // Update the display
+                updateObjectivesDisplay();
+                console.log('Successfully loaded objectives for training:', objectivesResult.objectives);
+            } else {
+                console.log('No objectives found for this training');
+                // Clear objectives if none found
+                selectedObjectives = [];
+                updateObjectivesDisplay();
+            }
+            
+            // Handle skills
+            if (skillsResult.success && skillsResult.skills && skillsResult.skills.length > 0) {
+                // Clear existing skills
+                selectedSkills = [];
+                
+                // Add fetched skills
+                skillsResult.skills.forEach(skill => {
+                    selectedSkills.push({
+                        id: skill.id,
+                        text: `${skill.name} (${skill.type})`
+                    });
+                });
+                
+                // Update the display
+                updateSkillsDisplay();
+                console.log('Successfully loaded skills for training:', skillsResult.skills);
+            } else {
+                console.log('No skills found for this training');
+                // Clear skills if none found
+                selectedSkills = [];
+                updateSkillsDisplay();
+            }
+            
+        } catch (error) {
+            console.error('Error fetching training objectives and skills:', error);
+            // Clear both objectives and skills on error
+            selectedObjectives = [];
+            selectedSkills = [];
+            updateObjectivesDisplay();
+            updateSkillsDisplay();
         }
         
         console.log('Filled form with database training:', trainingName);
@@ -2005,6 +2080,12 @@ function fillFromSuggested() {
         // Fill the course name and description fields
         document.getElementById('courseName').value = suggestion.name;
         document.getElementById('courseDescription').value = suggestion.description;
+        
+        // Clear objectives and skills for static templates
+        selectedObjectives = [];
+        selectedSkills = [];
+        updateObjectivesDisplay();
+        updateSkillsDisplay();
         
         console.log('Filled form with static template:', suggestion.name);
     }
