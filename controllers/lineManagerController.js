@@ -509,7 +509,7 @@ getTrainingDevelopmentTracker: async function (req, res) {
         // Fetch some employees for sample data
         const { data: employees, error: employeesError } = await supabase
             .from('staffaccounts')
-            .select('*')
+            .select('*');
             //.limit(20); // Get more employees to ensure we have the ones referenced by trainings
 
         if (employeesError) {
@@ -588,6 +588,41 @@ getTrainingDevelopmentTracker: async function (req, res) {
                 ]
             };
         });
+
+        // NEW: Create suggested trainings list with jobId for filtering
+        const suggestedTrainings = (trainings || []).map(training => ({
+            id: training.trainingId,
+            name: training.trainingName || 'Untitled Training',
+            description: training.trainingDesc || 'No description available',
+            jobId: training.jobId, // IMPORTANT: Keep the jobId for filtering
+            jobTitle: jobsMap[training.jobId]?.title || 'Unknown Position',
+            department: departmentsMap[jobsMap[training.jobId]?.departmentId]?.name || 'Unknown Department',
+            mode: training.isOnlineArrangement ? 'online' : 'onsite',
+            cost: training.cost || 0,
+            duration: training.totalDuration || 0,
+            isActive: training.isActive,
+            createdDate: training.createdAt || training.created_at,
+            location: training.isOnlineArrangement ? null : {
+                country: training.country,
+                address: training.address
+            }
+        }));
+
+        // Group suggested trainings by jobId for easier frontend filtering
+        const suggestedTrainingsByJob = suggestedTrainings.reduce((acc, training) => {
+            if (!acc[training.jobId]) {
+                acc[training.jobId] = [];
+            }
+            acc[training.jobId].push(training);
+            return acc;
+        }, {});
+
+        console.log(`Created ${suggestedTrainings.length} suggested trainings grouped by job position`);
+        console.log('Trainings per job:', Object.keys(suggestedTrainingsByJob).map(jobId => ({
+            jobId,
+            jobTitle: jobsMap[jobId]?.title || 'Unknown',
+            count: suggestedTrainingsByJob[jobId].length
+        })));
 
         // Create employee list showing all employees (with or without training assignments)
         let employeeAssignments = [];
@@ -705,13 +740,30 @@ getTrainingDevelopmentTracker: async function (req, res) {
             totalAssignments: employeeAssignments.length,
             inProgressAssignments: employeeAssignments.filter(a => a.status === 'in-progress').length,
             completedAssignments: employeeAssignments.filter(a => a.status === 'completed').length,
-            overdueAssignments: employeeAssignments.filter(a => a.status === 'not-started' && new Date(a.dueDate) < new Date()).length
+            overdueAssignments: employeeAssignments.filter(a => a.status === 'not-started' && new Date(a.dueDate) < new Date()).length,
+            // NEW: Add suggested trainings stats
+            totalSuggestedTrainings: suggestedTrainings.length,
+            jobsWithTrainings: Object.keys(suggestedTrainingsByJob).length,
+            avgTrainingsPerJob: Object.keys(suggestedTrainingsByJob).length > 0 ? 
+                (suggestedTrainings.length / Object.keys(suggestedTrainingsByJob).length).toFixed(1) : 0
         };
 
-        console.log('Final data:', {
+        console.log('Final data summary:', {
             trainings: formattedTrainings.length,
             assignments: employeeAssignments.length,
+            suggestedTrainings: suggestedTrainings.length,
+            jobsWithTrainings: Object.keys(suggestedTrainingsByJob).length,
             stats
+        });
+
+        // Log detailed breakdown by job
+        console.log('Detailed breakdown by job position:');
+        Object.entries(suggestedTrainingsByJob).forEach(([jobId, trainings]) => {
+            const job = jobsMap[jobId];
+            console.log(`- ${job?.title || 'Unknown Job'} (ID: ${jobId}): ${trainings.length} trainings`);
+            trainings.forEach(training => {
+                console.log(`  * ${training.name} (${training.mode}, $${training.cost})`);
+            });
         });
 
         // Render the training development tracker page with data
@@ -719,6 +771,10 @@ getTrainingDevelopmentTracker: async function (req, res) {
             title: 'Employee Training & Development Tracker',
             trainings: formattedTrainings,
             assignments: employeeAssignments,
+            suggestedTrainings: suggestedTrainings, // Full list for JavaScript filtering
+            suggestedTrainingsByJob: suggestedTrainingsByJob, // Grouped by job for easier access
+            jobPositions: jobPositions || [], // Pass job positions for reference
+            departments: departments || [], // Pass departments for reference
             stats: stats,
             user: req.user || null,
             currentDate: new Date().toISOString(),
@@ -728,16 +784,42 @@ getTrainingDevelopmentTracker: async function (req, res) {
                     month: 'short',
                     day: 'numeric'
                 });
-            }
+            },
+            // Helper function for debugging in template
+            debugMode: process.env.NODE_ENV === 'development'
         });
         
     } catch (error) {
         console.error('Error loading training development tracker:', error);
+        
+        // Enhanced error logging
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            details: error.details
+        });
+        
         res.status(500).send(`
             <h1>Error Loading Training Tracker</h1>
             <p>There was an error loading the training development tracker.</p>
-            <pre>${process.env.NODE_ENV === 'development' ? error.message : 'Internal Server Error'}</pre>
-            <a href="/linemanager/dashboard">Return to Dashboard</a>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3>Error Details:</h3>
+                <pre style="background: #e9ecef; padding: 10px; border-radius: 3px; overflow-x: auto;">
+${process.env.NODE_ENV === 'development' ? 
+    `Message: ${error.message}\n\nStack: ${error.stack}` : 
+    'Internal Server Error - Check server logs for details'
+}
+                </pre>
+            </div>
+            <div style="margin-top: 20px;">
+                <a href="/linemanager/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                    ← Return to Dashboard
+                </a>
+                <button onclick="window.location.reload()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-left: 10px; cursor: pointer;">
+                    🔄 Retry
+                </button>
+            </div>
         `);
     }
 },

@@ -1324,171 +1324,182 @@ s
             <p>Manage training courses, track employee progress, and oversee professional development initiatives.</p>
         </div>
 
-       <!-- Add New Training Modal -->
-    <div class="modal-overlay" id="addTrainingModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Add New Training Course</h2>
+ <!-- Add New Training Modal -->
+<div class="modal-overlay" id="addTrainingModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Add New Training Course</h2>
+        </div>
+        
+        <form id="addTrainingForm">
+            <!-- Training Course Name -->
+            <div class="form-group">
+                <label class="form-label">Training Course Name:</label>
+                <input type="text" class="form-input" id="courseName" placeholder="Enter training course name" required>
             </div>
-            
-            <form id="addTrainingForm">
-                <!-- Training Course Name -->
+
+            <!-- UPDATED: Job-based Suggested Trainings Dropdown -->
+            <div class="form-group">
+                <label class="form-label">Suggested Trainings:</label>
+                <select class="form-select" id="suggestedTrainings" onchange="fillFromSuggested()" disabled>
+                    <option value="">Please select a job position first</option>
+                </select>
+                <small class="form-text text-muted" style="font-size: 12px; color: #6c757d; margin-top: 5px; display: block;">
+                    This dropdown will populate with relevant trainings once you select a job position below.
+                </small>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label class="form-label">Description:</label>
+                <textarea class="form-textarea" id="courseDescription" placeholder="Enter detailed description of the training course" required></textarea>
+            </div>
+
+            <!-- Job Positions and Training Mode -->
+            <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Training Course Name:</label>
-                    <input type="text" class="form-input" id="courseName" placeholder="Enter training course name" required>
+                    <label class="form-label">Job Positions Applicable:</label>
+                    <select class="form-select" id="jobPositions" required>
+                        <option value="">Select applicable positions</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                
+                <!-- Replace your existing training mode field with this -->
+                <div class="form-group">
+                    <label for="trainingMode">Training Mode <span style="color: red;">*</span></label>
+                    <select id="trainingMode" name="trainingMode" required>
+                        <option value="">Select Training Mode</option>
+                        <option value="online">Online</option>
+                        <option value="onsite">Onsite</option>
+                    </select>
                 </div>
 
-                <!-- Description -->
-                <div class="form-group">
-                    <label class="form-label">Description:</label>
-                    <textarea class="form-textarea" id="courseDescription" placeholder="Enter detailed description of the training course" required></textarea>
-                </div>
-
-                <!-- Job Positions and Training Mode -->
-                <div class="form-row">
+                <!-- Add these location fields after the training mode field -->
+                <div id="locationFields" class="location-fields">
                     <div class="form-group">
-                        <label class="form-label">Job Positions Applicable:</label>
-                        <select class="form-select" id="jobPositions" required>
-                            <option value="">Select applicable positions</option>
-                            <!-- Options will be populated dynamically -->
+                        <label for="countryDropdown">Country <span style="color: red;">*</span></label>
+                        <select id="countryDropdown" name="country">
+                            <option value="">Loading countries...</option>
                         </select>
                     </div>
                     
-                  <!-- Replace your existing training mode field with this -->
-<div class="form-group">
-    <label for="trainingMode">Training Mode <span style="color: red;">*</span></label>
-    <select id="trainingMode" name="trainingMode" required>
-        <option value="">Select Training Mode</option>
-        <option value="online">Online</option>
-        <option value="onsite">Onsite</option>
-    </select>
-</div>
-
-<!-- Add these location fields after the training mode field -->
-<div id="locationFields" class="location-fields">
-    <div class="form-group">
-        <label for="countryDropdown">Country <span style="color: red;">*</span></label>
-        <select id="countryDropdown" name="country">
-            <option value="">Loading countries...</option>
-        </select>
-    </div>
-    
-    <div class="form-group">
-        <label for="addressField">Address <span style="color: red;">*</span></label>
-        <textarea id="addressField" name="address" rows="3" placeholder="Enter the full address for the training venue"></textarea>
-    </div>
-</div>
-                </div>
-
-<!-- Updated Cost section with PHP currency -->
-<div class="form-group">
-    <label class="form-label">Cost (PHP):</label>
-    <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost in Philippine Pesos (PHP)" min="0" step="0.01">
-</div>
-
-                <!-- Focus on Objective Areas with Dropdown -->
-                <div class="form-group">
-                    <label class="form-label">Objective Focus Areas:</label>
-                    <div class="add-item-section">
-                        <div class="add-item-header">
-                            <select class="add-item-input" id="objectiveDropdown">
-                                <option value="">Select objective area</option>
-                                <!-- Options will be populated dynamically -->
-                            </select>
-                            <button type="button" class="add-btn" onclick="addObjective()">Add Objective</button>
-                        </div>
-                        <div class="pills-container" id="objectivesList"></div>
+                    <div class="form-group">
+                        <label for="addressField">Address <span style="color: red;">*</span></label>
+                        <textarea id="addressField" name="address" rows="3" placeholder="Enter the full address for the training venue"></textarea>
                     </div>
                 </div>
+            </div>
 
-                <!-- Focus Skill Areas with Dropdown -->
-<div class="form-group">
-    <label class="form-label">Skill Focus Areas:</label>
-    <div class="add-item-section">
-        <div class="add-item-header">
-            <select class="add-item-input" id="skillDropdown">
-                <option value="">Select skill area</option>
-                <!-- Options will be populated dynamically with format: "Skill Name (Skill Type)" -->
-                <!-- Example: "JavaScript Programming (Hard)" or "Communication (Soft)" -->
-            </select>
-            <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
-        </div>
-        <div class="pills-container" id="skillsList"></div>
-    </div>
-</div>
-
-                <!-- Total Duration Display -->
-                <div class="duration-display">
-                    <div class="duration-label">Total Duration to Complete</div>
-                    <div class="duration-value"><span id="totalDuration">0</span></div>
-                </div>
-
-                <!-- Activities Needed -->
-                <div class="form-group">
-                    <label class="form-label">Activities Needed:</label>
-                    <div class="add-item-section">
-                        <div class="activity-form-grid">
-                            <input type="text" class="add-item-input" id="moduleName" placeholder="Module name">
-                            <input type="number" class="add-item-input" id="estimatedTime" placeholder="Estimated time (hours)" min="0" step="0.5">
-                        </div>
-<div class="activity-form-grid">
-    <select class="form-select" id="activityType">
-        <option value="">Select type</option>
-        <!-- Options will be populated dynamically -->
-    </select>
-    <div class="activity-type-actions">
-        <button type="button" class="add-type-btn" onclick="showAddActivityTypeModal()">
-            <i class="fas fa-plus"></i> Add New Type
-        </button>
-    </div>
-</div>
-
-<!-- Add Activity Type Mini Modal -->
-<div class="mini-modal-overlay" id="addActivityTypeModal">
-    <div class="mini-modal-content">
-        <div class="mini-modal-header">
-            <h4>Add New Activity Type</h4>
-            <button type="button" class="close-mini-modal" onclick="closeAddActivityTypeModal()">×</button>
-        </div>
-        <div class="mini-modal-body">
+            <!-- Updated Cost section with PHP currency -->
             <div class="form-group">
-                <label class="form-label">Activity Type Name:</label>
-                <input type="text" class="form-input" id="newActivityTypeName" placeholder="Enter activity type name" maxlength="50">
+                <label class="form-label">Cost (PHP):</label>
+                <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost in Philippine Pesos (PHP)" min="0" step="0.01">
             </div>
-            <div class="mini-modal-actions">
-                <button type="button" class="btn-secondary" onclick="closeAddActivityTypeModal()">Cancel</button>
-                <button type="button" class="btn-primary" onclick="saveNewActivityType()">Add Type</button>
+
+            <!-- Focus on Objective Areas with Dropdown -->
+            <div class="form-group">
+                <label class="form-label">Objective Focus Areas:</label>
+                <div class="add-item-section">
+                    <div class="add-item-header">
+                        <select class="add-item-input" id="objectiveDropdown">
+                            <option value="">Select objective area</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                        <button type="button" class="add-btn" onclick="addObjective()">Add Objective</button>
+                    </div>
+                    <div class="pills-container" id="objectivesList"></div>
+                </div>
             </div>
-        </div>
+
+            <!-- Focus Skill Areas with Dropdown -->
+            <div class="form-group">
+                <label class="form-label">Skill Focus Areas:</label>
+                <div class="add-item-section">
+                    <div class="add-item-header">
+                        <select class="add-item-input" id="skillDropdown">
+                            <option value="">Select skill area</option>
+                            <!-- Options will be populated dynamically with format: "Skill Name (Skill Type)" -->
+                            <!-- Example: "JavaScript Programming (Hard)" or "Communication (Soft)" -->
+                        </select>
+                        <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
+                    </div>
+                    <div class="pills-container" id="skillsList"></div>
+                </div>
+            </div>
+
+            <!-- Total Duration Display -->
+            <div class="duration-display">
+                <div class="duration-label">Total Duration to Complete</div>
+                <div class="duration-value"><span id="totalDuration">0</span></div>
+            </div>
+
+            <!-- Activities Needed -->
+            <div class="form-group">
+                <label class="form-label">Activities Needed:</label>
+                <div class="add-item-section">
+                    <div class="activity-form-grid">
+                        <input type="text" class="add-item-input" id="moduleName" placeholder="Module name">
+                        <input type="number" class="add-item-input" id="estimatedTime" placeholder="Estimated time (hours)" min="0" step="0.5">
+                    </div>
+                    <div class="activity-form-grid">
+                        <select class="form-select" id="activityType">
+                            <option value="">Select type</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                        <div class="activity-type-actions">
+                            <button type="button" class="add-type-btn" onclick="showAddActivityTypeModal()">
+                                <i class="fas fa-plus"></i> Add New Type
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Add Activity Type Mini Modal -->
+                    <div class="mini-modal-overlay" id="addActivityTypeModal">
+                        <div class="mini-modal-content">
+                            <div class="mini-modal-header">
+                                <h4>Add New Activity Type</h4>
+                                <button type="button" class="close-mini-modal" onclick="closeAddActivityTypeModal()">×</button>
+                            </div>
+                            <div class="mini-modal-body">
+                                <div class="form-group">
+                                    <label class="form-label">Activity Type Name:</label>
+                                    <input type="text" class="form-input" id="newActivityTypeName" placeholder="Enter activity type name" maxlength="50">
+                                </div>
+                                <div class="mini-modal-actions">
+                                    <button type="button" class="btn-secondary" onclick="closeAddActivityTypeModal()">Cancel</button>
+                                    <button type="button" class="btn-primary" onclick="saveNewActivityType()">Add Type</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="text" class="add-item-input" id="activityRemarks" placeholder="Remarks (optional)">
+                    <button type="button" class="add-btn" onclick="addActivity()" style="width: 100%; margin-top: 10px;">Add Activity</button>
+                    <div class="dynamic-list" id="activitiesList"></div>
+                </div>
+            </div>
+
+            <!-- Certificates -->
+            <div class="form-group">
+                <label class="form-label">Certificate/s:</label>
+                <div class="add-item-section">
+                    <div class="activity-form-grid">
+                        <input type="text" class="add-item-input" id="certificateTitle" placeholder="Enter certificate title">
+                        <textarea class="add-item-input" id="certificateDescription" placeholder="Enter certificate description" style="min-height: 60px; resize: vertical;"></textarea>
+                    </div>
+                    <button type="button" class="add-btn" onclick="addCertificate()" style="width: 100%; margin-top: 10px;">Add Certificate</button>
+                    <div class="dynamic-list" id="certificatesList"></div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeAddTrainingModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Create Training Course</button>
+            </div>
+        </form>
     </div>
 </div>
-
-                        <input type="text" class="add-item-input" id="activityRemarks" placeholder="Remarks (optional)">
-                        <button type="button" class="add-btn" onclick="addActivity()" style="width: 100%; margin-top: 10px;">Add Activity</button>
-                        <div class="dynamic-list" id="activitiesList"></div>
-                    </div>
-                </div>
-
-                <!-- Certificates -->
-                <div class="form-group">
-                    <label class="form-label">Certificate/s:</label>
-                    <div class="add-item-section">
-                        <div class="activity-form-grid">
-                            <input type="text" class="add-item-input" id="certificateTitle" placeholder="Enter certificate title">
-                            <textarea class="add-item-input" id="certificateDescription" placeholder="Enter certificate description" style="min-height: 60px; resize: vertical;"></textarea>
-                        </div>
-                        <button type="button" class="add-btn" onclick="addCertificate()" style="width: 100%; margin-top: 10px;">Add Certificate</button>
-                        <div class="dynamic-list" id="certificatesList"></div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeAddTrainingModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Create Training Course</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
 <!-- Tabs Container -->
         <div class="tabs-container">
@@ -1874,6 +1885,130 @@ s
 
     <!-- JavaScript for functionality -->
     <script>
+
+        // ADD this global variable to store all suggested trainings
+let allSuggestedTrainings = [];
+
+// INITIALIZE the suggested trainings data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Get suggested trainings data from the server
+    <% if (typeof suggestedTrainings !== 'undefined' && suggestedTrainings) { %>
+        allSuggestedTrainings = <%- JSON.stringify(suggestedTrainings) %>;
+        console.log('Loaded suggested trainings:', allSuggestedTrainings.length, 'trainings');
+        console.log('Sample training:', allSuggestedTrainings[0]);
+    <% } %>
+});
+
+
+
+        // Add this JavaScript function to handle the suggested training selection
+// UPDATE your fillFromSuggested function to handle more training data
+function fillFromSuggested() {
+    const suggestedSelect = document.getElementById('suggestedTrainings');
+    const selectedValue = suggestedSelect.value;
+    const selectedOption = suggestedSelect.options[suggestedSelect.selectedIndex];
+    
+    // Check if it's a database training (starts with 'db_')
+    if (selectedValue.startsWith('db_')) {
+        // Use data from database training
+        const trainingName = selectedOption.getAttribute('data-name');
+        const trainingDescription = selectedOption.getAttribute('data-description');
+        const trainingCost = selectedOption.getAttribute('data-cost');
+        const trainingMode = selectedOption.getAttribute('data-mode');
+        const trainingCountry = selectedOption.getAttribute('data-country');
+        const trainingAddress = selectedOption.getAttribute('data-address');
+        
+        // Fill form fields
+        document.getElementById('courseName').value = trainingName;
+        document.getElementById('courseDescription').value = trainingDescription;
+        
+        // Fill cost if available
+        if (trainingCost && trainingCost !== '0') {
+            document.getElementById('trainingCost').value = trainingCost;
+        }
+        
+        // Set training mode if available
+        if (trainingMode) {
+            document.getElementById('trainingMode').value = trainingMode;
+            // Trigger the training mode change event to show/hide location fields
+            toggleLocationFields();
+            
+            // If it's onsite training and we have location data, fill it
+            if (trainingMode === 'onsite') {
+                if (trainingCountry) {
+                    // Wait a bit for countries to load, then set the country
+                    setTimeout(() => {
+                        const countryDropdown = document.getElementById('countryDropdown');
+                        if (countryDropdown) {
+                            countryDropdown.value = trainingCountry;
+                        }
+                    }, 500);
+                }
+                if (trainingAddress) {
+                    document.getElementById('addressField').value = trainingAddress;
+                }
+            }
+        }
+        
+        console.log('Filled form with database training:', trainingName);
+        return;
+    }
+    
+    // Static training templates (your existing code)
+    const suggestedTrainings = {
+        leadership: {
+            name: "Leadership Development Program",
+            description: "Develop essential leadership skills including team management, strategic thinking, communication, and decision-making to effectively lead teams and drive organizational success."
+        },
+        safety: {
+            name: "Safety and Compliance Training",
+            description: "Essential workplace safety protocols, emergency procedures, and regulatory compliance requirements to ensure a safe and compliant work environment."
+        },
+        communication: {
+            name: "Communication Excellence",
+            description: "Improve interpersonal and communication skills for better workplace interactions, team collaboration, and professional relationships."
+        },
+        timemanagement: {
+            name: "Time Management Skills",
+            description: "Learn effective time management strategies, prioritization techniques, and productivity optimization methods to maximize efficiency and work-life balance."
+        },
+        customerservice: {
+            name: "Customer Service Training",
+            description: "Enhance customer interaction skills, learn problem-solving techniques, and understand customer psychology to deliver exceptional service experiences."
+        },
+        projectmanagement: {
+            name: "Project Management Fundamentals",
+            description: "Learn essential project management methodologies, tools, and techniques for successful project planning, execution, and delivery."
+        },
+        dataanalysis: {
+            name: "Data Analysis and Reporting",
+            description: "Master data analysis techniques, statistical methods, and reporting tools to make data-driven decisions and create meaningful insights."
+        },
+        teambuilding: {
+            name: "Team Building Workshop",
+            description: "Interactive workshop focused on building stronger team relationships, improving collaboration, and enhancing group dynamics for better team performance."
+        },
+        cybersecurity: {
+            name: "Cybersecurity Awareness",
+            description: "Essential cybersecurity practices, threat recognition, and data protection protocols to maintain secure digital environments and prevent security breaches."
+        },
+        diversity: {
+            name: "Diversity and Inclusion Training",
+            description: "Promote inclusive workplace culture, understand diversity benefits, and develop skills for creating equitable and respectful work environments."
+        }
+    };
+    
+    // Handle static training templates
+    if (selectedValue && suggestedTrainings[selectedValue]) {
+        const suggestion = suggestedTrainings[selectedValue];
+        
+        // Fill the course name and description fields
+        document.getElementById('courseName').value = suggestion.name;
+        document.getElementById('courseDescription').value = suggestion.description;
+        
+        console.log('Filled form with static template:', suggestion.name);
+    }
+}
 
         // Function to update statistics based on current assignments
 function updateTrainingStats() {
@@ -3243,10 +3378,11 @@ function populateActivityTypes(activityTypes) {
     });
 }
 
-// FIXED: Filter objectives and skills based on selected job position
+// UPDATE your onJobPositionChange function to populate suggested trainings
 function onJobPositionChange() {
     const jobPositionsSelect = document.getElementById('jobPositions');
     const selectedJobId = jobPositionsSelect.value;
+    const suggestedTrainingsSelect = document.getElementById('suggestedTrainings');
     
     console.log('Job position changed to:', selectedJobId);
     
@@ -3256,7 +3392,17 @@ function onJobPositionChange() {
     updateObjectivesDisplay();
     updateSkillsDisplay();
     
+    // Clear and reset suggested trainings dropdown
+    suggestedTrainingsSelect.innerHTML = '';
+    
     if (!selectedJobId) {
+        // No job selected
+        suggestedTrainingsSelect.disabled = true;
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Please select a job position first';
+        suggestedTrainingsSelect.appendChild(option);
+        
         // Reset to show all objectives and skills
         console.log('No job selected, showing all data');
         populateObjectives(allFormData.objectives);
@@ -3264,12 +3410,78 @@ function onJobPositionChange() {
         return;
     }
     
-    // Filter objectives for the selected job
+    // Enable suggested trainings dropdown
+    suggestedTrainingsSelect.disabled = false;
+    
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Select from suggested trainings (optional)';
+    suggestedTrainingsSelect.appendChild(defaultOption);
+    
+    // Add static training templates
+    const staticTrainings = [
+        { value: 'leadership', text: 'Leadership Development Program' },
+        { value: 'safety', text: 'Safety and Compliance Training' },
+        { value: 'communication', text: 'Communication Excellence' },
+        { value: 'timemanagement', text: 'Time Management Skills' },
+        { value: 'customerservice', text: 'Customer Service Training' },
+        { value: 'projectmanagement', text: 'Project Management Fundamentals' },
+        { value: 'dataanalysis', text: 'Data Analysis and Reporting' },
+        { value: 'teambuilding', text: 'Team Building Workshop' },
+        { value: 'cybersecurity', text: 'Cybersecurity Awareness' },
+        { value: 'diversity', text: 'Diversity and Inclusion Training' }
+    ];
+    
+    // Add optgroup for static templates
+    const staticOptgroup = document.createElement('optgroup');
+    staticOptgroup.label = 'General Training Templates';
+    
+    staticTrainings.forEach(training => {
+        const option = document.createElement('option');
+        option.value = training.value;
+        option.textContent = training.text;
+        staticOptgroup.appendChild(option);
+    });
+    
+    suggestedTrainingsSelect.appendChild(staticOptgroup);
+    
+    // Filter and add database trainings for this specific job
+    const filteredTrainings = allSuggestedTrainings.filter(training => 
+        training.jobId === parseInt(selectedJobId)
+    );
+    
+    console.log(`Found ${filteredTrainings.length} suggested trainings for job ID ${selectedJobId}`);
+    
+    if (filteredTrainings.length > 0) {
+        // Add optgroup for database trainings
+        const dbOptgroup = document.createElement('optgroup');
+        dbOptgroup.label = `Existing Trainings for ${jobPositionsSelect.options[jobPositionsSelect.selectedIndex].text}`;
+        
+        filteredTrainings.forEach(training => {
+            const option = document.createElement('option');
+            option.value = `db_${training.id}`;
+            option.textContent = training.name;
+            option.setAttribute('data-name', training.name);
+            option.setAttribute('data-description', training.description);
+            option.setAttribute('data-job-title', training.jobTitle);
+            option.setAttribute('data-department', training.department);
+            option.setAttribute('data-mode', training.mode);
+            option.setAttribute('data-cost', training.cost);
+            option.setAttribute('data-duration', training.duration);
+            option.setAttribute('data-country', training.location?.country || '');
+            option.setAttribute('data-address', training.location?.address || '');
+            dbOptgroup.appendChild(option);
+        });
+        
+        suggestedTrainingsSelect.appendChild(dbOptgroup);
+    }
+    
+    // Continue with existing job position change logic for objectives and skills
     const filteredObjectives = allFormData.objectives.filter(obj => 
         obj.jobId === parseInt(selectedJobId)
     );
     
-    // Filter skills for the selected job
     const filteredSkills = allFormData.skills.all.filter(skill => 
         skill.jobId === parseInt(selectedJobId)
     );
@@ -3277,14 +3489,11 @@ function onJobPositionChange() {
     console.log(`Job ID ${selectedJobId} selected:`);
     console.log(`- Found ${filteredObjectives.length} matching objectives`);
     console.log(`- Found ${filteredSkills.length} matching skills`);
+    console.log(`- Found ${filteredTrainings.length} matching suggested trainings`);
     
     // Update dropdowns with filtered data
     populateObjectives(filteredObjectives);
     populateSkills(filteredSkills);
-    
-    // Log the filtered data for debugging
-    console.log('Filtered objectives:', filteredObjectives.map(o => o.objectiveDescrpt));
-    console.log('Filtered skills:', filteredSkills.map(s => s.jobReqSkillName));
 }
         // Employee Training Modal Functions
         function openEmployeeModal(employeeId) {
