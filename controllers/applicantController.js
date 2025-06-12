@@ -415,6 +415,52 @@ getJobDetailsTitle: async function(req, res) {
         // Redirect upon success
         res.redirect('/applicant/login');
     },
+
+    handleLoginCheckEmail: async function (req, res) {
+        try {
+        const { email } = req.body;
+        
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.json({ 
+                exists: false, 
+                valid: false, 
+                message: 'Invalid email format' 
+            });
+        }
+
+        // Check if email already exists in database
+        const { data: existingData, error: existingDataError } = await supabase
+            .from('useraccounts')
+            .select('userEmail')
+            .eq('userEmail', email)
+            .limit(1);
+
+        if (existingDataError) {
+            console.error('Database error checking email:', existingDataError);
+            return res.status(500).json({ 
+                error: 'Database error occurred' 
+            });
+        }
+
+        const emailExists = existingData && existingData.length > 0;
+
+        res.json({
+            exists: emailExists,
+            valid: true,
+            message: emailExists ? 'Email is already registered' : 'Email is available'
+        });
+
+    } catch (error) {
+        console.error('Error in email check:', error);
+        res.status(500).json({ 
+            error: 'Server error occurred' 
+        });
+    }
+    },
+
+    
     handleLoginSubmit: async function (req, res) {
         try {
             const { email, password } = req.body;

@@ -11,11 +11,11 @@ const { hr } = require('date-fns/locale');
 router.use(express.urlencoded({ extended: true }));
 router.use(fileUpload());
 
-
 // Route to render the public home page
 router.get('/', applicantController.getAboutPage);
 router.get('/applicant/signup', applicantController.getApplicantRegisterPage);
 router.post('/applicant/signup', applicantController.handleRegisterPage);
+router.post('/applicant/signup/checkemail', applicantController.handleLoginCheckEmail);
 router.get('/applicant/login', applicantController.getApplicantLogin);
 router.post('/applicant/login', applicantController.handleLoginSubmit);
 router.get('/applicant/schedule-interview', applicantController.getCalendly);
@@ -385,7 +385,7 @@ router.put('/employee/training/:trainingRecordId/activity/:activityId', employee
 router.put('/employee/training/:trainingRecordId/activities', employeeController.updateTrainingActivities);
 
 // Certificates
-router.get('/employee/certificates', employeeController.getCertificates);
+router.get('/employee/certificates', employeeController.getEmployeeCertificates);
 router.get('/employee/training/:trainingRecordId/certificates', employeeController.getCertificatesForTraining);
 router.post('/employee/certificates/upload', employeeController.uploadTrainingCertificate);
 
@@ -410,15 +410,6 @@ router.get('/employee/certificates', employeeController.getCertificates);
 // ============================
 
 router.get('/hr/training-development-tracker', hrController.getHrTrainingDevelopmentTracker);
-
-// Get employees for assignment dropdown
-router.get('/hr/employees', hrController.getEmployees);
-
-// Create training with employee assignments
-router.post('/hr/training', hrController.createTraining);
-
-// Get form data (objectives, skills, etc.)
-router.get('/hr/training-form-data', hrController.getTrainingFormData);
 
 module.exports = router; 
 

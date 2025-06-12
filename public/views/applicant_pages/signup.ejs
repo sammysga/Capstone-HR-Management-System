@@ -88,6 +88,54 @@
             margin-top: -5px;
             margin-bottom: 5px;
         }
+
+        .success-message {
+            color: #28a745;
+            font-size: 0.8em;
+            text-align: left;
+            margin-top: -5px;
+            margin-bottom: 5px;
+        }
+
+        .email-input-container {
+            position: relative;
+        }
+
+        .email-status {
+            font-size: 0.8em;
+            margin-top: -5px;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        .email-checking {
+            color: #007bff;
+        }
+
+        .email-available {
+            color: #28a745;
+        }
+
+        .email-taken {
+            color: #dc3545;
+        }
+
+        .email-invalid {
+            color: #ffc107;
+        }
+
+        input.email-valid {
+            border-color: #28a745;
+        }
+
+        input.email-invalid {
+            border-color: #dc3545;
+        }
+
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -95,13 +143,18 @@
     <div class="signup-container">
         <img src="/images/prime_assets/company-logo-text.png" alt="Company Logo" style="width: 100px;">
         <h2>Create an Applicant Account</h2>
-        <form action="/applicant/signup" method="POST">
+        <form action="/applicant/signup" method="POST" id="signupForm">
             <input type="text" name="lastName" placeholder="Last Name" required>
             <input type="text" name="firstName" placeholder="First Name" required>
             <input type="text" name="middleInitial" placeholder="M.I." maxlength="1" required>
             <input type="date" name="birthDate" placeholder="Birthdate" required>
             <input type="tel" name="phoneNo" placeholder="Phone Number" required>
-            <input type="email" name="email" placeholder="Email Address" required>
+            
+            <div class="email-input-container">
+                <input type="email" name="email" id="emailInput" placeholder="Email Address" required>
+                <div id="emailStatus" class="email-status"></div>
+            </div>
+            
             <input type="password" name="password" id="password" placeholder="Set Password" required>
             <input type="password" name="confirmPassword" id="confirmpassword" placeholder="Confirm Password" required>
             
@@ -111,12 +164,132 @@
                 <% }); %>
             <% } %>
             
-            <button type="submit">Sign Up</button>
+            <button type="submit" id="submitBtn">Sign Up</button>
         </form>
         <div class="login-link">
             Already have an account? <a href="/applicant/login">Login here</a>
         </div>
     </div>
+
+    <script>
+        let emailCheckTimeout;
+        let isEmailValid = false;
+
+        const emailInput = document.getElementById('emailInput');
+        const emailStatus = document.getElementById('emailStatus');
+        const submitBtn = document.getElementById('submitBtn');
+        const signupForm = document.getElementById('signupForm');
+
+        // Email validation function
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Update submit button state
+        function updateSubmitButton() {
+            if (isEmailValid && emailInput.value.trim() !== '') {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+
+        // Check email availability
+        async function checkEmailAvailability(email) {
+            try {
+                const response = await fetch('/applicant/signup/checkemail', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    if (!result.valid) {
+                        emailStatus.textContent = result.message;
+                        emailStatus.className = 'email-status email-invalid';
+                        emailInput.className = 'email-invalid';
+                        isEmailValid = false;
+                    } else if (result.exists) {
+                        emailStatus.textContent = 'Email is already registered';
+                        emailStatus.className = 'email-status email-taken';
+                        emailInput.className = 'email-invalid';
+                        isEmailValid = false;
+                    } else {
+                        emailStatus.textContent = 'Email is available ✓';
+                        emailStatus.className = 'email-status email-available';
+                        emailInput.className = 'email-valid';
+                        isEmailValid = true;
+                    }
+                } else {
+                    emailStatus.textContent = 'Error checking email';
+                    emailStatus.className = 'email-status email-invalid';
+                    emailInput.className = '';
+                    isEmailValid = false;
+                }
+            } catch (error) {
+                console.error('Error checking email:', error);
+                emailStatus.textContent = 'Error checking email';
+                emailStatus.className = 'email-status email-invalid';
+                emailInput.className = '';
+                isEmailValid = false;
+            }
+            
+            updateSubmitButton();
+        }
+
+        // Email input event listener
+        emailInput.addEventListener('input', function() {
+            const email = this.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(emailCheckTimeout);
+            
+            // Reset status
+            emailStatus.textContent = '';
+            emailStatus.className = 'email-status';
+            this.className = '';
+            isEmailValid = false;
+            updateSubmitButton();
+            
+            if (email === '') {
+                return;
+            }
+            
+            // Basic email format check
+            if (!isValidEmail(email)) {
+                emailStatus.textContent = 'Invalid email format';
+                emailStatus.className = 'email-status email-invalid';
+                this.className = 'email-invalid';
+                return;
+            }
+            
+            // Show checking status
+            emailStatus.textContent = 'Checking availability...';
+            emailStatus.className = 'email-status email-checking';
+            
+            // Debounce API call (wait 500ms after user stops typing)
+            emailCheckTimeout = setTimeout(() => {
+                checkEmailAvailability(email);
+            }, 500);
+        });
+
+        // Form submission handler
+        signupForm.addEventListener('submit', function(e) {
+            if (!isEmailValid) {
+                e.preventDefault();
+                alert('Please enter a valid and available email address.');
+                return false;
+            }
+        });
+
+        // Initialize button state
+        updateSubmitButton();
+    </script>
     
 </body>
 </html>
