@@ -1606,6 +1606,7 @@ s
             <h3>Employee Training Assignments</h3>
         </div>
         
+        
         <!-- Training Request Statistics -->
         <div class="training-request-stats">
             <div class="request-stat-card pending">
@@ -1740,153 +1741,194 @@ s
             </div>
         </div>
 
-                       <!-- Employee assignments list -->
-<div class="assignments-list">
-    <%
-    // Debug: Check if assignments variable exists and log it
-    let hasAssignments = false;
-    let assignmentsToShow = [];
-    
-    if (typeof assignments !== 'undefined' && assignments && assignments.length > 0) {
-        hasAssignments = true;
-        assignmentsToShow = assignments;
-    } else {
-        // Fallback sample data for testing
-        assignmentsToShow = [
-            {
-                employeeId: 'john-doe',
-                employeeName: 'John Doe',
-                trainingTitle: 'JavaScript Fundamentals',
-                jobTitle: 'Frontend Developer',
-                status: 'in-progress',
-                progress: 75,
-                startDate: new Date('2024-01-15')
-            },
-            {
-                employeeId: 'jane-smith',
-                employeeName: 'Jane Smith',
-                trainingTitle: 'Safety Training',
-                jobTitle: 'Operations Manager',
-                status: 'completed',
-                progress: 100,
-                startDate: new Date('2024-01-10')
-            },
-            {
-                employeeId: 'mike-johnson',
-                employeeName: 'Mike Johnson',
-                trainingTitle: 'Data Analysis Bootcamp',
-                jobTitle: 'Data Analyst',
-                status: 'not-started',
-                progress: 0,
-                startDate: new Date('2024-01-20'),
-                dueDate: new Date('2024-02-20')
+        <!-- FIXED Employee assignments list -->
+        <div class="assignments-list">
+            <%
+            // Use the allAssignments data for JavaScript and assignments for display
+            let hasAssignments = false;
+            let assignmentsToShow = [];
+            
+            if (typeof assignments !== 'undefined' && assignments && assignments.length > 0) {
+                hasAssignments = true;
+                assignmentsToShow = assignments;
+            } else {
+                // Fallback sample data for testing
+                assignmentsToShow = [
+                    {
+                        employeeId: 'john-doe',
+                        employeeName: 'John Doe',
+                        trainingTitle: 'JavaScript Fundamentals',
+                        jobTitle: 'Frontend Developer',
+                        status: 'in-progress',
+                        progress: 75,
+                        startDate: new Date('2024-01-15'),
+                        hasMultipleTrainings: false,
+                        trainingCount: 1
+                    },
+                    {
+                        employeeId: 'jane-smith',
+                        employeeName: 'Jane Smith',
+                        trainingTitle: 'Multiple Trainings (3)',
+                        jobTitle: 'Operations Manager',
+                        status: 'in-progress',
+                        progress: 67,
+                        startDate: new Date('2024-01-10'),
+                        hasMultipleTrainings: true,
+                        trainingCount: 3,
+                        trainingsSummary: '3 trainings assigned • 1 completed • 2 in progress'
+                    },
+                    {
+                        employeeId: 'mike-johnson',
+                        employeeName: 'Mike Johnson',
+                        trainingTitle: 'Data Analysis Bootcamp',
+                        jobTitle: 'Data Analyst',
+                        status: 'not-started',
+                        progress: 0,
+                        startDate: new Date('2024-01-20'),
+                        dueDate: new Date('2024-02-20'),
+                        hasMultipleTrainings: false,
+                        trainingCount: 1
+                    }
+                ];
             }
-        ];
-    }
-    %>
-    
-    <!-- Debug info (remove in production) -->
-    <% if (!hasAssignments) { %>
-        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 20px; border-radius: 5px; font-size: 12px; color: #856404;">
-            <strong>Debug Info:</strong> No assignments data from server. Showing sample data for testing.
-            <br>Server assignments variable: <%= typeof assignments %> 
-            <% if (typeof assignments !== 'undefined') { %>
-                (length: <%= assignments ? assignments.length : 'null' %>)
+            %>
+            
+            <!-- Debug info (remove in production) -->
+            <% if (!hasAssignments) { %>
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 20px; border-radius: 5px; font-size: 12px; color: #856404;">
+                    <strong>Debug Info:</strong> No assignments data from server. Showing sample data for testing.
+                    <br>Server assignments variable: <%= typeof assignments %> 
+                    <% if (typeof assignments !== 'undefined') { %>
+                        (length: <%= assignments ? assignments.length : 'null' %>)
+                    <% } %>
+                </div>
             <% } %>
-        </div>
-    <% } %>
-    
-    <% if (assignmentsToShow && assignmentsToShow.length > 0) { %>
-        <% assignmentsToShow.forEach(assignment => { %>
-            <div class="assignment-item" data-status="<%= assignment.status %>" onclick="openEmployeeModal('<%= assignment.employeeId %>')">
-                <div class="assignment-info">
-                    <h4 class="employee-name"><%= assignment.employeeName %></h4>
-                    <div class="assignment-details">
-                        Training: <%= assignment.trainingTitle %><br>
-                        Job Title: <%= assignment.jobTitle %><br>
-                        <% if (assignment.status === 'completed') { %>
-                            Completed: <%= assignment.startDate ? assignment.startDate.toLocaleDateString() : 'Date not available' %> • Progress: <%= assignment.progress || 0 %>%
-                        <% } else if (assignment.status === 'in-progress') { %>
-                            Progress: <%= assignment.progress || 0 %>% • Started: <%= assignment.startDate ? assignment.startDate.toLocaleDateString() : 'Date not available' %>
-                        <% } else { %>
-                            Assigned: <%= assignment.startDate ? assignment.startDate.toLocaleDateString() : 'Date not available' %> • Due: <%= assignment.dueDate ? assignment.dueDate.toLocaleDateString() : 'No due date' %>
-                        <% } %>
-                    </div>
-                </div>
-                <div class="assignment-status">
-                    <span class="status-badge <%= assignment.status %>">
-                        <% if (assignment.status === 'in-progress') { %>In Progress
-                        <% } else if (assignment.status === 'completed') { %>Completed
-                        <% } else { %>Not Started<% } %>
-                    </span>
-                </div>
-            </div>
-        <% }); %>
-    <% } else { %>
-        <div class="no-assignments-message" style="text-align: center; padding: 40px; color: #64748b;">
-            <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; color: #cbd5e1;"></i>
-            <h3 style="margin: 0 0 10px 0; color: #475569;">No Training Assignments</h3>
-            <p style="margin: 0;">Training assignments will appear here once employees are enrolled in courses.</p>
-        </div>
-    <% } %>
-</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Employee Training Details Modal -->
-        <div class="modal-overlay" id="employeeTrainingModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title">Employee Training Details</h2>
-                </div>
-                
-                <!-- Employee Information Section -->
-                <div class="employee-info-section">
-                    <div class="employee-header">
-                        <div class="employee-avatar" id="employeeAvatar">JD</div>
-                        <div class="employee-details">
-                            <h3 id="employeeName">John Doe</h3>
-                            <div class="employee-job-role" id="employeeJobRole">Software Engineer</div>
-                            <div class="employee-email" id="employeeEmail">john.doe@company.com</div>
+            
+            <% if (assignmentsToShow && assignmentsToShow.length > 0) { %>
+                <% assignmentsToShow.forEach(assignment => { %>
+                    <div class="assignment-item" 
+                         data-status="<%= assignment.status %>" 
+                         data-employee-id="<%= assignment.employeeId %>"
+                         onclick="console.log('🔍 CLICKED EMPLOYEE:', '<%= assignment.employeeName %>', 'ID:', '<%= assignment.employeeId %>', 'Type:', typeof '<%= assignment.employeeId %>'); openEmployeeModal('<%= assignment.employeeId %>')">
+                        <div class="assignment-info">
+                            <h4 class="employee-name">
+                                <%= assignment.employeeName %>
+                                <small style="color: #999; font-weight: normal;">(ID: <%= assignment.employeeId %>)</small>
+                                <% if (assignment.hasMultipleTrainings) { %>
+                                    <span style="background: #07ACB9; color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 8px; font-weight: normal;">
+                                        <%= assignment.trainingCount %> trainings
+                                    </span>
+                                <% } %>
+                            </h4>
+                            <div class="assignment-details">
+                                <% if (assignment.hasMultipleTrainings) { %>
+                                    <%= assignment.trainingsSummary || `${assignment.trainingCount} trainings assigned` %><br>
+                                <% } else { %>
+                                    Training: <%= assignment.trainingTitle %><br>
+                                <% } %>
+                                Job Title: <%= assignment.jobTitle %><br>
+                                <% if (assignment.status === 'completed') { %>
+                                    <% if (assignment.hasMultipleTrainings) { %>
+                                        Overall Progress: <%= assignment.progress || 0 %>% • Click to view details
+                                    <% } else { %>
+                                        Completed: <%= assignment.startDate ? assignment.startDate.toLocaleDateString() : 'Date not available' %> • Progress: <%= assignment.progress || 0 %>%
+                                    <% } %>
+                                <% } else if (assignment.status === 'in-progress') { %>
+                                    <% if (assignment.hasMultipleTrainings) { %>
+                                        Overall Progress: <%= assignment.progress || 0 %>% • Click to view details
+                                    <% } else { %>
+                                        Progress: <%= assignment.progress || 0 %>% • Started: <%= assignment.startDate ? assignment.startDate.toLocaleDateString() : 'Date not available' %>
+                                    <% } %>
+                                <% } else { %>
+                                    <% if (assignment.hasMultipleTrainings) { %>
+                                        Multiple assignments • Click to view details
+                                    <% } else { %>
+                                        Assigned: <%= assignment.startDate ? assignment.startDate.toLocaleDateString() : 'Date not available' %> • Due: <%= assignment.dueDate ? assignment.dueDate.toLocaleDateString() : 'No due date' %>
+                                    <% } %>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="assignment-status">
+                            <span class="status-badge <%= assignment.status %>">
+                                <% if (assignment.status === 'in-progress') { %>
+                                    <% if (assignment.hasMultipleTrainings) { %>Mixed Progress<% } else { %>In Progress<% } %>
+                                <% } else if (assignment.status === 'completed') { %>
+                                    <% if (assignment.hasMultipleTrainings) { %>All Complete<% } else { %>Completed<% } %>
+                                <% } else if (assignment.status === 'overdue') { %>
+                                    <% if (assignment.hasMultipleTrainings) { %>Has Overdue<% } else { %>Overdue<% } %>
+                                <% } else { %>
+                                    <% if (assignment.hasMultipleTrainings) { %>Not Started<% } else { %>Not Started<% } %>
+                                <% } %>
+                            </span>
+                            <% if (assignment.hasMultipleTrainings) { %>
+                                <i class="fas fa-chevron-right" style="margin-left: 8px; color: #64748b; font-size: 12px;"></i>
+                            <% } %>
                         </div>
                     </div>
+                <% }); %>
+            <% } else { %>
+                <div class="no-assignments-message" style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; color: #cbd5e1;"></i>
+                    <h3 style="margin: 0 0 10px 0; color: #475569;">No Training Assignments</h3>
+                    <p style="margin: 0;">Training assignments will appear here once employees are enrolled in courses.</p>
                 </div>
+            <% } %>
+        </div>
+    </div>
+</div>
 
-                <!-- Training Statistics -->
-                <div class="training-stats">
-                    <div class="stat-card in-progress">
-                        <div class="stat-number" id="inProgressCount">2</div>
-                        <div class="stat-label">IN PROGRESS</div>
-                    </div>
-                    <div class="stat-card completed">
-                        <div class="stat-number" id="completedCount">5</div>
-                        <div class="stat-label">COMPLETED</div>
-                    </div>
-                    <div class="stat-card overdue">
-                        <div class="stat-number" id="overdueCount">1</div>
-                        <div class="stat-label">OVERDUE</div>
-                    </div>
-                </div>
-
-                <!-- Training Progress List -->
-                <div class="training-progress-list" id="employeeTrainingList">
-                    <!-- Training items will be populated by JavaScript -->
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeEmployeeTrainingModal()">Close</button>
-                    <button type="button" class="btn-primary" onclick="assignNewTraining()">Assign New Training</button>
-                    <button type="button" class="btn-primary" onclick="visitPerformanceTracker()">Visit Performance Tracker</button>
+<!-- Employee Training Details Modal -->
+<div class="modal-overlay" id="employeeTrainingModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Employee Training Details</h2>
+        </div>
+        
+        <!-- Employee Information Section -->
+        <div class="employee-info-section">
+            <div class="employee-header">
+                <div class="employee-avatar" id="employeeAvatar">JD</div>
+                <div class="employee-details">
+                    <h3 id="employeeName">John Doe</h3>
+                    <div class="employee-job-role" id="employeeJobRole">Software Engineer</div>
+                    <div class="employee-email" id="employeeEmail">john.doe@company.com</div>
                 </div>
             </div>
         </div>
 
+        <!-- Training Statistics -->
+        <div class="training-stats">
+            <div class="stat-card in-progress">
+                <div class="stat-number" id="inProgressCount">2</div>
+                <div class="stat-label">IN PROGRESS</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-number" id="completedCount">5</div>
+                <div class="stat-label">COMPLETED</div>
+            </div>
+            <div class="stat-card overdue">
+                <div class="stat-number" id="overdueCount">1</div>
+                <div class="stat-label">OVERDUE</div>
+            </div>
+        </div>
+
+        <!-- Training Progress List -->
+        <div class="training-progress-list" id="employeeTrainingList">
+            <!-- Training items will be populated by JavaScript -->
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeEmployeeTrainingModal()">Close</button>
+            <button type="button" class="btn-primary" onclick="assignNewTraining()">Assign New Training</button>
+            <button type="button" class="btn-primary" onclick="visitPerformanceTracker()">Visit Performance Tracker</button>
+        </div>
+    </div>
+</div>
     <!-- JavaScript for functionality -->
     <script>
 
         // ADD this global variable to store all suggested trainings
+        window.employeeAssignmentsData = [];
 let allSuggestedTrainings = [];
 
 // INITIALIZE the suggested trainings data when page loads
@@ -3576,221 +3618,265 @@ function onJobPositionChange() {
     populateObjectives(filteredObjectives);
     populateSkills(filteredSkills);
 }
-        // Employee Training Modal Functions
-        function openEmployeeModal(employeeId) {
-            // Sample employee data - in real app, this would come from a database
-            const employeeData = {
-                'john-doe': {
-                    name: 'John Doe',
-                    jobRole: 'Software Engineer',
-                    email: 'john.doe@company.com',
-                    avatar: 'JD',
-                    stats: { inProgress: 2, completed: 5, overdue: 1 },
-                    trainings: [
-                        {
-                            title: 'Leadership Development Program',
-                            description: 'Develop essential leadership skills including team management, strategic thinking, communication, and decision-making.',
-                            types: ['online'],
-                            progress: 75,
-                            status: 'in-progress'
-                        },
-                        {
-                            title: 'Advanced JavaScript',
-                            description: 'Master advanced JavaScript concepts including ES6+, async programming, and modern development patterns.',
-                            types: ['online'],
-                            progress: 40,
-                            status: 'in-progress'
-                        },
-                        {
-                            title: 'Safety and Compliance Training',
-                            description: 'Essential workplace safety protocols, emergency procedures, and regulatory compliance requirements.',
-                            types: ['onsite', 'required'],
-                            progress: 100,
-                            status: 'completed'
-                        },
-                        {
-                            title: 'Technical Skills Enhancement',
-                            description: 'Enhance technical capabilities and stay updated with latest technologies and industry best practices.',
-                            types: ['online', 'required'],
-                            progress: 100,
-                            status: 'completed'
-                        },
-                        {
-                            title: 'Communication Excellence',
-                            description: 'Improve interpersonal and communication skills for better workplace interactions and team collaboration.',
-                            types: ['onsite'],
-                            progress: 100,
-                            status: 'completed'
-                        },
-                        {
-                            title: 'Time Management',
-                            description: 'Learn effective time management strategies, prioritization techniques, and productivity optimization methods.',
-                            types: ['online'],
-                            progress: 100,
-                            status: 'completed'
-                        },
-                        {
-                            title: 'Customer Service Training',
-                            description: 'Enhance customer interaction skills, learn problem-solving techniques, and understand customer psychology.',
-                            types: ['onsite'],
-                            progress: 100,
-                            status: 'completed'
-                        },
-                        {
-                            title: 'Project Management Fundamentals',
-                            description: 'Learn essential project management methodologies, tools, and techniques for successful project delivery.',
-                            types: ['online', 'required'],
-                            progress: 25,
-                            status: 'overdue'
-                        }
-                    ]
-                },
-                'jane-smith': {
-                    name: 'Jane Smith',
-                    jobRole: 'Operations Manager',
-                    email: 'jane.smith@company.com',
-                    avatar: 'JS',
-                    stats: { inProgress: 1, completed: 8, overdue: 0 },
-                    trainings: [
-                        {
-                            title: 'Advanced Leadership Skills',
-                            description: 'Advanced leadership techniques for senior managers including strategic planning and team development.',
-                            types: ['online'],
-                            progress: 60,
-                            status: 'in-progress'
-                        },
-                        {
-                            title: 'Safety and Compliance Training',
-                            description: 'Essential workplace safety protocols, emergency procedures, and regulatory compliance requirements.',
-                            types: ['onsite', 'required'],
-                            progress: 100,
-                            status: 'completed'
-                        },
-                        {
-                            title: 'Operations Management Excellence',
-                            description: 'Optimize operational processes, improve efficiency, and implement best practices in operations management.',
-                            types: ['online'],
-                            progress: 100,
-                            status: 'completed'
-                        }
-                    ]
-                },
-                'mike-johnson': {
-                    name: 'Mike Johnson',
-                    jobRole: 'Data Analyst',
-                    email: 'mike.johnson@company.com',
-                    avatar: 'MJ',
-                    stats: { inProgress: 0, completed: 3, overdue: 1 },
-                    trainings: [
-                        {
-                            title: 'Advanced Excel Training',
-                            description: 'Master advanced Excel features including pivot tables, macros, data analysis tools, and complex formulas.',
-                            types: ['online'],
-                            progress: 0,
-                            status: 'overdue'
-                        },
-                        {
-                            title: 'Data Visualization with Power BI',
-                            description: 'Learn to create compelling data visualizations and interactive dashboards using Power BI.',
-                            types: ['online'],
-                            progress: 100,
-                            status: 'completed'
-                        },
-                        {
-                            title: 'SQL Database Management',
-                            description: 'Master SQL queries, database design, and data manipulation techniques for effective data management.',
-                            types: ['online'],
-                            progress: 100,
-                            status: 'completed'
-                        }
-                    ]
-                },
-                'sarah-wilson': {
-                    name: 'Sarah Wilson',
-                    jobRole: 'HR Specialist',
-                    email: 'sarah.wilson@company.com',
-                    avatar: 'SW',
-                    stats: { inProgress: 2, completed: 6, overdue: 0 },
-                    trainings: [
-                        {
-                            title: 'Team Building Workshop',
-                            description: 'Interactive workshop focused on building stronger team relationships, improving collaboration, and enhancing group dynamics.',
-                            types: ['onsite'],
-                            progress: 50,
-                            status: 'in-progress'
-                        },
-                        {
-                            title: 'HR Management Certification',
-                            description: 'Comprehensive HR management program covering recruitment, performance management, and employee relations.',
-                            types: ['online', 'required'],
-                            progress: 80,
-                            status: 'in-progress'
-                        },
-                        {
-                            title: 'Employment Law and Compliance',
-                            description: 'Stay updated with employment laws, regulations, and compliance requirements for HR professionals.',
-                            types: ['online', 'required'],
-                            progress: 100,
-                            status: 'completed'
-                        }
-                    ]
-                }
-            };
-
-            const employee = employeeData[employeeId];
-            if (!employee) return;
-
-            // Update employee information
-            document.getElementById('employeeName').textContent = employee.name;
-            document.getElementById('employeeJobRole').textContent = employee.jobRole;
-            document.getElementById('employeeEmail').textContent = employee.email;
-            document.getElementById('employeeAvatar').textContent = employee.avatar;
-
-            // Update statistics
-            document.getElementById('inProgressCount').textContent = employee.stats.inProgress;
-            document.getElementById('completedCount').textContent = employee.stats.completed;
-            document.getElementById('overdueCount').textContent = employee.stats.overdue;
-
-            // Update training list
-            const trainingList = document.getElementById('employeeTrainingList');
-            trainingList.innerHTML = '';
-
-            employee.trainings.forEach(training => {
-                const trainingItem = document.createElement('div');
-                trainingItem.className = 'training-progress-item';
-                
-                // Generate badge HTML for training types
-                const badgesHTML = training.types.map(type => {
-                    const badgeClass = type === 'online' ? 'online' : 
-                                     type === 'onsite' ? 'onsite' : 'required';
-                    const badgeText = type.charAt(0).toUpperCase() + type.slice(1);
-                    return `<span class="course-badge ${badgeClass}">${badgeText}</span>`;
-                }).join('');
-                
-                trainingItem.innerHTML = `
-                    <div class="training-progress-header">
-                        <h4 class="training-title">${training.title}</h4>
-                    </div>
-                    <div class="training-description">${training.description}</div>
-                    <div class="training-badges" style="margin: 10px 0;">
-                        ${badgesHTML}
-                    </div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-fill ${training.status}" style="width: ${training.progress}%"></div>
-                    </div>
-                    <div class="progress-text">
-                        <span class="progress-percentage">${training.progress}% Complete</span>
-                        <span class="progress-status ${training.status}">
-                            ${training.status.charAt(0).toUpperCase() + training.status.slice(1).replace('-', ' ')}
-                        </span>
-                    </div>
-                `;
-                trainingList.appendChild(trainingItem);
-            });
-
-            // Show modal
-            document.getElementById('employeeTrainingModal').classList.add('show');
+function openEmployeeModal(employeeId) {
+    console.log('🔍 === OPENING EMPLOYEE MODAL ===');
+    console.log('Requested employee ID:', employeeId, '(type:', typeof employeeId, ')');
+    
+    // Ensure data is loaded
+    if (!window.employeeAssignmentsData || window.employeeAssignmentsData.length === 0) {
+        console.error('❌ No assignment data available');
+        alert('Error: Assignment data not loaded. Please refresh the page.');
+        return;
+    }
+    
+    console.log('📊 Available data:', window.employeeAssignmentsData.length, 'assignments');
+    
+    // Get all assignments for this employee using loose equality to handle type differences
+    const employeeAssignments = window.employeeAssignmentsData.filter(assignment => {
+        const match = assignment.employeeId == employeeId; // Use == for type coercion
+        if (match) {
+            console.log(`✅ Match found: ${assignment.employeeName} - ${assignment.trainingTitle}`);
         }
+        return match;
+    });
+    
+    console.log(`🎯 Found ${employeeAssignments.length} assignments for employee ${employeeId}`);
+    
+    if (employeeAssignments.length === 0) {
+        console.error('❌ No assignments found for employee:', employeeId);
+        
+        // Show available IDs for debugging
+        const availableIds = [...new Set(window.employeeAssignmentsData.map(a => a.employeeId))];
+        console.log('Available employee IDs:', availableIds);
+        
+        alert(`No training data found for employee ID: ${employeeId}\n\nAvailable IDs: ${availableIds.join(', ')}`);
+        return;
+    }
+    
+    // Get employee info from first assignment
+    const firstAssignment = employeeAssignments[0];
+    console.log('👤 Employee info:', {
+        name: firstAssignment.employeeName,
+        email: firstAssignment.employeeEmail,
+        jobTitle: firstAssignment.jobTitle
+    });
+    
+    // Calculate statistics
+    const stats = {
+        inProgress: employeeAssignments.filter(a => a.status === 'in-progress').length,
+        completed: employeeAssignments.filter(a => a.status === 'completed').length,
+        overdue: employeeAssignments.filter(a => a.status === 'overdue').length
+    };
+    
+    console.log('📊 Training stats:', stats);
+    
+    // Update modal content
+    try {
+        document.getElementById('employeeName').textContent = firstAssignment.employeeName;
+        document.getElementById('employeeJobRole').textContent = firstAssignment.jobTitle;
+        document.getElementById('employeeEmail').textContent = firstAssignment.employeeEmail;
+        document.getElementById('employeeAvatar').textContent = generateAvatar(firstAssignment.employeeName);
+        
+        document.getElementById('inProgressCount').textContent = stats.inProgress;
+        document.getElementById('completedCount').textContent = stats.completed;
+        document.getElementById('overdueCount').textContent = stats.overdue;
+        
+        // Update training list
+        updateEmployeeTrainingList(employeeAssignments);
+        
+        // Show modal
+        document.getElementById('employeeTrainingModal').classList.add('show');
+        console.log('✅ Modal opened successfully');
+        
+    } catch (error) {
+        console.error('❌ Error updating modal:', error);
+        alert('Error updating modal content: ' + error.message);
+    }
+}
+
+// Function to get employee assignments from the server data
+function getEmployeeAssignments(employeeId) {
+    // Get assignments data that was passed from the server
+    const serverAssignments = window.employeeAssignmentsData || [];
+    
+    // Filter assignments for the specific employee
+    const employeeAssignments = serverAssignments.filter(assignment => 
+        assignment.employeeId === employeeId || 
+        assignment.employeeId === employeeId.toString()
+    );
+    
+    console.log(`Found ${employeeAssignments.length} assignments for employee ${employeeId}`);
+    return employeeAssignments;
+}
+
+// Function to calculate employee statistics
+function calculateEmployeeStats(assignments) {
+    const stats = {
+        inProgress: 0,
+        completed: 0,
+        overdue: 0
+    };
+
+    assignments.forEach(assignment => {
+        switch(assignment.status) {
+            case 'in-progress':
+                stats.inProgress++;
+                break;
+            case 'completed':
+                stats.completed++;
+                break;
+            case 'overdue':
+            case 'not-started':
+                // Check if it's actually overdue
+                if (assignment.isOverdue || (assignment.dueDate && new Date(assignment.dueDate) < new Date())) {
+                    stats.overdue++;
+                }
+                break;
+        }
+    });
+
+    return stats;
+}
+
+// Function to generate avatar initials
+function generateAvatar(name) {
+    if (!name) return 'NA';
+    
+    const nameParts = name.split(' ');
+    if (nameParts.length >= 2) {
+        return nameParts[0].charAt(0).toUpperCase() + nameParts[1].charAt(0).toUpperCase();
+    } else {
+        return nameParts[0].charAt(0).toUpperCase() + (nameParts[0].charAt(1) || '').toUpperCase();
+    }
+}
+
+function updateEmployeeTrainingList(assignments) {
+    const trainingList = document.getElementById('employeeTrainingList');
+    if (!trainingList) {
+        console.error('Training list element not found');
+        return;
+    }
+    
+    trainingList.innerHTML = '';
+    
+    console.log('📋 Updating training list with', assignments.length, 'assignments');
+    
+    assignments.forEach((assignment, index) => {
+        console.log(`${index + 1}. ${assignment.trainingTitle} (${assignment.status})`);
+        
+        const trainingItem = document.createElement('div');
+        trainingItem.className = 'training-progress-item';
+        
+        const badges = [];
+        if (assignment.trainingMode) badges.push(assignment.trainingMode);
+        if (assignment.isOverdue) badges.push('overdue');
+        
+        const badgesHTML = badges.map(badge => {
+            const badgeClass = badge === 'online' ? 'online' : badge === 'onsite' ? 'onsite' : 'required';
+            const badgeText = badge.charAt(0).toUpperCase() + badge.slice(1);
+            return `<span class="course-badge ${badgeClass}">${badgeText}</span>`;
+        }).join('');
+        
+        const startDate = assignment.startDate ? new Date(assignment.startDate).toLocaleDateString() : 'Not started';
+        const dueDate = assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No due date';
+        
+        let metaInfo = `Started: ${startDate}`;
+        if (assignment.dueDate) metaInfo += ` • Due: ${dueDate}`;
+        if (assignment.trainingDuration) metaInfo += ` • Duration: ${assignment.trainingDuration} hours`;
+        
+        trainingItem.innerHTML = `
+            <div class="training-progress-header">
+                <h4 class="training-title">${assignment.trainingTitle || 'Untitled Training'}</h4>
+            </div>
+            <div class="training-description">${assignment.trainingDescription || 'No description available'}</div>
+            <div class="training-meta">${metaInfo}</div>
+            <div class="training-badges" style="margin: 10px 0;">${badgesHTML}</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill ${assignment.status}" style="width: ${assignment.progress || 0}%"></div>
+            </div>
+            <div class="progress-text">
+                <span class="progress-percentage">${assignment.progress || 0}% Complete</span>
+                <span class="progress-status ${assignment.status}">${formatStatus(assignment.status)}</span>
+            </div>
+        `;
+        
+        trainingList.appendChild(trainingItem);
+    });
+    
+    console.log('✅ Training list updated successfully');
+}
+
+// Helper function to format status text
+function formatStatus(status) {
+    switch(status) {
+        case 'in-progress':
+            return 'In Progress';
+        case 'completed':
+            return 'Completed';
+        case 'not-started':
+            return 'Not Started';
+        case 'overdue':
+            return 'Overdue';
+        case 'no-training':
+            return 'No Training';
+        default:
+            return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+}
+
+// Initialize employee assignments data when page loads
+function initializeEmployeeAssignments() {
+    console.log('📥 Initializing employee assignments data...');
+    
+    <% if (typeof allAssignments !== 'undefined' && allAssignments) { %>
+        try {
+            window.employeeAssignmentsData = <%- JSON.stringify(allAssignments) %>;
+            console.log('✅ Successfully loaded allAssignments:', window.employeeAssignmentsData.length, 'assignments');
+            
+            if (window.employeeAssignmentsData.length > 0) {
+                console.log('📋 Sample assignment structure:', window.employeeAssignmentsData[0]);
+                
+                // Group by employee to verify multiple trainings
+                const grouped = {};
+                window.employeeAssignmentsData.forEach(assignment => {
+                    if (!grouped[assignment.employeeId]) {
+                        grouped[assignment.employeeId] = [];
+                    }
+                    grouped[assignment.employeeId].push(assignment);
+                });
+                
+                console.log('👥 Employee groups found:', Object.keys(grouped).length);
+                
+                // Find employees with multiple trainings
+                const multipleTrainings = Object.entries(grouped).filter(([_, assignments]) => assignments.length > 1);
+                console.log('🎯 Employees with multiple trainings:', multipleTrainings.length);
+                
+                if (multipleTrainings.length > 0) {
+                    console.log('✅ MULTIPLE TRAINING EMPLOYEES:');
+                    multipleTrainings.forEach(([empId, assignments]) => {
+                        console.log(`  - Employee ${empId} (${assignments[0].employeeName}): ${assignments.length} trainings`);
+                        assignments.forEach((assignment, index) => {
+                            console.log(`    ${index + 1}. ${assignment.trainingTitle}`);
+                        });
+                    });
+                } else {
+                    console.log('❌ No employees with multiple trainings found in data');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error loading allAssignments:', error);
+            window.employeeAssignmentsData = [];
+        }
+    <% } else { %>
+        console.log('❌ No allAssignments data available from server');
+        window.employeeAssignmentsData = [];
+    <% } %>
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEmployeeAssignments();
+});
 
         function closeEmployeeTrainingModal() {
             document.getElementById('employeeTrainingModal').classList.remove('show');
