@@ -491,7 +491,6 @@ getTrainingDevelopmentTracker: async function (req, res) {
             console.error('Error fetching job positions:', jobsError);
         } else {
             console.log(`Found ${jobPositions?.length || 0} job positions`);
-            console.log('Job positions structure:', jobPositions?.[0]);
         }
 
         // Fetch departments (no joins) 
@@ -503,23 +502,31 @@ getTrainingDevelopmentTracker: async function (req, res) {
             console.error('Error fetching departments:', departmentsError);
         } else {
             console.log(`Found ${departments?.length || 0} departments`);
-            console.log('Departments structure:', departments?.[0]);
         }
 
-        // Fetch some employees for sample data
+        // Fetch employees/staff accounts
         const { data: employees, error: employeesError } = await supabase
             .from('staffaccounts')
             .select('*');
-            //.limit(20); // Get more employees to ensure we have the ones referenced by trainings
 
         if (employeesError) {
             console.error('Error fetching employees:', employeesError);
         } else {
             console.log(`Found ${employees?.length || 0} employees`);
-            console.log('Employee structure:', employees?.[0]);
         }
 
-        // Create lookup map for employees/staff
+        // NEW: Fetch training records to get actual employee-training assignments
+        const { data: trainingRecords, error: trainingRecordsError } = await supabase
+            .from('training_records')
+            .select('*');
+
+        if (trainingRecordsError) {
+            console.error('Error fetching training records:', trainingRecordsError);
+        } else {
+            console.log(`Found ${trainingRecords?.length || 0} training records`);
+        }
+
+        // Create lookup maps
         const employeesMap = (employees || []).reduce((acc, employee) => {
             const empId = employee.staffId || employee.staff_id || employee.userId || employee.user_id || employee.id;
             const firstName = employee.staffFName || employee.staff_fname || employee.first_name || employee.firstName || 'Unknown';
@@ -539,7 +546,6 @@ getTrainingDevelopmentTracker: async function (req, res) {
             return acc;
         }, {});
 
-        // Create lookup maps (handle different possible column names)
         const jobsMap = (jobPositions || []).reduce((acc, job) => {
             const jobId = job.jobId || job.job_id || job.id;
             acc[jobId] = {
@@ -558,6 +564,21 @@ getTrainingDevelopmentTracker: async function (req, res) {
             acc[deptId] = {
                 ...dept,
                 name: deptName
+            };
+            return acc;
+        }, {});
+
+        // Create trainings lookup map
+        const trainingsMap = (trainings || []).reduce((acc, training) => {
+            const trainingId = training.trainingId || training.training_id || training.id;
+            acc[trainingId] = {
+                ...training,
+                id: trainingId,
+                name: training.trainingName || 'Untitled Training',
+                description: training.trainingDesc || 'No description available',
+                mode: training.isOnlineArrangement ? 'online' : 'onsite',
+                cost: training.cost || 0,
+                duration: training.totalDuration || 0
             };
             return acc;
         }, {});
@@ -589,12 +610,12 @@ getTrainingDevelopmentTracker: async function (req, res) {
             };
         });
 
-        // NEW: Create suggested trainings list with jobId for filtering
+        // Create suggested trainings list with jobId for filtering
         const suggestedTrainings = (trainings || []).map(training => ({
             id: training.trainingId,
             name: training.trainingName || 'Untitled Training',
             description: training.trainingDesc || 'No description available',
-            jobId: training.jobId, // IMPORTANT: Keep the jobId for filtering
+            jobId: training.jobId,
             jobTitle: jobsMap[training.jobId]?.title || 'Unknown Position',
             department: departmentsMap[jobsMap[training.jobId]?.departmentId]?.name || 'Unknown Department',
             mode: training.isOnlineArrangement ? 'online' : 'onsite',
@@ -617,73 +638,157 @@ getTrainingDevelopmentTracker: async function (req, res) {
             return acc;
         }, {});
 
-        console.log(`Created ${suggestedTrainings.length} suggested trainings grouped by job position`);
-        console.log('Trainings per job:', Object.keys(suggestedTrainingsByJob).map(jobId => ({
-            jobId,
-            jobTitle: jobsMap[jobId]?.title || 'Unknown',
-            count: suggestedTrainingsByJob[jobId].length
-        })));
-
-        // Create employee list showing all employees (with or without training assignments)
+        // NEW: Create employee assignments based on training_records
         let employeeAssignments = [];
         
-        if (employees && employees.length > 0) {
-            console.log(`Creating assignments for ${employees.length} employees`);
+        if (trainingRecords && trainingRecords.length > 0) {
+            console.log(`Creating assignments from ${trainingRecords.length} training records`);
             
-            employeeAssignments = employees.map((employee, index) => {
+            employeeAssignments = trainingRecords.map((record) => {
+                // Get employee details using userId from training_records
+                const employee = employeesMap[record.userId] || {};
+                
+                // Get training details using trainingId (FK to trainings table)
+                const training = trainingsMap[record.trainingId] || {};
+                
+                // Get job details for the employee
+                const job = jobsMap[employee.jobId] || {};
+                
+                console.log(`Processing record: Employee ${employee.fullName || record.userId} -> Training "${training.name || record.trainingId}"`);
+                
+                // Calculate progress based on training record data
+                let progress = 0;
+                let status = 'not-started';
+                
+                // Determine progress and status from training_records
+                if (record.progress !== undefined && record.progress !== null) {
+                    progress = Math.round(record.progress);
+                } else if (record.completionDate) {
+                    progress = 100;
+                    status = 'completed';
+                } else if (record.startDate) {
+                    // If started but no explicit progress, assign partial progress
+                    progress = Math.floor(Math.random() * 60) + 20; // 20-80%
+                    status = 'in-progress';
+                }
+                
+                // Override status if explicitly set in training_records
+                if (record.status) {
+                    status = record.status.toLowerCase();
+                    // Ensure progress matches status
+                    if (status === 'completed' && progress < 100) {
+                        progress = 100;
+                    } else if (status === 'not-started') {
+                        progress = 0;
+                    }
+                } else {
+                    // Determine status based on progress
+                    if (progress >= 100) {
+                        status = 'completed';
+                    } else if (progress > 0) {
+                        status = 'in-progress';
+                    } else {
+                        status = 'not-started';
+                    }
+                }
+                
+                // Handle dates from training_records
+                const startDate = record.startDate ? new Date(record.startDate) : 
+                                record.enrollmentDate ? new Date(record.enrollmentDate) : new Date();
+                const dueDate = record.dueDate ? new Date(record.dueDate) : 
+                              new Date(Date.now() + (training.duration || 30) * 24 * 60 * 60 * 1000);
+                
+                // Check if training is overdue
+                const now = new Date();
+                const isOverdue = status !== 'completed' && dueDate < now;
+                if (isOverdue && status === 'not-started') {
+                    status = 'overdue';
+                }
+                
+                return {
+                    employeeId: employee.id || record.userId,
+                    employeeName: employee.fullName || `User ${record.userId}`,
+                    employeeEmail: employee.email || 'no-email@company.com',
+                    jobTitle: job.title || 'Unknown Position',
+                    
+                    // Training information from trainings table via trainingId FK
+                    trainingTitle: training.name || `Training ${record.trainingId}`,
+                    trainingId: record.trainingId,
+                    trainingDescription: training.description || '',
+                    trainingMode: training.mode || 'unknown',
+                    trainingDuration: training.duration || 0,
+                    trainingCost: training.cost || 0,
+                    
+                    // Assignment status and progress
+                    status: status,
+                    progress: progress,
+                    startDate: startDate,
+                    dueDate: dueDate,
+                    hasTraining: true,
+                    isOverdue: isOverdue,
+                    
+                    // Additional metadata from training_records
+                    recordId: record.id || record.recordId,
+                    enrollmentDate: record.enrollmentDate || record.createdAt || startDate,
+                    completionDate: record.completionDate || null,
+                    lastUpdated: record.updatedAt || record.updated_at || null,
+                    
+                    // Calculated fields
+                    daysRemaining: Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)),
+                    daysSinceStart: Math.ceil((now - startDate) / (1000 * 60 * 60 * 24))
+                };
+            });
+            
+            console.log(`Created ${employeeAssignments.length} employee assignments from training records`);
+            
+            // Log a few examples for debugging
+            if (employeeAssignments.length > 0) {
+                console.log('Sample assignment:', {
+                    employee: employeeAssignments[0].employeeName,
+                    training: employeeAssignments[0].trainingTitle,
+                    status: employeeAssignments[0].status,
+                    progress: employeeAssignments[0].progress
+                });
+            }
+        } else {
+            // Fallback: Create assignments for employees without training (like your original logic)
+            console.log('No training records found, creating assignments for employees without training');
+            
+            const employeesWithoutTraining = (employees || []).filter(employee => {
+                const empId = employee.staffId || employee.staff_id || employee.userId || employee.user_id || employee.id;
+                // Check if this employee has any training records
+                return !trainingRecords?.some(record => record.userId === empId);
+            });
+            
+            employeeAssignments = employeesWithoutTraining.map((employee) => {
                 const empId = employee.staffId || employee.staff_id || employee.userId || employee.user_id || employee.id;
                 const firstName = employee.staffFName || employee.staff_fname || employee.first_name || employee.firstName || 'Unknown';
                 const lastName = employee.staffLName || employee.staff_lname || employee.last_name || employee.lastName || 'User';
                 const email = employee.staffEmail || employee.staff_email || employee.email || 'no-email@company.com';
                 const jobId = employee.jobId || employee.job_id;
-                
                 const job = jobsMap[jobId] || {};
                 
-                // Find if this employee has any training assigned (from trainings table)
-                const assignedTraining = trainings?.find(training => training.userId === empId);
-                
-                if (assignedTraining) {
-                    // Employee has training assigned
-                    const progressOptions = [
-                        { status: 'in-progress', progress: Math.floor(Math.random() * 80) + 10 },
-                        { status: 'completed', progress: 100 },
-                        { status: 'not-started', progress: Math.floor(Math.random() * 30) }
-                    ];
-                    const randomProgress = progressOptions[Math.floor(Math.random() * progressOptions.length)];
-
-                    return {
-                        employeeId: empId,
-                        employeeName: `${firstName} ${lastName}`,
-                        employeeEmail: email,
-                        jobTitle: job.title || 'Unknown Position',
-                        trainingTitle: assignedTraining.trainingName,
-                        trainingId: assignedTraining.trainingId,
-                        status: randomProgress.status,
-                        progress: randomProgress.progress,
-                        startDate: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000),
-                        dueDate: new Date(Date.now() + Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000),
-                        hasTraining: true
-                    };
-                } else {
-                    // Employee has no training assigned
-                    return {
-                        employeeId: empId,
-                        employeeName: `${firstName} ${lastName}`,
-                        employeeEmail: email,
-                        jobTitle: job.title || 'Unknown Position',
-                        trainingTitle: 'No Training Assigned',
-                        trainingId: null,
-                        status: 'no-training',
-                        progress: 0,
-                        startDate: null,
-                        dueDate: null,
-                        hasTraining: false
-                    };
-                }
+                return {
+                    employeeId: empId,
+                    employeeName: `${firstName} ${lastName}`,
+                    employeeEmail: email,
+                    jobTitle: job.title || 'Unknown Position',
+                    trainingTitle: 'No Training Assigned',
+                    trainingId: null,
+                    status: 'no-training',
+                    progress: 0,
+                    startDate: null,
+                    dueDate: null,
+                    hasTraining: false
+                };
             });
-        } else {
-            console.log('No employees found, creating demo employee list');
-            // Create demo employees if no real employees found
+            
+            console.log(`Created ${employeeAssignments.length} assignments for employees without training`);
+        }
+
+        // If no employees found at all, create demo data
+        if (employeeAssignments.length === 0) {
+            console.log('No employees or training records found, creating demo employee list');
             employeeAssignments = [
                 {
                     employeeId: 'demo-1',
@@ -710,19 +815,6 @@ getTrainingDevelopmentTracker: async function (req, res) {
                     startDate: null,
                     dueDate: null,
                     hasTraining: false
-                },
-                {
-                    employeeId: 'demo-3',
-                    employeeName: 'Mike Johnson',
-                    employeeEmail: 'mike.johnson@company.com',
-                    jobTitle: 'Data Analyst',
-                    trainingTitle: 'No Training Assigned',
-                    trainingId: null,
-                    status: 'no-training',
-                    progress: 0,
-                    startDate: null,
-                    dueDate: null,
-                    hasTraining: false
                 }
             ];
         }
@@ -741,7 +833,6 @@ getTrainingDevelopmentTracker: async function (req, res) {
             inProgressAssignments: employeeAssignments.filter(a => a.status === 'in-progress').length,
             completedAssignments: employeeAssignments.filter(a => a.status === 'completed').length,
             overdueAssignments: employeeAssignments.filter(a => a.status === 'not-started' && new Date(a.dueDate) < new Date()).length,
-            // NEW: Add suggested trainings stats
             totalSuggestedTrainings: suggestedTrainings.length,
             jobsWithTrainings: Object.keys(suggestedTrainingsByJob).length,
             avgTrainingsPerJob: Object.keys(suggestedTrainingsByJob).length > 0 ? 
@@ -751,19 +842,9 @@ getTrainingDevelopmentTracker: async function (req, res) {
         console.log('Final data summary:', {
             trainings: formattedTrainings.length,
             assignments: employeeAssignments.length,
+            trainingRecords: trainingRecords?.length || 0,
             suggestedTrainings: suggestedTrainings.length,
-            jobsWithTrainings: Object.keys(suggestedTrainingsByJob).length,
             stats
-        });
-
-        // Log detailed breakdown by job
-        console.log('Detailed breakdown by job position:');
-        Object.entries(suggestedTrainingsByJob).forEach(([jobId, trainings]) => {
-            const job = jobsMap[jobId];
-            console.log(`- ${job?.title || 'Unknown Job'} (ID: ${jobId}): ${trainings.length} trainings`);
-            trainings.forEach(training => {
-                console.log(`  * ${training.name} (${training.mode}, $${training.cost})`);
-            });
         });
 
         // Render the training development tracker page with data
@@ -771,10 +852,10 @@ getTrainingDevelopmentTracker: async function (req, res) {
             title: 'Employee Training & Development Tracker',
             trainings: formattedTrainings,
             assignments: employeeAssignments,
-            suggestedTrainings: suggestedTrainings, // Full list for JavaScript filtering
-            suggestedTrainingsByJob: suggestedTrainingsByJob, // Grouped by job for easier access
-            jobPositions: jobPositions || [], // Pass job positions for reference
-            departments: departments || [], // Pass departments for reference
+            suggestedTrainings: suggestedTrainings,
+            suggestedTrainingsByJob: suggestedTrainingsByJob,
+            jobPositions: jobPositions || [],
+            departments: departments || [],
             stats: stats,
             user: req.user || null,
             currentDate: new Date().toISOString(),
@@ -785,7 +866,6 @@ getTrainingDevelopmentTracker: async function (req, res) {
                     day: 'numeric'
                 });
             },
-            // Helper function for debugging in template
             debugMode: process.env.NODE_ENV === 'development'
         });
         
