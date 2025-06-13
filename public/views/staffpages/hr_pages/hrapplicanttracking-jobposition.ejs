@@ -695,6 +695,113 @@
     opacity: 0.7;
     font-style: italic;
 }
+
+/* Enhanced modal styles for document reupload functionality */
+        .document-reupload-section {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .document-reupload-section.active {
+            display: block;
+        }
+
+        .document-reupload-section h4 {
+            color: #856404;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remarks-section {
+            margin-top: 15px;
+        }
+
+        .remarks-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #856404;
+        }
+
+        .remarks-section textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .reupload-button {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .reupload-button:hover {
+            background-color: #e67e22;
+        }
+
+        .modal-buttons-enhanced {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .addtl-document-section {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .addtl-document-section h5 {
+            margin-top: 0;
+            color: #124A5C;
+        }
+
+        .warning-text {
+            color: #d9534f;
+            font-size: 0.9em;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+
     </style>
 </head>
 <body>
@@ -792,7 +899,7 @@
             </table>
         </div>
         <!-- ========== END ADDED P2 APPLICANT STATUS SECTION ========== -->
-        
+        <!-- Table for Applicant Data -->
 <!-- Table for Applicant Data -->
 <table class="tracking-table" id="mainApplicantTable" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
     <thead>
@@ -808,8 +915,8 @@
         <% if (applicants && applicants.length) { %>
             <% applicants.forEach((applicant, index) => { %>
                 <tr class="applicant-row" 
-                    data-phase="<%= applicant.applicantStatus.startsWith('P1') ? 'P1' : applicant.applicantStatus.startsWith('P2') ? 'P2' : applicant.applicantStatus.startsWith('P3') ? 'P3' : 'other' %>" 
-                    data-status="<%= applicant.applicantStatus %>"
+                    data-phase="<%= applicant.applicantStatus && applicant.applicantStatus.startsWith('P1') ? 'P1' : applicant.applicantStatus && applicant.applicantStatus.startsWith('P2') ? 'P2' : applicant.applicantStatus && applicant.applicantStatus.startsWith('P3') ? 'P3' : 'other' %>" 
+                    data-status="<%= applicant.applicantStatus || '' %>"
                     data-userid="<%= applicant.userId %>"
                     data-applicantid="<%= applicant.applicantId %>"
                     data-name="<%= applicant.lastName %>, <%= applicant.firstName %>"
@@ -828,61 +935,64 @@
 <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
 
 <div style="margin-top: 10px;">
-    <% if (applicant.applicantStatus.startsWith('P1 - Awaiting for HR Action')) { %>
+    <% if (applicant.applicantStatus && applicant.applicantStatus.startsWith('P1 - Awaiting for HR Action')) { %>
         <!-- For Review Button -->
         <button 
-        class="btn-review" 
-        onclick="
-            console.log('Opening Modal with:', {
-                lastName: '<%= applicant.lastName %>',
-                firstName: '<%= applicant.firstName %>',
-                birthDate: '<%= applicant.birthDate %>',
-                email: '<%= applicant.userEmail %>',
-                phoneNo: '<%= applicant.phoneNo %>',
-                scores: {
-                    degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
-                    experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
-                    certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
-                    hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
-                    softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
-                    workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
-                    availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
-                },
-                totalScore: '<%= applicant.initialScreeningAssessment.totalScore %>',
-                resumeURL: '<%= applicant.initialScreeningAssessment.resume_url %>'
-            });
+class="btn-review" 
+onclick="
+    console.log('Opening Modal with:', {
+        lastName: '<%= applicant.lastName %>',
+        firstName: '<%= applicant.firstName %>',
+        birthDate: '<%= applicant.birthDate %>',
+        email: '<%= applicant.userEmail %>',
+        phoneNo: '<%= applicant.phoneNo %>',
+        scores: {
+            degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
+            experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
+            certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
+            hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
+            softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
+            workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
+            availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
+        },
+        totalScore: '<%= applicant.initialScreeningAssessment.totalScore %>',
+        resumeURL: '<%= applicant.initialScreeningAssessment.resume_url %>',
+        applicantStatus: '<%= applicant.applicantStatus %>'
+    });
 
-            hrInitialScreeningModal(
-                '<%= applicant.userId %>', 
-                '<%= applicant.lastName %>', 
-                '<%= applicant.firstName %>', 
-                '<%= applicant.birthDate %>', 
-                '<%= applicant.userEmail %>', 
-                '<%= applicant.phoneNo %>', 
-                {
-                    degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
-                    experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
-                    certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
-                    hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
-                    softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
-                    workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
-                    availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
-                }, 
-                '<%= applicant.initialScreeningAssessment.totalScore %>', 
-                '<%= applicant.initialScreeningAssessment.degree_url %>',
-                '<%= applicant.initialScreeningAssessment.cert_url %>',
-                '<%= applicant.initialScreeningAssessment.resume_url %>'
-            )
-        ">
-        For Review
-        </button>
+    showAppropriateModal(
+        '<%= applicant.userId %>', 
+        '<%= applicant.lastName %>', 
+        '<%= applicant.firstName %>', 
+        '<%= applicant.birthDate %>', 
+        '<%= applicant.userEmail %>', 
+        '<%= applicant.phoneNo %>', 
+        {
+            degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
+            experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
+            certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
+            hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
+            softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
+            workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
+            availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
+        }, 
+        '<%= applicant.initialScreeningAssessment.totalScore %>', 
+        '<%= applicant.initialScreeningAssessment.degree_url %>',
+        '<%= applicant.initialScreeningAssessment.cert_url %>',
+        '<%= applicant.initialScreeningAssessment.resume_url %>',
+        '<%= applicant.applicantStatus %>'
+    )
+">
+For Review
+</button>
+
     
                             <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
     <!-- For Evaluation Button -->
     <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
         <button class="btn-evaluation">For Evaluation</button>
     </a>
-    <% } else if (applicant.applicantStatus.startsWith('P2 - HR Evaluation Accomplished')) { %>
+    <% } else if (applicant.applicantStatus && applicant.applicantStatus.startsWith('P2 - HR Evaluation Accomplished')) { %>
         <!-- ========== MODIFIED P2 ACCOMPLISHED SECTION ========== -->
         <!-- For Review Button that redirects to review filter -->
         <button 
@@ -961,6 +1071,7 @@
         <% } %>
     </tbody>
 </table>
+
 
 <!--Frontend Modals-->
 
@@ -1069,8 +1180,6 @@
 </div>
 <!-- ========== END UPDATED P2 NOTIFY MODAL ========== -->
 
-
-<!-- P1 - HR Choosing Modal -->
 <div id="hrInitialScreeningModalHtml" class="review-modal">
     <div class="review-modal-content">
         <span class="review-close-button">&times;</span>
@@ -1086,10 +1195,10 @@
             <p><strong>Email:</strong> <span id="applicant-email"></span></p>
             <p><strong>Contact No.:</strong> <span id="applicant-contact"></span></p>
         </div>
+
         <h4>HR Online Assessment Form Breakdown</h4>
         <div class="scores-section">
             <h4>Initial Screening Scores</h4> 
-        
             <table class="scores-table"> 
                 <thead> 
                     <tr> 
@@ -1128,7 +1237,6 @@
                     </tr> 
                 </tbody> 
             </table> 
-        
             <div class="computation-verdict"> 
                 <strong>Computation Verdict - <span id="computation-verdict"></span></strong> 
             </div>
@@ -1144,27 +1252,177 @@
         <p><strong>Resume:</strong> <a id="resume-doc" href="#" target="_blank">No document uploaded</a></p>
         <div id="resume-preview" style="margin-top: 10px;"></div>
 
-<!-- HR Verification Statement and Comments -->
-<div class="verification-section" style="margin-top: 20px; padding: 10px; border-top: 1px solid #ccc;">
-    <label style="display: flex; align-items: flex-start; gap: 10px; font-weight: normal;">
-        <input type="checkbox" id="hr-verification-checkbox" style="margin-top: 3px;">
-        <span>
-            I confirm that the applicant is eligible for endorsement to the Line Manager after a review of the submitted documents.
-        </span>
-    </label>
-    <p style="color: #d9534f; margin: 5px 0 15px 25px; font-size: 0.9em;">
-        * This checkbox must be ticked to proceed with confirmation and endorsement to the Line Manager.
-    </p>
+        <!-- Additional Document Section (only show if exists) -->
+        <div id="addtl-document-section" style="display: none;">
+            <p><strong>Additional Document:</strong> <a id="addtl-doc" href="#" target="_blank">No additional document</a></p>
+            <div id="addtl-preview" style="margin-top: 10px;"></div>
+            <div class="addtl-document-section" style="background-color: #e8f4f8; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                <h5 style="margin-top: 0; color: #124A5C;">HR Remarks for Additional Document:</h5>
+                <p id="hr-remarks-display" style="font-style: italic; color: #555;"></p>
+            </div>
+        </div>
 
-    <label for="hr-verification-comments" style="display: block; margin-top: 10px;"><strong>HR Comments (optional):</strong></label>
-    <textarea id="hr-verification-comments" rows="3" style="width: 100%; padding: 8px; resize: vertical;" placeholder="Enter any remarks or notes..."></textarea>
-</div>
+        <!-- Document Reupload Request Section -->
+        <div id="document-reupload-section" class="document-reupload-section" style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 20px 0; display: none;">
+            <h4 style="color: #856404; margin-top: 0; margin-bottom: 15px;"><i class="fas fa-exclamation-triangle"></i> Document Reupload Request</h4>
+            <p>Please select which documents need to be reuploaded by the applicant:</p>
+            
+            <div class="checkbox-group" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <div class="checkbox-item" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="reupload-degree" name="reupload-docs" value="degree" style="transform: scale(1.2);">
+                    <label for="reupload-degree" style="cursor: pointer; user-select: none;">Degree Certificate</label>
+                </div>
+                <div class="checkbox-item" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="reupload-cert" name="reupload-docs" value="certification" style="transform: scale(1.2);">
+                    <label for="reupload-cert" style="cursor: pointer; user-select: none;">Certification Document</label>
+                </div>
+                <div class="checkbox-item" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="reupload-resume" name="reupload-docs" value="resume" style="transform: scale(1.2);">
+                    <label for="reupload-resume" style="cursor: pointer; user-select: none;">Resume</label>
+                </div>
+                <div class="checkbox-item" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="reupload-addtl" name="reupload-docs" value="additional" style="transform: scale(1.2);">
+                    <label for="reupload-addtl" style="cursor: pointer; user-select: none;">Request Additional Document</label>
+                </div>
+            </div>
 
+            <div class="remarks-section" style="margin-top: 15px;">
+                <label for="reupload-remarks" style="display: block; font-weight: bold; margin-bottom: 8px; color: #856404;">Remarks/Instructions for Applicant: <span style="color: #d9534f; font-size: 0.9em; font-style: italic;">*Required</span></label>
+                <textarea id="reupload-remarks" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; min-height: 80px;" placeholder="Please provide specific instructions for the applicant regarding the document reupload requirements..."></textarea>
+                <div style="color: #d9534f; font-size: 0.9em; margin-top: 5px; font-style: italic;">This message will be shown to the applicant when they log in to the chatbot.</div>
+            </div>
+        </div>
 
-        <div class="review-modal-buttons">
-            <button id="backButton" class="review-modal-back-button">Back</button>
+        <!-- HR Verification Statement and Comments -->
+        <div class="verification-section" style="margin-top: 20px; padding: 10px; border-top: 1px solid #ccc;">
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-weight: normal;">
+                <input type="checkbox" id="hr-verification-checkbox" style="margin-top: 3px;">
+                <span>
+                    I confirm that the applicant is eligible for endorsement to the Line Manager after a review of the submitted documents.
+                </span>
+            </label>
+            <p style="color: #d9534f; margin: 5px 0 15px 25px; font-size: 0.9em;">
+                * This checkbox must be ticked to proceed with confirmation and endorsement to the Line Manager.
+            </p>
+
+            <label for="hr-verification-comments" style="display: block; margin-top: 10px;"><strong>HR Comments (optional):</strong></label>
+            <textarea id="hr-verification-comments" rows="3" style="width: 100%; padding: 8px; resize: vertical;" placeholder="Enter any remarks or notes..."></textarea>
+        </div>
+
+        <!-- Enhanced Modal Buttons -->
+        <div class="review-modal-buttons" style="display: flex; justify-content: center; margin-top: 20px; gap: 10px; flex-wrap: wrap;">
+            <button id="backButton" class="review-modal-back-button" onclick="document.getElementById('hrInitialScreeningModalHtml').style.display = 'none'">Back</button>
+            <button id="reuploadRequestButton" style="background-color: #f39c12; color: white; border: none; padding: 10px 20px; margin: 0 10px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background-color 0.3s ease;" onclick="toggleReuploadSection()">Document Reupload Request</button>
             <button id="rejectButton" class="review-modal-reject-button" onclick="rejectHRInitialScreeningModal()">Reject</button>
             <button id="confirmButton" class="review-modal-confirm-button" onclick="confirmHRInitialScreeningModal()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Second Modal for Final Decision (No Reupload Request) -->
+<div id="hrInitialScreeningDecisionModal" class="review-modal">
+    <div class="review-modal-content">
+        <span class="review-close-button">&times;</span>
+        <h2>P1: Final Review - Initial Screening</h2> 
+        <div class="divider"></div>
+        <div class="applicant-details">
+            <input type="hidden" id="final-userId">
+            <input type="hidden" id="final-jobId">            
+            <input type="hidden" id="final-applicantId">
+
+            <p><strong>Name:</strong> <span id="final-applicant-name"></span></p>
+            <p><strong>Birthday:</strong> <span id="final-applicant-birthday"></span></p>
+            <p><strong>Email:</strong> <span id="final-applicant-email"></span></p>
+            <p><strong>Contact No.:</strong> <span id="final-applicant-contact"></span></p>
+        </div>
+
+        <h4>HR Online Assessment Form Breakdown</h4>
+        <div class="scores-section">
+            <h4>Initial Screening Scores</h4> 
+            <table class="scores-table"> 
+                <thead> 
+                    <tr> 
+                        <th>Criteria</th> 
+                        <th>Score</th> 
+                    </tr> 
+                </thead> 
+                <tbody> 
+                    <tr> 
+                        <td>Industry Specific Degree</td> 
+                        <td id="final-score-degree"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Experiences</td> 
+                        <td id="final-score-experience"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Certifications</td> 
+                        <td id="final-score-certifications"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Hard Skills</td> 
+                        <td id="final-score-hard-skills"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Soft Skills</td> 
+                        <td id="final-score-soft-skills"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Work Setup</td> 
+                        <td id="final-score-work-setup"></td> 
+                    </tr> 
+                    <tr> 
+                        <td>Availability</td> 
+                        <td id="final-score-availability"></td> 
+                    </tr> 
+                </tbody> 
+            </table> 
+            <div class="computation-verdict"> 
+                <strong>Computation Verdict - <span id="final-computation-verdict"></span></strong> 
+            </div>
+        </div>
+
+        <h4>Uploaded Documents</h4>
+        <p><strong>Degree:</strong> <a id="final-degree-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="final-degree-preview" style="margin-top: 10px;"></div>
+        
+        <p><strong>Certification:</strong> <a id="final-cert-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="final-cert-preview" style="margin-top: 10px;"></div>
+        
+        <p><strong>Resume:</strong> <a id="final-resume-doc" href="#" target="_blank">No document uploaded</a></p>
+        <div id="final-resume-preview" style="margin-top: 10px;"></div>
+
+        <!-- Additional Document Section (only show if exists) -->
+        <div id="final-addtl-document-section" style="display: none;">
+            <p><strong>Additional Document:</strong> <a id="final-addtl-doc" href="#" target="_blank">No additional document</a></p>
+            <div id="final-addtl-preview" style="margin-top: 10px;"></div>
+            <div class="addtl-document-section" style="background-color: #e8f4f8; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                <h5 style="margin-top: 0; color: #124A5C;">HR Remarks for Additional Document:</h5>
+                <p id="final-hr-remarks-display" style="font-style: italic; color: #555;"></p>
+            </div>
+        </div>
+
+        <!-- HR Verification Statement and Comments -->
+        <div class="verification-section" style="margin-top: 20px; padding: 10px; border-top: 1px solid #ccc;">
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-weight: normal;">
+                <input type="checkbox" id="final-hr-verification-checkbox" style="margin-top: 3px;">
+                <span>
+                    I confirm that the applicant is eligible for endorsement to the Line Manager after a review of the submitted documents.
+                </span>
+            </label>
+            <p style="color: #d9534f; margin: 5px 0 15px 25px; font-size: 0.9em;">
+                * This checkbox must be ticked to proceed with confirmation and endorsement to the Line Manager.
+            </p>
+
+            <label for="final-hr-verification-comments" style="display: block; margin-top: 10px;"><strong>HR Comments (optional):</strong></label>
+            <textarea id="final-hr-verification-comments" rows="3" style="width: 100%; padding: 8px; resize: vertical;" placeholder="Enter any remarks or notes..."></textarea>
+        </div>
+
+        <!-- Final Decision Buttons (No Reupload Request) -->
+        <div class="review-modal-buttons">
+            <button id="finalBackButton" class="review-modal-back-button">Back</button>
+            <button id="finalRejectButton" class="review-modal-reject-button" onclick="rejectFinalHRModal()">Reject</button>
+            <button id="finalConfirmButton" class="review-modal-confirm-button" onclick="confirmFinalHRModal()">Confirm</button>
         </div>
     </div>
 </div>
@@ -1209,9 +1467,7 @@
         <label for="start-date-input" style="display: block; font-weight: 600; margin-bottom: 10px;">Confirmed Start Date:</label>
         <input type="date" id="start-date-input" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;" min="<%= new Date().toISOString().split('T')[0] %>">
     </div>
-</div>
-        
-        <div class="checklist-section" style="margin-bottom: 30px; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border: 1px solid #e9ecef;">
+</div><div class="checklist-section" style="margin-bottom: 30px; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border: 1px solid #e9ecef;">
             <h2 style="color: #124A5C; margin-top: 0; font-weight: 600; margin-bottom: 15px;"><strong>First Day Onboarding Checklist</strong></h2>
             <p style="margin-bottom: 15px;">The following checklist will be provided to the applicant:</p>
             
@@ -1299,6 +1555,7 @@
                 </p>
             </div>
         </div>
+        
         
         <div class="modal-question" style="text-align: center; margin: 25px 0;">
             <p style="font-weight: 600; font-size: 1.1rem; color: #124A5C;"><strong>Would you like to move this applicant for onboarding?</strong></p>
@@ -1523,6 +1780,12 @@ let pendingP2StatusChanges = {};
 // P2 Email Integration Global Variables
 let p2EmailTemplates = {};
 let p2EmailsToUpdate = { passed: [], failed: [] };
+
+
+// Global variables for tracking modal state
+let isReuploadRequested = false;
+let currentModalType = 'initial'; // 'initial' or 'final'
+
 
 // NEW: P2 Gmail Integration Flow Starter Function
 function startP2GmailIntegrationFlow() {
@@ -2525,8 +2788,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+// Enhanced function to open initial screening modal
 function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
-    console.log('Opening Modal with Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl });
+    console.log('Opening Initial Screening Modal with Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl });
 
     if (!userId || userId === "undefined") {
         console.error("Invalid userId passed to modal:", userId);
@@ -2534,29 +2798,110 @@ function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, p
         return;
     }
     
-    document.getElementById('userId').value = userId;
-
-    document.getElementById('applicant-name').textContent = `${lastName}, ${firstName}`;
-    document.getElementById('applicant-birthday').textContent = birthday || 'N/A';
-    document.getElementById('applicant-email').textContent = email || 'N/A';
-    document.getElementById('applicant-contact').textContent = phoneNo || 'N/A';
-
-    document.getElementById('score-degree').textContent = scores.degree || 'N/A';
-    document.getElementById('score-experience').textContent = scores.experience || 'N/A';
-    document.getElementById('score-certifications').textContent = scores.certifications || 'N/A';
-    document.getElementById('score-hard-skills').textContent = scores.hardSkills || 'N/A';
-    document.getElementById('score-soft-skills').textContent = scores.softSkills || 'N/A';
-    document.getElementById('score-work-setup').textContent = scores.workSetup || 'N/A';
-    document.getElementById('score-availability').textContent = scores.availability || 'N/A';
-
-    document.getElementById('computation-verdict').textContent = verdict || 'N/A';
-
-    // Display documents separately
-    displayUploadedDocument(degreeUrl, "degree-doc", "degree-preview");
-    displayUploadedDocument(certUrl, "cert-doc", "cert-preview");
-    displayUploadedDocument(resumeUrl, "resume-doc", "resume-preview");
-
+    currentModalType = 'initial';
+    isReuploadRequested = false;
+    
+    // Populate the initial modal
+    populateModalData('', userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl);
+    
+    // Check for additional document and HR remarks
+    checkForAdditionalDocument(userId);
+    
+    // Show the initial modal
     document.getElementById('hrInitialScreeningModalHtml').style.display = 'block';
+}
+
+// Function to open final decision modal (for reuploaded cases)
+function hrInitialScreeningDecisionModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
+    console.log('Opening Final Decision Modal with Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl });
+
+    if (!userId || userId === "undefined") {
+        console.error("Invalid userId passed to modal:", userId);
+        alert("Error: Invalid User ID. Cannot display applicant details.");
+        return;
+    }
+    
+    currentModalType = 'final';
+    
+    // Populate the final modal
+    populateModalData('final-', userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl);
+    
+    // Check for additional document and HR remarks in final modal
+    checkForAdditionalDocument(userId, 'final');
+    
+    // Show the final modal
+    document.getElementById('hrInitialScreeningDecisionModal').style.display = 'block';
+}
+
+// Helper function to populate modal data
+function populateModalData(prefix, userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
+    document.getElementById(prefix + 'userId').value = userId;
+    document.getElementById(prefix + 'applicant-name').textContent = `${lastName}, ${firstName}`;
+    document.getElementById(prefix + 'applicant-birthday').textContent = birthday || 'N/A';
+    document.getElementById(prefix + 'applicant-email').textContent = email || 'N/A';
+    document.getElementById(prefix + 'applicant-contact').textContent = phoneNo || 'N/A';
+
+    document.getElementById(prefix + 'score-degree').textContent = scores.degree || 'N/A';
+    document.getElementById(prefix + 'score-experience').textContent = scores.experience || 'N/A';
+    document.getElementById(prefix + 'score-certifications').textContent = scores.certifications || 'N/A';
+    document.getElementById(prefix + 'score-hard-skills').textContent = scores.hardSkills || 'N/A';
+    document.getElementById(prefix + 'score-soft-skills').textContent = scores.softSkills || 'N/A';
+    document.getElementById(prefix + 'score-work-setup').textContent = scores.workSetup || 'N/A';
+    document.getElementById(prefix + 'score-availability').textContent = scores.availability || 'N/A';
+
+    document.getElementById(prefix + 'computation-verdict').textContent = verdict || 'N/A';
+
+    // Display documents
+    displayUploadedDocument(degreeUrl, prefix + "degree-doc", prefix + "degree-preview");
+    displayUploadedDocument(certUrl, prefix + "cert-doc", prefix + "cert-preview");
+    displayUploadedDocument(resumeUrl, prefix + "resume-doc", prefix + "resume-preview");
+}
+
+// Function to check for additional document and HR remarks
+function checkForAdditionalDocument(userId, prefix = '') {
+    fetch(`/hr/get-additional-document/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.addtlFileUrl) {
+                const addtlSection = document.getElementById(prefix + 'addtl-document-section');
+                if (addtlSection) {
+                    addtlSection.style.display = 'block';
+                    displayUploadedDocument(data.addtlFileUrl, prefix + "addtl-doc", prefix + "addtl-preview");
+                    
+                    if (data.hrRemarks) {
+                        document.getElementById(prefix + 'hr-remarks-display').textContent = data.hrRemarks;
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for additional document:', error);
+        });
+}
+
+// Function to toggle reupload section
+function toggleReuploadSection() {
+    const reuploadSection = document.getElementById('document-reupload-section');
+    const reuploadButton = document.getElementById('reuploadRequestButton');
+    const verificationSection = document.querySelector('.verification-section'); // Add this line
+    
+    if (reuploadSection.style.display === 'none' || !reuploadSection.style.display) {
+        reuploadSection.style.display = 'block';
+        reuploadButton.textContent = 'Cancel Reupload Request';
+        reuploadButton.style.backgroundColor = '#e67e22';
+        if (verificationSection) verificationSection.style.display = 'none'; // Add this line
+        isReuploadRequested = true;
+    } else {
+        reuploadSection.style.display = 'none';
+        reuploadButton.textContent = 'Document Reupload Request';
+        reuploadButton.style.backgroundColor = '#f39c12';
+        if (verificationSection) verificationSection.style.display = 'block'; // Add this line
+        isReuploadRequested = false;
+        
+        // Clear form
+        document.querySelectorAll('input[name="reupload-docs"]').forEach(cb => cb.checked = false);
+        document.getElementById('reupload-remarks').value = '';
+    }
 }
 
 function displayUploadedDocument(fileUrl, linkId, previewId) {
@@ -2583,56 +2928,186 @@ function displayUploadedDocument(fileUrl, linkId, previewId) {
         docPreview.innerHTML = ""; // No preview for other file types
     }
 }
-
+// Enhanced confirm function for initial screening
 function confirmHRInitialScreeningModal() {
-    const userIdElement = document.getElementById("userId");
-    if (!userIdElement) {
-        alert("Error: userId is missing. Please try again.");
+    const userId = document.getElementById("userId").value;
+    
+    if (isReuploadRequested) {
+        // Handle document reupload request - no verification checkbox needed
+        handleDocumentReuploadRequest(userId);
+    } else {
+        // Normal confirmation process - requires verification checkbox
+        const checkbox = document.getElementById("hr-verification-checkbox");
+        const comments = document.getElementById("hr-verification-comments").value;
+        
+        if (!checkbox.checked) {
+            alert("Please confirm that the applicant is eligible for endorsement by checking the verification checkbox.");
+            return;
+        }
+        
+        handleNormalConfirmation(userId, comments);
+    }
+}
+
+// Function to handle document reupload request
+function handleDocumentReuploadRequest(userId) {  // Remove comments parameter
+    const selectedDocs = [];
+    const checkboxes = document.querySelectorAll('input[name="reupload-docs"]:checked');
+    const remarks = document.getElementById('reupload-remarks').value.trim();
+    
+    if (checkboxes.length === 0) {
+        alert("Please select at least one document type for reupload.");
         return;
     }
-
-    const userIdRaw = userIdElement.value.trim();
-    console.log("User  ID (raw):", userIdRaw);
-
-    const userId = parseInt(userIdRaw, 10);
-    console.log("User  ID (parsed):", userId);
-
-    if (isNaN(userId)) {
-        alert("Error: User ID is invalid. Please try again.");
+    
+    if (!remarks) {
+        alert("Please provide remarks/instructions for the applicant.");
         return;
     }
-
-    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
-        method: 'POST', 
+    
+    checkboxes.forEach(checkbox => {
+        selectedDocs.push(checkbox.value);
+    });
+    
+    const requestData = {
+        userId: userId,
+        documentsToReupload: selectedDocs,
+        remarks: remarks
+        // Remove hrComments completely for reupload requests
+    };
+    
+    fetch('/hr/request-document-reupload', {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId }), // Only send userId
+        body: JSON.stringify(requestData),
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Server Response:", data);
-
         if (data.success) {
-            const modal = document.getElementById('hrInitialScreeningModalHtml');
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            alert("Document reupload request sent successfully. The applicant will be notified when they log in to the chatbot.");
+            document.getElementById('hrInitialScreeningModalHtml').style.display = 'none';
+            location.reload();
+        } else {
+            alert("Error sending reupload request: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to send reupload request.");
+    });
+}
+
+// Function to handle normal confirmation
+function handleNormalConfirmation(userId, comments) {
+    const requestData = {
+        userId: userId,
+        hrComments: comments
+    };
+    
+    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
             alert("Successfully updated applicant status!");
+            document.getElementById('hrInitialScreeningModalHtml').style.display = 'none';
+            location.reload();
         } else {
             alert("Error updating applicant status: " + data.message);
         }
     })
     .catch(error => {
-        console.error("Fetch Error:", error);
+        console.error("Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+// Function to handle final modal confirmation
+function confirmFinalHRModal() {
+    const userId = document.getElementById("final-userId").value;
+    const checkbox = document.getElementById("final-hr-verification-checkbox");
+    const comments = document.getElementById("final-hr-verification-comments").value;
+    
+    if (!checkbox.checked) {
+        alert("Please confirm that the applicant is eligible for endorsement by checking the verification checkbox.");
+        return;
+    }
+    
+    const requestData = {
+        userId: userId,
+        hrComments: comments
+    };
+    
+    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Successfully updated applicant status!");
+            document.getElementById('hrInitialScreeningDecisionModal').style.display = 'none';
+            location.reload();
+        } else {
+            alert("Error updating applicant status: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
         alert("Failed to update applicant status.");
     });
 }
 
-// Close the modal
-document.querySelector('.review-close-button').addEventListener('click', function () {
-    document.getElementById('hrInitialScreeningModalHtml').style.display = 'none';
-});
+// Function to reject from final modal
+function rejectFinalHRModal() {
+    const userId = document.getElementById("final-userId").value;
+    
+    if (!confirm("Are you sure you want to reject this applicant? This action cannot be undone.")) {
+        return;
+    }
+    
+    fetch('/hr/applicant-tracker-jobposition/P1HRFailed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Successfully updated applicant status to P1 - HR FAILED!");
+            document.getElementById('hrInitialScreeningDecisionModal').style.display = 'none';
+            location.reload();
+        } else {
+            alert("Error updating applicant status: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
+// Function to determine which modal to show based on applicant status
+function showAppropriateModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl, applicantStatus) {
+    if (applicantStatus && applicantStatus.includes('Requested for Reupload')) {
+        // Show final decision modal (no reupload request option)
+        hrInitialScreeningDecisionModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl);
+    } else {
+        // Show initial modal (with reupload request option)
+        hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl);
+    }
+}
 
 // Close modal if clicked outside the modal content
 window.addEventListener('click', function (event) {
@@ -3230,10 +3705,6 @@ document.querySelectorAll(".btn-review").forEach(button => {
     });
 });
 
-// Function to close the modal
-document.querySelector(".review-close-button").addEventListener("click", function() {
-    document.getElementById("hrInitialScreeningModalHtml").style.display = "none";
-});
 
 // Close modal when clicking outside of the modal content
 window.addEventListener("click", function(event) {
@@ -3334,6 +3805,48 @@ function rejectHRInitialScreeningModal() {
         });
     }
 }
+
+
+// Enhanced close button handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Close buttons for both modals
+    document.querySelectorAll('.review-close-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const modal = this.closest('.review-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+    
+    // Back buttons
+    const backButton = document.getElementById('backButton');
+    if (backButton) {
+        backButton.addEventListener('click', function() {
+            document.getElementById('hrInitialScreeningModalHtml').style.display = 'none';
+        });
+    }
+    
+    const finalBackButton = document.getElementById('finalBackButton');
+    if (finalBackButton) {
+        finalBackButton.addEventListener('click', function() {
+            document.getElementById('hrInitialScreeningDecisionModal').style.display = 'none';
+        });
+    }
+    
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+        const initialModal = document.getElementById('hrInitialScreeningModalHtml');
+        const finalModal = document.getElementById('hrInitialScreeningDecisionModal');
+        
+        if (event.target === initialModal) {
+            initialModal.style.display = 'none';
+        }
+        if (event.target === finalModal) {
+            finalModal.style.display = 'none';
+        }
+    });
+});
 
 // Enhanced console logging for debugging
 console.log("✅ [P2 Integration] P2 Email Integration JavaScript loaded successfully");

@@ -12,6 +12,67 @@ const { getEmailTemplateData } = require('../utils/emailService');
 
 
 
+async function fileUpload(req, uploadType = 'normal') {
+    return new Promise((resolve, reject) => {
+        const form = new multiparty.Form();
+        
+        form.parse(req, async (err, fields, files) => {
+            if (err) {
+                console.error('❌ [File Upload] Error parsing form:', err);
+                return reject(err);
+            }
+            
+            const file = files.file && files.file[0];
+            if (!file) {
+                console.error('❌ [File Upload] No file provided');
+                return reject(new Error('No file provided'));
+            }
+            
+            try {
+                const userId = req.session.userID;
+                const timestamp = Date.now();
+                let fileName;
+                
+                // Generate appropriate filename based on upload type
+                if (uploadType === 'reupload') {
+                    fileName = `reupload_${userId}_${timestamp}_${file.originalFilename}`;
+                } else {
+                    fileName = `${uploadType}_${userId}_${timestamp}_${file.originalFilename}`;
+                }
+                
+                const { data, error } = await supabase.storage
+                    .from('applicant-files')
+                    .upload(fileName, fs.createReadStream(file.path), {
+                        contentType: file.headers['content-type'],
+                        upsert: false
+                    });
+                
+                if (error) {
+                    console.error('❌ [File Upload] Supabase storage error:', error);
+                    return reject(error);
+                }
+                
+                // Get public URL
+                const { data: urlData } = supabase.storage
+                    .from('applicant-files')
+                    .getPublicUrl(fileName);
+                
+                const fileUrl = urlData.publicUrl;
+                console.log(`✅ [File Upload] File uploaded successfully: ${fileUrl}`);
+                
+                // Clean up temporary file
+                fs.unlinkSync(file.path);
+                
+                resolve(fileUrl);
+                
+            } catch (uploadError) {
+                console.error('❌ [File Upload] Upload error:', uploadError);
+                reject(uploadError);
+            }
+        });
+    });
+}
+
 const hrController = {
     getHRDashboard: async function(req, res) {
         if (!req.session.user) {
@@ -1186,6 +1247,104 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
             res.json({ success: false, message: error.message });
         }
     },
+
+
+requestDocumentReupload: async function(req, res) {
+    const { userId, documentsToReupload, remarks, hrComments } = req.body;
+    
+    try {
+        console.log('📂 [Reupload Request] Processing document reupload request for userId:', userId);
+        console.log('📂 [Reupload Request] Documents to reupload:', documentsToReupload);
+        console.log('📂 [Reupload Request] HR Remarks:', remarks);
+        
+        // Update applicant_initialscreening_assessment with HR verification remarks
+        const { error: assessmentError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .update({ 
+                hrVerification: remarks,
+                isHRChosen: null // Reset HR chosen status for reupload
+            })
+            .eq('userId', userId);
+        
+        if (assessmentError) throw assessmentError;
+        
+        // Update applicant status to indicate reupload is requested
+        const { error: statusError } = await supabase
+            .from('applicantaccounts')
+            .update({ 
+                applicantStatus: "P1 - Awaiting for HR Action; Requested for Reupload" 
+            })
+            .eq('userId', userId);
+        
+        if (statusError) throw statusError;
+        
+        // Create chatbot message for the applicant
+        const chatbotMessage = {
+            text: `Hello! We have reviewed your application and would like to request some document updates. Please re-upload the following documents: ${documentsToReupload.map(doc => {
+                switch(doc) {
+                    case 'degree': return 'Degree Certificate';
+                    case 'certification': return 'Certification Document';
+                    case 'resume': return 'Resume';
+                    case 'additional': return 'Additional Document (as specified below)';
+                    default: return doc;
+                }
+            }).join(', ')}. 
+            
+HR Instructions: ${remarks}
+            
+Please use the file upload feature in the chat to submit the requested documents.`,
+            applicantStage: "P1 - Awaiting for HR Action; Requested for Reupload"
+        };
+        
+        // Save chatbot message to history
+        const { error: chatError } = await supabase
+            .from('chatbot_history')
+            .insert([{
+                userId: userId,
+                message: JSON.stringify(chatbotMessage),
+                sender: 'bot',
+                timestamp: new Date().toISOString(),
+                applicantStage: "P1 - Awaiting for HR Action; Requested for Reupload"
+            }]);
+        
+        if (chatError) throw chatError;
+        
+        res.json({ 
+            success: true, 
+            message: "Document reupload request sent successfully. The applicant will be notified when they log in to the chatbot." 
+        });
+        
+    } catch (error) {
+        console.error('❌ [Reupload Request] Error:', error);
+        res.json({ success: false, message: error.message });
+    }
+},
+
+
+// 3. Controller function to get additional document info
+getAdditionalDocument: async function(req, res) {
+    const { userId } = req.params;
+    
+    try {
+        const { data, error } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select('addtlfile_url, hrVerification')
+            .eq('userId', userId)
+            .single();
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            addtlFileUrl: data?.addtlfile_url || null,
+            hrRemarks: data?.hrVerification || null
+        });
+        
+    } catch (error) {
+        console.error('❌ [Get Additional Document] Error:', error);
+        res.json({ success: false, message: error.message });
+    }
+},
     
     // postNotifyLineManager: async function(req, res) {
     //     console.log('Request Body:', req.body); // Log the entire request body
@@ -3006,59 +3165,61 @@ updateJobOffer: async function(req, res) {
         }
     },
 
-    updateApplicantIsChosen: async function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            try {
-                const { lastName, firstName } = req.body; // Extract applicant details from the request
+    // updateApplicantIsChosen: async function (req, res) {
+    //     if (req.session.user && req.session.user.userRole === 'HR') {
+    //         try {
+    //             const { lastName, firstName } = req.body; // Extract applicant details from the request
     
-                // Use a switch case to handle the update logic
-                switch (true) {
-                    case !lastName || !firstName: {
-                        console.error('Missing applicant details.');
-                        return res.status(400).json({ success: false, message: 'Applicant details are missing.' });
-                    }
+    //             // Use a switch case to handle the update logic
+    //             switch (true) {
+    //                 case !lastName || !firstName: {
+    //                     console.error('Missing applicant details.');
+    //                     return res.status(400).json({ success: false, message: 'Applicant details are missing.' });
+    //                 }
     
-                    case true: {
-                        // Case to update `isChosen1` field
-                        const { error: chosenError } = await supabase
-                            .from('applicantaccounts')
-                            .update({ isChosen1: true })
-                            .match({ lastName, firstName });
+    //                 case true: {
+    //                     // Case to update `isChosen1` field
+    //                     const { error: chosenError } = await supabase
+    //                         .from('applicantaccounts')
+    //                         .update({ isChosen1: true })
+    //                         .match({ lastName, firstName });
     
-                        if (chosenError) {
-                            console.error('Error updating isChosen1:', chosenError);
-                            return res.status(500).json({ success: false, message: 'Failed to update isChosen1.' });
-                        }
+    //                     if (chosenError) {
+    //                         console.error('Error updating isChosen1:', chosenError);
+    //                         return res.status(500).json({ success: false, message: 'Failed to update isChosen1.' });
+    //                     }
     
-                        // Case to update `applicantStatus` after `isChosen1` is true
-                        const { error: statusError } = await supabase
-                            .from('applicantaccounts')
-                            .update({ applicantStatus: 'P1 - Awaiting for Line Manager Action; HR PASSED' })
-                            .match({ lastName, firstName, isChosen1: true });
+    //                     // Case to update `applicantStatus` after `isChosen1` is true
+    //                     const { error: statusError } = await supabase
+    //                         .from('applicantaccounts')
+    //                         .update({ applicantStatus: 'P1 - Awaiting for Line Manager Action; HR PASSED' })
+    //                         .match({ lastName, firstName, isChosen1: true });
     
-                        if (statusError) {
-                            console.error('Error updating applicantStatus:', statusError);
-                            return res.status(500).json({ success: false, message: 'Failed to update applicant status.' });
-                        }
+    //                     if (statusError) {
+    //                         console.error('Error updating applicantStatus:', statusError);
+    //                         return res.status(500).json({ success: false, message: 'Failed to update applicant status.' });
+    //                     }
     
-                        // If all updates succeed
-                        return res.json({ success: true, message: 'Applicant status updated successfully.' });
-                    }
+    //                     // If all updates succeed
+    //                     return res.json({ success: true, message: 'Applicant status updated successfully.' });
+    //                 }
     
-                    default: {
-                        console.error('Unexpected case encountered.');
-                        return res.status(400).json({ success: false, message: 'Invalid operation.' });
-                    }
-                }
-            } catch (error) {
-                console.error('Error in updateApplicantIsChosen:', error);
-                res.status(500).json({ success: false, message: 'Internal server error.' });
-            }
-        } else {
-            req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
-            res.redirect('/staff/login');
-        }
-    },
+    //                 default: {
+    //                     console.error('Unexpected case encountered.');
+    //                     return res.status(400).json({ success: false, message: 'Invalid operation.' });
+    //                 }
+    //             }
+    //         } catch (error) {
+    //             console.error('Error in updateApplicantIsChosen:', error);
+    //             res.status(500).json({ success: false, message: 'Internal server error.' });
+    //         }
+    //     } else {
+    //         req.flash('errors', { authError: 'Unauthorized access. HR role required.' });
+    //         res.redirect('/staff/login');
+    //     }
+    // },
+
+
 
 saveEvaluation: async function (req, res) {
     try {
@@ -3472,9 +3633,6 @@ getEmailTemplates: async function(req, res) {
         });
     }
 },
-
-
-
 
 // Enhanced markAsP2Passed function with better logging
 markAsP2Passed: async function(req, res) {

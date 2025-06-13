@@ -138,9 +138,9 @@ router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
 
 // Route for updating applicant status
-router.post('/update-applicant', hrController.updateApplicantIsChosen);
+// router.post('/update-applicant', hrController.updateApplicantIsChosen);
 router.get('/evaluation-form/:applicantId', hrController.getEvaluationForm);
-router.post("/saveEvaluation", hrController.saveEvaluation);
+router.post('/saveEvaluation', hrController.saveEvaluation);
 
 // Employee Routes
 router.get('/employee/dashboard', employeeController.getEmployeeDashboard);
@@ -289,10 +289,13 @@ router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositi
 router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
 router.post('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', hrController.updateStatusToP1AwaitingforLineManager);
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
+router.post('/handleFileUpload', applicantController.handleInitialFileUpload);
+
+router.post('/hr/request-document-reupload', hrController.requestDocumentReupload);
+router.get('/hr/get-additional-document/:userId', hrController.getAdditionalDocument);
 
 router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
 router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.getApplicantTrackerByJobPositions);
-
 // Routes for P1 review management
 router.post('/linemanager/applicant-tracker-jobposition/finalizeP1Review', lineManagerController.finalizeP1Review);
 router.post('/linemanager/applicant-tracker-jobposition/updateP1Statuses', lineManagerController.updateP1Statuses); 
