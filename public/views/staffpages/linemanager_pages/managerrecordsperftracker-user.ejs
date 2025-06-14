@@ -9,6 +9,158 @@
     <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+/* Enhanced Styling for Left-Side Training Section */
+.suggested-trainings-fieldset {
+    border: 2px solid var(--secondary-color);
+    background: linear-gradient(135deg, rgba(5, 156, 164, 0.05) 0%, rgba(18, 74, 92, 0.05) 100%);
+}
+
+.suggested-trainings-fieldset legend {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 8px 20px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* Training Dropdown Styling */
+#suggestedTrainings:hover {
+    border-color: var(--secondary-color);
+    box-shadow: 0 2px 8px rgba(5, 156, 164, 0.3);
+}
+
+#suggestedTrainings:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(5, 156, 164, 0.2);
+}
+
+#suggestedTrainings option {
+    padding: 12px;
+    background-color: white;
+    color: var(--primary-color);
+}
+
+#suggestedTrainings option:hover {
+    background-color: rgba(5, 156, 164, 0.1);
+}
+
+/* Selected training highlight */
+#suggestedTrainings.training-selected {
+    background-color: rgba(5, 156, 164, 0.1);
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(5, 156, 164, 0.2);
+}
+
+/* Training tooltip hover effect */
+.training-tooltip:hover #trainingTooltipText {
+    visibility: visible;
+    opacity: 1;
+}
+
+.training-tooltip:hover i {
+    background-color: var(--secondary-color);
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Training selection animation */
+@keyframes trainingSelected {
+    0% { 
+        background-color: white; 
+        transform: scale(1);
+    }
+    50% { 
+        background-color: rgba(76, 175, 80, 0.2); 
+        transform: scale(1.02);
+    }
+    100% { 
+        background-color: rgba(5, 156, 164, 0.1); 
+        transform: scale(1);
+    }
+}
+
+#suggestedTrainings.training-animation {
+    animation: trainingSelected 0.8s ease-in-out;
+}
+
+/* Selected Training Display Animation */
+#selectedTrainingDisplay {
+    transition: all 0.3s ease-in-out;
+}
+
+#selectedTrainingDisplay.show {
+    display: block !important;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Submit Button Enhanced Styling */
+#submitMidYearIDP:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(18, 74, 92, 0.4);
+}
+
+#submitMidYearIDP:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(18, 74, 92, 0.3);
+}
+
+#submitMidYearIDP:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .training-selection-container {
+        padding: 15px;
+    }
+    
+    .training-dropdown-container > div {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    #trainingTooltipText {
+        width: 280px;
+        right: -50px;
+    }
+    
+    #submitMidYearIDP {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .submit-button-container {
+        text-align: center;
+    }
+}
+
+/* Training fieldset specific enhancements */
+.suggested-trainings-fieldset .form-group {
+    margin-bottom: 0;
+}
+
+/* Smooth transitions for all training elements */
+.training-selection-container * {
+    transition: var(--transition);
+}
         /* IDP Form Styles */
 .idp-form fieldset {
     border: 1px solid #ddd;
@@ -1896,7 +2048,9 @@
             </div>
         </div>
     </section>
-</form><!-- Enhanced Mid-Year IDP Form with Circular Feedback Display -->
+</form>
+
+<!-- Enhanced Mid-Year IDP Form with Circular Feedback Display -->
 <section id="midYearIDPForm" class="fade-out section" style="display: none;">
     <div class="idp-progress">
         <h3><i class="fas fa-chart-line"></i> Development Plan Progress</h3>
@@ -2139,13 +2293,159 @@
             </div>
         </fieldset>
 
-        <div class="submit-button-container">
-            <button id="submitMidYearIDP" type="submit" class="save-btn" disabled>
-                <i class="fas fa-paper-plane"></i> Submit Mid-Year IDP
-            </button>
+<!-- NEW: Suggested Trainings Section - Left Side -->
+<fieldset class="suggested-trainings-fieldset">
+    <legend><i class="fas fa-graduation-cap"></i> SUGGESTED TRAININGS</legend>
+    
+    <div class="form-group">
+        <div class="training-selection-container" style="
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            border: 2px solid var(--primary-color);
+            margin-bottom: 15px;
+        ">
+            <div class="training-header" style="margin-bottom: 15px;">
+                <h4 style="margin: 0 0 8px 0; color: var(--primary-color); font-size: 16px;">
+                    <i class="fas fa-book-open"></i> Areas for Improvement
+                </h4>
+                <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.4;">
+                    Select a training program that aligns with your development goals and areas for improvement identified in this IDP.
+                </p>
+            </div>
+
+            <div class="training-dropdown-container" style="position: relative;">
+                <label for="suggestedTrainings" style="
+                    display: block;
+                    font-weight: 600;
+                    color: var(--primary-color);
+                    margin-bottom: 8px;
+                    font-size: 14px;
+                ">
+                    <i class="fas fa-search"></i> Choose Training Program:
+                </label>
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <!-- UPDATED SELECT ELEMENT - Now Dynamic -->
+                    <select id="suggestedTrainings" name="suggestedTrainings" style="
+                        flex: 1;
+                        padding: 12px 15px;
+                        border: 2px solid #ddd;
+                        border-radius: var(--border-radius);
+                        background-color: white;
+                        color: var(--primary-color);
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: var(--transition);
+                        font-size: 14px;
+                    " onchange="handleTrainingSelection(this)">
+                        <option value="">-- Select a Training Program --</option>
+                        <% if (user.availableTrainings && user.availableTrainings.length > 0) { %>
+                            <% user.availableTrainings.forEach(training => { %>
+                                <option value="<%= training.trainingId %>" data-description="<%= training.trainingDescription || 'No description available.' %>">
+                                    <%= training.trainingName %>
+                                </option>
+                            <% }); %>
+                        <% } else { %>
+                            <option value="" disabled>No trainings available</option>
+                        <% } %>
+                    </select>
+                    
+                    <!-- Training Description Tooltip -->
+                    <div class="training-tooltip" style="
+                        position: relative;
+                        cursor: help;
+                    ">
+                        <i class="fas fa-info-circle" style="
+                            color: var(--secondary-color);
+                            font-size: 18px;
+                            padding: 8px;
+                            border-radius: 50%;
+                            background-color: rgba(5, 156, 164, 0.1);
+                            transition: var(--transition);
+                        "></i>
+                        <div id="trainingTooltipText" class="tooltip-content" style="
+                            visibility: hidden;
+                            width: 350px;
+                            background-color: #333;
+                            color: #fff;
+                            text-align: left;
+                            border-radius: 8px;
+                            padding: 15px;
+                            position: absolute;
+                            z-index: 1000;
+                            bottom: 120%;
+                            right: 0;
+                            opacity: 0;
+                            transition: opacity 0.3s;
+                            font-size: 13px;
+                            line-height: 1.5;
+                            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                        ">
+                            <strong>Select a training</strong><br>
+                            Choose from our available training programs to enhance your skills and career growth.
+                            
+                            <!-- Tooltip arrow -->
+                            <div style="
+                                position: absolute;
+                                top: 100%;
+                                right: 20px;
+                                margin-left: -5px;
+                                border-width: 5px;
+                                border-style: solid;
+                                border-color: #333 transparent transparent transparent;
+                            "></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected Training Display -->
+            <div id="selectedTrainingDisplay" style="
+                margin-top: 15px;
+                padding: 12px;
+                background-color: rgba(5, 156, 164, 0.1);
+                border-radius: var(--border-radius);
+                border-left: 4px solid var(--secondary-color);
+                display: none;
+            ">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <i class="fas fa-check-circle" style="color: var(--success-color); margin-right: 8px;"></i>
+                    <strong id="selectedTrainingName" style="color: var(--primary-color);"></strong>
+                </div>
+                <p id="selectedTrainingDescription" style="
+                    margin: 0;
+                    color: #555;
+                    font-size: 13px;
+                    line-height: 1.4;
+                "></p>
+            </div>
         </div>
-    </form>
-</section>
+    </div>
+</fieldset>
+
+<!-- Submit Button Container - Right Side -->
+<div class="submit-button-container" style="text-align: right; margin-top: 30px;">
+    <button id="submitMidYearIDP" type="submit" class="save-btn" disabled style="
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-weight: 600;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 16px;
+        min-width: 220px;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(18, 74, 92, 0.3);
+    ">
+        <i class="fas fa-paper-plane"></i> Submit Mid-Year IDP
+    </button>
+</div>
 
 
 <!-- Final-Year IDP Form with Improved Frontend -->
@@ -2327,6 +2627,393 @@
 
             <!-- JavaScript for page functionality -->
             <script>
+// ===== UPDATED DYNAMIC TRAINING FUNCTIONALITY =====
+
+// Training descriptions mapping - now loaded dynamically
+let trainingDescriptions = {};
+
+// Function to initialize training descriptions from the select options
+function initializeTrainingDescriptions() {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    if (!trainingSelect) return;
+    
+    // Clear existing descriptions
+    trainingDescriptions = {};
+    
+    // Populate descriptions from select options
+    Array.from(trainingSelect.options).forEach(option => {
+        if (option.value && option.dataset.description) {
+            trainingDescriptions[option.value] = option.dataset.description;
+        }
+    });
+    
+    console.log('Initialized training descriptions:', trainingDescriptions);
+}
+
+// Updated function to handle training selection
+function handleTrainingSelection(selectElement) {
+    const selectedValue = selectElement.value;
+    const tooltipText = document.getElementById('trainingTooltipText');
+    
+    if (selectedValue && trainingDescriptions[selectedValue]) {
+        // Update tooltip content
+        const trainingName = selectElement.options[selectElement.selectedIndex].text;
+        const description = trainingDescriptions[selectedValue] || 'No description available.';
+        
+        tooltipText.innerHTML = `<strong>${trainingName}</strong><br>${description}`;
+        
+        // Add selected styling
+        selectElement.classList.add('training-selected', 'training-animation');
+        
+        // Show selected training display
+        showSelectedTrainingDisplay(trainingName, description);
+        
+        // Show a brief confirmation
+        showTrainingConfirmation(trainingName);
+        
+        // Remove animation class after animation completes
+        setTimeout(() => {
+            selectElement.classList.remove('training-animation');
+        }, 600);
+        
+        console.log(`Selected training: ${trainingName} (ID: ${selectedValue})`);
+    } else {
+        // Reset tooltip to default
+        tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our available training programs to enhance your skills and career growth.`;
+        selectElement.classList.remove('training-selected');
+        hideSelectedTrainingDisplay();
+    }
+}
+
+// Function to show selected training display
+function showSelectedTrainingDisplay(trainingName, description) {
+    const displayElement = document.getElementById('selectedTrainingDisplay');
+    const nameElement = document.getElementById('selectedTrainingName');
+    const descriptionElement = document.getElementById('selectedTrainingDescription');
+    
+    if (displayElement && nameElement && descriptionElement) {
+        nameElement.textContent = trainingName;
+        descriptionElement.textContent = description;
+        displayElement.style.display = 'block';
+        displayElement.classList.add('show');
+    }
+}
+
+// Function to hide selected training display
+function hideSelectedTrainingDisplay() {
+    const displayElement = document.getElementById('selectedTrainingDisplay');
+    if (displayElement) {
+        displayElement.style.display = 'none';
+        displayElement.classList.remove('show');
+    }
+}
+
+// Function to show training selection confirmation
+function showTrainingConfirmation(trainingName) {
+    // Create a temporary notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: var(--success-color);
+        color: white;
+        padding: 12px 20px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        font-weight: 500;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+    `;
+    notification.innerHTML = `<i class="fas fa-check-circle"></i> Training Selected: ${trainingName}`;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Function to get selected training ID (database ID)
+function getSelectedTrainingId() {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    return trainingSelect ? trainingSelect.value : '';
+}
+
+// Function to get selected training name (display text)
+function getSelectedTrainingName() {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    if (trainingSelect && trainingSelect.value) {
+        return trainingSelect.options[trainingSelect.selectedIndex].text;
+    }
+    return '';
+}
+
+// Enhanced submit function to include selected training ID
+async function submitMidYearIDPFormWithTraining(event) {
+    event.preventDefault();
+    
+    console.log("Submitting Mid-Year IDP form with suggested training...");
+    
+    // Validate the form
+    if (!validateIDPForm('mid')) {
+        return;
+    }
+    
+    // Get selected training
+    const selectedTrainingId = getSelectedTrainingId();
+    const selectedTrainingName = getSelectedTrainingName();
+    
+    // Get form data including training
+    const formData = {
+        profStrengths: document.getElementById("profStrengths").value,
+        profAreasForDevelopment: document.getElementById("profAreasForDevelopment").value,
+        profActionsToTake: document.getElementById("profActionsToTake").value,
+        leaderStrengths: document.getElementById("leaderStrengths").value,
+        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment").value,
+        leaderActionsToTake: document.getElementById("leaderActionsToTake").value,
+        nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value,
+        nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value,
+        nextRoleMobility: document.getElementById("nextRoleMobility").value,
+        suggestedTrainingId: selectedTrainingId, // Include selected training ID
+        suggestedTrainingName: selectedTrainingName // Include selected training name
+    };
+    
+    console.log("Form data with training:", formData);
+    
+    // Show selected training in confirmation if one is selected
+    if (selectedTrainingId) {
+        console.log(`Including suggested training: ${selectedTrainingName} (ID: ${selectedTrainingId})`);
+    }
+    
+    // Disable the submit button and show loading state
+    const submitButton = document.getElementById("submitMidYearIDP");
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    }
+    
+    try {
+        // Submit the form using AJAX
+        const response = await fetch(`/linemanager/midyear-idp/${userId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            let successMessage = "Mid-Year IDP saved successfully!";
+            if (selectedTrainingId) {
+                successMessage += `\n\nTraining recommendation: ${selectedTrainingName}`;
+            }
+            
+            alert(successMessage);
+            
+            // Update viewState to reflect the new status
+            viewState.viewOnlyStatus.midyearidp = true;
+            
+            // Update the UI based on the new state
+            updateStepperAccessibility();
+            
+            // Redirect to refresh the page
+            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+        } else {
+            alert("Error saving Mid-Year IDP: " + (result.message || "Unknown error"));
+            
+            // Re-enable the submit button
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
+            }
+        }
+    } catch (error) {
+        console.error("Error submitting Mid-Year IDP:", error);
+        alert("An error occurred while submitting the Mid-Year IDP. Please try again.");
+        
+        // Re-enable the submit button
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
+        }
+    }
+}
+
+// Function to initialize training dropdown functionality
+function initializeTrainingDropdown() {
+    // Initialize training descriptions first
+    initializeTrainingDescriptions();
+    
+    // Add hover effect to training tooltip
+    const trainingTooltip = document.querySelector('.training-tooltip');
+    const tooltipText = document.getElementById('trainingTooltipText');
+    
+    if (trainingTooltip && tooltipText) {
+        trainingTooltip.addEventListener('mouseenter', function() {
+            tooltipText.style.visibility = 'visible';
+            tooltipText.style.opacity = '1';
+        });
+        
+        trainingTooltip.addEventListener('mouseleave', function() {
+            tooltipText.style.visibility = 'hidden';
+            tooltipText.style.opacity = '0';
+        });
+    }
+    
+    // Initialize training dropdown
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    if (trainingSelect) {
+        // Set default tooltip
+        if (tooltipText) {
+            tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our available training programs to enhance your skills and career growth.`;
+        }
+        
+        // Add change event listener
+        trainingSelect.addEventListener('change', function() {
+            handleTrainingSelection(this);
+        });
+        
+        console.log('Training dropdown initialized successfully');
+        console.log('Available trainings:', trainingSelect.options.length - 1); // -1 for the default option
+    } else {
+        console.warn('Training dropdown element not found');
+    }
+}
+
+// Function to reset training selection
+function resetTrainingSelection() {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    const tooltipText = document.getElementById('trainingTooltipText');
+    
+    if (trainingSelect) {
+        trainingSelect.value = '';
+        trainingSelect.classList.remove('training-selected', 'training-animation');
+    }
+    
+    if (tooltipText) {
+        tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our available training programs to enhance your skills and career growth.`;
+    }
+    
+    hideSelectedTrainingDisplay();
+}
+
+// Function to pre-select a training by ID (useful for loading saved data)
+function setSelectedTrainingById(trainingId) {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    if (trainingSelect && trainingId) {
+        trainingSelect.value = trainingId;
+        handleTrainingSelection(trainingSelect);
+    }
+}
+
+// Function to get all available trainings from the dropdown
+function getAvailableTrainingsFromSelect() {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    if (!trainingSelect) return [];
+    
+    return Array.from(trainingSelect.options)
+        .filter(option => option.value)
+        .map(option => ({
+            id: option.value,
+            name: option.text,
+            description: option.dataset.description || ''
+        }));
+}
+
+// Function to handle training dropdown in view-only mode
+function setTrainingDropdownViewOnly(isViewOnly, selectedTrainingId = '') {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    const trainingContainer = document.querySelector('.training-selection-container');
+    
+    if (!trainingSelect || !trainingContainer) return;
+    
+    if (isViewOnly) {
+        // Disable the dropdown
+        trainingSelect.disabled = true;
+        trainingSelect.style.backgroundColor = '#f5f5f5';
+        trainingSelect.style.border = '1px solid #e1e5eb';
+        trainingSelect.style.cursor = 'not-allowed';
+        
+        // Set the selected training if provided
+        if (selectedTrainingId) {
+            trainingSelect.value = selectedTrainingId;
+            handleTrainingSelection(trainingSelect);
+        }
+        
+        // Update label to indicate view-only mode
+        const label = trainingContainer.querySelector('label');
+        if (label) {
+            label.innerHTML = '<i class="fas fa-graduation-cap"></i> Selected Training:';
+        }
+        
+        console.log('Training dropdown set to view-only mode');
+    } else {
+        // Enable the dropdown
+        trainingSelect.disabled = false;
+        trainingSelect.style.backgroundColor = 'white';
+        trainingSelect.style.border = '2px solid var(--primary-color)';
+        trainingSelect.style.cursor = 'pointer';
+        
+        // Reset label
+        const label = trainingContainer.querySelector('label');
+        if (label) {
+            label.innerHTML = '<i class="fas fa-search"></i> Choose Training Program:';
+        }
+        
+        console.log('Training dropdown set to edit mode');
+    }
+}
+
+// Enhanced DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize training dropdown
+    initializeTrainingDropdown();
+    
+    // Update the existing submitMidYearIDPForm function to use the new enhanced version
+    if (typeof submitMidYearIDPForm !== 'undefined') {
+        // Store reference to original function if needed
+        window.originalSubmitMidYearIDPForm = submitMidYearIDPForm;
+        // Replace with enhanced version
+        window.submitMidYearIDPForm = submitMidYearIDPFormWithTraining;
+        
+        console.log('Enhanced Mid-Year IDP submission function loaded');
+    }
+    
+    // If the form is already visible, ensure training dropdown is ready
+    const midYearIDPForm = document.getElementById("midYearIDPForm");
+    if (midYearIDPForm && midYearIDPForm.style.display !== 'none') {
+        setTimeout(initializeTrainingDropdown, 100);
+    }
+});
+
+// Export functions for global access
+window.handleTrainingSelection = handleTrainingSelection;
+window.getSelectedTrainingId = getSelectedTrainingId;
+window.getSelectedTrainingName = getSelectedTrainingName;
+window.resetTrainingSelection = resetTrainingSelection;
+window.setSelectedTrainingById = setSelectedTrainingById;
+window.getAvailableTrainingsFromSelect = getAvailableTrainingsFromSelect;
+window.setTrainingDropdownViewOnly = setTrainingDropdownViewOnly;
+window.submitMidYearIDPFormWithTraining = submitMidYearIDPFormWithTraining;
+
 // Initialize variables
 let currentStep = 0; // Track the current step
 let viewState = {}; // Store view state data

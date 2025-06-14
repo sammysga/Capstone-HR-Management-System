@@ -5053,134 +5053,149 @@ console.log('Final applicants list:', applicants);
             res.redirect('/staff/login');
         }
     },
-    getRecordsPerformanceTrackerByUserId: async function(req, res, next) {
-        try {
-            const userId = req.params.userId;
-            console.log('Fetching records for userId:', userId);
-        
-            if (!userId) {
-                req.flash('errors', { authError: 'User not logged in.' });
-                return res.redirect('/staff/login');
-            }
-        
-            // Fetch user-related data
-            const { data: userData, error } = await supabase
-                .from('useraccounts')
-                .select(`
-                    userId,
-                    userEmail, 
-                    userRole, 
-                    staffaccounts (
-                        firstName, 
-                        lastName, 
-                        phoneNumber, 
-                        dateOfBirth, 
-                        emergencyContactName, 
-                        emergencyContactNumber, 
-                        employmentType, 
-                        hireDate, 
-                        staffId, 
-                        jobId,
-                        departmentId,
-                        departments ( deptName ),
-                        jobpositions ( jobTitle ),
-                        staffdegrees ( degreeName, universityName, graduationYear ),
-                        staffcareerprogression ( milestoneName, startDate, endDate ),
-                        staffexperiences ( companyName, startDate ),
-                        staffcertification!staffcertification_staffId_fkey ( certificateName, certDate )
-                    )
-                `)
-                .eq('userId', userId)
-                .single();
-        
-            if (error) throw error;
-        
-            console.log('Fetched user data:', userData);
-        
-            // Fetch attendance logs for the specific user
-            const { data: attendanceLogs, error: attendanceError } = await supabase
-                .from('attendance')
-                .select(`
+getRecordsPerformanceTrackerByUserId: async function(req, res, next) {
+    try {
+        const userId = req.params.userId;
+        console.log('Fetching records for userId:', userId);
+    
+        if (!userId) {
+            req.flash('errors', { authError: 'User not logged in.' });
+            return res.redirect('/staff/login');
+        }
+    
+        // Fetch user-related data
+        const { data: userData, error } = await supabase
+            .from('useraccounts')
+            .select(`
+                userId,
+                userEmail, 
+                userRole, 
+                staffaccounts (
+                    firstName, 
+                    lastName, 
+                    phoneNumber, 
+                    dateOfBirth, 
+                    emergencyContactName, 
+                    emergencyContactNumber, 
+                    employmentType, 
+                    hireDate, 
+                    staffId, 
+                    jobId,
+                    departmentId,
+                    departments ( deptName ),
+                    jobpositions ( jobTitle ),
+                    staffdegrees ( degreeName, universityName, graduationYear ),
+                    staffcareerprogression ( milestoneName, startDate, endDate ),
+                    staffexperiences ( companyName, startDate ),
+                    staffcertification!staffcertification_staffId_fkey ( certificateName, certDate )
+                )
+            `)
+            .eq('userId', userId)
+            .single();
+    
+        if (error) throw error;
+    
+        console.log('Fetched user data:', userData);
+
+        // Fetch attendance logs for the specific user
+        const { data: attendanceLogs, error: attendanceError } = await supabase
+            .from('attendance')
+            .select(`
+                userId, 
+                attendanceDate, 
+                attendanceAction, 
+                attendanceTime, 
+                useraccounts (
                     userId, 
-                    attendanceDate, 
-                    attendanceAction, 
-                    attendanceTime, 
-                    useraccounts (
-                        userId, 
-                        staffaccounts (
-                            staffId,
-                            firstName, 
-                            lastName,
-                            departmentId, 
-                            jobId,
-                            departments: departmentId ("deptName"),
-                            jobpositions: jobId ("jobTitle")
-                        )
+                    staffaccounts (
+                        staffId,
+                        firstName, 
+                        lastName,
+                        departmentId, 
+                        jobId,
+                        departments: departmentId ("deptName"),
+                        jobpositions: jobId ("jobTitle")
                     )
-                `)
-                .eq('userId', userId)
-                .order('attendanceDate', { ascending: false });
-        
-            if (attendanceError) throw attendanceError;
-        
-            // Format attendance logs by week
-            const formattedAttendanceLogs = attendanceLogs.reduce((acc, attendance) => {
-                const attendanceDate = new Date(attendance.attendanceDate);
-                // Get the week number for the given date (ISO week)
-                const weekNumber = getISOWeek(attendanceDate);
-                
-                const weekEntry = acc.find(log => log.weekNumber === weekNumber);
-        
-                if (!weekEntry) {
-                    acc.push({
-                        weekNumber,
-                        days: [{
-                            date: attendanceDate,
-                            attendanceAction: attendance.attendanceAction,
-                            attendanceTime: attendance.attendanceTime
-                        }]
-                    });
-                } else {
-                    weekEntry.days.push({
+                )
+            `)
+            .eq('userId', userId)
+            .order('attendanceDate', { ascending: false });
+    
+        if (attendanceError) throw attendanceError;
+
+        // NEW: Fetch available trainings
+        const { data: trainingsData, error: trainingsError } = await supabase
+            .from('trainings')
+            .select('trainingId, trainingName, trainingDesc')
+            .order('trainingName', { ascending: true });
+
+        if (trainingsError) {
+            console.error('Error fetching trainings:', trainingsError);
+            // Don't throw error for trainings, just log it and continue with empty array
+        }
+
+        console.log('Fetched trainings data:', trainingsData);
+    
+        // Format attendance logs by week
+        const formattedAttendanceLogs = attendanceLogs.reduce((acc, attendance) => {
+            const attendanceDate = new Date(attendance.attendanceDate);
+            // Get the week number for the given date (ISO week)
+            const weekNumber = getISOWeek(attendanceDate);
+            
+            const weekEntry = acc.find(log => log.weekNumber === weekNumber);
+    
+            if (!weekEntry) {
+                acc.push({
+                    weekNumber,
+                    days: [{
                         date: attendanceDate,
                         attendanceAction: attendance.attendanceAction,
                         attendanceTime: attendance.attendanceTime
-                    });
-                }
-        
-                return acc;
-            }, []);
-        
-            // Compile the userData into the format required for the template
-            const formattedUserData = {
-                userId: userData.userId,
-                userEmail: userData.userEmail || '',
-                userRole: userData.userRole || '',
-                firstName: userData.staffaccounts[0]?.firstName || '',
-                lastName: userData.staffaccounts[0]?.lastName || '',
-                phoneNumber: userData.staffaccounts[0]?.phoneNumber || '',
-                dateOfBirth: userData.staffaccounts[0]?.dateOfBirth || '',
-                emergencyContactName: userData.staffaccounts[0]?.emergencyContactName || '',
-                emergencyContactNumber: userData.staffaccounts[0]?.emergencyContactNumber || '',
-                employmentType: userData.staffaccounts[0]?.employmentType || '',
-                hireDate: userData.staffaccounts[0]?.hireDate || '',
-                jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || '',
-                departmentName: userData.staffaccounts[0]?.departments?.deptName || '',
-                milestones: userData.staffaccounts[0]?.staffcareerprogression || [],
-                degrees: userData.staffaccounts[0]?.staffdegrees || [],
-                experiences: userData.staffaccounts[0]?.staffexperiences || [],
-                certifications: userData.staffaccounts[0]?.staffcertification || [],
-                weeklyAttendanceLogs: formattedAttendanceLogs // Add weekly attendance logs
-            };
-        
-            req.user = formattedUserData;
-            next();
-        } catch (err) {
-            console.error('Error in getRecordsPerformanceTrackerByUserId controller:', err);
-            req.flash('errors', { dbError: 'An error occurred while loading the personal info page.' });
-            res.redirect('/staffpages/linemanager_pages/managerrecordsperftracker');
-        }
-    },
+                    }]
+                });
+            } else {
+                weekEntry.days.push({
+                    date: attendanceDate,
+                    attendanceAction: attendance.attendanceAction,
+                    attendanceTime: attendance.attendanceTime
+                });
+            }
+    
+            return acc;
+        }, []);
+    
+        // Compile the userData into the format required for the template
+        const formattedUserData = {
+            userId: userData.userId,
+            userEmail: userData.userEmail || '',
+            userRole: userData.userRole || '',
+            firstName: userData.staffaccounts[0]?.firstName || '',
+            lastName: userData.staffaccounts[0]?.lastName || '',
+            phoneNumber: userData.staffaccounts[0]?.phoneNumber || '',
+            dateOfBirth: userData.staffaccounts[0]?.dateOfBirth || '',
+            emergencyContactName: userData.staffaccounts[0]?.emergencyContactName || '',
+            emergencyContactNumber: userData.staffaccounts[0]?.emergencyContactNumber || '',
+            employmentType: userData.staffaccounts[0]?.employmentType || '',
+            hireDate: userData.staffaccounts[0]?.hireDate || '',
+            jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || '',
+            departmentName: userData.staffaccounts[0]?.departments?.deptName || '',
+            milestones: userData.staffaccounts[0]?.staffcareerprogression || [],
+            degrees: userData.staffaccounts[0]?.staffdegrees || [],
+            experiences: userData.staffaccounts[0]?.staffexperiences || [],
+            certifications: userData.staffaccounts[0]?.staffcertification || [],
+            weeklyAttendanceLogs: formattedAttendanceLogs,
+            // NEW: Add trainings data
+            availableTrainings: trainingsData || []
+        };
+    
+        req.user = formattedUserData;
+        next();
+    } catch (err) {
+        console.error('Error in getRecordsPerformanceTrackerByUserId controller:', err);
+        req.flash('errors', { dbError: 'An error occurred while loading the personal info page.' });
+        res.redirect('/staffpages/linemanager_pages/managerrecordsperftracker');
+    }
+},
 
     // code with midyearidp logic
    // Fixed getUserProgressView function - specifically the stepper logic section
