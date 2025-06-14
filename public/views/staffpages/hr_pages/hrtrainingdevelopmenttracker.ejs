@@ -1186,6 +1186,7 @@
             }
             
             employees.forEach(employee => {
+                console.log('Employee object structure:', employee);
                 const isSelected = selectAll || selectedEmployees.some(emp => emp.id === employee.id);
                 
                 const employeeItem = document.createElement('div');
@@ -1215,15 +1216,26 @@
                 selectAllCheckbox.parentNode.replaceChild(newSelectAllCheckbox, selectAllCheckbox);
                 
                 newSelectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
                     const checkboxes = employeeItems.querySelectorAll('.employee-checkbox');
+                    
+                    if (isChecked) {
+                        // Clear existing selections first
+                        selectedEmployees = [];
+                        // Add all employees
+                        selectedEmployees = [...employees];
+                    } else {
+                        // Clear all selections
+                        selectedEmployees = [];
+                    }
+                    
+                    // Update checkboxes
                     checkboxes.forEach(checkbox => {
-                        checkbox.checked = this.checked;
-                        const employeeId = checkbox.value;
-                        const employee = employees.find(emp => emp.id === employeeId);
-                        if (employee) {
-                            handleEmployeeSelection(employee, this.checked, modal);
-                        }
+                        checkbox.checked = isChecked;
                     });
+                    
+                    updateSelectedCount(modal);
+                    console.log(`Select All ${isChecked ? 'checked' : 'unchecked'}. Total: ${selectedEmployees.length}`);
                 });
             } else {
                 console.warn(`Select all checkbox not found: ${selectAllCheckboxId}`);
