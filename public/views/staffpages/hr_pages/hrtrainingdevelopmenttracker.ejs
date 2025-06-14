@@ -1196,13 +1196,19 @@
                                                 Cost: ₱<%= training.cost.toLocaleString() %>
                                             <% } %>
                                         </div>
-                                        <div class="course-badges">
-                                            <% if (training.badges && training.badges.length > 0) { %>
-                                                <% training.badges.forEach(badge => { %>
-                                                    <span class="course-badge <%= badge %>"><%= badge.charAt(0).toUpperCase() + badge.slice(1) %></span>
-                                                <% }); %>
-                                            <% } %>
-                                        </div>
+                                       <div class="course-badges">
+    <% if (training.badges && training.badges.length > 0) { %>
+        <% training.badges.forEach(badge => { %>
+            <span class="course-badge <%= badge %>">
+                <% if (badge === 'required') { %>
+                    Required by HR
+                <% } else { %>
+                    <%= badge.charAt(0).toUpperCase() + badge.slice(1) %>
+                <% } %>
+            </span>
+        <% }); %>
+    <% } %>
+</div>
                                     </div>
                                 <% }); %>
                             <% } else { %>

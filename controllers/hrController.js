@@ -418,26 +418,35 @@ getHrTrainingDevelopmentTracker: async function (req, res) {
             }, {});
 
             // Format trainings
-            const formattedTrainings = (trainings || []).map(training => {
-                const job = jobsMap[training.jobId] || {};
-                const department = departmentsMap[job.departmentId] || {};
-                
-                return {
-                    id: training.trainingId,
-                    title: training.trainingName || 'Untitled Training',
-                    description: training.trainingDesc || 'No description available',
-                    mode: training.isOnlineArrangement ? 'online' : 'onsite',
-                    location: training.isOnlineArrangement ? null : {
-                        country: training.country,
-                        address: training.address
-                    },
-                    cost: training.cost || 0,
-                    duration: training.totalDuration || 0,
-                    department: department.departmentName || 'Unknown Department',
-                    jobTitle: job.jobTitle || 'Unknown Position',
-                    badges: [training.isOnlineArrangement ? 'online' : 'onsite']
-                };
-            });
+           // Format trainings
+const formattedTrainings = (trainings || []).map(training => {
+    const job = jobsMap[training.jobId] || {};
+    const department = departmentsMap[job.departmentId] || {};
+    
+    // Create badges array
+    const badges = [];
+    badges.push(training.isOnlineArrangement ? 'online' : 'onsite');
+    if (training.isRequired) {
+        badges.push('required');
+    }
+    
+    return {
+        id: training.trainingId,
+        title: training.trainingName || 'Untitled Training',
+        description: training.trainingDesc || 'No description available',
+        mode: training.isOnlineArrangement ? 'online' : 'onsite',
+        isRequired: training.isRequired || false,  // ADD THIS LINE
+        location: training.isOnlineArrangement ? null : {
+            country: training.country,
+            address: training.address
+        },
+        cost: training.cost || 0,
+        duration: training.totalDuration || 0,
+        department: department.departmentName || 'Unknown Department',
+        jobTitle: job.jobTitle || 'Unknown Position',
+        badges: badges  // UPDATE THIS LINE
+    };
+});
 
             res.render('staffpages/hr_pages/hrtrainingdevelopmenttracker', {
                 title: 'Employee Training & Development Tracker',
