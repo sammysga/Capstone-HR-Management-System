@@ -332,134 +332,355 @@ const hrController = {
         }
     },
 
-    // Function to render the training development tracker page
-getHrTrainingDevelopmentTracker: async function (req, res) {
+   getHrTrainingDevelopmentTracker: async function (req, res) {
+    try {
+        console.log('Loading training development tracker...');
+
+        // Fetch only REQUIRED trainings for HR
+        const { data: trainings, error: trainingsError } = await supabase
+            .from('trainings')
+            .select('*')
+            .eq('isActive', true)
+            .eq('isRequired', true) // Only fetch required trainings
+            .order('trainingName', { ascending: true });
+
+        if (trainingsError) throw trainingsError;
+
+        // Fetch job positions and departments
+        const { data: jobPositions } = await supabase.from('jobpositions').select('*');
+        const { data: departments } = await supabase.from('departments').select('*');
+        const { data: employees } = await supabase.from('staffaccounts').select('*').limit(20);
+
+        // Fetch training assignments for required trainings only
+        let assignments = [];
         try {
-            console.log('Loading training development tracker...');
-
-            // Fetch trainings
-            const { data: trainings, error: trainingsError } = await supabase
-                .from('trainings')
-                .select('*')
-                .eq('isActive', true)
-                .order('trainingName', { ascending: true });
-
-            if (trainingsError) throw trainingsError;
-
-            // Fetch job positions and departments
-            const { data: jobPositions } = await supabase.from('jobpositions').select('*');
-            const { data: departments } = await supabase.from('departments').select('*');
-            const { data: employees } = await supabase.from('staffaccounts').select('*').limit(20);
-
-            // Fetch training assignments if table exists
-            let assignments = [];
-            try {
-                const { data: assignmentData } = await supabase
-                    .from('training_assignments')
-                    .select(`
-                        *,
-                        trainings!inner(trainingName),
-                        staffaccounts!inner(staffFName, staffLName, staffEmail)
-                    `)
-                    .eq('isActive', true);
-                
-                if (assignmentData) {
-                    assignments = assignmentData.map(assignment => ({
-                        employeeId: assignment.employeeId,
-                        employeeName: `${assignment.staffaccounts.staffFName} ${assignment.staffaccounts.staffLName}`,
-                        trainingTitle: assignment.trainings.trainingName,
-                        status: assignment.status || 'not-started',
-                        progress: assignment.progress || 0,
-                        startDate: assignment.assignedDate ? new Date(assignment.assignedDate) : new Date(),
-                        dueDate: assignment.dueDate ? new Date(assignment.dueDate) : null
-                    }));
-                }
-            } catch (error) {
-                console.log('Training assignments table not found, using demo data');
-                // Fallback to demo assignments
-                assignments = [
-                    {
-                        employeeId: 'john-doe',
-                        employeeName: 'John Doe',
-                        trainingTitle: 'JavaScript Fundamentals',
-                        status: 'in-progress',
-                        progress: 75,
-                        startDate: new Date('2024-01-15')
-                    },
-                    {
-                        employeeId: 'jane-smith',
-                        employeeName: 'Jane Smith',
-                        trainingTitle: 'Safety Training',
-                        status: 'completed',
-                        progress: 100,
-                        startDate: new Date('2024-01-10')
-                    },
-                    {
-                        employeeId: 'mike-johnson',
-                        employeeName: 'Mike Johnson',
-                        trainingTitle: 'Data Analysis Bootcamp',
-                        status: 'not-started',
-                        progress: 0,
-                        startDate: new Date('2024-01-20'),
-                        dueDate: new Date('2024-02-20')
-                    }
-                ];
-            }
-
-            // Create lookup maps
-            const jobsMap = (jobPositions || []).reduce((acc, job) => {
-                acc[job.jobId] = job;
-                return acc;
-            }, {});
-
-            const departmentsMap = (departments || []).reduce((acc, dept) => {
-                acc[dept.departmentId] = dept;
-                return acc;
-            }, {});
-
-            // Format trainings
-           // Format trainings
-const formattedTrainings = (trainings || []).map(training => {
-    const job = jobsMap[training.jobId] || {};
-    const department = departmentsMap[job.departmentId] || {};
-    
-    // Create badges array
-    const badges = [];
-    badges.push(training.isOnlineArrangement ? 'online' : 'onsite');
-    if (training.isRequired) {
-        badges.push('required');
-    }
-    
-    return {
-        id: training.trainingId,
-        title: training.trainingName || 'Untitled Training',
-        description: training.trainingDesc || 'No description available',
-        mode: training.isOnlineArrangement ? 'online' : 'onsite',
-        isRequired: training.isRequired || false,  // ADD THIS LINE
-        location: training.isOnlineArrangement ? null : {
-            country: training.country,
-            address: training.address
-        },
-        cost: training.cost || 0,
-        duration: training.totalDuration || 0,
-        department: department.departmentName || 'Unknown Department',
-        jobTitle: job.jobTitle || 'Unknown Position',
-        badges: badges  // UPDATE THIS LINE
-    };
-});
-
-            res.render('staffpages/hr_pages/hrtrainingdevelopmenttracker', {
-                title: 'Employee Training & Development Tracker',
-                trainings: formattedTrainings,
-                assignments: assignments,
-                user: req.user || null
-            });
+            const { data: assignmentData } = await supabase
+                .from('training_records')
+                .select(`
+                    *,
+                    trainings!inner(trainingName, isRequired),
+                    staffaccounts!inner(staffFName, staffLName, staffEmail, jobId, departmentId),
+                    jobpositions!inner(jobTitle),
+                    departments!inner(deptName)
+                `)
+                .eq('trainings.isRequired', true) // Only assignments for required trainings
+                .eq('trainings.isActive', true)
+                .order('dateRequested', { ascending: false });
             
-        } catch (error) {a
-            console.error('Error loading training tracker:', error);
-            res.status(500).send('Error loading training tracker');
+            if (assignmentData) {
+                assignments = assignmentData.map(assignment => ({
+                    assignmentId: assignment.trainingRecordId,
+                    trainingId: assignment.trainingId,
+                    employeeId: assignment.userId,
+                    employeeName: `${assignment.staffaccounts.staffFName} ${assignment.staffaccounts.staffLName}`,
+                    employeeEmail: assignment.staffaccounts.staffEmail,
+                    trainingTitle: assignment.trainings.trainingName + ' (REQUIRED)',
+                    jobTitle: assignment.jobpositions?.jobTitle || 'Unknown Position',
+                    department: assignment.departments?.deptName || 'Unknown Department',
+                    status: assignment.trainingStatus?.toLowerCase().replace(' ', '-') || 'not-started',
+                    progress: assignment.progressPercentage || 0,
+                    startDate: assignment.setStartDate ? new Date(assignment.setStartDate) : new Date(),
+                    dueDate: assignment.setEndDate ? new Date(assignment.setEndDate) : null,
+                    assignedDate: assignment.dateRequested ? new Date(assignment.dateRequested) : new Date(),
+                    completionDate: assignment.completionDate ? new Date(assignment.completionDate) : null,
+                    isApproved: assignment.isApproved
+                }));
+            }
+        } catch (error) {
+            console.log('Training assignments table not found or error:', error);
+            // Fallback to demo assignments for required trainings
+            assignments = [
+                {
+                    assignmentId: 1,
+                    trainingId: 1,
+                    employeeId: 'john-doe',
+                    employeeName: 'John Doe',
+                    employeeEmail: 'john.doe@company.com',
+                    trainingTitle: 'Safety Training (REQUIRED)',
+                    jobTitle: 'Frontend Developer',
+                    department: 'IT',
+                    status: 'in-progress',
+                    progress: 75,
+                    startDate: new Date('2024-01-15'),
+                    assignedDate: new Date('2024-01-10'),
+                    isApproved: true
+                },
+                {
+                    assignmentId: 2,
+                    trainingId: 2,
+                    employeeId: 'jane-smith',
+                    employeeName: 'Jane Smith',
+                    employeeEmail: 'jane.smith@company.com',
+                    trainingTitle: 'Data Privacy Training (REQUIRED)',
+                    jobTitle: 'Operations Manager',
+                    department: 'Operations',
+                    status: 'completed',
+                    progress: 100,
+                    startDate: new Date('2024-01-10'),
+                    completionDate: new Date('2024-01-25'),
+                    assignedDate: new Date('2024-01-05'),
+                    isApproved: true
+                },
+                {
+                    assignmentId: 3,
+                    trainingId: 3,
+                    employeeId: 'mike-johnson',
+                    employeeName: 'Mike Johnson',
+                    employeeEmail: 'mike.johnson@company.com',
+                    trainingTitle: 'Compliance Training (REQUIRED)',
+                    jobTitle: 'Data Analyst',
+                    department: 'Analytics',
+                    status: 'not-started',
+                    progress: 0,
+                    startDate: new Date('2024-01-20'),
+                    dueDate: new Date('2024-02-20'),
+                    assignedDate: new Date('2024-01-15'),
+                    isApproved: true
+                }
+            ];
         }
-    },
+
+        // Create lookup maps
+        const jobsMap = (jobPositions || []).reduce((acc, job) => {
+            acc[job.jobId] = job;
+            return acc;
+        }, {});
+
+        const departmentsMap = (departments || []).reduce((acc, dept) => {
+            acc[dept.departmentId] = dept;
+            return acc;
+        }, {});
+
+        // Format trainings (only required ones)
+        const formattedTrainings = (trainings || []).map(training => {
+            const job = jobsMap[training.jobId] || {};
+            const department = departmentsMap[job.departmentId] || {};
+            
+            // Count assignments for this training
+            const trainingAssignments = assignments.filter(a => a.trainingId === training.trainingId);
+            const completedCount = trainingAssignments.filter(a => a.status === 'completed').length;
+            const inProgressCount = trainingAssignments.filter(a => a.status === 'in-progress').length;
+            const notStartedCount = trainingAssignments.filter(a => a.status === 'not-started').length;
+            
+            return {
+                id: training.trainingId,
+                title: training.trainingName || 'Untitled Training',
+                description: training.trainingDesc || 'No description available',
+                mode: training.isOnlineArrangement ? 'online' : 'onsite',
+                location: training.isOnlineArrangement ? null : {
+                    country: training.country,
+                    address: training.address
+                },
+                cost: training.cost || 0,
+                duration: training.totalDuration || 0,
+                department: department.departmentName || 'Unknown Department',
+                jobTitle: job.jobTitle || 'Unknown Position',
+                badges: [
+                    training.isOnlineArrangement ? 'online' : 'onsite',
+                    'required' // All trainings are required now
+                ],
+                // Assignment statistics
+                assignmentStats: {
+                    total: trainingAssignments.length,
+                    completed: completedCount,
+                    inProgress: inProgressCount,
+                    notStarted: notStartedCount
+                },
+                assignments: trainingAssignments // Include assignments for this training
+            };
+        });
+
+        res.render('staffpages/hr_pages/hrtrainingdevelopmenttracker', {
+            title: 'Required Training & Development Tracker',
+            trainings: formattedTrainings,
+            assignments: assignments,
+            user: req.user || null
+        });
+        
+    } catch (error) {
+        console.error('Error loading training tracker:', error);
+        res.status(500).send('Error loading training tracker');
+    }
+},
+
+getTrainingDetails: async function (req, res) {
+    try {
+        const trainingId = req.params.trainingId;
+        console.log('=== TRAINING DETAILS DEBUG ===');
+        console.log('Requested training ID:', trainingId);
+        console.log('Full request params:', req.params);
+        console.log('Request URL:', req.url);
+        console.log('Request method:', req.method);
+
+        if (!trainingId) {
+            console.log('ERROR: No training ID provided');
+            return res.status(400).json({
+                success: false,
+                message: 'Training ID is required'
+            });
+        }
+
+        // Get training details (WITHOUT the joins that are causing issues)
+        console.log('Fetching training from database...');
+        const { data: training, error: trainingError } = await supabase
+            .from('trainings')
+            .select('*')  // Just select all fields from trainings table
+            .eq('trainingId', trainingId)
+            .eq('isActive', true)
+            .single();
+
+        console.log('Training query result:', { training, error: trainingError });
+
+        if (trainingError || !training) {
+            console.log('Training not found or error:', trainingError);
+            return res.status(404).json({
+                success: false,
+                message: 'Training not found',
+                debug: { trainingId, error: trainingError }
+            });
+        }
+
+        console.log('Training found:', training.trainingName);
+
+        // Get job and department info separately if needed
+        let jobInfo = null;
+        let departmentInfo = null;
+
+        if (training.jobId) {
+            const { data: job } = await supabase
+                .from('jobpositions')
+                .select('jobTitle, departmentId')
+                .eq('jobId', training.jobId)
+                .single();
+            
+            jobInfo = job;
+
+            if (job && job.departmentId) {
+                const { data: department } = await supabase
+                    .from('departments')
+                    .select('deptName')
+                    .eq('departmentId', job.departmentId)
+                    .single();
+                
+                departmentInfo = department;
+            }
+        }
+
+        // Get all assignments for this training
+        const { data: assignments, error: assignmentsError } = await supabase
+            .from('training_records')
+            .select(`
+                *,
+                staffaccounts!inner(
+                    staffFName, 
+                    staffLName, 
+                    staffEmail,
+                    jobId,
+                    departmentId
+                )
+            `)
+            .eq('trainingId', trainingId)
+            .order('dateRequested', { ascending: false });
+
+        if (assignmentsError) {
+            console.error('Error fetching assignments:', assignmentsError);
+            // Don't throw error, just continue with empty assignments
+        }
+
+        // Get training activities
+        const { data: activities } = await supabase
+            .from('training_activities')
+            .select('*')
+            .eq('trainingId', trainingId)
+            .order('activityId', { ascending: true });
+
+        // Get training certifications
+        const { data: certifications } = await supabase
+            .from('training_certifications')
+            .select('*')
+            .eq('trainingId', trainingId)
+            .order('trainingCertId', { ascending: true });
+
+        // Format assignments data
+        const formattedAssignments = (assignments || []).map(assignment => {
+            // Get job and department info for each employee
+            let employeeJobTitle = 'Unknown Position';
+            let employeeDepartment = 'Unknown Department';
+
+
+            return {
+                assignmentId: assignment.trainingRecordId,
+                employeeId: assignment.userId,
+                employeeName: `${assignment.staffaccounts.staffFName} ${assignment.staffaccounts.staffLName}`,
+                employeeEmail: assignment.staffaccounts.staffEmail,
+                jobTitle: employeeJobTitle,
+                department: employeeDepartment,
+                status: assignment.trainingStatus || 'Not Started',
+                progress: 0, // You can calculate this based on completed activities
+                startDate: assignment.setStartDate,
+                endDate: assignment.setEndDate,
+                assignedDate: assignment.dateRequested,
+                isApproved: assignment.isApproved,
+                approvalRemarks: assignment.decisionRemarks,
+            };
+        });
+
+        // Calculate statistics
+        const stats = {
+            totalAssigned: formattedAssignments.length,
+            completed: formattedAssignments.filter(a => a.status === 'Completed').length,
+            inProgress: formattedAssignments.filter(a => a.status === 'In Progress').length,
+            notStarted: formattedAssignments.filter(a => 
+                a.status === 'Assigned' || 
+                a.status === 'Not Started' || 
+                !a.status
+            ).length,
+            overdue: formattedAssignments.filter(a => {
+                if (!a.endDate) return false;
+                const dueDate = new Date(a.endDate);
+                const today = new Date();
+                return dueDate < today && a.status !== 'Completed';
+            }).length
+        };
+
+        // Format training data
+        const formattedTraining = {
+            id: training.trainingId,
+            title: training.trainingName,
+            description: training.trainingDesc,
+            mode: training.isOnlineArrangement ? 'online' : 'onsite',
+            location: training.isOnlineArrangement ? null : {
+                country: training.country,
+                address: training.address
+            },
+            cost: training.cost || 0,
+            duration: training.totalDuration || 0,
+            isRequired: training.isRequired || false,
+            isActive: training.isActive,
+            createdDate: training.dateCreated || null,
+            jobTitle: jobInfo?.jobTitle || 'Unknown Position',
+            department: departmentInfo?.deptName || 'Unknown Department',
+            activities: activities || [],
+            certifications: certifications || [],
+            assignments: formattedAssignments,
+            statistics: stats
+        };
+
+        res.json({
+            success: true,
+            data: formattedTraining,
+            message: `Training details loaded successfully`
+        });
+
+    } catch (error) {
+        console.error('Error getting training details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get training details',
+            error: error.message
+        });
+    }
+},
 
 getEmployees: async function (req, res) {
     try {
@@ -596,7 +817,7 @@ getEmployees: async function (req, res) {
 
 getExistingTrainings: async function (req, res) {
     try {
-        console.log('Loading existing trainings for reassignment...');
+        console.log('Loading existing REQUIRED trainings for reassignment...');
 
         const { data: trainings, error } = await supabase
             .from('trainings')
@@ -612,6 +833,7 @@ getExistingTrainings: async function (req, res) {
                 isRequired
             `)
             .eq('isActive', true)
+            .eq('isRequired', true) // Only fetch required trainings
             .order('trainingName', { ascending: true });
 
         if (error) {
@@ -634,12 +856,12 @@ getExistingTrainings: async function (req, res) {
             }
         }));
 
-        console.log(`Found ${formattedTrainings.length} existing trainings`);
+        console.log(`Found ${formattedTrainings.length} existing REQUIRED trainings`);
 
         res.json({
             success: true,
             data: formattedTrainings,
-            message: `Successfully loaded ${formattedTrainings.length} existing trainings`
+            message: `Successfully loaded ${formattedTrainings.length} required trainings`
         });
 
     } catch (error) {

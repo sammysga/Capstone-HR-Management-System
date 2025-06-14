@@ -362,7 +362,7 @@ router.get('/linemanager/trainings', lineManagerController.getAllTrainings);
 router.get('/linemanager/training-development-tracker', lineManagerController.getTrainingDevelopmentTracker);
 // Training request routes
 router.get('/linemanager/training-request/:userId', lineManagerController.getTrainingRequest);
-router.get('/linemanager/api/training-request/:userId/details', lineManagerController.getTrainingRequestDetails);
+router.get('/linemanager/api/training-request/:userId/details', lineManagerController.getTrainingRequestDetails); // Fixed path
 router.post('/linemanager/training/approve', lineManagerController.approveTrainingRequest); // Fixed path
 router.post('/linemanager/training/reject', lineManagerController.rejectTrainingRequest); // Fixed path
 
@@ -428,6 +428,7 @@ router.post('/hr/training', hrController.createTraining);
 router.get('/hr/employees/filter', hrController.getEmployeesByFilter); 
 router.get('/hr/existing-trainings', hrController.getExistingTrainings); 
 router.post('/hr/training/reassign', hrController.reassignTraining); 
+router.get('/hr/training/:trainingId/details', hrController.getTrainingDetails);
 
 module.exports = router; 
 
