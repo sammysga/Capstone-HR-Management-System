@@ -4644,8 +4644,6 @@ getTrainingSkillsAndObjectives: async function(req, res) {
         });
     }
 },
-
-// Enhanced create training request with activity-based scheduling
 createTrainingRequest: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Creating enhanced training request for user ${req.session?.user?.userId}`);
     console.log('Request body:', req.body);
@@ -4696,13 +4694,13 @@ createTrainingRequest: async function(req, res) {
             });
         }
 
-        // Check for existing active requests for the same training
+        // FIXED: Check for existing active requests with proper enum values
         const { data: existingRequests, error: existingError } = await supabase
             .from('training_records')
             .select('trainingRecordId, setStartDate, setEndDate, trainingStatus')
             .eq('userId', userId)
             .eq('trainingId', parseInt(trainingId))
-            .in('trainingStatus', ['Not Started', 'In Progress', 'Pending Approval']);
+            .in('trainingStatus', ['Not Started', 'In Progress', 'For Approval']); // Use proper enum values
 
         if (existingError && existingError.code !== 'PGRST116') {
             console.error('Error checking existing requests:', existingError);
@@ -4727,14 +4725,22 @@ createTrainingRequest: async function(req, res) {
             }
         }
 
+        // FIXED: Determine initial training status using proper enum values
+        let initialTrainingStatus;
+        if (training.isOnlineArrangement && (scheduleType === 'asynchronous' || scheduleType === 'custom')) {
+            initialTrainingStatus = 'In Progress';
+        } else {
+            initialTrainingStatus = 'For Approval'; // Changed from 'Not Started' to require approval
+        }
+
         // Create training record with schedule type information
         const trainingRecordData = {
             userId: userId,
             trainingId: parseInt(trainingId),
             setStartDate: startDate,
             setEndDate: endDate,
-            trainingStatus: training.isOnlineArrangement && scheduleType === 'asynchronous' ? 'In Progress' : 'Not Started',
-            isApproved: null,
+            trainingStatus: initialTrainingStatus, // Use proper enum value
+            isApproved: null, // Will be set by manager
             dateRequested: new Date().toISOString().split('T')[0],
             decisionRemarks: scheduleType ? `Schedule Type: ${scheduleType}` : null
         };
@@ -4772,13 +4778,13 @@ createTrainingRequest: async function(req, res) {
         } else if (activities && activities.length > 0) {
             console.log(`Found ${activities.length} activities for training:`, activities);
             
-            // Create activity records with enhanced status for async trainings
+            // Create activity records
             for (const activity of activities) {
                 try {
                     const activityRecordData = {
                         trainingRecordId: trainingRecordId,
                         activityId: activity.activityId,
-                        status: training.isOnlineArrangement && scheduleType === 'asynchronous' ? 'Available' : 'Not Started',
+                        status: 'Not Started', // All activities start as 'Not Started'
                         timestampzStarted: null,
                         timestampzCompleted: null
                     };
@@ -4899,6 +4905,9 @@ createTrainingRequest: async function(req, res) {
         });
     }
 },
+
+
+// UPDATED: Enhanced getTrainingProgress with proper enum handling
 getTrainingProgress: async function(req, res) {
     const userId = req.session?.user?.userId;
     if (!userId) {
@@ -5006,23 +5015,23 @@ getTrainingProgress: async function(req, res) {
                     progressPercentage = Math.round((completedActivities / totalActivities) * 100);
                 }
 
-                // Enhanced status determination with approval states
+                // FIXED: Enhanced status determination with proper enum values
                 let status = 'Not Started';
                 const today = new Date();
                 const endDate = record.setEndDate ? new Date(record.setEndDate) : null;
 
                 // Check approval status first
-                if (record.isApproved === null) {
+                if (record.isApproved === null && record.trainingStatus === 'For Approval') {
                     status = 'Awaiting Approval';
                 } else if (record.isApproved === false) {
                     status = 'Rejected';
-                } else if (record.isApproved === true) {
-                    // Only check progress for approved trainings
+                } else if (record.isApproved === true || record.trainingStatus !== 'For Approval') {
+                    // Only check progress for approved trainings or those not requiring approval
                     if (completedActivities === totalActivities && totalActivities > 0) {
                         status = 'Completed';
                     } else if (endDate && today > endDate && progressPercentage < 100) {
                         status = 'Overdue';
-                    } else if (inProgressActivities > 0 || completedActivities > 0) {
+                    } else if (inProgressActivities > 0 || completedActivities > 0 || record.trainingStatus === 'In Progress') {
                         status = 'In Progress';
                     } else {
                         status = 'Not Started';
@@ -6464,6 +6473,7 @@ updateTrainingActivities: async function(req, res) {
     }
 },
 
+// FIXED: Update training progress with proper enum values
 updateTrainingProgress: async function(trainingRecordId) {
     try {
         console.log(`🔄 [Training Progress] Updating progress for training record: ${trainingRecordId}`);
@@ -6480,7 +6490,7 @@ updateTrainingProgress: async function(trainingRecordId) {
             return;
         }
 
-        let trainingStatus = 'Not Started';
+        let trainingStatus = 'Not Started'; // Use proper enum value
 
         // If any certificate is uploaded, mark as Completed
         if (certificates && certificates.length > 0) {

@@ -2575,6 +2575,232 @@
 .progress-status-indicator.awaiting-approval { background: #fef3c7; color: #d97706; }
 .progress-status-indicator.rejected { background: #fef2f2; color: #dc2626; }
 
+/* Training Activities Section Styles */
+.activities-container {
+    margin-top: 10px;
+}
+
+.activities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.activity-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+    border-color: #07ACB9;
+    background: #f0fdff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(7, 172, 185, 0.1);
+}
+
+.activity-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.activity-number {
+    background: linear-gradient(135deg, #07ACB9 0%, #059ca4 100%);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(7, 172, 185, 0.2);
+}
+
+.activity-info {
+    flex: 1;
+}
+
+.activity-name {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.3;
+}
+
+.activity-meta {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.activity-duration,
+.activity-type {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #64748b;
+    background: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.activity-duration i {
+    color: #07ACB9;
+}
+
+.activity-type i {
+    color: #3b82f6;
+}
+
+.activity-remarks {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border-left: 3px solid #07ACB9;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+.activity-remarks i {
+    color: #07ACB9;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.activities-summary {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 2px solid #10b981;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 20px;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #065f46;
+}
+
+.summary-item i {
+    color: #10b981;
+    font-size: 16px;
+}
+
+.summary-item strong {
+    font-weight: 600;
+}
+
+/* Responsive design for activities */
+@media (max-width: 768px) {
+    .activity-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .activity-number {
+        align-self: flex-start;
+    }
+    
+    .activity-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .activities-summary {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+}
+
+/* Animation for when activities load */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.activity-item {
+    animation: slideInUp 0.3s ease-out;
+}
+
+.activity-item:nth-child(2) { animation-delay: 0.1s; }
+.activity-item:nth-child(3) { animation-delay: 0.2s; }
+.activity-item:nth-child(4) { animation-delay: 0.3s; }
+.activity-item:nth-child(5) { animation-delay: 0.4s; }
+/* Custom Schedule Notice */
+.custom-schedule-notice {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid #0ea5e9;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 15px;
+}
+
+.custom-schedule-notice .custom-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: #0c4a6e;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.custom-schedule-notice .custom-note i {
+    color: #0ea5e9;
+    font-size: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.custom-schedule-notice .custom-note strong {
+    color: #0c4a6e;
+    font-weight: 600;
+}
+
+/* Enhanced date field styling for custom schedule */
+.date-field.custom-enabled input {
+    border-color: #0ea5e9;
+    background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+}
+
+.date-field.custom-enabled input:focus {
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* Custom schedule date helper */
+.date-helper.custom {
+    color: #0ea5e9;
+    font-weight: 500;
+}
 
     </style>
 </head>
@@ -2786,34 +3012,48 @@
                 </div>
             </div>
 
-            <!-- Focus Areas -->
-            <div class="form-section" id="focusAreasSection" style="display: none;">
-                <div class="section-header">
-                    <h3><i class="fas fa-target"></i> Training Focus Areas</h3>
-                </div>
-                
-                <div class="focus-areas-grid">
-                    <div class="focus-area-column">
-                        <div class="focus-area-header">
-                            <i class="fas fa-bullseye"></i>
-                            <span>Objectives</span>
-                        </div>
-                        <div class="tags-container" id="objectivesContainer">
-                            <div class="empty-state">No objectives defined</div>
-                        </div>
-                    </div>
-                    
-                    <div class="focus-area-column">
-                        <div class="focus-area-header">
-                            <i class="fas fa-cogs"></i>
-                            <span>Skills</span>
-                        </div>
-                        <div class="tags-container" id="skillsContainer">
-                            <div class="empty-state">No skills defined</div>
-                        </div>
-                    </div>
-                </div>
+           <!-- Focus Areas Section - UPDATED to include Activities -->
+<div class="form-section" id="focusAreasSection" style="display: none;">
+    <div class="section-header">
+        <h3><i class="fas fa-target"></i> Training Focus Areas</h3>
+    </div>
+    
+    <div class="focus-areas-grid">
+        <div class="focus-area-column">
+            <div class="focus-area-header">
+                <i class="fas fa-bullseye"></i>
+                <span>Objectives</span>
             </div>
+            <div class="tags-container" id="objectivesContainer">
+                <div class="empty-state">No objectives defined</div>
+            </div>
+        </div>
+        
+        <div class="focus-area-column">
+            <div class="focus-area-header">
+                <i class="fas fa-cogs"></i>
+                <span>Skills</span>
+            </div>
+            <div class="tags-container" id="skillsContainer">
+                <div class="empty-state">No skills defined</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- NEW: Training Activities Section -->
+<div class="form-section" id="activitiesSection" style="display: none;">
+    <div class="section-header">
+        <h3><i class="fas fa-tasks"></i> Training Activities</h3>
+        <div class="duration-info" id="activitiesDurationInfo">
+            Activities Overview
+        </div>
+    </div>
+    
+    <div class="activities-container" id="activitiesContainer">
+        <div class="empty-state">No activities defined</div>
+    </div>
+</div>
 
             <!-- Schedule Selection -->
             <div class="form-section" id="scheduleSection" style="display: none;">
@@ -2883,37 +3123,36 @@
                     </div>
                 </div>
 
-                <!-- Date Selection -->
-                <div class="date-selection">
-                    <div class="date-input-group">
-                        <div class="date-field">
-                            <label class="form-label">Start Date</label>
-                            <input type="date" class="form-input date-input" id="startDate" required>
-                        </div>
-                        <div class="date-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        <div class="date-field">
-                            <label class="form-label">End Date</label>
-                            <input type="date" class="form-input date-input" id="endDate" required readonly>
-                            <div class="date-helper" id="endDateHelper">
-                                End date will be calculated automatically
-                            </div>
-                        </div>
-                    </div>
+              <!-- Date Selection - FIXED for Custom Schedule -->
+<div class="date-selection">
+    <div class="date-input-group">
+        <div class="date-field">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-input date-input" id="startDate" required>
+        </div>
+        <div class="date-arrow">
+            <i class="fas fa-arrow-right"></i>
+        </div>
+        <div class="date-field">
+            <label class="form-label">End Date</label>
+            <input type="date" class="form-input date-input" id="endDate" required>
+            <div class="date-helper" id="endDateHelper">
+                End date will be calculated automatically
+            </div>
+        </div>
+    </div>
 
-                    <!-- Custom Schedule Options -->
-                    <div class="custom-schedule" id="customScheduleOptions" style="display: none;">
-                        <div class="custom-input-group">
-                            <label class="form-label">Hours per day</label>
-                            <input type="number" class="form-input" id="customHoursPerDay" min="1" max="12" step="0.5" placeholder="2.0">
-                        </div>
-                        <div class="custom-note">
-                            <i class="fas fa-info-circle"></i>
-                            End date will be calculated based on your custom hours per day
-                        </div>
-                    </div>
-                </div>
+    <!-- Custom Schedule Notice -->
+    <div class="custom-schedule-notice" id="customScheduleNotice" style="display: none;">
+        <div class="custom-note">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <strong>Custom Schedule:</strong> You can set your own training pace and timeline. 
+                Choose your preferred start and end dates based on your availability.
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- Schedule Summary -->
                 <div class="schedule-summary" id="scheduleSummary" style="display: none;">
@@ -3151,25 +3390,17 @@
         }
 
 
-// Initialize modal when DOM is loaded
-// 1. First, make sure the button click handler is properly set up
 document.addEventListener('DOMContentLoaded', function() {
-    // Find the "Request New Training" button and add click handler
-    const requestButton = document.querySelector('.btn.btn-primary');
-    if (requestButton) {
-        requestButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Request New Training button clicked'); // Debug log
-            openTrainingRequestModal();
-        });
-    }
+    setupTrainingRequestModal();
+});
 
-    // Alternative: Add click handler to all buttons with this text
-    document.querySelectorAll('button').forEach(button => {
+function setupTrainingRequestModal() {
+    // Find and setup the request button
+    const requestButtons = document.querySelectorAll('button');
+    requestButtons.forEach(button => {
         if (button.textContent.includes('Request New Training')) {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('Request New Training button clicked'); // Debug log
                 openTrainingRequestModal();
             });
         }
@@ -3177,11 +3408,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize modal functionality
     initializeTrainingModal();
-});
-
-// 2. Fixed openTrainingRequestModal function
+}
 function openTrainingRequestModal() {
-    console.log('Opening training request modal...'); // Debug log
+    console.log('Opening training request modal...');
     
     const modal = document.getElementById('trainingRequestModal');
     if (!modal) {
@@ -3191,7 +3420,7 @@ function openTrainingRequestModal() {
     
     // Show the modal
     modal.classList.add('show');
-    modal.style.display = 'flex'; // Ensure it's displayed
+    modal.style.display = 'flex';
     
     // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
@@ -3205,27 +3434,97 @@ function openTrainingRequestModal() {
         loadTrainings();
     }
     
-    // Focus on the training input for better UX
+    // Focus on the training input
     const trainingInput = document.getElementById('trainingCourseInput');
     if (trainingInput) {
         setTimeout(() => trainingInput.focus(), 100);
     }
 }
 
-// 3. Enhanced closeTrainingRequestModal function
 function closeTrainingRequestModal() {
-    console.log('Closing training request modal...'); // Debug log
-    
     const modal = document.getElementById('trainingRequestModal');
     if (modal) {
         modal.classList.remove('show');
-        // Add a small delay before hiding to allow animation
         setTimeout(() => {
             modal.style.display = 'none';
+            resetModal();
         }, 300);
     }
-    resetModal();
 }
+
+
+function resetModal() {
+    // Reset form
+    document.getElementById('trainingRequestForm').reset();
+    document.getElementById('selectedTrainingId').value = '';
+    
+    // Reset global variables
+    selectedTraining = null;
+    selectedScheduleType = null;
+    
+    // Hide sections
+    document.getElementById('trainingDetailsCard').style.display = 'none';
+    document.getElementById('focusAreasSection').style.display = 'none';
+    document.getElementById('activitiesSection').style.display = 'none'; // Add this line
+    document.getElementById('scheduleSection').style.display = 'none';
+    document.getElementById('scheduleSummary').style.display = 'none';
+    document.getElementById('customScheduleOptions').style.display = 'none';
+    
+    // Clear containers
+    document.getElementById('objectivesContainer').innerHTML = '<div class="empty-state">No objectives defined</div>';
+    document.getElementById('skillsContainer').innerHTML = '<div class="empty-state">No skills defined</div>';
+    document.getElementById('activitiesContainer').innerHTML = '<div class="empty-state">No activities defined</div>'; // Add this line
+    
+    // Close dropdown
+    document.getElementById('trainingDropdown').classList.remove('open');
+    
+    // Reset schedule options
+    document.querySelectorAll('input[name="scheduleType"]').forEach(radio => {
+        radio.checked = false;
+    });
+    
+    // Reset end date to readonly
+    document.getElementById('endDate').readOnly = true;
+    
+    // Disable submit button
+    document.getElementById('submitButton').disabled = true;
+}
+
+
+async function testTrainingDetailsAPI(trainingId) {
+    console.log(`Testing API for training ID: ${trainingId}`);
+    
+    try {
+        const response = await fetch(`/employee/trainings/${trainingId}/details`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        const text = await response.text();
+        console.log('Raw response:', text);
+        
+        try {
+            const json = JSON.parse(text);
+            console.log('Parsed JSON:', json);
+            return json;
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            console.log('Response was not valid JSON');
+            return null;
+        }
+        
+    } catch (error) {
+        console.error('Fetch error:', error);
+        return null;
+    }
+}
+
+// Add to global scope for debugging
+window.testTrainingDetailsAPI = testTrainingDetailsAPI;
 
 // 4. Make sure the modal HTML structure is correct
 function checkModalStructure() {
@@ -3389,18 +3688,29 @@ window.testModal = function() {
 document.addEventListener('click', function(e) {
     const target = e.target;
     
+    // Add null checks to prevent errors
+    if (!target) return;
+    
     // Check if clicked element is the request training button
-    if (target.textContent.includes('Request New Training') || 
+    const targetText = target.textContent || '';
+    const isButton = target.matches && (
+        target.matches('.btn-primary') || 
+        target.matches('.add-request-btn') ||
+        targetText.includes('Request New Training')
+    );
+    
+    const hasButtonParent = target.closest && (
         target.closest('.btn-primary') || 
-        target.closest('.add-request-btn')) {
-        
+        target.closest('.add-request-btn')
+    );
+    
+    if (isButton || hasButtonParent) {
         e.preventDefault();
         e.stopPropagation();
         console.log('Button clicked via event delegation');
         openTrainingRequestModal();
     }
 });
-
 // Initialize the application
         document.addEventListener('DOMContentLoaded', async () => {
             initializeTabs();
@@ -3458,6 +3768,7 @@ function initializeTrainingModal() {
     setupDateHandlers();
     setupFormValidation();
 }
+
 
 // Calendar rendering functions
         function renderCalendar() {
@@ -3577,14 +3888,25 @@ function getStatusClass(status) {
         }
 
 
+
 // Training dropdown functionality
 function setupTrainingDropdown() {
     const dropdown = document.getElementById('trainingDropdown');
     const input = document.getElementById('trainingCourseInput');
     const dropdownList = document.getElementById('trainingDropdownList');
+    const hiddenInput = document.getElementById('selectedTrainingId');
 
     input.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        // Clear selection if user modifies the input
+        if (selectedTraining && this.value !== selectedTraining.trainingName) {
+            selectedTraining = null;
+            hiddenInput.value = '';
+            hideTrainingDetails();
+            validateForm();
+        }
+        
         filterTrainings(searchTerm);
         dropdown.classList.add('open');
     });
@@ -3593,6 +3915,8 @@ function setupTrainingDropdown() {
         dropdown.classList.add('open');
         if (filteredTrainings.length === 0) {
             loadTrainings();
+        } else {
+            renderTrainingOptions(filteredTrainings);
         }
     });
 
@@ -3604,32 +3928,159 @@ function setupTrainingDropdown() {
     });
 }
 
-// Schedule type handlers
+
+function hideTrainingDetails() {
+    document.getElementById('trainingDetailsCard').style.display = 'none';
+    document.getElementById('focusAreasSection').style.display = 'none';
+    document.getElementById('activitiesSection').style.display = 'none'; // Add this line
+    document.getElementById('scheduleSection').style.display = 'none';
+    document.getElementById('scheduleSummary').style.display = 'none';
+}
+
+
+// 4. Helper function for keyboard navigation
+function updateActiveItem(items, activeIndex) {
+    items.forEach((item, index) => {
+        item.classList.toggle('active', index === activeIndex);
+    });
+}
+
+// Schedule handlers
 function setupScheduleHandlers() {
-    // Start date change handler
-    document.getElementById('startDate').addEventListener('change', function() {
-        if (selectedScheduleType && selectedTraining) {
-            calculateEndDate();
-        }
-        validateForm();
-    });
-
-    // Custom hours per day handler
-    document.getElementById('customHoursPerDay').addEventListener('input', function() {
-        if (selectedScheduleType === 'custom' && selectedTraining) {
-            calculateEndDate();
-        }
-        validateForm();
-    });
+    // Make selectScheduleType globally available
+    window.selectScheduleType = selectScheduleType;
 }
 
+// Enhanced date input handler for custom schedules
 function setupDateHandlers() {
-    // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('startDate').min = today;
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    
+    startDateInput.min = today;
+    
+    startDateInput.addEventListener('change', function() {
+        const startValue = this.value;
+        
+        if (selectedScheduleType && selectedTraining) {
+            if (selectedScheduleType === 'custom') {
+                // For custom, just set minimum end date and validate
+                endDateInput.min = startValue;
+                console.log('Custom schedule: Start date changed, setting end date minimum');
+            } else {
+                // For structured schedules, calculate end date
+                endDateInput.value = '';
+                calculateEndDate();
+            }
+        }
+        validateForm();
+    });
+    
+    // Enhanced end date handler for custom schedules
+    endDateInput.addEventListener('change', function() {
+        console.log('End date changed:', this.value);
+        
+        if (selectedScheduleType === 'custom') {
+            // Validate that end date is after start date
+            const startValue = startDateInput.value;
+            const endValue = this.value;
+            
+            if (startValue && endValue) {
+                const startDate = new Date(startValue);
+                const endDate = new Date(endValue);
+                
+                if (endDate <= startDate) {
+                    alert('End date must be after start date');
+                    this.value = '';
+                    return;
+                }
+            }
+            
+            updateScheduleSummary();
+        }
+        validateForm();
+    });
+}
+// Debug function for custom schedule testing
+function debugCustomSchedule() {
+    console.log('=== CUSTOM SCHEDULE DEBUG ===');
+    console.log('selectedScheduleType:', selectedScheduleType);
+    console.log('selectedTraining:', selectedTraining);
+    console.log('startDate:', document.getElementById('startDate').value);
+    console.log('endDate:', document.getElementById('endDate').value);
+    console.log('endDate readOnly:', document.getElementById('endDate').readOnly);
+    console.log('validation result:', validateForm());
 }
 
+// Add to global scope
+window.debugCustomSchedule = debugCustomSchedule;
+
+
+// FIXED: Custom schedule validation
+function validateForm() {
+    const trainingSelected = document.getElementById('selectedTrainingId').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const scheduleSelected = selectedScheduleType;
+    
+    console.log('Validation check:', {
+        trainingSelected: !!trainingSelected,
+        startDate: !!startDate,
+        endDate: !!endDate,
+        scheduleSelected: scheduleSelected,
+        selectedTraining: !!selectedTraining
+    });
+    
+    // Basic validation - must have training, start date, and schedule type
+    let isValid = trainingSelected && startDate && scheduleSelected && selectedTraining;
+    
+    if (!isValid) {
+        console.log('Basic validation failed');
+        setSubmitButtonState(false);
+        return false;
+    }
+    
+    // Date validation - start date should not be in the past
+    if (startDate) {
+        const today = new Date().toISOString().split('T')[0];
+        if (startDate < today) {
+            console.log('Start date is in the past');
+            isValid = false;
+        }
+    }
+    
+    // FIXED: End date validation for custom schedule
+    if (scheduleSelected === 'custom') {
+        // For custom schedule, user must set both start and end dates manually
+        const hasValidEndDate = endDate && new Date(endDate) > new Date(startDate);
+        
+        if (!hasValidEndDate) {
+            console.log('Custom schedule validation failed - no valid end date');
+            isValid = false;
+        }
+        
+        console.log('Custom schedule validation:', { 
+            hasValidEndDate, 
+            endDate,
+            startDateValue: startDate,
+            isValid 
+        });
+    } else {
+        // For non-custom schedules, end date should be automatically calculated
+        if (!endDate || new Date(endDate) <= new Date(startDate)) {
+            console.log('Non-custom schedule validation failed - invalid end date');
+            isValid = false;
+        }
+    }
+    
+    console.log('Final validation result:', isValid);
+    setSubmitButtonState(isValid);
+    return isValid;
+}
+
+// FIXED: Custom schedule type selection
 function selectScheduleType(type) {
+    console.log('Selected schedule type:', type);
     selectedScheduleType = type;
     
     // Update radio button
@@ -3640,27 +4091,53 @@ function selectScheduleType(type) {
     // Show/hide custom schedule options
     const customOptions = document.getElementById('customScheduleOptions');
     const endDateInput = document.getElementById('endDate');
+    const endDateHelper = document.getElementById('endDateHelper');
     
     if (type === 'custom') {
-        customOptions.style.display = 'block';
-        endDateInput.readOnly = false;
-        document.getElementById('endDateHelper').textContent = 'You can manually set the end date or specify hours per day';
+        // For custom schedule, allow manual date entry
+        customOptions.style.display = 'none'; // Keep hidden as we're using manual dates
+        endDateInput.readOnly = false; // Allow manual entry
+        endDateHelper.textContent = 'Manually set your preferred end date';
+        
+        // Clear end date for manual entry
+        endDateInput.value = '';
+        
+        console.log('Custom schedule enabled - manual date entry allowed');
     } else {
         customOptions.style.display = 'none';
         endDateInput.readOnly = true;
-        document.getElementById('endDateHelper').textContent = 'End date will be calculated automatically';
+        endDateHelper.textContent = 'End date will be calculated automatically';
         
-        if (selectedTraining) {
-            calculateEndDate();
-        }
+        // Clear end date for recalculation
+        endDateInput.value = '';
     }
     
-    updateScheduleSummary();
-    validateForm();
+    // Calculate end date if start date is set (only for non-custom schedules)
+    const startDateValue = document.getElementById('startDate').value;
+    if (selectedTraining && startDateValue && type !== 'custom') {
+        setTimeout(() => {
+            calculateEndDate();
+            updateScheduleSummary();
+            validateForm();
+        }, 100);
+    } else if (type === 'custom') {
+        // For custom schedule, just update summary and validate
+        setTimeout(() => {
+            updateScheduleSummary();
+            validateForm();
+        }, 100);
+    }
 }
+
 
 function calculateEndDate() {
     if (!selectedTraining || !selectedScheduleType) return;
+    
+    // Skip calculation for custom schedule - user sets dates manually
+    if (selectedScheduleType === 'custom') {
+        console.log('Custom schedule selected - user will set dates manually');
+        return;
+    }
     
     const startDateValue = document.getElementById('startDate').value;
     if (!startDateValue) return;
@@ -3669,7 +4146,6 @@ function calculateEndDate() {
     const totalHours = selectedTraining.totalDuration;
     let hoursPerDay;
     
-    // Determine hours per day based on schedule type
     switch (selectedScheduleType) {
         case 'intensive':
             hoursPerDay = 8;
@@ -3680,14 +4156,11 @@ function calculateEndDate() {
         case 'flexible':
             hoursPerDay = 2;
             break;
-        case 'custom':
-            hoursPerDay = parseFloat(document.getElementById('customHoursPerDay').value) || 2;
-            break;
         default:
             return;
     }
     
-    // Calculate working days needed (excluding weekends)
+    // Calculate working days needed
     const totalDays = Math.ceil(totalHours / hoursPerDay);
     let currentDate = new Date(startDate);
     let workingDaysAdded = 0;
@@ -3695,19 +4168,22 @@ function calculateEndDate() {
     // Add working days (skip weekends)
     while (workingDaysAdded < totalDays - 1) {
         currentDate.setDate(currentDate.getDate() + 1);
-        // Skip weekends (0 = Sunday, 6 = Saturday)
         if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
             workingDaysAdded++;
         }
     }
     
-    // Set the calculated end date
     const endDateFormatted = currentDate.toISOString().split('T')[0];
     document.getElementById('endDate').value = endDateFormatted;
     
-    updateScheduleSummary();
+    setTimeout(() => {
+        updateScheduleSummary();
+        validateForm();
+    }, 50);
 }
 
+
+// FIXED: Enhanced updateScheduleSummary for custom schedules
 function updateScheduleSummary() {
     if (!selectedTraining || !selectedScheduleType) {
         document.getElementById('scheduleSummary').style.display = 'none';
@@ -3739,14 +4215,14 @@ function updateScheduleSummary() {
             scheduleTypeName = 'Flexible (2 hours/day)';
             break;
         case 'custom':
-            hoursPerDay = parseFloat(document.getElementById('customHoursPerDay').value) || 2;
-            scheduleTypeName = `Custom (${hoursPerDay} hours/day)`;
+            hoursPerDay = 'Custom pace';
+            scheduleTypeName = 'Custom Schedule (Self-paced)';
             break;
         default:
             return;
     }
     
-    // Calculate total days
+    // Calculate total days for any schedule type
     let totalDays = 0;
     if (startDate && endDate) {
         const start = new Date(startDate);
@@ -3754,8 +4230,9 @@ function updateScheduleSummary() {
         let current = new Date(start);
         
         while (current <= end) {
-            // Count only working days
-            if (current.getDay() !== 0 && current.getDay() !== 6) {
+            // Count all days for custom, working days for others
+            if (selectedScheduleType === 'custom' || 
+                (current.getDay() !== 0 && current.getDay() !== 6)) {
                 totalDays++;
             }
             current.setDate(current.getDate() + 1);
@@ -3765,14 +4242,20 @@ function updateScheduleSummary() {
     // Update summary content
     document.getElementById('summaryDuration').textContent = `${selectedTraining.totalDuration} hours`;
     document.getElementById('summaryScheduleType').textContent = scheduleTypeName;
-    document.getElementById('summaryHoursPerDay').textContent = `${hoursPerDay} hours`;
+    document.getElementById('summaryHoursPerDay').textContent = typeof hoursPerDay === 'number' ? `${hoursPerDay} hours` : hoursPerDay;
     document.getElementById('summaryDateRange').textContent = endDate ? 
         `${formatDate(startDate)} - ${formatDate(endDate)}` : 
         formatDate(startDate);
-    document.getElementById('summaryTotalDays').textContent = `${totalDays} working days`;
+    
+    // Different day calculation for custom vs structured schedules
+    const dayType = selectedScheduleType === 'custom' ? 'days' : 'working days';
+    document.getElementById('summaryTotalDays').textContent = totalDays > 0 ? 
+        `${totalDays} ${dayType}` : 
+        'Set end date to calculate';
     
     document.getElementById('scheduleSummary').style.display = 'block';
 }
+
 
 function formatDate(dateString) {
     const date = new Date(dateString);
@@ -3782,18 +4265,13 @@ function formatDate(dateString) {
         day: 'numeric' 
     });
 }
-
-// Training selection and display
 function loadTrainings() {
     const dropdownList = document.getElementById('trainingDropdownList');
     dropdownList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading available trainings...</div>';
 
-    // Fetch trainings from your API
     fetch('/employee/trainings/dropdown', {
         method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
     })
     .then(response => {
@@ -3819,43 +4297,44 @@ function loadTrainings() {
         renderNoTrainings('Failed to load trainings. Please try again.');
     });
 }
-
 function renderNoTrainings(message) {
     const dropdownList = document.getElementById('trainingDropdownList');
     dropdownList.innerHTML = `<div class="no-results"><i class="fas fa-info-circle"></i> ${message}</div>`;
 }
 
 function filterTrainings(searchTerm) {
-    if (!searchTerm) {
-        renderTrainingOptions();
-    } else {
-        const filtered = filteredTrainings.filter(training => 
-            training.trainingName.toLowerCase().includes(searchTerm) ||
-            training.trainingDesc.toLowerCase().includes(searchTerm)
-        );
-        
-        const originalList = filteredTrainings;
-        filteredTrainings = filtered;
-        renderTrainingOptions();
-        filteredTrainings = originalList;
+    if (!searchTerm.trim()) {
+        renderTrainingOptions(filteredTrainings);
+        return;
     }
+    
+    const filtered = filteredTrainings.filter(training => 
+        training.trainingName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        training.trainingDesc.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    renderTrainingOptions(filtered);
 }
 
-function renderTrainingOptions() {
+
+
+function renderTrainingOptions(trainingsToShow = filteredTrainings) {
     const dropdownList = document.getElementById('trainingDropdownList');
     
-    if (filteredTrainings.length === 0) {
+    if (!trainingsToShow || trainingsToShow.length === 0) {
         dropdownList.innerHTML = '<div class="no-results"><i class="fas fa-search"></i> No trainings found</div>';
         return;
     }
 
-    const optionsHTML = filteredTrainings.map(training => `
-        <div class="dropdown-item" onclick="selectTraining(${training.trainingId})">
+    const optionsHTML = trainingsToShow.map(training => `
+        <div class="dropdown-item" 
+             onclick="selectTraining(${training.trainingId})" 
+             data-training-id="${training.trainingId}">
             <div class="dropdown-item-title">${training.trainingName}</div>
             <div class="dropdown-item-meta">
                 <span><i class="fas fa-${training.isOnlineArrangement ? 'laptop' : 'map-marker-alt'}"></i> ${training.isOnlineArrangement ? 'Online' : 'Onsite'}</span>
                 <span><i class="fas fa-clock"></i> ${training.totalDuration}h</span>
-                <span><i class="peso-symbol"></i> ${training.cost ? training.cost.toFixed(2) : '0.00'}</span>
+                <span><span class="peso-symbol">₱</span> ${training.cost ? training.cost.toFixed(2) : '0.00'}</span>
             </div>
         </div>
     `).join('');
@@ -3863,14 +4342,25 @@ function renderTrainingOptions() {
     dropdownList.innerHTML = optionsHTML;
 }
 
+
+// UPDATED: Enhanced selectTraining function
 async function selectTraining(trainingId) {
+    console.log('Selecting training ID:', trainingId);
+    
     selectedTraining = filteredTrainings.find(t => t.trainingId === trainingId);
     
-    if (!selectedTraining) return;
+    if (!selectedTraining) {
+        console.error('Training not found:', trainingId);
+        alert('Error: Selected training not found. Please try again.');
+        return;
+    }
 
-    // Update input field
-    document.getElementById('trainingCourseInput').value = selectedTraining.trainingName;
-    document.getElementById('selectedTrainingId').value = selectedTraining.trainingId;
+    // Update input field and hidden field
+    const input = document.getElementById('trainingCourseInput');
+    const hiddenInput = document.getElementById('selectedTrainingId');
+    
+    input.value = selectedTraining.trainingName;
+    hiddenInput.value = selectedTraining.trainingId;
     
     // Close dropdown
     document.getElementById('trainingDropdown').classList.remove('open');
@@ -3878,95 +4368,179 @@ async function selectTraining(trainingId) {
     // Show training details
     displayTrainingDetails(selectedTraining);
     
-    // Load skills and objectives from API
-    await loadTrainingSkillsAndObjectives(selectedTraining.trainingId);
-    
-    // Show schedule section
-    document.getElementById('scheduleSection').style.display = 'block';
-    
-    // Update schedule previews
-    updateSchedulePreviews();
-    
-    // Recalculate end date if schedule is already selected
-    if (selectedScheduleType) {
-        calculateEndDate();
+    try {
+        // Load skills, objectives, and activities
+        await loadTrainingSkillsAndObjectives(selectedTraining.trainingId);
+        
+        // Show schedule section
+        document.getElementById('scheduleSection').style.display = 'block';
+        
+        // Update schedule previews
+        updateSchedulePreviews();
+        
+        // Validate form
+        validateForm();
+        
+    } catch (error) {
+        console.error('Error loading training details:', error);
+        // Still show schedule section even if details fail
+        document.getElementById('scheduleSection').style.display = 'block';
+        updateSchedulePreviews();
+        validateForm();
     }
-    
-    validateForm();
 }
 
 async function loadTrainingSkillsAndObjectives(trainingId) {
     const objectivesContainer = document.getElementById('objectivesContainer');
     const skillsContainer = document.getElementById('skillsContainer');
+    const activitiesContainer = document.getElementById('activitiesContainer'); // New container
     
     // Show loading state
-    objectivesContainer.innerHTML = '<div style="color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i>Loading objectives...</div>';
-    skillsContainer.innerHTML = '<div style="color: #64748b; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i>Loading skills...</div>';
+    objectivesContainer.innerHTML = '<div style="color: #64748b; font-style: italic;"><i class="fas fa-spinner fa-spin"></i> Loading objectives...</div>';
+    skillsContainer.innerHTML = '<div style="color: #64748b; font-style: italic;"><i class="fas fa-spinner fa-spin"></i> Loading skills...</div>';
+    activitiesContainer.innerHTML = '<div style="color: #64748b; font-style: italic;"><i class="fas fa-spinner fa-spin"></i> Loading activities...</div>';
     
     document.getElementById('focusAreasSection').style.display = 'block';
 
     try {
+        console.log(`Fetching details for training ID: ${trainingId}`);
+        
         const response = await fetch(`/employee/trainings/${trainingId}/details`, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        console.log('Response status:', response.status);
 
-        const result = await response.json();
-        
-        if (result.success) {
-            // Update selectedTraining with fetched data
-            selectedTraining.objectives = result.data.objectives || [];
-            selectedTraining.skills = result.data.skills || [];
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Training details result:', result);
             
-            // Display the data
-            displayFocusAreas(selectedTraining);
+            if (result.success && result.data) {
+                selectedTraining.objectives = result.data.objectives || [];
+                selectedTraining.skills = result.data.skills || [];
+                selectedTraining.activities = result.data.activities || [];
+                
+                console.log('Objectives:', selectedTraining.objectives);
+                console.log('Skills:', selectedTraining.skills);
+                console.log('Activities:', selectedTraining.activities);
+                
+                displayFocusAreas(selectedTraining);
+                displayTrainingActivities(selectedTraining.activities); // New function
+            } else {
+                throw new Error(result.message || 'No data received');
+            }
         } else {
-            throw new Error(result.message || 'Failed to fetch training details');
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
     } catch (error) {
         console.error('Failed to load training details:', error);
-        objectivesContainer.innerHTML = '<div style="color: #ef4444; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-triangle"></i>Failed to load objectives</div>';
-        skillsContainer.innerHTML = '<div style="color: #ef4444; font-style: italic; display: flex; align-items: center; gap: 8px;"><i class="fas fa-exclamation-triangle"></i>Failed to load skills</div>';
+        objectivesContainer.innerHTML = '<div class="empty-state">Failed to load objectives</div>';
+        skillsContainer.innerHTML = '<div class="empty-state">Failed to load skills</div>';
+        activitiesContainer.innerHTML = '<div class="empty-state">Failed to load activities</div>';
         
-        // Still show the section with empty data
         selectedTraining.objectives = [];
         selectedTraining.skills = [];
+        selectedTraining.activities = [];
     }
+}
+
+
+
+// NEW: Function to display training activities
+function displayTrainingActivities(activities) {
+    const activitiesContainer = document.getElementById('activitiesContainer');
+    
+    if (!activities || activities.length === 0) {
+        activitiesContainer.innerHTML = '<div class="empty-state">No activities defined for this training</div>';
+        return;
+    }
+    
+    let activitiesHTML = '';
+    let totalDuration = 0;
+    
+    activities.forEach((activity, index) => {
+        const duration = activity.estActivityDuration || 0;
+        totalDuration += duration;
+        
+        activitiesHTML += `
+            <div class="activity-item">
+                <div class="activity-header">
+                    <div class="activity-number">${index + 1}</div>
+                    <div class="activity-info">
+                        <div class="activity-name">${activity.activityName || 'Unnamed Activity'}</div>
+                        <div class="activity-meta">
+                            <span class="activity-duration">
+                                <i class="fas fa-clock"></i>
+                                ${duration} ${duration === 1 ? 'hour' : 'hours'}
+                            </span>
+                            <span class="activity-type">
+                                <i class="fas fa-tag"></i>
+                                ${activity.activityType || 'General'}
+                            </span>
+                        </div>
+                        ${activity.activityRemarks ? `
+                            <div class="activity-remarks">
+                                <i class="fas fa-info-circle"></i>
+                                ${activity.activityRemarks}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    // Add summary at the top
+    const summaryHTML = `
+        <div class="activities-summary">
+            <div class="summary-item">
+                <i class="fas fa-list"></i>
+                <span><strong>${activities.length}</strong> Activities</span>
+            </div>
+            <div class="summary-item">
+                <i class="fas fa-clock"></i>
+                <span><strong>${totalDuration}</strong> Total Hours</span>
+            </div>
+        </div>
+        <div class="activities-list">
+            ${activitiesHTML}
+        </div>
+    `;
+    
+    activitiesContainer.innerHTML = summaryHTML;
 }
 
 function displayTrainingDetails(training) {
     document.getElementById('selectedTrainingName').textContent = training.trainingName;
     document.getElementById('trainingDuration').innerHTML = `<i class="fas fa-clock"></i> ${training.totalDuration} hours`;
     document.getElementById('trainingType').innerHTML = `<i class="fas fa-${training.isOnlineArrangement ? 'laptop' : 'map-marker-alt'}"></i> ${training.isOnlineArrangement ? 'Online' : 'Onsite'}`;
-    document.getElementById('trainingCost').innerHTML = `<i class="peso-symbol"></i> ${training.cost ? training.cost.toFixed(2) : 'Free'}`;
+    document.getElementById('trainingCost').innerHTML = `<span class="peso-symbol">₱</span> ${training.cost ? training.cost.toFixed(2) : 'Free'}`;
     document.getElementById('totalHours').textContent = training.totalDuration;
     
     document.getElementById('trainingDetailsCard').style.display = 'block';
 }
 
+// UPDATED: Enhanced displayFocusAreas function with better error handling
 function displayFocusAreas(training) {
     const objectivesContainer = document.getElementById('objectivesContainer');
     const skillsContainer = document.getElementById('skillsContainer');
     
-    // Clear existing content
+    // Clear containers
     objectivesContainer.innerHTML = '';
     skillsContainer.innerHTML = '';
     
     // Add objectives
     if (training.objectives && training.objectives.length > 0) {
+        console.log('Displaying objectives:', training.objectives);
         training.objectives.forEach(objective => {
             const tag = document.createElement('div');
             tag.className = 'tag objective';
-            tag.innerHTML = `<i class="fas fa-bullseye"></i>${objective.objectiveDescrpt}`;
-            tag.title = objective.objectiveKPI ? `KPI: ${objective.objectiveKPI}` : '';
+            // Handle different possible field names from database
+            const objectiveText = objective.objectiveDescrpt || objective.description || objective.name || 'Unnamed Objective';
+            tag.innerHTML = `<i class="fas fa-bullseye"></i>${objectiveText}`;
             objectivesContainer.appendChild(tag);
         });
     } else {
@@ -3975,26 +4549,33 @@ function displayFocusAreas(training) {
     
     // Add skills
     if (training.skills && training.skills.length > 0) {
+        console.log('Displaying skills:', training.skills);
         training.skills.forEach(skill => {
             const tag = document.createElement('div');
             tag.className = 'tag skill';
-            tag.innerHTML = `<i class="fas fa-cogs"></i>${skill.jobReqSkillName}`;
-            tag.title = `Type: ${skill.jobReqSkillType}`;
+            // Handle different possible field names from database
+            const skillText = skill.jobReqSkillName || skill.skillName || skill.name || 'Unnamed Skill';
+            tag.innerHTML = `<i class="fas fa-cogs"></i>${skillText}`;
             skillsContainer.appendChild(tag);
         });
     } else {
         skillsContainer.innerHTML = '<div class="empty-state">No skills defined</div>';
     }
     
-    document.getElementById('focusAreasSection').style.display = 'block';
+    // Display activities (call the new function)
+    displayTrainingActivities(training.activities || []);
+    
+    // Show the activities section
+    document.getElementById('activitiesSection').style.display = 'block';
 }
+
+
 
 function updateSchedulePreviews() {
     if (!selectedTraining) return;
     
     const totalHours = selectedTraining.totalDuration;
     
-    // Calculate days for each schedule type
     const intensiveDays = Math.ceil(totalHours / 8);
     const regularDays = Math.ceil(totalHours / 4);
     const flexibleDays = Math.ceil(totalHours / 2);
@@ -4004,42 +4585,115 @@ function updateSchedulePreviews() {
     document.getElementById('flexiblePreview').textContent = `${flexibleDays} working days`;
 }
 
+
 function setupFormValidation() {
     const form = document.getElementById('trainingRequestForm');
     form.addEventListener('submit', handleFormSubmit);
+    
+    // Add event listeners for all form inputs
+    const formInputs = document.querySelectorAll('#trainingRequestForm input, #trainingRequestForm select');
+    formInputs.forEach(input => {
+        input.addEventListener('change', validateForm);
+        input.addEventListener('input', validateForm);
+    });
 }
 
+// FIXED VALIDATION FUNCTION
 function validateForm() {
     const trainingSelected = document.getElementById('selectedTrainingId').value;
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     const scheduleSelected = selectedScheduleType;
     
-    let isValid = trainingSelected && startDate && scheduleSelected;
+    console.log('Validation check:', {
+        trainingSelected: !!trainingSelected,
+        startDate: !!startDate,
+        endDate: !!endDate,
+        scheduleSelected: scheduleSelected,
+        selectedTraining: !!selectedTraining
+    });
     
-    // Additional validation for custom schedule
+    // Basic validation - must have training, start date, and schedule type
+    let isValid = trainingSelected && startDate && scheduleSelected && selectedTraining;
+    
+    if (!isValid) {
+        console.log('Basic validation failed');
+        setSubmitButtonState(false);
+        return false;
+    }
+    
+    // Date validation - start date should not be in the past
+    if (startDate) {
+        const today = new Date().toISOString().split('T')[0];
+        if (startDate < today) {
+            console.log('Start date is in the past');
+            isValid = false;
+        }
+    }
+    
+    // End date validation based on schedule type
     if (scheduleSelected === 'custom') {
-        const customHours = document.getElementById('customHoursPerDay').value;
-        isValid = isValid && customHours && parseFloat(customHours) > 0;
+        // For custom schedule, user must manually set both start and end dates
+        const hasValidEndDate = endDate && new Date(endDate) > new Date(startDate);
+        
+        if (!hasValidEndDate) {
+            console.log('Custom schedule validation failed - no valid end date');
+            isValid = false;
+        }
+        
+        console.log('Custom schedule validation:', { 
+            hasValidEndDate, 
+            endDate,
+            isValid 
+        });
+    } else {
+        // For non-custom schedules, end date should be automatically calculated
+        if (!endDate || new Date(endDate) <= new Date(startDate)) {
+            console.log('Non-custom schedule validation failed - invalid end date');
+            isValid = false;
+        }
     }
     
-    // Date validation
-    if (startDate && endDate) {
-        isValid = isValid && new Date(endDate) >= new Date(startDate);
-    }
-    
-    document.getElementById('submitButton').disabled = !isValid;
+    console.log('Final validation result:', isValid);
+    setSubmitButtonState(isValid);
     return isValid;
 }
+
+
+function setSubmitButtonState(isValid) {
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = !isValid;
+    
+    if (isValid) {
+        submitButton.style.opacity = '1';
+        submitButton.style.cursor = 'pointer';
+    } else {
+        submitButton.style.opacity = '0.6';
+        submitButton.style.cursor = 'not-allowed';
+    }
+}
+
 
 function handleFormSubmit(e) {
     e.preventDefault();
     
+    console.log('Form submit attempted...');
+    
+    // Prevent double submission
+    const submitButton = document.getElementById('submitButton');
+    if (submitButton.disabled) {
+        console.log('Submit button is disabled, preventing submission');
+        return;
+    }
+    
+    // Final validation
     if (!validateForm()) {
+        console.log('Form validation failed');
         alert('Please fill in all required fields correctly.');
         return;
     }
     
+    // Get form data
     const formData = {
         trainingId: selectedTraining.trainingId,
         trainingName: selectedTraining.trainingName,
@@ -4050,36 +4704,39 @@ function handleFormSubmit(e) {
         totalDuration: selectedTraining.totalDuration
     };
     
+    console.log('Submitting form data:', formData);
     submitTrainingRequest(formData);
 }
+
 
 function getHoursPerDay() {
     switch (selectedScheduleType) {
         case 'intensive': return 8;
         case 'regular': return 4;
         case 'flexible': return 2;
-        case 'custom': return parseFloat(document.getElementById('customHoursPerDay').value) || 2;
+        case 'custom': return 'Based on activities'; // Custom doesn't use hours per day
         default: return 4;
     }
 }
+
 async function submitTrainingRequest(formData) {
     const submitButton = document.getElementById('submitButton');
     const originalText = submitButton.innerHTML;
     
+    // Disable button and show loading state
     submitButton.disabled = true;
     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
     try {
         const response = await fetch('/employee/training-requests', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
                 trainingId: formData.trainingId,
                 startDate: formData.startDate,
-                endDate: formData.endDate
+                endDate: formData.endDate,
+                scheduleType: formData.scheduleType
             })
         });
 
@@ -4089,38 +4746,39 @@ async function submitTrainingRequest(formData) {
             alert(`✅ Training request submitted successfully!\n\nTraining: ${formData.trainingName}\nSchedule: ${formData.scheduleType} (${formData.hoursPerDay} hours/day)\nPeriod: ${formatDate(formData.startDate)} - ${formatDate(formData.endDate)}\nTotal Duration: ${formData.totalDuration} hours\n\nYour line manager will be notified for approval.`);
             
             closeTrainingRequestModal();
+            
+            // Refresh the data
+            setTimeout(() => {
+                if (typeof loadTrainingProgress === 'function') loadTrainingProgress();
+                if (typeof loadAllCourses === 'function') loadAllCourses();
+            }, 1000);
+            
         } else {
-            // Handle server rejection (e.g., duplicate request) gracefully
-            if (result.message && result.message.includes('already have an active')) {
-                alert('⚠️ You already have an active training request for this course. If you wish to request again, please contact your administrator.');
-                closeTrainingRequestModal();
-            } else {
-                throw new Error(result.message || 'Failed to submit training request');
-            }
+            throw new Error(result.message || 'Failed to submit training request');
         }
         
     } catch (error) {
         console.error('Error submitting training request:', error);
 
         let errorMessage = 'Failed to submit training request. ';
-        if (error.message.includes('not authenticated')) {
+        if (error.message.includes('already have an active')) {
+            errorMessage = '⚠️ You already have an active training request for this course.';
+        } else if (error.message.includes('not authenticated')) {
             errorMessage += 'Please log in again and try again.';
         } else if (error.message.includes('not found')) {
             errorMessage += 'The selected training is no longer available.';
-        } else if (error.message.includes('End date must be after start date')) {
-            errorMessage += 'Please check your selected dates.';
         } else {
             errorMessage += error.message || 'Please try again later.';
         }
+        
         alert('❌ ' + errorMessage);
-    } finally {
+        
+        // Re-enable button on error
         submitButton.disabled = false;
         submitButton.innerHTML = originalText;
     }
 }
 
-
-// Modal control functions
 // 2. Fixed openTrainingRequestModal function
 function openTrainingRequestModal() {
     console.log('Opening training request modal...'); // Debug log
@@ -4155,18 +4813,33 @@ function openTrainingRequestModal() {
 }
 
 function closeTrainingRequestModal() {
-    console.log('Closing training request modal...'); // Debug log
+    console.log('Closing training request modal...');
     
     const modal = document.getElementById('trainingRequestModal');
     if (modal) {
         modal.classList.remove('show');
-        // Add a small delay before hiding to allow animation
         setTimeout(() => {
             modal.style.display = 'none';
+            // Only reset modal after successful submission or explicit cancel
+            resetModal();
         }, 300);
     }
-    resetModal();
 }
+
+function debugFormState() {
+    console.log('=== FORM STATE DEBUG ===');
+    console.log('selectedTraining:', selectedTraining);
+    console.log('selectedScheduleType:', selectedScheduleType);
+    console.log('trainingId input:', document.getElementById('selectedTrainingId').value);
+    console.log('startDate:', document.getElementById('startDate').value);
+    console.log('endDate:', document.getElementById('endDate').value);
+    console.log('customHours:', document.getElementById('customHoursPerDay').value);
+    console.log('submitButton disabled:', document.getElementById('submitButton').disabled);
+    console.log('form validation result:', validateForm());
+}
+
+// Add to global scope for debugging
+window.debugFormState = debugFormState;
 
 function resetModal() {
     // Reset form
@@ -4199,36 +4872,6 @@ function resetModal() {
     document.getElementById('submitButton').disabled = true;
 }
 
-function resetModal() {
-    // Reset form
-    document.getElementById('trainingRequestForm').reset();
-    document.getElementById('selectedTrainingId').value = '';
-    
-    // Reset global variables
-    selectedTraining = null;
-    selectedScheduleType = null;
-    
-    // Hide sections
-    document.getElementById('trainingDetailsCard').style.display = 'none';
-    document.getElementById('focusAreasSection').style.display = 'none';
-    document.getElementById('scheduleSection').style.display = 'none';
-    document.getElementById('scheduleSummary').style.display = 'none';
-    document.getElementById('customScheduleOptions').style.display = 'none';
-    
-    // Close dropdown
-    document.getElementById('trainingDropdown').classList.remove('open');
-    
-    // Reset schedule options
-    document.querySelectorAll('input[name="scheduleType"]').forEach(radio => {
-        radio.checked = false;
-    });
-    
-    // Reset end date to readonly
-    document.getElementById('endDate').readOnly = true;
-    
-    // Disable submit button
-    document.getElementById('submitButton').disabled = true;
-}
 
 
 
@@ -5042,13 +5685,35 @@ function renderCertificates(certificates) {
             });
         });
 
-        // Close modal when clicking outside
-        document.addEventListener('click', function(event) {
-            const modal = document.getElementById('trainingRequestModal');
-            if (event.target === modal) {
-                closeTrainingRequestModal();
-            }
-        });
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('trainingRequestModal');
+    if (event.target === modal) {
+        closeTrainingRequestModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('trainingRequestModal');
+        if (modal && modal.classList.contains('show')) {
+            closeTrainingRequestModal();
+        }
+    }
+});
+
+window.debugFormState = function() {
+    console.log('=== FORM STATE DEBUG ===');
+    console.log('selectedTraining:', selectedTraining);
+    console.log('selectedScheduleType:', selectedScheduleType);
+    console.log('trainingId input:', document.getElementById('selectedTrainingId').value);
+    console.log('startDate:', document.getElementById('startDate').value);
+    console.log('endDate:', document.getElementById('endDate').value);
+    console.log('customHours:', document.getElementById('customHoursPerDay').value);
+    console.log('submitButton disabled:', document.getElementById('submitButton').disabled);
+    console.log('form validation result:', validateForm());
+};
     </script>
 </body>
 </html>
