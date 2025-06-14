@@ -1320,10 +1320,12 @@
             color: #d97706;
         }
 
-        .course-list-badge.required {
-            background-color: #fecaca;
-            color: #dc2626;
-        }
+       /* Required badge styling for list view */
+.course-list-badge.required {
+    background-color: #fecaca;
+    color: #dc2626;
+    font-weight: 600;
+}
 
         .course-list-progress {
             width: 120px;
@@ -2839,6 +2841,95 @@
     opacity: 0.6;
 }
 
+
+/* Ongoing Required Courses styling */
+.course-list-item.ongoing-required {
+    border-left: 4px solid #dc2626;
+    background-color: #fef2f2;
+    border: 2px solid #fecaca;
+}
+
+.course-list-item.ongoing-required:hover {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+}
+
+.course-list-item.ongoing-required .course-list-title {
+    color: #991b1b;
+}
+
+/* Enhanced required badge styling */
+.course-list-badge.required {
+    background-color: #fecaca;
+    color: #dc2626;
+    border: 1px solid #dc2626;
+    font-weight: 600;
+    animation: pulseRequired 2s infinite;
+}
+
+@keyframes pulseRequired {
+    0%, 100% { 
+        background-color: #fecaca; 
+        transform: scale(1); 
+    }
+    50% { 
+        background-color: #fca5a5; 
+        transform: scale(1.02); 
+    }
+}
+/* Row 3 - Ongoing Required Courses (Full width) - UPDATED */
+.progress-category.row-3 {
+    background: linear-gradient(135deg, #fef2f2 0%, #fef3c7 100%);
+    border: 2px solid #dc2626;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    grid-column: span 2; /* Takes full width */
+    --accent-color: #dc2626;
+}
+
+.progress-category.row-3 .count {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--accent-color);
+    line-height: 1;
+}
+
+.progress-category.row-3 h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.2rem;
+    color: #334155;
+    font-weight: 600;
+}
+
+.progress-category.row-3 p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.progress-category.ongoing-required {
+    --accent-color: #dc2626;
+    --accent-color-dark: #b91c1c;
+    border-color: #dc2626;
+}
+
+.progress-category.ongoing-required:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.2);
+}
+
     </style>
 </head>
 <body>
@@ -3963,16 +4054,16 @@ function initializeTrainingModal() {
         }
 
 function getStatusClass(status) {
-            const statusMap = {
-                'Not Started': 'not-started',
-                'In Progress': 'in-progress',
-                'Completed': 'completed',
-                'Overdue': 'overdue',
-                'Awaiting Approval': 'awaiting-approval',
-                'Rejected': 'rejected'
-            };
-            return statusMap[status] || 'not-started';
-        }
+    const statusMap = {
+        'Not Started': 'not-started',
+        'In Progress': 'in-progress',
+        'Completed': 'completed',
+        'Overdue': 'overdue',
+        'Awaiting Approval': 'awaiting-approval',
+        'Rejected': 'rejected'
+    };
+    return statusMap[status] || 'not-started';
+}
 
 
 
@@ -5012,20 +5103,68 @@ async function loadTrainingProgress() {
             }
         }
 
-       function renderProgressCategories() {
+      function renderProgressCategories() {
     const container = document.getElementById('progressCategories');
     const trainings = trainingProgressData.trainings;
     
-    // Count trainings by status (including approval states)
+    console.log('📊 [Progress Categories] Total trainings loaded:', trainings.length);
+    
+    // Enhanced counting with detailed logging
     const counts = {
-        notStarted: trainings.filter(t => t.status === 'Not Started').length,
-        inProgress: trainings.filter(t => t.status === 'In Progress').length,
-        completed: trainings.filter(t => t.status === 'Completed').length,
-        overdue: trainings.filter(t => t.status === 'Overdue').length,
-        awaitingApproval: trainings.filter(t => t.status === 'Awaiting Approval').length,
-        rejected: trainings.filter(t => t.status === 'Rejected').length
+        notStarted: 0,
+        inProgress: 0,
+        completed: 0,
+        overdue: 0,
+        awaitingApproval: 0,
+        rejected: 0,
+        ongoingRequired: 0
     };
     
+    // Count with detailed debugging
+    trainings.forEach((training, index) => {
+        console.log(`📊 [Progress Categories] Training ${index + 1}: ${training.trainingName}`);
+        console.log(`  - Status: ${training.status}`);
+        console.log(`  - Training Status (DB): ${training.trainingStatus}`);
+        console.log(`  - Is Required: ${training.isRequired}`);
+        console.log(`  - Is Approved: ${training.isApproved}`);
+        console.log(`  - Is Ongoing Required: ${training.isOngoingRequired}`);
+        console.log(`  - Percentage: ${training.trainingPercentage}%`);
+        console.log(`  - Activities: ${training.completedActivities}/${training.totalActivities}`);
+        
+        // Count by status with ongoing required logic
+        if (training.status === 'Awaiting Approval') {
+            counts.awaitingApproval++;
+        } else if (training.status === 'Rejected') {
+            counts.rejected++;
+        } else if (training.isOngoingRequired) {
+            counts.ongoingRequired++;
+            console.log(`  ➜ Counted as ongoing required`);
+        } else {
+            switch (training.status) {
+                case 'Not Started':
+                    counts.notStarted++;
+                    console.log(`  ➜ Counted as not started`);
+                    break;
+                case 'In Progress':
+                    counts.inProgress++;
+                    console.log(`  ➜ Counted as in progress`);
+                    break;
+                case 'Completed':
+                    counts.completed++;
+                    console.log(`  ➜ Counted as completed`);
+                    break;
+                case 'Overdue':
+                    counts.overdue++;
+                    console.log(`  ➜ Counted as overdue`);
+                    break;
+                default:
+                    console.log(`  ➜ Unknown status: ${training.status}`);
+            }
+        }
+    });
+
+    console.log('📊 [Progress Categories] Final counts:', counts);
+
     container.innerHTML = `
         <!-- Row 1: Approval Status (Side by side, smaller height) -->
         <div class="progress-category awaiting-approval row-1" data-filter="awaiting-approval">
@@ -5071,6 +5210,13 @@ async function loadTrainingProgress() {
             <h3>Overdue</h3>
             <p>Training sessions past due date</p>
         </div>
+        
+        <!-- Row 3: Ongoing Required Courses (Full width) -->
+        <div class="progress-category ongoing-required row-3" data-filter="ongoing-required" style="grid-column: span 2;">
+            <div class="count">${counts.ongoingRequired}</div>
+            <h3>Ongoing Required Courses</h3>
+            <p>Required trainings within schedule period (not yet started or in progress)</p>
+        </div>
     `;
 
     // Add click handlers for filtering
@@ -5082,14 +5228,19 @@ async function loadTrainingProgress() {
     });
 }
 
+
         function renderTrainingSections() {
     const container = document.getElementById('trainingSections');
     const trainings = trainingProgressData.trainings;
     
+    // FIXED: Group trainings with proper ongoing required logic
     const groupedTrainings = {
         'awaiting-approval': trainings.filter(t => t.status === 'Awaiting Approval'),
         'rejected': trainings.filter(t => t.status === 'Rejected'),
-        'not-started': trainings.filter(t => t.status === 'Not Started'),
+        // FIXED: Use the new isOngoingRequired property
+        'ongoing-required': trainings.filter(t => t.isOngoingRequired),
+        // FIXED: Exclude ongoing required from regular not-started
+        'not-started': trainings.filter(t => t.status === 'Not Started' && !t.isOngoingRequired),
         'in-progress': trainings.filter(t => t.status === 'In Progress'),
         'completed': trainings.filter(t => t.status === 'Completed'),
         'overdue': trainings.filter(t => t.status === 'Overdue')
@@ -5101,6 +5252,7 @@ async function loadTrainingProgress() {
     const sectionInfo = {
         'awaiting-approval': { title: 'Awaiting for Approval', icon: 'fas fa-clock', color: '#f59e0b' },
         'rejected': { title: 'Rejected Requests', icon: 'fas fa-times-circle', color: '#dc2626' },
+        'ongoing-required': { title: 'Ongoing Required Courses', icon: 'fas fa-exclamation-triangle', color: '#dc2626' },
         'not-started': { title: 'Not Started Courses', icon: 'fas fa-circle', color: '#6b7280' },
         'in-progress': { title: 'In Progress Courses', icon: 'fas fa-play-circle', color: '#3b82f6' },
         'completed': { title: 'Completed Courses', icon: 'fas fa-check-circle', color: '#10b981' },
@@ -5127,57 +5279,296 @@ async function loadTrainingProgress() {
     });
 
     container.innerHTML = sectionsHTML || '<p style="text-align: center; color: #64748b; padding: 40px;">No training records found.</p>';
+    
+    // Debug logging
+    console.log('Training sections rendered:', Object.entries(groupedTrainings).map(([status, trainings]) => ({
+        status,
+        count: trainings.length,
+        trainings: trainings.map(t => ({ name: t.trainingName, status: t.status, isOngoingRequired: t.isOngoingRequired }))
+    })));
 }
 
-function renderTrainingListItem(training, status) {
-            const progressPercentage = training.trainingPercentage || 0;
-            const totalActivities = training.totalActivities || 0;
-            const completedActivities = training.completedActivities || 0;
-            
-            // Determine if the item should be clickable
-            const isClickable = training.isApproved === true;
-            const clickHandler = isClickable ? `onclick="navigateToTrainingDetails(${training.trainingRecordId})"` : '';
-            const cursorStyle = isClickable ? 'cursor: pointer;' : 'cursor: default; opacity: 0.7;';
-            
-            // Add approval status badge if not approved
-            let approvalBadge = '';
-            if (training.isApproved === null) {
-                approvalBadge = '<span class="course-list-badge awaiting-approval">Awaiting Approval</span>';
-            } else if (training.isApproved === false) {
-                approvalBadge = '<span class="course-list-badge rejected">Rejected</span>';
-            }
-            
-            return `
-                <div class="course-list-item ${status}" ${clickHandler} style="${cursorStyle}">
-                    <div class="course-list-info">
-                        <h5 class="course-list-title">${training.trainingName}</h5>
-                        <div class="course-list-details">
-                            Duration: ${training.totalDuration || 0} hours • 
-                            ${formatDateRange(training.setStartDate, training.setEndDate)} • 
-                            Activities: ${completedActivities}/${totalActivities}
-                            ${training.isApproved === null ? ' • <strong style="color: #f59e0b;">Pending Approval</strong>' : ''}
-                            ${training.isApproved === false ? ' • <strong style="color: #dc2626;">Request Rejected</strong>' : ''}
-                        </div>
-                    </div>
-                    <div class="course-list-meta">
-                        <div class="course-list-badges">
-                            <span class="course-list-badge ${training.isOnlineArrangement ? 'online' : 'onsite'}">
-                                ${training.isOnlineArrangement ? 'Online' : 'Onsite'}
-                            </span>
-                            <span class="course-list-badge ${status}">${training.status}</span>
-                            ${approvalBadge}
-                        </div>
-                        <div class="course-list-progress">
-                            <div class="course-list-progress-bar">
-                                <div class="course-list-progress-fill" style="width: ${progressPercentage}%;"></div>
-                            </div>
-                            <div class="course-list-progress-text">${Math.round(progressPercentage)}%</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
 
+function renderTrainingListItem(training, status) {
+    console.log('=== Rendering Training Item ===');
+    console.log('Training data:', {
+        name: training.trainingName,
+        status: training.status,
+        trainingStatus: training.trainingStatus, // Database status
+        isRequired: training.isRequired,
+        isOngoingRequired: training.isOngoingRequired,
+        section: status,
+        percentage: training.trainingPercentage,
+        totalActivities: training.totalActivities,
+        completedActivities: training.completedActivities,
+        inProgressActivities: training.inProgressActivities,
+        hasValidCertificates: training.hasValidCertificates,
+        debug: training._debug
+    });
+
+    // ENHANCED: Robust percentage validation and calculation
+    let progressPercentage = training.trainingPercentage;
+    
+    // Validate and fix percentage
+    if (progressPercentage === undefined || progressPercentage === null || isNaN(progressPercentage)) {
+        console.warn(`⚠️ Invalid trainingPercentage for ${training.trainingName}: ${progressPercentage}`);
+        
+        // Calculate manually from activity data
+        const total = training.totalActivities || 0;
+        const completed = training.completedActivities || 0;
+        
+        if (total > 0) {
+            progressPercentage = Math.round((completed / total) * 100);
+            console.log(`🔧 Calculated fallback percentage: ${progressPercentage}% (${completed}/${total})`);
+        } else {
+            progressPercentage = 0;
+            console.log(`🔧 No activities found, using 0%`);
+        }
+    }
+    
+    // Ensure percentage is within valid range
+    progressPercentage = Math.max(0, Math.min(100, Math.round(progressPercentage)));
+    
+    console.log(`📊 Final display percentage: ${progressPercentage}%`);
+
+    const totalActivities = training.totalActivities || 0;
+    const completedActivities = training.completedActivities || 0;
+    const inProgressActivities = training.inProgressActivities || 0;
+    
+    // Determine if the item should be clickable
+    const isClickable = training.isApproved === true;
+    const clickHandler = isClickable ? `onclick="navigateToTrainingDetails(${training.trainingRecordId})"` : '';
+    const cursorStyle = isClickable ? 'cursor: pointer;' : 'cursor: default; opacity: 0.7;';
+    
+    // Add approval status badge if not approved
+    let approvalBadge = '';
+    if (training.isApproved === null) {
+        approvalBadge = '<span class="course-list-badge awaiting-approval">Awaiting Approval</span>';
+    } else if (training.isApproved === false) {
+        approvalBadge = '<span class="course-list-badge rejected">Rejected</span>';
+    }
+    
+    // Special handling for ongoing required courses
+    let statusDescription = training.status;
+    if (status === 'ongoing-required') {
+        statusDescription = `${training.status} (Required)`;
+    }
+    
+    // Enhanced activity summary with more detail
+    const activitySummary = `Activities: ${completedActivities}/${totalActivities}${inProgressActivities > 0 ? ` (${inProgressActivities} in progress)` : ''}`;
+    
+    return `
+        <div class="course-list-item ${status}" ${clickHandler} style="${cursorStyle}">
+            <div class="course-list-info">
+                <h5 class="course-list-title">${training.trainingName}</h5>
+                <div class="course-list-details">
+                    Duration: ${training.totalDuration || 0} hours • 
+                    ${formatDateRange(training.setStartDate, training.setEndDate)} • 
+                    ${activitySummary}
+                    ${training.isApproved === null ? ' • <strong style="color: #f59e0b;">Pending Approval</strong>' : ''}
+                    ${training.isApproved === false ? ' • <strong style="color: #dc2626;">Request Rejected</strong>' : ''}
+                    ${training.isOngoingRequired ? ' • <strong style="color: #dc2626;">Required Course - Within Schedule</strong>' : ''}
+                    ${training.hasValidCertificates ? ' • <strong style="color: #059669;">Certificate Uploaded</strong>' : ''}
+                </div>
+            </div>
+            <div class="course-list-meta">
+                <div class="course-list-badges">
+                    <span class="course-list-badge ${training.isOnlineArrangement ? 'online' : 'onsite'}">
+                        ${training.isOnlineArrangement ? 'Online' : 'Onsite'}
+                    </span>
+                    ${checkIfRequired(training) ? '<span class="course-list-badge required">Required by HR</span>' : ''}
+                    <span class="course-list-badge ${getStatusClassForBadge(training, status)}">${statusDescription}</span>
+                    ${approvalBadge}
+                </div>
+                <div class="course-list-progress">
+                    <div class="course-list-progress-bar">
+                        <div class="course-list-progress-fill" style="width: ${progressPercentage}%;"></div>
+                    </div>
+                    <div class="course-list-progress-text">${progressPercentage}%</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+
+function debugTrainingPercentages() {
+    console.log('=== TRAINING PERCENTAGES DEBUG ===');
+    
+    if (trainingProgressData && trainingProgressData.trainings) {
+        trainingProgressData.trainings.forEach((training, index) => {
+            console.log(`\n${index + 1}. ${training.trainingName}`);
+            console.log(`   Status: ${training.status}`);
+            console.log(`   Percentage: ${training.trainingPercentage}%`);
+            console.log(`   Activities: ${training.completedActivities}/${training.totalActivities}`);
+            console.log(`   Manual calc: ${training.totalActivities > 0 ? Math.round((training.completedActivities / training.totalActivities) * 100) : 0}%`);
+            console.log(`   Debug info:`, training._debug);
+        });
+    } else {
+        console.log('No training data available');
+    }
+}
+
+// Make debugging function globally available
+window.debugTrainingPercentages = debugTrainingPercentages;
+function diagnoseTrainingPercentages() {
+    console.log('🔍 ENHANCED TRAINING PERCENTAGE DIAGNOSTIC');
+    console.log('==========================================');
+    
+    if (!window.trainingProgressData?.trainings) {
+        console.log('❌ No training data found');
+        return;
+    }
+    
+    const trainings = window.trainingProgressData.trainings;
+    console.log(`📊 Found ${trainings.length} training records`);
+    
+    trainings.forEach((training, index) => {
+        console.log(`\n--- Training ${index + 1}: ${training.trainingName} ---`);
+        
+        // Basic info
+        console.log(`Status: ${training.status}`);
+        console.log(`Training Status (DB): ${training.trainingStatus}`);
+        console.log(`Required: ${training.isRequired}`);
+        console.log(`Approved: ${training.isApproved}`);
+        console.log(`Ongoing Required: ${training.isOngoingRequired}`);
+        
+        // Percentage data
+        console.log(`\n📈 Percentage Analysis:`);
+        console.log(`  Backend Percentage: ${training.trainingPercentage}% (${typeof training.trainingPercentage})`);
+        console.log(`  Total Activities: ${training.totalActivities}`);
+        console.log(`  Completed Activities: ${training.completedActivities}`);
+        console.log(`  In Progress Activities: ${training.inProgressActivities}`);
+        
+        // Manual calculation
+        let manualPercentage = 0;
+        if (training.totalActivities > 0) {
+            manualPercentage = Math.round((training.completedActivities / training.totalActivities) * 100);
+        }
+        console.log(`  Manual Calculation: ${manualPercentage}%`);
+        
+        // Certificate info
+        console.log(`  Has Valid Certificates: ${training.hasValidCertificates}`);
+        if (training.certificates?.length > 0) {
+            console.log(`  Certificates: ${training.certificates.length} found`);
+            training.certificates.forEach((cert, i) => {
+                console.log(`    ${i + 1}. URL: ${cert.certificateUrl ? 'Present' : 'Missing'}`);
+            });
+        }
+        
+        // Issues detection
+        const issues = [];
+        if (training.trainingPercentage !== manualPercentage) {
+            issues.push(`Percentage mismatch: Backend ${training.trainingPercentage}% vs Manual ${manualPercentage}%`);
+        }
+        if (training.trainingPercentage === 0 && training.completedActivities > 0) {
+            issues.push(`Zero percentage despite completed activities`);
+        }
+        if (training.totalActivities === 0 && training.status === 'In Progress') {
+            issues.push(`In Progress status but no activities defined`);
+        }
+        
+        if (issues.length > 0) {
+            console.log(`⚠️  ISSUES DETECTED:`);
+            issues.forEach(issue => console.log(`    - ${issue}`));
+        } else {
+            console.log(`✅ No issues detected`);
+        }
+        
+        // Debug info from backend
+        if (training._debug) {
+            console.log(`\n🐛 Backend Debug Info:`, training._debug);
+        }
+    });
+}
+
+// Quick percentage fix function
+function quickFixPercentages() {
+    console.log('🔧 ENHANCED PERCENTAGE FIX ATTEMPT');
+    console.log('===================================');
+    
+    if (!window.trainingProgressData?.trainings) {
+        console.log('❌ No training data to fix');
+        return;
+    }
+    
+    let fixedCount = 0;
+    let issues = [];
+    
+    window.trainingProgressData.trainings.forEach(training => {
+        const originalPercentage = training.trainingPercentage;
+        let newPercentage = originalPercentage;
+        
+        // Fix percentage calculation
+        if (training.totalActivities > 0) {
+            const correctPercentage = Math.round((training.completedActivities / training.totalActivities) * 100);
+            
+            if (training.trainingPercentage !== correctPercentage) {
+                console.log(`Fixing ${training.trainingName}: ${training.trainingPercentage}% → ${correctPercentage}%`);
+                training.trainingPercentage = correctPercentage;
+                newPercentage = correctPercentage;
+                fixedCount++;
+            }
+        } else if (training.trainingPercentage > 0) {
+            // No activities but has percentage - set to 0
+            console.log(`Fixing ${training.trainingName}: ${training.trainingPercentage}% → 0% (no activities)`);
+            training.trainingPercentage = 0;
+            newPercentage = 0;
+            fixedCount++;
+        }
+        
+        // Detect other issues
+        if (training.status === 'In Progress' && training.completedActivities === 0 && training.inProgressActivities === 0) {
+            issues.push(`${training.trainingName}: Shows "In Progress" but no activities have been started`);
+        }
+        
+        if (training.status === 'Completed' && newPercentage < 100 && !training.hasValidCertificates) {
+            issues.push(`${training.trainingName}: Shows "Completed" but percentage is ${newPercentage}% and no certificates`);
+        }
+    });
+    
+    console.log(`✅ Fixed ${fixedCount} percentage calculations`);
+    
+    if (issues.length > 0) {
+        console.log(`\n⚠️  OTHER ISSUES DETECTED:`);
+        issues.forEach(issue => console.log(`  - ${issue}`));
+    }
+    
+    if (fixedCount > 0) {
+        console.log('🔄 Re-rendering training sections...');
+        if (typeof renderTrainingSections === 'function') {
+            renderTrainingSections();
+        }
+        if (typeof renderProgressCategories === 'function') {
+            renderProgressCategories();
+        }
+        if (typeof renderAllCourses === 'function') {
+            renderAllCourses();
+        }
+    }
+}
+
+// Auto-run diagnostic when this script loads
+console.log('🚀 Training percentage diagnostic loaded. Run diagnoseTrainingPercentages() or quickFixPercentages() in console.');
+
+// Make functions globally available
+window.diagnoseTrainingPercentages = diagnoseTrainingPercentages;
+window.quickFixPercentages = quickFixPercentages;
+
+function getStatusClassForBadge(training, section) {
+    if (section === 'ongoing-required') {
+        return 'ongoing-required';
+    }
+    return getStatusClass(training.status);
+}
+
+function checkIfRequired(training) {
+    // Check multiple possible locations for the isRequired field
+    return training.isRequired === true || 
+           training.trainings?.isRequired === true ||
+           training.isRequired === 1 ||
+           training.trainings?.isRequired === 1;
+}
 
 function formatDateRange(startDate, endDate) {
             if (!startDate) return 'No dates set';
@@ -5306,12 +5697,13 @@ async function loadAllCourses() {
                         
                         <div class="course-header">
                             <h3 class="course-title">${course.trainings?.trainingName || course.trainingName || 'Unknown Training'}</h3>
-                            <div class="course-badges">
-                                <span class="course-type ${course.trainings?.isOnlineArrangement || course.isOnlineArrangement ? 'online' : 'onsite'}">
-                                    <i class="fas fa-${course.trainings?.isOnlineArrangement || course.isOnlineArrangement ? 'laptop' : 'map-marker-alt'}"></i>
-                                    ${course.trainings?.isOnlineArrangement || course.isOnlineArrangement ? 'Online' : 'Onsite'}
-                                </span>
-                            </div>
+                          <div class="course-badges">
+    <span class="course-type ${course.trainings?.isOnlineArrangement || course.isOnlineArrangement ? 'online' : 'onsite'}">
+        <i class="fas fa-${course.trainings?.isOnlineArrangement || course.isOnlineArrangement ? 'laptop' : 'map-marker-alt'}"></i>
+        ${course.trainings?.isOnlineArrangement || course.isOnlineArrangement ? 'Online' : 'Onsite'}
+    </span>
+    ${(course.trainings?.isRequired || course.isRequired) ? '<span class="course-type required">Required by HR</span>' : ''}
+</div>
                         </div>
                         
                         <div class="course-description">

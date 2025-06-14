@@ -1172,96 +1172,188 @@ getExistingTrainings: async function (req, res) {
         }
     },
 
-    reassignTraining: async function (req, res) {
-        try {
-            const {
-                trainingId,
-                assignedEmployees,
-                assignmentType,
-                departmentId,
-                jobId
-            } = req.body;
+reassignTraining: async function (req, res) {
+    try {
+        const {
+            trainingId,
+            assignedEmployees,
+            assignmentType,
+            departmentId,
+            jobId
+        } = req.body;
 
-            console.log('Re-assigning training:', { trainingId, assignmentType, employeeCount: assignedEmployees?.length });
+        console.log('Re-assigning training:', { trainingId, assignmentType, employeeCount: assignedEmployees?.length });
 
-            // Validation
-            if (!trainingId) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Training ID is required'
-                });
-            }
-
-            if (!assignedEmployees || assignedEmployees.length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'At least one employee must be assigned'
-                });
-            }
-
-            // Get training details
-            const { data: training, error: trainingError } = await supabase
-                .from('trainings')
-                .select('trainingName, isRequired')
-                .eq('trainingId', trainingId)
-                .single();
-
-            if (trainingError || !training) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Training not found'
-                });
-            }
-
-            // Create training records for newly assigned employees
-            const trainingRecords = assignedEmployees.map(assignment => ({
-                trainingId: trainingId,
-                userId: assignment.userId,
-                setStartDate: assignment.startDate || new Date().toISOString().split('T')[0],
-                setEndDate: assignment.dueDate || null,
-                isApproved: true,
-                trainingStatus: 'Not Started',
-                dateRequested: new Date().toISOString().split('T')[0],
-                decisionDate: new Date().toISOString().split('T')[0],
-                decisionRemarks: `Training re-assigned by HR - Assignment Type: ${assignmentType}`
-            }));
-
-            const { error: recordsError } = await supabase
-                .from('training_records')
-                .insert(trainingRecords);
-
-            if (recordsError) {
-                console.error('Error creating training records:', recordsError);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to assign training to employees'
-                });
-            }
-
-            console.log(`Successfully re-assigned training to ${assignedEmployees.length} employees`);
-
-            res.json({
-                success: true,
-                message: `Training "${training.trainingName}" re-assigned to ${assignedEmployees.length} employee(s)`,
-                data: {
-                    trainingId: trainingId,
-                    trainingName: training.trainingName,
-                    assignedEmployeesCount: assignedEmployees.length,
-                    isRequired: training.isRequired,
-                    assignmentType: assignmentType
-                }
-            });
-
-        } catch (error) {
-            console.error('Error re-assigning training:', error);
-            res.status(500).json({
+        // Validation
+        if (!trainingId) {
+            return res.status(400).json({
                 success: false,
-                message: 'Failed to re-assign training',
-                error: error.message
+                message: 'Training ID is required'
             });
         }
-    },
 
+        if (!assignedEmployees || assignedEmployees.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'At least one employee must be assigned'
+            });
+        }
+
+        // Get training details
+        const { data: training, error: trainingError } = await supabase
+            .from('trainings')
+            .select('trainingName, isRequired')
+            .eq('trainingId', trainingId)
+            .single();
+
+        if (trainingError || !training) {
+            return res.status(404).json({
+                success: false,
+                message: 'Training not found'
+            });
+        }
+
+        // Get all training activities for this training
+        const { data: trainingActivities, error: activitiesError } = await supabase
+            .from('training_activities')
+            .select('activityId')
+            .eq('trainingId', trainingId);
+
+        if (activitiesError) {
+            console.error('Error fetching training activities:', activitiesError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch training activities'
+            });
+        }
+
+        // Get all training certifications for this training
+        const { data: trainingCertifications, error: certificationsError } = await supabase
+            .from('training_certifications')
+            .select('trainingCertId')
+            .eq('trainingId', trainingId);
+
+        if (certificationsError) {
+            console.error('Error fetching training certifications:', certificationsError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch training certifications'
+            });
+        }
+
+        // Create training records for newly assigned employees
+        const trainingRecords = assignedEmployees.map(assignment => ({
+            trainingId: trainingId,
+            userId: assignment.userId,
+            setStartDate: assignment.startDate || new Date().toISOString().split('T')[0],
+            setEndDate: assignment.dueDate || null,
+            isApproved: true,
+            trainingStatus: 'Not Started',
+            dateRequested: new Date().toISOString().split('T')[0],
+            decisionDate: new Date().toISOString().split('T')[0],
+            decisionRemarks: `Training re-assigned by HR - Assignment Type: ${assignmentType}`
+        }));
+
+        // Insert training records and get the created records with their IDs
+        const { data: createdRecords, error: recordsError } = await supabase
+            .from('training_records')
+            .insert(trainingRecords)
+            .select('trainingRecordId, userId');
+
+        if (recordsError) {
+            console.error('Error creating training records:', recordsError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to assign training to employees'
+            });
+        }
+
+        let activitiesCreated = 0;
+        let certificatesCreated = 0;
+
+        // Create training_records_activities for each user and each activity
+        if (trainingActivities && trainingActivities.length > 0 && createdRecords && createdRecords.length > 0) {
+            const trainingRecordsActivities = [];
+            
+            createdRecords.forEach(record => {
+                trainingActivities.forEach(activity => {
+                    trainingRecordsActivities.push({
+                        trainingRecordId: record.trainingRecordId,
+                        activityId: activity.activityId,
+                        status: 'Not Started',
+                        created_at: new Date().toISOString()
+                    });
+                });
+            });
+
+            // Insert all training records activities
+            const { error: activitiesRecordsError } = await supabase
+                .from('training_records_activities')
+                .insert(trainingRecordsActivities);
+
+            if (activitiesRecordsError) {
+                console.error('Error creating training records activities:', activitiesRecordsError);
+                console.warn('Training assigned but activity records creation failed');
+            } else {
+                activitiesCreated = trainingRecordsActivities.length;
+            }
+        }
+
+        // Create training_records_certificates for each user and each certification
+        if (trainingCertifications && trainingCertifications.length > 0 && createdRecords && createdRecords.length > 0) {
+            const trainingRecordsCertificates = [];
+            
+            createdRecords.forEach(record => {
+                trainingCertifications.forEach(certification => {
+                    trainingRecordsCertificates.push({
+                        trainingRecordId: record.trainingRecordId,
+                        trainingCertId: certification.trainingCertId,
+                        certificate_url: null, // Will be populated when certificate is earned
+                        created_at: new Date().toISOString()
+                    });
+                });
+            });
+
+            // Insert all training records certificates
+            const { error: certificatesRecordsError } = await supabase
+                .from('training_records_certificates')
+                .insert(trainingRecordsCertificates);
+
+            if (certificatesRecordsError) {
+                console.error('Error creating training records certificates:', certificatesRecordsError);
+                console.warn('Training assigned but certificate records creation failed');
+            } else {
+                certificatesCreated = trainingRecordsCertificates.length;
+            }
+        }
+
+        console.log(`Successfully re-assigned training to ${assignedEmployees.length} employees`);
+        console.log(`Created ${activitiesCreated} activity records`);
+        console.log(`Created ${certificatesCreated} certificate records`);
+
+        res.json({
+            success: true,
+            message: `Training "${training.trainingName}" re-assigned to ${assignedEmployees.length} employee(s)`,
+            data: {
+                trainingId: trainingId,
+                trainingName: training.trainingName,
+                assignedEmployeesCount: assignedEmployees.length,
+                isRequired: training.isRequired,
+                assignmentType: assignmentType,
+                activitiesCreated: activitiesCreated,
+                certificatesCreated: certificatesCreated
+            }
+        });
+
+    } catch (error) {
+        console.error('Error re-assigning training:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to re-assign training',
+            error: error.message
+        });
+    }
+},
     getEmployeesByFilter: async function (req, res) {
         try {
             const { departmentId, jobId, filterType } = req.query;
