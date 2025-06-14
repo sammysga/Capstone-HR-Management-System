@@ -4481,7 +4481,6 @@ getCertificates: async function(req, res) {
         });
     }
         }, 
-
 getTrainingsByJobAndDept: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Fetching trainings for modal dropdown - user ${req.session?.user?.userId}`);
     
@@ -4540,9 +4539,6 @@ getTrainingsByJobAndDept: async function(req, res) {
         });
     }
 },
-
-
-// Enhanced function to get training activities, skills and objectives
 getTrainingSkillsAndObjectives: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Fetching details for training ${req.params.trainingId}`);
 
@@ -4644,6 +4640,8 @@ getTrainingSkillsAndObjectives: async function(req, res) {
         });
     }
 },
+
+// FIXED: Create training request function
 createTrainingRequest: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Creating enhanced training request for user ${req.session?.user?.userId}`);
     console.log('Request body:', req.body);
@@ -4695,12 +4693,13 @@ createTrainingRequest: async function(req, res) {
         }
 
         // FIXED: Check for existing active requests with proper enum values
-        const { data: existingRequests, error: existingError } = await supabase
-            .from('training_records')
-            .select('trainingRecordId, setStartDate, setEndDate, trainingStatus')
-            .eq('userId', userId)
-            .eq('trainingId', parseInt(trainingId))
-            .in('trainingStatus', ['Not Started', 'In Progress', 'For Approval']); // Use proper enum values
+    // FIXED: Check for existing active requests with proper enum values
+const { data: existingRequests, error: existingError } = await supabase
+    .from('training_records')
+    .select('trainingRecordId, setStartDate, setEndDate, trainingStatus')
+    .eq('userId', userId)
+    .eq('trainingId', parseInt(trainingId))
+    .in('trainingStatus', ['For Approval', 'Not Started', 'In Progress']); // FIXED: Include 'For Approval' status
 
         if (existingError && existingError.code !== 'PGRST116') {
             console.error('Error checking existing requests:', existingError);
@@ -4725,25 +4724,16 @@ createTrainingRequest: async function(req, res) {
             }
         }
 
-        // FIXED: Determine initial training status using proper enum values
-        let initialTrainingStatus;
-        if (training.isOnlineArrangement && (scheduleType === 'asynchronous' || scheduleType === 'custom')) {
-            initialTrainingStatus = 'In Progress';
-        } else {
-            initialTrainingStatus = 'For Approval'; // Changed from 'Not Started' to require approval
-        }
-
-        // Create training record with schedule type information
-        const trainingRecordData = {
-            userId: userId,
-            trainingId: parseInt(trainingId),
-            setStartDate: startDate,
-            setEndDate: endDate,
-            trainingStatus: initialTrainingStatus, // Use proper enum value
-            isApproved: null, // Will be set by manager
-            dateRequested: new Date().toISOString().split('T')[0],
-            decisionRemarks: scheduleType ? `Schedule Type: ${scheduleType}` : null
-        };
+     // FIXED: Use correct enum values for training status - set to 'For Approval' initially
+const trainingRecordData = {
+    userId: userId,
+    trainingId: parseInt(trainingId),
+    setStartDate: startDate,
+    setEndDate: endDate,
+    trainingStatus: 'For Approval', // FIXED: Set to 'For Approval' for new requests
+    isApproved: null, // Will be set by manager (null = pending approval)
+    dateRequested: new Date().toISOString().split('T')[0], // FIXED: Add dateRequested
+};
 
         console.log('Creating training record with data:', trainingRecordData);
 
@@ -4873,27 +4863,26 @@ createTrainingRequest: async function(req, res) {
         }
 
         console.log(`Enhanced training request created successfully: ${trainingRecordId} with ${activitiesCreated}/${activities ? activities.length : 0} activities and ${certificatesCreated}/${certifications ? certifications.length : 0} certificates`);
-
-        res.status(201).json({
-            success: true,
-            message: 'Training request submitted successfully',
-            data: {
-                trainingRecordId: trainingRecordId,
-                trainingName: training.trainingName,
-                status: trainingRecordData.trainingStatus,
-                isApproved: null,
-                scheduleType: scheduleType,
-                isOnline: training.isOnlineArrangement,
-                activitiesCreated: activitiesCreated,
-                totalActivitiesAvailable: activities ? activities.length : 0,
-                activitiesFailed: activitiesFailed,
-                allActivitiesCreated: activitiesCreated === (activities ? activities.length : 0),
-                certificatesCreated: certificatesCreated,
-                totalCertificatesAvailable: certifications ? certifications.length : 0,
-                certificatesFailed: certificatesFailed,
-                allCertificatesCreated: certificatesCreated === (certifications ? certifications.length : 0)
-            }
-        });
+res.status(201).json({
+    success: true,
+    message: 'Training request submitted successfully and is pending approval',
+    data: {
+        trainingRecordId: trainingRecordId,
+        trainingName: training.trainingName,
+        status: 'For Approval', // Explicitly set status
+        isApproved: null, // Explicitly set as null (pending)
+        scheduleType: scheduleType,
+        isOnline: training.isOnlineArrangement,
+        activitiesCreated: activitiesCreated,
+        totalActivitiesAvailable: activities ? activities.length : 0,
+        activitiesFailed: activitiesFailed,
+        allActivitiesCreated: activitiesCreated === (activities ? activities.length : 0),
+        certificatesCreated: certificatesCreated,
+        totalCertificatesAvailable: certifications ? certifications.length : 0,
+        certificatesFailed: certificatesFailed,
+        allCertificatesCreated: certificatesCreated === (certifications ? certifications.length : 0)
+    }
+});
 
     } catch (error) {
         console.error('Error in enhanced createTrainingRequest:', error);
@@ -4905,7 +4894,6 @@ createTrainingRequest: async function(req, res) {
         });
     }
 },
-
 
 // UPDATED: Enhanced getTrainingProgress with proper enum handling
 getTrainingProgress: async function(req, res) {

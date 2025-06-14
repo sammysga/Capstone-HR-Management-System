@@ -2756,12 +2756,23 @@
 .activity-item:nth-child(4) { animation-delay: 0.3s; }
 .activity-item:nth-child(5) { animation-delay: 0.4s; }
 /* Custom Schedule Notice */
+/* Add after line 1200 in your CSS */
 .custom-schedule-notice {
     background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
     border: 2px solid #0ea5e9;
     border-radius: 12px;
     padding: 16px;
     margin-top: 15px;
+    display: none; /* Hidden by default */
+}
+
+.custom-schedule-notice.show {
+    display: block;
+}
+
+.date-helper.custom {
+    color: #0ea5e9;
+    font-weight: 500;
 }
 
 .custom-schedule-notice .custom-note {
@@ -2796,10 +2807,36 @@
     box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
-/* Custom schedule date helper */
-.date-helper.custom {
-    color: #0ea5e9;
+/* Submit modal button*/
+.btn-submit {
+    background: linear-gradient(135deg, #124A5C 0%, #07ACB9 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
     font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(18, 74, 92, 0.3);
+}
+
+.btn-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(18, 74, 92, 0.4);
+}
+
+.btn-submit:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.6;
 }
 
     </style>
@@ -3122,8 +3159,7 @@
                         </label>
                     </div>
                 </div>
-
-              <!-- Date Selection - FIXED for Custom Schedule -->
+<!-- Date Selection -->
 <div class="date-selection">
     <div class="date-input-group">
         <div class="date-field">
@@ -3135,7 +3171,7 @@
         </div>
         <div class="date-field">
             <label class="form-label">End Date</label>
-            <input type="date" class="form-input date-input" id="endDate" required>
+            <input type="date" class="form-input date-input" id="endDate" required readonly>
             <div class="date-helper" id="endDateHelper">
                 End date will be calculated automatically
             </div>
@@ -3143,7 +3179,7 @@
     </div>
 
     <!-- Custom Schedule Notice -->
-    <div class="custom-schedule-notice" id="customScheduleNotice" style="display: none;">
+    <div class="custom-schedule-notice" id="customScheduleNotice">
         <div class="custom-note">
             <i class="fas fa-info-circle"></i>
             <div>
@@ -3206,10 +3242,10 @@
                     <i class="fas fa-times"></i>
                     Cancel
                 </button>
-                <button type="submit" class="btn-primary" id="submitButton" disabled>
-                    <i class="fas fa-paper-plane"></i>
-                    Submit Request
-                </button>
+               <button type="submit" class="btn btn-submit" id="submitButton" disabled>
+    <i class="fas fa-paper-plane"></i>
+    Submit Request
+</button>
             </div>
         </form>
     </div>
@@ -3308,13 +3344,12 @@
             dropdown.classList.toggle('open');
         }
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('filter-dropdown');
-            if (!dropdown.contains(event.target)) {
-                dropdown.classList.remove('open');
-            }
-        });
+       document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('filter-dropdown');
+    if (dropdown && !dropdown.contains(event.target)) {
+        dropdown.classList.remove('open');
+    }
+});
 
         // Update filters based on checkboxes
         function updateFilters() {
@@ -3389,26 +3424,31 @@
             }
         }
 
-
 document.addEventListener('DOMContentLoaded', function() {
     setupTrainingRequestModal();
+    initializeTrainingModal();
 });
 
 function setupTrainingRequestModal() {
-    // Find and setup the request button
+    // Find and setup the request button ONLY outside modal
     const requestButtons = document.querySelectorAll('button');
     requestButtons.forEach(button => {
-        if (button.textContent.includes('Request New Training')) {
+        const modal = document.getElementById('trainingRequestModal');
+        const isInsideModal = modal && modal.contains(button);
+        
+        if (!isInsideModal && button.textContent.includes('Request New Training')) {
+            // Remove existing handlers to prevent duplicates
+            button.removeEventListener('click', openTrainingRequestModal);
             button.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 openTrainingRequestModal();
             });
         }
     });
-
-    // Initialize modal functionality
-    initializeTrainingModal();
 }
+
+
 function openTrainingRequestModal() {
     console.log('Opening training request modal...');
     
@@ -3465,15 +3505,15 @@ function resetModal() {
     // Hide sections
     document.getElementById('trainingDetailsCard').style.display = 'none';
     document.getElementById('focusAreasSection').style.display = 'none';
-    document.getElementById('activitiesSection').style.display = 'none'; // Add this line
+    document.getElementById('activitiesSection').style.display = 'none';
     document.getElementById('scheduleSection').style.display = 'none';
     document.getElementById('scheduleSummary').style.display = 'none';
-    document.getElementById('customScheduleOptions').style.display = 'none';
+    document.getElementById('customScheduleNotice').style.display = 'none';
     
     // Clear containers
     document.getElementById('objectivesContainer').innerHTML = '<div class="empty-state">No objectives defined</div>';
     document.getElementById('skillsContainer').innerHTML = '<div class="empty-state">No skills defined</div>';
-    document.getElementById('activitiesContainer').innerHTML = '<div class="empty-state">No activities defined</div>'; // Add this line
+    document.getElementById('activitiesContainer').innerHTML = '<div class="empty-state">No activities defined</div>';
     
     // Close dropdown
     document.getElementById('trainingDropdown').classList.remove('open');
@@ -3483,13 +3523,35 @@ function resetModal() {
         radio.checked = false;
     });
     
-    // Reset end date to readonly
-    document.getElementById('endDate').readOnly = true;
+    // Reset date fields
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const endDateHelper = document.getElementById('endDateHelper');
+    
+    startDateInput.value = '';
+    endDateInput.value = '';
+    endDateInput.readOnly = true;
+    endDateHelper.textContent = 'End date will be calculated automatically';
+    endDateHelper.classList.remove('custom');
+    
+    // Reset date minimums
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.min = today;
+    endDateInput.min = '';
+    
+    // Clear training input
+    document.getElementById('trainingCourseInput').value = '';
+    
+    // Reset dropdown list
+    document.getElementById('trainingDropdownList').innerHTML = '<div class="loading">Loading available trainings...</div>';
     
     // Disable submit button
-    document.getElementById('submitButton').disabled = true;
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = true;
+    submitButton.style.opacity = '0.6';
+    submitButton.style.cursor = 'not-allowed';
+    submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
 }
-
 
 async function testTrainingDetailsAPI(trainingId) {
     console.log(`Testing API for training ID: ${trainingId}`);
@@ -3683,34 +3745,44 @@ window.testModal = function() {
     console.log('Manual modal test...');
     openTrainingRequestModal();
 };
-
-// 11. Enhanced event delegation (catches dynamically added buttons)
+// Enhanced event delegation (catches dynamically added buttons)
 document.addEventListener('click', function(e) {
     const target = e.target;
     
     // Add null checks to prevent errors
     if (!target) return;
     
-    // Check if clicked element is the request training button
+    // Check if we're inside the modal
+    const modal = document.getElementById('trainingRequestModal');
+    const isInsideModal = modal && modal.contains(target);
+    
+    // If inside modal, don't trigger the training request modal opening
+    if (isInsideModal) {
+        return;
+    }
+    
+    // Check if clicked element is the request training button (only outside modal)
     const targetText = target.textContent || '';
-    const isButton = target.matches && (
+    const isRequestButton = target.matches && (
         target.matches('.btn-primary') || 
         target.matches('.add-request-btn') ||
         targetText.includes('Request New Training')
     );
     
-    const hasButtonParent = target.closest && (
+    const hasRequestButtonParent = target.closest && (
         target.closest('.btn-primary') || 
         target.closest('.add-request-btn')
     );
     
-    if (isButton || hasButtonParent) {
+    // Only open modal if it's a request button and we're not already in modal
+    if ((isRequestButton || hasRequestButtonParent) && !isInsideModal) {
         e.preventDefault();
         e.stopPropagation();
         console.log('Button clicked via event delegation');
         openTrainingRequestModal();
     }
 });
+
 // Initialize the application
         document.addEventListener('DOMContentLoaded', async () => {
             initializeTabs();
@@ -3767,8 +3839,23 @@ function initializeTrainingModal() {
     setupScheduleHandlers();
     setupDateHandlers();
     setupFormValidation();
+    
+    // Ensure modal close handlers work properly
+    const modal = document.getElementById('trainingRequestModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeTrainingRequestModal();
+            }
+        });
+    }
+    
+    // Close button handler
+    const closeBtn = document.querySelector('.modal-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeTrainingRequestModal);
+    }
 }
-
 
 // Calendar rendering functions
         function renderCalendar() {
@@ -3920,12 +4007,13 @@ function setupTrainingDropdown() {
         }
     });
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-        if (!dropdown.contains(event.target)) {
-            dropdown.classList.remove('open');
-        }
-    });
+   // Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('trainingDropdown');
+    if (dropdown && !dropdown.contains(event.target)) {
+        dropdown.classList.remove('open');
+    }
+});
 }
 
 
@@ -3950,8 +4038,6 @@ function setupScheduleHandlers() {
     // Make selectScheduleType globally available
     window.selectScheduleType = selectScheduleType;
 }
-
-// Enhanced date input handler for custom schedules
 function setupDateHandlers() {
     const today = new Date().toISOString().split('T')[0];
     const startDateInput = document.getElementById('startDate');
@@ -3962,45 +4048,45 @@ function setupDateHandlers() {
     startDateInput.addEventListener('change', function() {
         const startValue = this.value;
         
-        if (selectedScheduleType && selectedTraining) {
+        if (startValue && selectedScheduleType && selectedTraining) {
+            endDateInput.min = startValue; // Always set minimum end date
+            
             if (selectedScheduleType === 'custom') {
-                // For custom, just set minimum end date and validate
-                endDateInput.min = startValue;
-                console.log('Custom schedule: Start date changed, setting end date minimum');
+                // For custom, clear end date and let user choose
+                endDateInput.value = '';
+                endDateInput.readOnly = false;
+                console.log('Custom schedule: User can set end date manually');
             } else {
                 // For structured schedules, calculate end date
-                endDateInput.value = '';
+                endDateInput.readOnly = true;
                 calculateEndDate();
             }
         }
         validateForm();
     });
     
-    // Enhanced end date handler for custom schedules
     endDateInput.addEventListener('change', function() {
         console.log('End date changed:', this.value);
         
-        if (selectedScheduleType === 'custom') {
-            // Validate that end date is after start date
-            const startValue = startDateInput.value;
-            const endValue = this.value;
+        const startValue = startDateInput.value;
+        const endValue = this.value;
+        
+        if (startValue && endValue) {
+            const startDate = new Date(startValue);
+            const endDate = new Date(endValue);
             
-            if (startValue && endValue) {
-                const startDate = new Date(startValue);
-                const endDate = new Date(endValue);
-                
-                if (endDate <= startDate) {
-                    alert('End date must be after start date');
-                    this.value = '';
-                    return;
-                }
+            if (endDate <= startDate) {
+                alert('End date must be after start date');
+                this.value = '';
+                return;
             }
-            
-            updateScheduleSummary();
         }
+        
+        updateScheduleSummary();
         validateForm();
     });
 }
+
 // Debug function for custom schedule testing
 function debugCustomSchedule() {
     console.log('=== CUSTOM SCHEDULE DEBUG ===');
@@ -4077,8 +4163,6 @@ function validateForm() {
     setSubmitButtonState(isValid);
     return isValid;
 }
-
-// FIXED: Custom schedule type selection
 function selectScheduleType(type) {
     console.log('Selected schedule type:', type);
     selectedScheduleType = type;
@@ -4088,45 +4172,39 @@ function selectScheduleType(type) {
         radio.checked = radio.value === type;
     });
     
-    // Show/hide custom schedule options
-    const customOptions = document.getElementById('customScheduleOptions');
     const endDateInput = document.getElementById('endDate');
     const endDateHelper = document.getElementById('endDateHelper');
+    const customNotice = document.getElementById('customScheduleNotice');
     
     if (type === 'custom') {
         // For custom schedule, allow manual date entry
-        customOptions.style.display = 'none'; // Keep hidden as we're using manual dates
-        endDateInput.readOnly = false; // Allow manual entry
-        endDateHelper.textContent = 'Manually set your preferred end date';
-        
-        // Clear end date for manual entry
-        endDateInput.value = '';
+        endDateInput.readOnly = false;
+        endDateInput.value = ''; // Clear for manual entry
+        endDateHelper.textContent = 'Choose your preferred end date';
+        endDateHelper.classList.add('custom');
+        customNotice.style.display = 'block';
         
         console.log('Custom schedule enabled - manual date entry allowed');
     } else {
-        customOptions.style.display = 'none';
+        // For structured schedules
         endDateInput.readOnly = true;
+        endDateInput.value = ''; // Clear for recalculation
         endDateHelper.textContent = 'End date will be calculated automatically';
+        endDateHelper.classList.remove('custom');
+        customNotice.style.display = 'none';
         
-        // Clear end date for recalculation
-        endDateInput.value = '';
+        // Calculate end date if start date is already set
+        const startDateValue = document.getElementById('startDate').value;
+        if (selectedTraining && startDateValue) {
+            calculateEndDate();
+        }
     }
     
-    // Calculate end date if start date is set (only for non-custom schedules)
-    const startDateValue = document.getElementById('startDate').value;
-    if (selectedTraining && startDateValue && type !== 'custom') {
-        setTimeout(() => {
-            calculateEndDate();
-            updateScheduleSummary();
-            validateForm();
-        }, 100);
-    } else if (type === 'custom') {
-        // For custom schedule, just update summary and validate
-        setTimeout(() => {
-            updateScheduleSummary();
-            validateForm();
-        }, 100);
-    }
+    // Update schedule summary and validate
+    setTimeout(() => {
+        updateScheduleSummary();
+        validateForm();
+    }, 100);
 }
 
 
@@ -4588,7 +4666,12 @@ function updateSchedulePreviews() {
 
 function setupFormValidation() {
     const form = document.getElementById('trainingRequestForm');
-    form.addEventListener('submit', handleFormSubmit);
+    if (form) {
+        // Remove any existing event listeners
+        form.removeEventListener('submit', handleFormSubmit);
+        // Add the submit handler
+        form.addEventListener('submit', handleFormSubmit);
+    }
     
     // Add event listeners for all form inputs
     const formInputs = document.querySelectorAll('#trainingRequestForm input, #trainingRequestForm select');
@@ -4598,7 +4681,6 @@ function setupFormValidation() {
     });
 }
 
-// FIXED VALIDATION FUNCTION
 function validateForm() {
     const trainingSelected = document.getElementById('selectedTrainingId').value;
     const startDate = document.getElementById('startDate').value;
@@ -4613,7 +4695,7 @@ function validateForm() {
         selectedTraining: !!selectedTraining
     });
     
-    // Basic validation - must have training, start date, and schedule type
+    // Basic validation
     let isValid = trainingSelected && startDate && scheduleSelected && selectedTraining;
     
     if (!isValid) {
@@ -4631,25 +4713,16 @@ function validateForm() {
         }
     }
     
-    // End date validation based on schedule type
-    if (scheduleSelected === 'custom') {
-        // For custom schedule, user must manually set both start and end dates
-        const hasValidEndDate = endDate && new Date(endDate) > new Date(startDate);
+    // End date validation
+    if (!endDate) {
+        console.log('No end date set');
+        isValid = false;
+    } else if (startDate && endDate) {
+        const startDateObj = new Date(startDate);
+        const endDateObj = new Date(endDate);
         
-        if (!hasValidEndDate) {
-            console.log('Custom schedule validation failed - no valid end date');
-            isValid = false;
-        }
-        
-        console.log('Custom schedule validation:', { 
-            hasValidEndDate, 
-            endDate,
-            isValid 
-        });
-    } else {
-        // For non-custom schedules, end date should be automatically calculated
-        if (!endDate || new Date(endDate) <= new Date(startDate)) {
-            console.log('Non-custom schedule validation failed - invalid end date');
+        if (endDateObj <= startDateObj) {
+            console.log('End date must be after start date');
             isValid = false;
         }
     }
@@ -4658,7 +4731,6 @@ function validateForm() {
     setSubmitButtonState(isValid);
     return isValid;
 }
-
 
 function setSubmitButtonState(isValid) {
     const submitButton = document.getElementById('submitButton');
@@ -4672,7 +4744,6 @@ function setSubmitButtonState(isValid) {
         submitButton.style.cursor = 'not-allowed';
     }
 }
-
 
 function handleFormSubmit(e) {
     e.preventDefault();
@@ -4705,9 +4776,10 @@ function handleFormSubmit(e) {
     };
     
     console.log('Submitting form data:', formData);
+    
+    // Don't reset modal here - wait for successful submission
     submitTrainingRequest(formData);
 }
-
 
 function getHoursPerDay() {
     switch (selectedScheduleType) {
@@ -4718,7 +4790,6 @@ function getHoursPerDay() {
         default: return 4;
     }
 }
-
 async function submitTrainingRequest(formData) {
     const submitButton = document.getElementById('submitButton');
     const originalText = submitButton.innerHTML;
@@ -4743,8 +4814,10 @@ async function submitTrainingRequest(formData) {
         const result = await response.json();
         
         if (response.ok && result.success) {
-            alert(`✅ Training request submitted successfully!\n\nTraining: ${formData.trainingName}\nSchedule: ${formData.scheduleType} (${formData.hoursPerDay} hours/day)\nPeriod: ${formatDate(formData.startDate)} - ${formatDate(formData.endDate)}\nTotal Duration: ${formData.totalDuration} hours\n\nYour line manager will be notified for approval.`);
+            // Success message
+            alert(`✅ Training request submitted successfully!\n\nTraining: ${formData.trainingName}\nSchedule: ${formData.scheduleType}\nPeriod: ${formatDate(formData.startDate)} - ${formatDate(formData.endDate)}\nTotal Duration: ${formData.totalDuration} hours\n\nYour line manager will be notified for approval.`);
             
+            // Close modal AFTER showing success message
             closeTrainingRequestModal();
             
             // Refresh the data
@@ -4773,15 +4846,16 @@ async function submitTrainingRequest(formData) {
         
         alert('❌ ' + errorMessage);
         
-        // Re-enable button on error
+        // Re-enable button on error - DON'T reset modal
         submitButton.disabled = false;
         submitButton.innerHTML = originalText;
+        
+        // Re-validate form to restore proper button state
+        validateForm();
     }
 }
-
-// 2. Fixed openTrainingRequestModal function
 function openTrainingRequestModal() {
-    console.log('Opening training request modal...'); // Debug log
+    console.log('Opening training request modal...');
     
     const modal = document.getElementById('trainingRequestModal');
     if (!modal) {
@@ -4791,7 +4865,7 @@ function openTrainingRequestModal() {
     
     // Show the modal
     modal.classList.add('show');
-    modal.style.display = 'flex'; // Ensure it's displayed
+    modal.style.display = 'flex';
     
     // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
@@ -4801,11 +4875,11 @@ function openTrainingRequestModal() {
     }
     
     // Load trainings if not already loaded
-    if (filteredTrainings.length === 0) {
+    if (!filteredTrainings || filteredTrainings.length === 0) {
         loadTrainings();
     }
     
-    // Focus on the training input for better UX
+    // Focus on the training input
     const trainingInput = document.getElementById('trainingCourseInput');
     if (trainingInput) {
         setTimeout(() => trainingInput.focus(), 100);
@@ -5701,6 +5775,16 @@ document.addEventListener('keydown', function(event) {
             closeTrainingRequestModal();
         }
     }
+});
+
+
+// Global error handler for uncaught errors
+window.addEventListener('error', function(e) {
+    console.error('Global error caught:', e.error);
+    console.log('Error occurred at:', e.filename, 'line:', e.lineno);
+    
+    // Don't reset modal on errors - just log them
+    return false; // Don't prevent default error handling
 });
 
 window.debugFormState = function() {
