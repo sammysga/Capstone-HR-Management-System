@@ -508,9 +508,6 @@ getTrainingDetails: async function (req, res) {
         const trainingId = req.params.trainingId;
         console.log('=== TRAINING DETAILS DEBUG ===');
         console.log('Requested training ID:', trainingId);
-        console.log('Full request params:', req.params);
-        console.log('Request URL:', req.url);
-        console.log('Request method:', req.method);
 
         if (!trainingId) {
             console.log('ERROR: No training ID provided');
@@ -520,11 +517,11 @@ getTrainingDetails: async function (req, res) {
             });
         }
 
-        // Get training details (WITHOUT the joins that are causing issues)
+        // Get training details
         console.log('Fetching training from database...');
         const { data: training, error: trainingError } = await supabase
             .from('trainings')
-            .select('*')  // Just select all fields from trainings table
+            .select('*')
             .eq('trainingId', trainingId)
             .eq('isActive', true)
             .single();
@@ -566,25 +563,98 @@ getTrainingDetails: async function (req, res) {
             }
         }
 
-        // Get all assignments for this training
-        const { data: assignments, error: assignmentsError } = await supabase
+        // Get training records first
+        console.log('Fetching training assignments...');
+        const { data: trainingRecords, error: recordsError } = await supabase
             .from('training_records')
-            .select(`
-                *,
-                staffaccounts!inner(
-                    staffFName, 
-                    staffLName, 
-                    staffEmail,
-                    jobId,
-                    departmentId
-                )
-            `)
+            .select('*')
             .eq('trainingId', trainingId)
             .order('dateRequested', { ascending: false });
 
-        if (assignmentsError) {
-            console.error('Error fetching assignments:', assignmentsError);
-            // Don't throw error, just continue with empty assignments
+        if (recordsError) {
+            console.error('Error fetching training records:', recordsError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching training records'
+            });
+        }
+
+        console.log(`Found ${trainingRecords?.length || 0} training records`);
+
+        // Now get user and staff details for each record
+        let assignments = [];
+        
+        if (trainingRecords && trainingRecords.length > 0) {
+            const userIds = trainingRecords.map(record => record.userId);
+            
+            // Get user accounts
+            const { data: userAccounts, error: userError } = await supabase
+                .from('useraccounts')
+                .select('userId, userEmail')
+                .in('userId', userIds);
+
+            if (userError) {
+                console.error('Error fetching user accounts:', userError);
+            }
+
+            // Get staff accounts
+            const { data: staffAccounts, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('userId, firstName, lastName, jobId, departmentId')
+                .in('userId', userIds);
+
+            if (staffError) {
+                console.error('Error fetching staff accounts:', staffError);
+            }
+
+            // Get job positions
+            const jobIds = [...new Set(staffAccounts?.map(staff => staff.jobId).filter(Boolean))];
+            let jobPositions = [];
+            if (jobIds.length > 0) {
+                const { data: jobs } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle')
+                    .in('jobId', jobIds);
+                jobPositions = jobs || [];
+            }
+
+            // Get departments
+            const departmentIds = [...new Set(staffAccounts?.map(staff => staff.departmentId).filter(Boolean))];
+            let departments = [];
+            if (departmentIds.length > 0) {
+                const { data: depts } = await supabase
+                    .from('departments')
+                    .select('departmentId, deptName')
+                    .in('departmentId', departmentIds);
+                departments = depts || [];
+            }
+
+            // Combine all data
+            assignments = trainingRecords.map(record => {
+                const userAccount = userAccounts?.find(user => user.userId === record.userId);
+                const staffAccount = staffAccounts?.find(staff => staff.userId === record.userId);
+                const jobPosition = jobPositions.find(job => job.jobId === staffAccount?.jobId);
+                const department = departments.find(dept => dept.departmentId === staffAccount?.departmentId);
+
+                return {
+                    assignmentId: record.trainingRecordId,
+                    employeeId: record.userId,
+                    employeeName: staffAccount ? `${staffAccount.firstName} ${staffAccount.lastName}` : 'Unknown Employee',
+                    employeeEmail: userAccount?.userEmail || 'no-email@company.com',
+                    jobTitle: jobPosition?.jobTitle || 'Unknown Position',
+                    department: department?.deptName || 'Unknown Department',
+                    status: record.trainingStatus || 'Not Started',
+                    progress: 0, // You can calculate this based on completed activities
+                    startDate: record.setStartDate,
+                    endDate: record.setEndDate,
+                    assignedDate: record.dateRequested,
+                    completionDate: record.decisionDate,
+                    isApproved: record.isApproved,
+                    approvalRemarks: record.decisionRemarks,
+                };
+            });
+
+            console.log(`Successfully processed ${assignments.length} assignments`);
         }
 
         // Get training activities
@@ -601,41 +671,17 @@ getTrainingDetails: async function (req, res) {
             .eq('trainingId', trainingId)
             .order('trainingCertId', { ascending: true });
 
-        // Format assignments data
-        const formattedAssignments = (assignments || []).map(assignment => {
-            // Get job and department info for each employee
-            let employeeJobTitle = 'Unknown Position';
-            let employeeDepartment = 'Unknown Department';
-
-
-            return {
-                assignmentId: assignment.trainingRecordId,
-                employeeId: assignment.userId,
-                employeeName: `${assignment.staffaccounts.staffFName} ${assignment.staffaccounts.staffLName}`,
-                employeeEmail: assignment.staffaccounts.staffEmail,
-                jobTitle: employeeJobTitle,
-                department: employeeDepartment,
-                status: assignment.trainingStatus || 'Not Started',
-                progress: 0, // You can calculate this based on completed activities
-                startDate: assignment.setStartDate,
-                endDate: assignment.setEndDate,
-                assignedDate: assignment.dateRequested,
-                isApproved: assignment.isApproved,
-                approvalRemarks: assignment.decisionRemarks,
-            };
-        });
-
         // Calculate statistics
         const stats = {
-            totalAssigned: formattedAssignments.length,
-            completed: formattedAssignments.filter(a => a.status === 'Completed').length,
-            inProgress: formattedAssignments.filter(a => a.status === 'In Progress').length,
-            notStarted: formattedAssignments.filter(a => 
+            totalAssigned: assignments.length,
+            completed: assignments.filter(a => a.status === 'Completed').length,
+            inProgress: assignments.filter(a => a.status === 'In Progress').length,
+            notStarted: assignments.filter(a => 
                 a.status === 'Assigned' || 
                 a.status === 'Not Started' || 
                 !a.status
             ).length,
-            overdue: formattedAssignments.filter(a => {
+            overdue: assignments.filter(a => {
                 if (!a.endDate) return false;
                 const dueDate = new Date(a.endDate);
                 const today = new Date();
@@ -662,9 +708,11 @@ getTrainingDetails: async function (req, res) {
             department: departmentInfo?.deptName || 'Unknown Department',
             activities: activities || [],
             certifications: certifications || [],
-            assignments: formattedAssignments,
+            assignments: assignments,
             statistics: stats
         };
+
+        console.log(`Training details loaded: ${formattedTraining.title} with ${assignments.length} assignments`);
 
         res.json({
             success: true,
@@ -969,10 +1017,10 @@ getExistingTrainings: async function (req, res) {
                     setStartDate: assignment.startDate || new Date().toISOString().split('T')[0],
                     setEndDate: assignment.dueDate || null,
                     isApproved: true, // Auto-approved since it's assigned by HR
-                    trainingStatus: 'Assigned',
+                    trainingStatus: 'Not Started',
                     dateRequested: new Date().toISOString().split('T')[0],
                     decisionDate: new Date().toISOString().split('T')[0],
-                    decisionRemarks: `Required training assigned by HR - Assignment Type: ${assignmentType}`
+                    decisionRemarks: `Training assigned by HR - Assignment Type: ${assignmentType} - Status: Not Started`
                 }));
 
                 const { error: recordsError } = await supabase
@@ -1172,7 +1220,7 @@ getExistingTrainings: async function (req, res) {
                 setStartDate: assignment.startDate || new Date().toISOString().split('T')[0],
                 setEndDate: assignment.dueDate || null,
                 isApproved: true,
-                trainingStatus: 'Assigned',
+                trainingStatus: 'Not Started',
                 dateRequested: new Date().toISOString().split('T')[0],
                 decisionDate: new Date().toISOString().split('T')[0],
                 decisionRemarks: `Training re-assigned by HR - Assignment Type: ${assignmentType}`
