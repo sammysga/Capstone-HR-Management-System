@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Training & Development Tracker</title>
     <link rel="stylesheet" href="/css/sidebar.css">
-    <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
+    <!-- <link rel="stylesheet" href="/css/recordsandperformancetracker.css"> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
 .view-all-btn {
@@ -276,7 +276,7 @@
         /* Main content styling */
         .main-content {
             margin-left: 270px;
-            padding: 20px;
+            padding: 30px;
             font-family: 'Inter', sans-serif;
         }
 
@@ -382,44 +382,54 @@
         }
 
         /* Search and Filter Section */
-        .search-filter-section {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+.search-filter-section {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
 
-        .search-container {
-            flex: 1;
-            min-width: 300px;
-            position: relative;
-        }
+/* Search Container - Revised */
+.search-container {
+    position: relative;
+    flex: 1;
+    min-width: 300px;
+    height: 40px; /* Fixed container height */
+}
 
-        .search-input {
-            width: 100%;
-            padding: 12px 16px 12px 45px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s ease;
-            box-sizing: border-box;
-        }
+/* Search Input - Final Version */
+.search-input {
+    width: 100%;
+    padding: 0 16px 0 40px; /* Top/bottom 0 since we control height */
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    height: 100%; /* Take full container height */
+    line-height: 40px; /* Match container height */
+    box-sizing: border-box;
+}
 
-        .search-input:focus {
-            outline: none;
-            border-color: #07ACB9;
-            box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
-        }
+.search-input:focus {
+    outline: none;
+    border-color: #07ACB9;
+    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+}
 
-        .search-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #64748b;
-            font-size: 14px;
-        }
+/* Search Icon - Pixel Perfect */
+.search-icon {
+    position: absolute;
+    left: 14px; /* Optimal icon position */
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 15px; /* Slightly larger */
+    width: 15px; /* Fixed width */
+    height: 15px; /* Fixed height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
         /* Filter dropdown */
         .filter-dropdown {
@@ -759,7 +769,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px; /* Increased gap */
-}s
+}
         /* country add */
 label {
             display: block;
@@ -769,7 +779,7 @@ label {
         }
         select, input[type="text"], textarea {
             width: 100%;
-            padding: 10px;
+            /* padding: 10px; */
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
@@ -1574,7 +1584,7 @@ s
 }
 
 </style>
-    </style>
+
 </head>
 <body>
     <%- include('../../partials/linemanager_partials') %>
