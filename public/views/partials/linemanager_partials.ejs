@@ -270,6 +270,7 @@ body {
 .pulse-animation {
     animation: pulse 1s infinite;
 }
+
 </style>
 
 <div class="sidebar">
@@ -794,91 +795,102 @@ function updateLeaveRequestsSection(leaveRequests) {
         });
     }, 100);
 }
+
 function updateTrainingRequestsSection(trainingRequests) {
     const trainingSection = document.getElementById('section-training');
     trainingSection.innerHTML = '<h4>Training Requests</h4>';
 
-    console.log('Updating training requests section with data:', trainingRequests);
+    // Debug: Log the incoming data
+    console.log('Training requests data received:', trainingRequests);
+    console.log('Number of training requests:', trainingRequests.length);
 
     if (!trainingRequests || trainingRequests.length === 0) {
+        console.log('No training requests data available');
         const emptyMessage = document.createElement('div');
         emptyMessage.classList.add('notification-item');
         emptyMessage.innerHTML = `
             <div class="headline">No pending training requests</div>
-            <div class="content">There are currently no training requests pending approval.</div>
+            <div class="content">There are currently no training requests awaiting approval.</div>
         `;
         trainingSection.appendChild(emptyMessage);
         return;
     }
 
-    // Normalize training request data with better fallbacks
-    const normalizedRequests = trainingRequests.map(request => {
-        // Handle cases where names might be 'N/A' or missing
-        const firstName = request.firstName && request.firstName !== 'N/A' 
-            ? request.firstName 
-            : 'Employee';
-        const lastName = request.lastName && request.lastName !== 'N/A' 
-            ? request.lastName 
-            : '';
-        
-        return {
-            userId: request.userId || 'unknown',
-            trainingRecordId: request.trainingRecordId || 'unknown',
-            firstName: firstName,
-            lastName: lastName,
-            trainingName: request.trainingName || 'Training',
-            dateRequested: request.dateRequested || 'Recent',
-            status: request.status || 'Pending',
-            date: request.date || request.dateRequested || new Date().toISOString()
-        };
+    // Filter for pending approval requests (status "For Approval" and isApproved null)
+    const pendingRequests = trainingRequests.filter(request => {
+        const isPending = request.trainingStatus === 'For Approval' && request.isApproved === null;
+        console.log(`Checking request ${request.trainingRecordId}:`, {
+            status: request.trainingStatus,
+            isApproved: request.isApproved,
+            isPending: isPending
+        });
+        return isPending;
     });
 
-    console.log('Normalized training requests:', normalizedRequests);
+    console.log('Filtered pending requests:', pendingRequests);
 
-    // Sort training requests by date (oldest first for priority)
-    normalizedRequests.sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return dateA - dateB;
-    });
+    if (pendingRequests.length === 0) {
+        console.log('No pending training requests after filtering');
+        const emptyMessage = document.createElement('div');
+        emptyMessage.classList.add('notification-item');
+        emptyMessage.innerHTML = `
+            <div class="headline">No pending training requests</div>
+            <div class="content">All training requests have been processed.</div>
+        `;
+        trainingSection.appendChild(emptyMessage);
+        return;
+    }
 
-    // Add training requests
-    normalizedRequests.forEach(request => {
+    // Create training request items
+    pendingRequests.forEach(request => {
         const notificationItem = document.createElement('div');
         notificationItem.classList.add('notification-item');
         
-        const fullName = `${request.firstName} ${request.lastName}`.trim();
-            
-        console.log(`Creating notification item for: ${fullName}, Training: ${request.trainingName}`);
-            
+        const fullName = `${request.firstName || 'Employee'} ${request.lastName || ''}`.trim();
+        const trainingName = request.trainingName || 'Training Program';
+        const dateRequested = request.dateRequested || 'Recent';
+        
+        console.log('Creating training request item:', {
+            fullName,
+            trainingName,
+            dateRequested,
+            userId: request.userId,
+            recordId: request.trainingRecordId
+        });
+
         notificationItem.innerHTML = `
             <div class="headline">Training Request: ${fullName}</div>
-            <div class="content">Training: ${request.trainingName}</div>
-            <div class="date">${request.dateRequested}</div>
+            <div class="content">
+                <strong>Training:</strong> ${trainingName}<br>
+                <strong>Status:</strong> <span class="status-pending">For Approval</span>
+            </div>
+            <div class="date">Requested: ${dateRequested}</div>
             <button class="view-training-btn" 
                     data-user-id="${request.userId}" 
-                    data-record-id="${request.trainingRecordId}">
-                Review Request
+                    data-record-id="${request.trainingRecordId}"
+                    data-training-name="${encodeURIComponent(trainingName)}">
+               Required Action
             </button>
         `;
         trainingSection.appendChild(notificationItem);
     });
 
-    // Add click handlers for training buttons
-    setTimeout(() => {
-        document.querySelectorAll('.view-training-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const userId = this.getAttribute('data-user-id');
-                const recordId = this.getAttribute('data-record-id');
-                
-                if (userId && recordId) {
-                    window.location.href = `/linemanager/training-request/${userId}?recordId=${recordId}`;
-                } else {
-                    alert('Error: Missing request information. Please refresh and try again.');
-                }
-            });
+    // Add event listeners to the buttons
+    document.querySelectorAll('.view-training-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const recordId = this.getAttribute('data-record-id');
+            const trainingName = this.getAttribute('data-training-name');
+            
+            console.log('Training request clicked:', { userId, recordId, trainingName });
+            
+            if (userId && recordId) {
+                window.location.href = `/linemanager/training-request/${userId}?recordId=${recordId}&trainingName=${trainingName}`;
+            } else {
+                alert('Error: Missing request information. Please refresh and try again.');
+            }
         });
-    }, 100);
+    });
 }
 
 // Debug function to log the structure of training requests data
@@ -1004,48 +1016,56 @@ function checkForNewNotifications(currentCount) {
         previousNotificationCount = currentCount;
     }
 
-    // Notification bell click event - FIXED VERSION
-    notificationBell.addEventListener('click', async function(event) {
-        console.log('Notification bell clicked');
-        notificationPanel.classList.toggle('open');
-        
-        // Add explicit style manipulation for better cross-browser compatibility
-        if (notificationPanel.classList.contains('open')) {
-            try {
-                // First check for 360 feedback
-                await fetch360Feedback();
-                
-                // Show loading indicators for all sections
-                document.getElementById('section-training').innerHTML = '<h4>Training Requests</h4><div class="loading-indicator"><div class="spinner"></div></div>';
-                document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4><div class="loading-indicator"><div class="spinner"></div></div>';
-                document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4><div class="loading-indicator"><div class="spinner"></div></div>';
-                document.getElementById('section-resignation').innerHTML = '<h4>Resignation Requests</h4><div class="loading-indicator"><div class="spinner"></div></div>';
-                
-                // Fetch regular notifications
-                const notificationData = await fetchNotifications();
-                
-                notificationCount.textContent = notificationData.notificationCount;
-                
-                // Update sections
-                updateTrainingRequestsSection(notificationData.trainingRequests);
-                updateApplicantsSection(notificationData.applicants);
-                updateLeaveRequestsSection(notificationData.leaveRequests);
-                updateResignationRequestsSection(notificationData.offboardingRequests); 
-                
-            } catch (error) {
-                console.error('Error updating notifications:', error);
-                
-                // Show error message in sections
-                document.getElementById('section-training').innerHTML = '<h4>Training Requests</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load training request data. Please try again later.</div></div>';
-                
-                document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load applicant data. Please try again later.</div></div>';
-                
-                document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load leave request data. Please try again later.</div></div>';
-                
-                document.getElementById('section-resignation').innerHTML = '<h4>Resignation Requests</h4><div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load resignation request data. Please try again later.</div></div>';
+notificationBell.addEventListener('click', async function(event) {
+    console.log('Notification bell clicked');
+    notificationPanel.classList.toggle('open');
+    
+    if (notificationPanel.classList.contains('open')) {
+        try {
+            // First check for 360 feedback
+            await fetch360Feedback();
+            
+            // Show loading indicators for all sections
+            document.getElementById('section-training').innerHTML = '<h4>Training Requests</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+            document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+            document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+            document.getElementById('section-resignation').innerHTML = '<h4>Resignation Requests</h4><div class="loading-indicator"><div class="spinner"></div></div>';
+            
+            // Fetch regular notifications
+            const notificationData = await fetchNotifications();
+            console.log('Fetched notification data:', notificationData); // Debug log
+            
+            notificationCount.textContent = notificationData.notificationCount;
+            
+            // Debug: Check training requests data
+            if (notificationData.trainingRequests && notificationData.trainingRequests.length > 0) {
+                console.log('Training requests found:', {
+                    count: notificationData.trainingRequests.length,
+                    firstItem: notificationData.trainingRequests[0]
+                });
+            } else {
+                console.log('No training requests found in response');
             }
+            
+            // Update sections with proper data passing
+            updateTrainingRequestsSection(notificationData.trainingRequests || []);
+            updateApplicantsSection(notificationData.applicants || []);
+            updateLeaveRequestsSection(notificationData.leaveRequests || []);
+            updateResignationRequestsSection(notificationData.offboardingRequests || []); 
+            
+        } catch (error) {
+            console.error('Error updating notifications:', error);
+            
+            // Show error message in sections
+            const errorHTML = '<div class="notification-item"><div class="headline">Error loading data</div><div class="content">Could not load data. Please try again later.</div></div>';
+            
+            document.getElementById('section-training').innerHTML = '<h4>Training Requests</h4>' + errorHTML;
+            document.getElementById('section-2').innerHTML = '<h4>Applicants Awaiting Review</h4>' + errorHTML;
+            document.getElementById('section-3').innerHTML = '<h4>Leave Requests</h4>' + errorHTML;
+            document.getElementById('section-resignation').innerHTML = '<h4>Resignation Requests</h4>' + errorHTML;
         }
-    });
+    }
+});
 
   // Update the older notifications handling to sort by date
 document.addEventListener('DOMContentLoaded', function() {

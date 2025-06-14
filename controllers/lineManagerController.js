@@ -7945,6 +7945,7 @@ getLeaveTypeName: async function(leaveTypeId) {
         return 'Leave';
     }
 },
+
 getLineManagerNotifications: async function (req, res) {
     // Check for authentication
     if (!req.session.user) {
@@ -7952,6 +7953,8 @@ getLineManagerNotifications: async function (req, res) {
     }
 
     try {
+        console.log(`[${new Date().toISOString()}] Starting getLineManagerNotifications for user: ${req.session.user.userId}`);
+        
         // Get the line manager's department ID first
         const lineManagerId = req.session.user.userId;
         const { data: lineManagerData, error: lineManagerError } = await supabase
@@ -7961,41 +7964,51 @@ getLineManagerNotifications: async function (req, res) {
             .single();
 
         if (lineManagerError) {
-            console.error('Error fetching line manager department:', lineManagerError);
+            console.error(`[${new Date().toISOString()}] Error fetching line manager department:`, lineManagerError);
             throw lineManagerError;
         }
 
         const lineManagerDepartmentId = lineManagerData?.departmentId;
+        console.log(`[${new Date().toISOString()}] Line manager department ID: ${lineManagerDepartmentId}`);
 
         if (!lineManagerDepartmentId) {
-            console.error('Line manager has no department assigned');
+            console.error(`[${new Date().toISOString()}] Line manager has no department assigned`);
             return res.status(400).json({ error: 'Department not assigned to your account' });
         }
 
         // Fetch applicants awaiting Line Manager action (P1 status) 
-        // Filter applicants by the line manager's department
+        console.log(`[${new Date().toISOString()}] Fetching P1 applicants for department: ${lineManagerDepartmentId}`);
         const { data: p1Applicants, error: p1ApplicantsError } = await supabase
             .from('applicantaccounts')
             .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
             .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED')
-            .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
+            .eq('departmentId', lineManagerDepartmentId)
             .order('created_at', { ascending: false });
 
-        if (p1ApplicantsError) throw p1ApplicantsError;
+        if (p1ApplicantsError) {
+            console.error(`[${new Date().toISOString()}] Error fetching P1 applicants:`, p1ApplicantsError);
+            throw p1ApplicantsError;
+        }
+        console.log(`[${new Date().toISOString()}] Found ${p1Applicants?.length || 0} P1 applicants`);
 
         // Fetch applicants awaiting Line Manager evaluation (P3 status) 
-        // Filter applicants by the line manager's department
+        console.log(`[${new Date().toISOString()}] Fetching P3 applicants for department: ${lineManagerDepartmentId}`);
         const { data: p3Applicants, error: p3ApplicantsError } = await supabase
             .from('applicantaccounts')
             .select('applicantId, created_at, lastName, firstName, applicantStatus, jobId, departmentId')
             .eq('applicantStatus', 'P3 - Awaiting for Line Manager Evaluation')
-            .eq('departmentId', lineManagerDepartmentId) // Filter by department ID
+            .eq('departmentId', lineManagerDepartmentId)
             .order('created_at', { ascending: false });
 
-        if (p3ApplicantsError) throw p3ApplicantsError;
+        if (p3ApplicantsError) {
+            console.error(`[${new Date().toISOString()}] Error fetching P3 applicants:`, p3ApplicantsError);
+            throw p3ApplicantsError;
+        }
+        console.log(`[${new Date().toISOString()}] Found ${p3Applicants?.length || 0} P3 applicants`);
 
         // Combine the applicants
         const allApplicants = [...p1Applicants, ...p3Applicants];
+        console.log(`[${new Date().toISOString()}] Total applicants: ${allApplicants.length}`);
 
         // Format the applicants data
         const formattedApplicants = allApplicants.map(applicant => ({
@@ -8003,7 +8016,7 @@ getLineManagerNotifications: async function (req, res) {
             firstName: applicant.firstName || 'N/A',
             lastName: applicant.lastName || 'N/A',
             status: applicant.applicantStatus || 'N/A',
-            jobId: applicant.jobId, // Include jobId for the redirect
+            jobId: applicant.jobId,
             createdAt: applicant.created_at,
             formattedDate: new Date(applicant.created_at).toLocaleString('en-US', {
                 weekday: 'short', 
@@ -8016,6 +8029,7 @@ getLineManagerNotifications: async function (req, res) {
         }));
 
         // Fetch pending leave requests for staff in the line manager's department
+        console.log(`[${new Date().toISOString()}] Fetching leave requests for department: ${lineManagerDepartmentId}`);
         const { data: leaveRequests, error: leaveError } = await supabase
             .from('leaverequests')
             .select(`
@@ -8042,12 +8056,16 @@ getLineManagerNotifications: async function (req, res) {
             .eq('status', 'Pending')
             .order('created_at', { ascending: false });
 
-        if (leaveError) throw leaveError;
+        if (leaveError) {
+            console.error(`[${new Date().toISOString()}] Error fetching leave requests:`, leaveError);
+            throw leaveError;
+        }
 
         // Filter leave requests to only include those from the line manager's department
         const filteredLeaveRequests = leaveRequests.filter(leave => 
             leave.useraccounts?.staffaccounts[0]?.departmentId === lineManagerDepartmentId
         );
+        console.log(`[${new Date().toISOString()}] Found ${filteredLeaveRequests.length} leave requests for department`);
 
         // Format leave requests
         const formattedLeaveRequests = filteredLeaveRequests.map(leave => ({
@@ -8068,6 +8086,7 @@ getLineManagerNotifications: async function (req, res) {
         }));
 
         // Fetch pending offboarding/resignation requests
+        console.log(`[${new Date().toISOString()}] Fetching offboarding requests for department: ${lineManagerDepartmentId}`);
         const { data: offboardingRequests, error: offboardingError } = await supabase
             .from('offboarding_requests')
             .select(`
@@ -8089,7 +8108,7 @@ getLineManagerNotifications: async function (req, res) {
             .order('created_at', { ascending: false });
 
         if (offboardingError) {
-            console.error('Error fetching offboarding requests:', offboardingError);
+            console.error(`[${new Date().toISOString()}] Error fetching offboarding requests:`, offboardingError);
             throw offboardingError;
         }
 
@@ -8097,6 +8116,7 @@ getLineManagerNotifications: async function (req, res) {
         const filteredOffboardingRequests = offboardingRequests.filter(request => 
             request.useraccounts?.staffaccounts[0]?.departmentId === lineManagerDepartmentId
         );
+        console.log(`[${new Date().toISOString()}] Found ${filteredOffboardingRequests.length} offboarding requests for department`);
 
         // Format offboarding requests
         const formattedOffboardingRequests = filteredOffboardingRequests.map(request => ({
@@ -8116,85 +8136,163 @@ getLineManagerNotifications: async function (req, res) {
             type: 'Resignation Request'
         }));
 
-const { data: trainingRequests, error: trainingError } = await supabase
-    .from('training_records')
-    .select(`
-        trainingRecordId,
-        userId,
-        trainingId,
-        dateRequested,
-        isApproved,
-        decisionDate,
-        trainingStatus,
-        useraccounts:userId (
-            userEmail,
-            staffaccounts (
-                departmentId,
-                firstName,
-                lastName
-            )
-        ),
-        trainings:trainingId (
-            trainingName,
-            trainingDesc
-        )
-    `)
-    .is('isApproved', null) // Only get pending approvals
-    .is('decisionDate', null) // Only get requests without decision date
-    .not('trainingStatus', 'eq', 'Cancelled') // Exclude cancelled requests
-    .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
-    .order('dateRequested', { ascending: true }); // Oldest first for priority
+        // ======= ENHANCED TRAINING REQUESTS FETCHING WITH ENUM =======
+        console.log(`[${new Date().toISOString()}] Starting to fetch training requests for department: ${lineManagerDepartmentId}`);
+        
+        let formattedTrainingRequests = [];
+        
+        try {
+            // First, let's check if the training_records table exists and what columns it has
+            const { data: tableCheck, error: tableCheckError } = await supabase
+                .from('training_records')
+                .select('*')
+                .limit(1);
 
-        if (trainingError) {
-            console.error('Error fetching training requests:', trainingError);
-            // Don't throw error - just log it and continue with empty array
+            if (tableCheckError) {
+                if (tableCheckError.code === '42P01') {
+                    console.log(`[${new Date().toISOString()}] training_records table does not exist`);
+                } else {
+                    console.error(`[${new Date().toISOString()}] Error checking training_records table:`, tableCheckError);
+                }
+                // Continue with empty array if table doesn't exist
+            } else {
+                console.log(`[${new Date().toISOString()}] training_records table exists, proceeding with query`);
+                
+                // Enhanced query with detailed logging
+                console.log(`[${new Date().toISOString()}] Executing training requests query with filters:`);
+                console.log(`- trainingStatus: 'For Approval' (enum)`);
+                console.log(`- isApproved: null`);
+                console.log(`- decisionDate: null`);
+                console.log(`- departmentId: ${lineManagerDepartmentId}`);
+
+                const { data: trainingRequests, error: trainingError } = await supabase
+                    .from('training_records')
+                    .select(`
+                        trainingRecordId,
+                        userId,
+                        trainingId,
+                        dateRequested,
+                        isApproved,
+                        decisionDate,
+                        trainingStatus,
+                        useraccounts!inner (
+                            userEmail,
+                            staffaccounts!inner (
+                                departmentId,
+                                firstName,
+                                lastName
+                            )
+                        ),
+                        trainings!inner (
+                            trainingName,
+                            trainingDesc
+                        )
+                    `)
+                    .eq('trainingStatus', 'For Approval') // Enum value
+                    .is('isApproved', null)
+                    // .is('decisionDate', null)
+                    .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId)
+                    .order('dateRequested', { ascending: true });
+
+                if (trainingError) {
+                    console.error(`[${new Date().toISOString()}] Error in training requests query:`, trainingError);
+                    console.error(`[${new Date().toISOString()}] Error details:`, {
+                        code: trainingError.code,
+                        message: trainingError.message,
+                        details: trainingError.details,
+                        hint: trainingError.hint
+                    });
+                } else {
+                    console.log(`[${new Date().toISOString()}] Training requests query successful`);
+                    console.log(`[${new Date().toISOString()}] Raw training requests data:`, JSON.stringify(trainingRequests, null, 2));
+                    console.log(`[${new Date().toISOString()}] Found ${trainingRequests?.length || 0} training requests matching criteria`);
+
+                    if (trainingRequests && trainingRequests.length > 0) {
+                        // Log each training request for debugging
+                        trainingRequests.forEach((request, index) => {
+                            console.log(`[${new Date().toISOString()}] Training Request ${index + 1}:`, {
+                                trainingRecordId: request.trainingRecordId,
+                                userId: request.userId,
+                                trainingStatus: request.trainingStatus,
+                                isApproved: request.isApproved,
+                                decisionDate: request.decisionDate,
+                                departmentId: request.useraccounts?.staffaccounts?.departmentId,
+                                firstName: request.useraccounts?.staffaccounts?.firstName,
+                                lastName: request.useraccounts?.staffaccounts?.lastName,
+                                trainingName: request.trainings?.trainingName
+                            });
+                        });
+
+                        // Format training requests with detailed logging
+                        formattedTrainingRequests = trainingRequests.map((request, index) => {
+                            const formatted = {
+                                userId: request.userId,
+                                trainingRecordId: request.trainingRecordId,
+                                firstName: request.useraccounts?.staffaccounts?.firstName || 'Employee',
+                                lastName: request.useraccounts?.staffaccounts?.lastName || '',
+                                trainingName: request.trainings?.trainingName || 'N/A',
+                                dateRequested: request.dateRequested ? new Date(request.dateRequested).toLocaleString('en-US', {
+                                    weekday: 'short',
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                }) : 'Recent',
+                                trainingStatus: request.trainingStatus || 'For Approval',
+                                isApproved: request.isApproved,
+                                date: request.dateRequested
+                            };
+                            
+                            console.log(`[${new Date().toISOString()}] Formatted Training Request ${index + 1}:`, formatted);
+                            return formatted;
+                        });
+                    } else {
+                        console.log(`[${new Date().toISOString()}] No training requests found matching the criteria`);
+                    }
+                }
+            }
+        } catch (trainingFetchError) {
+            console.error(`[${new Date().toISOString()}] Unexpected error in training requests section:`, trainingFetchError);
+            console.error(`[${new Date().toISOString()}] Training fetch error stack:`, trainingFetchError.stack);
         }
 
-// In your getLineManagerNotifications function, update the training requests formatting:
-const formattedTrainingRequests = (trainingRequests || []).map(request => ({
-    userId: request.userId,
-    trainingRecordId: request.trainingRecordId,
-    firstName: request.useraccounts?.staffaccounts[0]?.firstName || request.useraccounts?.staffaccounts?.firstName || 'Employee',
-    lastName: request.useraccounts?.staffaccounts[0]?.lastName || request.useraccounts?.staffaccounts?.lastName || '',
-    trainingName: request.trainings?.trainingName || 'N/A',
-    dateRequested: request.dateRequested ? new Date(request.dateRequested).toLocaleString('en-US', {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    }) : 'Recent',
-    // Keep original date for frontend sorting
-    date: request.dateRequested
-}));
-        // Calculate total notification count (now including training requests)
+        console.log(`[${new Date().toISOString()}] Final formatted training requests count: ${formattedTrainingRequests.length}`);
+
+        // Calculate total notification count
         const notificationCount = formattedApplicants.length + 
                                  formattedLeaveRequests.length + 
                                  formattedOffboardingRequests.length +
                                  formattedTrainingRequests.length;
 
+        console.log(`[${new Date().toISOString()}] Total notification count: ${notificationCount}`);
+        console.log(`[${new Date().toISOString()}] Breakdown - Applicants: ${formattedApplicants.length}, Leave: ${formattedLeaveRequests.length}, Offboarding: ${formattedOffboardingRequests.length}, Training: ${formattedTrainingRequests.length}`);
+
+        // Prepare response data
+        const responseData = {
+            success: true,
+            data: {
+                applicants: formattedApplicants,
+                leaveRequests: formattedLeaveRequests,
+                offboardingRequests: formattedOffboardingRequests,
+                trainingRequests: formattedTrainingRequests,
+                notificationCount: notificationCount
+            }
+        };
+
         // If it's an API request, return JSON
         if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
+            console.log(`[${new Date().toISOString()}] Returning JSON response`);
             return res
                 .header('Content-Type', 'application/json')
-                .json({
-                    applicants: formattedApplicants,
-                    leaveRequests: formattedLeaveRequests,
-                    offboardingRequests: formattedOffboardingRequests,
-                    trainingRequests: formattedTrainingRequests, // Add training requests to response
-                    notificationCount: notificationCount
-                });
+                .json(responseData);
         }
 
         // Otherwise, return the rendered partial template
-        return res.render('partials/linemanager_partials', {
-            applicants: formattedApplicants,
-            leaveRequests: formattedLeaveRequests,
-            offboardingRequests: formattedOffboardingRequests,
-            trainingRequests: formattedTrainingRequests, // Add training requests to template
-            notificationCount: notificationCount
-        });
+        console.log(`[${new Date().toISOString()}] Rendering partial template`);
+        return res.render('partials/linemanager_partials', responseData.data);
+
     } catch (err) {
-        console.error('Error fetching notification data:', err);
+        console.error(`[${new Date().toISOString()}] Error in getLineManagerNotifications:`, err);
+        console.error(`[${new Date().toISOString()}] Error stack:`, err.stack);
         
         // Better error handling for API requests
         if (req.xhr || req.headers.accept?.includes('application/json') || req.path.includes('/api/')) {
@@ -8202,6 +8300,7 @@ const formattedTrainingRequests = (trainingRequests || []).map(request => ({
                 .status(500)
                 .header('Content-Type', 'application/json')
                 .json({ 
+                    success: false,
                     error: 'An error occurred while loading notifications.',
                     details: process.env.NODE_ENV === 'development' ? err.message : undefined
                 });
@@ -9677,11 +9776,16 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
         return [];
     }
 },
+
+// Updated getTrainingRequest function with enhanced logging
 getTrainingRequest: async function(req, res) {
     const userId = req.session?.user?.userId;
     const userRole = req.session?.user?.userRole;
 
+    console.log(`[${new Date().toISOString()}] getTrainingRequest called by user: ${userId}, role: ${userRole}`);
+
     if (!userId || userRole !== 'Line Manager') {
+        console.log(`[${new Date().toISOString()}] Unauthorized access attempt - userId: ${userId}, role: ${userRole}`);
         req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
         return res.redirect('/staff/login');
     }
@@ -9689,11 +9793,13 @@ getTrainingRequest: async function(req, res) {
     const requestUserId = req.params.userId;
     const recordId = req.query.recordId;
 
-    console.log(`[${new Date().toISOString()}] Line manager ${userId} accessing training request view for user ${requestUserId}, record ${recordId}`);
+    console.log(`[${new Date().toISOString()}] Training request parameters - requestUserId: ${requestUserId}, recordId: ${recordId}`);
 
     try {
         // If we have both userId and recordId, fetch the specific request data
         if (requestUserId && recordId) {
+            console.log(`[${new Date().toISOString()}] Fetching specific training request with enum status 'For Approval'`);
+            
             const { data: trainingRequest, error } = await supabase
                 .from('training_records')
                 .select(`
@@ -9704,7 +9810,13 @@ getTrainingRequest: async function(req, res) {
                             firstName,
                             lastName,
                             departmentId,
-                            jobId
+                            jobId,
+                            departments(
+                                deptName
+                            ),
+                            jobpositions(
+                                jobTitle
+                            )
                         )
                     ),
                     trainings!inner(
@@ -9719,14 +9831,33 @@ getTrainingRequest: async function(req, res) {
                 `)
                 .eq('userId', requestUserId)
                 .eq('trainingRecordId', recordId)
+                .eq('trainingStatus', 'For Approval') // Enum value
                 .is('isApproved', null)
                 .single();
 
+            if (error) {
+                console.error(`[${new Date().toISOString()}] Error fetching training request:`, error);
+                console.error(`[${new Date().toISOString()}] Query parameters used:`, {
+                    userId: requestUserId,
+                    recordId: recordId,
+                    trainingStatus: 'For Approval',
+                    isApproved: 'null'
+                });
+            }
+
             if (error || !trainingRequest) {
                 console.log(`[${new Date().toISOString()}] Training request not found or already processed`);
+                console.log(`[${new Date().toISOString()}] Error details:`, error);
                 req.flash('errors', { notFound: 'Training request not found or already processed.' });
                 return res.redirect('/linemanager/dashboard');
             }
+
+            console.log(`[${new Date().toISOString()}] Successfully fetched training request:`, {
+                trainingRecordId: trainingRequest.trainingRecordId,
+                trainingStatus: trainingRequest.trainingStatus,
+                isApproved: trainingRequest.isApproved,
+                trainingName: trainingRequest.trainings?.trainingName
+            });
 
             // Render the view with the training request data
             res.render('staffpages/linemanager_pages/view-training-request', {
@@ -9745,17 +9876,18 @@ getTrainingRequest: async function(req, res) {
         }
 
     } catch (error) {
-        console.error(`[${new Date().toISOString()}] Error in getTrainingRequest:`, error);
+        console.error(`[${new Date().toISOString()}] Unexpected error in getTrainingRequest:`, error);
+        console.error(`[${new Date().toISOString()}] Error stack:`, error.stack);
         req.flash('errors', { serverError: 'Error loading training request.' });
         res.redirect('/linemanager/dashboard');
     }
 },
-
 getTrainingRequestsForNotifications: async function(lineManagerUserId) {
-    console.log(`[${new Date().toISOString()}] Fetching training requests for line manager ${lineManagerUserId}`);
+    console.log(`[${new Date().toISOString()}] getTrainingRequestsForNotifications called for line manager: ${lineManagerUserId}`);
     
     try {
         // First, get the line manager's department ID
+        console.log(`[${new Date().toISOString()}] Fetching line manager department info`);
         const { data: lineManagerData, error: lineManagerError } = await supabase
             .from('staffaccounts')
             .select('departmentId')
@@ -9768,14 +9900,16 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
         }
 
         const lineManagerDepartmentId = lineManagerData?.departmentId;
+        console.log(`[${new Date().toISOString()}] Line manager department ID: ${lineManagerDepartmentId}`);
 
         if (!lineManagerDepartmentId) {
             console.error(`[${new Date().toISOString()}] Line manager has no department assigned`);
             return [];
         }
 
-        // Query to get training requests that need approval (isApproved = null)
-        // Join with useraccounts and staffaccounts to get staff names and filter by department
+        // Query to get training requests with enum status "For Approval" and isApproved = null
+        console.log(`[${new Date().toISOString()}] Querying training requests with enum 'For Approval' status`);
+        
         const { data: trainingRequests, error } = await supabase
             .from('training_records')
             .select(`
@@ -9798,41 +9932,72 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
                     trainingDesc
                 )
             `)
-            .is('isApproved', null) // Only get pending approvals
-            .not('trainingStatus', 'eq', 'Cancelled') // Exclude cancelled requests
-            .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
-            .order('dateRequested', { ascending: true }); // Oldest first for priority
+            .eq('trainingStatus', 'For Approval') // Enum value
+            .is('isApproved', null)
+            .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId)
+            .order('dateRequested', { ascending: true });
 
         if (error) {
             console.error(`[${new Date().toISOString()}] Error fetching training requests:`, error);
+            console.error(`[${new Date().toISOString()}] Query parameters:`, {
+                trainingStatus: 'For Approval',
+                isApproved: 'null',
+                departmentId: lineManagerDepartmentId
+            });
+            return [];
+        }
+
+        console.log(`[${new Date().toISOString()}] Raw training requests query result:`, trainingRequests);
+        console.log(`[${new Date().toISOString()}] Found ${trainingRequests?.length || 0} training requests`);
+
+        if (!trainingRequests || trainingRequests.length === 0) {
+            console.log(`[${new Date().toISOString()}] No training requests found for department ${lineManagerDepartmentId}`);
             return [];
         }
 
         // Transform the data to match frontend expectations
-        const transformedRequests = trainingRequests.map(request => ({
-            userId: request.userId,
-            trainingRecordId: request.trainingRecordId,
-            firstName: request.useraccounts.staffaccounts.firstName,
-            lastName: request.useraccounts.staffaccounts.lastName,
-            trainingName: request.trainings.trainingName,
-            dateRequested: new Date(request.dateRequested).toLocaleDateString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            }),
-            // Keep original date for frontend sorting
-            date: request.dateRequested
-        }));
+        const transformedRequests = trainingRequests.map((request, index) => {
+            console.log(`[${new Date().toISOString()}] Processing training request ${index + 1}:`, {
+                trainingRecordId: request.trainingRecordId,
+                userId: request.userId,
+                trainingStatus: request.trainingStatus,
+                isApproved: request.isApproved,
+                firstName: request.useraccounts?.staffaccounts?.firstName,
+                lastName: request.useraccounts?.staffaccounts?.lastName,
+                trainingName: request.trainings?.trainingName
+            });
 
-        console.log(`[${new Date().toISOString()}] Found ${transformedRequests.length} pending training requests for department ${lineManagerDepartmentId}`);
+            return {
+                userId: request.userId,
+                trainingRecordId: request.trainingRecordId,
+                firstName: request.useraccounts.staffaccounts.firstName,
+                lastName: request.useraccounts.staffaccounts.lastName,
+                trainingName: request.trainings.trainingName,
+                dateRequested: new Date(request.dateRequested).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }),
+                trainingStatus: request.trainingStatus,
+                isApproved: request.isApproved,
+                // Keep original date for frontend sorting
+                date: request.dateRequested
+            };
+        });
+
+        console.log(`[${new Date().toISOString()}] Successfully transformed ${transformedRequests.length} training requests`);
+        console.log(`[${new Date().toISOString()}] Final transformed requests:`, transformedRequests);
+        
         return transformedRequests;
 
     } catch (error) {
-        console.error(`[${new Date().toISOString()}] Error in getTrainingRequestsForNotifications:`, error);
+        console.error(`[${new Date().toISOString()}] Unexpected error in getTrainingRequestsForNotifications:`, error);
+        console.error(`[${new Date().toISOString()}] Error stack:`, error.stack);
         return [];
     }
 },
+
 
 getTrainingRequestDetails: async function(req, res) {
     const userId = req.session?.user?.userId;
@@ -10011,177 +10176,379 @@ getTrainingRequestDetails: async function(req, res) {
         });
     }
 },
+// Approve training request - REVISED
+approveTrainingRequest: async function(req, res) {
+    const userId = req.session?.user?.userId;
+    const userRole = req.session?.user?.userRole;
 
-    // Approve training request
-    approveTrainingRequest: async function(req, res) {
-        const userId = req.session?.user?.userId;
-        const userRole = req.session?.user?.userRole;
-
-        if (!userId || userRole !== 'Line Manager') {
-            return res.status(401).json({
-                success: false,
-                message: 'Unauthorized. Line Manager access only.',
-                timestamp: new Date().toISOString()
-            });
-        }
-
-        console.log(`[${new Date().toISOString()}] Line manager ${userId} approving training request`);
-
-        try {
-            const { remarks, trainingRecordId, userId: requestUserId } = req.body;
-
-            if (!remarks || !remarks.trim()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Remarks are required for approval',
-                    timestamp: new Date().toISOString()
-                });
-            }
-
-            if (!trainingRecordId) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Training record ID is required',
-                    timestamp: new Date().toISOString()
-                });
-            }
-
-            const approvedDate = new Date().toISOString().split('T')[0]; // Today's date
-
-            // Update the training record
-            const { error } = await supabase
-                .from('training_records')
-                .update({
-                    isApproved: true,
-                    decisionDate: approvedDate,
-                    decisionRemarks:remarks,
-                    // Note: Add these fields to your table if you want to track approval details:
-                    // approvalRemarks: remarks,
-                    // approvedBy: userId
-                })
-                .eq('trainingRecordId', trainingRecordId)
-                .is('isApproved', null); // Only update if still pending
-
-            if (error) {
-                console.error(`[${new Date().toISOString()}] Error approving training request:`, error);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to approve training request',
-                    error: error.message,
-                    timestamp: new Date().toISOString()
-                });
-            }
-
-            console.log(`[${new Date().toISOString()}] Training request ${trainingRecordId} approved successfully`);
-
-            res.json({
-                success: true,
-                message: 'Training request approved successfully!',
-                data: {
-                    trainingRecordId,
-                    status: 'approved',
-                    approvedBy: userId,
-                    approvedDate
-                },
-                timestamp: new Date().toISOString()
-            });
-
-        } catch (error) {
-            console.error(`[${new Date().toISOString()}] Error in training approval:`, error);
-            res.status(500).json({
-                success: false,
-                message: 'Internal server error during approval',
-                error: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
-    },
-
-    // Reject training request
-    rejectTrainingRequest: async function(req, res) {
-        const userId = req.session?.user?.userId;
-        const userRole = req.session?.user?.userRole;
-
-        if (!userId || userRole !== 'Line Manager') {
-            return res.status(401).json({
-                success: false,
-                message: 'Unauthorized. Line Manager access only.',
-                timestamp: new Date().toISOString()
-            });
-        }
-
-        console.log(`[${new Date().toISOString()}] Line manager ${userId} rejecting training request`);
-
-        try {
-            const { remarks, trainingRecordId, userId: requestUserId } = req.body;
-
-            if (!remarks || !remarks.trim()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Remarks are required for rejection',
-                    timestamp: new Date().toISOString()
-                });
-            }
-
-            if (!trainingRecordId) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Training record ID is required',
-                    timestamp: new Date().toISOString()
-                });
-            }
-
-            const rejectedDate = new Date().toISOString().split('T')[0]; // Today's date
-
-            // Update the training record
-            const { error } = await supabase
-                .from('training_records')
-                .update({
-                    isApproved: false,
-                    decisionDate: rejectedDate,
-                    decisionRemarks: remarks,
-                    // Note: Add these fields to your table if you want to track rejection details:
-                    // rejectionRemarks: remarks,
-                    // rejectedBy: userId
-                })
-                .eq('trainingRecordId', trainingRecordId)
-                .is('isApproved', null); // Only update if still pending
-
-            if (error) {
-                console.error(`[${new Date().toISOString()}] Error rejecting training request:`, error);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to reject training request',
-                    error: error.message,
-                    timestamp: new Date().toISOString()
-                });
-            }
-
-            console.log(`[${new Date().toISOString()}] Training request ${trainingRecordId} rejected successfully`);
-
-            res.json({
-                success: true,
-                message: 'Training request rejected successfully!',
-                data: {
-                    trainingRecordId,
-                    status: 'rejected',
-                    rejectedBy: userId,
-                    rejectedDate
-                },
-                timestamp: new Date().toISOString()
-            });
-
-        } catch (error) {
-            console.error(`[${new Date().toISOString()}] Error in training rejection:`, error);
-            res.status(500).json({
-                success: false,
-                message: 'Internal server error during rejection',
-                error: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
+    if (!userId || userRole !== 'Line Manager') {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized. Line Manager access only.',
+            timestamp: new Date().toISOString()
+        });
     }
 
+    console.log(`[${new Date().toISOString()}] Line manager ${userId} approving training request`);
+
+    try {
+        const { remarks, trainingRecordId, userId: requestUserId } = req.body;
+
+        if (!remarks || !remarks.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Remarks are required for approval',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        if (!trainingRecordId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Training record ID is required',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        const approvedDate = new Date().toISOString().split('T')[0]; // Today's date
+
+        // REVISED: Update the training record with proper enum and approval status
+        const { data: updatedRecord, error } = await supabase
+            .from('training_records')
+            .update({
+                trainingStatus: 'Not Started', // Set to enum value
+                isApproved: true, // Set to approved
+                decisionDate: approvedDate, // Record decision date
+                decisionRemarks: remarks // Record approval remarks
+            })
+            .eq('trainingRecordId', trainingRecordId)
+            .is('isApproved', null) // Only update if still pending
+            .select() // Return the updated record
+            .single();
+
+        if (error) {
+            console.error(`[${new Date().toISOString()}] Error approving training request:`, error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to approve training request',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Check if any record was actually updated
+        if (!updatedRecord) {
+            return res.status(404).json({
+                success: false,
+                message: 'Training request not found or already processed',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        console.log(`[${new Date().toISOString()}] Training request ${trainingRecordId} approved successfully - Status: Not Started, Approved: true`);
+
+        res.json({
+            success: true,
+            message: 'Training request approved successfully! Employee can now start the training.',
+            data: {
+                trainingRecordId,
+                trainingStatus: 'Not Started',
+                isApproved: true,
+                approvedBy: userId,
+                decisionDate: approvedDate,
+                decisionRemarks: remarks
+            },
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] Error in training approval:`, error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error during approval',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
+
+// Reject training request - REVISED
+rejectTrainingRequest: async function(req, res) {
+    const userId = req.session?.user?.userId;
+    const userRole = req.session?.user?.userRole;
+
+    if (!userId || userRole !== 'Line Manager') {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized. Line Manager access only.',
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    console.log(`[${new Date().toISOString()}] Line manager ${userId} rejecting training request`);
+
+    try {
+        const { remarks, trainingRecordId, userId: requestUserId } = req.body;
+
+        if (!remarks || !remarks.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Remarks are required for rejection',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        if (!trainingRecordId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Training record ID is required',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        const rejectedDate = new Date().toISOString().split('T')[0]; // Today's date
+
+        // REVISED: Update the training record with proper rejection status
+        const { data: updatedRecord, error } = await supabase
+            .from('training_records')
+            .update({
+                trainingStatus: 'Not Started', // Keep as Not Started even when rejected
+                isApproved: false, // Set to rejected
+                decisionDate: rejectedDate, // Record decision date
+                decisionRemarks: remarks // Record rejection remarks
+            })
+            .eq('trainingRecordId', trainingRecordId)
+            .is('isApproved', null) // Only update if still pending
+            .select() // Return the updated record
+            .single();
+
+        if (error) {
+            console.error(`[${new Date().toISOString()}] Error rejecting training request:`, error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to reject training request',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Check if any record was actually updated
+        if (!updatedRecord) {
+            return res.status(404).json({
+                success: false,
+                message: 'Training request not found or already processed',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        console.log(`[${new Date().toISOString()}] Training request ${trainingRecordId} rejected successfully - Status: Not Started, Approved: false`);
+
+        res.json({
+            success: true,
+            message: 'Training request rejected successfully.',
+            data: {
+                trainingRecordId,
+                trainingStatus: 'Not Started',
+                isApproved: false,
+                rejectedBy: userId,
+                decisionDate: rejectedDate,
+                decisionRemarks: remarks
+            },
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] Error in training rejection:`, error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error during rejection',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
+
+// BONUS: Updated createTrainingRequest function to properly handle the initial status
+createTrainingRequest: async function(req, res) {
+    console.log(`[${new Date().toISOString()}] Creating training request for user ${req.session?.user?.userId}`);
+    console.log('Request body:', req.body);
+
+    try {
+        const userId = req.session?.user?.userId;
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User not authenticated'
+            });
+        }
+
+        const { trainingId, startDate, endDate, scheduleType } = req.body;
+
+        // Validate required fields
+        if (!trainingId || !startDate || !endDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'Training ID, start date, and end date are required'
+            });
+        }
+
+        // Validate dates
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (end <= start) {
+            return res.status(400).json({
+                success: false,
+                message: 'End date must be after start date'
+            });
+        }
+
+        // Check if training exists and is active
+        const { data: training, error: trainingError } = await supabase
+            .from('trainings')
+            .select('trainingId, trainingName, isOnlineArrangement, totalDuration')
+            .eq('trainingId', parseInt(trainingId))
+            .eq('isActive', true)
+            .single();
+
+        if (trainingError || !training) {
+            console.error('Training not found or inactive:', trainingError);
+            return res.status(404).json({
+                success: false,
+                message: 'Training not found or inactive'
+            });
+        }
+
+        // Check for existing active requests
+        const { data: existingRequests, error: existingError } = await supabase
+            .from('training_records')
+            .select('trainingRecordId, setStartDate, setEndDate, trainingStatus, isApproved')
+            .eq('userId', userId)
+            .eq('trainingId', parseInt(trainingId))
+            .or('isApproved.is.null,isApproved.eq.true') // Pending or approved
+            .not('trainingStatus', 'eq', 'Completed'); // Exclude completed
+
+        if (existingError && existingError.code !== 'PGRST116') {
+            console.error('Error checking existing requests:', existingError);
+            throw new Error(`Failed to check existing requests: ${existingError.message}`);
+        }
+
+        // Check for conflicts
+        if (existingRequests && existingRequests.length > 0) {
+            const hasConflict = existingRequests.some(request => {
+                // If there's a pending request (isApproved is null)
+                if (request.isApproved === null) {
+                    return true; // Block duplicate pending requests
+                }
+                
+                // If there's an approved request, check for date overlap
+                if (request.isApproved === true) {
+                    const requestStart = new Date(request.setStartDate);
+                    const requestEnd = new Date(request.setEndDate);
+                    return (start <= requestEnd && end >= requestStart);
+                }
+                
+                return false;
+            });
+
+            if (hasConflict) {
+                const conflicting = existingRequests[0];
+                const conflictType = conflicting.isApproved === null ? 'pending approval' : 'approved and overlapping';
+                return res.status(400).json({
+                    success: false,
+                    message: `You already have a training request for this course that is ${conflictType}. Please check your existing requests.`
+                });
+            }
+        }
+
+        // REVISED: Create training record with proper initial status
+        const trainingRecordData = {
+            userId: userId,
+            trainingId: parseInt(trainingId),
+            setStartDate: startDate,
+            setEndDate: endDate,
+            trainingStatus: 'Not Started', // Use proper enum value
+            isApproved: null, // Pending approval
+            dateRequested: new Date().toISOString().split('T')[0],
+            decisionDate: null, // Will be set when approved/rejected
+            decisionRemarks: scheduleType ? `Schedule Type: ${scheduleType}` : null
+        };
+
+        console.log('Creating training record with data:', trainingRecordData);
+
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .insert([trainingRecordData])
+            .select()
+            .single();
+
+        if (recordError) {
+            console.error('Error creating training record:', recordError);
+            throw new Error(`Failed to create training record: ${recordError.message}`);
+        }
+
+        const trainingRecordId = trainingRecord.trainingRecordId;
+        console.log(`Training record created with ID: ${trainingRecordId}`);
+
+        // Create activity records (same as before)
+        const { data: activities, error: activitiesError } = await supabase
+            .from('training_activities')
+            .select('activityId, activityName, estActivityDuration, activityType')
+            .eq('trainingId', parseInt(trainingId))
+            .order('activityId', { ascending: true });
+
+        let activitiesCreated = 0;
+        
+        if (!activitiesError && activities && activities.length > 0) {
+            for (const activity of activities) {
+                try {
+                    const activityRecordData = {
+                        trainingRecordId: trainingRecordId,
+                        activityId: activity.activityId,
+                        status: 'Not Started',
+                        timestampzStarted: null,
+                        timestampzCompleted: null
+                    };
+
+                    const { error: activityInsertError } = await supabase
+                        .from('training_records_activities')
+                        .insert([activityRecordData]);
+
+                    if (!activityInsertError) {
+                        activitiesCreated++;
+                    }
+                } catch (activityError) {
+                    console.error(`Error creating activity record:`, activityError);
+                }
+            }
+        }
+
+        console.log(`Training request created successfully: ${trainingRecordId} with ${activitiesCreated} activities`);
+
+        res.status(201).json({
+            success: true,
+            message: 'Training request submitted successfully and is pending approval',
+            data: {
+                trainingRecordId: trainingRecordId,
+                trainingName: training.trainingName,
+                trainingStatus: 'Not Started',
+                isApproved: null, // Pending
+                scheduleType: scheduleType,
+                activitiesCreated: activitiesCreated,
+                totalActivitiesAvailable: activities ? activities.length : 0
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in createTrainingRequest:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create training request',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
     //  getTrainingRequestsForNotifications: function(req, res) {
     //      try {
     //     // Query to get training requests that need approval (isApproved = null)
