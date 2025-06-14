@@ -423,6 +423,11 @@ router.get('/employee/certificates', employeeController.getCertificates);
 // ============================
 router.get('/hr/employees', hrController.getEmployees);
 router.get('/hr/training-development-tracker', hrController.getHrTrainingDevelopmentTracker);
+router.get('/hr/training-form-data', hrController.getTrainingFormData); 
+router.post('/hr/training', hrController.createTraining); 
+router.get('/hr/employees/filter', hrController.getEmployeesByFilter); 
+router.get('/hr/existing-trainings', hrController.getExistingTrainings); 
+router.post('/hr/training/reassign', hrController.reassignTraining); 
 
 module.exports = router; 
 

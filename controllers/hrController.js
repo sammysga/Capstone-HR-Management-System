@@ -464,7 +464,8 @@ getEmployees: async function (req, res) {
                 firstName, 
                 userId,
                 jobId,
-                jobpositions(jobTitle),
+                departmentId,
+                jobpositions(jobTitle, departmentId),
                 departments(deptName),
                 useraccounts(userEmail)
             `)
@@ -483,18 +484,22 @@ getEmployees: async function (req, res) {
             
             return {
                 id: emp.staffId,
+                userId: emp.userId, // Make sure this field is included
                 firstName: emp.firstName || 'Unknown',
                 lastName: emp.lastName || 'User',
                 fullName: fullName,
-                email: emp.useraccounts?.userEmail || 'no-email@company.com', // Get email from useraccounts table
+                email: emp.useraccounts?.userEmail || 'no-email@company.com',
                 jobId: emp.jobId,
                 jobTitle: emp.jobpositions?.jobTitle || 'Unknown Position',
+                departmentId: emp.departmentId || emp.jobpositions?.departmentId,
                 department: emp.departments?.deptName || 'Unknown Department'
             };
         });
 
         console.log('Formatted employees:', formattedEmployees.length);
-        console.log('Sample employee data:', formattedEmployees[0]); // Log first employee for debugging
+        if (formattedEmployees.length > 0) {
+            console.log('Sample employee data:', formattedEmployees[0]);
+        }
 
         res.json({
             success: true,
@@ -509,52 +514,62 @@ getEmployees: async function (req, res) {
         const demoEmployees = [
             {
                 id: 'emp1',
+                userId: 1,
                 firstName: 'John',
                 lastName: 'Doe',
                 fullName: 'John Doe',
                 email: 'john.doe@company.com',
                 jobId: 1,
                 jobTitle: 'Software Engineer',
+                departmentId: 1,
                 department: 'IT'
             },
             {
                 id: 'emp2',
+                userId: 2,
                 firstName: 'Jane',
                 lastName: 'Smith',
                 fullName: 'Jane Smith',
                 email: 'jane.smith@company.com',
                 jobId: 2,
                 jobTitle: 'Operations Manager',
+                departmentId: 2,
                 department: 'Operations'
             },
             {
                 id: 'emp3',
+                userId: 3,
                 firstName: 'Mike',
                 lastName: 'Johnson',
                 fullName: 'Mike Johnson',
                 email: 'mike.johnson@company.com',
                 jobId: 3,
                 jobTitle: 'Data Analyst',
+                departmentId: 3,
                 department: 'Analytics'
             },
             {
                 id: 'emp4',
+                userId: 4,
                 firstName: 'Sarah',
                 lastName: 'Wilson',
                 fullName: 'Sarah Wilson',
                 email: 'sarah.wilson@company.com',
                 jobId: 4,
                 jobTitle: 'HR Specialist',
+                departmentId: 4,
                 department: 'Human Resources'
             },
             {
                 id: 'emp5',
+                userId: 5,
                 firstName: 'David',
                 lastName: 'Brown',
                 fullName: 'David Brown',
                 email: 'david.brown@company.com',
                 jobId: 5,
                 jobTitle: 'Marketing Manager',
+                departmentId: 5,
                 department: 'Marketing'
             }
         ];
@@ -570,15 +585,71 @@ getEmployees: async function (req, res) {
     }
 },
 
+getExistingTrainings: async function (req, res) {
+    try {
+        console.log('Loading existing trainings for reassignment...');
+
+        const { data: trainings, error } = await supabase
+            .from('trainings')
+            .select(`
+                trainingId,
+                trainingName,
+                trainingDesc,
+                isOnlineArrangement,
+                country,
+                address,
+                cost,
+                totalDuration,
+                isRequired
+            `)
+            .eq('isActive', true)
+            .order('trainingName', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching existing trainings:', error);
+            throw error;
+        }
+
+        // Format trainings for dropdown
+        const formattedTrainings = (trainings || []).map(training => ({
+            id: training.trainingId,
+            title: training.trainingName,
+            description: training.trainingDesc,
+            mode: training.isOnlineArrangement ? 'online' : 'onsite',
+            cost: training.cost || 0,
+            duration: training.totalDuration || 0,
+            isRequired: training.isRequired || false,
+            location: training.isOnlineArrangement ? null : {
+                country: training.country,
+                address: training.address
+            }
+        }));
+
+        console.log(`Found ${formattedTrainings.length} existing trainings`);
+
+        res.json({
+            success: true,
+            data: formattedTrainings,
+            message: `Successfully loaded ${formattedTrainings.length} existing trainings`
+        });
+
+    } catch (error) {
+        console.error('Error loading existing trainings:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load existing trainings',
+            error: error.message
+        });
+    }
+},
+
     // Create training with employee assignments
     createTraining: async function (req, res) {
         try {
             const {
                 trainingName,
                 trainingDesc,
-                jobId,
-                objectives,
-                skills,
+                isRequired,
                 isOnlineArrangement,
                 cost,
                 totalDuration,
@@ -586,16 +657,19 @@ getEmployees: async function (req, res) {
                 certifications,
                 assignedEmployees,
                 country,
-                address
+                address,
+                assignmentType, // 'all', 'department', 'jobPosition', 'individual'
+                departmentId,
+                jobId
             } = req.body;
 
-            console.log('Creating training with assignments:', req.body);
+            console.log('Creating training with data:', req.body);
 
             // Validation
-            if (!trainingName || !trainingDesc || !jobId) {
+            if (!trainingName || !trainingDesc) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Training name, description, and job position are required'
+                    message: 'Training name and description are required'
                 });
             }
 
@@ -606,20 +680,44 @@ getEmployees: async function (req, res) {
                 });
             }
 
-            // Create training
+            /// Get jobId from the first assigned employee
+            let trainingJobId = jobId; 
+
+            // If no jobId provided, get from first assigned employee
+            if (!trainingJobId && assignedEmployees && assignedEmployees.length > 0) {
+                console.log('No jobId provided, getting from first employee:', assignedEmployees[0].userId);
+                
+                const { data: employeeData, error: employeeError } = await supabase
+                    .from('staffaccounts')
+                    .select('jobId')
+                    .eq('userId', assignedEmployees[0].userId)
+                    .single();
+                
+                if (employeeError) {
+                    console.error('Error getting employee jobId:', employeeError);
+                    trainingJobId = 1; // Fallback to jobId 1
+                } else {
+                    trainingJobId = employeeData?.jobId || 1;
+                }
+                
+                console.log('Using jobId from employee:', trainingJobId);
+            }
+
+            // Create training record with the determined jobId
             const { data: trainingData, error: trainingError } = await supabase
                 .from('trainings')
                 .insert({
                     trainingName: trainingName,
                     trainingDesc: trainingDesc,
-                    jobId: parseInt(jobId),
                     isOnlineArrangement: isOnlineArrangement,
                     country: !isOnlineArrangement ? country : null,
                     address: !isOnlineArrangement ? address : null,
                     cost: parseFloat(cost) || 0,
                     totalDuration: parseFloat(totalDuration) || 0,
-                    userId: req.user?.id || 'system',
-                    isActive: true
+                    isRequired: isRequired || false,
+                    isActive: true,
+                    userId: req.session.user?.userId || 1,
+                    jobId: trainingJobId 
                 })
                 .select()
                 .single();
@@ -632,54 +730,65 @@ getEmployees: async function (req, res) {
             const trainingId = trainingData.trainingId;
             console.log('Training created with ID:', trainingId);
 
-            // Try to create training assignments table if it doesn't exist
+            // Create training records for assigned employees
             try {
-                await supabase.rpc('create_training_assignments_table');
-            } catch (e) {
-                console.log('Training assignments table might already exist or RPC not available');
-            }
-
-            // Create employee assignments
-            try {
-                const employeeAssignments = assignedEmployees.map(assignment => ({
+                const trainingRecords = assignedEmployees.map(assignment => ({
                     trainingId: trainingId,
-                    employeeId: assignment.employeeId,
-                    assignedDate: assignment.assignedDate || new Date().toISOString().split('T')[0],
-                    dueDate: assignment.dueDate || null,
-                    status: 'assigned',
-                    progress: 0,
-                    assignedBy: req.user?.id || 'system',
-                    isActive: true
+                    userId: assignment.userId,
+                    setStartDate: assignment.startDate || new Date().toISOString().split('T')[0],
+                    setEndDate: assignment.dueDate || null,
+                    isApproved: true, // Auto-approved since it's assigned by HR
+                    trainingStatus: 'Assigned',
+                    dateRequested: new Date().toISOString().split('T')[0],
+                    decisionDate: new Date().toISOString().split('T')[0],
+                    decisionRemarks: `Required training assigned by HR - Assignment Type: ${assignmentType}`
                 }));
 
-                const { error: assignmentsError } = await supabase
-                    .from('training_assignments')
-                    .insert(employeeAssignments);
+                const { error: recordsError } = await supabase
+                    .from('training_records')
+                    .insert(trainingRecords);
 
-                if (assignmentsError) {
-                    console.log('Could not create assignments, table might not exist:', assignmentsError);
+                if (recordsError) {
+                    console.log('Could not create training records:', recordsError);
                     // Continue without failing - training is still created
+                } else {
+                    console.log(`Created ${trainingRecords.length} training records`);
                 }
-            } catch (assignmentError) {
-                console.log('Assignment creation failed, but training was created:', assignmentError);
+            } catch (recordsError) {
+                console.log('Training records creation failed:', recordsError);
             }
 
             // Insert activities if provided
             if (activities && activities.length > 0) {
                 try {
-                    const trainingActivities = activities.map((activity, index) => ({
+                    const trainingActivities = activities.map(activity => ({
                         trainingId: trainingId,
                         activityName: activity.name,
                         activityType: activity.type,
-                        estimatedDuration: parseFloat(activity.duration),
-                        remarks: activity.remarks || null,
-                        sequenceOrder: index + 1,
-                        isActive: true
+                        estActivityDuration: parseFloat(activity.duration),
+                        activityRemarks: activity.remarks || null
                     }));
 
                     await supabase.from('training_activities').insert(trainingActivities);
+                    console.log(`Created ${trainingActivities.length} training activities`);
                 } catch (e) {
                     console.log('Could not insert activities:', e);
+                }
+            }
+
+            // Insert certifications if provided
+            if (certifications && certifications.length > 0) {
+                try {
+                    const trainingCerts = certifications.map(cert => ({
+                        trainingId: trainingId,
+                        trainingCertTitle: cert.title,
+                        trainingCertDesc: cert.description
+                    }));
+
+                    await supabase.from('training_certifications').insert(trainingCerts);
+                    console.log(`Created ${trainingCerts.length} training certifications`);
+                } catch (e) {
+                    console.log('Could not insert certifications:', e);
                 }
             }
 
@@ -689,7 +798,9 @@ getEmployees: async function (req, res) {
                 data: {
                     trainingId: trainingId,
                     trainingName: trainingName,
-                    assignedEmployeesCount: assignedEmployees.length
+                    assignedEmployeesCount: assignedEmployees.length,
+                    isRequired: isRequired,
+                    assignmentType: assignmentType
                 }
             });
 
@@ -714,33 +825,24 @@ getEmployees: async function (req, res) {
                 .select('*')
                 .order('jobTitle', { ascending: true });
 
-            // Fetch objectives
-            const { data: objectives } = await supabase
-                .from('objectives')
+            // Fetch departments
+            const { data: departments } = await supabase
+                .from('departments')
                 .select('*')
-                .order('objectiveDescrpt', { ascending: true });
-
-            // Fetch skills
-            const { data: skills } = await supabase
-                .from('jobreqskills')
-                .select('*')
-                .order('jobReqSkillName', { ascending: true });
+                .order('deptName', { ascending: true });
 
             // Fetch activity types
             const { data: activityTypes } = await supabase
-                .from('activity_types')
+                .from('training_activities_types')
                 .select('*')
-                .order('label', { ascending: true });
+                .order('activityType', { ascending: true });
 
             const formData = {
                 jobPositions: jobPositions || [],
-                objectives: objectives || [],
-                skills: {
-                    all: skills || []
-                },
+                departments: departments || [],
                 activityTypes: (activityTypes || []).map(type => ({
-                    id: type.id,
-                    label: type.label || type.activityType || type.name
+                    id: type.activityTypeId,
+                    label: type.activityType
                 }))
             };
 
@@ -750,6 +852,14 @@ getEmployees: async function (req, res) {
                     { jobId: 1, jobTitle: 'Software Engineer', jobDescrpt: 'Develops software applications' },
                     { jobId: 2, jobTitle: 'Data Analyst', jobDescrpt: 'Analyzes business data' },
                     { jobId: 3, jobTitle: 'HR Specialist', jobDescrpt: 'Manages human resources' }
+                ];
+            }
+
+            if (formData.departments.length === 0) {
+                formData.departments = [
+                    { departmentId: 1, deptName: 'IT' },
+                    { departmentId: 2, deptName: 'HR' },
+                    { departmentId: 3, deptName: 'Finance' }
                 ];
             }
 
@@ -768,8 +878,7 @@ getEmployees: async function (req, res) {
                 data: formData,
                 metadata: {
                     jobPositionsCount: formData.jobPositions.length,
-                    objectivesCount: formData.objectives.length,
-                    skillsCount: formData.skills.all.length,
+                    departmentsCount: formData.departments.length,
                     activityTypesCount: formData.activityTypes.length
                 }
             });
@@ -779,6 +888,163 @@ getEmployees: async function (req, res) {
             res.status(500).json({
                 success: false,
                 message: 'Failed to load form data',
+                error: error.message
+            });
+        }
+    },
+
+    reassignTraining: async function (req, res) {
+        try {
+            const {
+                trainingId,
+                assignedEmployees,
+                assignmentType,
+                departmentId,
+                jobId
+            } = req.body;
+
+            console.log('Re-assigning training:', { trainingId, assignmentType, employeeCount: assignedEmployees?.length });
+
+            // Validation
+            if (!trainingId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Training ID is required'
+                });
+            }
+
+            if (!assignedEmployees || assignedEmployees.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'At least one employee must be assigned'
+                });
+            }
+
+            // Get training details
+            const { data: training, error: trainingError } = await supabase
+                .from('trainings')
+                .select('trainingName, isRequired')
+                .eq('trainingId', trainingId)
+                .single();
+
+            if (trainingError || !training) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Training not found'
+                });
+            }
+
+            // Create training records for newly assigned employees
+            const trainingRecords = assignedEmployees.map(assignment => ({
+                trainingId: trainingId,
+                userId: assignment.userId,
+                setStartDate: assignment.startDate || new Date().toISOString().split('T')[0],
+                setEndDate: assignment.dueDate || null,
+                isApproved: true,
+                trainingStatus: 'Assigned',
+                dateRequested: new Date().toISOString().split('T')[0],
+                decisionDate: new Date().toISOString().split('T')[0],
+                decisionRemarks: `Training re-assigned by HR - Assignment Type: ${assignmentType}`
+            }));
+
+            const { error: recordsError } = await supabase
+                .from('training_records')
+                .insert(trainingRecords);
+
+            if (recordsError) {
+                console.error('Error creating training records:', recordsError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to assign training to employees'
+                });
+            }
+
+            console.log(`Successfully re-assigned training to ${assignedEmployees.length} employees`);
+
+            res.json({
+                success: true,
+                message: `Training "${training.trainingName}" re-assigned to ${assignedEmployees.length} employee(s)`,
+                data: {
+                    trainingId: trainingId,
+                    trainingName: training.trainingName,
+                    assignedEmployeesCount: assignedEmployees.length,
+                    isRequired: training.isRequired,
+                    assignmentType: assignmentType
+                }
+            });
+
+        } catch (error) {
+            console.error('Error re-assigning training:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to re-assign training',
+                error: error.message
+            });
+        }
+    },
+
+    getEmployeesByFilter: async function (req, res) {
+        try {
+            const { departmentId, jobId, filterType } = req.query;
+            
+            console.log('Getting employees by filter:', { departmentId, jobId, filterType });
+            
+            let query = supabase
+                .from('staffaccounts')
+                .select(`
+                    staffId, 
+                    lastName, 
+                    firstName, 
+                    userId,
+                    jobId,
+                    departmentId,
+                    jobpositions(jobTitle),
+                    departments(deptName),
+                    useraccounts(userEmail)
+                `)
+                .order('firstName', { ascending: true });
+
+            // Apply filters based on filterType
+            if (filterType === 'department' && departmentId) {
+                query = query.eq('departmentId', departmentId);
+            } else if (filterType === 'jobPosition' && jobId) {
+                query = query.eq('jobId', jobId);
+            }
+
+            const { data: employees, error } = await query;
+
+            if (error) {
+                console.error('Error fetching employees:', error);
+                throw error;
+            }
+
+            // Format the employees data
+            const formattedEmployees = (employees || []).map(emp => ({
+                id: emp.staffId,
+                userId: emp.userId,
+                firstName: emp.firstName || 'Unknown',
+                lastName: emp.lastName || 'User',
+                fullName: `${emp.firstName || 'Unknown'} ${emp.lastName || 'User'}`,
+                email: emp.useraccounts?.userEmail || 'no-email@company.com',
+                jobId: emp.jobId,
+                jobTitle: emp.jobpositions?.jobTitle || 'Unknown Position',
+                departmentId: emp.departmentId,
+                department: emp.departments?.deptName || 'Unknown Department'
+            }));
+
+            console.log(`Found ${formattedEmployees.length} employees with filter`);
+
+            res.json({
+                success: true,
+                data: formattedEmployees,
+                filterApplied: { departmentId, jobId, filterType }
+            });
+
+        } catch (error) {
+            console.error('Error fetching employees by filter:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch employees',
                 error: error.message
             });
         }
