@@ -2706,10 +2706,10 @@
                     <div class="card">
                         <div class="card-header">
                             <h3>All Certificates</h3>
-                            <button class="btn btn-primary">
+                            <!-- <button class="btn btn-primary">
                                 <i class="fas fa-upload"></i>
                                 Upload Certificate
-                            </button>
+                            </button> -->
                         </div>
                         <p>Manage your training certificates and upload new certifications you've earned.</p>
                         
@@ -4655,50 +4655,100 @@ async function loadAllCourses() {
         }
 
         function renderCertificates(certificates) {
-            const container = document.getElementById('certificatesList');
-            
-            if (certificates.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; color: #64748b; padding: 40px;">
-                        <i class="fas fa-certificate" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                        <p>No certificates available yet.</p>
-                        <p>Complete your training courses to earn certificates.</p>
-                    </div>
-                `;
-                return;
-            }
+    const container = document.getElementById('certificatesList');
+    
+    if (!certificates || certificates.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #64748b; padding: 40px;">
+                <i class="fas fa-certificate" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                <p style="font-size: 1.1rem; margin-bottom: 8px;">No certificates available yet</p>
+                <p style="font-size: 0.9rem;">Complete your training courses to earn certificates.</p>
+            </div>
+        `;
+        return;
+    }
 
-            const certificatesHTML = certificates.map(cert => `
-                <div class="certificate-list-item uploaded">
-                    <div class="certificate-list-info">
-                        <div class="certificate-list-icon">
-                            <i class="fas fa-certificate"></i>
-                        </div>
-                        <div class="certificate-list-details">
-                            <h4 class="certificate-list-title">${cert.trainingCertTitle || 'Untitled Certificate'}</h4>
-                            <div class="certificate-list-meta">
-                                <strong>Description:</strong> ${cert.trainingCertDesc || 'No description available'}
-                            </div>
-                        </div>
+    // Filter certificates that have valid URLs (handle both field naming conventions)
+    const validCertificates = certificates.filter(cert => {
+        const url = cert.certificate_url || cert.certificateUrl;
+        return url && url.trim() !== '';
+    });
+
+    if (validCertificates.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #64748b; padding: 40px;">
+                <i class="fas fa-certificate" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                <p style="font-size: 1.1rem; margin-bottom: 8px;">No certificate files available</p>
+                <p style="font-size: 0.9rem;">Certificates will appear here once they are uploaded.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const certificatesHTML = validCertificates.map(cert => {
+        // Handle different date field names
+        const dateField = cert.created_at || cert.issuedDate;
+        const formattedDate = dateField ? 
+            new Date(dateField).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            }) : 'Date not available';
+
+        // Handle different field naming conventions
+        const certificateUrl = cert.certificate_url || cert.certificateUrl;
+        const certificateTitle = cert.trainingCertTitle || cert.trainingName || 'Training Certificate';
+        const certificateDesc = cert.trainingCertDesc || 'Certificate of completion';
+
+        return `
+            <div class="certificate-list-item uploaded">
+                <div class="certificate-list-info">
+                    <div class="certificate-list-icon">
+                        <i class="fas fa-certificate"></i>
                     </div>
-                    <div class="certificate-list-actions">
-                        <div class="certificate-list-id">CERT-${cert.trainingCertId}</div>
-                        <i class="fas fa-external-link-alt certificate-view" onclick="viewCertificate('${cert.certificateUrl}')" title="View Certificate"></i>
+                    <div class="certificate-list-details">
+                        <h4 class="certificate-list-title">${certificateTitle}</h4>
+                        <div class="certificate-list-meta">
+                            <strong>Training:</strong> ${cert.trainingName || 'Unknown Training'}<br>
+                            <strong>Description:</strong> ${certificateDesc}<br>
+                            <strong>Issued:</strong> ${formattedDate}<br>
+                            <strong>Record ID:</strong> ${cert.trainingRecordId || 'N/A'}
+                        </div>
                     </div>
                 </div>
-            `).join('');
+                <div class="certificate-list-actions">
+                    <div class="certificate-list-id">CERT-${cert.trainingRecordCertificateId || cert.trainingCertId || 'N/A'}</div>
+                    <i class="fas fa-external-link-alt certificate-download" 
+                       onclick="viewCertificate('${certificateUrl}')" 
+                       title="View Certificate"
+                       style="cursor: pointer; color: #07ACB9; font-size: 1.1rem; padding: 4px; border-radius: 4px; transition: background-color 0.2s ease;"
+                       onmouseover="this.style.backgroundColor='#f0fdff'" 
+                       onmouseout="this.style.backgroundColor='transparent'"></i>
+                </div>
+            </div>
+        `;
+    }).join('');
 
-            container.innerHTML = certificatesHTML;
-        }
+    container.innerHTML = certificatesHTML;
+}
 
         function viewCertificate(certificateUrl) {
-            if (certificateUrl) {
-                // Open certificate in new tab/window
-                window.open(certificateUrl, '_blank');
-            } else {
-                alert('Certificate URL not available');
-            }
-        }
+    if (!certificateUrl || certificateUrl.trim() === '') {
+        alert('Certificate URL not available');
+        return;
+    }
+    
+    // Check if URL is relative or absolute
+    let fullUrl = certificateUrl;
+    if (!certificateUrl.startsWith('http://') && !certificateUrl.startsWith('https://')) {
+        // If it's a relative URL, you might need to prepend your domain
+        // Adjust this based on how your certificate URLs are stored
+        fullUrl = certificateUrl.startsWith('/') ? certificateUrl : '/' + certificateUrl;
+    }
+    
+    // Open certificate in new tab/window
+    window.open(fullUrl, '_blank', 'noopener,noreferrer');
+}
 
         function downloadCertificate(certId) {
             window.open(`/employee/certificates/${certId}/download`, '_blank');
@@ -4784,67 +4834,111 @@ function formatDate(dateString) {
                 alert('Failed to upload certificate. Please try again.');
             }
         }
-
 async function loadCertificates() {
-            try {
-                const response = await fetch('/employee/certificates', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                });
+    console.log('Loading certificates...'); // Debug log
+    
+    try {
+        const response = await fetch('/employee/certificates', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
 
-                const result = await response.json();
-                
-                if (result.success) {
-                    renderCertificates(result.data || []);
-                } else {
-                    throw new Error(result.message || 'Failed to fetch certificates');
-                }
-            } catch (error) {
-                console.error('Error loading certificates:', error);
-                document.getElementById('certificatesList').innerHTML = 
-                    `<div style="text-align: center; color: #64748b; padding: 40px;">
-                        <p>Failed to load certificates. Please refresh the page.</p>
-                    </div>`;
-            }
+        console.log('Response status:', response.status); // Debug log
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        function renderCertificates(certificates) {
-            const container = document.getElementById('certificatesList');
-            
-            if (certificates.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; color: #64748b; padding: 40px;">
-                        <i class="fas fa-certificate" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                        <p>No certificates available yet.</p>
-                        <p>Complete your training courses to earn certificates.</p>
-                    </div>
-                `;
-                return;
-            }
+        const result = await response.json();
+        console.log('Certificates result:', result); // Debug log
+        
+        if (result.success) {
+            console.log('Certificates data:', result.data); // Debug log
+            renderCertificates(result.data || []);
+        } else {
+            throw new Error(result.message || 'Failed to fetch certificates');
+        }
+    } catch (error) {
+        console.error('Error loading certificates:', error);
+        document.getElementById('certificatesList').innerHTML = 
+            `<div style="text-align: center; color: #64748b; padding: 40px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 10px;"></i>
+                <p style="margin: 0; color: #64748b;">Failed to load certificates</p>
+                <p style="margin: 5px 0; color: #ef4444; font-size: 0.9rem;">${error.message}</p>
+                <button onclick="loadCertificates()" style="margin-top: 10px; padding: 8px 16px; background: #07ACB9; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    <i class="fas fa-retry"></i> Retry
+                </button>
+            </div>`;
+    }
+}
 
-            const certificatesHTML = certificates.map(cert => `
-                <div class="certificate-list-item uploaded">
-                    <div class="certificate-list-info">
-                        <div class="certificate-list-icon">
-                            <i class="fas fa-certificate"></i>
-                        </div>
-                        <div class="certificate-list-details">
-                            <h4 class="certificate-list-title">${cert.trainingCertTitle || 'Untitled Certificate'}</h4>
-                            <div class="certificate-list-meta">
-                                <strong>Description:</strong> ${cert.trainingCertDesc || 'No description available'}
-                            </div>
-                        </div>
+function renderCertificates(certificates) {
+    const container = document.getElementById('certificatesList');
+    
+    if (!certificates || certificates.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #64748b; padding: 40px;">
+                <i class="fas fa-certificate" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                <p style="font-size: 1.1rem; margin-bottom: 8px;">No certificates available yet</p>
+                <p style="font-size: 0.9rem;">Complete your training courses to earn certificates.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Filter certificates that have valid URLs
+    const validCertificates = certificates.filter(cert => cert.certificate_url && cert.certificate_url.trim() !== '');
+
+    if (validCertificates.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #64748b; padding: 40px;">
+                <i class="fas fa-certificate" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                <p style="font-size: 1.1rem; margin-bottom: 8px;">No certificate files available</p>
+                <p style="font-size: 0.9rem;">Certificates will appear here once they are uploaded.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const certificatesHTML = validCertificates.map(cert => {
+        const formattedDate = cert.created_at ? 
+            new Date(cert.created_at).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            }) : 'Date not available';
+
+        return `
+            <div class="certificate-list-item uploaded">
+                <div class="certificate-list-info">
+                    <div class="certificate-list-icon">
+                        <i class="fas fa-certificate"></i>
                     </div>
-                    <div class="certificate-list-actions">
-                        <div class="certificate-list-id">CERT-${cert.trainingCertId}</div>
-                        <i class="fas fa-external-link-alt certificate-view" onclick="viewCertificate('${cert.certificateUrl}')" title="View Certificate"></i>
+                    <div class="certificate-list-details">
+                        <h4 class="certificate-list-title">${cert.trainingName || 'Training Certificate'}</h4>
+                        <div class="certificate-list-meta">
+                            <strong>Training:</strong> ${cert.trainingName || 'Unknown Training'}<br>
+                            <strong>Issued:</strong> ${formattedDate}<br>
+                            <strong>Record ID:</strong> ${cert.trainingRecordId || 'N/A'}
+                        </div>
                     </div>
                 </div>
-            `).join('');
+                <div class="certificate-list-actions">
+                    <div class="certificate-list-id">CERT-${cert.trainingRecordCertificateId || 'N/A'}</div>
+                    <i class="fas fa-external-link-alt certificate-download" 
+                       onclick="viewCertificate('${cert.certificate_url}')" 
+                       title="View Certificate"
+                       style="cursor: pointer; color: #07ACB9; font-size: 1.1rem; padding: 4px; border-radius: 4px; transition: background-color 0.2s ease;"
+                       onmouseover="this.style.backgroundColor='#f0fdff'" 
+                       onmouseout="this.style.backgroundColor='transparent'"></i>
+                </div>
+            </div>
+        `;
+    }).join('');
 
-            container.innerHTML = certificatesHTML;
-        }
+    container.innerHTML = certificatesHTML;
+}
         // View toggle functionality
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.view-btn').forEach(btn => {

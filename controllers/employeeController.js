@@ -4293,58 +4293,72 @@ getEmployeeTrainingSpecific: async function(req, res) {
         }
     },
 
-    // Method to get certificates
-    getCertificates: async function(req, res) {
-        if (!req.session.user || req.session.user.userRole !== 'Employee') {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Unauthorized. Employee access only.' 
+// Method to get certificates
+getCertificates: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
+        });
+    }
+
+    try {
+        const userId = req.session.user.userId;
+        console.log(`[${new Date().toISOString()}] Fetching certificates for user ${userId}`);
+
+        // Get all approved training records for this user
+        const { data: userTrainingRecords, error: recordsError } = await supabase
+            .from('training_records')
+            .select('trainingRecordId')
+            .eq('userId', userId)
+            .eq('isApproved', true);
+
+        if (recordsError) {
+            console.error('Error fetching training records:', recordsError);
+            throw recordsError;
+        }
+
+        if (!userTrainingRecords || userTrainingRecords.length === 0) {
+            console.log(`No approved training records found for user ${userId}`);
+            return res.json({
+                success: true,
+                data: []
             });
         }
 
-        try {
-            const userId = req.session.user.userId;
+        const trainingRecordIds = userTrainingRecords.map(record => record.trainingRecordId);
+        console.log(`Found ${trainingRecordIds.length} training records for user ${userId}`);
 
-            // Get all training records for this user
-            const { data: userTrainingRecords, error: recordsError } = await supabase
-                .from('training_records')
-                .select('trainingRecordId')
-                .eq('userId', userId)
-                .eq('isApproved', true);
-
-            if (recordsError) {
-                throw recordsError;
-            }
-
-            if (!userTrainingRecords || userTrainingRecords.length === 0) {
-                return res.json({
-                    success: true,
-                    data: []
-                });
-            }
-
-            const trainingRecordIds = userTrainingRecords.map(record => record.trainingRecordId);
-
-            // Fetch certificates for user's training records
-            const { data: certificates, error: certificatesError } = await supabase
-                .from('training_records_certificates')
-                .select(`
-                    *,
-                    training_records!inner (
-                        trainingRecordId,
-                        trainings!inner (
-                            trainingName
-                        )
+        // Fetch certificates for user's training records
+        const { data: certificates, error: certificatesError } = await supabase
+            .from('training_records_certificates')
+            .select(`
+                trainingRecordCertificateId,
+                certificate_url,
+                created_at,
+                trainingRecordId,
+                training_records!inner (
+                    trainingRecordId,
+                    trainings!inner (
+                        trainingName
                     )
-                `)
-                .in('trainingRecordId', trainingRecordIds);
+                )
+            `)
+            .in('trainingRecordId', trainingRecordIds)
+            .not('certificate_url', 'is', null)
+            .order('created_at', { ascending: false }); // Fixed ordering syntax
 
-            if (certificatesError) {
-                throw certificatesError;
-            }
+        if (certificatesError) {
+            console.error('Error fetching certificates:', certificatesError);
+            throw certificatesError;
+        }
 
-            // Format the response
-            const formattedCertificates = (certificates || []).map(cert => ({
+        console.log(`Found ${certificates ? certificates.length : 0} certificates`);
+
+        // Format the response and filter out certificates without URLs
+        const formattedCertificates = (certificates || [])
+            .filter(cert => cert.certificate_url && cert.certificate_url.trim() !== '')
+            .map(cert => ({
                 trainingRecordCertificateId: cert.trainingRecordCertificateId,
                 certificate_url: cert.certificate_url,
                 created_at: cert.created_at,
@@ -4352,19 +4366,22 @@ getEmployeeTrainingSpecific: async function(req, res) {
                 trainingName: cert.training_records?.trainings?.trainingName || 'Unknown Training'
             }));
 
-            res.json({
-                success: true,
-                data: formattedCertificates
-            });
-        } catch (error) {
-            console.error('Error fetching certificates:', error);
-            res.status(500).json({ 
-                success: false, 
-                message: 'Failed to fetch certificates',
-                error: error.message 
-            });
-        }
-    },
+        console.log(`Returning ${formattedCertificates.length} valid certificates`);
+
+        res.json({
+            success: true,
+            data: formattedCertificates
+        });
+
+    } catch (error) {
+        console.error('Error in getCertificates:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch certificates',
+            error: error.message 
+        });
+    }
+},
 
     getEmployeeTrainingProgress: async function(req, res) {
     // Authentication check
@@ -5314,8 +5331,9 @@ getAllCourses: async function(req, res) {
     }
 },
 // Get Certificates - Updated to fetch from training_records_certificates
+// Get Certificates - Simplified approach
 getEmployeeCertificates: async function(req, res) {
-const userId = req.session?.user?.userId;
+    const userId = req.session?.user?.userId;
     if (!userId) {
         return res.status(401).json({
             success: false,
@@ -5323,63 +5341,104 @@ const userId = req.session?.user?.userId;
         });
     }
 
-    console.log(`[${new Date().toISOString()}] Fetching issued certificates for user ${userId}`);
+    console.log(`[${new Date().toISOString()}] Fetching certificates for user ${userId}`);
     
     try {
-        // Get user's training records with certificate records that have URLs
-        const { data: certificateData, error: certificatesError } = await supabase
+        // Step 1: Get user's training records
+        const { data: userTrainingRecords, error: recordsError } = await supabase
             .from('training_records')
-            .select(`
-                trainingRecordId,
-                userId,
-                training_records_certificates!inner (
-                    trainingRecordCertificateId,
-                    certificate_url,
-                    created_at,
-                    trainingCertId,
-                    training_certifications!inner (
-                        trainingCertId,
-                        trainingCertTitle,
-                        trainingCertDesc
-                    )
-                )
-            `)
+            .select('trainingRecordId, trainingId')
             .eq('userId', userId)
-            .not('training_records_certificates.certificate_url', 'is', null)
-            .neq('training_records_certificates.certificate_url', '')
-            .order('training_records_certificates.created_at', { ascending: false });
+            .eq('isApproved', true);
 
-        if (certificatesError) {
-            console.error('Error fetching certificates:', certificatesError);
-            throw new Error(`Failed to fetch certificates: ${certificatesError.message}`);
+        if (recordsError) {
+            console.error('Error fetching training records:', recordsError);
+            throw new Error(`Failed to fetch training records: ${recordsError.message}`);
         }
 
-        console.log('Raw certificate data:', JSON.stringify(certificateData, null, 2));
-
-        // Flatten and format the certificate data
-        const formattedCertificates = [];
-        
-        if (certificateData && certificateData.length > 0) {
-            certificateData.forEach(record => {
-                if (record.training_records_certificates && record.training_records_certificates.length > 0) {
-                    record.training_records_certificates.forEach(cert => {
-                        if (cert.certificate_url && cert.training_certifications) {
-                            formattedCertificates.push({
-                                trainingRecordCertificateId: cert.trainingRecordCertificateId,
-                                trainingCertId: cert.trainingCertId,
-                                certificateUrl: cert.certificate_url,
-                                issuedDate: cert.created_at,
-                                trainingCertTitle: cert.training_certifications.trainingCertTitle || 'Untitled Certificate',
-                                trainingCertDesc: cert.training_certifications.trainingCertDesc || 'No description available'
-                            });
-                        }
-                    });
-                }
+        if (!userTrainingRecords || userTrainingRecords.length === 0) {
+            console.log(`No training records found for user ${userId}`);
+            return res.json({
+                success: true,
+                data: [],
+                count: 0
             });
         }
 
-        console.log(`Found ${formattedCertificates.length} issued certificates for user ${userId}`);
-        console.log('Formatted certificates:', JSON.stringify(formattedCertificates, null, 2));
+        const trainingRecordIds = userTrainingRecords.map(r => r.trainingRecordId);
+        console.log('Training record IDs:', trainingRecordIds);
+
+        // Step 2: Get certificate records for these training records
+        const { data: certificateRecords, error: certError } = await supabase
+            .from('training_records_certificates')
+            .select('*')
+            .in('trainingRecordId', trainingRecordIds)
+            .not('certificate_url', 'is', null)
+            .neq('certificate_url', '')
+            .order('created_at', { ascending: false });
+
+        if (certError) {
+            console.error('Error fetching certificate records:', certError);
+            throw new Error(`Failed to fetch certificate records: ${certError.message}`);
+        }
+
+        console.log('Certificate records found:', certificateRecords?.length || 0);
+
+        if (!certificateRecords || certificateRecords.length === 0) {
+            return res.json({
+                success: true,
+                data: [],
+                count: 0
+            });
+        }
+
+        // Step 3: Get training names for context
+        const trainingIds = [...new Set(userTrainingRecords.map(r => r.trainingId))];
+        const { data: trainings, error: trainingsError } = await supabase
+            .from('trainings')
+            .select('trainingId, trainingName')
+            .in('trainingId', trainingIds);
+
+        if (trainingsError) {
+            console.error('Error fetching trainings:', trainingsError);
+        }
+
+        // Step 4: Get certificate details if trainingCertId exists
+        const certIds = certificateRecords
+            .filter(cert => cert.trainingCertId)
+            .map(cert => cert.trainingCertId);
+
+        let certificateDetails = [];
+        if (certIds.length > 0) {
+            const { data: certDetails, error: certDetailsError } = await supabase
+                .from('training_certifications')
+                .select('trainingCertId, trainingCertTitle, trainingCertDesc')
+                .in('trainingCertId', certIds);
+
+            if (!certDetailsError) {
+                certificateDetails = certDetails || [];
+            }
+        }
+
+        // Step 5: Format the response
+        const formattedCertificates = certificateRecords.map(cert => {
+            // Find the training record to get training info
+            const trainingRecord = userTrainingRecords.find(tr => tr.trainingRecordId === cert.trainingRecordId);
+            const training = trainings?.find(t => t.trainingId === trainingRecord?.trainingId);
+            const certDetail = certificateDetails.find(cd => cd.trainingCertId === cert.trainingCertId);
+
+            return {
+                trainingRecordCertificateId: cert.trainingRecordCertificateId,
+                certificate_url: cert.certificate_url,
+                created_at: cert.created_at,
+                trainingRecordId: cert.trainingRecordId,
+                trainingName: training?.trainingName || 'Unknown Training',
+                trainingCertTitle: certDetail?.trainingCertTitle || training?.trainingName || 'Training Certificate',
+                trainingCertDesc: certDetail?.trainingCertDesc || 'Certificate of completion'
+            };
+        });
+
+        console.log(`Returning ${formattedCertificates.length} certificates for user ${userId}`);
 
         res.json({
             success: true,
@@ -5388,7 +5447,7 @@ const userId = req.session?.user?.userId;
         });
 
     } catch (error) {
-        console.error('Error in getCertificates:', error);
+        console.error('Error in getEmployeeCertificates:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to fetch certificates',
@@ -6101,7 +6160,6 @@ getUserObjectives: async function(req, res) {
     }
 },
 
-// FIXED: Single activity update without upsert (handles constraint issue)
 updateSingleActivity: async function(req, res) {
     if (!req.session.user || req.session.user.userRole !== 'Employee') {
         return res.status(401).json({ 
@@ -6115,7 +6173,7 @@ updateSingleActivity: async function(req, res) {
         const { status, timestampzStarted, timestampzCompleted } = req.body;
         const userId = req.session.user.userId;
 
-        console.log('Updating single activity with timestamps:', {
+        console.log('🔄 [Single Activity] Updating activity with timestamps:', {
             trainingRecordId,
             activityId,
             status,
@@ -6148,7 +6206,7 @@ updateSingleActivity: async function(req, res) {
             .maybeSingle();
 
         if (checkError && checkError.code !== 'PGRST116') {
-            console.error('Error checking existing activity:', checkError);
+            console.error('❌ [Single Activity] Error checking existing activity:', checkError);
             return res.status(500).json({
                 success: false,
                 message: 'Database error while checking activity record'
@@ -6165,7 +6223,7 @@ updateSingleActivity: async function(req, res) {
 
         if (existingActivity) {
             // Update existing record
-            console.log('Updating existing activity record:', existingActivity.trainingRecordActivityId);
+            console.log('🔄 [Single Activity] Updating existing activity record:', existingActivity.trainingRecordActivityId);
             
             const { data: updateResult, error: updateError } = await supabase
                 .from('training_records_activities')
@@ -6175,7 +6233,7 @@ updateSingleActivity: async function(req, res) {
                 .single();
 
             if (updateError) {
-                console.error('Error updating existing activity:', updateError);
+                console.error('❌ [Single Activity] Error updating existing activity:', updateError);
                 return res.status(500).json({
                     success: false,
                     message: 'Failed to update activity: ' + updateError.message
@@ -6185,7 +6243,7 @@ updateSingleActivity: async function(req, res) {
             updatedActivity = updateResult;
         } else {
             // Insert new record
-            console.log('Creating new activity record');
+            console.log('➕ [Single Activity] Creating new activity record');
             
             const insertData = {
                 trainingRecordId: parseInt(trainingRecordId),
@@ -6200,7 +6258,7 @@ updateSingleActivity: async function(req, res) {
                 .single();
 
             if (insertError) {
-                console.error('Error inserting new activity:', insertError);
+                console.error('❌ [Single Activity] Error inserting new activity:', insertError);
                 return res.status(500).json({
                     success: false,
                     message: 'Failed to create activity record: ' + insertError.message
@@ -6210,14 +6268,15 @@ updateSingleActivity: async function(req, res) {
             updatedActivity = insertResult;
         }
 
-        // Update training progress
+        // Update training progress - NEW LOGIC: Any activity change = In Progress
+        console.log('🔄 [Single Activity] Updating training progress after activity change...');
         try {
             await this.updateTrainingProgress(trainingRecordId);
         } catch (progressError) {
-            console.error('Failed to update training progress:', progressError);
+            console.error('❌ [Single Activity] Failed to update training progress:', progressError);
         }
 
-        console.log('Activity updated successfully:', updatedActivity);
+        console.log('✅ [Single Activity] Activity updated successfully:', updatedActivity);
 
         res.json({
             success: true,
@@ -6226,7 +6285,7 @@ updateSingleActivity: async function(req, res) {
         });
 
     } catch (error) {
-        console.error('Error updating single activity:', error);
+        console.error('❌ [Single Activity] Error updating single activity:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to update activity',
@@ -6249,8 +6308,8 @@ updateTrainingActivities: async function(req, res) {
         const userId = req.session.user.userId;
         const { activities } = req.body;
 
-        console.log('Batch updating activities with timestamps for training record:', trainingRecordId);
-        console.log('Activities to update:', activities);
+        console.log('🔄 [Batch Activities] Batch updating activities for training record:', trainingRecordId);
+        console.log('🔄 [Batch Activities] Activities to update:', activities);
 
         if (!activities || !Array.isArray(activities)) {
             return res.status(400).json({
@@ -6268,7 +6327,7 @@ updateTrainingActivities: async function(req, res) {
             .single();
 
         if (recordError || !trainingRecord) {
-            console.error('Training record not found:', recordError);
+            console.error('❌ [Batch Activities] Training record not found:', recordError);
             return res.status(404).json({
                 success: false,
                 message: 'Training record not found'
@@ -6282,7 +6341,7 @@ updateTrainingActivities: async function(req, res) {
             .eq('trainingRecordId', trainingRecordId);
 
         if (existingError) {
-            console.error('Error fetching existing activities:', existingError);
+            console.error('❌ [Batch Activities] Error fetching existing activities:', existingError);
             return res.status(500).json({
                 success: false,
                 message: 'Database error while fetching existing activities'
@@ -6294,7 +6353,7 @@ updateTrainingActivities: async function(req, res) {
         // Process each activity update
         for (const activity of activities) {
             try {
-                console.log(`Processing activity ${activity.activityId}:`, activity);
+                console.log(`🔄 [Batch Activities] Processing activity ${activity.activityId}:`, activity);
 
                 const existingActivity = existingActivities.find(ea => ea.activityId === activity.activityId);
                 
@@ -6316,7 +6375,7 @@ updateTrainingActivities: async function(req, res) {
                         .single();
 
                     if (updateError) {
-                        console.error('Error updating activity:', updateError);
+                        console.error('❌ [Batch Activities] Error updating activity:', updateError);
                         updateResults.push({ 
                             success: false, 
                             activityId: activity.activityId, 
@@ -6341,7 +6400,7 @@ updateTrainingActivities: async function(req, res) {
                         .single();
 
                     if (insertError) {
-                        console.error('Error inserting activity:', insertError);
+                        console.error('❌ [Batch Activities] Error inserting activity:', insertError);
                         updateResults.push({ 
                             success: false, 
                             activityId: activity.activityId, 
@@ -6360,7 +6419,7 @@ updateTrainingActivities: async function(req, res) {
                 });
 
             } catch (error) {
-                console.error('Error processing activity:', error);
+                console.error('❌ [Batch Activities] Error processing activity:', error);
                 updateResults.push({ 
                     success: false, 
                     activityId: activity.activityId, 
@@ -6369,17 +6428,18 @@ updateTrainingActivities: async function(req, res) {
             }
         }
 
-        // Update overall training progress
+        // Update overall training progress - NEW LOGIC: Any activity change = In Progress
+        console.log('🔄 [Batch Activities] Updating training progress after batch changes...');
         try {
             await this.updateTrainingProgress(trainingRecordId);
         } catch (progressError) {
-            console.error('Failed to update training progress:', progressError);
+            console.error('❌ [Batch Activities] Failed to update training progress:', progressError);
         }
 
         const successfulUpdates = updateResults.filter(result => result.success);
         const failedUpdates = updateResults.filter(result => !result.success);
 
-        console.log('Batch update completed:', {
+        console.log('✅ [Batch Activities] Batch update completed:', {
             successful: successfulUpdates.length,
             failed: failedUpdates.length
         });
@@ -6395,7 +6455,7 @@ updateTrainingActivities: async function(req, res) {
         });
 
     } catch (error) {
-        console.error('Error in batch update:', error);
+        console.error('❌ [Batch Activities] Error in batch update:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to update activities',
@@ -6404,34 +6464,47 @@ updateTrainingActivities: async function(req, res) {
     }
 },
 
-// Helper function to update training progress (no changes needed)
 updateTrainingProgress: async function(trainingRecordId) {
     try {
-        // Get all activities for this training record
-        const { data: activities, error: activitiesError } = await supabase
-            .from('training_records_activities')
-            .select('status')
-            .eq('trainingRecordId', trainingRecordId);
+        console.log(`🔄 [Training Progress] Updating progress for training record: ${trainingRecordId}`);
 
-        if (activitiesError) {
-            console.error('Error fetching activities for progress update:', activitiesError);
+        // Check if there are any certificates uploaded for this training record
+        const { data: certificates, error: certError } = await supabase
+            .from('training_records_certificates')
+            .select('certificate_url')
+            .eq('trainingRecordId', trainingRecordId)
+            .not('certificate_url', 'is', null);
+
+        if (certError) {
+            console.error('❌ [Training Progress] Error checking certificates:', certError);
             return;
         }
-
-        if (!activities || activities.length === 0) {
-            return;
-        }
-
-        const totalActivities = activities.length;
-        const completedActivities = activities.filter(activity => activity.status === 'Completed').length;
-        const inProgressActivities = activities.filter(activity => activity.status === 'In Progress').length;
 
         let trainingStatus = 'Not Started';
-        
-        if (completedActivities === totalActivities) {
+
+        // If any certificate is uploaded, mark as Completed
+        if (certificates && certificates.length > 0) {
             trainingStatus = 'Completed';
-        } else if (completedActivities > 0 || inProgressActivities > 0) {
-            trainingStatus = 'In Progress';
+            console.log(`✅ [Training Progress] Found ${certificates.length} certificate(s), setting status to Completed`);
+        } else {
+            // Check if there are any activity records (any status change means In Progress)
+            const { data: activities, error: activitiesError } = await supabase
+                .from('training_records_activities')
+                .select('status, trainingRecordActivityId')
+                .eq('trainingRecordId', trainingRecordId);
+
+            if (activitiesError) {
+                console.error('❌ [Training Progress] Error fetching activities:', activitiesError);
+                return;
+            }
+
+            // If there are any activity records, mark as In Progress
+            if (activities && activities.length > 0) {
+                trainingStatus = 'In Progress';
+                console.log(`🔄 [Training Progress] Found ${activities.length} activity record(s), setting status to In Progress`);
+            } else {
+                console.log(`⏸️ [Training Progress] No activities or certificates found, keeping status as Not Started`);
+            }
         }
 
         // Update training record status
@@ -6441,13 +6514,13 @@ updateTrainingProgress: async function(trainingRecordId) {
             .eq('trainingRecordId', trainingRecordId);
 
         if (updateError) {
-            console.error('Error updating training status:', updateError);
+            console.error('❌ [Training Progress] Error updating training status:', updateError);
         } else {
-            console.log(`Training ${trainingRecordId} status updated to: ${trainingStatus}`);
+            console.log(`✅ [Training Progress] Training ${trainingRecordId} status updated to: ${trainingStatus}`);
         }
 
     } catch (error) {
-        console.error('Error in updateTrainingProgress:', error);
+        console.error('❌ [Training Progress] Error in updateTrainingProgress:', error);
     }
 },
 
