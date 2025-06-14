@@ -780,39 +780,43 @@ getTrainingDevelopmentTracker: async function (req, res) {
                 const recordId = record.trainingRecordId || record.recordId || record.id || null;
                 
                 return {
-                    // FIXED: Use userId consistently instead of employeeId
-                    employeeId: record.userId, // This should match what's used in the modal
-                    userId: record.userId, // Keep both for compatibility
-                    employeeName: employee.fullName || `User ${record.userId}`,
-                    employeeEmail: employeeEmail, // NOW USING PROPER EMAIL FROM useraccounts
-                    jobTitle: job.title || 'Unknown Position',
-                    
-                    // Training information from trainings table via trainingId FK
-                    trainingTitle: training.name || `Training ${record.trainingId}`,
-                    trainingId: record.trainingId,
-                    trainingDescription: training.description || '',
-                    trainingMode: training.mode || 'unknown',
-                    trainingDuration: training.duration || 0,
-                    trainingCost: training.cost || 0,
-                    
-                    // Assignment status and progress
-                    status: status,
-                    progress: progress,
-                    startDate: startDate,
-                    dueDate: dueDate,
-                    hasTraining: true,
-                    isOverdue: isOverdue,
-                    
-                    // Additional metadata from training_records
-                    recordId: recordId,
-                    enrollmentDate: record.enrollmentDate || record.createdAt || record.created_at || startDate,
-                    completionDate: record.completionDate || record.completion_date || null,
-                    lastUpdated: record.updatedAt || record.updated_at || record.lastUpdated || null,
-                    
-                    // Calculated fields
-                    daysRemaining: Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)),
-                    daysSinceStart: Math.ceil((now - startDate) / (1000 * 60 * 60 * 24))
-                };
+    // FIXED: Use userId consistently instead of employeeId
+    employeeId: record.userId, // This should match what's used in the modal
+    userId: record.userId, // Keep both for compatibility
+    employeeName: employee.fullName || `User ${record.userId}`,
+    employeeEmail: employeeEmail, // NOW USING PROPER EMAIL FROM useraccounts
+    jobTitle: job.title || 'Unknown Position',
+    
+    // Training information from trainings table via trainingId FK
+    trainingTitle: training.name || `Training ${record.trainingId}`,
+    trainingId: record.trainingId,
+    trainingDescription: training.description || '',
+    trainingMode: training.mode || 'unknown',
+    trainingDuration: training.duration || 0,
+    trainingCost: training.cost || 0,
+    
+    // Assignment status and progress
+    status: status,
+    progress: progress,
+    startDate: startDate,
+    dueDate: dueDate,
+    hasTraining: true,
+    isOverdue: isOverdue,
+    
+    // ADD THESE TWO MISSING FIELDS:
+    isApproved: record.isApproved,           // ← ADD THIS LINE
+    trainingStatus: record.trainingStatus,   // ← ADD THIS LINE
+    
+    // Additional metadata from training_records
+    recordId: recordId,
+    enrollmentDate: record.enrollmentDate || record.createdAt || record.created_at || startDate,
+    completionDate: record.completionDate || record.completion_date || null,
+    lastUpdated: record.updatedAt || record.updated_at || record.lastUpdated || null,
+    
+    // Calculated fields
+    daysRemaining: Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)),
+    daysSinceStart: Math.ceil((now - startDate) / (1000 * 60 * 60 * 24))
+};
             });
             
             console.log(`Created ${employeeAssignments.length} employee assignments from training records`);
@@ -1180,6 +1184,295 @@ ${process.env.NODE_ENV === 'development' ?
                 </button>
             </div>
         `);
+    }
+},
+// ============================
+// PENDING TRAINING REQUESTS MANAGEMENT
+// ============================
+
+// Approve single training request by record ID
+approveTrainingRequestByRecord: async function (req, res) {
+    try {
+        console.log('🟢 Approving training request by record ID...');
+        const { recordId } = req.body;
+        
+        if (!recordId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Record ID is required'
+            });
+        }
+        
+        console.log('Record ID to approve:', recordId);
+        
+        // First, get the current record to check if it exists
+        const { data: existingRecord, error: fetchError } = await supabase
+            .from('training_records')
+            .select('*')
+            .eq('trainingRecordId', recordId)
+            .single();
+        
+        if (fetchError || !existingRecord) {
+            console.error('Training record not found:', fetchError);
+            return res.status(404).json({
+                success: false,
+                message: 'Training request not found'
+            });
+        }
+        
+        // Update the training record to set isApproved = true
+        const { data, error } = await supabase
+            .from('training_records')
+            .update({ 
+                isApproved: true,
+                trainingStatus: 'Not Started' // Change from 'For Approval' to 'Not Started' when approved
+            })
+            .eq('trainingRecordId', recordId)
+            .select();
+        
+        if (error) {
+            console.error('Error approving training request:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to approve training request: ' + error.message
+            });
+        }
+        
+        console.log('Training request approved successfully:', data[0]);
+        
+        res.json({
+            success: true,
+            message: 'Training request approved successfully',
+            data: data[0]
+        });
+        
+    } catch (error) {
+        console.error('Error in approveTrainingRequestByRecord:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error: ' + error.message
+        });
+    }
+},
+
+// Reject single training request by record ID
+rejectTrainingRequestByRecord: async function (req, res) {
+    try {
+        console.log('🔴 Rejecting training request by record ID...');
+        const { recordId, reason } = req.body;
+        
+        if (!recordId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Record ID is required'
+            });
+        }
+        
+        console.log('Record ID to reject:', recordId);
+        console.log('Rejection reason:', reason);
+        
+        // First, get the current record to check if it exists
+        const { data: existingRecord, error: fetchError } = await supabase
+            .from('training_records')
+            .select('*')
+            .eq('trainingRecordId', recordId)
+            .single();
+        
+        if (fetchError || !existingRecord) {
+            console.error('Training record not found:', fetchError);
+            return res.status(404).json({
+                success: false,
+                message: 'Training request not found'
+            });
+        }
+        
+        // Update the training record to set isApproved = false and trainingStatus = cancelled
+        const { data, error } = await supabase
+            .from('training_records')
+            .update({ 
+                isApproved: false,
+                trainingStatus: 'Cancelled' // Set to Cancelled when rejected
+            })
+            .eq('trainingRecordId', recordId)
+            .select();
+        
+        if (error) {
+            console.error('Error rejecting training request:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to reject training request: ' + error.message
+            });
+        }
+        
+        console.log('Training request rejected successfully:', data[0]);
+        
+        res.json({
+            success: true,
+            message: 'Training request rejected successfully',
+            data: data[0]
+        });
+        
+    } catch (error) {
+        console.error('Error in rejectTrainingRequestByRecord:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error: ' + error.message
+        });
+    }
+},
+
+// Approve multiple training requests in bulk
+approveTrainingRequestsBulk: async function (req, res) {
+    try {
+        console.log('🟢 Bulk approving training requests...');
+        const { recordIds } = req.body;
+        
+        if (!recordIds || !Array.isArray(recordIds) || recordIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Record IDs array is required'
+            });
+        }
+        
+        console.log('Record IDs to approve:', recordIds);
+        
+        // First, check which records exist
+        const { data: existingRecords, error: fetchError } = await supabase
+            .from('training_records')
+            .select('trainingRecordId')
+            .in('trainingRecordId', recordIds);
+        
+        if (fetchError) {
+            console.error('Error fetching training records:', fetchError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch training records: ' + fetchError.message
+            });
+        }
+        
+        const existingRecordIds = existingRecords.map(record => record.trainingRecordId);
+        console.log('Found existing records:', existingRecordIds.length, 'out of', recordIds.length);
+        
+        if (existingRecordIds.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No training requests found'
+            });
+        }
+        
+        // Update multiple training records to set isApproved = true
+        const { data, error } = await supabase
+            .from('training_records')
+            .update({ 
+                isApproved: true,
+                trainingStatus: 'Not Started' // Change from 'For Approval' to 'Not Started' when approved
+            })
+            .in('trainingRecordId', existingRecordIds)
+            .select();
+        
+        if (error) {
+            console.error('Error bulk approving training requests:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to approve training requests: ' + error.message
+            });
+        }
+        
+        console.log(`Bulk approved ${data?.length || 0} training requests`);
+        
+        res.json({
+            success: true,
+            message: `Successfully approved ${data?.length || 0} training requests`,
+            data: data,
+            approvedCount: data?.length || 0,
+            requestedCount: recordIds.length,
+            foundCount: existingRecordIds.length
+        });
+        
+    } catch (error) {
+        console.error('Error in approveTrainingRequestsBulk:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error: ' + error.message
+        });
+    }
+},
+
+// Reject multiple training requests in bulk
+rejectTrainingRequestsBulk: async function (req, res) {
+    try {
+        console.log('🔴 Bulk rejecting training requests...');
+        const { recordIds, reason } = req.body;
+        
+        if (!recordIds || !Array.isArray(recordIds) || recordIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Record IDs array is required'
+            });
+        }
+        
+        console.log('Record IDs to reject:', recordIds);
+        console.log('Rejection reason:', reason);
+        
+        // First, check which records exist
+        const { data: existingRecords, error: fetchError } = await supabase
+            .from('training_records')
+            .select('trainingRecordId')
+            .in('trainingRecordId', recordIds);
+        
+        if (fetchError) {
+            console.error('Error fetching training records:', fetchError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch training records: ' + fetchError.message
+            });
+        }
+        
+        const existingRecordIds = existingRecords.map(record => record.trainingRecordId);
+        console.log('Found existing records:', existingRecordIds.length, 'out of', recordIds.length);
+        
+        if (existingRecordIds.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No training requests found'
+            });
+        }
+        
+        // Update multiple training records to set isApproved = false
+        const { data, error } = await supabase
+            .from('training_records')
+            .update({ 
+                isApproved: false,
+                trainingStatus: 'Cancelled' // Set to Cancelled when rejected
+            })
+            .in('trainingRecordId', existingRecordIds)
+            .select();
+        
+        if (error) {
+            console.error('Error bulk rejecting training requests:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to reject training requests: ' + error.message
+            });
+        }
+        
+        console.log(`Bulk rejected ${data?.length || 0} training requests`);
+        
+        res.json({
+            success: true,
+            message: `Successfully rejected ${data?.length || 0} training requests`,
+            data: data,
+            rejectedCount: data?.length || 0,
+            requestedCount: recordIds.length,
+            foundCount: existingRecordIds.length
+        });
+        
+    } catch (error) {
+        console.error('Error in rejectTrainingRequestsBulk:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error: ' + error.message
+        });
     }
 },
 
@@ -8012,7 +8305,7 @@ const { data: trainingRequests, error: trainingError } = await supabase
     `)
     .is('isApproved', null) // Only get pending approvals
     .is('decisionDate', null) // Only get requests without decision date
-    .not('trainingStatus', 'eq', 'cancelled') // Exclude cancelled requests
+    .not('trainingStatus', 'eq', 'Cancelled') // Exclude cancelled requests
     .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
     .order('dateRequested', { ascending: true }); // Oldest first for priority
 
@@ -9514,7 +9807,7 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
                 )
             `)
             .is('isApproved', null) // Only get pending approvals
-            .not('trainingStatus', 'eq', 'cancelled') // Exclude cancelled requests
+            .not('trainingStatus', 'eq', 'Cancelled') // Exclude cancelled requests
             .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
             .order('dateRequested', { ascending: true }); // Oldest first for priority
 
@@ -9670,7 +9963,7 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
                 )
             `)
             .is('isApproved', null) // Only get pending approvals
-            .not('trainingStatus', 'eq', 'cancelled') // Exclude cancelled requests
+            .not('trainingStatus', 'eq', 'Cancelled') // Exclude cancelled requests
             .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId) // Filter by department
             .order('dateRequested', { ascending: true }); // Oldest first for priority
 

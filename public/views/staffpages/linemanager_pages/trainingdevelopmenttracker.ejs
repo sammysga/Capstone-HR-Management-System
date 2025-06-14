@@ -8,6 +8,268 @@
     <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+.view-all-btn {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+.view-all-btn:hover {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.view-all-btn i {
+    font-size: 10px;
+}
+
+/* Modal Close Button */
+.close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close-modal-btn:hover {
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+/* Pending Requests Controls */
+.pending-requests-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    gap: 20px;
+}
+
+.pending-stats-summary {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.pending-count-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+/* Pending Requests List */
+.pending-requests-list {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background-color: white;
+}
+
+.pending-request-item {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.pending-request-item:hover {
+    background-color: #f8fafc;
+}
+
+.pending-request-item:last-child {
+    border-bottom: none;
+}
+
+.pending-request-checkbox {
+    margin-right: 15px;
+    width: 18px;
+    height: 18px;
+    accent-color: #f59e0b;
+}
+
+.pending-request-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.pending-request-details {
+    flex: 1;
+}
+
+.pending-employee-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #334155;
+    margin: 0 0 6px 0;
+}
+
+.pending-training-title {
+    font-size: 14px;
+    color: #f59e0b;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.pending-request-meta {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.pending-request-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 20px;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.approve-btn {
+    background-color: #10b981;
+    color: white;
+}
+
+.approve-btn:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+}
+
+.reject-btn {
+    background-color: #ef4444;
+    color: white;
+}
+
+.reject-btn:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+}
+
+.view-details-btn {
+    background-color: #6366f1;
+    color: white;
+}
+
+.view-details-btn:hover {
+    background-color: #4f46e5;
+    transform: translateY(-1px);
+}
+
+/* Empty State */
+.no-pending-requests {
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+}
+
+.no-pending-requests i {
+    font-size: 48px;
+    color: #cbd5e1;
+    margin-bottom: 15px;
+}
+
+.no-pending-requests h3 {
+    margin: 0 0 10px 0;
+    color: #475569;
+    font-size: 18px;
+}
+
+.no-pending-requests p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Priority Badges */
+.priority-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+.priority-high {
+    background-color: #fecaca;
+    color: #dc2626;
+}
+
+.priority-medium {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.priority-low {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pending-requests-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .pending-request-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .pending-request-actions {
+        margin-left: 0;
+        justify-content: flex-end;
+    }
+}
         /* Import Inter font */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
@@ -1607,109 +1869,148 @@ s
         </div>
         
         
-        <!-- Training Request Statistics -->
-        <div class="training-request-stats">
-            <div class="request-stat-card pending">
-                <div class="request-stat-icon">
+<!-- Training Request Statistics with Database Data -->
+<div class="training-request-stats">
+    <div class="request-stat-card pending">
+        <div class="request-stat-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="request-stat-number" id="pendingRequestsCount">
+            <%
+            // Calculate pending requests from training_records where isApproved = FALSE
+            let pendingFromDB = 0;
+            let ongoingFromDB = 0;
+            let completedFromDB = 0;
+            let overdueFromDB = 0;
+            
+            if (typeof allAssignments !== 'undefined' && allAssignments && allAssignments.length > 0) {
+                allAssignments.forEach(assignment => {
+                    // Check trainingStatus and isApproved to categorize
+                    if (assignment.trainingStatus === 'For Approval' || assignment.isApproved === null) {
+                        pendingFromDB++; // For Approval status = pending requests
+                    } else if (assignment.trainingStatus === 'Cancelled' || assignment.isApproved === false) {
+                        // Cancelled trainings - could be counted separately or ignored
+                        // For now, we'll count them as a different category or skip them
+                    } else if (assignment.isApproved === true) {
+                        // For approved trainings, categorize by trainingStatus
+                        switch(assignment.trainingStatus) {
+                            case 'In Progress':
+                                ongoingFromDB++;
+                                break;
+                            case 'Completed':
+                                completedFromDB++;
+                                break;
+                            case 'Not Started':
+                                ongoingFromDB++; // Count Not Started as ongoing since they're approved
+                                break;
+                            default:
+                                // Handle any other status or check if overdue
+                                if (assignment.isOverdue) {
+                                    overdueFromDB++;
+                                } else {
+                                    ongoingFromDB++;
+                                }
+                        }
+                    }
+                });
+            }
+            %>
+            <%= pendingFromDB %>
+        </div>
+        <div class="request-stat-label">Pending Requests</div>
+        <div class="request-stat-change neutral">
+            <i class="fas fa-minus"></i> No change
+        </div>
+        <!-- Add View All Button -->
+        <div class="stat-card-action" style="margin-top: 15px;">
+            <button class="view-all-btn" onclick="openPendingRequestsModal()">
+                <i class="fas fa-eye"></i> View All
+            </button>
+        </div>
+    </div>
+    
+    <div class="request-stat-card approved">
+        <div class="request-stat-icon">
+            <i class="fas fa-play-circle"></i>
+        </div>
+        <div class="request-stat-number" id="ongoingRequestsCount">
+            <%= ongoingFromDB %>
+        </div>
+        <div class="request-stat-label">Ongoing Active Trainings</div>
+        <div class="request-stat-change increase">
+            <i class="fas fa-arrow-up"></i> +2 this week
+        </div>
+    </div>
+    
+    <div class="request-stat-card completed" style="--accent-color: #3b82f6;">
+        <div class="request-stat-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div class="request-stat-number" id="completedRequestsCount">
+            <%= completedFromDB %>
+        </div>
+        <div class="request-stat-label">Completed Active Trainings</div>
+        <div class="request-stat-change increase">
+            <i class="fas fa-arrow-up"></i> +3 this week
+        </div>
+    </div>
+    
+    <div class="request-stat-card rejected">
+        <div class="request-stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="request-stat-number" id="overdueRequestsCount">
+            <%= overdueFromDB %>
+        </div>
+        <div class="request-stat-label">Overdue Trainings</div>
+        <div class="request-stat-change decrease">
+            <i class="fas fa-arrow-down"></i> -1 this week
+        </div>
+    </div>
+</div>
+
+<!-- Pending Requests Modal -->
+<div class="modal-overlay" id="pendingRequestsModal">
+    <div class="modal-content" style="max-width: 1000px;">
+        <div class="modal-header">
+            <h2 class="modal-title">Pending Training Requests</h2>
+            <button type="button" class="close-modal-btn" onclick="closePendingRequestsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Filter and Search Section -->
+        <div class="pending-requests-controls">
+            <div class="search-container" style="flex: 1; max-width: 400px;">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search pending requests..." id="pendingRequestsSearch">
+            </div>
+            
+            <div class="pending-stats-summary">
+                <span class="pending-count-badge">
                     <i class="fas fa-clock"></i>
-                </div>
-                <div class="request-stat-number" id="pendingRequestsCount">
-                    <%
-                    // Calculate pending requests count
-                    let pendingCount = 0;
-                    if (typeof assignments !== 'undefined' && assignments && assignments.length > 0) {
-                        pendingCount = assignments.filter(assignment => 
-                            assignment.status === 'not-started' || assignment.status === 'pending'
-                        ).length;
-                    } else {
-                        // Sample data count for testing
-                        pendingCount = 1; // From sample data: Mike Johnson - not-started
-                    }
-                    %>
-                    <%= pendingCount %>
-                </div>
-                <div class="request-stat-label">Pending Requests</div>
-                <div class="request-stat-change neutral">
-                    <i class="fas fa-minus"></i> No change
-                </div>
-            </div>
-            
-            <div class="request-stat-card approved">
-                <div class="request-stat-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="request-stat-number" id="approvedRequestsCount">
-                    <%
-                    // Calculate approved/in-progress requests count
-                    let approvedCount = 0;
-                    if (typeof assignments !== 'undefined' && assignments && assignments.length > 0) {
-                        approvedCount = assignments.filter(assignment => 
-                            assignment.status === 'in-progress' || assignment.status === 'approved'
-                        ).length;
-                    } else {
-                        // Sample data count for testing
-                        approvedCount = 1; // From sample data: John Doe - in-progress
-                    }
-                    %>
-                    <%= approvedCount %>
-                </div>
-                <div class="request-stat-label">Approved Requests</div>
-                <div class="request-stat-change increase">
-                    <i class="fas fa-arrow-up"></i> +2 this week
-                </div>
-            </div>
-            
-            <div class="request-stat-card rejected">
-                <div class="request-stat-icon">
-                    <i class="fas fa-times-circle"></i>
-                </div>
-                <div class="request-stat-number" id="rejectedRequestsCount">
-                    <%
-                    // Calculate rejected requests count
-                    let rejectedCount = 0;
-                    if (typeof assignments !== 'undefined' && assignments && assignments.length > 0) {
-                        rejectedCount = assignments.filter(assignment => 
-                            assignment.status === 'rejected' || assignment.status === 'cancelled'
-                        ).length;
-                    } else {
-                        // Sample data count for testing
-                        rejectedCount = 0; // No rejected in sample data
-                    }
-                    %>
-                    <%= rejectedCount %>
-                </div>
-                <div class="request-stat-label">Rejected Requests</div>
-                <div class="request-stat-change decrease">
-                    <i class="fas fa-arrow-down"></i> -1 this week
-                </div>
-            </div>
-            
-            <!-- Total Completed (Bonus stat) -->
-            <div class="request-stat-card completed" style="--accent-color: #3b82f6;">
-                <div class="request-stat-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <div class="request-stat-number" id="completedRequestsCount">
-                    <%
-                    // Calculate completed requests count
-                    let completedCount = 0;
-                    if (typeof assignments !== 'undefined' && assignments && assignments.length > 0) {
-                        completedCount = assignments.filter(assignment => 
-                            assignment.status === 'completed'
-                        ).length;
-                    } else {
-                        // Sample data count for testing
-                        completedCount = 1; // From sample data: Jane Smith - completed
-                    }
-                    %>
-                    <%= completedCount %>
-                </div>
-                <div class="request-stat-label">Completed</div>
-                <div class="request-stat-change increase">
-                    <i class="fas fa-arrow-up"></i> +3 this week
-                </div>
+                    <span id="pendingModalCount">0</span> Pending
+                </span>
             </div>
         </div>
+
+        <!-- Pending Requests List -->
+        <div class="pending-requests-list" id="pendingRequestsList">
+            <!-- Requests will be populated by JavaScript from database -->
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closePendingRequestsModal()">Close</button>
+            <button type="button" class="btn-primary" onclick="approveAllSelected()">
+                <i class="fas fa-check"></i> Approve Selected
+            </button>
+            <button type="button" class="btn-primary" onclick="rejectAllSelected()" style="background-color: #ef4444; margin-left: 10px;">
+                <i class="fas fa-times"></i> Reject Selected
+            </button>
+        </div>
+    </div>
+</div>
         
         <!-- Search and Filter Section -->
         <div class="search-filter-section">
@@ -1941,7 +2242,654 @@ document.addEventListener('DOMContentLoaded', function() {
     <% } %>
 });
 
+// Initialize database data for pending requests
+let dbPendingRequests = [];
 
+// Initialize when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all assignments data from server
+    <% if (typeof allAssignments !== 'undefined' && allAssignments) { %>
+        const allServerAssignments = <%- JSON.stringify(allAssignments) %>;
+        
+        console.log('📥 Loading pending requests from database...');
+        console.log('Total assignments from server:', allServerAssignments.length);
+        
+        // Filter for pending requests (trainingStatus = 'For Approval' OR isApproved = null)
+        dbPendingRequests = allServerAssignments.filter(assignment => {
+            // Only show records that are waiting for approval
+            const isPendingApproval = assignment.trainingStatus === 'For Approval' || 
+                                    (assignment.isApproved === null || assignment.isApproved === undefined);
+            
+            console.log(`Assignment ${assignment.employeeName}: isApproved = ${assignment.isApproved}, trainingStatus = ${assignment.trainingStatus}, isPendingApproval = ${isPendingApproval}`);
+            
+            return isPendingApproval;
+        });
+        
+        console.log(`Found ${dbPendingRequests.length} pending requests (isApproved = false)`);
+        
+        // Log some examples
+        if (dbPendingRequests.length > 0) {
+            console.log('Sample pending request:', {
+                employee: dbPendingRequests[0].employeeName,
+                training: dbPendingRequests[0].trainingTitle,
+                isApproved: dbPendingRequests[0].isApproved,
+                recordId: dbPendingRequests[0].recordId
+            });
+        }
+        
+    <% } else { %>
+        console.log('❌ No allAssignments data available');
+        dbPendingRequests = [];
+    <% } %>
+});
+
+// Open Pending Requests Modal
+function openPendingRequestsModal() {
+    console.log('Opening pending requests modal...');
+    
+    // Load pending requests data from database
+    loadPendingRequestsFromDB();
+    
+    // Show modal
+    document.getElementById('pendingRequestsModal').classList.add('show');
+}
+
+// Close Pending Requests Modal
+function closePendingRequestsModal() {
+    document.getElementById('pendingRequestsModal').classList.remove('show');
+}
+
+// Load and display pending requests from database
+function loadPendingRequestsFromDB() {
+    const pendingRequestsList = document.getElementById('pendingRequestsList');
+    const pendingModalCount = document.getElementById('pendingModalCount');
+    
+    console.log(`Loading ${dbPendingRequests.length} pending requests from database`);
+    
+    // Update count
+    pendingModalCount.textContent = dbPendingRequests.length;
+    
+    // Clear existing content
+    pendingRequestsList.innerHTML = '';
+    
+    if (dbPendingRequests.length === 0) {
+        // Show empty state
+        pendingRequestsList.innerHTML = `
+            <div class="no-pending-requests">
+                <i class="fas fa-inbox"></i>
+                <h3>No Pending Requests</h3>
+                <p>All training requests have been processed.</p>
+            </div>
+        `;
+        return;
+    }
+
+ // ADD THIS DEBUG CODE HERE - RIGHT BEFORE THE forEach LOOP
+    console.log('🔍 === DEBUGGING PENDING REQUESTS ===');
+    console.log('Total pending requests:', dbPendingRequests.length);
+    
+    
+    // Populate pending requests from database
+    dbPendingRequests.forEach((request, index) => {
+        
+        console.log(`Request ${index + 1}:`, {
+            employeeName: request.employeeName,
+            trainingTitle: request.trainingTitle,
+            trainingStatus: request.trainingStatus,
+            isApproved: request.isApproved,
+            recordId: request.recordId || request.id
+        });
+
+        const requestItem = document.createElement('div');
+        requestItem.className = 'pending-request-item';
+        requestItem.setAttribute('data-request-id', request.recordId || request.id);
+        requestItem.setAttribute('data-training-record-id', request.recordId);
+        
+        // Format dates
+        const requestDate = request.enrollmentDate || request.startDate || request.createdAt;
+        const dueDate = request.dueDate;
+        const requestDateFormatted = requestDate ? new Date(requestDate).toLocaleDateString() : 'Not specified';
+        const dueDateFormatted = dueDate ? new Date(dueDate).toLocaleDateString() : 'No due date';
+        
+        // Determine priority based on due date or default to medium
+        let priority = 'medium';
+        if (dueDate) {
+            const daysUntilDue = Math.ceil((new Date(dueDate) - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysUntilDue < 7) {
+                priority = 'high';
+            } else if (daysUntilDue > 30) {
+                priority = 'low';
+            }
+        }
+        
+        requestItem.innerHTML = `
+            <input type="checkbox" class="pending-request-checkbox" data-request-id="${request.recordId || request.id}">
+            <div class="pending-request-info">
+                <div class="pending-request-details">
+                    <h4 class="pending-employee-name">
+                        ${request.employeeName || 'Unknown Employee'}
+                        <span class="priority-badge priority-${priority}">${priority.toUpperCase()}</span>
+                    </h4>
+                    <div class="pending-training-title">${request.trainingTitle || 'Unknown Training'}</div>
+                    <div class="pending-request-meta">
+                        Job Position: ${request.jobTitle || 'Not specified'}<br>
+                        Request Date: ${requestDateFormatted} • Due Date: ${dueDateFormatted}<br>
+                        Duration: ${request.trainingDuration || 'Not specified'} hours<br>
+                        Current Status: ${request.trainingStatus || 'For Approval'}<br>
+                        Email: ${request.employeeEmail || 'Not specified'}
+                        ${request.reason ? `<br>Reason: ${request.reason}` : ''}
+                    </div>
+                </div>
+                <div class="pending-request-actions">
+                    <button class="action-btn approve-btn" onclick="approveTrainingRequest('${request.recordId || request.id}')">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="action-btn reject-btn" onclick="rejectTrainingRequest('${request.recordId || request.id}')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                    <button class="action-btn view-details-btn" onclick="viewTrainingRequestDetails('${request.recordId || request.id}')">
+                        <i class="fas fa-eye"></i> Details
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        pendingRequestsList.appendChild(requestItem);
+    });
+    
+    // Initialize search functionality
+    initializePendingRequestsSearch();
+}
+
+// Initialize search functionality for pending requests
+function initializePendingRequestsSearch() {
+    const searchInput = document.getElementById('pendingRequestsSearch');
+    if (!searchInput) return;
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const requestItems = document.querySelectorAll('.pending-request-item');
+        
+        requestItems.forEach(item => {
+            const employeeName = item.querySelector('.pending-employee-name').textContent.toLowerCase();
+            const trainingTitle = item.querySelector('.pending-training-title').textContent.toLowerCase();
+            const meta = item.querySelector('.pending-request-meta').textContent.toLowerCase();
+            
+            const matches = employeeName.includes(searchTerm) || 
+                           trainingTitle.includes(searchTerm) || 
+                           meta.includes(searchTerm);
+            
+            item.style.display = matches ? 'flex' : 'none';
+        });
+    });
+}
+
+// Approve individual training request
+async function approveTrainingRequest(requestId) {
+    if (!confirm('Are you sure you want to approve this training request?')) {
+        return;
+    }
+    
+    console.log('Approving training request:', requestId);
+    
+    try {
+        const response = await fetch('/linemanager/training-request/approve', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                recordId: requestId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Training request approved successfully! Status changed to Not Started.', 'success');
+            
+            // Update the underlying data object
+            const requestIndex = dbPendingRequests.findIndex(req => (req.recordId || req.id) === requestId);
+            if (requestIndex !== -1) {
+                dbPendingRequests[requestIndex].trainingStatus = 'Not Started';
+                dbPendingRequests[requestIndex].isApproved = true;
+            }
+            
+            // Update the UI to show the new status before removing
+            const requestItem = document.querySelector(`[data-request-id="${requestId}"]`);
+            if (requestItem) {
+                // Update the status in the UI to show "Not Started"
+                const statusElement = requestItem.querySelector('.pending-request-meta');
+                if (statusElement) {
+                    // Update the status line in the meta information
+                    const currentMeta = statusElement.innerHTML;
+                    const updatedMeta = currentMeta.replace(
+                        /Current Status: [^<]*/,
+                        'Current Status: Not Started'
+                    );
+                    statusElement.innerHTML = updatedMeta;
+                }
+                
+                // Add a visual indicator that it's been approved
+                requestItem.style.backgroundColor = '#f0fdf4'; // Light green background
+                requestItem.style.border = '2px solid #10b981'; // Green border
+                
+                // Wait a moment to show the status change, then remove from pending list
+                setTimeout(() => {
+                    requestItem.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => {
+                        requestItem.remove();
+                        updateRequestCounts();
+                    }, 300);
+                }, 1500); // Show the updated status for 1.5 seconds
+            }
+        } else {
+            showNotification('Error approving request: ' + result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error approving request:', error);
+        showNotification('Error approving request. Please try again.', 'error');
+    }
+}
+
+// Reject individual training request
+async function rejectTrainingRequest(requestId) {
+    const reason = prompt('Please provide a reason for rejection (optional):');
+    if (reason === null) return; // User cancelled
+    
+    console.log('Rejecting training request:', requestId, 'Reason:', reason);
+    
+    try {
+        const response = await fetch('/linemanager/training-request/reject', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                recordId: requestId,
+                reason: reason || 'No reason provided'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Training request rejected.', 'warning');
+            
+            // Update the underlying data object
+            const requestIndex = dbPendingRequests.findIndex(req => (req.recordId || req.id) === requestId);
+            if (requestIndex !== -1) {
+                dbPendingRequests[requestIndex].trainingStatus = 'Cancelled';
+                dbPendingRequests[requestIndex].isApproved = false;
+            }
+            
+            // Remove from pending list with animation
+            const requestItem = document.querySelector(`[data-request-id="${requestId}"]`);
+            if (requestItem) {
+                requestItem.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => {
+                    requestItem.remove();
+                    updateRequestCounts();
+                }, 300);
+            }
+        } else {
+            showNotification('Error rejecting request: ' + result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error rejecting request:', error);
+        showNotification('Error rejecting request. Please try again.', 'error');
+    }
+}
+
+// View training request details
+function viewTrainingRequestDetails(requestId) {
+    console.log('Viewing details for training request:', requestId);
+    
+    // Find the request in database data
+    const request = dbPendingRequests.find(req => (req.recordId || req.id) === requestId);
+    if (request) {
+        const enrollmentDate = request.enrollmentDate || request.startDate || request.createdAt;
+        const details = `
+Employee: ${request.employeeName || 'Unknown'}
+Email: ${request.employeeEmail || 'Not specified'}
+Training: ${request.trainingTitle || 'Unknown Training'}
+Job Position: ${request.jobTitle || 'Not specified'}
+Enrollment Date: ${enrollmentDate ? new Date(enrollmentDate).toLocaleDateString() : 'Not specified'}
+Due Date: ${request.dueDate ? new Date(request.dueDate).toLocaleDateString() : 'No due date'}
+Duration: ${request.trainingDuration || 'Not specified'} hours
+Current Status: ${request.trainingStatus || 'For Approval'}
+Progress: ${request.progress || 0}%
+Training Record ID: ${request.recordId}
+        `;
+        alert('Training Request Details:\n\n' + details);
+    } else {
+        alert('Request details not found.');
+    }
+}
+
+// Approve all selected requests
+async function approveAllSelected() {
+    const selectedCheckboxes = document.querySelectorAll('.pending-request-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one request to approve.');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to approve ${selectedCheckboxes.length} selected request(s)?`)) {
+        return;
+    }
+    
+    const requestIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-request-id'));
+    
+    try {
+        const response = await fetch('/linemanager/training-request/approve-bulk', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                recordIds: requestIds
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`${requestIds.length} requests approved successfully! All statuses changed to Not Started.`, 'success');
+            
+            // Update the underlying data objects
+            requestIds.forEach(requestId => {
+                const requestIndex = dbPendingRequests.findIndex(req => (req.recordId || req.id) === requestId);
+                if (requestIndex !== -1) {
+                    dbPendingRequests[requestIndex].trainingStatus = 'Not Started';
+                    dbPendingRequests[requestIndex].isApproved = true;
+                }
+            });
+            
+            // Update UI for all selected items to show new status
+            selectedCheckboxes.forEach((checkbox, index) => {
+                const requestItem = checkbox.closest('.pending-request-item');
+                
+                // Update the status in the UI to show "Not Started"
+                const statusElement = requestItem.querySelector('.pending-request-meta');
+                if (statusElement) {
+                    const currentMeta = statusElement.innerHTML;
+                    const updatedMeta = currentMeta.replace(
+                        /Current Status: [^<]*/,
+                        'Current Status: Not Started'
+                    );
+                    statusElement.innerHTML = updatedMeta;
+                }
+                
+                // Add visual indicator that it's been approved
+                requestItem.style.backgroundColor = '#f0fdf4'; // Light green background
+                requestItem.style.border = '2px solid #10b981'; // Green border
+                
+                // Remove with staggered animation after showing status change
+                setTimeout(() => {
+                    requestItem.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => {
+                        requestItem.remove();
+                        if (index === selectedCheckboxes.length - 1) {
+                            updateRequestCounts();
+                        }
+                    }, 300);
+                }, 1500 + (index * 100)); // Show status for 1.5s + stagger
+            });
+        } else {
+            showNotification('Error approving requests: ' + result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error approving requests:', error);
+        showNotification('Error approving requests. Please try again.', 'error');
+    }
+}
+
+// Reject all selected requests
+async function rejectAllSelected() {
+    const selectedCheckboxes = document.querySelectorAll('.pending-request-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one request to reject.');
+        return;
+    }
+    
+    const reason = prompt('Please provide a reason for rejecting these requests:');
+    if (reason === null) return; // User cancelled
+    
+    if (!confirm(`Are you sure you want to reject ${selectedCheckboxes.length} selected request(s)?`)) {
+        return;
+    }
+    
+    const requestIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-request-id'));
+    
+    try {
+        const response = await fetch('/linemanager/training-request/reject-bulk', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                recordIds: requestIds,
+                reason: reason || 'No reason provided'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`${requestIds.length} requests rejected.`, 'warning');
+            
+            // Update the underlying data objects
+            requestIds.forEach(requestId => {
+                const requestIndex = dbPendingRequests.findIndex(req => (req.recordId || req.id) === requestId);
+                if (requestIndex !== -1) {
+                    dbPendingRequests[requestIndex].trainingStatus = 'Cancelled';
+                    dbPendingRequests[requestIndex].isApproved = false;
+                }
+            });
+            
+            // Remove rejected items with staggered animation
+            selectedCheckboxes.forEach((checkbox, index) => {
+                const requestItem = checkbox.closest('.pending-request-item');
+                setTimeout(() => {
+                    requestItem.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => {
+                        requestItem.remove();
+                        if (index === selectedCheckboxes.length - 1) {
+                            updateRequestCounts();
+                        }
+                    }, 300);
+                }, index * 100);
+            });
+        } else {
+            showNotification('Error rejecting requests: ' + result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error rejecting requests:', error);
+        showNotification('Error rejecting requests. Please try again.', 'error');
+    }
+}
+
+// Update request counts after actions
+function updateRequestCounts() {
+    const remainingRequests = document.querySelectorAll('.pending-request-item').length;
+    
+    // Update modal count
+    const pendingModalCount = document.getElementById('pendingModalCount');
+    if (pendingModalCount) {
+        pendingModalCount.textContent = remainingRequests;
+    }
+    
+    // Update main dashboard count
+    const pendingRequestsCount = document.getElementById('pendingRequestsCount');
+    if (pendingRequestsCount) {
+        pendingRequestsCount.textContent = remainingRequests;
+    }
+    
+    // Update the database array
+    dbPendingRequests = dbPendingRequests.filter(req => {
+        const requestId = req.recordId || req.id;
+        return document.querySelector(`[data-request-id="${requestId}"]`) !== null;
+    });
+    
+    // If no more pending requests, show empty state
+    if (remainingRequests === 0) {
+        const pendingRequestsList = document.getElementById('pendingRequestsList');
+        pendingRequestsList.innerHTML = `
+            <div class="no-pending-requests">
+                <i class="fas fa-check-circle"></i>
+                <h3>All Requests Processed</h3>
+                <p>Great job! All pending training requests have been processed.</p>
+            </div>
+        `;
+    }
+}
+
+// Show notification function
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 30000;
+        animation: slideInRight 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    `;
+    
+    // Set background color based on type
+    switch(type) {
+        case 'success':
+            notification.style.backgroundColor = '#10b981';
+            break;
+        case 'warning':
+            notification.style.backgroundColor = '#f59e0b';
+            break;
+        case 'error':
+            notification.style.backgroundColor = '#ef4444';
+            break;
+        default:
+            notification.style.backgroundColor = '#6366f1';
+    }
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(-20px); }
+    }
+    
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('pendingRequestsModal');
+    if (!modal) return;
+    
+    const modalContent = modal.querySelector('.modal-content');
+    
+    if (modal.classList.contains('show') && 
+        !modalContent.contains(event.target) && 
+        !event.target.classList.contains('view-all-btn')) {
+        closePendingRequestsModal();
+    }
+});
+
+// Handle Escape key to close modal
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('pendingRequestsModal');
+        if (modal && modal.classList.contains('show')) {
+            closePendingRequestsModal();
+        }
+    }
+});
+
+// Update the main statistics function to use database data
+function updateTrainingStats() {
+    // This function should be called after approve/reject actions
+    // to update the main dashboard statistics
+    
+    <% if (typeof allAssignments !== 'undefined' && allAssignments) { %>
+        const allServerAssignments = <%- JSON.stringify(allAssignments) %>;
+        
+        let pendingCount = 0;
+        let ongoingCount = 0;
+        let completedCount = 0;
+        let overdueCount = 0;
+        
+        allServerAssignments.forEach(assignment => {
+            // Check trainingStatus and isApproved to categorize
+            if (assignment.trainingStatus === 'For Approval' || assignment.isApproved === null) {
+                pendingCount++; // For Approval status = pending requests
+            } else if (assignment.trainingStatus === 'Cancelled' || assignment.isApproved === false) {
+                // Cancelled trainings - you might want to count these separately
+                // For now, we'll not count them in any category
+            } else if (assignment.isApproved === true) {
+                // For approved trainings, categorize by trainingStatus
+                switch(assignment.trainingStatus) {
+                    case 'In Progress':
+                        ongoingCount++;
+                        break;
+                    case 'Completed':
+                        completedCount++;
+                        break;
+                    case 'Not Started':
+                        ongoingCount++; // Count Not Started as ongoing since they're approved
+                        break;
+                    default:
+                        if (assignment.isOverdue) {
+                            overdueCount++;
+                        } else {
+                            ongoingCount++;
+                        }
+                }
+            }
+        });
+        
+        // Update the counts in the DOM
+        const pendingElement = document.getElementById('pendingRequestsCount');
+        const ongoingElement = document.getElementById('ongoingRequestsCount');
+        const completedElement = document.getElementById('completedRequestsCount');
+        const overdueElement = document.getElementById('overdueRequestsCount');
+        
+        if (pendingElement) pendingElement.textContent = pendingCount;
+        if (ongoingElement) ongoingElement.textContent = ongoingCount;
+        if (completedElement) completedElement.textContent = completedCount;
+        if (overdueElement) overdueElement.textContent = overdueCount;
+    <% } %>
+}
 
         // Add this JavaScript function to handle the suggested training selection
 // UPDATE your fillFromSuggested function to handle more training data
@@ -2134,13 +3082,14 @@ async function fillFromSuggested() {
 }
 
         // Function to update statistics based on current assignments
+// Function to update statistics based on current assignments
 function updateTrainingStats() {
     const assignmentItems = document.querySelectorAll('.assignment-item');
     
     let pendingCount = 0;
-    let approvedCount = 0;
-    let rejectedCount = 0;
+    let ongoingCount = 0;
     let completedCount = 0;
+    let overdueCount = 0;
     
     assignmentItems.forEach(item => {
         const status = item.getAttribute('data-status');
@@ -2152,28 +3101,27 @@ function updateTrainingStats() {
                 break;
             case 'in-progress':
             case 'approved':
-                approvedCount++;
-                break;
-            case 'rejected':
-            case 'cancelled':
-                rejectedCount++;
+                ongoingCount++;
                 break;
             case 'completed':
                 completedCount++;
                 break;
+            case 'overdue':
+                overdueCount++;
+                break;
         }
     });
     
-    // Update the counts in the DOM
+    // Update the counts in the DOM with new IDs
     const pendingElement = document.getElementById('pendingRequestsCount');
-    const approvedElement = document.getElementById('approvedRequestsCount');
-    const rejectedElement = document.getElementById('rejectedRequestsCount');
+    const ongoingElement = document.getElementById('ongoingRequestsCount');
     const completedElement = document.getElementById('completedRequestsCount');
+    const overdueElement = document.getElementById('overdueRequestsCount');
     
     if (pendingElement) pendingElement.textContent = pendingCount;
-    if (approvedElement) approvedElement.textContent = approvedCount;
-    if (rejectedElement) rejectedElement.textContent = rejectedCount;
+    if (ongoingElement) ongoingElement.textContent = ongoingCount;
     if (completedElement) completedElement.textContent = completedCount;
+    if (overdueElement) overdueElement.textContent = overdueCount;
 }
 
 // Call this function whenever the assignment list is updated
