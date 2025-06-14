@@ -5006,55 +5006,70 @@ getTrainingProgress: async function(req, res) {
 
                 // FIXED: Calculate progress based on training_records_activities
                 const totalActivities = trainingActivities?.length || 0;
-                const completedActivities = recordActivities?.filter(ra => ra.status === 'Completed')?.length || 0;
-                const inProgressActivities = recordActivities?.filter(ra => ra.status === 'In Progress')?.length || 0;
+const completedActivities = recordActivities?.filter(ra => ra.status === 'Completed')?.length || 0;
+const inProgressActivities = recordActivities?.filter(ra => ra.status === 'In Progress')?.length || 0;
 
-                console.log(`Activity breakdown:`, {
-                    total: totalActivities,
-                    completed: completedActivities,
-                    inProgress: inProgressActivities
-                });
+console.log(`Activity breakdown:`, {
+    total: totalActivities,
+    completed: completedActivities,
+    inProgress: inProgressActivities
+});
 
-                // FIXED: Calculate percentage based on completed activities from training_records_activities
-                let progressPercentage = 0;
-                if (totalActivities > 0) {
-                    progressPercentage = Math.round((completedActivities / totalActivities) * 100);
-                }
+// FIXED: Enhanced percentage calculation that accounts for in-progress activities
+let progressPercentage = 0;
+if (totalActivities > 0) {
+    // Method 1: Count in-progress as 50% complete
+    const partialProgress = (completedActivities * 1.0) + (inProgressActivities * 0.5);
+    progressPercentage = Math.round((partialProgress / totalActivities) * 100);
+    
+    // Alternative Method 2: Count only completed activities (more conservative)
+    // progressPercentage = Math.round((completedActivities / totalActivities) * 100);
+    
+    console.log(`Percentage calculation: (${completedActivities} completed + ${inProgressActivities} * 0.5) / ${totalActivities} = ${progressPercentage}%`);
+}
 
-                console.log(`Calculated percentage: ${progressPercentage}%`);
+console.log(`Calculated percentage: ${progressPercentage}%`);
 
-                // FIXED: Determine training status based on certificates and activities
-                let finalTrainingStatus = record.trainingStatus; // Start with current status
-                
-                // Check if there are certificates with URLs (completed)
-                const hasValidCertificates = recordCertificates?.some(cert => 
-                    cert.certificate_url && cert.certificate_url.trim() !== ''
-                ) || false;
+// FIXED: More robust training status determination
+let finalTrainingStatus = record.trainingStatus;
 
-                if (hasValidCertificates) {
-                    finalTrainingStatus = 'Completed';
-                } else if (recordActivities && recordActivities.length > 0) {
-                    // If there are any activity records, mark as In Progress
-                    finalTrainingStatus = 'In Progress';
-                } else {
-                    finalTrainingStatus = 'Not Started';
-                }
+// Check if there are certificates with URLs (completed)
+const hasValidCertificates = recordCertificates?.some(cert => 
+    cert.certificate_url && cert.certificate_url.trim() !== ''
+) || false;
 
-                // Update training record status if it has changed
-                if (finalTrainingStatus !== record.trainingStatus) {
-                    console.log(`Updating training status: ${record.trainingStatus} → ${finalTrainingStatus}`);
-                    
-                    const { error: updateError } = await supabase
-                        .from('training_records')
-                        .update({ trainingStatus: finalTrainingStatus })
-                        .eq('trainingRecordId', record.trainingRecordId);
+if (hasValidCertificates) {
+    finalTrainingStatus = 'Completed';
+    // Override percentage to 100% if certificates exist
+    progressPercentage = 100;
+} else if (completedActivities > 0 || inProgressActivities > 0) {
+    // If there are any activity records with progress, mark as In Progress
+    finalTrainingStatus = 'In Progress';
+} else if (recordActivities && recordActivities.length > 0) {
+    // If there are activity records but no progress, still mark as In Progress
+    finalTrainingStatus = 'In Progress';
+} else {
+    finalTrainingStatus = 'Not Started';
+}
 
-                    if (updateError) {
-                        console.error('Error updating training status:', updateError);
-                    } else {
-                        console.log('Training status updated successfully');
-                    }
-                }
+console.log(`Final training status: ${finalTrainingStatus} (was: ${record.trainingStatus})`);
+console.log(`Final percentage: ${progressPercentage}%`);
+
+// Update training record status if it has changed
+if (finalTrainingStatus !== record.trainingStatus) {
+    console.log(`Updating training status: ${record.trainingStatus} → ${finalTrainingStatus}`);
+    
+    const { error: updateError } = await supabase
+        .from('training_records')
+        .update({ trainingStatus: finalTrainingStatus })
+        .eq('trainingRecordId', record.trainingRecordId);
+
+    if (updateError) {
+        console.error('Error updating training status:', updateError);
+    } else {
+        console.log('Training status updated successfully');
+    }
+}
 
                 // FIXED: Enhanced status determination for frontend display
                 let displayStatus = 'Not Started';

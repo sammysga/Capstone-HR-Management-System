@@ -5288,13 +5288,12 @@ async function loadTrainingProgress() {
     })));
 }
 
-
 function renderTrainingListItem(training, status) {
     console.log('=== Rendering Training Item ===');
     console.log('Training data:', {
         name: training.trainingName,
         status: training.status,
-        trainingStatus: training.trainingStatus, // Database status
+        trainingStatus: training.trainingStatus,
         isRequired: training.isRequired,
         isOngoingRequired: training.isOngoingRequired,
         section: status,
@@ -5306,24 +5305,30 @@ function renderTrainingListItem(training, status) {
         debug: training._debug
     });
 
-    // ENHANCED: Robust percentage validation and calculation
+    // FIXED: Use backend-calculated percentage directly, with minimal validation
     let progressPercentage = training.trainingPercentage;
     
-    // Validate and fix percentage
+    // Only recalculate if backend percentage is clearly wrong (null/undefined/NaN)
     if (progressPercentage === undefined || progressPercentage === null || isNaN(progressPercentage)) {
-        console.warn(`⚠️ Invalid trainingPercentage for ${training.trainingName}: ${progressPercentage}`);
+        console.warn(`⚠️ Backend percentage is invalid for ${training.trainingName}: ${progressPercentage}`);
         
-        // Calculate manually from activity data
+        // Fallback calculation only when backend fails
         const total = training.totalActivities || 0;
         const completed = training.completedActivities || 0;
+        const inProgress = training.inProgressActivities || 0;
         
         if (total > 0) {
-            progressPercentage = Math.round((completed / total) * 100);
-            console.log(`🔧 Calculated fallback percentage: ${progressPercentage}% (${completed}/${total})`);
+            // FIXED: Count in-progress activities as partial completion (50%)
+            const partialProgress = (completed * 1.0) + (inProgress * 0.5);
+            progressPercentage = Math.round((partialProgress / total) * 100);
+            console.log(`🔧 Fallback calculation: ${progressPercentage}% (completed: ${completed}, in-progress: ${inProgress}, total: ${total})`);
         } else {
             progressPercentage = 0;
             console.log(`🔧 No activities found, using 0%`);
         }
+    } else {
+        // Trust the backend calculation
+        console.log(`✅ Using backend percentage: ${progressPercentage}%`);
     }
     
     // Ensure percentage is within valid range
@@ -5390,170 +5395,6 @@ function renderTrainingListItem(training, status) {
         </div>
     `;
 }
-
-
-function debugTrainingPercentages() {
-    console.log('=== TRAINING PERCENTAGES DEBUG ===');
-    
-    if (trainingProgressData && trainingProgressData.trainings) {
-        trainingProgressData.trainings.forEach((training, index) => {
-            console.log(`\n${index + 1}. ${training.trainingName}`);
-            console.log(`   Status: ${training.status}`);
-            console.log(`   Percentage: ${training.trainingPercentage}%`);
-            console.log(`   Activities: ${training.completedActivities}/${training.totalActivities}`);
-            console.log(`   Manual calc: ${training.totalActivities > 0 ? Math.round((training.completedActivities / training.totalActivities) * 100) : 0}%`);
-            console.log(`   Debug info:`, training._debug);
-        });
-    } else {
-        console.log('No training data available');
-    }
-}
-
-// Make debugging function globally available
-window.debugTrainingPercentages = debugTrainingPercentages;
-function diagnoseTrainingPercentages() {
-    console.log('🔍 ENHANCED TRAINING PERCENTAGE DIAGNOSTIC');
-    console.log('==========================================');
-    
-    if (!window.trainingProgressData?.trainings) {
-        console.log('❌ No training data found');
-        return;
-    }
-    
-    const trainings = window.trainingProgressData.trainings;
-    console.log(`📊 Found ${trainings.length} training records`);
-    
-    trainings.forEach((training, index) => {
-        console.log(`\n--- Training ${index + 1}: ${training.trainingName} ---`);
-        
-        // Basic info
-        console.log(`Status: ${training.status}`);
-        console.log(`Training Status (DB): ${training.trainingStatus}`);
-        console.log(`Required: ${training.isRequired}`);
-        console.log(`Approved: ${training.isApproved}`);
-        console.log(`Ongoing Required: ${training.isOngoingRequired}`);
-        
-        // Percentage data
-        console.log(`\n📈 Percentage Analysis:`);
-        console.log(`  Backend Percentage: ${training.trainingPercentage}% (${typeof training.trainingPercentage})`);
-        console.log(`  Total Activities: ${training.totalActivities}`);
-        console.log(`  Completed Activities: ${training.completedActivities}`);
-        console.log(`  In Progress Activities: ${training.inProgressActivities}`);
-        
-        // Manual calculation
-        let manualPercentage = 0;
-        if (training.totalActivities > 0) {
-            manualPercentage = Math.round((training.completedActivities / training.totalActivities) * 100);
-        }
-        console.log(`  Manual Calculation: ${manualPercentage}%`);
-        
-        // Certificate info
-        console.log(`  Has Valid Certificates: ${training.hasValidCertificates}`);
-        if (training.certificates?.length > 0) {
-            console.log(`  Certificates: ${training.certificates.length} found`);
-            training.certificates.forEach((cert, i) => {
-                console.log(`    ${i + 1}. URL: ${cert.certificateUrl ? 'Present' : 'Missing'}`);
-            });
-        }
-        
-        // Issues detection
-        const issues = [];
-        if (training.trainingPercentage !== manualPercentage) {
-            issues.push(`Percentage mismatch: Backend ${training.trainingPercentage}% vs Manual ${manualPercentage}%`);
-        }
-        if (training.trainingPercentage === 0 && training.completedActivities > 0) {
-            issues.push(`Zero percentage despite completed activities`);
-        }
-        if (training.totalActivities === 0 && training.status === 'In Progress') {
-            issues.push(`In Progress status but no activities defined`);
-        }
-        
-        if (issues.length > 0) {
-            console.log(`⚠️  ISSUES DETECTED:`);
-            issues.forEach(issue => console.log(`    - ${issue}`));
-        } else {
-            console.log(`✅ No issues detected`);
-        }
-        
-        // Debug info from backend
-        if (training._debug) {
-            console.log(`\n🐛 Backend Debug Info:`, training._debug);
-        }
-    });
-}
-
-// Quick percentage fix function
-function quickFixPercentages() {
-    console.log('🔧 ENHANCED PERCENTAGE FIX ATTEMPT');
-    console.log('===================================');
-    
-    if (!window.trainingProgressData?.trainings) {
-        console.log('❌ No training data to fix');
-        return;
-    }
-    
-    let fixedCount = 0;
-    let issues = [];
-    
-    window.trainingProgressData.trainings.forEach(training => {
-        const originalPercentage = training.trainingPercentage;
-        let newPercentage = originalPercentage;
-        
-        // Fix percentage calculation
-        if (training.totalActivities > 0) {
-            const correctPercentage = Math.round((training.completedActivities / training.totalActivities) * 100);
-            
-            if (training.trainingPercentage !== correctPercentage) {
-                console.log(`Fixing ${training.trainingName}: ${training.trainingPercentage}% → ${correctPercentage}%`);
-                training.trainingPercentage = correctPercentage;
-                newPercentage = correctPercentage;
-                fixedCount++;
-            }
-        } else if (training.trainingPercentage > 0) {
-            // No activities but has percentage - set to 0
-            console.log(`Fixing ${training.trainingName}: ${training.trainingPercentage}% → 0% (no activities)`);
-            training.trainingPercentage = 0;
-            newPercentage = 0;
-            fixedCount++;
-        }
-        
-        // Detect other issues
-        if (training.status === 'In Progress' && training.completedActivities === 0 && training.inProgressActivities === 0) {
-            issues.push(`${training.trainingName}: Shows "In Progress" but no activities have been started`);
-        }
-        
-        if (training.status === 'Completed' && newPercentage < 100 && !training.hasValidCertificates) {
-            issues.push(`${training.trainingName}: Shows "Completed" but percentage is ${newPercentage}% and no certificates`);
-        }
-    });
-    
-    console.log(`✅ Fixed ${fixedCount} percentage calculations`);
-    
-    if (issues.length > 0) {
-        console.log(`\n⚠️  OTHER ISSUES DETECTED:`);
-        issues.forEach(issue => console.log(`  - ${issue}`));
-    }
-    
-    if (fixedCount > 0) {
-        console.log('🔄 Re-rendering training sections...');
-        if (typeof renderTrainingSections === 'function') {
-            renderTrainingSections();
-        }
-        if (typeof renderProgressCategories === 'function') {
-            renderProgressCategories();
-        }
-        if (typeof renderAllCourses === 'function') {
-            renderAllCourses();
-        }
-    }
-}
-
-// Auto-run diagnostic when this script loads
-console.log('🚀 Training percentage diagnostic loaded. Run diagnoseTrainingPercentages() or quickFixPercentages() in console.');
-
-// Make functions globally available
-window.diagnoseTrainingPercentages = diagnoseTrainingPercentages;
-window.quickFixPercentages = quickFixPercentages;
 
 function getStatusClassForBadge(training, section) {
     if (section === 'ongoing-required') {
@@ -6190,6 +6031,125 @@ window.debugFormState = function() {
     console.log('submitButton disabled:', document.getElementById('submitButton').disabled);
     console.log('form validation result:', validateForm());
 };
+
+
+
+function debugPercentageIssues() {
+    console.log('🔍 DEBUGGING PERCENTAGE ISSUES');
+    console.log('====================================');
+    
+    if (!window.trainingProgressData?.trainings) {
+        console.log('❌ No training data found');
+        return;
+    }
+    
+    const trainings = window.trainingProgressData.trainings;
+    console.log(`📊 Found ${trainings.length} training records`);
+    
+    // Focus on required trainings with issues
+    const problematicTrainings = trainings.filter(training => {
+        const hasInProgress = training.inProgressActivities > 0;
+        const hasZeroPercentage = training.trainingPercentage === 0;
+        return hasInProgress && hasZeroPercentage;
+    });
+    
+    console.log(`🚨 Found ${problematicTrainings.length} trainings with in-progress activities but 0% completion`);
+    
+    problematicTrainings.forEach((training, index) => {
+        console.log(`\n--- Problem Training ${index + 1}: ${training.trainingName} ---`);
+        console.log(`Backend Data:`);
+        console.log(`  - Training Percentage: ${training.trainingPercentage}%`);
+        console.log(`  - Total Activities: ${training.totalActivities}`);
+        console.log(`  - Completed Activities: ${training.completedActivities}`);
+        console.log(`  - In Progress Activities: ${training.inProgressActivities}`);
+        console.log(`  - Training Status: ${training.trainingStatus}`);
+        console.log(`  - Display Status: ${training.status}`);
+        console.log(`  - Is Required: ${training.isRequired}`);
+        console.log(`  - Is Approved: ${training.isApproved}`);
+        
+        // Manual calculation
+        if (training.totalActivities > 0) {
+            const manualPercentage = Math.round(
+                ((training.completedActivities * 1.0) + (training.inProgressActivities * 0.5)) / 
+                training.totalActivities * 100
+            );
+            console.log(`  - Manual Calculation: ${manualPercentage}%`);
+            console.log(`  - Difference: ${manualPercentage - training.trainingPercentage}%`);
+        }
+        
+        if (training._debug) {
+            console.log(`Backend Debug:`, training._debug);
+        }
+    });
+    
+    return problematicTrainings;
+}
+
+function testPercentageCalculation(trainingRecordId) {
+    console.log(`🧪 TESTING PERCENTAGE CALCULATION FOR RECORD ${trainingRecordId}`);
+    
+    if (!window.trainingProgressData?.trainings) {
+        console.log('❌ No training data available');
+        return;
+    }
+    
+    const training = window.trainingProgressData.trainings.find(t => t.trainingRecordId === trainingRecordId);
+    
+    if (!training) {
+        console.log(`❌ Training record ${trainingRecordId} not found`);
+        return;
+    }
+    
+    console.log(`\n=== Testing ${training.trainingName} ===`);
+    console.log(`Current backend percentage: ${training.trainingPercentage}%`);
+    console.log(`Activities: ${training.completedActivities}/${training.totalActivities} (${training.inProgressActivities} in progress)`);
+    
+    // Test different calculation methods
+    if (training.totalActivities > 0) {
+        const method1 = Math.round((training.completedActivities / training.totalActivities) * 100);
+        const method2 = Math.round(((training.completedActivities + training.inProgressActivities) / training.totalActivities) * 100);
+        const method3 = Math.round(((training.completedActivities * 1.0) + (training.inProgressActivities * 0.5)) / training.totalActivities * 100);
+        
+        console.log(`\nCalculation Methods:`);
+        console.log(`  Method 1 (completed only): ${method1}%`);
+        console.log(`  Method 2 (completed + in-progress): ${method2}%`);
+        console.log(`  Method 3 (completed + 50% in-progress): ${method3}%`);
+        console.log(`  Current backend: ${training.trainingPercentage}%`);
+        
+        // Recommend the best method
+        if (training.inProgressActivities > 0 && training.trainingPercentage === 0) {
+            console.log(`\n🔧 RECOMMENDATION: Backend should use Method 3 (${method3}%)`);
+        }
+    }
+    
+    return training;
+}
+
+function forceRefreshTrainingData() {
+    console.log('🔄 FORCING TRAINING DATA REFRESH');
+    
+    // Clear current data
+    window.trainingProgressData = { trainings: [] };
+    
+    // Reload data
+    loadTrainingProgress().then(() => {
+        console.log('✅ Training data refreshed');
+        debugPercentageIssues();
+    }).catch(error => {
+        console.error('❌ Failed to refresh data:', error);
+    });
+}
+
+// Make functions globally available
+window.debugPercentageIssues = debugPercentageIssues;
+window.testPercentageCalculation = testPercentageCalculation;
+window.forceRefreshTrainingData = forceRefreshTrainingData;
+
+// Auto-run on page load
+console.log('🚀 Percentage debugging tools loaded. Available functions:');
+console.log('  - debugPercentageIssues()');
+console.log('  - testPercentageCalculation(trainingRecordId)');
+console.log('  - forceRefreshTrainingData()');
     </script>
 </body>
 </html>
