@@ -6258,7 +6258,6 @@ getUserObjectives: async function(req, res) {
     }
 },
 
-
 updateSingleActivity: async function(req, res) {
     if (!req.session.user || req.session.user.userRole !== 'Employee') {
         return res.status(401).json({ 
@@ -6272,7 +6271,7 @@ updateSingleActivity: async function(req, res) {
         const { status, timestampzStarted, timestampzCompleted } = req.body;
         const userId = req.session.user.userId;
 
-        console.log('🔄 [Single Activity] Updating activity with timestamps:', {
+        console.log('🔄 [Single Activity] Updating activity:', {
             trainingRecordId,
             activityId,
             status,
@@ -6281,10 +6280,19 @@ updateSingleActivity: async function(req, res) {
             userId
         });
 
-        // Verify training record belongs to user
+        // Validate status enum
+        const validStatuses = ['Not Started', 'In Progress', 'Completed'];
+        if (status && !validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+            });
+        }
+
+        // Verify training record belongs to user and is approved
         const { data: trainingRecord, error: recordError } = await supabase
             .from('training_records')
-            .select('trainingRecordId, trainingId')
+            .select('trainingRecordId, trainingId, isApproved, trainingStatus')
             .eq('trainingRecordId', trainingRecordId)
             .eq('userId', userId)
             .single();
@@ -6293,6 +6301,14 @@ updateSingleActivity: async function(req, res) {
             return res.status(404).json({
                 success: false,
                 message: 'Training record not found'
+            });
+        }
+
+        // Check if training is approved
+        if (trainingRecord.isApproved !== true) {
+            return res.status(403).json({
+                success: false,
+                message: 'Cannot update activities for unapproved training'
             });
         }
 
@@ -6312,9 +6328,24 @@ updateSingleActivity: async function(req, res) {
             });
         }
 
-        // Prepare update data
+        // Prepare update data with automatic timestamp handling
         const updateData = {};
-        if (status !== undefined) updateData.status = status;
+        if (status !== undefined) {
+            updateData.status = status;
+            
+            // Auto-set timestamps based on status
+            if (status === 'In Progress' && !existingActivity?.timestampzStarted) {
+                updateData.timestampzStarted = timestampzStarted || new Date().toISOString();
+            } else if (status === 'Completed') {
+                updateData.timestampzCompleted = timestampzCompleted || new Date().toISOString();
+                // Ensure started timestamp exists
+                if (!existingActivity?.timestampzStarted) {
+                    updateData.timestampzStarted = timestampzStarted || new Date().toISOString();
+                }
+            }
+        }
+
+        // Override with explicit timestamps if provided
         if (timestampzStarted !== undefined) updateData.timestampzStarted = timestampzStarted;
         if (timestampzCompleted !== undefined) updateData.timestampzCompleted = timestampzCompleted;
 
@@ -6367,11 +6398,13 @@ updateSingleActivity: async function(req, res) {
             updatedActivity = insertResult;
         }
 
-        // IMPORTANT: Update training progress status after any activity change
+        // CRITICAL: Update training progress status after any activity change
         console.log('🔄 [Single Activity] Updating training progress after activity change...');
+        let updatedTrainingStatus = trainingRecord.trainingStatus;
+        
         try {
-            const updatedTrainingStatus = await this.updateTrainingProgress(trainingRecordId);
-            console.log('✅ [Single Activity] Training status updated to:', updatedTrainingStatus);
+            updatedTrainingStatus = await this.updateTrainingProgress(trainingRecordId);
+            console.log(`✅ [Single Activity] Training status updated: ${trainingRecord.trainingStatus} → ${updatedTrainingStatus}`);
         } catch (progressError) {
             console.error('❌ [Single Activity] Failed to update training progress:', progressError);
             // Don't fail the whole request - activity update succeeded
@@ -6382,7 +6415,10 @@ updateSingleActivity: async function(req, res) {
         res.json({
             success: true,
             message: 'Activity updated successfully',
-            data: updatedActivity
+            data: {
+                activity: updatedActivity,
+                trainingStatus: updatedTrainingStatus
+            }
         });
 
     } catch (error) {
@@ -6395,7 +6431,7 @@ updateSingleActivity: async function(req, res) {
     }
 },
 
-// COMPLETE: updateTrainingActivities function (batch update)
+// ENHANCED: Batch activity update with improved progress tracking
 updateTrainingActivities: async function(req, res) {
     if (!req.session.user || req.session.user.userRole !== 'Employee') {
         return res.status(401).json({ 
@@ -6419,10 +6455,24 @@ updateTrainingActivities: async function(req, res) {
             });
         }
 
-        // Verify training record belongs to user
+        // Validate all statuses before processing
+        const validStatuses = ['Not Started', 'In Progress', 'Completed'];
+        const invalidActivities = activities.filter(activity => 
+            activity.status && !validStatuses.includes(activity.status)
+        );
+
+        if (invalidActivities.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid status values found. Must be one of: ${validStatuses.join(', ')}`,
+                invalidActivities: invalidActivities.map(a => ({ activityId: a.activityId, status: a.status }))
+            });
+        }
+
+        // Verify training record belongs to user and is approved
         const { data: trainingRecord, error: recordError } = await supabase
             .from('training_records')
-            .select('trainingRecordId, trainingId')
+            .select('trainingRecordId, trainingId, isApproved, trainingStatus')
             .eq('trainingRecordId', trainingRecordId)
             .eq('userId', userId)
             .single();
@@ -6432,6 +6482,14 @@ updateTrainingActivities: async function(req, res) {
             return res.status(404).json({
                 success: false,
                 message: 'Training record not found'
+            });
+        }
+
+        // Check if training is approved
+        if (trainingRecord.isApproved !== true) {
+            return res.status(403).json({
+                success: false,
+                message: 'Cannot update activities for unapproved training'
             });
         }
 
@@ -6459,10 +6517,22 @@ updateTrainingActivities: async function(req, res) {
                 const existingActivity = existingActivities.find(ea => ea.activityId === activity.activityId);
                 
                 const updateData = {
-                    status: activity.status || 'Not Started',
-                    timestampzStarted: activity.timestampzStarted || null,
-                    timestampzCompleted: activity.timestampzCompleted || null
+                    status: activity.status || 'Not Started'
                 };
+
+                // Auto-handle timestamps based on status
+                if (activity.status === 'In Progress' && !existingActivity?.timestampzStarted) {
+                    updateData.timestampzStarted = activity.timestampzStarted || new Date().toISOString();
+                } else if (activity.status === 'Completed') {
+                    updateData.timestampzCompleted = activity.timestampzCompleted || new Date().toISOString();
+                    if (!existingActivity?.timestampzStarted) {
+                        updateData.timestampzStarted = activity.timestampzStarted || new Date().toISOString();
+                    }
+                }
+
+                // Override with explicit timestamps if provided
+                if (activity.timestampzStarted !== undefined) updateData.timestampzStarted = activity.timestampzStarted;
+                if (activity.timestampzCompleted !== undefined) updateData.timestampzCompleted = activity.timestampzCompleted;
 
                 let result;
 
@@ -6529,11 +6599,13 @@ updateTrainingActivities: async function(req, res) {
             }
         }
 
-        // IMPORTANT: Update overall training progress after batch changes
+        // CRITICAL: Update overall training progress after batch changes
         console.log('🔄 [Batch Activities] Updating training progress after batch changes...');
+        let updatedTrainingStatus = trainingRecord.trainingStatus;
+        
         try {
-            const updatedTrainingStatus = await this.updateTrainingProgress(trainingRecordId);
-            console.log('✅ [Batch Activities] Training status updated to:', updatedTrainingStatus);
+            updatedTrainingStatus = await this.updateTrainingProgress(trainingRecordId);
+            console.log(`✅ [Batch Activities] Training status updated: ${trainingRecord.trainingStatus} → ${updatedTrainingStatus}`);
         } catch (progressError) {
             console.error('❌ [Batch Activities] Failed to update training progress:', progressError);
             // Don't fail the whole request - activity updates may have succeeded
@@ -6544,7 +6616,8 @@ updateTrainingActivities: async function(req, res) {
 
         console.log('✅ [Batch Activities] Batch update completed:', {
             successful: successfulUpdates.length,
-            failed: failedUpdates.length
+            failed: failedUpdates.length,
+            trainingStatus: updatedTrainingStatus
         });
 
         res.json({
@@ -6554,6 +6627,7 @@ updateTrainingActivities: async function(req, res) {
                 `Updated ${successfulUpdates.length} activities successfully, ${failedUpdates.length} failed`,
             updatedCount: successfulUpdates.length,
             failedCount: failedUpdates.length,
+            trainingStatus: updatedTrainingStatus,
             details: updateResults
         });
 
@@ -6566,77 +6640,200 @@ updateTrainingActivities: async function(req, res) {
         });
     }
 },
-// FIXED: Update training progress with proper enum values
+
 updateTrainingProgress: async function(trainingRecordId) {
     try {
         console.log(`🔄 [Training Progress] Updating progress for training record: ${trainingRecordId}`);
 
-        // Check if there are any certificates uploaded for this training record
+        // Get current training record status
+        const { data: currentRecord, error: recordError } = await supabase
+            .from('training_records')
+            .select('trainingStatus, isApproved')
+            .eq('trainingRecordId', trainingRecordId)
+            .single();
+
+        if (recordError) {
+            console.error('❌ [Training Progress] Error fetching current record:', recordError);
+            throw recordError;
+        }
+
+        // Only update if training is approved
+        if (currentRecord.isApproved !== true) {
+            console.log(`⏸️ [Training Progress] Training not approved (isApproved: ${currentRecord.isApproved}), skipping status update`);
+            return currentRecord.trainingStatus;
+        }
+
+        console.log(`🔄 [Training Progress] Current status: ${currentRecord.trainingStatus}`);
+
+        // PRIORITY 1: Check for certificates with valid URLs (highest priority)
         const { data: certificates, error: certError } = await supabase
             .from('training_records_certificates')
-            .select('certificate_url')
-            .eq('trainingRecordId', trainingRecordId)
-            .not('certificate_url', 'is', null);
+            .select('certificate_url, trainingRecordCertificateId')
+            .eq('trainingRecordId', trainingRecordId);
 
         if (certError) {
             console.error('❌ [Training Progress] Error checking certificates:', certError);
-            return;
+            throw certError;
         }
 
-        let trainingStatus = 'Not Started'; // Default status
-
-        // FIXED: Priority 1 - If any certificate with valid URL exists, mark as Completed
+        // Check if any certificate has a valid URL
         const hasValidCertificates = certificates && certificates.length > 0 && 
-                                   certificates.some(cert => cert.certificate_url && cert.certificate_url.trim() !== '');
+                                   certificates.some(cert => 
+                                       cert.certificate_url && 
+                                       cert.certificate_url.trim() !== '' &&
+                                       cert.certificate_url !== 'null'
+                                   );
+
+        let newTrainingStatus = 'Not Started'; // Default
 
         if (hasValidCertificates) {
-            trainingStatus = 'Completed';
-            console.log(`✅ [Training Progress] Found ${certificates.length} certificate(s) with valid URLs, setting status to Completed`);
+            newTrainingStatus = 'Completed';
+            console.log(`✅ [Training Progress] Found certificate(s) with valid URL(s), setting status to 'Completed'`);
+            console.log(`📄 [Training Progress] Certificate details:`, 
+                certificates.filter(cert => cert.certificate_url && cert.certificate_url.trim() !== '')
+                          .map(cert => ({ id: cert.trainingRecordCertificateId, hasUrl: !!cert.certificate_url }))
+            );
         } else {
-            // Priority 2 - Check if there are any activity records
+            // PRIORITY 2: Check activity records for progress
             const { data: activities, error: activitiesError } = await supabase
                 .from('training_records_activities')
-                .select('status, trainingRecordActivityId')
+                .select('status, activityId, timestampzStarted, timestampzCompleted')
                 .eq('trainingRecordId', trainingRecordId);
 
             if (activitiesError) {
                 console.error('❌ [Training Progress] Error fetching activities:', activitiesError);
-                return;
+                throw activitiesError;
             }
 
-            // If there are any activity records, mark as In Progress
+            console.log(`📋 [Training Progress] Found ${activities?.length || 0} activity records`);
+
             if (activities && activities.length > 0) {
-                trainingStatus = 'In Progress';
-                console.log(`🔄 [Training Progress] Found ${activities.length} activity record(s), setting status to In Progress`);
+                // Any activity record existence indicates training has started
+                newTrainingStatus = 'In Progress';
                 
-                // Debug: Log activity statuses
-                const statusCounts = {};
-                activities.forEach(act => {
-                    statusCounts[act.status] = (statusCounts[act.status] || 0) + 1;
+                // Count activity statuses for debugging
+                const statusCounts = {
+                    'Not Started': 0,
+                    'In Progress': 0,
+                    'Completed': 0
+                };
+                
+                activities.forEach(activity => {
+                    const status = activity.status || 'Not Started';
+                    statusCounts[status] = (statusCounts[status] || 0) + 1;
                 });
+
                 console.log(`🔄 [Training Progress] Activity status breakdown:`, statusCounts);
+                console.log(`🔄 [Training Progress] Setting status to 'In Progress' due to activity records`);
+
+                // Optional: More granular logic based on activity completion
+                const totalActivities = activities.length;
+                const completedActivities = statusCounts['Completed'] || 0;
+                
+                console.log(`📊 [Training Progress] Progress: ${completedActivities}/${totalActivities} activities completed`);
+                
+                // Note: We don't set to 'Completed' based on activities alone - only certificates can do that
             } else {
-                console.log(`⏸️ [Training Progress] No activities or certificates found, keeping status as Not Started`);
+                console.log(`⏸️ [Training Progress] No activity records found, keeping status as 'Not Started'`);
             }
         }
 
-        // Update training record status
-        const { error: updateError } = await supabase
-            .from('training_records')
-            .update({ trainingStatus })
-            .eq('trainingRecordId', trainingRecordId);
+        // Only update if status has changed
+        if (newTrainingStatus !== currentRecord.trainingStatus) {
+            console.log(`🔄 [Training Progress] Status change: '${currentRecord.trainingStatus}' → '${newTrainingStatus}'`);
+            
+            const { error: updateError } = await supabase
+                .from('training_records')
+                .update({ 
+                    trainingStatus: newTrainingStatus,
+                    // Optional: Update a timestamp for when status was last changed
+                    statusUpdatedAt: new Date().toISOString()
+                })
+                .eq('trainingRecordId', trainingRecordId);
 
-        if (updateError) {
-            console.error('❌ [Training Progress] Error updating training status:', updateError);
-            throw updateError;
+            if (updateError) {
+                console.error('❌ [Training Progress] Error updating training status:', updateError);
+                throw updateError;
+            }
+
+            console.log(`✅ [Training Progress] Training ${trainingRecordId} status updated to: '${newTrainingStatus}'`);
         } else {
-            console.log(`✅ [Training Progress] Training ${trainingRecordId} status updated to: ${trainingStatus}`);
+            console.log(`➡️ [Training Progress] Status unchanged: '${newTrainingStatus}'`);
         }
 
-        return trainingStatus;
+        return newTrainingStatus;
 
     } catch (error) {
         console.error('❌ [Training Progress] Error in updateTrainingProgress:', error);
+        throw error;
+    }
+},
+
+// HELPER: Function to validate training status transitions
+validateStatusTransition: function(currentStatus, newStatus) {
+    const validTransitions = {
+        'Not Started': ['In Progress'],
+        'In Progress': ['Completed'],
+        'Completed': [] // Completed is final state
+    };
+
+    const allowedTransitions = validTransitions[currentStatus] || [];
+    return allowedTransitions.includes(newStatus) || currentStatus === newStatus;
+},
+
+// HELPER: Get training progress summary
+getTrainingProgressSummary: async function(trainingRecordId) {
+    try {
+        const { data: summary, error } = await supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                trainingStatus,
+                isApproved,
+                setStartDate,
+                setEndDate,
+                trainings (
+                    trainingName,
+                    totalDuration
+                )
+            `)
+            .eq('trainingRecordId', trainingRecordId)
+            .single();
+
+        if (error) throw error;
+
+        // Get activity progress
+        const { data: activities } = await supabase
+            .from('training_records_activities')
+            .select('status')
+            .eq('trainingRecordId', trainingRecordId);
+
+        // Get certificate status
+        const { data: certificates } = await supabase
+            .from('training_records_certificates')
+            .select('certificate_url')
+            .eq('trainingRecordId', trainingRecordId);
+
+        const activityCounts = {
+            total: activities?.length || 0,
+            completed: activities?.filter(a => a.status === 'Completed').length || 0,
+            inProgress: activities?.filter(a => a.status === 'In Progress').length || 0
+        };
+
+        const hasValidCertificates = certificates?.some(cert => 
+            cert.certificate_url && cert.certificate_url.trim() !== ''
+        ) || false;
+
+        return {
+            ...summary,
+            activityCounts,
+            hasValidCertificates,
+            progressPercentage: activityCounts.total > 0 ? 
+                Math.round((activityCounts.completed / activityCounts.total) * 100) : 0
+        };
+
+    } catch (error) {
+        console.error('Error getting training progress summary:', error);
         throw error;
     }
 },
