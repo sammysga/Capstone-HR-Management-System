@@ -526,8 +526,6 @@ getTrainingDetails: async function (req, res) {
             .eq('isActive', true)
             .single();
 
-        console.log('Training query result:', { training, error: trainingError });
-
         if (trainingError || !training) {
             console.log('Training not found or error:', trainingError);
             return res.status(404).json({
@@ -539,7 +537,7 @@ getTrainingDetails: async function (req, res) {
 
         console.log('Training found:', training.trainingName);
 
-        // Get job and department info separately if needed
+        // Get job and department info
         let jobInfo = null;
         let departmentInfo = null;
 
@@ -567,7 +565,18 @@ getTrainingDetails: async function (req, res) {
         console.log('Fetching training assignments...');
         const { data: trainingRecords, error: recordsError } = await supabase
             .from('training_records')
-            .select('*')
+            .select(`
+                *,
+                trainings!inner (
+                    trainingName,
+                    trainingDesc,
+                    isOnlineArrangement,
+                    isRequired,
+                    totalDuration,
+                    cost,
+                    address
+                )
+            `)
             .eq('trainingId', trainingId)
             .order('dateRequested', { ascending: false });
 
@@ -581,7 +590,7 @@ getTrainingDetails: async function (req, res) {
 
         console.log(`Found ${trainingRecords?.length || 0} training records`);
 
-        // Now get user and staff details for each record
+        // NEW: Use the SAME progress calculation logic as employee side
         let assignments = [];
         
         if (trainingRecords && trainingRecords.length > 0) {
@@ -593,19 +602,11 @@ getTrainingDetails: async function (req, res) {
                 .select('userId, userEmail')
                 .in('userId', userIds);
 
-            if (userError) {
-                console.error('Error fetching user accounts:', userError);
-            }
-
             // Get staff accounts
             const { data: staffAccounts, error: staffError } = await supabase
                 .from('staffaccounts')
                 .select('userId, firstName, lastName, jobId, departmentId')
                 .in('userId', userIds);
-
-            if (staffError) {
-                console.error('Error fetching staff accounts:', staffError);
-            }
 
             // Get job positions
             const jobIds = [...new Set(staffAccounts?.map(staff => staff.jobId).filter(Boolean))];
@@ -629,32 +630,124 @@ getTrainingDetails: async function (req, res) {
                 departments = depts || [];
             }
 
-            // Combine all data
-            assignments = trainingRecords.map(record => {
-                const userAccount = userAccounts?.find(user => user.userId === record.userId);
-                const staffAccount = staffAccounts?.find(staff => staff.userId === record.userId);
-                const jobPosition = jobPositions.find(job => job.jobId === staffAccount?.jobId);
-                const department = departments.find(dept => dept.departmentId === staffAccount?.departmentId);
+            // REUSE EMPLOYEE LOGIC: Process each training record to add progress information
+            const enrichedRecords = await Promise.all(
+                trainingRecords.map(async (record) => {
+                    try {
+                        // Get activities count (SAME as employee side)
+                        const { data: activities, error: activitiesError } = await supabase
+                            .from('training_activities')
+                            .select('activityId')
+                            .eq('trainingId', record.trainingId);
 
-                return {
-                    assignmentId: record.trainingRecordId,
-                    employeeId: record.userId,
-                    employeeName: staffAccount ? `${staffAccount.firstName} ${staffAccount.lastName}` : 'Unknown Employee',
-                    employeeEmail: userAccount?.userEmail || 'no-email@company.com',
-                    jobTitle: jobPosition?.jobTitle || 'Unknown Position',
-                    department: department?.deptName || 'Unknown Department',
-                    status: record.trainingStatus || 'Not Started',
-                    progress: 0, // You can calculate this based on completed activities
-                    startDate: record.setStartDate,
-                    endDate: record.setEndDate,
-                    assignedDate: record.dateRequested,
-                    completionDate: record.decisionDate,
-                    isApproved: record.isApproved,
-                    approvalRemarks: record.decisionRemarks,
-                };
-            });
+                        if (activitiesError) {
+                            console.error(`Error fetching activities for training ${record.trainingId}:`, activitiesError);
+                        }
 
-            console.log(`Successfully processed ${assignments.length} assignments`);
+                        // Get completed activities (SAME as employee side)
+                        const { data: completedActivities, error: completedError } = await supabase
+                            .from('training_records_activities')
+                            .select('activityId, status')
+                            .eq('trainingRecordId', record.trainingRecordId);
+
+                        if (completedError) {
+                            console.error(`Error fetching completed activities for record ${record.trainingRecordId}:`, completedError);
+                        }
+
+                        const totalActivities = activities?.length || 0;
+                        const completedCount = completedActivities?.filter(a => a.status === 'Completed').length || 0;
+                        const inProgressCount = completedActivities?.filter(a => a.status === 'In Progress').length || 0;
+
+                        // SAME CALCULATION as employee renderTrainingListItem
+                        let progressPercentage = 0;
+                        if (totalActivities > 0) {
+                            // FIXED: Use the SAME enhanced percentage calculation as employee side
+                            const partialProgress = (completedCount * 1.0) + (inProgressCount * 0.5);
+                            progressPercentage = Math.round((partialProgress / totalActivities) * 100);
+                        }
+
+                        // Check for certificates (SAME as employee side)
+                        const { data: certificates, error: certError } = await supabase
+                            .from('training_records_certificates')
+                            .select('certificate_url')
+                            .eq('trainingRecordId', record.trainingRecordId);
+
+                        const hasValidCertificates = certificates?.some(cert => 
+                            cert.certificate_url && cert.certificate_url.trim() !== ''
+                        ) || false;
+
+                        // SAME STATUS DETERMINATION as employee getTrainingProgress
+                        let displayStatus = 'Not Started';
+                        const today = new Date();
+                        const startDate = record.setStartDate ? new Date(record.setStartDate) : null;
+                        const endDate = record.setEndDate ? new Date(record.setEndDate) : null;
+
+                        // Check approval status first (SAME as employee side)
+                        if (record.isApproved === null) {
+                            displayStatus = 'Awaiting Approval';
+                        } else if (record.isApproved === false) {
+                            displayStatus = 'Rejected';
+                        } else if (record.isApproved === true) {
+                            // For approved trainings, use the calculated status (SAME as employee side)
+                            if (hasValidCertificates) {
+                                displayStatus = 'Completed';
+                                progressPercentage = 100; // Override percentage if certificates exist
+                            } else if (endDate && today > endDate && progressPercentage < 100) {
+                                displayStatus = 'Overdue';
+                            } else if (inProgressCount > 0 || completedCount > 0) {
+                                displayStatus = 'In Progress';
+                            } else {
+                                displayStatus = 'Not Started';
+                            }
+                        }
+
+                        // Get user and staff details
+                        const userAccount = userAccounts?.find(user => user.userId === record.userId);
+                        const staffAccount = staffAccounts?.find(staff => staff.userId === record.userId);
+                        const jobPosition = jobPositions.find(job => job.jobId === staffAccount?.jobId);
+                        const department = departments.find(dept => dept.departmentId === staffAccount?.departmentId);
+
+                        console.log(`Employee ${staffAccount?.firstName} ${staffAccount?.lastName}: ${progressPercentage}% (${completedCount}/${totalActivities} completed, ${inProgressCount} in progress, status: ${displayStatus})`);
+
+                        return {
+                            assignmentId: record.trainingRecordId,
+                            employeeId: record.userId,
+                            employeeName: staffAccount ? `${staffAccount.firstName} ${staffAccount.lastName}` : 'Unknown Employee',
+                            employeeEmail: userAccount?.userEmail || 'no-email@company.com',
+                            jobTitle: jobPosition?.jobTitle || 'Unknown Position',
+                            department: department?.deptName || 'Unknown Department',
+                            status: displayStatus,
+                            progress: progressPercentage, // SAME calculation as employee side
+                            startDate: record.setStartDate,
+                            endDate: record.setEndDate,
+                            assignedDate: record.dateRequested,
+                            completionDate: record.decisionDate,
+                            isApproved: record.isApproved,
+                            approvalRemarks: record.decisionRemarks,
+                            // Add activity breakdown for debugging
+                            activityBreakdown: {
+                                total: totalActivities,
+                                completed: completedCount,
+                                inProgress: inProgressCount,
+                                hasValidCertificates: hasValidCertificates
+                            }
+                        };
+                    } catch (error) {
+                        console.error(`Error processing training record ${record.trainingRecordId}:`, error);
+                        return {
+                            assignmentId: record.trainingRecordId,
+                            employeeId: record.userId,
+                            employeeName: 'Unknown Employee',
+                            status: 'Error',
+                            progress: 0,
+                            error: error.message
+                        };
+                    }
+                })
+            );
+
+            assignments = enrichedRecords;
+            console.log(`Successfully processed ${assignments.length} assignments using employee-side logic`);
         }
 
         // Get training activities
@@ -671,7 +764,7 @@ getTrainingDetails: async function (req, res) {
             .eq('trainingId', trainingId)
             .order('trainingCertId', { ascending: true });
 
-        // Calculate statistics
+        // Calculate statistics with progress awareness
         const stats = {
             totalAssigned: assignments.length,
             completed: assignments.filter(a => a.status === 'Completed').length,
@@ -686,7 +779,10 @@ getTrainingDetails: async function (req, res) {
                 const dueDate = new Date(a.endDate);
                 const today = new Date();
                 return dueDate < today && a.status !== 'Completed';
-            }).length
+            }).length,
+            // Calculate average progress
+            averageProgress: assignments.length > 0 ? 
+                Math.round(assignments.reduce((sum, a) => sum + a.progress, 0) / assignments.length) : 0
         };
 
         // Format training data
@@ -712,12 +808,12 @@ getTrainingDetails: async function (req, res) {
             statistics: stats
         };
 
-        console.log(`Training details loaded: ${formattedTraining.title} with ${assignments.length} assignments`);
+        console.log(`Training details loaded: ${formattedTraining.title} with ${assignments.length} assignments, average progress: ${stats.averageProgress}%`);
 
         res.json({
             success: true,
             data: formattedTraining,
-            message: `Training details loaded successfully`
+            message: `Training details loaded successfully with synchronized progress`
         });
 
     } catch (error) {
