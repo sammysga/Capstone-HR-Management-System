@@ -5053,7 +5053,8 @@ console.log('Final applicants list:', applicants);
             res.redirect('/staff/login');
         }
     },
-getRecordsPerformanceTrackerByUserId: async function(req, res, next) {
+    
+    getRecordsPerformanceTrackerByUserId: async function(req, res, next) {
     try {
         const userId = req.params.userId;
         console.log('Fetching records for userId:', userId);
@@ -5097,6 +5098,10 @@ getRecordsPerformanceTrackerByUserId: async function(req, res, next) {
     
         console.log('Fetched user data:', userData);
 
+        // Get jobId for the user
+        const jobId = userData.staffaccounts[0]?.jobId;
+        console.log('User jobId:', jobId);
+
         // Fetch attendance logs for the specific user
         const { data: attendanceLogs, error: attendanceError } = await supabase
             .from('attendance')
@@ -5123,18 +5128,188 @@ getRecordsPerformanceTrackerByUserId: async function(req, res, next) {
     
         if (attendanceError) throw attendanceError;
 
-        // NEW: Fetch available trainings
-        const { data: trainingsData, error: trainingsError } = await supabase
-            .from('trainings')
-            .select('trainingId, trainingName, trainingDesc')
-            .order('trainingName', { ascending: true });
+        // NEW: Fetch user's objectives from the most recent objective settings
+        let userObjectives = [];
+        let userSkills = [];
+        let availableTrainings = [];
 
-        if (trainingsError) {
-            console.error('Error fetching trainings:', trainingsError);
-            // Don't throw error for trainings, just log it and continue with empty array
+        if (jobId) {
+            // Get the most recent objective settings for this user
+            const { data: objectiveSettings, error: objectiveError } = await supabase
+                .from('objectivesettings')
+                .select(`
+                    objectiveSettingsId,
+                    performancePeriodYear,
+                    objectivesettings_objectives (
+                        objectiveId,
+                        objectiveDescrpt,
+                        objectiveKPI,
+                        objectiveTarget,
+                        objectiveUOM,
+                        objectiveAssignedWeight
+                    )
+                `)
+                .eq('userId', userId)
+                .eq('jobId', jobId)
+                .order('performancePeriodYear', { ascending: false })
+                .limit(1);
+
+            if (objectiveError) {
+                console.error('Error fetching objectives:', objectiveError);
+            } else if (objectiveSettings && objectiveSettings.length > 0) {
+                userObjectives = objectiveSettings[0].objectivesettings_objectives || [];
+                console.log('Fetched user objectives:', userObjectives);
+            }
+
+            // Get job required skills for this position
+            const { data: jobSkills, error: skillsError } = await supabase
+                .from('jobreqskills')
+                .select(`
+                    jobReqSkillId,
+                    jobReqSkillType,
+                    jobReqSkillName
+                `)
+                .eq('jobId', jobId);
+
+            if (skillsError) {
+                console.error('Error fetching job skills:', skillsError);
+            } else {
+                userSkills = jobSkills || [];
+                console.log('Fetched user job skills:', userSkills);
+            }
+
+const { data: trainingObjectives, error: trainingObjError } = await supabase
+                .from('training_objectives')
+                .select(`
+                    trainingId,
+                    objectiveId,
+                    trainings (
+                        trainingId,
+                        trainingName,
+                        trainingDesc
+                    ),
+                    objectivesettings_objectives!inner (
+                        objectiveId,
+                        objectiveDescrpt,
+                        objectiveKPI
+                    )
+                `)
+                .in('objectiveId', userObjectives.map(obj => obj.objectiveId));
+
+            // Get trainings that have skills matching user's job skills
+            const { data: trainingSkills, error: trainingSkillsError } = await supabase
+                .from('training_skills')
+                .select(`
+                    trainingId,
+                    jobReqSkillId,
+                    trainings (
+                        trainingId,
+                        trainingName,
+                        trainingDesc
+                    ),
+                    jobreqskills!inner (
+                        jobReqSkillId,
+                        jobReqSkillName,
+                        jobReqSkillType
+                    )
+                `)
+                .in('jobReqSkillId', userSkills.map(skill => skill.jobReqSkillId));
+
+            if (trainingObjError) {
+                console.error('Error fetching training objectives:', trainingObjError);
+            }
+
+            if (trainingSkillsError) {
+                console.error('Error fetching training skills:', trainingSkillsError);
+            }
+
+            // Combine and process trainings with detailed objective and skill information
+            const trainingMap = new Map();
+
+            // Process trainings from objectives
+            if (trainingObjectives) {
+                trainingObjectives.forEach(item => {
+                    if (item.trainings) {
+                        const trainingId = item.trainings.trainingId;
+                        
+                        if (!trainingMap.has(trainingId)) {
+                            trainingMap.set(trainingId, {
+                                trainingId: trainingId,
+                                trainingName: item.trainings.trainingName,
+                                trainingDescription: item.trainings.trainingDesc,
+                                matchType: 'objective',
+                                objectives: [],
+                                skills: []
+                            });
+                        }
+                        
+                        const training = trainingMap.get(trainingId);
+                        
+                        // Add objective details
+                        if (item.objectivesettings_objectives) {
+                            training.objectives.push({
+                                objectiveId: item.objectivesettings_objectives.objectiveId,
+                                objectiveDescrpt: item.objectivesettings_objectives.objectiveDescrpt,
+                                objectiveKPI: item.objectivesettings_objectives.objectiveKPI
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Process trainings from skills
+            if (trainingSkills) {
+                trainingSkills.forEach(item => {
+                    if (item.trainings) {
+                        const trainingId = item.trainings.trainingId;
+                        
+                        if (!trainingMap.has(trainingId)) {
+                            trainingMap.set(trainingId, {
+                                trainingId: trainingId,
+                                trainingName: item.trainings.trainingName,
+                                trainingDescription: item.trainings.trainingDesc,
+                                matchType: 'skill',
+                                objectives: [],
+                                skills: []
+                            });
+                        } else {
+                            // Mark as both if already exists from objectives
+                            const training = trainingMap.get(trainingId);
+                            training.matchType = 'both';
+                        }
+                        
+                        const training = trainingMap.get(trainingId);
+                        
+                        // Add skill details
+                        if (item.jobreqskills) {
+                            training.skills.push({
+                                jobReqSkillId: item.jobreqskills.jobReqSkillId,
+                                jobReqSkillName: item.jobreqskills.jobReqSkillName,
+                                jobReqSkillType: item.jobreqskills.jobReqSkillType
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Convert Map to Array, remove duplicates, and sort by name
+            availableTrainings = Array.from(trainingMap.values())
+                .map(training => {
+                    // Remove duplicate objectives and skills
+                    training.objectives = training.objectives.filter((obj, index, self) => 
+                        index === self.findIndex(o => o.objectiveId === obj.objectiveId)
+                    );
+                    
+                    training.skills = training.skills.filter((skill, index, self) => 
+                        index === self.findIndex(s => s.jobReqSkillId === skill.jobReqSkillId)
+                    );
+                    
+                    return training;
+                })
+                .sort((a, b) => a.trainingName.localeCompare(b.trainingName));
+
+            console.log('Enhanced available trainings with objectives and skills:', availableTrainings);
         }
-
-        console.log('Fetched trainings data:', trainingsData);
     
         // Format attendance logs by week
         const formattedAttendanceLogs = attendanceLogs.reduce((acc, attendance) => {
@@ -5179,13 +5354,17 @@ getRecordsPerformanceTrackerByUserId: async function(req, res, next) {
             hireDate: userData.staffaccounts[0]?.hireDate || '',
             jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || '',
             departmentName: userData.staffaccounts[0]?.departments?.deptName || '',
+            departmentId: userData.staffaccounts[0]?.departmentId || '',
+            jobId: jobId || '',
             milestones: userData.staffaccounts[0]?.staffcareerprogression || [],
             degrees: userData.staffaccounts[0]?.staffdegrees || [],
             experiences: userData.staffaccounts[0]?.staffexperiences || [],
             certifications: userData.staffaccounts[0]?.staffcertification || [],
             weeklyAttendanceLogs: formattedAttendanceLogs,
-            // NEW: Add trainings data
-            availableTrainings: trainingsData || []
+            // UPDATED: Add filtered trainings and related data
+            availableTrainings: availableTrainings,
+            userObjectives: userObjectives,
+            userSkills: userSkills
         };
     
         req.user = formattedUserData;
@@ -5196,7 +5375,6 @@ getRecordsPerformanceTrackerByUserId: async function(req, res, next) {
         res.redirect('/staffpages/linemanager_pages/managerrecordsperftracker');
     }
 },
-
     // code with midyearidp logic
    // Fixed getUserProgressView function - specifically the stepper logic section
 getUserProgressView: async function(req, res) {

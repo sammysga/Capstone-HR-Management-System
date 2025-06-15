@@ -35,15 +35,188 @@
     border-color: var(--secondary-color);
     box-shadow: 0 0 0 3px rgba(5, 156, 164, 0.2);
 }
+#suggestedTrainings {
+    /* Better text wrapping and display */
+    white-space: normal !important;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 #suggestedTrainings option {
-    padding: 12px;
+    padding: 8px 12px;
+    line-height: 1.4;
+    white-space: normal;
+    word-wrap: break-word;
     background-color: white;
     color: var(--primary-color);
+    border-bottom: 1px solid #f0f0f0;
 }
 
 #suggestedTrainings option:hover {
     background-color: rgba(5, 156, 164, 0.1);
+}
+
+#suggestedTrainings option:checked,
+#suggestedTrainings option:selected {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+/* Training Details Panel Styles */
+#trainingDetailsPanel {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Training Detail Items */
+.training-detail-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.training-detail-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    transition: left 0.5s;
+}
+
+.training-detail-item:hover::before {
+    left: 100%;
+}
+
+/* Enhanced skill and objective tags */
+.training-detail-item span {
+    transition: var(--transition);
+}
+
+.training-detail-item span:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Custom scrollbar for details panel */
+#trainingDetailsPanel::-webkit-scrollbar {
+    width: 8px;
+}
+
+#trainingDetailsPanel::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#trainingDetailsPanel::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 4px;
+}
+
+#trainingDetailsPanel::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* Responsive adjustments for training dropdown */
+@media (max-width: 768px) {
+    #trainingDetailsPanel {
+        position: fixed;
+        top: 50%;
+        left: 10px;
+        right: 10px;
+        transform: translateY(-50%);
+        max-height: 70vh;
+        z-index: 9999;
+    }
+    
+    #trainingDetailsList {
+        padding: 10px;
+    }
+    
+    .training-detail-item {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    
+    #suggestedTrainings {
+        font-size: 12px;
+    }
+}
+
+/* Loading state for training details */
+.training-details-loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.training-details-loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--secondary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced training selection feedback */
+#suggestedTrainings.training-selected {
+    background-color: rgba(5, 156, 164, 0.1);
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(5, 156, 164, 0.3);
+}
+
+/* Training match type indicators in select */
+#suggestedTrainings option[data-match-type="both"] {
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+#suggestedTrainings option[data-match-type="objective"] {
+    background-color: rgba(33, 150, 243, 0.1);
+}
+
+#suggestedTrainings option[data-match-type="skill"] {
+    background-color: rgba(255, 152, 0, 0.1);
+}
+
+/* Panel close button (optional) */
+.panel-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #999;
+    padding: 5px;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.panel-close-btn:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #f44336;
 }
 
 /* Selected training highlight */
@@ -2293,9 +2466,9 @@
             </div>
         </fieldset>
 
-<!-- NEW: Suggested Trainings Section - Left Side -->
+        
 <fieldset class="suggested-trainings-fieldset">
-    <legend><i class="fas fa-graduation-cap"></i> SUGGESTED TRAININGS</legend>
+    <legend><i class="fas fa-graduation-cap"></i> SUGGESTED TRAININGS TO TAKE</legend>
     
     <div class="form-group">
         <div class="training-selection-container" style="
@@ -2307,13 +2480,14 @@
         ">
             <div class="training-header" style="margin-bottom: 15px;">
                 <h4 style="margin: 0 0 8px 0; color: var(--primary-color); font-size: 16px;">
-                    <i class="fas fa-book-open"></i> Areas for Improvement
+                    <i class="fas fa-book-open"></i> Recommended Training Programs
                 </h4>
                 <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.4;">
-                    Select a training program that aligns with your development goals and areas for improvement identified in this IDP.
+                    Select a training program that aligns with your job objectives and required skills. These trainings are specifically matched to your role.
                 </p>
             </div>
 
+            <!-- SINGLE ENHANCED TRAINING DROPDOWN -->
             <div class="training-dropdown-container" style="position: relative;">
                 <label for="suggestedTrainings" style="
                     display: block;
@@ -2325,37 +2499,92 @@
                     <i class="fas fa-search"></i> Choose Training Program:
                 </label>
                 
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <!-- UPDATED SELECT ELEMENT - Now Dynamic -->
-                    <select id="suggestedTrainings" name="suggestedTrainings" style="
-                        flex: 1;
-                        padding: 12px 15px;
-                        border: 2px solid #ddd;
-                        border-radius: var(--border-radius);
-                        background-color: white;
-                        color: var(--primary-color);
-                        font-weight: 500;
-                        cursor: pointer;
-                        transition: var(--transition);
-                        font-size: 14px;
-                    " onchange="handleTrainingSelection(this)">
-                        <option value="">-- Select a Training Program --</option>
-                        <% if (user.availableTrainings && user.availableTrainings.length > 0) { %>
-                            <% user.availableTrainings.forEach(training => { %>
-                                <option value="<%= training.trainingId %>" data-description="<%= training.trainingDescription || 'No description available.' %>">
-                                    <%= training.trainingName %>
-                                </option>
-                            <% }); %>
-                        <% } else { %>
-                            <option value="" disabled>No trainings available</option>
-                        <% } %>
-                    </select>
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <!-- Enhanced Select Element with Better Display -->
+                    <div style="flex: 1; position: relative;">
+                        <select id="suggestedTrainings" name="suggestedTrainings" style="
+                            width: 100%;
+                            padding: 12px 15px;
+                            border: 2px solid #ddd;
+                            border-radius: var(--border-radius);
+                            background-color: white;
+                            color: var(--primary-color);
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: var(--transition);
+                            font-size: 13px;
+                            line-height: 1.3;
+                            height: auto;
+                            min-height: 45px;
+                        " onchange="handleTrainingSelection(this)" onclick="showTrainingDetails()">
+                            <option value="">-- Select a Training Program --</option>
+                            <% if (user.availableTrainings && user.availableTrainings.length > 0) { %>
+                                <% user.availableTrainings.forEach(training => { %>
+                                    <% 
+                                        // Build shorter display text for dropdown (just training name + match indicator)
+                                        let displayText = training.trainingName;
+                                        
+                                        // Add match type indicator only
+                                        if (training.matchType === 'both') {
+                                            displayText += ' ⭐';
+                                        } else if (training.matchType === 'objective') {
+                                            displayText += ' 🎯';
+                                        } else if (training.matchType === 'skill') {
+                                            displayText += ' 🔧';
+                                        }
+                                        
+                                        // Build objectives list for data attribute
+                                        let objectivesList = '';
+                                        if (training.objectives && training.objectives.length > 0) {
+                                            objectivesList = training.objectives.map(obj => obj.objectiveDescrpt).join(', ');
+                                        }
+                                        
+                                        // Build skills list for data attribute
+                                        let skillsList = '';
+                                        if (training.skills && training.skills.length > 0) {
+                                            skillsList = training.skills.map(skill => `${skill.jobReqSkillName} (${skill.jobReqSkillType})`).join(', ');
+                                        }
+                                    %>
+                                    <option value="<%= training.trainingId %>" 
+                                            data-description="<%= training.trainingDescription || 'No description available.' %>"
+                                            data-match-type="<%= training.matchType %>"
+                                            data-objectives='<%- JSON.stringify(training.objectives || []) %>'
+                                            data-skills='<%- JSON.stringify(training.skills || []) %>'
+                                            data-objectives-text="<%= objectivesList %>"
+                                            data-skills-text="<%= skillsList %>"
+                                            title="<%= displayText %> | Objectives: <%= objectivesList || 'None' %> | Skills: <%= skillsList || 'None' %>">
+                                        <%= displayText %>
+                                    </option>
+                                <% }); %>
+                            <% } else { %>
+                                <option value="" disabled>No matching trainings available for your role</option>
+                            <% } %>
+                        </select>
+
+                        <!-- Training Details Panel (Shows when dropdown is focused/clicked) -->
+                        <div id="trainingDetailsPanel" style="
+                            position: absolute;
+                            top: 100%;
+                            left: 0;
+                            right: 0;
+                            background: white;
+                            border: 2px solid var(--secondary-color);
+                            border-radius: var(--border-radius);
+                            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                            z-index: 1000;
+                            display: none;
+                            max-height: 400px;
+                            overflow-y: auto;
+                            margin-top: 5px;
+                        ">
+                            <div id="trainingDetailsList" style="padding: 15px;">
+                                <!-- Training details will be populated here -->
+                            </div>
+                        </div>
+                    </div>
                     
-                    <!-- Training Description Tooltip -->
-                    <div class="training-tooltip" style="
-                        position: relative;
-                        cursor: help;
-                    ">
+                    <!-- Info Icon Tooltip -->
+                    <div class="training-tooltip" style="position: relative; cursor: help;">
                         <i class="fas fa-info-circle" style="
                             color: var(--secondary-color);
                             font-size: 18px;
@@ -2383,7 +2612,7 @@
                             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
                         ">
                             <strong>Select a training</strong><br>
-                            Choose from our available training programs to enhance your skills and career growth.
+                            Choose from our recommended training programs that match your job objectives and required skills.
                             
                             <!-- Tooltip arrow -->
                             <div style="
@@ -2400,6 +2629,19 @@
                 </div>
             </div>
 
+            <!-- Training Match Information -->
+            <div class="training-match-info" style="margin-top: 15px; font-size: 12px; color: #666;">
+                <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">Training Legend:</h5>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div><span style="color: #4CAF50;">⭐</span> Perfect Match: Covers both objectives and skills</div>
+                    <div><span style="color: #2196F3;">🎯</span> Objective Match: Aligns with your objectives</div>
+                    <div><span style="color: #FF9800;">🔧</span> Skill Match: Develops required job skills</div>
+                </div>
+                <div style="margin-top: 8px; font-style: italic; color: #888; font-size: 11px;">
+                    Click or focus the dropdown to see detailed objectives and skills for each training program.
+                </div>
+            </div>
+
             <!-- Selected Training Display -->
             <div id="selectedTrainingDisplay" style="
                 margin-top: 15px;
@@ -2412,6 +2654,13 @@
                 <div style="display: flex; align-items: center; margin-bottom: 8px;">
                     <i class="fas fa-check-circle" style="color: var(--success-color); margin-right: 8px;"></i>
                     <strong id="selectedTrainingName" style="color: var(--primary-color);"></strong>
+                    <span id="selectedTrainingMatchBadge" style="
+                        margin-left: 10px;
+                        padding: 2px 8px;
+                        border-radius: 12px;
+                        font-size: 11px;
+                        font-weight: bold;
+                    "></span>
                 </div>
                 <p id="selectedTrainingDescription" style="
                     margin: 0;
@@ -2423,7 +2672,6 @@
         </div>
     </div>
 </fieldset>
-
 <!-- Submit Button Container - Right Side -->
 <div class="submit-button-container" style="text-align: right; margin-top: 30px;">
     <button id="submitMidYearIDP" type="submit" class="save-btn" disabled style="
@@ -2631,69 +2879,495 @@
 
 // Training descriptions mapping - now loaded dynamically
 let trainingDescriptions = {};
+let trainingMatchTypes = {};
 
-// Function to initialize training descriptions from the select options
 function initializeTrainingDescriptions() {
     const trainingSelect = document.getElementById('suggestedTrainings');
     if (!trainingSelect) return;
     
     // Clear existing descriptions
     trainingDescriptions = {};
+    trainingMatchTypes = {};
     
     // Populate descriptions from select options
     Array.from(trainingSelect.options).forEach(option => {
         if (option.value && option.dataset.description) {
             trainingDescriptions[option.value] = option.dataset.description;
+            trainingMatchTypes[option.value] = option.dataset.matchType || 'general';
         }
     });
     
     console.log('Initialized training descriptions:', trainingDescriptions);
+    console.log('Initialized training match types:', trainingMatchTypes);
+    
+    // Log summary of training details
+    const trainingsWithDetails = Array.from(trainingSelect.options)
+        .filter(option => option.value)
+        .map(option => {
+            try {
+                const objectives = JSON.parse(option.dataset.objectives || '[]');
+                const skills = JSON.parse(option.dataset.skills || '[]');
+                return {
+                    name: option.text.split(' | ')[0],
+                    objectiveCount: objectives.length,
+                    skillCount: skills.length,
+                    matchType: option.dataset.matchType
+                };
+            } catch (e) {
+                return null;
+            }
+        })
+        .filter(training => training !== null);
+    
+    console.log('Training details summary:', trainingsWithDetails);
 }
-
-// Updated function to handle training selection
 function handleTrainingSelection(selectElement) {
     const selectedValue = selectElement.value;
     const tooltipText = document.getElementById('trainingTooltipText');
     
-    if (selectedValue && trainingDescriptions[selectedValue]) {
-        // Update tooltip content
-        const trainingName = selectElement.options[selectElement.selectedIndex].text;
-        const description = trainingDescriptions[selectedValue] || 'No description available.';
+    // Hide details panel when selection is made
+    hideTrainingDetails();
+    
+    if (selectedValue && selectElement.selectedIndex > 0) {
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
         
-        tooltipText.innerHTML = `<strong>${trainingName}</strong><br>${description}`;
+        // Get training details
+        const trainingName = selectedOption.text.replace(/[⭐🎯🔧]$/, '').trim(); // Remove match indicators
+        const description = selectedOption.dataset.description || 'No description available.';
+        const matchType = selectedOption.dataset.matchType || 'general';
+        
+        // Parse objectives and skills from data attributes
+        let objectives = [];
+        let skills = [];
+        
+        try {
+            objectives = JSON.parse(selectedOption.dataset.objectives || '[]');
+            skills = JSON.parse(selectedOption.dataset.skills || '[]');
+        } catch (e) {
+            console.error('Error parsing training details:', e);
+        }
+        
+        // Build enhanced tooltip with objectives and skills
+        let tooltipContent = `<strong>${trainingName}</strong><br><br>${description}<br><br>`;
+        
+        // Add objectives section
+        if (objectives.length > 0) {
+            tooltipContent += `<strong>📋 Covered Objectives (${objectives.length}):</strong><br>`;
+            objectives.forEach(obj => {
+                tooltipContent += `• ${obj.objectiveDescrpt}`;
+                if (obj.objectiveKPI) {
+                    tooltipContent += ` (${obj.objectiveKPI})`;
+                }
+                tooltipContent += `<br>`;
+            });
+            tooltipContent += `<br>`;
+        }
+        
+        // Add skills section
+        if (skills.length > 0) {
+            tooltipContent += `<strong>🔧 Developed Skills (${skills.length}):</strong><br>`;
+            
+            // Group skills by type
+            const hardSkills = skills.filter(skill => skill.jobReqSkillType === 'Hard');
+            const softSkills = skills.filter(skill => skill.jobReqSkillType === 'Soft');
+            
+            if (hardSkills.length > 0) {
+                tooltipContent += `<em>Hard Skills:</em> ${hardSkills.map(s => s.jobReqSkillName).join(', ')}<br>`;
+            }
+            
+            if (softSkills.length > 0) {
+                tooltipContent += `<em>Soft Skills:</em> ${softSkills.map(s => s.jobReqSkillName).join(', ')}<br>`;
+            }
+            
+            tooltipContent += `<br>`;
+        }
+        
+        // Add match type information
+        let matchTypeText = '';
+        switch(matchType) {
+            case 'both':
+                matchTypeText = '<span style="color: #4CAF50;">⭐ Perfect Match</span> - Covers both your objectives and required skills';
+                break;
+            case 'objective':
+                matchTypeText = '<span style="color: #2196F3;">🎯 Objective Match</span> - Aligns with your current objectives';
+                break;
+            case 'skill':
+                matchTypeText = '<span style="color: #FF9800;">🔧 Skill Match</span> - Develops your required job skills';
+                break;
+            default:
+                matchTypeText = '<span style="color: #666;">General Training</span>';
+        }
+        
+        tooltipContent += `<em>${matchTypeText}</em>`;
+        tooltipText.innerHTML = tooltipContent;
         
         // Add selected styling
         selectElement.classList.add('training-selected', 'training-animation');
         
-        // Show selected training display
-        showSelectedTrainingDisplay(trainingName, description);
+        // Show selected training display with enhanced information
+        showSelectedTrainingDisplayDetailed(trainingName, description, matchType, objectives, skills);
         
         // Show a brief confirmation
-        showTrainingConfirmation(trainingName);
+        showTrainingConfirmationDetailed(trainingName, matchType, objectives.length, skills.length);
         
         // Remove animation class after animation completes
         setTimeout(() => {
             selectElement.classList.remove('training-animation');
         }, 600);
         
-        console.log(`Selected training: ${trainingName} (ID: ${selectedValue})`);
+        console.log(`Selected training: ${trainingName} (ID: ${selectedValue}, Match: ${matchType})`);
+        console.log('Objectives covered:', objectives);
+        console.log('Skills developed:', skills);
     } else {
         // Reset tooltip to default
-        tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our available training programs to enhance your skills and career growth.`;
+        tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our recommended training programs that match your job objectives and required skills.`;
         selectElement.classList.remove('training-selected');
         hideSelectedTrainingDisplay();
     }
 }
 
-// Function to show selected training display
-function showSelectedTrainingDisplay(trainingName, description) {
+
+function showTrainingDetails() {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    const detailsPanel = document.getElementById('trainingDetailsPanel');
+    const detailsList = document.getElementById('trainingDetailsList');
+    
+    if (!trainingSelect || !detailsPanel || !detailsList) return;
+    
+    console.log('Showing training details panel...');
+    
+    // Build the details content
+    let detailsHTML = '<h4 style="margin: 0 0 15px 0; color: var(--primary-color); font-size: 16px;">Available Training Programs</h4>';
+    
+    // Get all training options (skip the first placeholder option)
+    const options = Array.from(trainingSelect.options).slice(1);
+    
+    if (options.length === 0) {
+        detailsHTML += '<p style="color: #666; font-style: italic;">No training programs available for your role.</p>';
+    } else {
+        options.forEach((option, index) => {
+            if (option.value) {
+                try {
+                    const objectives = JSON.parse(option.dataset.objectives || '[]');
+                    const skills = JSON.parse(option.dataset.skills || '[]');
+                    const matchType = option.dataset.matchType || 'general';
+                    const description = option.dataset.description || 'No description available.';
+                    
+                    // Get clean training name (remove match indicators)
+                    const trainingName = option.text.replace(/[⭐🎯🔧]$/, '').trim();
+                    
+                    // Match type styling
+                    let matchBadge = '';
+                    let borderColor = '#ddd';
+                    
+                    switch(matchType) {
+                        case 'both':
+                            matchBadge = '<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">⭐ Perfect Match</span>';
+                            borderColor = '#4CAF50';
+                            break;
+                        case 'objective':
+                            matchBadge = '<span style="background: #2196F3; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🎯 Objective Match</span>';
+                            borderColor = '#2196F3';
+                            break;
+                        case 'skill':
+                            matchBadge = '<span style="background: #FF9800; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🔧 Skill Match</span>';
+                            borderColor = '#FF9800';
+                            break;
+                        default:
+                            matchBadge = '<span style="background: #666; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">Available</span>';
+                    }
+                    
+                    detailsHTML += `
+                        <div class="training-detail-item" style="
+                            border: 1px solid ${borderColor};
+                            border-radius: 8px;
+                            padding: 15px;
+                            margin-bottom: 15px;
+                            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(245,247,250,0.9));
+                            cursor: pointer;
+                            transition: var(--transition);
+                        " onclick="selectTrainingFromPanel('${option.value}')" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                <h5 style="margin: 0; color: var(--primary-color); font-size: 14px; font-weight: 600;">${trainingName}</h5>
+                                ${matchBadge}
+                            </div>
+                            
+                            <p style="margin: 0 0 12px 0; font-size: 12px; color: #666; line-height: 1.4;">${description}</p>
+                            
+                            ${objectives.length > 0 ? `
+                                <div style="margin-bottom: 10px;">
+                                    <strong style="font-size: 12px; color: var(--primary-color);">📋 Objectives (${objectives.length}):</strong>
+                                    <div style="margin-top: 5px;">
+                                        ${objectives.map(obj => `
+                                            <span style="
+                                                display: inline-block;
+                                                background: rgba(33, 150, 243, 0.1);
+                                                color: #1976D2;
+                                                padding: 3px 8px;
+                                                border-radius: 12px;
+                                                font-size: 11px;
+                                                margin: 2px;
+                                                border: 1px solid rgba(33, 150, 243, 0.2);
+                                            ">${obj.objectiveDescrpt}</span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${skills.length > 0 ? `
+                                <div>
+                                    <strong style="font-size: 12px; color: var(--primary-color);">🔧 Skills (${skills.length}):</strong>
+                                    <div style="margin-top: 5px;">
+                                        ${skills.map(skill => {
+                                            const isHard = skill.jobReqSkillType === 'Hard';
+                                            const bgColor = isHard ? 'rgba(255, 152, 0, 0.1)' : 'rgba(76, 175, 80, 0.1)';
+                                            const textColor = isHard ? '#F57C00' : '#388E3C';
+                                            const borderColor = isHard ? 'rgba(255, 152, 0, 0.2)' : 'rgba(76, 175, 80, 0.2)';
+                                            
+                                            return `
+                                                <span style="
+                                                    display: inline-block;
+                                                    background: ${bgColor};
+                                                    color: ${textColor};
+                                                    padding: 3px 8px;
+                                                    border-radius: 12px;
+                                                    font-size: 11px;
+                                                    margin: 2px;
+                                                    border: 1px solid ${borderColor};
+                                                ">${skill.jobReqSkillName} <em>(${skill.jobReqSkillType})</em></span>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                } catch (e) {
+                    console.error('Error parsing training data for option:', option.value, e);
+                }
+            }
+        });
+    }
+    
+    detailsList.innerHTML = detailsHTML;
+    detailsPanel.style.display = 'block';
+    
+    // Add click-outside handler to close panel
+    setTimeout(() => {
+        document.addEventListener('click', handleClickOutsideDetailsPanel);
+    }, 100);
+}
+
+
+// Function to select training from the details panel
+function selectTrainingFromPanel(trainingId) {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    const detailsPanel = document.getElementById('trainingDetailsPanel');
+    
+    if (trainingSelect && trainingId) {
+        trainingSelect.value = trainingId;
+        handleTrainingSelection(trainingSelect);
+        
+        // Close the details panel
+        if (detailsPanel) {
+            detailsPanel.style.display = 'none';
+        }
+        
+        // Remove click-outside handler
+        document.removeEventListener('click', handleClickOutsideDetailsPanel);
+        
+        console.log('Training selected from panel:', trainingId);
+    }
+}
+
+function handleClickOutsideDetailsPanel(event) {
+    const detailsPanel = document.getElementById('trainingDetailsPanel');
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    const trainingContainer = document.querySelector('.training-dropdown-container');
+    
+    if (detailsPanel && trainingContainer) {
+        // Check if click is outside the training container
+        if (!trainingContainer.contains(event.target)) {
+            detailsPanel.style.display = 'none';
+            document.removeEventListener('click', handleClickOutsideDetailsPanel);
+        }
+    }
+}
+
+// Function to hide training details panel
+function hideTrainingDetails() {
+    const detailsPanel = document.getElementById('trainingDetailsPanel');
+    if (detailsPanel) {
+        detailsPanel.style.display = 'none';
+        document.removeEventListener('click', handleClickOutsideDetailsPanel);
+    }
+}
+
+// Enhanced function to show selected training display with objectives and skills
+function showSelectedTrainingDisplayDetailed(trainingName, description, matchType, objectives, skills) {
     const displayElement = document.getElementById('selectedTrainingDisplay');
     const nameElement = document.getElementById('selectedTrainingName');
     const descriptionElement = document.getElementById('selectedTrainingDescription');
+    const matchBadgeElement = document.getElementById('selectedTrainingMatchBadge');
     
-    if (displayElement && nameElement && descriptionElement) {
+    if (displayElement && nameElement && descriptionElement && matchBadgeElement) {
+        nameElement.textContent = trainingName;
+        
+        // Build enhanced description with objectives and skills
+        let enhancedDescription = description;
+        
+        if (objectives.length > 0 || skills.length > 0) {
+            enhancedDescription += '\n\n';
+            
+            if (objectives.length > 0) {
+                enhancedDescription += `📋 Objectives (${objectives.length}): `;
+                enhancedDescription += objectives.map(obj => obj.objectiveDescrpt).join(', ');
+                enhancedDescription += '\n';
+            }
+            
+            if (skills.length > 0) {
+                enhancedDescription += `🔧 Skills (${skills.length}): `;
+                enhancedDescription += skills.map(skill => skill.jobReqSkillName).join(', ');
+            }
+        }
+        
+        descriptionElement.textContent = enhancedDescription;
+        
+        // Set match badge
+        let badgeText = '';
+        let badgeColor = '';
+        
+        switch(matchType) {
+            case 'both':
+                badgeText = `Perfect Match (${objectives.length + skills.length} items)`;
+                badgeColor = '#4CAF50';
+                break;
+            case 'objective':
+                badgeText = `Objective Match (${objectives.length} objectives)`;
+                badgeColor = '#2196F3';
+                break;
+            case 'skill':
+                badgeText = `Skill Match (${skills.length} skills)`;
+                badgeColor = '#FF9800';
+                break;
+            default:
+                badgeText = 'Available';
+                badgeColor = '#666';
+        }
+        
+        matchBadgeElement.textContent = badgeText;
+        matchBadgeElement.style.backgroundColor = badgeColor;
+        matchBadgeElement.style.color = 'white';
+        
+        displayElement.style.display = 'block';
+        displayElement.classList.add('show');
+    }
+}
+
+
+// Enhanced function to show training selection confirmation with details
+function showTrainingConfirmationDetailed(trainingName, matchType, objectiveCount, skillCount) {
+    // Create a temporary notification
+    const notification = document.createElement('div');
+    
+    let matchIcon = '';
+    let bgColor = '';
+    let detailText = '';
+    
+    switch(matchType) {
+        case 'both':
+            matchIcon = '<i class="fas fa-star"></i>';
+            bgColor = '#4CAF50';
+            detailText = ` (${objectiveCount} objectives, ${skillCount} skills)`;
+            break;
+        case 'objective':
+            matchIcon = '<i class="fas fa-bullseye"></i>';
+            bgColor = '#2196F3';
+            detailText = ` (${objectiveCount} objectives)`;
+            break;
+        case 'skill':
+            matchIcon = '<i class="fas fa-cogs"></i>';
+            bgColor = '#FF9800';
+            detailText = ` (${skillCount} skills)`;
+            break;
+        default:
+            matchIcon = '<i class="fas fa-check-circle"></i>';
+            bgColor = 'var(--success-color)';
+            detailText = '';
+    }
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: ${bgColor};
+        color: white;
+        padding: 12px 20px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        font-weight: 500;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+        max-width: 350px;
+    `;
+    notification.innerHTML = `${matchIcon} Training Selected: ${trainingName}${detailText}`;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remove after 4 seconds (longer due to more content)
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 4000);
+}
+
+
+// Enhanced function to show selected training display
+function showSelectedTrainingDisplay(trainingName, description, matchType) {
+    const displayElement = document.getElementById('selectedTrainingDisplay');
+    const nameElement = document.getElementById('selectedTrainingName');
+    const descriptionElement = document.getElementById('selectedTrainingDescription');
+    const matchBadgeElement = document.getElementById('selectedTrainingMatchBadge');
+    
+    if (displayElement && nameElement && descriptionElement && matchBadgeElement) {
         nameElement.textContent = trainingName;
         descriptionElement.textContent = description;
+        
+        // Set match badge
+        let badgeText = '';
+        let badgeColor = '';
+        
+        switch(matchType) {
+            case 'both':
+                badgeText = 'Perfect Match';
+                badgeColor = '#4CAF50';
+                break;
+            case 'objective':
+                badgeText = 'Objective Match';
+                badgeColor = '#2196F3';
+                break;
+            case 'skill':
+                badgeText = 'Skill Match';
+                badgeColor = '#FF9800';
+                break;
+            default:
+                badgeText = 'Available';
+                badgeColor = '#666';
+        }
+        
+        matchBadgeElement.textContent = badgeText;
+        matchBadgeElement.style.backgroundColor = badgeColor;
+        matchBadgeElement.style.color = 'white';
+        
         displayElement.style.display = 'block';
         displayElement.classList.add('show');
     }
@@ -2708,15 +3382,38 @@ function hideSelectedTrainingDisplay() {
     }
 }
 
-// Function to show training selection confirmation
-function showTrainingConfirmation(trainingName) {
+
+// Enhanced function to show training selection confirmation
+function showTrainingConfirmation(trainingName, matchType) {
     // Create a temporary notification
     const notification = document.createElement('div');
+    
+    let matchIcon = '';
+    let bgColor = '';
+    
+    switch(matchType) {
+        case 'both':
+            matchIcon = '<i class="fas fa-star"></i>';
+            bgColor = '#4CAF50';
+            break;
+        case 'objective':
+            matchIcon = '<i class="fas fa-bullseye"></i>';
+            bgColor = '#2196F3';
+            break;
+        case 'skill':
+            matchIcon = '<i class="fas fa-cogs"></i>';
+            bgColor = '#FF9800';
+            break;
+        default:
+            matchIcon = '<i class="fas fa-check-circle"></i>';
+            bgColor = 'var(--success-color)';
+    }
+    
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        background-color: var(--success-color);
+        background-color: ${bgColor};
         color: white;
         padding: 12px 20px;
         border-radius: var(--border-radius);
@@ -2726,7 +3423,7 @@ function showTrainingConfirmation(trainingName) {
         transform: translateX(100%);
         transition: transform 0.3s ease-in-out;
     `;
-    notification.innerHTML = `<i class="fas fa-check-circle"></i> Training Selected: ${trainingName}`;
+    notification.innerHTML = `${matchIcon} Training Selected: ${trainingName}`;
     
     document.body.appendChild(notification);
     
@@ -2744,6 +3441,40 @@ function showTrainingConfirmation(trainingName) {
     }, 3000);
 }
 
+
+
+// Enhanced function to get selected training data with objectives and skills
+function getSelectedTrainingData() {
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    if (!trainingSelect || !trainingSelect.value) {
+        return null;
+    }
+    
+    const selectedOption = trainingSelect.options[trainingSelect.selectedIndex];
+    
+    let objectives = [];
+    let skills = [];
+    
+    try {
+        objectives = JSON.parse(selectedOption.dataset.objectives || '[]');
+        skills = JSON.parse(selectedOption.dataset.skills || '[]');
+    } catch (e) {
+        console.error('Error parsing training details:', e);
+    }
+    
+    return {
+        trainingId: trainingSelect.value,
+        trainingName: selectedOption.text.split(' | ')[0], // Get just the training name
+        description: selectedOption.dataset.description || '',
+        matchType: selectedOption.dataset.matchType || 'general',
+        objectives: objectives,
+        skills: skills,
+        objectiveCount: objectives.length,
+        skillCount: skills.length
+    };
+}
+
+
 // Function to get selected training ID (database ID)
 function getSelectedTrainingId() {
     const trainingSelect = document.getElementById('suggestedTrainings');
@@ -2759,7 +3490,8 @@ function getSelectedTrainingName() {
     return '';
 }
 
-// Enhanced submit function to include selected training ID
+
+// Enhanced submit function to include selected training data
 async function submitMidYearIDPFormWithTraining(event) {
     event.preventDefault();
     
@@ -2770,9 +3502,8 @@ async function submitMidYearIDPFormWithTraining(event) {
         return;
     }
     
-    // Get selected training
-    const selectedTrainingId = getSelectedTrainingId();
-    const selectedTrainingName = getSelectedTrainingName();
+    // Get selected training data
+    const selectedTrainingData = getSelectedTrainingData();
     
     // Get form data including training
     const formData = {
@@ -2785,15 +3516,17 @@ async function submitMidYearIDPFormWithTraining(event) {
         nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value,
         nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value,
         nextRoleMobility: document.getElementById("nextRoleMobility").value,
-        suggestedTrainingId: selectedTrainingId, // Include selected training ID
-        suggestedTrainingName: selectedTrainingName // Include selected training name
+        // Enhanced training data
+        suggestedTrainingId: selectedTrainingData ? selectedTrainingData.trainingId : '',
+        suggestedTrainingName: selectedTrainingData ? selectedTrainingData.trainingName : '',
+        suggestedTrainingMatchType: selectedTrainingData ? selectedTrainingData.matchType : ''
     };
     
-    console.log("Form data with training:", formData);
+    console.log("Form data with enhanced training info:", formData);
     
     // Show selected training in confirmation if one is selected
-    if (selectedTrainingId) {
-        console.log(`Including suggested training: ${selectedTrainingName} (ID: ${selectedTrainingId})`);
+    if (selectedTrainingData) {
+        console.log(`Including suggested training: ${selectedTrainingData.trainingName} (ID: ${selectedTrainingData.trainingId}, Match: ${selectedTrainingData.matchType})`);
     }
     
     // Disable the submit button and show loading state
@@ -2822,8 +3555,9 @@ async function submitMidYearIDPFormWithTraining(event) {
         
         if (result.success) {
             let successMessage = "Mid-Year IDP saved successfully!";
-            if (selectedTrainingId) {
-                successMessage += `\n\nTraining recommendation: ${selectedTrainingName}`;
+            if (selectedTrainingData) {
+                successMessage += `\n\nRecommended training: ${selectedTrainingData.trainingName}`;
+                successMessage += `\nMatch type: ${selectedTrainingData.matchType}`;
             }
             
             alert(successMessage);
@@ -2857,9 +3591,10 @@ async function submitMidYearIDPFormWithTraining(event) {
     }
 }
 
+
 // Function to initialize training dropdown functionality
 function initializeTrainingDropdown() {
-    // Initialize training descriptions first
+    // Initialize training descriptions and match types first
     initializeTrainingDescriptions();
     
     // Add hover effect to training tooltip
@@ -2883,7 +3618,7 @@ function initializeTrainingDropdown() {
     if (trainingSelect) {
         // Set default tooltip
         if (tooltipText) {
-            tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our available training programs to enhance your skills and career growth.`;
+            tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our recommended training programs that match your job objectives and required skills.`;
         }
         
         // Add change event listener
@@ -2893,10 +3628,22 @@ function initializeTrainingDropdown() {
         
         console.log('Training dropdown initialized successfully');
         console.log('Available trainings:', trainingSelect.options.length - 1); // -1 for the default option
+        
+        // Log training match distribution
+        const matchTypes = {};
+        Array.from(trainingSelect.options).forEach(option => {
+            if (option.value) {
+                const matchType = option.dataset.matchType || 'general';
+                matchTypes[matchType] = (matchTypes[matchType] || 0) + 1;
+            }
+        });
+        console.log('Training match distribution:', matchTypes);
     } else {
         console.warn('Training dropdown element not found');
     }
 }
+
+
 
 // Function to reset training selection
 function resetTrainingSelection() {
@@ -2909,11 +3656,12 @@ function resetTrainingSelection() {
     }
     
     if (tooltipText) {
-        tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our available training programs to enhance your skills and career growth.`;
+        tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our recommended training programs that match your job objectives and required skills.`;
     }
     
     hideSelectedTrainingDisplay();
 }
+
 
 // Function to pre-select a training by ID (useful for loading saved data)
 function setSelectedTrainingById(trainingId) {
@@ -2934,9 +3682,11 @@ function getAvailableTrainingsFromSelect() {
         .map(option => ({
             id: option.value,
             name: option.text,
-            description: option.dataset.description || ''
+            description: option.dataset.description || '',
+            matchType: option.dataset.matchType || 'general'
         }));
 }
+
 
 // Function to handle training dropdown in view-only mode
 function setTrainingDropdownViewOnly(isViewOnly, selectedTrainingId = '') {
@@ -2969,7 +3719,7 @@ function setTrainingDropdownViewOnly(isViewOnly, selectedTrainingId = '') {
         // Enable the dropdown
         trainingSelect.disabled = false;
         trainingSelect.style.backgroundColor = 'white';
-        trainingSelect.style.border = '2px solid var(--primary-color)';
+        trainingSelect.style.border = '2px solid #ddd';
         trainingSelect.style.cursor = 'pointer';
         
         // Reset label
@@ -2980,6 +3730,21 @@ function setTrainingDropdownViewOnly(isViewOnly, selectedTrainingId = '') {
         
         console.log('Training dropdown set to edit mode');
     }
+}
+
+// Function to get training recommendations summary
+function getTrainingRecommendationsSummary() {
+    const trainings = getAvailableTrainingsFromSelect();
+    
+    const summary = {
+        total: trainings.length,
+        perfectMatch: trainings.filter(t => t.matchType === 'both').length,
+        objectiveMatch: trainings.filter(t => t.matchType === 'objective').length,
+        skillMatch: trainings.filter(t => t.matchType === 'skill').length,
+        general: trainings.filter(t => t.matchType === 'general').length
+    };
+    
+    return summary;
 }
 
 // Enhanced DOMContentLoaded event listener
@@ -3002,17 +3767,30 @@ document.addEventListener('DOMContentLoaded', function() {
     if (midYearIDPForm && midYearIDPForm.style.display !== 'none') {
         setTimeout(initializeTrainingDropdown, 100);
     }
+    
+    // Log training recommendations summary
+    setTimeout(() => {
+        const summary = getTrainingRecommendationsSummary();
+        console.log('Training Recommendations Summary:', summary);
+        
+        if (summary.total === 0) {
+            console.warn('No training recommendations found. Check if user has objectives and job skills defined.');
+        }
+    }, 500);
 });
 
 // Export functions for global access
 window.handleTrainingSelection = handleTrainingSelection;
 window.getSelectedTrainingId = getSelectedTrainingId;
 window.getSelectedTrainingName = getSelectedTrainingName;
+window.getSelectedTrainingData = getSelectedTrainingData;
 window.resetTrainingSelection = resetTrainingSelection;
 window.setSelectedTrainingById = setSelectedTrainingById;
 window.getAvailableTrainingsFromSelect = getAvailableTrainingsFromSelect;
 window.setTrainingDropdownViewOnly = setTrainingDropdownViewOnly;
+window.getTrainingRecommendationsSummary = getTrainingRecommendationsSummary;
 window.submitMidYearIDPFormWithTraining = submitMidYearIDPFormWithTraining;
+    
 
 // Initialize variables
 let currentStep = 0; // Track the current step
@@ -3025,7 +3803,7 @@ let softSkills = []; // Store soft skills
 let midYearIDPData = null; // Store mid-year IDP data
 let finalYearIDPData = null; // Store final-year IDP data
 let midYearFeedbackData = null; // Global variable to store Mid-Year feedback data
- 
+
 
 // Function to initialize all variables and setup from viewState
 function initializeFromViewState() {
@@ -6539,7 +7317,73 @@ document.addEventListener("DOMContentLoaded", function() {
     // Attach form submission listeners
     attachFormListeners();
     
-    console.log("Performance tracker stepper system initialized.");
+    // === NEW: Enhanced Training Dropdown Initialization ===
+    
+    // Initialize training dropdown
+    initializeTrainingDropdown();
+    
+    // Update the existing submitMidYearIDPForm function to use the new enhanced version
+    if (typeof submitMidYearIDPForm !== 'undefined') {
+        // Store reference to original function if needed
+        window.originalSubmitMidYearIDPForm = submitMidYearIDPForm;
+        // Replace with enhanced version
+        window.submitMidYearIDPForm = submitMidYearIDPFormWithTraining;
+        
+        console.log('Enhanced Mid-Year IDP submission function loaded');
+    }
+    
+    // Add focus event to show details panel
+    const trainingSelect = document.getElementById('suggestedTrainings');
+    if (trainingSelect) {
+        trainingSelect.addEventListener('focus', showTrainingDetails);
+        
+        // Add keyboard navigation
+        trainingSelect.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideTrainingDetails();
+                trainingSelect.blur();
+            }
+        });
+        
+        // Add click event as backup for mobile devices
+        trainingSelect.addEventListener('click', showTrainingDetails);
+        
+        console.log('Training dropdown events attached successfully');
+    } else {
+        console.warn('Training dropdown element not found during initialization');
+    }
+    
+    // If the Mid-Year IDP form is already visible, ensure training dropdown is ready
+    const midYearIDPForm = document.getElementById("midYearIDPForm");
+    if (midYearIDPForm && midYearIDPForm.style.display !== 'none') {
+        setTimeout(() => {
+            initializeTrainingDropdown();
+            console.log('Training dropdown re-initialized for visible form');
+        }, 100);
+    }
+    
+    // Log training recommendations summary
+    setTimeout(() => {
+        if (typeof getTrainingRecommendationsSummary === 'function') {
+            const summary = getTrainingRecommendationsSummary();
+            console.log('Training Recommendations Summary:', summary);
+            
+            if (summary.total === 0) {
+                console.warn('No training recommendations found. Check if user has objectives and job skills defined.');
+            } else {
+                console.log(`Found ${summary.total} training recommendations:`, {
+                    'Perfect Match (⭐)': summary.perfectMatch,
+                    'Objective Match (🎯)': summary.objectiveMatch,
+                    'Skill Match (🔧)': summary.skillMatch,
+                    'General': summary.general
+                });
+            }
+        }
+    }, 500);
+    
+    // === END: Enhanced Training Dropdown Initialization ===
+    
+    console.log("Performance tracker stepper system with enhanced training dropdown initialized.");
 });
 
 // Function to set up event handlers for the stepper
