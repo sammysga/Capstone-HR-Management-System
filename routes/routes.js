@@ -429,6 +429,7 @@ router.get('/hr/employees/filter', hrController.getEmployeesByFilter);
 router.get('/hr/existing-trainings', hrController.getExistingTrainings); 
 router.post('/hr/training/reassign', hrController.reassignTraining); 
 router.get('/hr/training/:trainingId/details', hrController.getTrainingDetails);
+router.get('/hr/employee-dashboard', hrController.getEmployeeTrainingDashboard);
 
 module.exports = router; 
 

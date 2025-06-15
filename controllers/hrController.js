@@ -959,6 +959,275 @@ getEmployees: async function (req, res) {
     }
 },
 
+getEmployeeTrainingDashboard: async function (req, res) {
+    try {
+        console.log('Loading Employee Training Dashboard...');
+
+        // Get all employees with their basic info
+        const { data: allEmployees, error: employeesError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                userId,
+                firstName,
+                lastName,
+                jobId,
+                departmentId,
+                jobpositions(jobTitle),
+                departments(deptName),
+                useraccounts(userEmail)
+            `)
+            .order('firstName', { ascending: true });
+
+        if (employeesError) {
+            console.error('Error fetching employees:', employeesError);
+            throw employeesError;
+        }
+
+        console.log(`Found ${allEmployees?.length || 0} employees`);
+
+        // Get all training records for all employees
+        const { data: allTrainingRecords, error: recordsError } = await supabase
+            .from('training_records')
+            .select(`
+                *,
+                trainings!inner(
+                    trainingName,
+                    isRequired,
+                    totalDuration,
+                    isOnlineArrangement
+                )
+            `)
+            .eq('trainings.isRequired', true) // Only required trainings
+            .eq('trainings.isActive', true);
+
+        if (recordsError) {
+            console.error('Error fetching training records:', recordsError);
+            throw recordsError;
+        }
+
+        console.log(`Found ${allTrainingRecords?.length || 0} training records`);
+
+        // Get all activity progress data
+        const trainingRecordIds = allTrainingRecords?.map(record => record.trainingRecordId) || [];
+        let allActivityProgress = [];
+        let allCertificates = [];
+
+        if (trainingRecordIds.length > 0) {
+            const { data: activityData } = await supabase
+                .from('training_records_activities')
+                .select('trainingRecordId, status, activityId')
+                .in('trainingRecordId', trainingRecordIds);
+
+            const { data: certificateData } = await supabase
+                .from('training_records_certificates')
+                .select('trainingRecordId, certificate_url')
+                .in('trainingRecordId', trainingRecordIds);
+
+            allActivityProgress = activityData || [];
+            allCertificates = certificateData || [];
+        }
+
+        // Get activity counts for all trainings
+        const trainingIds = [...new Set(allTrainingRecords?.map(record => record.trainingId) || [])];
+        let trainingActivityCounts = {};
+
+        if (trainingIds.length > 0) {
+            const { data: activityCounts } = await supabase
+                .from('training_activities')
+                .select('trainingId, activityId')
+                .in('trainingId', trainingIds);
+
+            // Create map of training ID to activity count
+            if (activityCounts) {
+                activityCounts.forEach(activity => {
+                    trainingActivityCounts[activity.trainingId] = (trainingActivityCounts[activity.trainingId] || 0) + 1;
+                });
+            }
+        }
+
+        // Process each employee to calculate their training dashboard data
+        const employeeDashboardData = (allEmployees || []).map(employee => {
+            // Get all training records for this employee
+            const employeeTrainings = allTrainingRecords?.filter(record => record.userId === employee.userId) || [];
+
+            // Calculate overall progress for this employee
+            let totalTrainings = employeeTrainings.length;
+            let completedTrainings = 0;
+            let inProgressTrainings = 0;
+            let notStartedTrainings = 0;
+            let overdueTrainings = 0;
+            let awaitingApprovalTrainings = 0;
+            let rejectedTrainings = 0;
+            let totalProgressSum = 0;
+
+            const trainingDetails = employeeTrainings.map(training => {
+                // Calculate progress for this specific training (same logic as before)
+                const recordActivities = allActivityProgress.filter(ap => ap.trainingRecordId === training.trainingRecordId);
+                const completedActivities = recordActivities.filter(ra => ra.status === 'Completed').length;
+                const inProgressActivities = recordActivities.filter(ra => ra.status === 'In Progress').length;
+                const totalActivities = trainingActivityCounts[training.trainingId] || 0;
+
+                // Check for valid certificates
+                const recordCertificates = allCertificates.filter(cert => cert.trainingRecordId === training.trainingRecordId);
+                const hasValidCertificates = recordCertificates.some(cert => 
+                    cert.certificate_url && cert.certificate_url.trim() !== ''
+                );
+
+                // Calculate percentage progress (same logic as employee side)
+                let progressPercentage = 0;
+                if (hasValidCertificates) {
+                    progressPercentage = 100;
+                } else if (totalActivities > 0) {
+                    const partialProgress = (completedActivities * 1.0) + (inProgressActivities * 0.5);
+                    progressPercentage = Math.round((partialProgress / totalActivities) * 100);
+                }
+
+                // Enhanced status determination (same logic as employee side)
+                let displayStatus = 'Not Started';
+                const today = new Date();
+                const startDate = training.setStartDate ? new Date(training.setStartDate) : null;
+                const endDate = training.setEndDate ? new Date(training.setEndDate) : null;
+
+                // Check approval status first
+                if (training.isApproved === null) {
+                    displayStatus = 'Awaiting Approval';
+                } else if (training.isApproved === false) {
+                    displayStatus = 'Rejected';
+                } else if (training.isApproved === true) {
+                    if (hasValidCertificates) {
+                        displayStatus = 'Completed';
+                    } else if (endDate && today > endDate && progressPercentage < 100) {
+                        displayStatus = 'Overdue';
+                    } else if (inProgressActivities > 0 || completedActivities > 0) {
+                        displayStatus = 'In Progress';
+                    } else {
+                        displayStatus = 'Not Started';
+                    }
+                }
+
+                // Count by status
+                switch (displayStatus) {
+                    case 'Completed':
+                        completedTrainings++;
+                        break;
+                    case 'In Progress':
+                        inProgressTrainings++;
+                        break;
+                    case 'Overdue':
+                        overdueTrainings++;
+                        break;
+                    case 'Awaiting Approval':
+                        awaitingApprovalTrainings++;
+                        break;
+                    case 'Rejected':
+                        rejectedTrainings++;
+                        break;
+                    default:
+                        notStartedTrainings++;
+                        break;
+                }
+
+                totalProgressSum += progressPercentage;
+
+                return {
+                    userId: employee.userId, 
+                    employeeName: `${employee.firstName} ${employee.lastName}`,
+                    jobTitle: employee.jobpositions?.jobTitle || 'Unknown Position',
+                    department: employee.departments?.deptName || 'Unknown Department',
+                    email: employee.useraccounts?.userEmail || 'No email',
+                    trainingRecordId: training.trainingRecordId,
+                    trainingName: training.trainings.trainingName,
+                    isRequired: training.trainings.isRequired,
+                    totalDuration: training.trainings.totalDuration,
+                    isOnlineArrangement: training.trainings.isOnlineArrangement,
+                    status: displayStatus,
+                    progress: progressPercentage,
+                    startDate: training.setStartDate,
+                    endDate: training.setEndDate,
+                    isOverdue: displayStatus === 'Overdue',
+                    isApproved: training.isApproved
+                };
+            });
+
+            // Calculate overall employee stats
+            const overallProgress = totalTrainings > 0 ? Math.round(totalProgressSum / totalTrainings) : 0;
+            
+            // Determine overall employee status
+            let overallStatus = 'On Track';
+            if (overdueTrainings > 0) {
+                overallStatus = 'Behind Schedule';
+            } else if (completedTrainings === totalTrainings && totalTrainings > 0) {
+                overallStatus = 'All Complete';
+            } else if (awaitingApprovalTrainings > 0) {
+                overallStatus = 'Pending Approval';
+            } else if (rejectedTrainings > 0) {
+                overallStatus = 'Has Rejections';
+            }
+
+            return {
+                userId: employee.userId,
+                employeeName: `${employee.firstName} ${employee.lastName}`,
+                jobTitle: employee.jobpositions?.jobTitle || 'Unknown Position',
+                department: employee.departments?.deptName || 'Unknown Department',
+                email: employee.useraccounts?.userEmail || 'No email',
+                
+                // Overall stats
+                overallProgress: overallProgress,
+                overallStatus: overallStatus,
+                
+                // Training counts
+                totalTrainings: totalTrainings,
+                completedTrainings: completedTrainings,
+                inProgressTrainings: inProgressTrainings,
+                notStartedTrainings: notStartedTrainings,
+                overdueTrainings: overdueTrainings,
+                awaitingApprovalTrainings: awaitingApprovalTrainings,
+                rejectedTrainings: rejectedTrainings,
+                
+                // Detailed training info
+                trainings: trainingDetails,
+                
+                // Flags for filtering
+                hasOverdueTrainings: overdueTrainings > 0,
+                hasCompletedAllTrainings: completedTrainings === totalTrainings && totalTrainings > 0,
+                hasPendingApprovals: awaitingApprovalTrainings > 0,
+                hasRejections: rejectedTrainings > 0
+            };
+        });
+
+        // Calculate dashboard summary statistics
+        const dashboardStats = {
+            totalEmployees: employeeDashboardData.length,
+            employeesBehindSchedule: employeeDashboardData.filter(emp => emp.overallStatus === 'Behind Schedule').length,
+            employeesOnTrack: employeeDashboardData.filter(emp => emp.overallStatus === 'On Track').length,
+            employeesAllComplete: employeeDashboardData.filter(emp => emp.overallStatus === 'All Complete').length,
+            employeesWithPendingApprovals: employeeDashboardData.filter(emp => emp.hasPendingApprovals).length,
+            employeesWithRejections: employeeDashboardData.filter(emp => emp.hasRejections).length,
+            averageProgress: employeeDashboardData.length > 0 ? 
+                Math.round(employeeDashboardData.reduce((sum, emp) => sum + emp.overallProgress, 0) / employeeDashboardData.length) : 0
+        };
+
+        console.log('Dashboard stats calculated:', dashboardStats);
+
+        res.json({
+            success: true,
+            data: {
+                employees: employeeDashboardData,
+                statistics: dashboardStats
+            },
+            message: `Employee dashboard loaded with ${employeeDashboardData.length} employees`
+        });
+
+    } catch (error) {
+        console.error('Error loading employee training dashboard:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load employee training dashboard',
+            error: error.message
+        });
+    }
+},
+
 getExistingTrainings: async function (req, res) {
     try {
         console.log('Loading existing REQUIRED trainings for reassignment...');

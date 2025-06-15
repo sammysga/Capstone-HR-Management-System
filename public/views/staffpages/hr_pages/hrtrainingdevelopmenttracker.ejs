@@ -431,98 +431,61 @@
                                 </div>
                             <% } %>
                         </div>
+                    </div>
+                </div>
 
                 <!-- Employee Training Assignments Tab -->
                 <div id="employee-assignments-tab" class="tab-content">
                     <div class="card">
                         <div class="card-header">
-                            <h3>Employee Training Assignments</h3>
+                            <h3>Employee Training Dashboard</h3>
+                            <button class="btn btn-primary" onclick="refreshDashboard()">
+                                <i class="fas fa-sync-alt"></i> Refresh Dashboard
+                            </button>
                         </div>
                         
-                        <!-- Search Section -->
-                        <div class="search-filter-section">
-                            <div class="search-container">
-                                <i class="fas fa-search search-icon"></i>
-                                <input type="text" class="search-input" placeholder="Search employees..." id="employeeSearch">
+                        <!-- Dashboard Summary Cards -->
+                        <div class="dashboard-summary" id="dashboardSummary">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                Loading dashboard overview...
                             </div>
                         </div>
 
-                        <!-- Employee assignments list -->
-                        <div class="assignments-list">
-                            <%
-                            // Use assignments data if available, otherwise show sample data
-                            let assignmentsToShow = [];
+                        <!-- Search and Filter Section -->
+                        <div class="search-filter-section" style="margin-top: 30px;">
+                            <div class="search-container">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="search-input" placeholder="Search employees..." id="employeeDashboardSearch">
+                            </div>
                             
-                            if (typeof assignments !== 'undefined' && assignments && assignments.length > 0) {
-                                assignmentsToShow = assignments;
-                            } else {
-                                // Sample data for testing
-                                assignmentsToShow = [
-                                    {
-                                        employeeId: 'john-doe',
-                                        employeeName: 'John Doe',
-                                        trainingTitle: 'Safety Training (REQUIRED)',
-                                        jobTitle: 'Frontend Developer',
-                                        status: 'in-progress',
-                                        progress: 75,
-                                        startDate: new Date('2024-01-15')
-                                    },
-                                    {
-                                        employeeId: 'jane-smith',
-                                        employeeName: 'Jane Smith',
-                                        trainingTitle: 'Leadership Development',
-                                        jobTitle: 'Operations Manager',
-                                        status: 'completed',
-                                        progress: 100,
-                                        startDate: new Date('2024-01-10')
-                                    },
-                                    {
-                                        employeeId: 'mike-johnson',
-                                        employeeName: 'Mike Johnson',
-                                        trainingTitle: 'Data Analysis Bootcamp (REQUIRED)',
-                                        jobTitle: 'Data Analyst',
-                                        status: 'not-started',
-                                        progress: 0,
-                                        startDate: new Date('2024-01-20'),
-                                        dueDate: new Date('2024-02-20')
-                                    }
-                                ];
-                            }
-                            %>
-                            
-                            <% if (assignmentsToShow && assignmentsToShow.length > 0) { %>
-                                <% assignmentsToShow.forEach(assignment => { %>
-                                    <div class="assignment-item" data-status="<%= assignment.status %>">
-                                        <div class="assignment-info">
-                                            <h4 class="employee-name"><%= assignment.employeeName %></h4>
-                                            <div class="assignment-details">
-                                                Training: <%= assignment.trainingTitle %><br>
-                                                Job Title: <%= assignment.jobTitle %><br>
-                                                <% if (assignment.status === 'completed') { %>
-                                                    Completed: <%= assignment.startDate ? assignment.startDate.toLocaleDateString() : 'Date not available' %> • Progress: <%= assignment.progress || 0 %>%
-                                                <% } else if (assignment.status === 'in-progress') { %>
-                                                    Progress: <%= assignment.progress || 0 %>% • Started: <%= assignment.startDate ? assignment.startDate.toLocaleDateString() : 'Date not available' %>
-                                                <% } else { %>
-                                                    Assigned: <%= assignment.startDate ? assignment.startDate.toLocaleDateString() : 'Date not available' %> • Due: <%= assignment.dueDate ? assignment.dueDate.toLocaleDateString() : 'No due date' %>
-                                                <% } %>
-                                            </div>
-                                        </div>
-                                        <div class="assignment-status">
-                                            <span class="status-badge <%= assignment.status %>">
-                                                <% if (assignment.status === 'in-progress') { %>In Progress
-                                                <% } else if (assignment.status === 'completed') { %>Completed
-                                                <% } else { %>Not Started<% } %>
-                                            </span>
-                                        </div>
-                                    </div>
-                                <% }); %>
-                            <% } else { %>
-                                <div class="no-assignments-message" style="text-align: center; padding: 40px; color: #64748b;">
-                                    <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; color: #cbd5e1;"></i>
-                                    <h3 style="margin: 0 0 10px 0; color: #475569;">No Training Assignments</h3>
-                                    <p style="margin: 0;">Training assignments will appear here once employees are assigned to courses.</p>
-                                </div>
-                            <% } %>
+                            <div class="filter-controls">
+                                <select class="filter-select" id="statusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="Behind Schedule">Behind Schedule</option>
+                                    <option value="On Track">On Track</option>
+                                    <option value="All Complete">All Complete</option>
+                                    <option value="Pending Approval">Pending Approval</option>
+                                    <option value="Has Rejections">Has Rejections</option>
+                                </select>
+                                
+                                <select class="filter-select" id="departmentFilter">
+                                    <option value="">All Departments</option>
+                                    <!-- Will be populated by JavaScript -->
+                                </select>
+                                
+                                <button class="filter-btn" onclick="clearAllFilters()">
+                                    <i class="fas fa-times"></i> Clear Filters
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Employee Dashboard List -->
+                        <div class="employees-dashboard-list" id="employeesDashboardList">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                Loading employee training data...
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -530,11 +493,26 @@
         </div>
     </div>
 
-    <!-- JavaScript will be added in Phase 2C -->
     <script>
+        // Global variables for dashboard
+        let employeeDashboardData = [];
+        let filteredEmployees = [];
+        let dashboardStats = {};
+
         // Initialize page with better error handling
         document.addEventListener('DOMContentLoaded', function() {
             console.log('HR Training Tracker initializing...');
+
+            const employeeTab = document.querySelector('[data-tab="employee-assignments-tab"]');
+                if (employeeTab) {
+                    employeeTab.addEventListener('click', function() {
+                        console.log('Employee assignments tab clicked - loading dashboard...');
+                        // Always load dashboard data when tab is clicked (removed the length check)
+                        setTimeout(() => {
+                            loadEmployeeDashboard();
+                        }, 100);
+                    });
+                }
 
             document.querySelectorAll('.progress-bar-fill').forEach(function(progressBar) {
                 const progress = progressBar.getAttribute('data-progress');
@@ -583,6 +561,490 @@
                 }
             }, 200);
         });
+
+        // ============================================================================
+        // DASHBOARD FUNCTIONALITY
+        // ============================================================================
+
+        async function loadEmployeeDashboard() {
+            try {
+                console.log('Loading Employee Training Dashboard...');
+
+                const summaryContainer = document.getElementById('dashboardSummary');
+                const listContainer = document.getElementById('employeesDashboardList');
+                
+                if (!summaryContainer || !listContainer) {
+                    console.error('Dashboard containers not found!');
+                    console.log('Summary container:', summaryContainer);
+                    console.log('List container:', listContainer);
+                    showNotification('Dashboard containers not found. Please check HTML structure.', 'error');
+                    return;
+                }
+                
+                // Show loading state immediately
+                summaryContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b; grid-column: 1 / -1;">
+                        <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                        <p style="margin-top: 10px;">Loading dashboard overview...</p>
+                    </div>
+                `;
+                
+                listContainer.innerHTML = `
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                        Loading employee training data...
+                    </div>
+                `;
+                
+                const response = await fetch('/hr/employee-dashboard', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    employeeDashboardData = result.data.employees || [];
+                    dashboardStats = result.data.statistics || {};
+                    filteredEmployees = [...employeeDashboardData];
+                    
+                    console.log(`Loaded dashboard data for ${employeeDashboardData.length} employees`);
+                    
+                    renderDashboardSummary();
+                    renderEmployeeDashboard();
+                    populateDepartmentFilter();
+                    initializeDashboardSearch();
+                    
+                } else {
+                    throw new Error(result.message || 'Failed to load employee dashboard');
+                }
+                
+            } catch (error) {
+                console.error('Error loading employee dashboard:', error);
+                showNotification('Failed to load employee dashboard: ' + error.message, 'error');
+                
+                // Show error state
+                document.getElementById('dashboardSummary').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px; color: #ef4444;"></i>
+                        <h3 style="margin: 0 0 10px 0; color: #475569;">Failed to Load Dashboard</h3>
+                        <p style="margin: 0 0 15px 0;">There was an error loading the employee training dashboard.</p>
+                        <button onclick="loadEmployeeDashboard()" class="btn btn-primary">
+                            <i class="fas fa-retry"></i> Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderDashboardSummary() {
+            const summaryContainer = document.getElementById('dashboardSummary');
+            
+            const summaryHtml = `
+                <div class="summary-card total">
+                    <div class="summary-card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="summary-card-number">${dashboardStats.totalEmployees}</div>
+                    <div class="summary-card-label">Total Employees</div>
+                    <div class="summary-card-sublabel">In training system</div>
+                </div>
+                
+                <div class="summary-card behind">
+                    <div class="summary-card-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="summary-card-number">${dashboardStats.employeesBehindSchedule}</div>
+                    <div class="summary-card-label">Behind Schedule</div>
+                    <div class="summary-card-sublabel">Need attention</div>
+                </div>
+                
+                <div class="summary-card on-track">
+                    <div class="summary-card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="summary-card-number">${dashboardStats.employeesOnTrack}</div>
+                    <div class="summary-card-label">On Track</div>
+                    <div class="summary-card-sublabel">Making progress</div>
+                </div>
+                
+                <div class="summary-card complete">
+                    <div class="summary-card-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="summary-card-number">${dashboardStats.employeesAllComplete}</div>
+                    <div class="summary-card-label">All Complete</div>
+                    <div class="summary-card-sublabel">100% finished</div>
+                </div>
+                
+                <div class="summary-card pending">
+                    <div class="summary-card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="summary-card-number">${dashboardStats.employeesWithPendingApprovals}</div>
+                    <div class="summary-card-label">Pending Approval</div>
+                    <div class="summary-card-sublabel">Awaiting review</div>
+                </div>
+                
+                <div class="summary-card rejected">
+                    <div class="summary-card-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="summary-card-number">${dashboardStats.employeesWithRejections}</div>
+                    <div class="summary-card-label">Has Rejections</div>
+                    <div class="summary-card-sublabel">Need follow-up</div>
+                </div>
+            `;
+            
+            summaryContainer.innerHTML = summaryHtml;
+        }
+
+        function renderEmployeeDashboard() {
+            const dashboardContainer = document.getElementById('employeesDashboardList');
+            
+            if (filteredEmployees.length === 0) {
+                dashboardContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px; color: #cbd5e1;"></i>
+                        <h3 style="margin: 0 0 10px 0; color: #475569;">No Employees Found</h3>
+                        <p style="margin: 0;">Try adjusting your search or filter criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const employeesHtml = filteredEmployees.map(employee => {
+                const statusClass = `status-${employee.overallStatus.toLowerCase().replace(' ', '-')}`;
+                
+                return `
+                    <div class="employee-dashboard-item ${statusClass}" onclick="showEmployeeTrainingDetails('${employee.userId}')">
+                        <div class="employee-header">
+                            <div class="employee-info">
+                                <h4>${employee.employeeName}</h4>
+                                <div class="employee-meta">
+                                    ${employee.jobTitle} • ${employee.department}<br>
+                                    ${employee.email}
+                                </div>
+                            </div>
+                            <div class="employee-status">
+                                <div class="employee-overall-progress">${employee.overallProgress}%</div>
+                                <div class="employee-status-badge">${employee.overallStatus}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="employee-progress-grid">
+                            <div class="progress-stat">
+                                <div class="progress-stat-number" style="--stat-color: #10b981;">${employee.completedTrainings}</div>
+                                <div class="progress-stat-label">Completed</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-stat-number" style="--stat-color: #07ACB9;">${employee.inProgressTrainings}</div>
+                                <div class="progress-stat-label">In Progress</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-stat-number" style="--stat-color: #64748b;">${employee.notStartedTrainings}</div>
+                                <div class="progress-stat-label">Not Started</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-stat-number" style="--stat-color: #ef4444;">${employee.overdueTrainings}</div>
+                                <div class="progress-stat-label">Overdue</div>
+                            </div>
+                        </div>
+                        
+                        <div class="employee-actions" onclick="event.stopPropagation()">
+                            <button class="action-btn primary" onclick="showEmployeeTrainingDetails('${employee.userId}')">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                            <button class="action-btn" onclick="sendReminderToEmployee('${employee.userId}')">
+                                <i class="fas fa-bell"></i> Send Reminder
+                            </button>
+                            <button class="action-btn" onclick="assignNewTraining('${employee.userId}')">
+                                <i class="fas fa-plus"></i> Assign Training
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            dashboardContainer.innerHTML = employeesHtml;
+        }
+
+        function populateDepartmentFilter() {
+            const departmentFilter = document.getElementById('departmentFilter');
+            if (!departmentFilter) return;
+            
+            // Get unique departments from employee data
+            const departments = [...new Set(employeeDashboardData.map(emp => emp.department))].sort();
+            
+            departmentFilter.innerHTML = '<option value="">All Departments</option>';
+            departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                departmentFilter.appendChild(option);
+            });
+            
+            // Add change event listener
+            departmentFilter.addEventListener('change', function() {
+                applyFilters();
+            });
+        }
+
+        function initializeDashboardSearch() {
+            const searchInput = document.getElementById('employeeDashboardSearch');
+            if (!searchInput) return;
+            
+            searchInput.addEventListener('input', function() {
+                applyFilters();
+            });
+            
+            // Initialize status filter
+            const statusFilter = document.getElementById('statusFilter');
+            if (statusFilter) {
+                statusFilter.addEventListener('change', function() {
+                    applyFilters();
+                });
+            }
+        }
+
+        // Apply All Filters
+        function applyFilters() {
+            const searchTerm = document.getElementById('employeeDashboardSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const departmentFilter = document.getElementById('departmentFilter').value;
+            
+            filteredEmployees = employeeDashboardData.filter(employee => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    employee.employeeName.toLowerCase().includes(searchTerm) ||
+                    employee.jobTitle.toLowerCase().includes(searchTerm) ||
+                    employee.department.toLowerCase().includes(searchTerm) ||
+                    employee.email.toLowerCase().includes(searchTerm);
+                
+                // Status filter
+                const matchesStatus = !statusFilter || employee.overallStatus === statusFilter;
+                
+                // Department filter
+                const matchesDepartment = !departmentFilter || employee.department === departmentFilter;
+                
+                return matchesSearch && matchesStatus && matchesDepartment;
+            });
+            
+            renderEmployeeDashboard();
+        }
+
+        // Clear All Filters
+        function clearAllFilters() {
+            document.getElementById('employeeDashboardSearch').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('departmentFilter').value = '';
+            
+            filteredEmployees = [...employeeDashboardData];
+            renderEmployeeDashboard();
+        }
+
+        // Refresh Dashboard
+        function refreshDashboard() {
+            employeeDashboardData = [];
+            loadEmployeeDashboard();
+        }
+
+        function debugEmployeeData() {
+            console.log('=== EMPLOYEE DATA DEBUG ===');
+            console.log('Total employees in dashboard:', employeeDashboardData.length);
+            
+            if (employeeDashboardData.length > 0) {
+                console.log('First employee data:', employeeDashboardData[0]);
+                console.log('First employee userId type:', typeof employeeDashboardData[0].userId);
+                console.log('First employee userId value:', employeeDashboardData[0].userId);
+            }
+            
+            console.log('All employee userIds:', employeeDashboardData.map(emp => ({
+                name: emp.employeeName,
+                userId: emp.userId,
+                userIdType: typeof emp.userId
+            })));
+        }
+
+        // Show Employee Training Details Modal
+        function showEmployeeTrainingDetails(userId) {
+            console.log('=== SHOW EMPLOYEE DETAILS DEBUG ===');
+            console.log('Searching for userId:', userId);
+            console.log('userId type:', typeof userId);
+            console.log('Available employees:', employeeDashboardData.length);
+            
+            // Try both string and number comparison
+            let employee = employeeDashboardData.find(emp => emp.userId == userId); // Use == for type coercion
+            
+            if (!employee) {
+                console.log('Employee not found with == comparison, trying strict ===');
+                employee = employeeDashboardData.find(emp => emp.userId === userId);
+            }
+            
+            if (!employee) {
+                console.log('Employee not found with === comparison, trying string conversion');
+                employee = employeeDashboardData.find(emp => String(emp.userId) === String(userId));
+            }
+            
+            if (!employee) {
+                console.log('Employee not found with string conversion, trying number conversion');
+                employee = employeeDashboardData.find(emp => Number(emp.userId) === Number(userId));
+            }
+            
+            if (!employee) {
+                console.error('Employee still not found after all attempts');
+                console.log('Available userIds:', employeeDashboardData.map(emp => emp.userId));
+                showNotification('Employee not found. Check console for debugging info.', 'error');
+                debugEmployeeData(); // Call debug function
+                return;
+            }
+            
+            console.log('Employee found:', employee.employeeName);
+            
+            // Rest of your existing modal code...
+            const modalHtml = `
+                <div class="modal-overlay" id="employeeDetailsModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 1000px; width: 95%;">
+                        <div class="modal-header">
+                            <h2 class="modal-title">${employee.employeeName} - Training Details</h2>
+                            <button type="button" class="close-btn" onclick="closeEmployeeDetailsModal()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                        </div>
+                        
+                        <div style="max-height: 70vh; overflow-y: auto; padding: 0 5px;">
+                            <!-- Employee Overview -->
+                            <div class="card" style="margin-bottom: 20px;">
+                                <div class="card-header">
+                                    <h3>Employee Overview</h3>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                    <div>
+                                        <p><strong>Name:</strong> ${employee.employeeName}</p>
+                                        <p><strong>Job Title:</strong> ${employee.jobTitle}</p>
+                                        <p><strong>Department:</strong> ${employee.department}</p>
+                                        <p><strong>Email:</strong> ${employee.email}</p>
+                                        <p><strong>User ID:</strong> ${employee.userId} (${typeof employee.userId})</p>
+                                    </div>
+                                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                                        <h4 style="margin-bottom: 15px; color: #334155;">Training Progress</h4>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                            <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                                <div style="font-size: 24px; font-weight: 600; color: #07ACB9;">${employee.overallProgress}%</div>
+                                                <div style="font-size: 12px; color: #64748b;">Overall Progress</div>
+                                            </div>
+                                            <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                                <div style="font-size: 24px; font-weight: 600; color: #10b981;">${employee.completedTrainings}</div>
+                                                <div style="font-size: 12px; color: #64748b;">Completed</div>
+                                            </div>
+                                            <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                                <div style="font-size: 24px; font-weight: 600; color: #3b82f6;">${employee.inProgressTrainings}</div>
+                                                <div style="font-size: 12px; color: #64748b;">In Progress</div>
+                                            </div>
+                                            <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                                <div style="font-size: 24px; font-weight: 600; color: #ef4444;">${employee.overdueTrainings}</div>
+                                                <div style="font-size: 12px; color: #64748b;">Overdue</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Training Details -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Training Assignments (${employee.trainings.length})</h3>
+                                </div>
+                                <div>
+                                    ${employee.trainings.length > 0 ? employee.trainings.map(training => `
+                                        <div class="assignment-item" style="margin-bottom: 15px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                                <div style="flex: 1;">
+                                                    <h4 style="margin: 0 0 5px 0; color: #334155;">${training.trainingName}</h4>
+                                                    <div style="font-size: 14px; color: #64748b; margin-bottom: 10px;">
+                                                        ${training.isRequired ? '<span style="color: #ef4444; font-weight: 600;">REQUIRED</span> • ' : ''}
+                                                        Duration: ${training.totalDuration} hours • 
+                                                        Mode: ${training.isOnlineArrangement ? 'Online' : 'Onsite'}
+                                                        ${training.startDate ? `<br>Start: ${new Date(training.startDate).toLocaleDateString()}` : ''}
+                                                        ${training.endDate ? ` • Due: ${new Date(training.endDate).toLocaleDateString()}` : ''}
+                                                    </div>
+                                                    ${training.isOverdue ? '<div style="color: #ef4444; font-size: 12px; font-weight: 600;">⚠️ OVERDUE</div>' : ''}
+                                                </div>
+                                                <div style="text-align: right;">
+                                                    <div style="font-size: 20px; font-weight: 700; color: ${training.progress >= 100 ? '#10b981' : training.progress >= 50 ? '#07ACB9' : '#64748b'};">
+                                                        ${training.progress}%
+                                                    </div>
+                                                    <div style="font-size: 10px; color: #64748b; margin-bottom: 4px;">Progress</div>
+                                                    <span class="status-badge ${training.status.toLowerCase().replace(' ', '-')}">${training.status}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('') : `
+                                        <div style="text-align: center; padding: 40px; color: #64748b;">
+                                            <i class="fas fa-graduation-cap" style="font-size: 48px; margin-bottom: 15px; color: #cbd5e1;"></i>
+                                            <h3 style="margin: 0 0 10px 0; color: #475569;">No Training Assignments</h3>
+                                            <p style="margin: 0;">This employee has not been assigned any trainings yet.</p>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn-secondary" onclick="closeEmployeeDetailsModal()">Close</button>
+                            <button type="button" class="btn-primary" onclick="assignNewTraining('${employee.userId}')">
+                                <i class="fas fa-plus"></i> Assign New Training
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove any existing modal
+            const existingModal = document.getElementById('employeeDetailsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        // Close Employee Details Modal
+        function closeEmployeeDetailsModal() {
+            const modal = document.getElementById('employeeDetailsModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Send Reminder to Employee
+        function sendReminderToEmployee(userId) {
+            // This would integrate with your notification system
+            showNotification('Reminder sent to employee!', 'success');
+            console.log('Sending reminder to employee:', userId);
+        }
+
+        // Assign New Training to Employee
+        function assignNewTraining(userId) {
+            // Close any open modals
+            closeEmployeeDetailsModal();
+            
+            // Open the reassign training modal with pre-selected employee
+            setTimeout(() => {
+                openReassignTrainingModal();
+                // Pre-select this employee when modal opens
+                // You could add logic here to pre-filter to this specific employee
+            }, 100);
+        }
+
+
+
         // ============================================================================
         // TAB FUNCTIONALITY
         // ============================================================================
@@ -2068,8 +2530,15 @@
         window.closeTrainingDetailsModal = closeTrainingDetailsModal;
         window.searchModalEmployees = searchModalEmployees;
         window.reassignThisTraining = reassignThisTraining;
+        window.loadEmployeeDashboard = loadEmployeeDashboard;
+        window.refreshDashboard = refreshDashboard;
+        window.clearAllFilters = clearAllFilters;
+        window.showEmployeeTrainingDetails = showEmployeeTrainingDetails;
+        window.closeEmployeeDetailsModal = closeEmployeeDetailsModal;
+        window.sendReminderToEmployee = sendReminderToEmployee;
+        window.assignNewTraining = assignNewTraining;
 
-                // Toggle active class for sidebar links
+        // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
