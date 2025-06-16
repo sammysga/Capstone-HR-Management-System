@@ -463,7 +463,7 @@ getLeaveRequest: async function(req, res) {
         return res.status(500).json({ success: false, message: 'Error fetching leave request.' });
     }
 },
-        
+    
 getTrainingDevelopmentTracker: async function (req, res) {
     try {
         console.log('🚀 === TRAINING DEVELOPMENT TRACKER STARTED ===');
@@ -508,6 +508,29 @@ getTrainingDevelopmentTracker: async function (req, res) {
             console.log(`Found ${departments?.length || 0} departments`);
         }
 
+        // Fetch training budgets
+        const { data: trainingBudgets, error: budgetsError } = await supabase
+            .from('training_budgets')
+            .select('*');
+
+        if (budgetsError) {
+            console.error('Error fetching training budgets:', budgetsError);
+        } else {
+            console.log(`Found ${trainingBudgets?.length || 0} training budgets`);
+        }
+
+        // Create training budgets lookup by departmentId
+        const trainingBudgetsMap = (trainingBudgets || []).reduce((acc, budget) => {
+            const departmentId = budget.departmentId || budget.department_id;
+            if (departmentId) {
+                acc[departmentId] = {
+                    amount: budget.amount || 0,
+                    fiscalYear: budget.fiscalYear || new Date().getFullYear()
+                };
+            }
+            return acc;
+        }, {});
+
         // Fetch employees/staff accounts
         const { data: employees, error: employeesError } = await supabase
             .from('staffaccounts')
@@ -519,10 +542,10 @@ getTrainingDevelopmentTracker: async function (req, res) {
             console.log(`Found ${employees?.length || 0} employees`);
         }
 
-        // NEW: Fetch user accounts to get emails using userId FK
+        // Fetch user accounts to get emails using userId FK
         const { data: userAccounts, error: userAccountsError } = await supabase
             .from('useraccounts')
-            .select('userId, userEmail');
+            .select('userId, userEmail, departmentId');
 
         if (userAccountsError) {
             console.error('Error fetching user accounts:', userAccountsError);
@@ -530,7 +553,7 @@ getTrainingDevelopmentTracker: async function (req, res) {
             console.log(`Found ${userAccounts?.length || 0} user accounts`);
         }
 
-        // NEW: Fetch training records to get actual employee-training assignments
+        // Fetch training records to get actual employee-training assignments
         const { data: trainingRecords, error: trainingRecordsError } = await supabase
             .from('training_records')
             .select('*');
@@ -543,9 +566,7 @@ getTrainingDevelopmentTracker: async function (req, res) {
 
         // Create lookup maps - FIXED DEPARTMENT LOOKUP
         const departmentsMap = (departments || []).reduce((acc, dept) => {
-            // Handle different possible field names for department ID
             const deptId = dept.departmentId || dept.department_id || dept.dept_id || dept.id;
-            // Handle different possible field names for department name
             const deptName = dept.deptName || dept.departmentName || dept.department_name || 
                             dept.dept_name || dept.name || dept.title || 'Unknown Department';
             
@@ -564,7 +585,6 @@ getTrainingDevelopmentTracker: async function (req, res) {
             const jobId = job.jobId || job.job_id || job.id;
             const departmentId = job.departmentId || job.department_id || job.dept_id;
             
-            // Get department name using the departmentId
             const department = departmentsMap[departmentId] || {};
             
             console.log(`Job mapping: Job ID ${jobId} -> Department ID ${departmentId} -> Department "${department.name}"`);
@@ -575,43 +595,42 @@ getTrainingDevelopmentTracker: async function (req, res) {
                 title: job.jobTitle || job.job_title || job.title || job.name || 'Unknown Position',
                 description: job.jobDescrpt || job.job_description || job.description || '',
                 departmentId: departmentId,
-                departmentName: department.name || 'Unknown Department' // Add department name directly
+                departmentName: department.name || 'Unknown Department'
             };
             return acc;
         }, {});
 
         // Fix the employeesMap creation to use userId as the key
-const employeesMap = (employees || []).reduce((acc, employee) => {
-    // Use userId as the primary key for mapping
-    const userId = employee.userId || employee.user_id;
-    const staffId = employee.staffId || employee.staff_id || employee.id;
-    const firstName = employee.staffFName || employee.staff_fname || employee.first_name || employee.firstName || 'Unknown';
-    const lastName = employee.staffLName || employee.staff_lname || employee.last_name || employee.lastName || 'User';
-    const email = employee.staffEmail || employee.staff_email || employee.email || 'no-email@company.com';
-    const jobId = employee.jobId || employee.job_id;
-    
-    // Key by userId instead of staffId for training_records lookup
-    if (userId) {
-        acc[userId] = {
-            ...employee,
-            staffId: staffId,
-            userId: userId,
-            firstName: firstName,
-            lastName: lastName,
-            fullName: `${firstName} ${lastName}`,
-            email: email,
-            jobId: jobId
-        };
-    }
-    
-    return acc;
-}, {});
+        const employeesMap = (employees || []).reduce((acc, employee) => {
+            const userId = employee.userId || employee.user_id;
+            const staffId = employee.staffId || employee.staff_id || employee.id;
+            const firstName = employee.staffFName || employee.staff_fname || employee.first_name || employee.firstName || 'Unknown';
+            const lastName = employee.staffLName || employee.staff_lname || employee.last_name || employee.lastName || 'User';
+            const email = employee.staffEmail || employee.staff_email || employee.email || 'no-email@company.com';
+            const jobId = employee.jobId || employee.job_id;
+            
+            if (userId) {
+                acc[userId] = {
+                    ...employee,
+                    staffId: staffId,
+                    userId: userId,
+                    firstName: firstName,
+                    lastName: lastName,
+                    fullName: `${firstName} ${lastName}`,
+                    email: email,
+                    jobId: jobId
+                };
+            }
+            
+            return acc;
+        }, {});
 
-        // NEW: Create user accounts lookup map for emails
+        // Create user accounts lookup map for emails and department
         const userAccountsMap = (userAccounts || []).reduce((acc, user) => {
             acc[user.userId] = {
                 userId: user.userId,
-                email: user.userEmail || 'no-email@company.com'
+                email: user.userEmail || 'no-email@company.com',
+                departmentId: user.departmentId || null
             };
             return acc;
         }, {});
@@ -637,7 +656,6 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
         // FIXED: Transform training data with proper department resolution
         const formattedTrainings = (trainings || []).map(training => {
             const job = jobsMap[training.jobId] || {};
-            // Department name is now directly available in job object
             const departmentName = job.departmentName || 'Unknown Department';
             const trainingOwner = employeesMap[training.userId] || {};
             
@@ -654,7 +672,7 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
                 },
                 cost: training.cost || 0,
                 duration: training.totalDuration || 0,
-                department: departmentName, // Now properly resolved
+                department: departmentName,
                 jobTitle: job.title || 'Unknown Position',
                 jobId: training.jobId,
                 createdBy: trainingOwner.fullName || 'Unknown Creator',
@@ -676,7 +694,7 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
                 description: training.trainingDesc || 'No description available',
                 jobId: training.jobId,
                 jobTitle: job.title || 'Unknown Position',
-                department: departmentName, // Now properly resolved
+                department: departmentName,
                 mode: training.isOnlineArrangement ? 'online' : 'onsite',
                 cost: training.cost || 0,
                 duration: training.totalDuration || 0,
@@ -698,55 +716,42 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
             return acc;
         }, {});
 
-        // NEW: Create employee assignments based on training_records
+        // Create employee assignments based on training_records
         let employeeAssignments = [];
 
         if (trainingRecords && trainingRecords.length > 0) {
             console.log(`Creating assignments from ${trainingRecords.length} training records`);
             
             employeeAssignments = trainingRecords.map((record) => {
-                // Get employee details using userId from training_records
                 const employee = employeesMap[record.userId] || {};
-                
-                // NEW: Get user email from useraccounts table using userId FK
                 const userAccount = userAccountsMap[record.userId] || {};
                 const employeeEmail = userAccount.email || employee.email || 'no-email@company.com';
-                
-                // Get training details using trainingId (FK to trainings table)
                 const training = trainingsMap[record.trainingId] || {};
-                
-                // Get job details for the employee
                 const job = jobsMap[employee.jobId] || {};
                 
                 console.log(`Processing record: Employee ${employee.fullName || record.userId} (${employeeEmail}) -> Training "${training.name || record.trainingId}"`);
                 
-                // Calculate progress based on training record data
                 let progress = 0;
                 let status = 'not-started';
                 
-                // Determine progress and status from training_records
                 if (record.progress !== undefined && record.progress !== null) {
                     progress = Math.round(record.progress);
                 } else if (record.completionDate) {
                     progress = 100;
                     status = 'completed';
                 } else if (record.startDate) {
-                    // If started but no explicit progress, assign partial progress
-                    progress = Math.floor(Math.random() * 60) + 20; // 20-80%
+                    progress = Math.floor(Math.random() * 60) + 20;
                     status = 'in-progress';
                 }
                 
-                // Override status if explicitly set in training_records
                 if (record.status) {
                     status = record.status.toLowerCase();
-                    // Ensure progress matches status
                     if (status === 'completed' && progress < 100) {
                         progress = 100;
                     } else if (status === 'not-started') {
                         progress = 0;
                     }
                 } else {
-                    // Determine status based on progress
                     if (progress >= 100) {
                         status = 'completed';
                     } else if (progress > 0) {
@@ -756,31 +761,27 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
                     }
                 }
                 
-                // Handle dates from training_records
                 const startDate = record.startDate ? new Date(record.startDate) : 
                                 record.enrollmentDate ? new Date(record.enrollmentDate) : new Date();
                 const dueDate = record.dueDate ? new Date(record.dueDate) : 
                               new Date(Date.now() + (training.duration || 30) * 24 * 60 * 60 * 1000);
                 
-                // Check if training is overdue
                 const now = new Date();
                 const isOverdue = status !== 'completed' && dueDate < now;
                 if (isOverdue && status === 'not-started') {
                     status = 'overdue';
                 }
                 
-                // FIXED: Handle different possible record ID field names
                 const recordId = record.trainingRecordId || record.recordId || record.id || null;
                 
                 return {
-                    // FIXED: Use userId consistently instead of employeeId
-                    employeeId: record.userId, // This should match what's used in the modal
-                    userId: record.userId, // Keep both for compatibility
+                    employeeId: record.userId,
+                    userId: record.userId,
                     employeeName: employee.fullName || `User ${record.userId}`,
-                    employeeEmail: employeeEmail, // NOW USING PROPER EMAIL FROM useraccounts
+                    employeeEmail: employeeEmail,
                     jobTitle: job.title || 'Unknown Position',
+                    departmentId: userAccount.departmentId || null,
                     
-                    // Training information from trainings table via trainingId FK
                     trainingTitle: training.name || `Training ${record.trainingId}`,
                     trainingId: record.trainingId,
                     trainingDescription: training.description || '',
@@ -788,7 +789,6 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
                     trainingDuration: training.duration || 0,
                     trainingCost: training.cost || 0,
                     
-                    // Assignment status and progress
                     status: status,
                     progress: progress,
                     startDate: startDate,
@@ -796,17 +796,14 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
                     hasTraining: true,
                     isOverdue: isOverdue,
                     
-                    // ADD THESE TWO MISSING FIELDS:
-                    isApproved: record.isApproved,           // ← ADD THIS LINE
-                    trainingStatus: record.trainingStatus,   // ← ADD THIS LINE
+                    isApproved: record.isApproved,
+                    trainingStatus: record.trainingStatus,
                     
-                    // Additional metadata from training_records
                     recordId: recordId,
                     enrollmentDate: record.enrollmentDate || record.createdAt || record.created_at || startDate,
                     completionDate: record.completionDate || record.completion_date || null,
                     lastUpdated: record.updatedAt || record.updated_at || record.lastUpdated || null,
                     
-                    // Calculated fields
                     daysRemaining: Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)),
                     daysSinceStart: Math.ceil((now - startDate) / (1000 * 60 * 60 * 24))
                 };
@@ -824,6 +821,7 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
                     employeeName: 'John Doe',
                     employeeEmail: 'john.doe@company.com',
                     jobTitle: 'Software Engineer',
+                    departmentId: 1,
                     trainingTitle: 'No Training Assigned',
                     trainingId: null,
                     status: 'no-training',
@@ -837,6 +835,7 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
                     employeeName: 'Jane Smith',
                     employeeEmail: 'jane.smith@company.com',
                     jobTitle: 'Operations Manager',
+                    departmentId: 2,
                     trainingTitle: 'No Training Assigned',
                     trainingId: null,
                     status: 'no-training',
@@ -851,7 +850,6 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
         // Group assignments by employee for proper modal display
         const groupedAssignments = {};
         employeeAssignments.forEach(assignment => {
-            // Use employeeId (which is now set to userId)
             const empId = assignment.employeeId;
             if (!groupedAssignments[empId]) {
                 groupedAssignments[empId] = [];
@@ -862,9 +860,8 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
         // Create a display list that shows one item per employee (for the main list)
         const employeeDisplayList = Object.keys(groupedAssignments).map(employeeId => {
             const employeeTrainingAssignments = groupedAssignments[employeeId];
-            const primaryAssignment = employeeTrainingAssignments[0]; // Use first assignment for display
+            const primaryAssignment = employeeTrainingAssignments[0];
             
-            // Calculate overall employee progress if they have multiple trainings
             let totalProgress = 0;
             let completedTrainings = 0;
             let inProgressTrainings = 0;
@@ -891,7 +888,6 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
 
             const averageProgress = Math.round(totalProgress / employeeTrainingAssignments.length);
             
-            // Determine overall status
             let overallStatus = 'not-started';
             if (completedTrainings === employeeTrainingAssignments.length) {
                 overallStatus = 'completed';
@@ -901,7 +897,6 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
                 overallStatus = 'in-progress';
             }
 
-            // Create summary for display
             let trainingsSummary = '';
             if (employeeTrainingAssignments.length > 1) {
                 trainingsSummary = `${employeeTrainingAssignments.length} trainings assigned`;
@@ -933,11 +928,6 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
 
         console.log('Employee display list created:', employeeDisplayList.length, 'employees');
         console.log('Grouped assignments:', Object.keys(groupedAssignments).length, 'employees with assignments');
-
-        console.log('Final employee assignments:', employeeAssignments.length);
-        console.log(`Total employees: ${employeeDisplayList.length}`);
-        console.log(`Employees with training: ${employeeDisplayList.filter(e => e.hasTraining).length}`);
-        console.log(`Employees without training: ${employeeDisplayList.filter(e => !e.hasTraining).length}`);
 
         // Get summary statistics
         const stats = {
@@ -974,12 +964,13 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
         res.render('staffpages/linemanager_pages/trainingdevelopmenttracker', {
             title: 'Employee Training & Development Tracker',
             trainings: formattedTrainings,
-            assignments: employeeDisplayList, // Use display list for main view
-            allAssignments: employeeAssignments, // Keep all assignments for modal
+            assignments: employeeDisplayList,
+            allAssignments: employeeAssignments,
             suggestedTrainings: suggestedTrainings,
             suggestedTrainingsByJob: suggestedTrainingsByJob,
             jobPositions: jobPositions || [],
             departments: departments || [],
+            trainingBudgets: trainingBudgetsMap,
             stats: stats,
             user: req.user || null,
             currentDate: new Date().toISOString(),
@@ -998,14 +989,6 @@ const employeesMap = (employees || []).reduce((acc, employee) => {
     } catch (error) {
         console.error('💥 ERROR in getTrainingDevelopmentTracker:', error);
         console.error('Error stack:', error.stack);
-        
-        // Enhanced error logging
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            code: error.code,
-            details: error.details
-        });
         
         res.status(500).send(`
             <h1>Error Loading Training Tracker</h1>

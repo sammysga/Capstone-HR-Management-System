@@ -1588,6 +1588,58 @@ s
 }
 }
 
+/* Training Budget Section CSS */
+.training-budget-status {
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .budget-stat-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid #e2e8f0;
+        max-width: 350px;
+    }
+    
+    .budget-stat-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+    }
+    
+    .budget-stat-content {
+        flex: 1;
+    }
+    
+    .budget-stat-number {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 4px;
+    }
+    
+    .budget-stat-label {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 500;
+    }
+    
+    .budget-stat-period {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
 </style>
 
 </head>
@@ -1847,6 +1899,24 @@ s
             <h3>Employee Training Assignments</h3>
         </div>
         
+        <div class="training-budget-status">
+    <div class="budget-stat-card">
+        <div class="budget-stat-icon">
+            <i class="fas fa-coins"></i>
+        </div>
+        <div class="budget-stat-content">
+           <div class="budget-stat-number" id="trainingBudgetAmount">
+    <% if (user && user.departmentId && trainingBudgets[user.departmentId]) { %>
+        ₱<%= trainingBudgets[user.departmentId].amount.toLocaleString() %>
+    <% } else { %>
+        ₱0
+    <% } %>
+</div>
+            <div class="budget-stat-label">Budget for Training</div>
+            <div class="budget-stat-period">Annual Department Budget</div>
+        </div>
+    </div>
+</div>
         
 <!-- Training Request Statistics with Database Data -->
 <div class="training-request-stats">
