@@ -2093,7 +2093,7 @@ s
                         <div class="assignment-info">
                             <h4 class="employee-name">
                                 <%= assignment.employeeName %>
-                                <small style="color: #999; font-weight: normal;">(ID: <%= assignment.employeeId %>)</small>
+                            
                                 <% if (assignment.hasMultipleTrainings) { %>
                                     <span style="background: #07ACB9; color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 8px; font-weight: normal;">
                                         <%= assignment.trainingCount %> trainings
@@ -3062,46 +3062,46 @@ async function fillFromSuggested() {
 
         // Function to update statistics based on current assignments
 // Function to update statistics based on current assignments
-function updateTrainingStats() {
-    const assignmentItems = document.querySelectorAll('.assignment-item');
+// function updateTrainingStats() {
+//     const assignmentItems = document.querySelectorAll('.assignment-item');
     
-    let pendingCount = 0;
-    let ongoingCount = 0;
-    let completedCount = 0;
-    let overdueCount = 0;
+//     let pendingCount = 0;
+//     let ongoingCount = 0;
+//     let completedCount = 0;
+//     let overdueCount = 0;
     
-    assignmentItems.forEach(item => {
-        const status = item.getAttribute('data-status');
+//     assignmentItems.forEach(item => {
+//         const status = item.getAttribute('data-status');
         
-        switch(status) {
-            case 'not-started':
-            case 'pending':
-                pendingCount++;
-                break;
-            case 'in-progress':
-            case 'approved':
-                ongoingCount++;
-                break;
-            case 'completed':
-                completedCount++;
-                break;
-            case 'overdue':
-                overdueCount++;
-                break;
-        }
-    });
+//         switch(status) {
+//             case 'not-started':
+//             case 'pending':
+//                 pendingCount++;
+//                 break;
+//             case 'in-progress':
+//             case 'approved':
+//                 ongoingCount++;
+//                 break;
+//             case 'completed':
+//                 completedCount++;
+//                 break;
+//             case 'overdue':
+//                 overdueCount++;
+//                 break;
+//         }
+//     });
     
-    // Update the counts in the DOM with new IDs
-    const pendingElement = document.getElementById('pendingRequestsCount');
-    const ongoingElement = document.getElementById('ongoingRequestsCount');
-    const completedElement = document.getElementById('completedRequestsCount');
-    const overdueElement = document.getElementById('overdueRequestsCount');
+//     // Update the counts in the DOM with new IDs
+//     const pendingElement = document.getElementById('pendingRequestsCount');
+//     const ongoingElement = document.getElementById('ongoingRequestsCount');
+//     const completedElement = document.getElementById('completedRequestsCount');
+//     const overdueElement = document.getElementById('overdueRequestsCount');
     
-    if (pendingElement) pendingElement.textContent = pendingCount;
-    if (ongoingElement) ongoingElement.textContent = ongoingCount;
-    if (completedElement) completedElement.textContent = completedCount;
-    if (overdueElement) overdueElement.textContent = overdueCount;
-}
+//     if (pendingElement) pendingElement.textContent = pendingCount;
+//     if (ongoingElement) ongoingElement.textContent = ongoingCount;
+//     if (completedElement) completedElement.textContent = completedCount;
+//     if (overdueElement) overdueElement.textContent = overdueCount;
+// }
 
 // Call this function whenever the assignment list is updated
 document.addEventListener('DOMContentLoaded', function() {
