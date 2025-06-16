@@ -5919,128 +5919,172 @@ getFeedbackQuestionnaire: async function(req, res) {
         });
     }
 },
-    saveMidYearIDP: async function(req, res) {
-        try {
-            // Get the user ID from the route parameters or form submission
-            const userId = req.params.userId || req.body.userId;
-            console.log("Starting saveMidYearIDP for userId:", userId);
-    
-            if (!userId) {
-                console.error("User ID is missing");
-                return res.status(400).json({ success: false, message: "User ID is required" });
-            }
-    
-            // Get all form fields from the request body
-            const {
-                profStrengths,
-                profAreasForDevelopment,
-                profActionsToTake,
-                leaderStrengths,
-                leaderAreasForDevelopment,
-                leaderActionsToTake,
-                nextRoleShortTerm,
-                nextRoleLongTerm,
-                nextRoleMobility
-            } = req.body;
-    
-            console.log("Received form data:", req.body);
-    
-            // Check if there's already an entry for this user
-            const { data: existingRecord, error: checkError } = await supabase
-                .from("midyearidps")
-                .select("midyearidpId")
-                .eq("userId", userId)
-                .single();
-    
-            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-                console.error("Error checking for existing midyearidp:", checkError);
-                return res.status(500).json({ success: false, message: "Error checking for existing record" });
-            }
-    
-            let result;
-            if (existingRecord) {
-                // Update existing record
-                console.log("Updating existing midyearidp record:", existingRecord.midyearidpId);
-                const { data, error } = await supabase
-                    .from("midyearidps")
-                    .update({
-                        profStrengths,
-                        profAreasForDevelopment,
-                        profActionsToTake,
-                        leaderStrengths,
-                        leaderAreasForDevelopment,
-                        leaderActionsToTake,
-                        nextRoleShortTerm,
-                        nextRoleLongTerm,
-                        nextRoleMobility
-                    })
-                    .eq("midyearidpId", existingRecord.midyearidpId);
-    
-                if (error) {
-                    console.error("Error updating midyearidp:", error);
-                    return res.status(500).json({ success: false, message: error.message });
-                }
-                
-                result = data;
-            } else {
-                // Create new record
-                console.log("Creating new midyearidp record for userId:", userId);
-                const { data, error } = await supabase
-                    .from("midyearidps")
-                    .insert({
-                        userId,
-                        profStrengths,
-                        profAreasForDevelopment,
-                        profActionsToTake,
-                        leaderStrengths,
-                        leaderAreasForDevelopment,
-                        leaderActionsToTake,
-                        nextRoleShortTerm,
-                        nextRoleLongTerm,
-                        nextRoleMobility
-                    })
-                    .select();
-    
-                if (error) {
-                    console.error("Error inserting midyearidp:", error);
-                    return res.status(500).json({ success: false, message: error.message });
-                }
-                
-                result = data;
-            }
-    
-            console.log("Mid-Year IDP saved successfully:", result);
-    
-            // If it's an API request (AJAX), return JSON
-            if (req.xhr || req.headers.accept?.includes('application/json')) {
-                return res.status(200).json({ 
-                    success: true, 
-                    message: "Mid-Year IDP saved successfully" 
-                });
-            }
-    
-            // Otherwise, redirect to the user's records page with success message
-            req.flash('success', 'Mid-Year IDP submitted successfully!');
-            return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
-    
-        } catch (error) {
-            console.error("Error in saveMidYearIDP:", error);
-            
-            // If it's an API request (AJAX), return JSON error
-            if (req.xhr || req.headers.accept?.includes('application/json')) {
-                return res.status(500).json({ 
-                    success: false, 
-                    message: "An error occurred while saving the Mid-Year IDP",
-                    error: error.message 
-                });
-            }
-    
-            // Otherwise, redirect with error message
-            req.flash('errors', { dbError: 'An error occurred while saving the Mid-Year IDP.' });
-            return res.redirect(`/linemanager/midyear-idp/${req.params.userId || req.body.userId}`);
-        }
-    },
+saveMidYearIDP: async function(req, res) {
+    try {
+        // Get the user ID from the route parameters or form submission
+        const userId = req.params.userId || req.body.userId;
+        console.log("Starting saveMidYearIDP for userId:", userId);
 
+        if (!userId) {
+            console.error("User ID is missing");
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // Get all form fields from the request body
+        const {
+            profStrengths,
+            profAreasForDevelopment,
+            profActionsToTake,
+            leaderStrengths,
+            leaderAreasForDevelopment,
+            leaderActionsToTake,
+            nextRoleShortTerm,
+            nextRoleLongTerm,
+            nextRoleMobility,
+            suggestedTrainings // Array of training objects with trainingId and remarks
+        } = req.body;
+
+        console.log("Received form data:", req.body);
+        console.log("Suggested trainings:", suggestedTrainings);
+
+        // FIXED: Ensure text fields are saved as strings, not arrays
+        const textData = {
+            profStrengths: Array.isArray(profStrengths) ? profStrengths.join(' ') : (profStrengths || ''),
+            profAreasForDevelopment: Array.isArray(profAreasForDevelopment) ? profAreasForDevelopment.join(' ') : (profAreasForDevelopment || ''),
+            profActionsToTake: Array.isArray(profActionsToTake) ? profActionsToTake.join(' ') : (profActionsToTake || ''),
+            leaderStrengths: Array.isArray(leaderStrengths) ? leaderStrengths.join(' ') : (leaderStrengths || ''),
+            leaderAreasForDevelopment: Array.isArray(leaderAreasForDevelopment) ? leaderAreasForDevelopment.join(' ') : (leaderAreasForDevelopment || ''),
+            leaderActionsToTake: Array.isArray(leaderActionsToTake) ? leaderActionsToTake.join(' ') : (leaderActionsToTake || ''),
+            nextRoleShortTerm: Array.isArray(nextRoleShortTerm) ? nextRoleShortTerm.join(' ') : (nextRoleShortTerm || ''),
+            nextRoleLongTerm: Array.isArray(nextRoleLongTerm) ? nextRoleLongTerm.join(' ') : (nextRoleLongTerm || ''),
+            nextRoleMobility: Array.isArray(nextRoleMobility) ? nextRoleMobility.join(' ') : (nextRoleMobility || '')
+        };
+
+        console.log("Processed text data:", textData);
+
+        // Check if there's already an entry for this user
+        const { data: existingRecord, error: checkError } = await supabase
+            .from("midyearidps")
+            .select("midyearidpId")
+            .eq("userId", userId)
+            .single();
+
+        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            console.error("Error checking for existing midyearidp:", checkError);
+            return res.status(500).json({ success: false, message: "Error checking for existing record" });
+        }
+
+        let result;
+        let midyearidpId;
+        
+        if (existingRecord) {
+            // Update existing record
+            console.log("Updating existing midyearidp record:", existingRecord.midyearidpId);
+            const { data, error } = await supabase
+                .from("midyearidps")
+                .update(textData)
+                .eq("midyearidpId", existingRecord.midyearidpId)
+                .select();
+
+            if (error) {
+                console.error("Error updating midyearidp:", error);
+                return res.status(500).json({ success: false, message: error.message });
+            }
+            
+            result = data;
+            midyearidpId = existingRecord.midyearidpId;
+        } else {
+            // Create new record
+            console.log("Creating new midyearidp record for userId:", userId);
+            const { data, error } = await supabase
+                .from("midyearidps")
+                .insert({
+                    userId,
+                    ...textData
+                })
+                .select();
+
+            if (error) {
+                console.error("Error inserting midyearidp:", error);
+                return res.status(500).json({ success: false, message: error.message });
+            }
+            
+            result = data;
+            midyearidpId = data[0].midyearidpId;
+        }
+
+        // FIXED: Handle suggested trainings properly
+        if (suggestedTrainings && Array.isArray(suggestedTrainings) && suggestedTrainings.length > 0) {
+            console.log("Processing suggested trainings:", suggestedTrainings);
+            
+            // First, delete existing suggested trainings for this midyearidp
+            const { error: deleteError } = await supabase
+                .from("midyearidps_suggestedtrainings")
+                .delete()
+                .eq("midyearidpId", midyearidpId);
+
+            if (deleteError) {
+                console.error("Error deleting existing suggested trainings:", deleteError);
+                // Don't fail the entire operation, just log the error
+            }
+
+            // Insert new suggested trainings
+            const trainingsToInsert = suggestedTrainings.map(training => ({
+                midyearidpId: midyearidpId,
+                trainingId: parseInt(training.trainingId), // Ensure it's an integer
+                remarks: training.remarks || null
+            }));
+
+            console.log("Trainings to insert:", trainingsToInsert);
+
+            const { data: trainingsData, error: trainingsError } = await supabase
+                .from("midyearidps_suggestedtrainings")
+                .insert(trainingsToInsert)
+                .select();
+
+            if (trainingsError) {
+                console.error("Error inserting suggested trainings:", trainingsError);
+                // Don't fail the entire operation, just log the error
+                console.warn("Mid-Year IDP saved but suggested trainings could not be saved");
+            } else {
+                console.log("Successfully saved suggested trainings:", trainingsData);
+            }
+        } else {
+            console.log("No suggested trainings to save");
+        }
+
+        console.log("Mid-Year IDP saved successfully:", result);
+
+        // If it's an API request (AJAX), return JSON
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(200).json({ 
+                success: true, 
+                message: "Mid-Year IDP saved successfully",
+                midyearidpId: midyearidpId
+            });
+        }
+
+        // Otherwise, redirect to the user's records page with success message
+        req.flash('success', 'Mid-Year IDP submitted successfully!');
+        return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
+
+    } catch (error) {
+        console.error("Error in saveMidYearIDP:", error);
+        
+        // If it's an API request (AJAX), return JSON error
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(500).json({ 
+                success: false, 
+                message: "An error occurred while saving the Mid-Year IDP",
+                error: error.message 
+            });
+        }
+
+        // Otherwise, redirect with error message
+        req.flash('errors', { dbError: 'An error occurred while saving the Mid-Year IDP.' });
+        return res.redirect(`/linemanager/midyear-idp/${req.params.userId || req.body.userId}`);
+    }
+},
     // Aggregated Mid-Year Average 360 Degree Objective and Skills Feedback
 
     getMidYearFeedbackAggregates: async function(req, res) {
@@ -6455,6 +6499,65 @@ getFeedbackQuestionnaire: async function(req, res) {
             return res.redirect(`/linemanager/finalyear-idp/${req.params.userId || req.body.userId}`);
         }
     },
+
+    getMidYearIDPWithTrainings: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // Get Mid-Year IDP data
+        const { data: midyearData, error: midyearError } = await supabase
+            .from("midyearidps")
+            .select("*")
+            .eq("userId", userId)
+            .single();
+
+        if (midyearError && midyearError.code !== 'PGRST116') {
+            console.error("Error fetching Mid-Year IDP:", midyearError);
+            return res.status(500).json({ success: false, message: "Error fetching Mid-Year IDP data" });
+        }
+
+        let suggestedTrainings = [];
+        
+        if (midyearData) {
+            // Get suggested trainings with training details
+            const { data: trainingsData, error: trainingsError } = await supabase
+                .from("midyearidps_suggestedtrainings")
+                .select(`
+                    *,
+                    trainings (
+                        trainingId,
+                        trainingName,
+                        trainingDesc
+                    )
+                `)
+                .eq("midyearidpId", midyearData.midyearidpId);
+
+            if (!trainingsError && trainingsData) {
+                suggestedTrainings = trainingsData;
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                midyearIDP: midyearData,
+                suggestedTrainings: suggestedTrainings
+            }
+        });
+
+    } catch (error) {
+        console.error("Error in getMidYearIDPWithTrainings:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while fetching Mid-Year IDP data",
+            error: error.message 
+        });
+    }
+},
 
     getMidYearIDP: async function(req, res) {
         try {
