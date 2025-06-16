@@ -1581,6 +1581,11 @@ s
     .request-stat-number {
         font-size: 1.75rem;
     }
+
+    .required-asterisk {
+    color: red;
+    margin-left: 3px;
+}
 }
 
 </style>
@@ -1596,7 +1601,7 @@ s
             <p>Manage training courses, track employee progress, and oversee professional development initiatives.</p>
         </div>
 
- <!-- Add New Training Modal -->
+<!-- Add New Training Modal -->
 <div class="modal-overlay" id="addTrainingModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -1606,116 +1611,99 @@ s
         <form id="addTrainingForm">
             <!-- Training Course Name -->
             <div class="form-group">
-                <label class="form-label">Training Course Name:</label>
+                <label class="form-label">Training Course Name <span class="required-asterisk">*</span></label>
                 <input type="text" class="form-input" id="courseName" placeholder="Enter training course name" required>
             </div>
 
-            <!-- UPDATED: Job-based Suggested Trainings Dropdown -->
-            <!-- <div class="form-group">
-                <label class="form-label">Suggested Trainings:</label>
-                <select class="form-select" id="suggestedTrainings" onchange="fillFromSuggested()" disabled>
-                    <option value="">Please select a job position first</option>
-                </select>
-                <small class="form-text text-muted" style="font-size: 12px; color: #6c757d; margin-top: 5px; display: block;">
-                    This dropdown will populate with relevant trainings once you select a job position below.
-                </small>
-            </div> -->
-
             <!-- Description -->
             <div class="form-group">
-                <label class="form-label">Description:</label>
+                <label class="form-label">Description <span class="required-asterisk">*</span></label>
                 <textarea class="form-textarea" id="courseDescription" placeholder="Enter detailed description of the training course" required></textarea>
             </div>
 
             <!-- Job Positions and Training Mode -->
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Job Positions Applicable:</label>
+                    <label class="form-label">Job Positions Applicable <span class="required-asterisk">*</span></label>
                     <select class="form-select" id="jobPositions" required>
                         <option value="">Select applicable positions</option>
                         <!-- Options will be populated dynamically -->
                     </select>
                 </div>
                 
-                <!-- Replace your existing training mode field with this -->
                 <div class="form-group">
-                    <label for="trainingMode">Training Mode <span style="color: red;">*</span></label>
-                    <select id="trainingMode" name="trainingMode" required>
+                    <label class="form-label">Training Mode <span class="required-asterisk">*</span></label>
+                    <select class="form-select" id="trainingMode" name="trainingMode" required>
                         <option value="">Select Training Mode</option>
                         <option value="online">Online</option>
                         <option value="onsite">Onsite</option>
                     </select>
                 </div>
 
-                <!-- Add these location fields after the training mode field -->
+                <!-- Location Fields (conditionally required for onsite) -->
                 <div id="locationFields" class="location-fields">
                     <div class="form-group">
-                        <label for="countryDropdown">Country <span style="color: red;">*</span></label>
-                        <select id="countryDropdown" name="country">
-                            <option value="">Loading countries...</option>
+                        <label for="countryDropdown">Country <span class="required-asterisk">*</span></label>
+                        <select id="countryDropdown" name="country" required>
+                            <option value="">Select country</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label for="addressField">Address <span style="color: red;">*</span></label>
-                        <textarea id="addressField" name="address" rows="3" placeholder="Enter the full address for the training venue"></textarea>
+                        <label for="addressField">Address <span class="required-asterisk">*</span></label>
+                        <textarea id="addressField" name="address" rows="3" placeholder="Enter the full address for the training venue" required></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- Updated Cost section with PHP currency -->
+            <!-- Cost -->
             <div class="form-group">
-                <label class="form-label">Cost (PHP):</label>
-                <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost in Philippine Pesos (PHP)" min="0" step="0.01">
+                <label class="form-label">Cost (PHP) <span class="required-asterisk">*</span></label>
+                <input type="number" class="form-input" id="trainingCost" placeholder="Enter training cost in Philippine Pesos (PHP)" min="0" step="0.01" required>
             </div>
 
-            <!-- Focus on Objective Areas with Dropdown -->
+            <!-- Objective Areas -->
             <div class="form-group">
-                <label class="form-label">Objective Focus Areas:</label>
+                <label class="form-label">Objective Focus Areas <span class="required-asterisk">*</span></label>
                 <div class="add-item-section">
                     <div class="add-item-header">
-                        <select class="add-item-input" id="objectiveDropdown">
+                        <select class="add-item-input" id="objectiveDropdown" required>
                             <option value="">Select objective area</option>
                             <!-- Options will be populated dynamically -->
                         </select>
                         <button type="button" class="add-btn" onclick="addObjective()">Add Objective</button>
                     </div>
                     <div class="pills-container" id="objectivesList"></div>
+                    <small class="form-text text-muted">At least one objective is required</small>
                 </div>
             </div>
 
-            <!-- Focus Skill Areas with Dropdown -->
+            <!-- Skill Areas -->
             <div class="form-group">
-                <label class="form-label">Skill Focus Areas:</label>
+                <label class="form-label">Skill Focus Areas <span class="required-asterisk">*</span></label>
                 <div class="add-item-section">
                     <div class="add-item-header">
-                        <select class="add-item-input" id="skillDropdown">
+                        <select class="add-item-input" id="skillDropdown" required>
                             <option value="">Select skill area</option>
-                            <!-- Options will be populated dynamically with format: "Skill Name (Skill Type)" -->
-                            <!-- Example: "JavaScript Programming (Hard)" or "Communication (Soft)" -->
+                            <!-- Options will be populated dynamically -->
                         </select>
                         <button type="button" class="add-btn" onclick="addSkill()">Add Skill Area</button>
                     </div>
                     <div class="pills-container" id="skillsList"></div>
+                    <small class="form-text text-muted">At least one skill is required</small>
                 </div>
-            </div>
-
-            <!-- Total Duration Display -->
-            <div class="duration-display">
-                <div class="duration-label">Total Duration to Complete</div>
-                <div class="duration-value"><span id="totalDuration">0</span></div>
             </div>
 
             <!-- Activities Needed -->
             <div class="form-group">
-                <label class="form-label">Activities Needed:</label>
+                <label class="form-label">Activities Needed <span class="required-asterisk">*</span></label>
                 <div class="add-item-section">
                     <div class="activity-form-grid">
-                        <input type="text" class="add-item-input" id="moduleName" placeholder="Module name">
-                        <input type="number" class="add-item-input" id="estimatedTime" placeholder="Estimated time (hours)" min="0" step="0.5">
+                        <input type="text" class="add-item-input" id="moduleName" placeholder="Module name" required>
+                        <input type="number" class="add-item-input" id="estimatedTime" placeholder="Estimated time (hours)" min="0" step="0.5" required>
                     </div>
                     <div class="activity-form-grid">
-                        <select class="form-select" id="activityType">
+                        <select class="form-select" id="activityType" required>
                             <option value="">Select type</option>
                             <!-- Options will be populated dynamically -->
                         </select>
@@ -1725,43 +1713,24 @@ s
                             </button>
                         </div>
                     </div>
-
-                    <!-- Add Activity Type Mini Modal -->
-                    <div class="mini-modal-overlay" id="addActivityTypeModal">
-                        <div class="mini-modal-content">
-                            <div class="mini-modal-header">
-                                <h4>Add New Activity Type</h4>
-                                <button type="button" class="close-mini-modal" onclick="closeAddActivityTypeModal()">×</button>
-                            </div>
-                            <div class="mini-modal-body">
-                                <div class="form-group">
-                                    <label class="form-label">Activity Type Name:</label>
-                                    <input type="text" class="form-input" id="newActivityTypeName" placeholder="Enter activity type name" maxlength="50">
-                                </div>
-                                <div class="mini-modal-actions">
-                                    <button type="button" class="btn-secondary" onclick="closeAddActivityTypeModal()">Cancel</button>
-                                    <button type="button" class="btn-primary" onclick="saveNewActivityType()">Add Type</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <input type="text" class="add-item-input" id="activityRemarks" placeholder="Remarks (optional)">
                     <button type="button" class="add-btn" onclick="addActivity()" style="width: 100%; margin-top: 10px;">Add Activity</button>
                     <div class="dynamic-list" id="activitiesList"></div>
+                    <small class="form-text text-muted">At least one activity is required</small>
                 </div>
             </div>
 
             <!-- Certificates -->
             <div class="form-group">
-                <label class="form-label">Certificate/s:</label>
+                <label class="form-label">Certificate/s <span class="required-asterisk">*</span></label>
                 <div class="add-item-section">
                     <div class="activity-form-grid">
-                        <input type="text" class="add-item-input" id="certificateTitle" placeholder="Enter certificate title">
-                        <textarea class="add-item-input" id="certificateDescription" placeholder="Enter certificate description" style="min-height: 60px; resize: vertical;"></textarea>
+                        <input type="text" class="add-item-input" id="certificateTitle" placeholder="Enter certificate title" required>
+                        <textarea class="add-item-input" id="certificateDescription" placeholder="Enter certificate description" style="min-height: 60px; resize: vertical;" required></textarea>
                     </div>
                     <button type="button" class="add-btn" onclick="addCertificate()" style="width: 100%; margin-top: 10px;">Add Certificate</button>
                     <div class="dynamic-list" id="certificatesList"></div>
+                    <small class="form-text text-muted">At least one certificate is required</small>
                 </div>
             </div>
 
