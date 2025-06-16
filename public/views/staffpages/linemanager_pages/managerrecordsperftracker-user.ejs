@@ -35,8 +35,8 @@
     border-color: var(--secondary-color);
     box-shadow: 0 0 0 3px rgba(5, 156, 164, 0.2);
 }
+
 #suggestedTrainings {
-    /* Better text wrapping and display */
     white-space: normal !important;
     word-wrap: break-word;
     overflow: hidden;
@@ -79,10 +79,11 @@
     }
 }
 
-/* Training Detail Items */
+/* NEW: Priority-based Training Detail Items */
 .training-detail-item {
     position: relative;
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 .training-detail-item::before {
@@ -100,7 +101,22 @@
     left: 100%;
 }
 
-/* Enhanced skill and objective tags */
+/* NEW: Priority Badge Styles */
+.training-priority-critical {
+    border-left: 4px solid #dc3545 !important;
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), rgba(220, 53, 69, 0.02));
+}
+
+.training-priority-recommended {
+    border-left: 4px solid #ffc107 !important;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.05), rgba(255, 193, 7, 0.02));
+}
+
+.training-priority-available {
+    border-left: 4px solid #28a745 !important;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(40, 167, 69, 0.02));
+}
+
 .training-detail-item span {
     transition: var(--transition);
 }
@@ -127,6 +143,108 @@
 
 #trainingDetailsPanel::-webkit-scrollbar-thumb:hover {
     background: var(--primary-color);
+}
+
+
+
+/* NEW: Top 5 Development Areas Styling */
+.development-areas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.development-area-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 6px;
+    border-left: 3px solid #ffc107;
+    transition: all 0.3s ease;
+    font-size: 12px;
+}
+
+.development-area-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.development-area-item.critical {
+    border-left-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.development-area-item.needs-improvement {
+    border-left-color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.05);
+}
+
+.development-area-rank {
+    font-weight: bold;
+    color: var(--primary-color);
+    min-width: 20px;
+    text-align: center;
+}
+
+.development-area-name {
+    flex: 1;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.development-area-type {
+    font-size: 10px;
+    color: #666;
+    background-color: rgba(18, 74, 92, 0.1);
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+.development-area-rating {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.development-area-rating.critical {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.development-area-rating.needs-improvement {
+    color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+
+/* Loading state for development areas */
+.development-areas-loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.development-areas-loading::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--secondary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Responsive adjustments for training dropdown */
@@ -186,44 +304,20 @@
     box-shadow: 0 0 0 2px rgba(5, 156, 164, 0.3);
 }
 
-/* Training match type indicators in select */
-#suggestedTrainings option[data-match-type="both"] {
-    background-color: rgba(76, 175, 80, 0.1);
+/* NEW: Priority indicators in select options */
+#suggestedTrainings option[data-priority="critical"] {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #721c24;
 }
 
-#suggestedTrainings option[data-match-type="objective"] {
-    background-color: rgba(33, 150, 243, 0.1);
+#suggestedTrainings option[data-priority="recommended"] {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #856404;
 }
 
-#suggestedTrainings option[data-match-type="skill"] {
-    background-color: rgba(255, 152, 0, 0.1);
-}
-
-/* Panel close button (optional) */
-.panel-close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: #999;
-    padding: 5px;
-    border-radius: 50%;
-    transition: var(--transition);
-}
-
-.panel-close-btn:hover {
-    background-color: rgba(244, 67, 54, 0.1);
-    color: #f44336;
-}
-
-/* Selected training highlight */
-#suggestedTrainings.training-selected {
-    background-color: rgba(5, 156, 164, 0.1);
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 0 2px rgba(5, 156, 164, 0.2);
+#suggestedTrainings option[data-priority="available"] {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #155724;
 }
 
 /* Training tooltip hover effect */
@@ -254,10 +348,6 @@
     }
 }
 
-#suggestedTrainings.training-animation {
-    animation: trainingSelected 0.8s ease-in-out;
-}
-
 /* Selected Training Display Animation */
 #selectedTrainingDisplay {
     transition: all 0.3s ease-in-out;
@@ -266,17 +356,6 @@
 #selectedTrainingDisplay.show {
     display: block !important;
     animation: fadeInUp 0.5s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 /* Submit Button Enhanced Styling */
@@ -323,6 +402,23 @@
     .submit-button-container {
         text-align: center;
     }
+    
+    .development-areas-list {
+        gap: 6px;
+    }
+    
+    .development-area-item {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    
+    .development-area-name {
+        font-size: 11px;
+    }
+    
+    .development-area-type {
+        font-size: 9px;
+    }
 }
 
 /* Training fieldset specific enhancements */
@@ -333,6 +429,55 @@
 /* Smooth transitions for all training elements */
 .training-selection-container * {
     transition: var(--transition);
+}
+
+/* NEW: Empty state for development areas */
+.development-areas-empty {
+    text-align: center;
+    padding: 20px;
+    color: #28a745;
+    font-style: italic;
+    background-color: rgba(40, 167, 69, 0.05);
+    border-radius: 6px;
+    border: 1px dashed #28a745;
+}
+
+.development-areas-empty i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* NEW: Priority legend */
+.priority-legend {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    font-size: 11px;
+}
+
+.priority-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.priority-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.priority-indicator.critical {
+    background-color: #dc3545;
+}
+
+.priority-indicator.recommended {
+    background-color: #ffc107;
+}
+
+.priority-indicator.available {
+    background-color: #28a745;
 }
         /* IDP Form Styles */
 .idp-form fieldset {
@@ -2466,7 +2611,6 @@
             </div>
         </fieldset>
 
-        
 <fieldset class="suggested-trainings-fieldset">
     <legend><i class="fas fa-graduation-cap"></i> SUGGESTED TRAININGS TO TAKE</legend>
     
@@ -2483,7 +2627,7 @@
                     <i class="fas fa-book-open"></i> Recommended Training Programs
                 </h4>
                 <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.4;">
-                    Select a training program that aligns with your job objectives and required skills. These trainings are specifically matched to your role.
+                    Select a training program that addresses your development areas identified through Q1 and Q2 feedback.
                 </p>
             </div>
 
@@ -2500,7 +2644,7 @@
                 </label>
                 
                 <div style="display: flex; align-items: flex-start; gap: 10px;">
-                    <!-- Enhanced Select Element with Better Display -->
+                    <!-- Enhanced Select Element -->
                     <div style="flex: 1; position: relative;">
                         <select id="suggestedTrainings" name="suggestedTrainings" style="
                             width: 100%;
@@ -2521,26 +2665,14 @@
                             <% if (user.availableTrainings && user.availableTrainings.length > 0) { %>
                                 <% user.availableTrainings.forEach(training => { %>
                                     <% 
-                                        // Build shorter display text for dropdown (just training name + match indicator)
                                         let displayText = training.trainingName;
-                                        
-                                        // Add match type indicator only
-                                        if (training.matchType === 'both') {
-                                            displayText += ' ⭐';
-                                        } else if (training.matchType === 'objective') {
-                                            displayText += ' 🎯';
-                                        } else if (training.matchType === 'skill') {
-                                            displayText += ' 🔧';
-                                        }
-                                        
-                                        // Build objectives list for data attribute
                                         let objectivesList = '';
+                                        let skillsList = '';
+                                        
                                         if (training.objectives && training.objectives.length > 0) {
                                             objectivesList = training.objectives.map(obj => obj.objectiveDescrpt).join(', ');
                                         }
                                         
-                                        // Build skills list for data attribute
-                                        let skillsList = '';
                                         if (training.skills && training.skills.length > 0) {
                                             skillsList = training.skills.map(skill => `${skill.jobReqSkillName} (${skill.jobReqSkillType})`).join(', ');
                                         }
@@ -2557,11 +2689,11 @@
                                     </option>
                                 <% }); %>
                             <% } else { %>
-                                <option value="" disabled>No matching trainings available for your role</option>
+                                <option value="" disabled>No training programs available for your role</option>
                             <% } %>
                         </select>
 
-                        <!-- Training Details Panel (Shows when dropdown is focused/clicked) -->
+                        <!-- Training Details Panel -->
                         <div id="trainingDetailsPanel" style="
                             position: absolute;
                             top: 100%;
@@ -2612,7 +2744,7 @@
                             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
                         ">
                             <strong>Select a training</strong><br>
-                            Choose from our recommended training programs that match your job objectives and required skills.
+                            Choose from our recommended training programs that address your development areas.
                             
                             <!-- Tooltip arrow -->
                             <div style="
@@ -2629,16 +2761,13 @@
                 </div>
             </div>
 
-            <!-- Training Match Information -->
+            <!-- UPDATED: New Top 5 Development Areas Legend -->
             <div class="training-match-info" style="margin-top: 15px; font-size: 12px; color: #666;">
-                <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">Training Legend:</h5>
-                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <div><span style="color: #4CAF50;">⭐</span> Perfect Match: Covers both objectives and skills</div>
-                    <div><span style="color: #2196F3;">🎯</span> Objective Match: Aligns with your objectives</div>
-                    <div><span style="color: #FF9800;">🔧</span> Skill Match: Develops required job skills</div>
-                </div>
-                <div style="margin-top: 8px; font-style: italic; color: #888; font-size: 11px;">
-                    Click or focus the dropdown to see detailed objectives and skills for each training program.
+                <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+                    <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q1-Q2 Feedback):
+                </h5>
+                <div style="font-style: italic; color: #888; font-size: 11px;">
+                    Complete Q1 and Q2 feedback to see personalized training priorities based on your development areas.
                 </div>
             </div>
 
@@ -2672,6 +2801,8 @@
         </div>
     </div>
 </fieldset>
+
+
 <!-- Submit Button Container - Right Side -->
 <div class="submit-button-container" style="text-align: right; margin-top: 30px;">
     <button id="submitMidYearIDP" type="submit" class="save-btn" disabled style="
@@ -2899,28 +3030,8 @@ function initializeTrainingDescriptions() {
     
     console.log('Initialized training descriptions:', trainingDescriptions);
     console.log('Initialized training match types:', trainingMatchTypes);
-    
-    // Log summary of training details
-    const trainingsWithDetails = Array.from(trainingSelect.options)
-        .filter(option => option.value)
-        .map(option => {
-            try {
-                const objectives = JSON.parse(option.dataset.objectives || '[]');
-                const skills = JSON.parse(option.dataset.skills || '[]');
-                return {
-                    name: option.text.split(' | ')[0],
-                    objectiveCount: objectives.length,
-                    skillCount: skills.length,
-                    matchType: option.dataset.matchType
-                };
-            } catch (e) {
-                return null;
-            }
-        })
-        .filter(training => training !== null);
-    
-    console.log('Training details summary:', trainingsWithDetails);
 }
+
 function handleTrainingSelection(selectElement) {
     const selectedValue = selectElement.value;
     const tooltipText = document.getElementById('trainingTooltipText');
@@ -2932,7 +3043,7 @@ function handleTrainingSelection(selectElement) {
         const selectedOption = selectElement.options[selectElement.selectedIndex];
         
         // Get training details
-        const trainingName = selectedOption.text.replace(/[⭐🎯🔧]$/, '').trim(); // Remove match indicators
+        const trainingName = selectedOption.text.replace(/[⭐🎯🔧]$/, '').trim();
         const description = selectedOption.dataset.description || 'No description available.';
         const matchType = selectedOption.dataset.matchType || 'general';
         
@@ -2947,7 +3058,7 @@ function handleTrainingSelection(selectElement) {
             console.error('Error parsing training details:', e);
         }
         
-        // Build enhanced tooltip with objectives and skills
+        // Build enhanced tooltip
         let tooltipContent = `<strong>${trainingName}</strong><br><br>${description}<br><br>`;
         
         // Add objectives section
@@ -2967,7 +3078,6 @@ function handleTrainingSelection(selectElement) {
         if (skills.length > 0) {
             tooltipContent += `<strong>🔧 Developed Skills (${skills.length}):</strong><br>`;
             
-            // Group skills by type
             const hardSkills = skills.filter(skill => skill.jobReqSkillType === 'Hard');
             const softSkills = skills.filter(skill => skill.jobReqSkillType === 'Soft');
             
@@ -2982,32 +3092,19 @@ function handleTrainingSelection(selectElement) {
             tooltipContent += `<br>`;
         }
         
-        // Add match type information
-        let matchTypeText = '';
-        switch(matchType) {
-            case 'both':
-                matchTypeText = '<span style="color: #4CAF50;">⭐ Perfect Match</span> - Covers both your objectives and required skills';
-                break;
-            case 'objective':
-                matchTypeText = '<span style="color: #2196F3;">🎯 Objective Match</span> - Aligns with your current objectives';
-                break;
-            case 'skill':
-                matchTypeText = '<span style="color: #FF9800;">🔧 Skill Match</span> - Develops your required job skills';
-                break;
-            default:
-                matchTypeText = '<span style="color: #666;">General Training</span>';
-        }
+        // UPDATED: New priority system based on lacking areas
+        const priorityInfo = getTrainingPriorityInfo(selectedOption);
+        tooltipContent += `<em style="color: ${priorityInfo.color};">${priorityInfo.text}</em>`;
         
-        tooltipContent += `<em>${matchTypeText}</em>`;
         tooltipText.innerHTML = tooltipContent;
         
         // Add selected styling
         selectElement.classList.add('training-selected', 'training-animation');
         
-        // Show selected training display with enhanced information
+        // Show selected training display
         showSelectedTrainingDisplayDetailed(trainingName, description, matchType, objectives, skills);
         
-        // Show a brief confirmation
+        // Show confirmation
         showTrainingConfirmationDetailed(trainingName, matchType, objectives.length, skills.length);
         
         // Remove animation class after animation completes
@@ -3015,18 +3112,160 @@ function handleTrainingSelection(selectElement) {
             selectElement.classList.remove('training-animation');
         }, 600);
         
-        console.log(`Selected training: ${trainingName} (ID: ${selectedValue}, Match: ${matchType})`);
-        console.log('Objectives covered:', objectives);
-        console.log('Skills developed:', skills);
+        console.log(`Selected training: ${trainingName} (ID: ${selectedValue}, Priority: ${priorityInfo.priority})`);
     } else {
         // Reset tooltip to default
-        tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our recommended training programs that match your job objectives and required skills.`;
+        tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our recommended training programs that address your development areas.`;
         selectElement.classList.remove('training-selected');
         hideSelectedTrainingDisplay();
     }
 }
 
 
+// NEW: Function to get training priority based on lacking areas
+function getTrainingPriorityInfo(trainingOption) {
+    if (!midYearFeedbackData || !midYearFeedbackData.categorizedFeedback) {
+        return {
+            priority: 'unknown',
+            text: 'Training Available',
+            color: '#666'
+        };
+    }
+    
+    let objectives = [];
+    let skills = [];
+    
+    try {
+        objectives = JSON.parse(trainingOption.dataset.objectives || '[]');
+        skills = JSON.parse(trainingOption.dataset.skills || '[]');
+    } catch (e) {
+        console.error('Error parsing training data for priority calculation:', e);
+        return {
+            priority: 'unknown',
+            text: 'Training Available',
+            color: '#666'
+        };
+    }
+    
+    const lackingAreas = [
+        ...midYearFeedbackData.categorizedFeedback.average,
+        ...midYearFeedbackData.categorizedFeedback.belowAverage
+    ];
+    
+    let matchCount = 0;
+    let criticalMatchCount = 0; // Below average (1-2 stars)
+    
+    // Check objectives matches
+    objectives.forEach(obj => {
+        const match = lackingAreas.find(area => 
+            area.type === 'objective' && area.objectiveId === obj.objectiveId
+        );
+        if (match) {
+            matchCount++;
+            if (match.averageRating < 3) {
+                criticalMatchCount++;
+            }
+        }
+    });
+    
+    // Check skills matches
+    skills.forEach(skill => {
+        const match = lackingAreas.find(area => 
+            area.type === 'skill' && area.jobReqSkillId === skill.jobReqSkillId
+        );
+        if (match) {
+            matchCount++;
+            if (match.averageRating < 3) {
+                criticalMatchCount++;
+            }
+        }
+    });
+    
+    // Determine priority
+    if (criticalMatchCount > 0) {
+        return {
+            priority: 'critical',
+            text: `🔥 High Priority - Addresses ${criticalMatchCount} critical development area${criticalMatchCount > 1 ? 's' : ''}`,
+            color: '#dc3545'
+        };
+    } else if (matchCount > 0) {
+        return {
+            priority: 'recommended',
+            text: `⚡ Recommended - Addresses ${matchCount} development area${matchCount > 1 ? 's' : ''}`,
+            color: '#ffc107'
+        };
+    } else {
+        return {
+            priority: 'available',
+            text: '✓ Available - General professional development',
+            color: '#28a745'
+        };
+    }
+}
+
+function updateTrainingLegendWithTop5() {
+    const legendContainer = document.querySelector('.training-match-info');
+    if (!legendContainer) return;
+    
+    if (!midYearFeedbackData || !midYearFeedbackData.categorizedFeedback) {
+        legendContainer.innerHTML = `
+            <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">Training Priorities:</h5>
+            <div style="font-style: italic; color: #888; font-size: 11px;">
+                Complete Q1 and Q2 feedback to see personalized training priorities based on your development areas.
+            </div>
+        `;
+        return;
+    }
+    
+    // Get top 5 lacking areas (lowest ratings first)
+    const lackingAreas = [
+        ...midYearFeedbackData.categorizedFeedback.average,
+        ...midYearFeedbackData.categorizedFeedback.belowAverage
+    ].sort((a, b) => a.averageRating - b.averageRating).slice(0, 5);
+    
+    let legendHTML = `
+        <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+            <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q1-Q2 Feedback):
+        </h5>
+    `;
+    
+    if (lackingAreas.length === 0) {
+        legendHTML += `
+            <div style="font-style: italic; color: #888; font-size: 11px;">
+                No development areas identified. All objectives and skills are performing well!
+            </div>
+        `;
+    } else {
+        legendHTML += `<div style="display: flex; flex-direction: column; gap: 8px;">`;
+        
+        lackingAreas.forEach((area, index) => {
+            const name = area.type === 'objective' ? area.objectiveDescrpt : area.jobReqSkillName;
+            const type = area.type === 'objective' ? 'Objective' : `${area.jobReqSkillType} Skill`;
+            const rating = area.averageRating.toFixed(1);
+            const ratingColor = area.averageRating < 3 ? '#dc3545' : '#ffc107';
+            
+            legendHTML += `
+                <div style="display: flex; align-items: center; gap: 10px; padding: 6px; background-color: rgba(255, 255, 255, 0.8); border-radius: 4px; border-left: 3px solid ${ratingColor};">
+                    <span style="font-weight: bold; color: ${ratingColor}; min-width: 20px;">${index + 1}.</span>
+                    <div style="flex: 1;">
+                        <div style="font-size: 12px; font-weight: 500; color: var(--primary-color);">${truncateText(name, 40)}</div>
+                        <div style="font-size: 10px; color: #666;">${type} • Rating: ${rating}/5.0</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        legendHTML += `</div>`;
+        
+        legendHTML += `
+            <div style="margin-top: 8px; font-style: italic; color: #666; font-size: 11px;">
+                💡 Trainings that address these areas will be prioritized in recommendations.
+            </div>
+        `;
+    }
+    
+    legendContainer.innerHTML = legendHTML;
+}
 function showTrainingDetails() {
     const trainingSelect = document.getElementById('suggestedTrainings');
     const detailsPanel = document.getElementById('trainingDetailsPanel');
@@ -3034,48 +3273,39 @@ function showTrainingDetails() {
     
     if (!trainingSelect || !detailsPanel || !detailsList) return;
     
-    console.log('Showing training details panel...');
+    console.log('Showing training details panel with priority information...');
     
     // Build the details content
     let detailsHTML = '<h4 style="margin: 0 0 15px 0; color: var(--primary-color); font-size: 16px;">Available Training Programs</h4>';
     
-    // Get all training options (skip the first placeholder option)
+    // Get all training options and calculate priorities
     const options = Array.from(trainingSelect.options).slice(1);
     
     if (options.length === 0) {
         detailsHTML += '<p style="color: #666; font-style: italic;">No training programs available for your role.</p>';
     } else {
-        options.forEach((option, index) => {
+        // Sort options by priority (critical first, then recommended, then available)
+        const optionsWithPriority = options.map(option => {
+            const priorityInfo = getTrainingPriorityInfo(option);
+            return { option, priorityInfo };
+        }).sort((a, b) => {
+            const priorityOrder = { 'critical': 0, 'recommended': 1, 'available': 2, 'unknown': 3 };
+            return priorityOrder[a.priorityInfo.priority] - priorityOrder[b.priorityInfo.priority];
+        });
+        
+        optionsWithPriority.forEach(({ option, priorityInfo }, index) => {
             if (option.value) {
                 try {
                     const objectives = JSON.parse(option.dataset.objectives || '[]');
                     const skills = JSON.parse(option.dataset.skills || '[]');
-                    const matchType = option.dataset.matchType || 'general';
                     const description = option.dataset.description || 'No description available.';
                     
-                    // Get clean training name (remove match indicators)
+                    // Get clean training name
                     const trainingName = option.text.replace(/[⭐🎯🔧]$/, '').trim();
                     
-                    // Match type styling
-                    let matchBadge = '';
-                    let borderColor = '#ddd';
-                    
-                    switch(matchType) {
-                        case 'both':
-                            matchBadge = '<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">⭐ Perfect Match</span>';
-                            borderColor = '#4CAF50';
-                            break;
-                        case 'objective':
-                            matchBadge = '<span style="background: #2196F3; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🎯 Objective Match</span>';
-                            borderColor = '#2196F3';
-                            break;
-                        case 'skill':
-                            matchBadge = '<span style="background: #FF9800; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🔧 Skill Match</span>';
-                            borderColor = '#FF9800';
-                            break;
-                        default:
-                            matchBadge = '<span style="background: #666; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">Available</span>';
-                    }
+                    // Priority styling
+                    let borderColor = priorityInfo.color;
+                    let priorityBadge = `<span style="background: ${priorityInfo.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">${priorityInfo.priority === 'critical' ? '🔥 High Priority' : priorityInfo.priority === 'recommended' ? '⚡ Recommended' : '✓ Available'}</span>`;
                     
                     detailsHTML += `
                         <div class="training-detail-item" style="
@@ -3090,7 +3320,11 @@ function showTrainingDetails() {
                             
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                                 <h5 style="margin: 0; color: var(--primary-color); font-size: 14px; font-weight: 600;">${trainingName}</h5>
-                                ${matchBadge}
+                                ${priorityBadge}
+                            </div>
+                            
+                            <div style="margin-bottom: 12px; padding: 8px; background-color: rgba(${priorityInfo.color === '#dc3545' ? '220, 53, 69' : priorityInfo.color === '#ffc107' ? '255, 193, 7' : '40, 167, 69'}, 0.1); border-radius: 4px; font-size: 11px; color: ${priorityInfo.color};">
+                                ${priorityInfo.text}
                             </div>
                             
                             <p style="margin: 0 0 12px 0; font-size: 12px; color: #666; line-height: 1.4;">${description}</p>
@@ -3158,6 +3392,7 @@ function showTrainingDetails() {
         document.addEventListener('click', handleClickOutsideDetailsPanel);
     }, 100);
 }
+
 
 
 // Function to select training from the details panel
@@ -3491,11 +3726,11 @@ function getSelectedTrainingName() {
 }
 
 
-// Enhanced submit function to include selected training data
+// Enhanced submit function to include selected training data with priority info
 async function submitMidYearIDPFormWithTraining(event) {
     event.preventDefault();
     
-    console.log("Submitting Mid-Year IDP form with suggested training...");
+    console.log("Submitting Mid-Year IDP form with priority-based training selection...");
     
     // Validate the form
     if (!validateIDPForm('mid')) {
@@ -3504,6 +3739,14 @@ async function submitMidYearIDPFormWithTraining(event) {
     
     // Get selected training data
     const selectedTrainingData = getSelectedTrainingData();
+    
+    // Get priority information if available
+    let trainingPriorityInfo = null;
+    if (selectedTrainingData) {
+        const trainingSelect = document.getElementById('suggestedTrainings');
+        const selectedOption = trainingSelect.options[trainingSelect.selectedIndex];
+        trainingPriorityInfo = getTrainingPriorityInfo(selectedOption);
+    }
     
     // Get form data including training
     const formData = {
@@ -3516,17 +3759,19 @@ async function submitMidYearIDPFormWithTraining(event) {
         nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value,
         nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value,
         nextRoleMobility: document.getElementById("nextRoleMobility").value,
-        // Enhanced training data
+        // Enhanced training data with priority information
         suggestedTrainingId: selectedTrainingData ? selectedTrainingData.trainingId : '',
         suggestedTrainingName: selectedTrainingData ? selectedTrainingData.trainingName : '',
-        suggestedTrainingMatchType: selectedTrainingData ? selectedTrainingData.matchType : ''
+        suggestedTrainingMatchType: selectedTrainingData ? selectedTrainingData.matchType : '',
+        suggestedTrainingPriority: trainingPriorityInfo ? trainingPriorityInfo.priority : '',
+        suggestedTrainingPriorityReason: trainingPriorityInfo ? trainingPriorityInfo.text : ''
     };
     
-    console.log("Form data with enhanced training info:", formData);
+    console.log("Form data with enhanced priority-based training info:", formData);
     
     // Show selected training in confirmation if one is selected
-    if (selectedTrainingData) {
-        console.log(`Including suggested training: ${selectedTrainingData.trainingName} (ID: ${selectedTrainingData.trainingId}, Match: ${selectedTrainingData.matchType})`);
+    if (selectedTrainingData && trainingPriorityInfo) {
+        console.log(`Including suggested training: ${selectedTrainingData.trainingName} (ID: ${selectedTrainingData.trainingId}, Priority: ${trainingPriorityInfo.priority})`);
     }
     
     // Disable the submit button and show loading state
@@ -3555,9 +3800,10 @@ async function submitMidYearIDPFormWithTraining(event) {
         
         if (result.success) {
             let successMessage = "Mid-Year IDP saved successfully!";
-            if (selectedTrainingData) {
+            if (selectedTrainingData && trainingPriorityInfo) {
                 successMessage += `\n\nRecommended training: ${selectedTrainingData.trainingName}`;
-                successMessage += `\nMatch type: ${selectedTrainingData.matchType}`;
+                successMessage += `\nPriority: ${trainingPriorityInfo.priority}`;
+                successMessage += `\nReason: ${trainingPriorityInfo.text}`;
             }
             
             alert(successMessage);
@@ -3591,7 +3837,6 @@ async function submitMidYearIDPFormWithTraining(event) {
     }
 }
 
-
 // Function to initialize training dropdown functionality
 function initializeTrainingDropdown() {
     // Initialize training descriptions and match types first
@@ -3618,7 +3863,7 @@ function initializeTrainingDropdown() {
     if (trainingSelect) {
         // Set default tooltip
         if (tooltipText) {
-            tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our recommended training programs that match your job objectives and required skills.`;
+            tooltipText.innerHTML = `<strong>Select a training</strong><br>Choose from our recommended training programs that address your development areas.`;
         }
         
         // Add change event listener
@@ -3627,22 +3872,10 @@ function initializeTrainingDropdown() {
         });
         
         console.log('Training dropdown initialized successfully');
-        console.log('Available trainings:', trainingSelect.options.length - 1); // -1 for the default option
-        
-        // Log training match distribution
-        const matchTypes = {};
-        Array.from(trainingSelect.options).forEach(option => {
-            if (option.value) {
-                const matchType = option.dataset.matchType || 'general';
-                matchTypes[matchType] = (matchTypes[matchType] || 0) + 1;
-            }
-        });
-        console.log('Training match distribution:', matchTypes);
     } else {
         console.warn('Training dropdown element not found');
     }
 }
-
 
 
 // Function to reset training selection
@@ -3765,20 +3998,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // If the form is already visible, ensure training dropdown is ready
     const midYearIDPForm = document.getElementById("midYearIDPForm");
     if (midYearIDPForm && midYearIDPForm.style.display !== 'none') {
-        setTimeout(initializeTrainingDropdown, 100);
+        setTimeout(() => {
+            initializeTrainingDropdown();
+            console.log('Training dropdown re-initialized for visible form');
+        }, 100);
     }
     
-    // Log training recommendations summary
-    setTimeout(() => {
-        const summary = getTrainingRecommendationsSummary();
-        console.log('Training Recommendations Summary:', summary);
-        
-        if (summary.total === 0) {
-            console.warn('No training recommendations found. Check if user has objectives and job skills defined.');
-        }
-    }, 500);
+    console.log("Performance tracker stepper system with enhanced priority-based training dropdown initialized.");
 });
-
 // Export functions for global access
 window.handleTrainingSelection = handleTrainingSelection;
 window.getSelectedTrainingId = getSelectedTrainingId;
@@ -3790,7 +4017,12 @@ window.getAvailableTrainingsFromSelect = getAvailableTrainingsFromSelect;
 window.setTrainingDropdownViewOnly = setTrainingDropdownViewOnly;
 window.getTrainingRecommendationsSummary = getTrainingRecommendationsSummary;
 window.submitMidYearIDPFormWithTraining = submitMidYearIDPFormWithTraining;
-    
+window.loadMidYearFeedbackAggregates = loadMidYearFeedbackAggregates;
+window.updateTrainingLegendWithTop5 = updateTrainingLegendWithTop5;
+window.initializeTrainingDropdown = initializeTrainingDropdown;
+window.navigateToMidYearIDP = navigateToMidYearIDP;
+window.refreshFeedbackDataOnYearChange = refreshFeedbackDataOnYearChange;
+window.submitMidYearIDPFormWithTraining = submitMidYearIDPFormWithTraining;
 
 // Initialize variables
 let currentStep = 0; // Track the current step
@@ -4735,7 +4967,7 @@ function filterAnswers() {
 
 
 
-// Enhanced function to navigate to Mid-Year IDP (update the existing one)
+// Enhanced function to navigate to Mid-Year IDP with priority system
 function navigateToMidYearIDP() {
     const midYearIDPButton = document.getElementById("midYearIDP");
     
@@ -4759,7 +4991,7 @@ function navigateToMidYearIDP() {
     midYearIDPForm.classList.remove("fade-out");
     midYearIDPForm.classList.add("fade-in");
     
-    // Load feedback aggregates when form is shown
+    // Load feedback aggregates when form is shown - this will update the training legend
     loadMidYearFeedbackAggregates();
     
     // Check if in view-only mode
@@ -4779,7 +5011,7 @@ function navigateToMidYearIDP() {
     }
     
     midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-    console.log("Navigated to the Mid-Year IDP form.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
+    console.log("Navigated to the Mid-Year IDP form with priority-based training system.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
 }
 
 
@@ -6376,7 +6608,6 @@ function loadMidYearIDPData(userId) {
     });
 }
 
-
 async function loadMidYearFeedbackAggregates() {
     console.log("Loading Mid-Year feedback aggregates...");
     
@@ -6386,11 +6617,11 @@ async function loadMidYearFeedbackAggregates() {
         loadingIndicator.style.display = 'block';
     }
     
-    // Show loading placeholders in circular displays
+    // Show loading placeholders
     showLoadingPlaceholders();
     
     try {
-        // Get the selected year from the year dropdown or URL
+        // Get the selected year
         let selectedYear = new Date().getFullYear();
         
         const yearSelect = document.getElementById('yearSelect');
@@ -6418,6 +6649,9 @@ async function loadMidYearFeedbackAggregates() {
             
             // Display the feedback in circular format
             displayFeedbackInCircularFormat(midYearFeedbackData);
+            
+            // UPDATED: Update the training legend with top 5 lacking areas
+            updateTrainingLegendWithTop5();
             
         } else {
             console.error("Error loading feedback aggregates:", result.message);
@@ -6579,6 +6813,13 @@ function createCircularFeedbackItem(item, ratingType) {
     
     return div;
 }
+// Helper function to truncate text
+function truncateText(text, maxLength) {
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return text.substring(0, maxLength - 3) + '...';
+}
 
 // Function to generate tooltip text
 function generateItemTooltip(item) {
@@ -6652,15 +6893,16 @@ function showNoFeedbackMessage() {
         }
     });
 }
-// Function to refresh feedback data when year changes
+// Function to refresh feedback data when year changes - now updates training legend
 function refreshFeedbackDataOnYearChange() {
     // Check if Mid-Year IDP form is currently visible
     const midYearIDPForm = document.getElementById("midYearIDPForm");
     if (midYearIDPForm && midYearIDPForm.style.display === "block") {
-        // Reload feedback aggregates for the new year
+        // Reload feedback aggregates for the new year - this will update the training legend
         loadMidYearFeedbackAggregates();
     }
 }
+
 
 
 // Function to load Final-Year IDP data
