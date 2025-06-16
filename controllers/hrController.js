@@ -1056,8 +1056,6 @@ getEmployeeTrainingDashboard: async function (req, res) {
             let inProgressTrainings = 0;
             let notStartedTrainings = 0;
             let overdueTrainings = 0;
-            let awaitingApprovalTrainings = 0;
-            let rejectedTrainings = 0;
             let totalProgressSum = 0;
 
             const trainingDetails = employeeTrainings.map(training => {
@@ -1085,24 +1083,17 @@ getEmployeeTrainingDashboard: async function (req, res) {
                 // Enhanced status determination (same logic as employee side)
                 let displayStatus = 'Not Started';
                 const today = new Date();
-                const startDate = training.setStartDate ? new Date(training.setStartDate) : null;
                 const endDate = training.setEndDate ? new Date(training.setEndDate) : null;
 
-                // Check approval status first
-                if (training.isApproved === null) {
-                    displayStatus = 'Awaiting Approval';
-                } else if (training.isApproved === false) {
-                    displayStatus = 'Rejected';
-                } else if (training.isApproved === true) {
-                    if (hasValidCertificates) {
-                        displayStatus = 'Completed';
-                    } else if (endDate && today > endDate && progressPercentage < 100) {
-                        displayStatus = 'Overdue';
-                    } else if (inProgressActivities > 0 || completedActivities > 0) {
-                        displayStatus = 'In Progress';
-                    } else {
-                        displayStatus = 'Not Started';
-                    }
+                // Simplified status logic (removed approval checks)
+                if (hasValidCertificates) {
+                    displayStatus = 'Completed';
+                } else if (endDate && today > endDate && progressPercentage < 100) {
+                    displayStatus = 'Overdue';
+                } else if (inProgressActivities > 0 || completedActivities > 0) {
+                    displayStatus = 'In Progress';
+                } else {
+                    displayStatus = 'Not Started';
                 }
 
                 // Count by status
@@ -1115,12 +1106,6 @@ getEmployeeTrainingDashboard: async function (req, res) {
                         break;
                     case 'Overdue':
                         overdueTrainings++;
-                        break;
-                    case 'Awaiting Approval':
-                        awaitingApprovalTrainings++;
-                        break;
-                    case 'Rejected':
-                        rejectedTrainings++;
                         break;
                     default:
                         notStartedTrainings++;
@@ -1145,7 +1130,6 @@ getEmployeeTrainingDashboard: async function (req, res) {
                     startDate: training.setStartDate,
                     endDate: training.setEndDate,
                     isOverdue: displayStatus === 'Overdue',
-                    isApproved: training.isApproved
                 };
             });
 
@@ -1158,11 +1142,7 @@ getEmployeeTrainingDashboard: async function (req, res) {
                 overallStatus = 'Behind Schedule';
             } else if (completedTrainings === totalTrainings && totalTrainings > 0) {
                 overallStatus = 'All Complete';
-            } else if (awaitingApprovalTrainings > 0) {
-                overallStatus = 'Pending Approval';
-            } else if (rejectedTrainings > 0) {
-                overallStatus = 'Has Rejections';
-            }
+            } 
 
             return {
                 userId: employee.userId,
@@ -1181,17 +1161,13 @@ getEmployeeTrainingDashboard: async function (req, res) {
                 inProgressTrainings: inProgressTrainings,
                 notStartedTrainings: notStartedTrainings,
                 overdueTrainings: overdueTrainings,
-                awaitingApprovalTrainings: awaitingApprovalTrainings,
-                rejectedTrainings: rejectedTrainings,
-                
+             
                 // Detailed training info
                 trainings: trainingDetails,
                 
                 // Flags for filtering
                 hasOverdueTrainings: overdueTrainings > 0,
                 hasCompletedAllTrainings: completedTrainings === totalTrainings && totalTrainings > 0,
-                hasPendingApprovals: awaitingApprovalTrainings > 0,
-                hasRejections: rejectedTrainings > 0
             };
         });
 
@@ -1201,8 +1177,6 @@ getEmployeeTrainingDashboard: async function (req, res) {
             employeesBehindSchedule: employeeDashboardData.filter(emp => emp.overallStatus === 'Behind Schedule').length,
             employeesOnTrack: employeeDashboardData.filter(emp => emp.overallStatus === 'On Track').length,
             employeesAllComplete: employeeDashboardData.filter(emp => emp.overallStatus === 'All Complete').length,
-            employeesWithPendingApprovals: employeeDashboardData.filter(emp => emp.hasPendingApprovals).length,
-            employeesWithRejections: employeeDashboardData.filter(emp => emp.hasRejections).length,
             averageProgress: employeeDashboardData.length > 0 ? 
                 Math.round(employeeDashboardData.reduce((sum, emp) => sum + emp.overallProgress, 0) / employeeDashboardData.length) : 0
         };

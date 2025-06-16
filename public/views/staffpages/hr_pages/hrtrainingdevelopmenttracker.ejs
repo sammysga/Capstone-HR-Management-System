@@ -465,8 +465,6 @@
                                     <option value="Behind Schedule">Behind Schedule</option>
                                     <option value="On Track">On Track</option>
                                     <option value="All Complete">All Complete</option>
-                                    <option value="Pending Approval">Pending Approval</option>
-                                    <option value="Has Rejections">Has Rejections</option>
                                 </select>
                                 
                                 <select class="filter-select" id="departmentFilter">
@@ -683,24 +681,6 @@
                     <div class="summary-card-label">All Complete</div>
                     <div class="summary-card-sublabel">100% finished</div>
                 </div>
-                
-                <div class="summary-card pending">
-                    <div class="summary-card-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="summary-card-number">${dashboardStats.employeesWithPendingApprovals}</div>
-                    <div class="summary-card-label">Pending Approval</div>
-                    <div class="summary-card-sublabel">Awaiting review</div>
-                </div>
-                
-                <div class="summary-card rejected">
-                    <div class="summary-card-icon">
-                        <i class="fas fa-times-circle"></i>
-                    </div>
-                    <div class="summary-card-number">${dashboardStats.employeesWithRejections}</div>
-                    <div class="summary-card-label">Has Rejections</div>
-                    <div class="summary-card-sublabel">Need follow-up</div>
-                </div>
             `;
             
             summaryContainer.innerHTML = summaryHtml;
@@ -762,9 +742,6 @@
                             <button class="action-btn primary" onclick="showEmployeeTrainingDetails('${employee.userId}')">
                                 <i class="fas fa-eye"></i> View Details
                             </button>
-                            <button class="action-btn" onclick="sendReminderToEmployee('${employee.userId}')">
-                                <i class="fas fa-bell"></i> Send Reminder
-                            </button>
                             <button class="action-btn" onclick="assignNewTraining('${employee.userId}')">
                                 <i class="fas fa-plus"></i> Assign Training
                             </button>
@@ -808,6 +785,13 @@
             // Initialize status filter
             const statusFilter = document.getElementById('statusFilter');
             if (statusFilter) {
+                statusFilter.innerHTML = `
+                    <option value="">All Statuses</option>
+                    <option value="Behind Schedule">Behind Schedule</option>
+                    <option value="On Track">On Track</option>
+                    <option value="All Complete">All Complete</option>
+                `;
+                
                 statusFilter.addEventListener('change', function() {
                     applyFilters();
                 });
@@ -1023,13 +1007,6 @@
             }
         }
 
-        // Send Reminder to Employee
-        function sendReminderToEmployee(userId) {
-            // This would integrate with your notification system
-            showNotification('Reminder sent to employee!', 'success');
-            console.log('Sending reminder to employee:', userId);
-        }
-
         // Assign New Training to Employee
         function assignNewTraining(userId) {
             // Close any open modals
@@ -1039,7 +1016,6 @@
             setTimeout(() => {
                 openReassignTrainingModal();
                 // Pre-select this employee when modal opens
-                // You could add logic here to pre-filter to this specific employee
             }, 100);
         }
 
@@ -2535,7 +2511,6 @@
         window.clearAllFilters = clearAllFilters;
         window.showEmployeeTrainingDetails = showEmployeeTrainingDetails;
         window.closeEmployeeDetailsModal = closeEmployeeDetailsModal;
-        window.sendReminderToEmployee = sendReminderToEmployee;
         window.assignNewTraining = assignNewTraining;
 
         // Toggle active class for sidebar links
