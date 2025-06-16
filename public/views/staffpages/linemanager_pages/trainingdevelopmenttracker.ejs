@@ -1899,25 +1899,55 @@ s
             <h3>Employee Training Assignments</h3>
         </div>
         
-        <div class="training-budget-status">
+<div class="training-budget-status">
     <div class="budget-stat-card">
         <div class="budget-stat-icon">
             <i class="fas fa-coins"></i>
         </div>
         <div class="budget-stat-content">
-           <div class="budget-stat-number" id="trainingBudgetAmount">
-    <% if (user && user.departmentId && trainingBudgets[user.departmentId]) { %>
-        ₱<%= trainingBudgets[user.departmentId].amount.toLocaleString() %>
-    <% } else { %>
-        ₱0
-    <% } %>
-</div>
+            <div class="budget-stat-number" id="trainingBudgetAmount">
+                <% 
+                // Debug logging
+                console.log('=== BUDGET DEBUG ===');
+                console.log('User object:', typeof user, user ? Object.keys(user) : 'null');
+                console.log('User departmentId:', user?.departmentId);
+                console.log('currentUserDepartmentId:', typeof currentUserDepartmentId !== 'undefined' ? currentUserDepartmentId : 'undefined');
+                console.log('trainingBudgets keys:', typeof trainingBudgets !== 'undefined' ? Object.keys(trainingBudgets) : 'undefined');
+                console.log('trainingBudgets:', typeof trainingBudgets !== 'undefined' ? trainingBudgets : 'undefined');
+                
+                let budgetAmount = 0;
+                let departmentId = null;
+                
+                // Try multiple ways to get the department ID
+                if (user && user.departmentId) {
+                    departmentId = user.departmentId;
+                    console.log('Using user.departmentId:', departmentId);
+                } else if (typeof currentUserDepartmentId !== 'undefined' && currentUserDepartmentId) {
+                    departmentId = currentUserDepartmentId;
+                    console.log('Using currentUserDepartmentId:', departmentId);
+                }
+                
+                // Get budget amount
+                if (departmentId && typeof trainingBudgets !== 'undefined' && trainingBudgets[departmentId]) {
+                    budgetAmount = trainingBudgets[departmentId].amount || 0;
+                    console.log('Found budget:', budgetAmount, 'for department:', departmentId);
+                } else {
+                    console.log('No budget found. Department ID:', departmentId);
+                    if (typeof trainingBudgets !== 'undefined') {
+                        console.log('Available budget departments:', Object.keys(trainingBudgets));
+                    }
+                }
+                
+                console.log('Final budget amount:', budgetAmount);
+                %>
+                
+                ₱<%= budgetAmount.toLocaleString() %>
+            </div>
             <div class="budget-stat-label">Budget for Training</div>
-            <div class="budget-stat-period">Annual Department Budget</div>
         </div>
     </div>
 </div>
-        
+
 <!-- Training Request Statistics with Database Data -->
 <div class="training-request-stats">
     <div class="request-stat-card pending">

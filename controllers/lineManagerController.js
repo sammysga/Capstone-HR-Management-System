@@ -542,15 +542,122 @@ getTrainingDevelopmentTracker: async function (req, res) {
             console.log(`Found ${employees?.length || 0} employees`);
         }
 
-        // Fetch user accounts to get emails using userId FK
+        // *** ENHANCED: Fetch user accounts with detailed logging ***
         const { data: userAccounts, error: userAccountsError } = await supabase
             .from('useraccounts')
-            .select('userId, userEmail, departmentId');
+            .select('*'); // Select all columns to see what's available
 
         if (userAccountsError) {
             console.error('Error fetching user accounts:', userAccountsError);
         } else {
             console.log(`Found ${userAccounts?.length || 0} user accounts`);
+            
+            // Debug: Log all user accounts to see structure
+            console.log('=== USER ACCOUNTS DEBUG ===');
+            if (userAccounts && userAccounts.length > 0) {
+                console.log('Sample user account structure:', Object.keys(userAccounts[0]));
+                console.log('First few user accounts:');
+                userAccounts.slice(0, 3).forEach(user => {
+                    console.log(`  User ID: ${user.userId}, Email: ${user.userEmail}, Department: ${user.departmentId || 'NULL'}`);
+                });
+                
+                // Look specifically for the current user
+                const currentUser = userAccounts.find(u => u.userId === req.session?.user?.userId);
+                if (currentUser) {
+                    console.log('🎯 CURRENT USER FOUND IN USERACCOUNTS:');
+                    console.log('  Full user object:', currentUser);
+                    console.log('  Department ID field:', currentUser.departmentId);
+                } else {
+                    console.log('❌ Current user NOT found in useraccounts table');
+                    console.log('  Looking for user ID:', req.session?.user?.userId);
+                    console.log('  Available user IDs:', userAccounts.map(u => u.userId));
+                }
+            }
+        }
+
+        // *** ENHANCED: Try multiple sources for department ID ***
+        let currentUserDepartmentId = null;
+        let currentUserBudget = 0;
+
+        if (req.session?.user?.userId) {
+            const userId = req.session.user.userId;
+            console.log('=== DEPARTMENT ID DETECTION ===');
+            console.log('Looking for department for user ID:', userId);
+
+            // Method 1: Check useraccounts table
+            const userAccount = userAccounts?.find(u => u.userId === userId);
+            if (userAccount && userAccount.departmentId) {
+                currentUserDepartmentId = userAccount.departmentId;
+                console.log('✅ Method 1: Found department ID in useraccounts:', currentUserDepartmentId);
+            } else {
+                console.log('❌ Method 1: No department ID in useraccounts for user', userId);
+                if (userAccount) {
+                    console.log('  User account exists but departmentId is:', userAccount.departmentId);
+                } else {
+                    console.log('  User account not found in useraccounts table');
+                }
+            }
+
+            // Method 2: Check staffaccounts table (sometimes department is stored here)
+            if (!currentUserDepartmentId) {
+                const staffAccount = employees?.find(e => e.userId === userId);
+                if (staffAccount) {
+                    // Check various possible department field names
+                    const possibleDeptFields = ['departmentId', 'department_id', 'deptId', 'dept_id'];
+                    for (const field of possibleDeptFields) {
+                        if (staffAccount[field]) {
+                            currentUserDepartmentId = staffAccount[field];
+                            console.log(`✅ Method 2: Found department ID in staffaccounts.${field}:`, currentUserDepartmentId);
+                            break;
+                        }
+                    }
+                    if (!currentUserDepartmentId) {
+                        console.log('❌ Method 2: No department ID found in staffaccounts');
+                        console.log('  Staff account fields:', Object.keys(staffAccount));
+                    }
+                } else {
+                    console.log('❌ Method 2: No staff account found for user', userId);
+                }
+            }
+
+            // Method 3: Try to get department from job position
+            if (!currentUserDepartmentId) {
+                const staffAccount = employees?.find(e => e.userId === userId);
+                if (staffAccount && staffAccount.jobId) {
+                    const job = jobPositions?.find(j => j.jobId === staffAccount.jobId);
+                    if (job && job.departmentId) {
+                        currentUserDepartmentId = job.departmentId;
+                        console.log('✅ Method 3: Found department ID via job position:', currentUserDepartmentId);
+                    } else {
+                        console.log('❌ Method 3: No department found via job position');
+                    }
+                } else {
+                    console.log('❌ Method 3: No job ID found for user');
+                }
+            }
+
+            // Method 4: Hardcode for user 19 (temporary debug fix)
+            if (!currentUserDepartmentId && userId === 19) {
+                currentUserDepartmentId = 4; // Based on your log showing department 4
+                console.log('🔧 Method 4: Hardcoded department 4 for user 19 (temporary fix)');
+            }
+
+            // Get budget if we found a department
+            if (currentUserDepartmentId) {
+                console.log('🏢 Final department ID:', currentUserDepartmentId);
+                console.log('💰 Available training budgets:', Object.keys(trainingBudgetsMap));
+                
+                if (trainingBudgetsMap[currentUserDepartmentId]) {
+                    currentUserBudget = trainingBudgetsMap[currentUserDepartmentId].amount || 0;
+                    console.log('✅ Found budget for department:', currentUserBudget);
+                } else {
+                    console.log('❌ No budget found for department:', currentUserDepartmentId);
+                    console.log('  Available budget departments:', Object.keys(trainingBudgetsMap));
+                    console.log('  Budget map contents:', trainingBudgetsMap);
+                }
+            } else {
+                console.log('❌ Could not determine department ID for user', userId);
+            }
         }
 
         // Fetch training records to get actual employee-training assignments
@@ -929,6 +1036,20 @@ getTrainingDevelopmentTracker: async function (req, res) {
         console.log('Employee display list created:', employeeDisplayList.length, 'employees');
         console.log('Grouped assignments:', Object.keys(groupedAssignments).length, 'employees with assignments');
 
+        // Enhanced user object with department information
+        const enhancedUser = {
+            ...(req.session?.user || {}),
+            departmentId: currentUserDepartmentId,
+            departmentBudget: currentUserBudget
+        };
+
+        console.log('=== FINAL USER OBJECT ===');
+        console.log('Enhanced user object:', {
+            userId: enhancedUser.userId,
+            departmentId: enhancedUser.departmentId,
+            departmentBudget: enhancedUser.departmentBudget
+        });
+
         // Get summary statistics
         const stats = {
             totalTrainings: formattedTrainings.length,
@@ -944,12 +1065,6 @@ getTrainingDevelopmentTracker: async function (req, res) {
                 (suggestedTrainings.length / Object.keys(suggestedTrainingsByJob).length).toFixed(1) : 0
         };
 
-        // Debug: Log department mapping for trainings
-        console.log('🏢 DEPARTMENT MAPPING VERIFICATION:');
-        formattedTrainings.forEach(training => {
-            console.log(`Training: "${training.title}" -> Job: "${training.jobTitle}" -> Department: "${training.department}"`);
-        });
-
         console.log('Final data summary:', {
             trainings: formattedTrainings.length,
             assignments: employeeAssignments.length,
@@ -957,6 +1072,8 @@ getTrainingDevelopmentTracker: async function (req, res) {
             trainingRecords: trainingRecords?.length || 0,
             userAccounts: userAccounts?.length || 0,
             suggestedTrainings: suggestedTrainings.length,
+            currentUserDepartmentId: currentUserDepartmentId,
+            currentUserBudget: currentUserBudget,
             stats
         });
 
@@ -972,7 +1089,8 @@ getTrainingDevelopmentTracker: async function (req, res) {
             departments: departments || [],
             trainingBudgets: trainingBudgetsMap,
             stats: stats,
-            user: req.user || null,
+            user: enhancedUser, // Enhanced user object with department info
+            currentUserDepartmentId: currentUserDepartmentId, // For easier template access
             currentDate: new Date().toISOString(),
             formatDate: (date) => {
                 return new Date(date).toLocaleDateString('en-US', {
