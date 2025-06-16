@@ -580,24 +580,32 @@ getTrainingDevelopmentTracker: async function (req, res) {
             return acc;
         }, {});
 
-        const employeesMap = (employees || []).reduce((acc, employee) => {
-            const empId = employee.staffId || employee.staff_id || employee.userId || employee.user_id || employee.id;
-            const firstName = employee.staffFName || employee.staff_fname || employee.first_name || employee.firstName || 'Unknown';
-            const lastName = employee.staffLName || employee.staff_lname || employee.last_name || employee.lastName || 'User';
-            const email = employee.staffEmail || employee.staff_email || employee.email || 'no-email@company.com';
-            const jobId = employee.jobId || employee.job_id;
-            
-            acc[empId] = {
-                ...employee,
-                id: empId,
-                firstName: firstName,
-                lastName: lastName,
-                fullName: `${firstName} ${lastName}`,
-                email: email,
-                jobId: jobId
-            };
-            return acc;
-        }, {});
+        // Fix the employeesMap creation to use userId as the key
+const employeesMap = (employees || []).reduce((acc, employee) => {
+    // Use userId as the primary key for mapping
+    const userId = employee.userId || employee.user_id;
+    const staffId = employee.staffId || employee.staff_id || employee.id;
+    const firstName = employee.staffFName || employee.staff_fname || employee.first_name || employee.firstName || 'Unknown';
+    const lastName = employee.staffLName || employee.staff_lname || employee.last_name || employee.lastName || 'User';
+    const email = employee.staffEmail || employee.staff_email || employee.email || 'no-email@company.com';
+    const jobId = employee.jobId || employee.job_id;
+    
+    // Key by userId instead of staffId for training_records lookup
+    if (userId) {
+        acc[userId] = {
+            ...employee,
+            staffId: staffId,
+            userId: userId,
+            firstName: firstName,
+            lastName: lastName,
+            fullName: `${firstName} ${lastName}`,
+            email: email,
+            jobId: jobId
+        };
+    }
+    
+    return acc;
+}, {});
 
         // NEW: Create user accounts lookup map for emails
         const userAccountsMap = (userAccounts || []).reduce((acc, user) => {
