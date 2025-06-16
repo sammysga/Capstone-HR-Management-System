@@ -4845,23 +4845,55 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Assign New Training functionality would be implemented here.');
         }
 
-        function visitPerformanceTracker() {
-            // Get current employee name for context
-            const employeeName = document.getElementById('employeeName').textContent;
-            
-            // This would typically navigate to the performance tracker page
-            // You can customize this URL based on your routing structure
-            const performanceTrackerUrl = '/performance-tracker'; // or '/employee/performance-tracker'
-            
-            // Option 1: Navigate to performance tracker
-            window.location.href = performanceTrackerUrl;
-            
-            // Option 2: Open in new tab (uncomment if preferred)
-            // window.open(performanceTrackerUrl, '_blank');
-            
-            // Option 3: For demonstration - show alert (remove in production)
-            // alert(`Navigating to Performance Tracker for ${employeeName}...`);
-        }
+function visitPerformanceTracker() {
+    console.log('=== visitPerformanceTracker() triggered ===');
+    
+    // Get the modal element
+    const modal = document.getElementById('employeeTrainingModal');
+    if (!modal) {
+        console.error('❌ Error: Could not find employee training modal');
+        alert('System error: Modal not found. Please refresh the page.');
+        return;
+    }
+    
+    // Get the employee name element (which we know exists from openEmployeeModal)
+    const employeeNameElement = document.getElementById('employeeName');
+    const employeeName = employeeNameElement?.textContent || 'Unknown Employee';
+    
+    // Get the employee ID - we'll use the same method as openEmployeeModal
+    const employeeAssignments = window.employeeAssignmentsData?.filter(assignment => 
+        assignment.employeeName === employeeName
+    );
+    
+    if (!employeeAssignments || employeeAssignments.length === 0) {
+        console.error('❌ Error: Could not find assignments for employee:', employeeName);
+        console.log('Available employees:', 
+            [...new Set(window.employeeAssignmentsData.map(a => a.employeeName))]);
+        alert(`Error: Could not find data for ${employeeName}`);
+        return;
+    }
+    
+    // Use the same ID from the assignments
+    const userId = employeeAssignments[0].employeeId;
+    console.log('📌 Retrieved employee ID:', userId, 'for', employeeName);
+    
+    // Construct and validate URL
+    if (!userId || isNaN(userId)) {
+        console.error('❌ Invalid employee ID:', userId);
+        alert('System error: Invalid employee ID');
+        return;
+    }
+    
+    const performanceTrackerUrl = `/linemanager/records-performance-tracker/${userId}`;
+    console.log('🔗 Generated URL:', performanceTrackerUrl);
+    
+    // Navigate to performance tracker
+    console.log(`🚀 Redirecting to performance tracker for ${employeeName} (ID: ${userId})`);
+    window.location.href = performanceTrackerUrl;
+    
+    // Alternative: Open in new tab
+    // window.open(performanceTrackerUrl, '_blank');
+}
 
         // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
