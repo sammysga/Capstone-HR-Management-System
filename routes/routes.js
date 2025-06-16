@@ -408,7 +408,7 @@ router.get('/employee/job/:jobId/skills', employeeController.getJobSkills);
 router.get('/employee/user/objectives', employeeController.getUserObjectives);
 // GET /api/trainings/:trainingId/details - Get training skills and objectives
 router.get('/employee/trainings/:trainingId/details', employeeController.getTrainingSkillsAndObjectives);
-// POST /api/training-requests - Create new training request
+// POST /api/training-requests - Add new training request
 router.get('/employee/training-progress', employeeController.getTrainingProgress);
 router.get('/employee/all-courses', employeeController.getAllCourses);
 router.get('/employee/training/:trainingRecordId/certificates', employeeController.getCertificatesForTraining);

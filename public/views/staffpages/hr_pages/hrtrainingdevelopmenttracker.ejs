@@ -43,7 +43,7 @@
             <p>View and manage all required trainings for employees.</p>
         </div>
 
-        <!-- CREATE NEW TRAINING MODAL -->
+        <!-- ADD NEW TRAINING MODAL -->
         <div class="modal-overlay" id="addTrainingModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -214,7 +214,7 @@
 
                     <div class="modal-actions">
                         <button type="button" class="btn-secondary" onclick="closeAddTrainingModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">Create Training Course</button>
+                        <button type="submit" class="btn-primary">Add New HR Training Course</button>
                     </div>
                 </form>
             </div>
@@ -341,7 +341,7 @@
                             
                             <button class="add-training-btn" onclick="addNewTraining()">
                                 <i class="fas fa-plus"></i>
-                                Create New Training
+                                Add New HR Training
                             </button>
                             
                             <button class="reassign-training-btn" onclick="openReassignTrainingModal()">
@@ -427,7 +427,7 @@
                                 <div class="no-trainings-message" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #64748b;">
                                     <i class="fas fa-graduation-cap" style="font-size: 48px; margin-bottom: 15px; color: #cbd5e1;"></i>
                                     <h3 style="margin: 0 0 10px 0; color: #475569;">No Required Training Courses Available</h3>
-                                    <p style="margin: 0;">Click "Create New Training" to create your first required training course.</p>
+                                    <p style="margin: 0;">Click "Add New Training" to create your first required training course.</p>
                                 </div>
                             <% } %>
                         </div>
