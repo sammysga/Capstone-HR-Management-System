@@ -727,8 +727,8 @@ res.render('applicant_pages/chatbot', {
         }
     },
 
-
-    handleChatbotMessage: async function (req, res) {
+// Updated handleChatbotMessage function - Replace your existing function with this
+handleChatbotMessage: async function (req, res) {
     try {
         console.log('✅ [Chatbot] Start processing chatbot message');
         const today = new Date().toISOString().split('T')[0]; // Get today's date in "YYYY-MM-DD" format
@@ -783,8 +783,9 @@ res.render('applicant_pages/chatbot', {
         console.log(`✅ [Chatbot] UserID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
 
         // Handle status_check command first (before saving to chat history)
+        // UPDATED SECTION: Don't save status_check to chat history, use new reupload system
         if (userMessage === 'status_check') {
-            console.log('📋 [Chatbot] Status check requested');
+            console.log('📋 [Chatbot] Status check requested - NOT saving to chat history');
             
             // Check for document reupload requests
             const { data: assessmentData, error: assessmentError } = await supabase
@@ -804,12 +805,12 @@ HR Instructions: ${hrRemarks}
             
 Please use the file upload feature in the chat to submit the requested documents.`,
                     buttons: [
-                        { text: 'Upload Document', type: 'file_upload' }
+                        { text: 'Upload Document', type: 'file_upload_reupload' } // CHANGED: Use new reupload type
                     ]
                 };
                 
                 // Set the applicant stage to expect file upload
-                req.session.applicantStage = 'file_upload';
+                req.session.applicantStage = 'file_upload_reupload'; // CHANGED: New stage for reuploads
                 req.session.awaitingFileUpload = 'reupload';
                 
                 // Save bot response (but NOT the status_check user message)
@@ -1580,18 +1581,42 @@ getInitialScreeningQuestions: async function (jobId) {
     }
 },
 
+handleReuploadsFileUpload: async function(req, res) {
+    console.log('📂 [Reupload] Initiating reupload file upload process...');
 
-// Add this to applicantController
-handleInitialFileUpload: async function(req, res) {
     try {
-        console.log('📂 [File Upload] Processing file upload...');
-        
         const userId = req.session.userID;
         if (!userId) {
-            return res.status(401).json({ response: "Unauthorized" });
+            console.error('❌ [Reupload] No user session found.');
+            return res.status(400).json({ response: 'User session not found.' });
+        }
+
+        if (!req.files || !req.files.file) {
+            console.log('❌ [Reupload] No file uploaded.');
+            return res.status(400).json({ response: 'No file uploaded.' });
+        }
+
+        const file = req.files.file;
+        console.log(`📎 [Reupload] File received: ${file.name} (Type: ${file.mimetype}, Size: ${file.size} bytes)`);
+
+        // File validation
+        const allowedTypes = [
+            'application/pdf', 'image/jpeg', 'image/png', 'image/jpg',
+            'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        const maxSize = 5 * 1024 * 1024; // 5 MB
+        
+        if (!allowedTypes.includes(file.mimetype)) {
+            console.log('❌ [Reupload] Invalid file type.');
+            return res.status(400).json({ response: 'Invalid file type. Please upload PDF, DOC, DOCX, or image files.' });
         }
         
-        // Check applicant status to determine if this is a reupload
+        if (file.size > maxSize) {
+            console.log('❌ [Reupload] File size exceeds the 5 MB limit.');
+            return res.status(400).json({ response: 'File size exceeds the 5 MB limit.' });
+        }
+
+        // Check if this is actually a reupload request
         const { data: applicantData, error: applicantError } = await supabase
             .from('applicantaccounts')
             .select('applicantStatus')
@@ -1599,26 +1624,186 @@ handleInitialFileUpload: async function(req, res) {
             .single();
         
         if (applicantError || !applicantData) {
-            return res.status(400).json({ response: "Error checking applicant status" });
+            console.error('❌ [Reupload] Error checking applicant status:', applicantError);
+            return res.status(400).json({ response: 'Error checking applicant status' });
         }
         
         const isReuploadRequest = applicantData.applicantStatus.includes('Requested for Reupload');
-        console.log(`📂 [File Upload] Is reupload request: ${isReuploadRequest}`);
+        if (!isReuploadRequest) {
+            console.log('❌ [Reupload] Not a valid reupload request.');
+            return res.status(400).json({ response: 'This is not a valid reupload request.' });
+        }
+
+        // Get HR verification to understand what was requested
+        const { data: assessmentData, error: assessmentError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select('hrVerification')
+            .eq('userId', userId)
+            .single();
         
-        if (isReuploadRequest) {
-            // Handle reupload scenario
-            return await this.handleReuploadScenario(req, res, userId);
-        } else {
-            // Handle normal upload scenario (your existing logic)
-            return await this.handleNormalUpload(req, res, userId);
+        if (assessmentError) {
+            console.error('❌ [Reupload] Error getting assessment data:', assessmentError);
+            return res.status(400).json({ response: 'Error retrieving reupload instructions' });
         }
         
+        const hrRemarks = assessmentData.hrVerification || '';
+        console.log('📂 [Reupload] HR Remarks:', hrRemarks);
+
+        // Generate unique file name
+        const uniqueName = `${Date.now()}-${file.name}`;
+        const filePath = path.join(__dirname, '../uploads', uniqueName);
+
+        // Ensure uploads directory exists
+        if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
+            fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
+        }
+
+        // Save file locally first
+        await file.mv(filePath);
+        console.log('📂 [Reupload] File successfully saved locally. Uploading to Supabase...');
+
+        // Upload to Supabase
+        const { error: uploadError } = await supabase.storage
+            .from('uploads')
+            .upload(uniqueName, fs.readFileSync(filePath), {
+                contentType: file.mimetype,
+                cacheControl: '3600',
+                upsert: false,
+            });
+
+        // Clean up local file
+        fs.unlinkSync(filePath);
+        console.log('📂 [Reupload] Local file deleted after upload to Supabase.');
+
+        if (uploadError) {
+            console.error('❌ [Reupload] Error uploading file to Supabase:', uploadError);
+            return res.status(500).json({ response: 'Error uploading file to Supabase.' });
+        }
+
+        const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
+        console.log(`✅ [Reupload] File uploaded successfully: ${fileUrl}`);
+
+        // Insert file metadata into database
+        const { error: insertError } = await supabase
+            .from('user_files')
+            .insert([{
+                userId: userId,
+                file_name: uniqueName,
+                file_url: fileUrl,
+                uploaded_at: new Date(),
+                file_size: file.size,
+            }]);
+
+        if (insertError) {
+            console.error('❌ [Reupload] Error inserting file metadata:', insertError);
+            return res.status(500).json({ response: 'Error inserting file metadata into database.' });
+        }
+
+        console.log('✅ [Reupload] File metadata successfully inserted into database.');
+
+        // Determine which field to update based on HR remarks
+        let updateField = {};
+        let successMessage = '';
+        
+        const remarksLower = hrRemarks.toLowerCase();
+        
+        if (remarksLower.includes('degree')) {
+            updateField = { degree_url: fileUrl };
+            successMessage = '✅ Degree document uploaded successfully.';
+            console.log('📂 [Reupload] Updating degree_url field');
+        } else if (remarksLower.includes('certification') || remarksLower.includes('certificate') || remarksLower.includes('cert')) {
+            updateField = { cert_url: fileUrl };
+            successMessage = '✅ Certification document uploaded successfully.';
+            console.log('📂 [Reupload] Updating cert_url field');
+        } else if (remarksLower.includes('resume')) {
+            updateField = { resume_url: fileUrl };
+            successMessage = '✅ Resume uploaded successfully.';
+            console.log('📂 [Reupload] Updating resume_url field');
+        } else if (remarksLower.includes('additional') || remarksLower.includes('work permit') || remarksLower.includes('visa') || remarksLower.includes('addtl')) {
+            updateField = { addtlfile_url: fileUrl };
+            successMessage = '✅ Additional document uploaded successfully.';
+            console.log('📂 [Reupload] Updating addtlfile_url field');
+        } else {
+            // Default to additional document if unclear
+            updateField = { addtlfile_url: fileUrl };
+            successMessage = '✅ Document uploaded successfully.';
+            console.log('📂 [Reupload] Defaulting to addtlfile_url field');
+        }
+        
+        console.log('📂 [Reupload] Updating field:', updateField);
+        
+        // Update the file URL in the assessment table
+        const { error: updateError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .update(updateField)
+            .eq('userId', userId);
+        
+        if (updateError) {
+            console.error('❌ [Reupload] Error updating document:', updateError);
+            return res.status(400).json({ response: 'Error updating document in database' });
+        }
+        
+        // Update applicant status back to normal P1 awaiting (so HR can make final decision)
+        const { error: statusUpdateError } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: "P1 - Awaiting for HR Action" })
+            .eq('userId', userId);
+        
+        if (statusUpdateError) {
+            console.error('❌ [Reupload] Error updating status:', statusUpdateError);
+        } else {
+            console.log('✅ [Reupload] Applicant status updated back to P1 - Awaiting for HR Action');
+        }
+        
+        // Clear HR verification since document has been reuploaded
+        await supabase
+            .from('applicant_initialscreening_assessment')
+            .update({ hrVerification: null })
+            .eq('userId', userId);
+        
+        // Final completion message
+        const finalMessage = "Thank you for uploading your document. Your application has been submitted and is now awaiting review by our HR team. You will be notified once a decision has been made.";
+        
+        // Save both messages to chat history
+        const timestamp = new Date().toISOString();
+        await supabase
+            .from('chatbot_history')
+            .insert([
+                {
+                    userId,
+                    message: JSON.stringify({ text: successMessage }),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: "P1 - Awaiting for HR Action"
+                },
+                {
+                    userId,
+                    message: JSON.stringify({ text: finalMessage }),
+                    sender: 'bot',
+                    timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
+                    applicantStage: "P1 - Awaiting for HR Action"
+                }
+            ]);
+        
+        console.log('✅ [Reupload] Process completed successfully');
+        
+        return res.status(200).json({
+            response: {
+                text: successMessage,
+                nextMessage: {
+                    text: finalMessage
+                },
+                applicantStage: "P1 - Awaiting for HR Action"
+            }
+        });
+        
     } catch (error) {
-        console.error('❌ [File Upload] Error:', error);
-        res.status(500).json({ response: "Error processing file upload" });
+        console.error('❌ [Reupload] Unexpected error:', error);
+        return res.status(500).json({ response: 'An unexpected error occurred during reupload.' });
     }
 },
-handleReuploadScenario: async function(req, res, userId) {
+
+handleReuploadScenario: async function(req, res, userId, file) {
     try {
         console.log('📂 [Reupload] Handling reupload scenario for userId:', userId);
         
@@ -1637,11 +1822,11 @@ handleReuploadScenario: async function(req, res, userId) {
         const hrRemarks = assessmentData.hrVerification || '';
         console.log('📂 [Reupload] HR Remarks:', hrRemarks);
         
-        // Upload the file using your existing fileUpload function
-        const fileUrl = await fileUpload(req, 'reupload');
+        // Upload the file to Supabase storage
+        const fileUrl = await this.uploadFileToSupabase(file, 'reupload');
         
         if (!fileUrl) {
-            return res.status(400).json({ response: "Error uploading file" });
+            return res.status(400).json({ response: "Error uploading file to storage" });
         }
         
         console.log('✅ [Reupload] File uploaded successfully:', fileUrl);
@@ -1655,19 +1840,24 @@ handleReuploadScenario: async function(req, res, userId) {
         if (remarksLower.includes('degree')) {
             updateField = { degree_url: fileUrl };
             successMessage = '✅ Degree document uploaded successfully.';
-        } else if (remarksLower.includes('certification') || remarksLower.includes('certificate')) {
+            console.log('📂 [Reupload] Updating degree_url field');
+        } else if (remarksLower.includes('certification') || remarksLower.includes('certificate') || remarksLower.includes('cert')) {
             updateField = { cert_url: fileUrl };
             successMessage = '✅ Certification document uploaded successfully.';
+            console.log('📂 [Reupload] Updating cert_url field');
         } else if (remarksLower.includes('resume')) {
             updateField = { resume_url: fileUrl };
             successMessage = '✅ Resume uploaded successfully.';
-        } else if (remarksLower.includes('additional') || remarksLower.includes('work permit') || remarksLower.includes('visa')) {
+            console.log('📂 [Reupload] Updating resume_url field');
+        } else if (remarksLower.includes('additional') || remarksLower.includes('work permit') || remarksLower.includes('visa') || remarksLower.includes('addtl')) {
             updateField = { addtlfile_url: fileUrl };
             successMessage = '✅ Additional document uploaded successfully.';
+            console.log('📂 [Reupload] Updating addtlfile_url field');
         } else {
             // Default to additional document if unclear
             updateField = { addtlfile_url: fileUrl };
             successMessage = '✅ Document uploaded successfully.';
+            console.log('📂 [Reupload] Defaulting to addtlfile_url field');
         }
         
         console.log('📂 [Reupload] Updating field:', updateField);
@@ -1683,6 +1873,9 @@ handleReuploadScenario: async function(req, res, userId) {
             return res.status(400).json({ response: "Error updating document in database" });
         }
         
+        // Also save to user_files table for tracking
+        await this.saveFileMetadata(userId, file.name, fileUrl, file.size);
+        
         // Update applicant status back to normal P1 awaiting (so HR can make final decision)
         const { error: statusUpdateError } = await supabase
             .from('applicantaccounts')
@@ -1693,30 +1886,16 @@ handleReuploadScenario: async function(req, res, userId) {
             console.error('❌ [Reupload] Error updating status:', statusUpdateError);
         }
         
+        // Clear HR verification since document has been reuploaded
+        await supabase
+            .from('applicant_initialscreening_assessment')
+            .update({ hrVerification: null })
+            .eq('userId', userId);
+        
         // Final completion message
         const finalMessage = "Thank you for uploading your document. Your application has been submitted and is now awaiting review by our HR team. You will be notified once a decision has been made.";
         
         console.log('✅ [Reupload] Process completed successfully');
-        
-        // Save both messages to chat history
-        await supabase
-            .from('chatbot_history')
-            .insert([
-                {
-                    userId,
-                    message: JSON.stringify({ text: successMessage }),
-                    sender: 'bot',
-                    timestamp: new Date().toISOString(),
-                    applicantStage: "P1 - Awaiting for HR Action"
-                },
-                {
-                    userId,
-                    message: JSON.stringify({ text: finalMessage }),
-                    sender: 'bot',
-                    timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
-                    applicantStage: "P1 - Awaiting for HR Action"
-                }
-            ]);
         
         return res.status(200).json({
             response: {
@@ -1734,59 +1913,133 @@ handleReuploadScenario: async function(req, res, userId) {
     }
 },
 
-handleNormalUpload: async function(req, res, userId) {
-    // Put your existing file upload logic here for normal resume upload
+handleNormalUpload: async function(req, res, userId, file) {
     try {
         console.log('📂 [Normal Upload] Handling normal upload scenario for userId:', userId);
         
-        const fileUrl = await fileUpload(req, 'resume');
+        // Check what stage the user is in
+        const awaitingFileUpload = req.session.awaitingFileUpload;
+        console.log('📂 [Normal Upload] Awaiting file upload type:', awaitingFileUpload);
         
-        if (fileUrl) {
-            console.log(`✅ [Normal Upload] Resume Uploaded: ${fileUrl}`);
-            req.session.resumeUrl = fileUrl;
+        // Upload the file to Supabase storage
+        const fileUrl = await this.uploadFileToSupabase(file, awaitingFileUpload || 'resume');
+        
+        if (!fileUrl) {
+            return res.status(400).json({ response: "Error uploading file to storage" });
+        }
+        
+        console.log(`✅ [Normal Upload] File uploaded: ${fileUrl}`);
+        
+        // Save to user_files table
+        await this.saveFileMetadata(userId, file.name, fileUrl, file.size);
+        
+        let updateField = {};
+        let successMessage = '';
+        
+        // Determine which field to update based on the upload type
+        if (awaitingFileUpload === 'degree') {
+            updateField = { degree_url: fileUrl };
+            successMessage = '✅ Degree uploaded successfully. Let\'s continue.';
+        } else if (awaitingFileUpload === 'certification') {
+            updateField = { cert_url: fileUrl };
+            successMessage = '✅ Certification uploaded successfully. Let\'s continue.';
+        } else {
+            // Default to resume
+            updateField = { resume_url: fileUrl };
+            successMessage = '✅ Resume uploaded successfully. Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the HR department, and we will notify you once a decision has been made.';
             
-            // Update the resume URL in the assessment table
+            // Update applicant status for resume upload
             await supabase
-                .from('applicant_initialscreening_assessment')
-                .update({ resume_url: fileUrl })
-                .eq('userId', userId);
-            
-            // Update applicant status to 'P1 - Awaiting for HR Action'
-            const { data: updateStatusData, error: updateStatusError } = await supabase
                 .from('applicantaccounts')
                 .update({ applicantStatus: 'P1 - Awaiting for HR Action' })
                 .eq('userId', userId);
-            
-            if (updateStatusError) {
-                console.error('❌ [Normal Upload] Error updating applicant status:', updateStatusError);
-                return res.status(400).json({ 
-                    response: { text: "Your resume was uploaded, but there was an error updating your application status. Please contact support." }
-                });
-            } else {
-                console.log('✅ [Normal Upload] Applicant status updated to P1 - Awaiting for HR Action');
-                
-                // Update session applicant stage
-                req.session.applicantStage = 'P1 - Awaiting for HR Action';
-                
-                // Reset file upload flag
-                delete req.session.awaitingFileUpload;
-                
-                return res.status(200).json({
-                    response: { 
-                        text: "Thank you for uploading your resume. Your application has been submitted and is now awaiting review by our HR team. You will be notified once a decision has been made.",
-                        applicantStage: "P1 - Awaiting for HR Action"
-                    }
-                });
-            }
-        } else {
-            return res.status(400).json({ 
-                response: { text: "There was an error uploading your resume. Please try again." }
-            });
         }
+        
+        // Update the assessment table
+        const { error: updateError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .update(updateField)
+            .eq('userId', userId);
+        
+        if (updateError) {
+            console.error('❌ [Normal Upload] Error updating assessment:', updateError);
+            return res.status(400).json({ response: "Error updating document in database" });
+        }
+        
+        console.log('✅ [Normal Upload] Process completed successfully');
+        
+        return res.status(200).json({
+            response: {
+                text: successMessage,
+                applicantStage: awaitingFileUpload === 'resume' ? "P1 - Awaiting for HR Action" : req.session.applicantStage
+            }
+        });
         
     } catch (error) {
         console.error('❌ [Normal Upload] Error in handleNormalUpload:', error);
         return res.status(500).json({ response: "Error processing file upload" });
+    }
+},
+
+// Helper function to upload file to Supabase storage
+uploadFileToSupabase: async function(file, uploadType) {
+    try {
+        // Generate unique filename
+        const timestamp = Date.now();
+        const fileExtension = file.name.split('.').pop();
+        const fileName = `${timestamp}-${uploadType}.${fileExtension}`;
+        
+        console.log('📂 [Supabase Upload] Uploading file:', fileName);
+        
+        // Upload to Supabase storage
+        const { data, error } = await supabase.storage
+            .from('uploads')
+            .upload(fileName, file.data, {
+                contentType: file.mimetype,
+                upsert: false
+            });
+        
+        if (error) {
+            console.error('❌ [Supabase Upload] Upload error:', error);
+            return null;
+        }
+        
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+            .from('uploads')
+            .getPublicUrl(fileName);
+        
+        const fileUrl = publicUrlData.publicUrl;
+        console.log('✅ [Supabase Upload] File uploaded successfully:', fileUrl);
+        
+        return fileUrl;
+        
+    } catch (error) {
+        console.error('❌ [Supabase Upload] Error:', error);
+        return null;
+    }
+},
+
+// Helper function to save file metadata
+saveFileMetadata: async function(userId, fileName, fileUrl, fileSize) {
+    try {
+        const { error } = await supabase
+            .from('user_files')
+            .insert([{
+                userId: userId,
+                file_name: fileName,
+                file_url: fileUrl,
+                file_size: fileSize,
+                uploaded_at: new Date().toISOString()
+            }]);
+        
+        if (error) {
+            console.error('❌ [File Metadata] Error saving metadata:', error);
+        } else {
+            console.log('✅ [File Metadata] File metadata saved successfully');
+        }
+    } catch (error) {
+        console.error('❌ [File Metadata] Unexpected error:', error);
     }
 },
 
