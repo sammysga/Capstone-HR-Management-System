@@ -2686,8 +2686,23 @@
                     " onclick="addSelectedTraining()">
                         <i class="fas fa-plus"></i> Add Training
                     </button>
-                </div>
-            </div>
+                <!-- NEW BUTTON FOR MANAGING TRAINING -->
+        <button type="button" id="manageTrainingBtn" style="
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            white-space: nowrap;
+            min-height: 45px;
+        " onclick="window.location.href='/linemanager/training-development-tracker'">
+            <i class="fas fa-tasks"></i> Go to Manage Training & Development
+        </button>
+    </div>
+</div>
 
             <!-- NEW: Selected Trainings Display -->
             <div id="selectedTrainingsContainer" style="margin-top: 20px;">
@@ -3017,39 +3032,64 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Enhanced feedback tabs initialized successfully');
 });
 
-// Function to export all answers (placeholder)
+// ENHANCED: Clear all filters including text search
+function clearAllFilters() {
+    const responderFilter = document.getElementById('responderFilter');
+    const questionFilter = document.getElementById('questionFilter');
+    const textSearchFilter = document.getElementById('textSearchFilter');
+    
+    if (responderFilter) responderFilter.value = 'all';
+    if (questionFilter) questionFilter.value = 'all';
+    if (textSearchFilter) textSearchFilter.value = '';
+    
+    // Apply filters to show all results
+    applyEnhancedFilters();
+    
+    // Show success message
+    showFilterClearMessage();
+}
+
+// ENHANCED: Export function with complete data
 function exportAllAnswers() {
     if (!window.currentFeedbackData || !window.currentFeedbackData.individualAnswers) {
         alert('No data available to export');
         return;
     }
     
-    console.log('Exporting answers for', window.currentFeedbackData.individualAnswers.length, 'responders');
+    console.log('Exporting comprehensive answers for', window.currentFeedbackData.individualAnswers.length, 'responders');
     
-    // Create CSV content
-    let csvContent = "Responder Name,Job Title,Responder Type,Submitted Date,Objective,Rating,Comment,Skill,Skill Type,Skill Rating\n";
+    // Create comprehensive CSV content
+    let csvContent = "Responder First Name,Responder Last Name,Job Title,Responder Type,Submitted Date,Overall Average Rating,";
+    csvContent += "Objective Name,Objective KPI,Objective Target,Objective UOM,Objective Weight,Guide Question,Objective Rating,Objective Comment,";
+    csvContent += "Skill Name,Skill Type,Skill Rating,Skill Comment\n";
     
     window.currentFeedbackData.individualAnswers.forEach(answer => {
-        const baseLine = `"${answer.responderName}","${answer.responderJobTitle}","${answer.responderType}","${answer.submittedDate || 'N/A'}"`;
+        const overallRating = calculateOverallRating(answer);
+        const baseLine = `"${answer.responderFirstName}","${answer.responderLastName}","${answer.responderJobTitle}","${answer.responderType}","${answer.submittedDate || 'N/A'}","${overallRating.toFixed(1)}"`;
+        
+        // Track if we've added any data for this responder
+        let hasData = false;
         
         // Add objective answers
         if (answer.objectiveAnswers && answer.objectiveAnswers.length > 0) {
             answer.objectiveAnswers.forEach(obj => {
-                csvContent += `${baseLine},"${obj.objectiveName || 'N/A'}","${obj.rating || 'N/A'}","${(obj.comment || 'N/A').replace(/"/g, '""')}","","",""\n`;
+                csvContent += `${baseLine},"${obj.objectiveName || 'N/A'}","${obj.objectiveKPI || 'N/A'}","${obj.objectiveTarget || 'N/A'}","${obj.objectiveUOM || 'N/A'}","${(obj.objectiveWeight * 100).toFixed(1)}%","${(obj.guideQuestion || 'N/A').replace(/"/g, '""')}","${obj.rating || 'N/A'}","${(obj.comment || 'N/A').replace(/"/g, '""')}","","","",""\n`;
+                hasData = true;
             });
         }
         
-        // Add skill ratings
+        // Add skill ratings and comments
         if (answer.skillRatings && Object.keys(answer.skillRatings).length > 0) {
             Object.entries(answer.skillRatings).forEach(([skillName, skillData]) => {
-                csvContent += `${baseLine},"","","","${skillName}","${skillData.skillType}","${skillData.rating}"\n`;
+                const skillComment = answer.skillComments && answer.skillComments[skillName] ? answer.skillComments[skillName].comment : 'No comment';
+                csvContent += `${baseLine},"","","","","","","","","${skillName}","${skillData.skillType}","${skillData.rating}","${skillComment.replace(/"/g, '""')}"\n`;
+                hasData = true;
             });
         }
         
         // If no objectives or skills, add a line anyway
-        if ((!answer.objectiveAnswers || answer.objectiveAnswers.length === 0) && 
-            (!answer.skillRatings || Object.keys(answer.skillRatings).length === 0)) {
-            csvContent += `${baseLine},"No feedback provided","","","","",""\n`;
+        if (!hasData) {
+            csvContent += `${baseLine},"No feedback provided","","","","","","","","","","",""\n`;
         }
     });
     
@@ -3058,13 +3098,47 @@ function exportAllAnswers() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `feedback_responses_${window.currentFeedbackData.quarter}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `comprehensive_feedback_${window.currentFeedbackData.quarter}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
     // Show success message
+    showExportSuccessMessage();
+}
+
+
+// Helper function to calculate overall rating
+function calculateOverallRating(answer) {
+    let totalRating = 0;
+    let ratingCount = 0;
+    
+    // Count objective ratings
+    if (answer.objectiveAnswers && answer.objectiveAnswers.length > 0) {
+        answer.objectiveAnswers.forEach(obj => {
+            if (obj.rating && obj.rating > 0) {
+                totalRating += obj.rating;
+                ratingCount++;
+            }
+        });
+    }
+    
+    // Count skill ratings
+    if (answer.skillRatings && Object.keys(answer.skillRatings).length > 0) {
+        Object.values(answer.skillRatings).forEach(skill => {
+            if (skill.rating && skill.rating > 0) {
+                totalRating += skill.rating;
+                ratingCount++;
+            }
+        });
+    }
+    
+    return ratingCount > 0 ? (totalRating / ratingCount) : 0;
+}
+
+// Show export success message
+function showExportSuccessMessage() {
     const message = document.createElement('div');
     message.style.cssText = `
         position: fixed;
@@ -3076,17 +3150,28 @@ function exportAllAnswers() {
         border-radius: 4px;
         font-weight: 500;
         z-index: 10000;
-        animation: fadeInOut 3s ease-in-out;
+        animation: fadeInOut 4s ease-in-out;
+        max-width: 350px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     `;
-    message.innerHTML = '<i class="fas fa-download"></i> Export completed successfully!';
+    message.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-download"></i> 
+            <div>
+                <div>Export completed successfully!</div>
+                <div style="font-size: 0.8em; opacity: 0.9;">Comprehensive feedback data exported</div>
+            </div>
+        </div>
+    `;
     document.body.appendChild(message);
     
     setTimeout(() => {
         if (document.body.contains(message)) {
             document.body.removeChild(message);
         }
-    }, 3000);
+    }, 4000);
 }
+
 
 function addSelectedTraining() {
     const dropdown = document.getElementById('suggestedTrainings');
@@ -3343,16 +3428,24 @@ function updateSelectedTrainingsDisplay() {
 async function loadExistingSelectedTrainings(userId) {
     try {
         console.log('Loading existing selected trainings for user:', userId);
+        
+        // FIXED: Remove year parameter since it's not in the current schema
         const response = await fetch(`/linemanager/midyear-idp-trainings/${userId}`);
         const result = await response.json();
         
         if (result.success && result.data.suggestedTrainings && result.data.suggestedTrainings.length > 0) {
-            selectedTrainings = result.data.suggestedTrainings.map(item => ({
-                trainingId: item.trainingId.toString(),
-                trainingName: item.trainings.trainingName,
-                trainingDescription: item.trainings.trainingDesc || 'No description available.',
-                remarks: item.remarks || ''
-            }));
+            // Clear existing selected trainings
+            selectedTrainings = [];
+            
+            // Process the fetched trainings
+            result.data.suggestedTrainings.forEach(item => {
+                selectedTrainings.push({
+                    trainingId: item.trainingId.toString(),
+                    trainingName: item.trainings.trainingName,
+                    trainingDescription: item.trainings.trainingDesc || 'No description available.',
+                    remarks: item.remarks || ''
+                });
+            });
             
             updateSelectedTrainingsDisplay();
             console.log('Loaded existing selected trainings:', selectedTrainings);
@@ -3367,6 +3460,40 @@ async function loadExistingSelectedTrainings(userId) {
         updateSelectedTrainingsDisplay();
     }
 }
+
+
+// FIXED: Enhanced function to load Mid-Year IDP data for view-only mode (without year)
+async function loadMidYearIDPDataForViewOnly(userId) {
+    try {
+        console.log("Loading Mid-Year IDP data for view-only mode...");
+        
+        // FIXED: Remove year parameter since it's not in the current schema
+        const response = await fetch(`/linemanager/midyear-idp/${userId}`, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data.midYearData) {
+            createViewOnlyMidYearIDP(result.data.midYearData);
+        } else {
+            console.error("No Mid-Year IDP data found for view-only mode");
+            // Show error message or redirect
+            alert("No Mid-Year IDP data found. Please complete the IDP first.");
+        }
+    } catch (error) {
+        console.error("Error loading Mid-Year IDP data for view-only mode:", error);
+        alert("Error loading Mid-Year IDP data. Please try again.");
+    }
+}
+
 // Function to get selected trainings data for form submission
 function getSelectedTrainingsForSubmission() {
     return selectedTrainings.map(training => ({
@@ -3986,7 +4113,7 @@ async function submitMidYearIDPFormWithTraining(event) {
         nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value,
         nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value,
         nextRoleMobility: document.getElementById("nextRoleMobility").value,
-        suggestedTrainings: getSelectedTrainingsForSubmission() // NEW: Multiple trainings with remarks
+        suggestedTrainings: getSelectedTrainingsForSubmission() // Multiple trainings with remarks
     };
     
     console.log("Form data with multiple training selections:", formData);
@@ -4031,12 +4158,14 @@ async function submitMidYearIDPFormWithTraining(event) {
             alert(successMessage);
             
             // Update viewState to reflect the new status
-            viewState.viewOnlyStatus.midyearidp = true;
+            if (typeof viewState !== 'undefined') {
+                viewState.viewOnlyStatus.midyearidp = true;
+                
+                // Update the UI based on the new state
+                updateStepperAccessibility();
+            }
             
-            // Update the UI based on the new state
-            updateStepperAccessibility();
-            
-            // Redirect to refresh the page
+            // Redirect to refresh the page and show view-only mode
             window.location.href = `/linemanager/records-performance-tracker/${userId}`;
         } else {
             alert("Error saving Mid-Year IDP: " + (result.message || "Unknown error"));
@@ -6620,31 +6749,32 @@ function loadFeedbackData(quarter) {
         });
 }
 
+
 function setupEnhancedFilters(responderFilterOptions, questionFilterOptions) {
     const responderFilter = document.getElementById('responderFilter');
     const questionFilter = document.getElementById('questionFilter');
     
-    // Clear and populate responder filter with enhanced options
-    if (responderFilter && responderFilterOptions) {
-        responderFilter.innerHTML = '';
+    // Enhanced responder filter setup - SIMPLIFIED VERSION
+    if (responderFilter && window.currentFeedbackData && window.currentFeedbackData.individualAnswers) {
+        responderFilter.innerHTML = '<option value="all">All Responders</option>';
         
-        responderFilterOptions.forEach(option => {
-            const optionElement = document.createElement('option');
-            optionElement.value = option.value;
-            optionElement.textContent = option.label;
-            
-            // Handle disabled options (separators)
-            if (option.disabled) {
-                optionElement.disabled = true;
-                optionElement.style.fontWeight = 'bold';
-                optionElement.style.backgroundColor = '#f0f0f0';
-            }
-            
-            responderFilter.appendChild(optionElement);
+        // Add individual responders with full names and job titles ONLY
+        window.currentFeedbackData.individualAnswers.forEach(answer => {
+            const option = document.createElement('option');
+            option.value = answer.responderId.toString();
+            option.textContent = `${answer.responderFirstName} ${answer.responderLastName} (${answer.responderJobTitle})`;
+            option.setAttribute('data-responder-type', answer.responderType.toLowerCase());
+            option.setAttribute('data-first-name', answer.responderFirstName);
+            option.setAttribute('data-last-name', answer.responderLastName);
+            option.setAttribute('data-job-title', answer.responderJobTitle);
+            responderFilter.appendChild(option);
         });
+        
+        // REMOVED: Type-based filter groups (peer, self, manager, direct)
+        // No separator or grouped options are added
     }
     
-    // Clear and populate question filter
+    // Enhanced question filter setup (unchanged)
     if (questionFilter && questionFilterOptions) {
         questionFilter.innerHTML = '';
         
@@ -6664,7 +6794,7 @@ function setupEnhancedFilters(responderFilterOptions, questionFilterOptions) {
         });
     }
     
-    // Add event listeners for real-time filtering
+    // Add enhanced event listeners
     if (responderFilter) {
         responderFilter.addEventListener('change', applyEnhancedFilters);
     }
@@ -6673,9 +6803,11 @@ function setupEnhancedFilters(responderFilterOptions, questionFilterOptions) {
         questionFilter.addEventListener('change', applyEnhancedFilters);
     }
     
-    console.log('Enhanced filters setup completed with proper responder and question options');
+    console.log('Enhanced filters setup completed with individual responders only');
 }
 
+
+// Updated applyEnhancedFilters function
 function applyEnhancedFilters() {
     const responderFilter = document.getElementById('responderFilter');
     const questionFilter = document.getElementById('questionFilter');
@@ -6690,27 +6822,19 @@ function applyEnhancedFilters() {
     
     let filteredAnswers = [...window.currentFeedbackData.individualAnswers];
     
-    console.log('Applying filters:', { responderValue, questionValue });
+    console.log('Applying enhanced filters:', { responderValue, questionValue });
     console.log('Original answers count:', filteredAnswers.length);
     
-    // Apply responder filter
-    if (responderValue !== 'all' && responderValue !== 'separator') {
-        if (responderValue === 'peer' || responderValue === 'manager' || responderValue === 'direct' || responderValue === 'self') {
-            // Filter by responder type
-            filteredAnswers = filteredAnswers.filter(answer => 
-                answer.responderType.toLowerCase() === responderValue.toLowerCase()
-            );
-            console.log(`Filtered by type '${responderValue}':`, filteredAnswers.length);
-        } else {
-            // Filter by specific responder ID
-            filteredAnswers = filteredAnswers.filter(answer => 
-                answer.responderId && answer.responderId.toString() === responderValue
-            );
-            console.log(`Filtered by responder ID '${responderValue}':`, filteredAnswers.length);
-        }
+    // Apply responder filter - SIMPLIFIED VERSION
+    if (responderValue !== 'all') {
+        // Only filter by specific responder ID (removed type-based filtering)
+        filteredAnswers = filteredAnswers.filter(answer => 
+            answer.responderId && answer.responderId.toString() === responderValue
+        );
+        console.log(`Filtered by responder ID '${responderValue}':`, filteredAnswers.length);
     }
     
-    // Apply question filter
+    // Apply question filter with enhanced matching (unchanged)
     if (questionValue !== 'all' && !questionValue.endsWith('_skills') && !questionValue.startsWith('---')) {
         if (questionValue.startsWith('obj_')) {
             // Filter by specific objective
@@ -6743,7 +6867,106 @@ function applyEnhancedFilters() {
 }
 
 
-// Function to update filter result count
+function addTextSearchFilter() {
+    const filterBar = document.querySelector('.filter-bar');
+    if (!filterBar || document.getElementById('textSearchFilter')) return;
+    
+    const searchContainer = document.createElement('div');
+    searchContainer.style.cssText = 'flex: 1; min-width: 200px;';
+    
+    searchContainer.innerHTML = `
+        <label for="textSearchFilter" style="font-weight: 500; margin-right: 8px; color: var(--primary-color);">
+            <i class="fas fa-search"></i> Search Comments:
+        </label>
+        <input type="text" id="textSearchFilter" placeholder="Search in comments..." 
+               style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 180px; transition: all 0.3s ease;">
+    `;
+    
+    // Insert before the clear button
+    const clearButton = filterBar.querySelector('#clearFilters').parentElement;
+    filterBar.insertBefore(searchContainer, clearButton);
+    
+    // Add event listener for text search
+    const textSearchFilter = document.getElementById('textSearchFilter');
+    textSearchFilter.addEventListener('input', debounce(applyTextSearchFilter, 300));
+}
+
+// Text search filter function
+function applyTextSearchFilter() {
+    const textSearchFilter = document.getElementById('textSearchFilter');
+    const searchTerm = textSearchFilter ? textSearchFilter.value.toLowerCase().trim() : '';
+    
+    if (!window.currentFeedbackData) return;
+    
+    let filteredAnswers = [...window.currentFeedbackData.individualAnswers];
+    
+    // Apply existing filters first
+    const responderFilter = document.getElementById('responderFilter');
+    const questionFilter = document.getElementById('questionFilter');
+    
+    if (responderFilter && responderFilter.value !== 'all') {
+        // Apply responder filter logic
+        const responderValue = responderFilter.value;
+        if (responderValue === 'peer' || responderValue === 'manager' || responderValue === 'direct' || responderValue === 'self') {
+            filteredAnswers = filteredAnswers.filter(answer => 
+                answer.responderType.toLowerCase() === responderValue.toLowerCase()
+            );
+        } else {
+            filteredAnswers = filteredAnswers.filter(answer => 
+                answer.responderId && answer.responderId.toString() === responderValue
+            );
+        }
+    }
+    
+    if (questionFilter && questionFilter.value !== 'all') {
+        // Apply question filter logic
+        const questionValue = questionFilter.value;
+        if (questionValue.startsWith('obj_')) {
+            const objectiveId = questionValue.replace('obj_', '');
+            filteredAnswers = filteredAnswers.filter(answer => 
+                answer.objectiveAnswers && answer.objectiveAnswers.some(obj => 
+                    obj.objectiveId && obj.objectiveId.toString() === objectiveId
+                )
+            );
+        } else if (questionValue.startsWith('hard_') || questionValue.startsWith('soft_')) {
+            const skillId = questionValue.replace(/^(hard_|soft_)/, '');
+            const skillType = questionValue.startsWith('hard_') ? 'Hard' : 'Soft';
+            filteredAnswers = filteredAnswers.filter(answer => 
+                answer.skillRatings && Object.values(answer.skillRatings).some(skill => 
+                    skill.skillId && skill.skillId.toString() === skillId && skill.skillType === skillType
+                )
+            );
+        }
+    }
+    
+    // Apply text search filter
+    if (searchTerm) {
+        filteredAnswers = filteredAnswers.filter(answer => {
+            // Search in objective comments
+            const objectiveMatch = answer.objectiveAnswers && answer.objectiveAnswers.some(obj => 
+                (obj.comment && obj.comment.toLowerCase().includes(searchTerm)) ||
+                (obj.objectiveName && obj.objectiveName.toLowerCase().includes(searchTerm))
+            );
+            
+            // Search in skill comments
+            const skillMatch = answer.skillComments && Object.entries(answer.skillComments).some(([skillName, skillData]) => 
+                (skillData.comment && skillData.comment.toLowerCase().includes(searchTerm)) ||
+                skillName.toLowerCase().includes(searchTerm)
+            );
+            
+            // Search in responder name
+            const responderMatch = answer.responderName && answer.responderName.toLowerCase().includes(searchTerm);
+            
+            return objectiveMatch || skillMatch || responderMatch;
+        });
+    }
+    
+    displayFilteredAnswers(filteredAnswers);
+    updateFilterResultCount(filteredAnswers.length, window.currentFeedbackData.individualAnswers.length);
+}
+
+
+// Updated filter result count function with better messaging
 function updateFilterResultCount(filteredCount, totalCount) {
     let countDisplay = document.getElementById('filterResultCount');
     
@@ -6768,9 +6991,11 @@ function updateFilterResultCount(filteredCount, totalCount) {
     }
     
     if (filteredCount === totalCount) {
-        countDisplay.innerHTML = `<i class="fas fa-info-circle"></i> Showing all ${totalCount} responses`;
+        countDisplay.innerHTML = `<i class="fas fa-info-circle"></i> Showing all ${totalCount} individual responses`;
+    } else if (filteredCount === 1) {
+        countDisplay.innerHTML = `<i class="fas fa-filter"></i> Showing 1 individual response`;
     } else {
-        countDisplay.innerHTML = `<i class="fas fa-filter"></i> Showing ${filteredCount} of ${totalCount} responses`;
+        countDisplay.innerHTML = `<i class="fas fa-filter"></i> Showing ${filteredCount} individual responses of ${totalCount} total`;
     }
 }
 
@@ -6951,7 +7176,7 @@ function setupFeedbackTabs() {
     }
 }
 
-// Fixed function to display filtered answers
+// ENHANCED: Function to display filtered answers with complete data
 function displayFilteredAnswers(answersToShow) {
     const individualAnswersContainer = document.getElementById('individualAnswersContainer');
     
@@ -6975,7 +7200,7 @@ function displayFilteredAnswers(answersToShow) {
     let answersHTML = '';
     
     answersToShow.forEach((answer, index) => {
-        // Generate star rating for individual objective ratings
+        // Enhanced star rating function
         const generateStarRating = (rating) => {
             if (!rating || rating === 0) return '<span style="color: #ccc;">No rating</span>';
             
@@ -7003,81 +7228,218 @@ function displayFilteredAnswers(answersToShow) {
             return starsHTML;
         };
         
+        // Calculate average rating for this responder
+        let totalRating = 0;
+        let ratingCount = 0;
+        
+        // Count objective ratings
+        if (answer.objectiveAnswers && answer.objectiveAnswers.length > 0) {
+            answer.objectiveAnswers.forEach(obj => {
+                if (obj.rating && obj.rating > 0) {
+                    totalRating += obj.rating;
+                    ratingCount++;
+                }
+            });
+        }
+        
+        // Count skill ratings
+        if (answer.skillRatings && Object.keys(answer.skillRatings).length > 0) {
+            Object.values(answer.skillRatings).forEach(skill => {
+                if (skill.rating && skill.rating > 0) {
+                    totalRating += skill.rating;
+                    ratingCount++;
+                }
+            });
+        }
+        
+        const averageRating = ratingCount > 0 ? (totalRating / ratingCount) : 0;
+        
         answersHTML += `
-        <div class="answer-card" style="background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" 
+        <div class="answer-card" style="background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid var(--secondary-color);" 
              data-responder-type="${answer.responderType.toLowerCase()}" 
              data-responder-id="${answer.responderId}"
-             data-responder-name="${answer.responderName}">
+             data-responder-name="${answer.responderName}"
+             data-responder-first-name="${answer.responderFirstName}"
+             data-responder-last-name="${answer.responderLastName}">
+            
+            <!-- Enhanced Header with More Info -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
-                <div>
-                    <h4 style="margin: 0; color: var(--primary-color);">${answer.responderName} (${answer.responderType})</h4>
-                    <p style="margin: 5px 0 0 0; color: #555; font-size: 0.9em;">${answer.responderJobTitle}</p>
-                    <p style="margin: 5px 0 0 0; color: #555; font-size: 0.9em;">Submitted on ${answer.submittedDate ? new Date(answer.submittedDate).toLocaleDateString() : 'Unknown Date'}</p>
+                <div style="flex: 1;">
+                    <h4 style="margin: 0; color: var(--primary-color); font-size: 1.1rem;">
+                        ${answer.responderName} (${answer.responderType})
+                    </h4>
+                    <p style="margin: 5px 0 0 0; color: #555; font-size: 0.9em;">
+                        <i class="fas fa-briefcase"></i> ${answer.responderJobTitle}
+                    </p>
+                    <p style="margin: 5px 0 0 0; color: #555; font-size: 0.9em;">
+                        <i class="fas fa-calendar"></i> Submitted: ${answer.submittedDate ? new Date(answer.submittedDate).toLocaleDateString() : 'Unknown Date'}
+                    </p>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">
+                        <i class="fas fa-chart-line"></i> Overall Average: <strong style="color: var(--primary-color);">${averageRating.toFixed(1)}/5.0</strong>
+                        <span style="margin-left: 8px;">${generateStarRating(averageRating)}</span>
+                    </p>
                 </div>
-                <div class="response-status" style="background-color: #4CAF50; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
-                    Complete
+                <div style="text-align: right;">
+                    <div class="response-status" style="background-color: #4CAF50; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; margin-bottom: 8px;">
+                        Complete
+                    </div>
+                    <div style="font-size: 0.8em; color: #666;">
+                        <div>${answer.totalObjectiveAnswers || 0} Objectives</div>
+                        <div>${answer.totalSkillAnswers || 0} Skills</div>
+                    </div>
                 </div>
             </div>
             
-            ${answer.objectiveAnswers && answer.objectiveAnswers.length > 0 ? answer.objectiveAnswers.map(obj => `
-                <div class="answer-group objective-answer" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;" 
-                     data-objective-id="${obj.objectiveId}" data-objective-name="${obj.objectiveName}">
-                    <h5 style="margin: 0 0 10px 0; color: var(--secondary-color);">${obj.objectiveName || 'Unnamed Objective'}</h5>
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <div style="margin-right: 15px;">
-                            <strong style="color: #555;">Rating:</strong>
-                            <span style="font-weight: bold; color: var(--primary-color); margin-left: 5px;">${obj.rating || 'N/A'}/5.0</span>
-                        </div>
-                        <div class="star-display" style="color: #FFD700;">
-                            ${generateStarRating(obj.rating || 0)}
-                        </div>
-                    </div>
-                    <div>
-                        <strong style="color: #555;">Comment:</strong>
-                        <p style="margin: 5px 0 0 0;">${obj.comment || 'No comment provided'}</p>
-                    </div>
-                </div>
-            `).join('') : '<div style="text-align: center; color: #666; font-style: italic; padding: 10px;">No objective feedback provided</div>'}
-            
-            ${answer.skillRatings && Object.keys(answer.skillRatings).length > 0 ? `
-                <div class="skill-ratings" style="background-color: #f9f9f9; border-radius: 6px; padding: 15px;">
-                    <h5 style="margin: 0 0 10px 0; color: var(--secondary-color);">Skills Assessment</h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
-                        ${Object.entries(answer.skillRatings).map(([skillName, skillData]) => `
-                            <div class="skill-rating" style="display: flex; justify-content: space-between;" 
-                                 data-skill-name="${skillName}" 
-                                 data-skill-type="${skillData.skillType}" 
-                                 data-skill-id="${skillData.skillId}">
-                                <span>${skillName} <small style="color: #666;">(${skillData.skillType})</small>:</span>
-                                <strong style="color: var(--primary-color);">${skillData.rating}/5</strong>
+            <!-- Objectives Section -->
+            ${answer.objectiveAnswers && answer.objectiveAnswers.length > 0 ? `
+                <div class="objectives-section" style="margin-bottom: 25px;">
+                    <h5 style="margin: 0 0 15px 0; color: var(--secondary-color); font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                        <i class="fas fa-bullseye"></i> Objective Assessments (${answer.objectiveAnswers.length})
+                    </h5>
+                    ${answer.objectiveAnswers.map(obj => `
+                        <div class="answer-group objective-answer" style="margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 6px; border-left: 3px solid var(--secondary-color);" 
+                             data-objective-id="${obj.objectiveId}" 
+                             data-objective-name="${obj.objectiveName}">
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <div style="flex: 1;">
+                                    <h6 style="margin: 0 0 5px 0; color: var(--primary-color); font-size: 0.95rem;">
+                                        ${obj.objectiveName || 'Unnamed Objective'}
+                                    </h6>
+                                    <div style="font-size: 0.8em; color: #666; margin-bottom: 8px;">
+                                        <span><strong>KPI:</strong> ${obj.objectiveKPI}</span> | 
+                                        <span><strong>Target:</strong> ${obj.objectiveTarget} ${obj.objectiveUOM}</span> | 
+                                        <span><strong>Weight:</strong> ${(obj.objectiveWeight * 100).toFixed(1)}%</span>
+                                    </div>
+                                    ${obj.guideQuestion !== 'No guide question' ? `
+                                        <div style="font-size: 0.8em; color: #555; font-style: italic; margin-bottom: 8px;">
+                                            <strong>Guide Question:</strong> ${obj.guideQuestion}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <div style="text-align: right; margin-left: 15px;">
+                                    <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary-color); margin-bottom: 5px;">
+                                        ${obj.rating || 'N/A'}/5.0
+                                    </div>
+                                    <div class="star-display" style="color: #FFD700; font-size: 0.9rem;">
+                                        ${generateStarRating(obj.rating || 0)}
+                                    </div>
+                                </div>
                             </div>
-                        `).join('')}
-                    </div>
+                            
+                            <div class="comment-section">
+                                <strong style="color: #555; font-size: 0.9rem;">
+                                    <i class="fas fa-comment"></i> Feedback Comment:
+                                </strong>
+                                <p style="margin: 8px 0 0 0; padding: 10px; background-color: white; border-radius: 4px; font-size: 0.9rem; line-height: 1.4;">
+                                    ${obj.comment || 'No comment provided'}
+                                </p>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
-            ` : '<div style="text-align: center; color: #666; font-style: italic; padding: 10px;">No skills assessment provided</div>'}
+            ` : `
+                <div class="no-objectives" style="text-align: center; color: #666; font-style: italic; padding: 15px; background-color: #f9f9f9; border-radius: 6px; margin-bottom: 20px;">
+                    <i class="fas fa-info-circle"></i> No objective feedback provided
+                </div>
+            `}
+            
+            <!-- Skills Section -->
+            ${answer.skillRatings && Object.keys(answer.skillRatings).length > 0 ? `
+                <div class="skills-section">
+                    <h5 style="margin: 0 0 15px 0; color: var(--secondary-color); font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                        <i class="fas fa-cogs"></i> Skills Assessment (${Object.keys(answer.skillRatings).length})
+                    </h5>
+                    
+                    <!-- Hard Skills -->
+                    ${Object.entries(answer.skillRatings).filter(([skillName, skillData]) => skillData.skillType === 'Hard').length > 0 ? `
+                        <div class="hard-skills-subsection" style="margin-bottom: 20px;">
+                            <h6 style="margin: 0 0 10px 0; color: #2196F3; font-size: 0.9rem;">
+                                <i class="fas fa-tools"></i> Hard Skills
+                            </h6>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
+                                ${Object.entries(answer.skillRatings)
+                                    .filter(([skillName, skillData]) => skillData.skillType === 'Hard')
+                                    .map(([skillName, skillData]) => `
+                                    <div class="skill-rating-card" style="background-color: rgba(33, 150, 243, 0.05); padding: 12px; border-radius: 6px; border-left: 3px solid #2196F3;" 
+                                         data-skill-name="${skillName}" 
+                                         data-skill-type="${skillData.skillType}" 
+                                         data-skill-id="${skillData.skillId}">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                            <span style="font-weight: 500; color: var(--primary-color); font-size: 0.9rem;">${skillName}</span>
+                                            <strong style="color: #2196F3; font-size: 1rem;">${skillData.rating}/5</strong>
+                                        </div>
+                                        <div class="star-display" style="color: #FFD700; font-size: 0.8rem; margin-bottom: 8px;">
+                                            ${generateStarRating(skillData.rating)}
+                                        </div>
+                                        ${answer.skillComments && answer.skillComments[skillName] && answer.skillComments[skillName].comment !== 'No comment provided' ? `
+                                            <div style="font-size: 0.8em; color: #555; font-style: italic;">
+                                                "${answer.skillComments[skillName].comment}"
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Soft Skills -->
+                    ${Object.entries(answer.skillRatings).filter(([skillName, skillData]) => skillData.skillType === 'Soft').length > 0 ? `
+                        <div class="soft-skills-subsection">
+                            <h6 style="margin: 0 0 10px 0; color: #9C27B0; font-size: 0.9rem;">
+                                <i class="fas fa-heart"></i> Soft Skills
+                            </h6>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
+                                ${Object.entries(answer.skillRatings)
+                                    .filter(([skillName, skillData]) => skillData.skillType === 'Soft')
+                                    .map(([skillName, skillData]) => `
+                                    <div class="skill-rating-card" style="background-color: rgba(156, 39, 176, 0.05); padding: 12px; border-radius: 6px; border-left: 3px solid #9C27B0;" 
+                                         data-skill-name="${skillName}" 
+                                         data-skill-type="${skillData.skillType}" 
+                                         data-skill-id="${skillData.skillId}">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                            <span style="font-weight: 500; color: var(--primary-color); font-size: 0.9rem;">${skillName}</span>
+                                            <strong style="color: #9C27B0; font-size: 1rem;">${skillData.rating}/5</strong>
+                                        </div>
+                                        <div class="star-display" style="color: #FFD700; font-size: 0.8rem; margin-bottom: 8px;">
+                                            ${generateStarRating(skillData.rating)}
+                                        </div>
+                                        ${answer.skillComments && answer.skillComments[skillName] && answer.skillComments[skillName].comment !== 'No comment provided' ? `
+                                            <div style="font-size: 0.8em; color: #555; font-style: italic;">
+                                                "${answer.skillComments[skillName].comment}"
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : `
+                <div class="no-skills" style="text-align: center; color: #666; font-style: italic; padding: 15px; background-color: #f9f9f9; border-radius: 6px;">
+                    <i class="fas fa-info-circle"></i> No skills assessment provided
+                </div>
+            `}
+            
+            <!-- Debug Info (remove in production) -->
+            ${console.log('Answer data:', answer) || ''}
         </div>
         `;
     });
     
     individualAnswersContainer.innerHTML = answersHTML;
-    console.log(`Displayed ${answersToShow.length} filtered answers`);
+    console.log(`Displayed ${answersToShow.length} individual answers with complete feedback data`);
+    
+    // Log summary of displayed data
+    let totalObjectives = 0;
+    let totalSkills = 0;
+    answersToShow.forEach(answer => {
+        totalObjectives += answer.totalObjectiveAnswers || 0;
+        totalSkills += answer.totalSkillAnswers || 0;
+    });
+    
+    console.log(`Summary: ${answersToShow.length} responders, ${totalObjectives} objective responses, ${totalSkills} skill responses`);
 }
-
-
-function clearAllFilters() {
-    const responderFilter = document.getElementById('responderFilter');
-    const questionFilter = document.getElementById('questionFilter');
-    
-    if (responderFilter) responderFilter.value = 'all';
-    if (questionFilter) questionFilter.value = 'all';
-    
-    // Apply filters to show all results
-    applyEnhancedFilters();
-    
-    // Show success message
-    showFilterClearMessage();
-}
-
 
 
 // Function to submit Mid-Year IDP form
@@ -7332,6 +7694,7 @@ function loadMidYearIDPData(userId) {
     });
 }
 
+// UPDATED: Enhanced function to load Mid-Year feedback aggregates (remove year dependency if needed)
 async function loadMidYearFeedbackAggregates() {
     console.log("Loading Mid-Year feedback aggregates...");
     
@@ -7345,7 +7708,7 @@ async function loadMidYearFeedbackAggregates() {
     showLoadingPlaceholders();
     
     try {
-        // Get the selected year
+        // Get the selected year (this may work with your feedback tables)
         let selectedYear = new Date().getFullYear();
         
         const yearSelect = document.getElementById('yearSelect');
@@ -7374,7 +7737,7 @@ async function loadMidYearFeedbackAggregates() {
             // Display the feedback in circular format
             displayFeedbackInCircularFormat(midYearFeedbackData);
             
-            // UPDATED: Update the training legend with top 5 lacking areas
+            // Update the training legend with top 5 lacking areas
             updateTrainingLegendWithTop5();
             
         } else {
@@ -7393,6 +7756,15 @@ async function loadMidYearFeedbackAggregates() {
     }
 }
 
+// UPDATED: Function to refresh feedback data when year changes (simplified for current schema)
+function refreshFeedbackDataOnYearChange() {
+    // Check if Mid-Year IDP form is currently visible
+    const midYearIDPForm = document.getElementById("midYearIDPForm");
+    if (midYearIDPForm && midYearIDPForm.style.display === "block") {
+        // Only reload feedback aggregates (not the IDP data since it doesn't use year filtering)
+        loadMidYearFeedbackAggregates();
+    }
+}
 // Function to show loading placeholders
 function showLoadingPlaceholders() {
     const containers = [
@@ -7615,16 +7987,6 @@ function showNoFeedbackMessage() {
         }
     });
 }
-// Function to refresh feedback data when year changes - now updates training legend
-function refreshFeedbackDataOnYearChange() {
-    // Check if Mid-Year IDP form is currently visible
-    const midYearIDPForm = document.getElementById("midYearIDPForm");
-    if (midYearIDPForm && midYearIDPForm.style.display === "block") {
-        // Reload feedback aggregates for the new year - this will update the training legend
-        loadMidYearFeedbackAggregates();
-    }
-}
-
 
 
 // Function to load Final-Year IDP data
@@ -7671,6 +8033,8 @@ function createViewOnlyMidYearIDP(data) {
         return;
     }
     
+    console.log("Creating view-only Mid-Year IDP with data:", data);
+    
     // Create view-only form
     const form = document.getElementById("midYearIDPFormDetails");
     if (!form) {
@@ -7682,10 +8046,13 @@ function createViewOnlyMidYearIDP(data) {
     form.classList.add('view-only-mode');
     
     // Disable all form inputs
-    const inputs = form.querySelectorAll("input, textarea");
+    const inputs = form.querySelectorAll("input, textarea, select");
     inputs.forEach(input => {
         input.disabled = true;
         input.setAttribute('readonly', 'readonly');
+        input.style.backgroundColor = '#f5f5f5';
+        input.style.border = '1px solid #e1e5eb';
+        input.style.cursor = 'not-allowed';
     });
     
     // Update the title to indicate view-only mode
@@ -7703,7 +8070,7 @@ function createViewOnlyMidYearIDP(data) {
     // Set values for view-only
     setIDPFormValues(data);
     
-    // FIXED: Set training dropdown to view-only mode and load selected trainings
+    // FIXED: Set training dropdown to view-only mode
     setTrainingDropdownViewOnly(true);
     
     // Load existing selected trainings for view-only display
@@ -7717,9 +8084,23 @@ function createViewOnlyMidYearIDP(data) {
         form.appendChild(lastUpdatedInfo);
     }
     
-    const lastUpdatedDate = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : 'Unknown';
-    lastUpdatedInfo.textContent = `Last updated: ${lastUpdatedDate}`;
+    const lastUpdatedDate = data.created_at ? new Date(data.created_at).toLocaleString() : 'Unknown';
+    lastUpdatedInfo.innerHTML = `
+        <div style="margin-top: 20px; padding: 15px; background-color: #e8f5e8; border-radius: 8px; border-left: 4px solid #4CAF50;">
+            <div style="display: flex; align-items: center; gap: 8px; color: #2e7d32;">
+                <i class="fas fa-check-circle"></i>
+                <strong>Mid-Year IDP Completed</strong>
+            </div>
+            <div style="margin-top: 8px; font-size: 14px; color: #555;">
+                Last updated: ${lastUpdatedDate}
+            </div>
+        </div>
+    `;
+    
+    console.log("View-only Mid-Year IDP created successfully");
 }
+
+
 // Function to create view-only Final-Year IDP
 function createViewOnlyFinalYearIDP(data) {
     if (!data) {
