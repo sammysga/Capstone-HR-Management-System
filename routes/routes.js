@@ -442,10 +442,10 @@ router.get('/hr/budget-export/:format', hrController.exportBudgetReport);
 router.get('/hr/offboarding-dashboard-stats', hrController.getOffboardingDashboardStats);
 router.get('/hr/offboarding-reports', hrController.getOffboardingReports);
 
-router.get('/reports/employees', hrController.getEmployeesForReports);
-router.get('/reports/daily-attendance', hrController.getDailyAttendanceReport);
-router.get('/reports/employee-attendance', hrController.getEmployeeAttendanceReport);
-router.get('/reports/leave-requests', hrController.getLeaveRequestsReport);
+router.get('/hr/reports/employees', hrController.getEmployeesForReports);
+router.get('/hr/reports/daily-attendance', hrController.getDailyAttendanceReport);
+router.get('/hr/reports/employee-attendance', hrController.getEmployeeAttendanceReport);
+router.get('/hr/reports/leave-requests', hrController.getLeaveRequestsReport);
 
 
 module.exports = router; 

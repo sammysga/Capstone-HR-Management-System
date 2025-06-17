@@ -77,59 +77,55 @@ async function fileUpload(req, uploadType = 'normal') {
 async function processAttendanceData(attendanceData, leaveData, allEmployees, reportDate) {
     const departments = ['HR', 'IT', 'Marketing', 'Partnerships', 'Investor Relations', 'Finance'];
     
-    // Create employee lookup for easier processing
+    // Create employee lookup
     const employeeLookup = {};
     allEmployees.forEach(emp => {
         if (emp.staffaccounts && emp.staffaccounts.length > 0) {
+            const staff = emp.staffaccounts[0];
             employeeLookup[emp.userId] = {
-                firstName: emp.staffaccounts[0].firstName,
-                lastName: emp.staffaccounts[0].lastName,
-                department: emp.staffaccounts[0].departments?.deptName || 'N/A'
+                firstName: staff.firstName,
+                lastName: staff.lastName,
+                department: staff.departments?.deptName || 'Unknown'
             };
         }
     });
 
     // Create leave lookup
     const leaveLookup = {};
-    leaveData.forEach(leave => {
-        leaveLookup[leave.userId] = {
-            leaveType: leave.leave_types?.typeName || 'Leave',
-            fromDate: leave.fromDate,
-            untilDate: leave.untilDate
-        };
-    });
-
-    // Process attendance logs to group by employee and calculate working hours
-    const employeeAttendance = {};
-    attendanceData.forEach(log => {
-        const userId = log.userId;
-        const attendanceTime = log.attendanceTime || '00:00:00';
-        const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
-        const localDate = new Date(log.attendanceDate);
-        localDate.setHours(hours, minutes, seconds);
-
-        if (!employeeAttendance[userId]) {
-            employeeAttendance[userId] = {
-                userId,
-                timeIn: null,
-                timeOut: null,
-                useraccounts: log.useraccounts
+    if (leaveData && leaveData.length > 0) {
+        leaveData.forEach(leave => {
+            leaveLookup[leave.userId] = {
+                leaveType: leave.leave_types?.typeName || 'Leave',
+                fromDate: leave.fromDate,
+                untilDate: leave.untilDate
             };
-        }
+        });
+    }
 
-        if (log.attendanceAction === 'Time In') {
-            employeeAttendance[userId].timeIn = localDate;
-        } else if (log.attendanceAction === 'Time Out') {
-            employeeAttendance[userId].timeOut = localDate;
-        }
-    });
+    // Process attendance logs
+    const employeeAttendance = {};
+    if (attendanceData && attendanceData.length > 0) {
+        attendanceData.forEach(log => {
+            const userId = log.userId;
+            
+            if (!employeeAttendance[userId]) {
+                employeeAttendance[userId] = {
+                    userId,
+                    timeIn: null,
+                    timeOut: null,
+                    useraccounts: log.useraccounts
+                };
+            }
 
-    // Process each employee's attendance
-    const processedEmployees = {};
-    departments.forEach(dept => {
-        processedEmployees[dept] = [];
-    });
+            if (log.attendanceAction === 'Time In') {
+                employeeAttendance[userId].timeIn = log.attendanceTime;
+            } else if (log.attendanceAction === 'Time Out') {
+                employeeAttendance[userId].timeOut = log.attendanceTime;
+            }
+        });
+    }
 
+    // Initialize summary and breakdown
     const summary = {
         totalEmployees: Object.keys(employeeLookup).length,
         present: 0,
@@ -152,12 +148,18 @@ async function processAttendanceData(attendanceData, leaveData, allEmployees, re
         };
     });
 
-    // Count total employees per department
+    // Count employees per department
     Object.values(employeeLookup).forEach(emp => {
         const dept = emp.department;
         if (departmentBreakdown[dept]) {
             departmentBreakdown[dept].totalEmployees++;
         }
+    });
+
+    // Process detailed attendance by department
+    const detailedAttendance = {};
+    departments.forEach(dept => {
+        detailedAttendance[dept] = [];
     });
 
     // Process each employee
@@ -185,76 +187,62 @@ async function processAttendanceData(attendanceData, leaveData, allEmployees, re
             if (departmentBreakdown[department]) {
                 departmentBreakdown[department].onLeave++;
             }
-        } else if (attendance) {
+        } else if (attendance && attendance.timeIn) {
             // Employee has attendance record
-            if (attendance.timeIn) {
-                status = 'Present';
-                timeIn = attendance.timeIn.toLocaleTimeString();
-                summary.present++;
+            status = 'Present';
+            timeIn = attendance.timeIn;
+            summary.present++;
+            if (departmentBreakdown[department]) {
+                departmentBreakdown[department].present++;
+            }
+
+            // Check if late (after 9:00 AM)
+            const timeInParts = attendance.timeIn.split(':');
+            const timeInHour = parseInt(timeInParts[0]);
+            const timeInMinute = parseInt(timeInParts[1]);
+            
+            if (timeInHour > 9 || (timeInHour === 9 && timeInMinute > 0)) {
+                lateMinutes = (timeInHour - 9) * 60 + timeInMinute;
+                status = 'Late';
+                summary.late++;
+                summary.present--; // Remove from present count
                 if (departmentBreakdown[department]) {
-                    departmentBreakdown[department].present++;
+                    departmentBreakdown[department].late++;
+                    departmentBreakdown[department].present--;
                 }
+            }
 
-                // Check if late (after 9:00 AM)
-                const startOfDay = new Date(attendance.timeIn);
-                startOfDay.setHours(9, 0, 0, 0);
+            // Calculate working hours
+            if (attendance.timeOut) {
+                timeOut = attendance.timeOut;
                 
-                if (attendance.timeIn > startOfDay) {
-                    lateMinutes = Math.round((attendance.timeIn - startOfDay) / (1000 * 60));
-                    status = 'Late';
-                    summary.late++;
-                    summary.present--; // Remove from present count
+                // Simple hour calculation
+                const timeInHours = timeInHour + (timeInMinute / 60);
+                const timeOutParts = attendance.timeOut.split(':');
+                const timeOutHours = parseInt(timeOutParts[0]) + (parseInt(timeOutParts[1]) / 60);
+                
+                let workingHours = timeOutHours - timeInHours;
+                if (workingHours < 0) workingHours += 24; // Handle next day
+                
+                hoursWorked = workingHours.toFixed(1) + ' hrs';
+
+                // Check if early out (before 5:00 PM)
+                const timeOutHour = parseInt(timeOutParts[0]);
+                const timeOutMinute = parseInt(timeOutParts[1]);
+                
+                if (timeOutHour < 17 || (timeOutHour === 17 && timeOutMinute === 0)) {
+                    earlyOutMinutes = (17 - timeOutHour) * 60 - timeOutMinute;
+                    if (status === 'Present') {
+                        status = 'Early Out';
+                    }
+                    summary.earlyOut++;
                     if (departmentBreakdown[department]) {
-                        departmentBreakdown[department].late++;
-                        departmentBreakdown[department].present--;
+                        departmentBreakdown[department].earlyOut++;
                     }
                 }
-
-                // Calculate working hours
-                if (attendance.timeOut) {
-                    timeOut = attendance.timeOut.toLocaleTimeString();
-                    const workingMilliseconds = attendance.timeOut - attendance.timeIn;
-                    const workingHours = workingMilliseconds / (1000 * 60 * 60);
-                    const hours = Math.floor(workingHours);
-                    const minutes = Math.round((workingHours - hours) * 60);
-                    hoursWorked = `${hours} hrs ${minutes} mins`;
-
-                    // Check if early out (before 5:00 PM)
-                    const endOfDay = new Date(attendance.timeOut);
-                    endOfDay.setHours(17, 0, 0, 0);
-                    
-                    if (attendance.timeOut < endOfDay) {
-                        earlyOutMinutes = Math.round((endOfDay - attendance.timeOut) / (1000 * 60));
-                        if (status === 'Present') {
-                            status = 'Early Out';
-                        }
-                        summary.earlyOut++;
-                        if (departmentBreakdown[department]) {
-                            departmentBreakdown[department].earlyOut++;
-                        }
-                    }
-                } else {
-                    // Still in work or didn't record time out
-                    const now = new Date();
-                    const endOfDay = new Date(reportDate);
-                    endOfDay.setHours(23, 59, 59, 999);
-                    
-                    if (new Date(reportDate).toDateString() === now.toDateString() && now <= endOfDay) {
-                        timeOut = '(In Work)';
-                        const workingMilliseconds = now - attendance.timeIn;
-                        const workingHours = workingMilliseconds / (1000 * 60 * 60);
-                        const hours = Math.floor(workingHours);
-                        const minutes = Math.round((workingHours - hours) * 60);
-                        hoursWorked = `${hours} hrs ${minutes} mins`;
-                    } else {
-                        timeOut = '(No Time Out)';
-                        const workingMilliseconds = endOfDay - attendance.timeIn;
-                        const workingHours = workingMilliseconds / (1000 * 60 * 60);
-                        const hours = Math.floor(workingHours);
-                        const minutes = Math.round((workingHours - hours) * 60);
-                        hoursWorked = `${hours} hrs ${minutes} mins`;
-                    }
-                }
+            } else {
+                timeOut = '(In Work)';
+                hoursWorked = 'In progress';
             }
         } else {
             // No attendance record and not on leave
@@ -277,14 +265,14 @@ async function processAttendanceData(attendanceData, leaveData, allEmployees, re
             leaveRemarks
         };
 
-        if (processedEmployees[department]) {
-            processedEmployees[department].push(employeeData);
+        if (detailedAttendance[department]) {
+            detailedAttendance[department].push(employeeData);
         }
     });
 
     // Sort employees within each department
-    Object.keys(processedEmployees).forEach(dept => {
-        processedEmployees[dept].sort((a, b) => 
+    Object.keys(detailedAttendance).forEach(dept => {
+        detailedAttendance[dept].sort((a, b) => 
             `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
         );
     });
@@ -292,7 +280,7 @@ async function processAttendanceData(attendanceData, leaveData, allEmployees, re
     return {
         summary,
         departmentBreakdown: Object.values(departmentBreakdown),
-        detailedAttendance: processedEmployees
+        detailedAttendance
     };
 }
 
@@ -8742,17 +8730,10 @@ viewEvaluation: async function(req, res) {
     },
 
     // Get employees for reports dropdown
-    getEmployeesForReports: async function(req, res) {
-        if (!req.session.user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Unauthorized. Access only for authorized users.' 
-            });
-        }
-
+    getEmployeesForReports: async (req, res) => {
         try {
-            console.log('🔄 [Backend] Fetching employees for reports dropdown...');
-
+            console.log('🔄 [Backend] Fetching employees for dropdown...');
+            
             const { data: employees, error } = await supabase
                 .from('useraccounts')
                 .select(`
@@ -8760,55 +8741,51 @@ viewEvaluation: async function(req, res) {
                     staffaccounts (
                         firstName,
                         lastName,
-                        departmentId,
-                        departments (deptName)
+                        departments (
+                            deptName
+                        )
                     )
                 `)
-                .eq('userRole', 'Staff')
-                .not('staffaccounts', 'is', null);
-
+                .neq('userRole', 'HR')
+                .order('staffaccounts.firstName', { ascending: true });
+            
             if (error) {
                 console.error('❌ [Backend] Error fetching employees:', error);
-                throw error;
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to fetch employees: ' + error.message
+                });
             }
-
+            
+            // Format the data for frontend
             const formattedEmployees = employees
-                .filter(emp => emp.staffaccounts && emp.staffaccounts.length > 0)
+                .filter(emp => emp.staffaccounts) // Filter out users without staff accounts
                 .map(emp => ({
                     userId: emp.userId,
-                    firstName: emp.staffaccounts[0].firstName,
-                    lastName: emp.staffaccounts[0].lastName,
-                    department: emp.staffaccounts[0].departments?.deptName || 'N/A'
-                }))
-                .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
-
-            console.log(`✅ [Backend] Found ${formattedEmployees.length} employees for dropdown`);
-
-            return res.json({
+                    firstName: emp.staffaccounts.firstName,
+                    lastName: emp.staffaccounts.lastName,
+                    department: emp.staffaccounts.departments?.deptName || 'Unknown'
+                }));
+            
+            console.log(`✅ [Backend] Found ${formattedEmployees.length} employees`);
+            res.json({
                 success: true,
                 employees: formattedEmployees
             });
-
+            
         } catch (error) {
             console.error('❌ [Backend] Error in getEmployeesForReports:', error);
-            return res.status(500).json({
+            res.status(500).json({
                 success: false,
-                message: 'Failed to fetch employees for reports'
+                message: 'Failed to fetch employees: ' + error.message
             });
         }
     },
 
-    // Get daily attendance report
-    getDailyAttendanceReport: async function(req, res) {
-        if (!req.session.user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Unauthorized. Access only for authorized users.' 
-            });
-        }
-
+    getDailyAttendanceReport: async (req, res) => {
         try {
             const { attendanceDate } = req.query;
+            console.log(`🔄 [Backend] Generating daily attendance report for date: ${attendanceDate}`);
             
             if (!attendanceDate) {
                 return res.status(400).json({
@@ -8817,174 +8794,725 @@ viewEvaluation: async function(req, res) {
                 });
             }
 
-            console.log(`🔄 [Backend] Generating daily attendance report for ${attendanceDate}...`);
+            // Get all staff members
+            const { data: allStaff, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select(`
+                    userId,
+                    firstName,
+                    lastName,
+                    departments (
+                        deptName
+                    ),
+                    jobpositions (
+                        jobTitle
+                    ),
+                    useraccounts (
+                        userRole
+                    )
+                `)
+                .neq('useraccounts.userRole', 'HR');
+            
+            if (staffError) {
+                console.error('❌ [Backend] Error fetching staff:', staffError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to fetch staff data: ' + staffError.message
+                });
+            }
 
-            // Fetch attendance data for the specified date
-            const { data: attendanceData, error: attendanceError } = await supabase
+            console.log(`👥 [Backend] Found ${allStaff.length} total staff members`);
+            
+            // Get attendance logs for the specified date
+            const { data: attendanceLogs, error: attendanceError } = await supabase
                 .from('attendance')
                 .select(`
                     userId,
-                    attendanceDate,
-                    attendanceAction,
                     attendanceTime,
+                    attendanceAction,
                     city,
-                    useraccounts (
-                        userId,
-                        staffaccounts (
-                            staffId,
-                            firstName,
-                            lastName,
-                            departmentId,
-                            jobId,
-                            departments: departmentId (deptName),
-                            jobpositions: jobId (jobTitle)
-                        )
-                    )
+                    attendanceDate
                 `)
                 .eq('attendanceDate', attendanceDate)
+                .order('userId', { ascending: true })
                 .order('attendanceTime', { ascending: true });
-
+            
             if (attendanceError) {
-                console.error('❌ [Backend] Error fetching attendance data:', attendanceError);
-                throw attendanceError;
+                console.error('❌ [Backend] Error fetching attendance:', attendanceError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to fetch attendance data: ' + attendanceError.message
+                });
             }
 
-            // Fetch leave data for the specified date
-            const { data: leaveData, error: leaveError } = await supabase
+            console.log(`📊 [Backend] Found ${attendanceLogs.length} attendance records for ${attendanceDate}`);
+            
+            // Get leave requests for the same date
+            const { data: leaveRequests, error: leaveError } = await supabase
                 .from('leaverequests')
                 .select(`
                     userId,
                     fromDate,
                     untilDate,
-                    status,
-                    leave_types (typeName),
-                    useraccounts (
-                        userId,
-                        staffaccounts (
-                            firstName,
-                            lastName,
-                            departmentId,
-                            departments: departmentId (deptName)
-                        )
+                    reason,
+                    leave_types (
+                        typeName
                     )
                 `)
                 .eq('status', 'Approved')
                 .lte('fromDate', attendanceDate)
                 .gte('untilDate', attendanceDate);
-
+            
             if (leaveError) {
-                console.error('❌ [Backend] Error fetching leave data:', leaveError);
-                throw leaveError;
+                console.error('❌ [Backend] Error fetching leave requests:', leaveError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to fetch leave data: ' + leaveError.message
+                });
             }
 
-            // Get all employees for total count
-            const { data: allEmployees, error: employeeError } = await supabase
-                .from('useraccounts')
-                .select(`
-                    userId,
-                    staffaccounts (
-                        firstName,
-                        lastName,
-                        departmentId,
-                        departments: departmentId (deptName)
-                    )
-                `)
-                .eq('userRole', 'Staff')
-                .not('staffaccounts', 'is', null);
-
-            if (employeeError) {
-                console.error('❌ [Backend] Error fetching employee data:', employeeError);
-                throw employeeError;
-            }
-
+            console.log(`🏖️ [Backend] Found ${leaveRequests.length} approved leave requests for ${attendanceDate}`);
+            
             // Process attendance data
-            const processedData = await processAttendanceData(attendanceData, leaveData, allEmployees, attendanceDate);
-
-            console.log(`✅ [Backend] Daily attendance report generated successfully for ${attendanceDate}`);
-
-            return res.json({
+            const attendanceMap = {};
+            attendanceLogs.forEach(log => {
+                if (!attendanceMap[log.userId]) {
+                    attendanceMap[log.userId] = [];
+                }
+                attendanceMap[log.userId].push(log);
+            });
+            
+            // Process leave data
+            const leaveMap = {};
+            leaveRequests.forEach(leave => {
+                leaveMap[leave.userId] = leave;
+            });
+            
+            // Process each employee
+            const detailedAttendance = {};
+            const departmentBreakdown = {};
+            let totalEmployees = 0;
+            let present = 0;
+            let onLeave = 0;
+            let late = 0;
+            let earlyOut = 0;
+            
+            allStaff.forEach(employee => {
+                const dept = employee.departments?.deptName || 'Unknown';
+                
+                // Initialize department breakdown
+                if (!departmentBreakdown[dept]) {
+                    departmentBreakdown[dept] = {
+                        department: dept,
+                        totalEmployees: 0,
+                        present: 0,
+                        late: 0,
+                        onLeave: 0,
+                        earlyOut: 0
+                    };
+                }
+                
+                // Initialize detailed attendance by department
+                if (!detailedAttendance[dept]) {
+                    detailedAttendance[dept] = [];
+                }
+                
+                departmentBreakdown[dept].totalEmployees++;
+                totalEmployees++;
+                
+                const empAttendance = attendanceMap[employee.userId] || [];
+                const empLeave = leaveMap[employee.userId];
+                
+                let timeIn = null;
+                let timeOut = null;
+                let status = 'Absent';
+                let lateMinutes = 0;
+                let earlyOutMinutes = 0;
+                let hoursWorked = 'N/A';
+                
+                // Check if employee is on leave
+                if (empLeave) {
+                    status = 'On Leave';
+                    departmentBreakdown[dept].onLeave++;
+                    onLeave++;
+                } else if (empAttendance.length > 0) {
+                    // Find time in and time out
+                    const timeInRecord = empAttendance.find(log => log.attendanceAction === 'Time In');
+                    const timeOutRecord = empAttendance.find(log => log.attendanceAction === 'Time Out');
+                    
+                    if (timeInRecord) {
+                        timeIn = timeInRecord.attendanceTime;
+                        status = 'Present';
+                        
+                        // Check if late (assuming 9:00 AM is the standard time)
+                        const standardTimeIn = '09:00:00';
+                        if (timeIn > standardTimeIn) {
+                            status = 'Late';
+                            const timeInDate = new Date(`1970-01-01T${timeIn}`);
+                            const standardDate = new Date(`1970-01-01T${standardTimeIn}`);
+                            lateMinutes = Math.round((timeInDate - standardDate) / 60000);
+                            departmentBreakdown[dept].late++;
+                            late++;
+                        } else {
+                            departmentBreakdown[dept].present++;
+                            present++;
+                        }
+                    }
+                    
+                    if (timeOutRecord) {
+                        timeOut = timeOutRecord.attendanceTime;
+                        
+                        // Check if early out (assuming 6:00 PM is the standard time)
+                        const standardTimeOut = '18:00:00';
+                        if (timeOut < standardTimeOut) {
+                            const timeOutDate = new Date(`1970-01-01T${timeOut}`);
+                            const standardDate = new Date(`1970-01-01T${standardTimeOut}`);
+                            earlyOutMinutes = Math.round((standardDate - timeOutDate) / 60000);
+                            departmentBreakdown[dept].earlyOut++;
+                            earlyOut++;
+                        }
+                    }
+                    
+                    // Calculate hours worked
+                    if (timeIn && timeOut) {
+                        const timeInDate = new Date(`1970-01-01T${timeIn}`);
+                        const timeOutDate = new Date(`1970-01-01T${timeOut}`);
+                        const diffMs = timeOutDate - timeInDate;
+                        const diffHours = diffMs / (1000 * 60 * 60);
+                        hoursWorked = diffHours.toFixed(2);
+                    }
+                }
+                
+                // Add to detailed attendance
+                detailedAttendance[dept].push({
+                    userId: employee.userId,
+                    firstName: employee.firstName,
+                    lastName: employee.lastName,
+                    timeIn: timeIn || 'N/A',
+                    timeOut: timeOut || 'N/A',
+                    status: status,
+                    hoursWorked: hoursWorked,
+                    lateMinutes: lateMinutes,
+                    earlyOutMinutes: earlyOutMinutes,
+                    onLeave: !!empLeave,
+                    leaveRemarks: empLeave ? `${empLeave.leave_types?.typeName} - ${empLeave.reason}` : null
+                });
+            });
+            
+            const summary = {
+                totalEmployees,
+                present,
+                onLeave,
+                late,
+                earlyOut
+            };
+            
+            const response = {
                 success: true,
                 reportDate: attendanceDate,
-                generatedOn: new Date().toLocaleDateString(),
-                ...processedData
-            });
-
+                summary: summary,
+                departmentBreakdown: Object.values(departmentBreakdown),
+                detailedAttendance: detailedAttendance
+            };
+            
+            console.log(`✅ [Backend] Daily attendance report generated successfully`);
+            console.log(`📈 [Backend] Summary: ${present} present, ${onLeave} on leave, ${late} late, ${earlyOut} early out of ${totalEmployees} total`);
+            
+            res.json(response);
+            
         } catch (error) {
-            console.error('❌ [Backend] Error in getDailyAttendanceReport:', error);
-            return res.status(500).json({
+            console.error('❌ [Backend] Error generating daily attendance report:', error);
+            res.status(500).json({
                 success: false,
-                message: 'Failed to generate daily attendance report'
+                message: 'Failed to generate daily attendance report: ' + error.message
             });
         }
     },
 
-    // Get employee attendance report (placeholder for now)
-    getEmployeeAttendanceReport: async function(req, res) {
-        if (!req.session.user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Unauthorized. Access only for authorized users.' 
-            });
-        }
-
+    // Enhanced getEmployeeAttendanceReport function for Weekly/Monthly Individual Employee Reports
+    getEmployeeAttendanceReport: async (req, res) => {
         try {
-            const { employeeId, reportType, startDate, endDate } = req.query;
+            const { employeeId, startDate, endDate, reportType } = req.query;
+            console.log(`🔄 [Employee Report] Generating comprehensive employee attendance report for employee ${employeeId} from ${startDate} to ${endDate}, type: ${reportType}`);
             
-            console.log(`🔄 [Backend] Generating employee attendance report for employee ${employeeId} from ${startDate} to ${endDate}...`);
-
-            // TODO: Implement employee-specific attendance report logic
-            // For now, return a placeholder response
+            if (!employeeId || !startDate || !endDate) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Employee ID, start date, and end date are required'
+                });
+            }
             
-            return res.json({
-                success: true,
-                message: 'Employee attendance report - Coming soon',
-                reportType,
-                employeeId,
-                startDate,
-                endDate,
-                generatedOn: new Date().toLocaleDateString()
+            // Get employee details with enhanced information
+            const { data: employeeData, error: employeeError } = await supabase
+                .from('staffaccounts')
+                .select(`
+                    userId,
+                    firstName,
+                    lastName,
+                    hireDate,
+                    departments (
+                        deptName
+                    ),
+                    jobpositions (
+                        jobTitle
+                    ),
+                    useraccounts (
+                        userEmail
+                    )
+                `)
+                .eq('userId', employeeId)
+                .single();
+            
+            if (employeeError || !employeeData) {
+                console.error('❌ [Employee Report] Error fetching employee:', employeeError);
+                return res.status(404).json({
+                    success: false,
+                    message: 'Employee not found'
+                });
+            }
+            
+            console.log(`👤 [Employee Report] Processing report for: ${employeeData.firstName} ${employeeData.lastName}`);
+            
+            // Get all attendance records for the date range
+            const { data: attendanceRecords, error: attendanceError } = await supabase
+                .from('attendance')
+                .select(`
+                    attendanceDate,
+                    attendanceTime,
+                    attendanceAction,
+                    city
+                `)
+                .eq('userId', employeeId)
+                .gte('attendanceDate', startDate)
+                .lte('attendanceDate', endDate)
+                .order('attendanceDate', { ascending: true })
+                .order('attendanceTime', { ascending: true });
+            
+            if (attendanceError) {
+                console.error('❌ [Employee Report] Error fetching attendance records:', attendanceError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to fetch attendance records: ' + attendanceError.message
+                });
+            }
+            
+            console.log(`📊 [Employee Report] Found ${attendanceRecords?.length || 0} attendance records`);
+            
+            // Get leave requests for the date range (both approved and pending)
+            const { data: leaveRecords, error: leaveError } = await supabase
+                .from('leaverequests')
+                .select(`
+                    leaveRequestId,
+                    fromDate,
+                    untilDate,
+                    reason,
+                    status,
+                    created_at,
+                    updatedDate,
+                    remarkByManager,
+                    leave_types (
+                        typeName
+                    )
+                `)
+                .eq('userId', employeeId)
+                .or(`and(fromDate.lte.${endDate},untilDate.gte.${startDate})`)
+                .order('fromDate', { ascending: false });
+            
+            if (leaveError) {
+                console.error('❌ [Employee Report] Error fetching leave records:', leaveError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to fetch leave records: ' + leaveError.message
+                });
+            }
+            
+            console.log(`🏖️ [Employee Report] Found ${leaveRecords?.length || 0} leave records`);
+            
+            // Get current leave balances
+            const { data: leaveBalances, error: balanceError } = await supabase
+                .from('leavebalances')
+                .select(`
+                    totalLeaves,
+                    usedLeaves,
+                    remainingLeaves,
+                    leave_types (
+                        typeName
+                    )
+                `)
+                .eq('userId', employeeId);
+            
+            if (balanceError) {
+                console.error('❌ [Employee Report] Error fetching leave balances:', balanceError);
+            }
+            
+            console.log(`💰 [Employee Report] Found ${leaveBalances?.length || 0} leave balance records`);
+            
+            // Helper function to calculate working days in period (excluding weekends)
+            const calculateWorkingDays = (start, end) => {
+                let workingDays = 0;
+                const currentDate = new Date(start);
+                const periodEndDate = new Date(end);
+                
+                while (currentDate <= endDate) {
+                    const dayOfWeek = currentDate.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude Sunday (0) and Saturday (6)
+                        workingDays++;
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                return workingDays;
+            };
+            
+            // Helper function to check if date is on leave
+            const isDateOnLeave = (date, leaveRecords) => {
+                const checkDate = new Date(date);
+                return leaveRecords.find(leave => {
+                    if (leave.status !== 'Approved') return false;
+                    const fromDate = new Date(leave.fromDate);
+                    const untilDate = new Date(leave.untilDate);
+                    return checkDate >= fromDate && checkDate <= untilDate;
+                });
+            };
+            
+            // Process attendance data by date
+            const attendanceByDate = {};
+            attendanceRecords.forEach(record => {
+                if (!attendanceByDate[record.attendanceDate]) {
+                    attendanceByDate[record.attendanceDate] = [];
+                }
+                attendanceByDate[record.attendanceDate].push(record);
             });
-
+            
+            // Generate detailed attendance record for each working day
+            const detailedAttendanceRecord = [];
+            const workingDaysInPeriod = calculateWorkingDays(startDate, endDate);
+            let daysPresent = 0;
+            let daysOnLeave = 0;
+            let lateArrivals = 0;
+            let earlyOuts = 0;
+            let totalWorkHours = 0;
+            
+            const currentDate = new Date(startDate);
+            const periodEndDate = new Date(endDate);
+            
+            while (currentDate <= periodEndDate) {
+                const dayOfWeek = currentDate.getDay();
+                
+                // Only process working days (Monday to Friday)
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    const dateString = currentDate.toISOString().split('T')[0];
+                    const dailyAttendance = attendanceByDate[dateString] || [];
+                    const leaveRecord = isDateOnLeave(dateString, leaveRecords || []);
+                    
+                    let timeIn = 'N/A';
+                    let timeOut = 'N/A';
+                    let hoursWorked = 'N/A';
+                    let status = 'Absent';
+                    let lateMinutes = 0;
+                    let earlyOutMinutes = 0;
+                    let onLeave = false;
+                    let leaveRemarks = 'N/A';
+                    
+                    if (leaveRecord) {
+                        // Employee is on leave
+                        status = 'On Leave';
+                        onLeave = true;
+                        leaveRemarks = `${leaveRecord.leave_types?.typeName || 'Leave'} - ${leaveRecord.reason || 'No reason provided'}`;
+                        daysOnLeave++;
+                    } else if (dailyAttendance.length > 0) {
+                        // Employee has attendance records
+                        const timeInRecord = dailyAttendance.find(a => a.attendanceAction === 'Time In');
+                        const timeOutRecord = dailyAttendance.find(a => a.attendanceAction === 'Time Out');
+                        
+                        if (timeInRecord) {
+                            timeIn = timeInRecord.attendanceTime;
+                            status = 'Present';
+                            daysPresent++;
+                            
+                            // Check if late (standard time: 9:00 AM)
+                            const standardTimeIn = '09:00:00';
+                            if (timeIn > standardTimeIn) {
+                                status = 'Late';
+                                const timeInDate = new Date(`1970-01-01T${timeIn}`);
+                                const standardDate = new Date(`1970-01-01T${standardTimeIn}`);
+                                lateMinutes = Math.round((timeInDate - standardDate) / 60000);
+                                lateArrivals++;
+                            }
+                        }
+                        
+                        if (timeOutRecord) {
+                            timeOut = timeOutRecord.attendanceTime;
+                            
+                            // Check if early out (standard time: 6:00 PM)
+                            const standardTimeOut = '18:00:00';
+                            if (timeOut < standardTimeOut) {
+                                const timeOutDate = new Date(`1970-01-01T${timeOut}`);
+                                const standardDate = new Date(`1970-01-01T${standardTimeOut}`);
+                                earlyOutMinutes = Math.round((standardDate - timeOutDate) / 60000);
+                                earlyOuts++;
+                            }
+                        }
+                        
+                        // Calculate hours worked
+                        if (timeIn !== 'N/A' && timeOut !== 'N/A') {
+                            const timeInDate = new Date(`1970-01-01T${timeIn}`);
+                            const timeOutDate = new Date(`1970-01-01T${timeOut}`);
+                            const diffMs = timeOutDate - timeInDate;
+                            const diffHours = diffMs / (1000 * 60 * 60);
+                            hoursWorked = `${Math.floor(diffHours)} hrs ${Math.round((diffHours % 1) * 60)} mins`;
+                            totalWorkHours += diffHours;
+                        }
+                    }
+                    
+                    detailedAttendanceRecord.push({
+                        date: currentDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                        }),
+                        timeIn: timeIn,
+                        timeOut: timeOut,
+                        hoursWorked: hoursWorked,
+                        status: status,
+                        lateMinutes: lateMinutes,
+                        earlyOutMinutes: earlyOutMinutes,
+                        onLeave: onLeave,
+                        leaveRemarks: leaveRemarks
+                    });
+                }
+                
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            // Format leave balances
+            const formattedLeaveBalances = (leaveBalances || []).map(balance => ({
+                leaveType: balance.leave_types?.typeName || 'Unknown',
+                annualEntitlement: balance.totalLeaves || 0,
+                used: balance.usedLeaves || 0,
+                remaining: balance.remainingLeaves || 0
+            }));
+            
+            // Separate approved and pending leave requests
+            const approvedLeave = (leaveRecords || [])
+                .filter(leave => leave.status === 'Approved')
+                .map(leave => ({
+                    date: new Date(leave.fromDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    }),
+                    leaveType: leave.leave_types?.typeName || 'Unknown',
+                    requestedDates: `${new Date(leave.fromDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    })} - ${new Date(leave.untilDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    })}`,
+                    duration: Math.ceil((new Date(leave.untilDate) - new Date(leave.fromDate)) / (1000 * 60 * 60 * 24)) + 1,
+                    status: leave.status,
+                    approvedBy: 'Manager', // This would come from approval records
+                    approvalDate: leave.updatedDate ? new Date(leave.updatedDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    }) : 'N/A',
+                    remarks: leave.remarkByManager || 'N/A'
+                }));
+            
+            const pendingLeave = (leaveRecords || [])
+                .filter(leave => leave.status === 'Pending')
+                .map(leave => ({
+                    date: new Date(leave.fromDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    }),
+                    leaveType: leave.leave_types?.typeName || 'Unknown',
+                    requestedDates: `${new Date(leave.fromDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    })} - ${new Date(leave.untilDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    })}`,
+                    duration: Math.ceil((new Date(leave.untilDate) - new Date(leave.fromDate)) / (1000 * 60 * 60 * 24)) + 1,
+                    status: leave.status,
+                    decisionBy: 'Pending Manager Decision'
+                }));
+            
+            // Build comprehensive response
+            const response = {
+                success: true,
+                employee: {
+                    userId: employeeData.userId,
+                    employeeName: `${employeeData.firstName} ${employeeData.lastName}`,
+                    firstName: employeeData.firstName,
+                    lastName: employeeData.lastName,
+                    position: employeeData.jobpositions?.jobTitle || 'Unknown',
+                    department: employeeData.departments?.deptName || 'Unknown',
+                    email: employeeData.useraccounts?.userEmail || 'N/A',
+                    hireDate: employeeData.hireDate
+                },
+                reportType: reportType,
+                reportingPeriod: {
+                    startDate: startDate,
+                    endDate: endDate,
+                    periodType: reportType === 'weekly' ? 'Weekly' : 'Monthly'
+                },
+                reportGenerated: new Date().toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }),
+                periodOverview: {
+                    workingDaysInPeriod: workingDaysInPeriod,
+                    daysPresent: daysPresent,
+                    daysOnLeave: daysOnLeave,
+                    lateArrivals: lateArrivals,
+                    earlyOuts: earlyOuts,
+                    totalWorkHours: `${Math.floor(totalWorkHours)} hrs ${Math.round((totalWorkHours % 1) * 60)} mins`
+                },
+                currentLeaveBalances: formattedLeaveBalances,
+                detailedAttendanceRecord: detailedAttendanceRecord,
+                leaveTaken: approvedLeave,
+                pendingLeaveRequests: pendingLeave
+            };
+            
+            console.log(`✅ [Employee Report] Comprehensive employee attendance report generated for ${employeeData.firstName} ${employeeData.lastName}`);
+            console.log(`📈 [Employee Report] Summary: ${daysPresent}/${workingDaysInPeriod} working days present, ${daysOnLeave} days on leave, ${lateArrivals} late arrivals`);
+            
+            res.json(response);
+            
         } catch (error) {
-            console.error('❌ [Backend] Error in getEmployeeAttendanceReport:', error);
-            return res.status(500).json({
+            console.error('❌ [Employee Report] Error generating comprehensive employee attendance report:', error);
+            res.status(500).json({
                 success: false,
-                message: 'Failed to generate employee attendance report'
+                message: 'Failed to generate employee attendance report: ' + error.message
             });
         }
     },
 
-    // Get leave requests report (placeholder for now)
-    getLeaveRequestsReport: async function(req, res) {
-        if (!req.session.user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Unauthorized. Access only for authorized users.' 
-            });
-        }
-
+    getLeaveRequestsReport: async (req, res) => {
         try {
-            const { reportType, startDate, endDate } = req.query;
+            const { startDate, endDate, reportType } = req.query;
+            console.log(`🔄 [Backend] Generating leave requests report from ${startDate} to ${endDate}`);
             
-            console.log(`🔄 [Backend] Generating leave requests report from ${startDate} to ${endDate}...`);
-
-            // TODO: Implement leave requests report logic
-            // For now, return a placeholder response
+            if (!startDate || !endDate) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Start date and end date are required'
+                });
+            }
             
-            return res.json({
+            // Get leave requests for the date range
+            const { data: leaveRequests, error: leaveError } = await supabase
+                .from('leaverequests')
+                .select(`
+                    fromDate,
+                    untilDate,
+                    reason,
+                    status,
+                    updatedDate,
+                    remarkByManager,
+                    useraccounts (
+                        staffaccounts (
+                            firstName,
+                            lastName,
+                            departments (
+                                deptName
+                            )
+                        )
+                    ),
+                    leave_types (
+                        typeName
+                    )
+                `)
+                .or(`fromDate.gte.${startDate},fromDate.lte.${endDate},untilDate.gte.${startDate},untilDate.lte.${endDate}`)
+                .order('fromDate', { ascending: false });
+            
+            if (leaveError) {
+                console.error('❌ [Backend] Error fetching leave requests:', leaveError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to fetch leave requests: ' + leaveError.message
+                });
+            }
+            
+            // Get leave balances
+            const { data: leaveBalances, error: balanceError } = await supabase
+                .from('leavebalances')
+                .select(`
+                    totalLeaves,
+                    usedLeaves,
+                    remainingLeaves,
+                    useraccounts (
+                        staffaccounts (
+                            firstName,
+                            lastName,
+                            departments (
+                                deptName
+                            )
+                        )
+                    ),
+                    leave_types (
+                        typeName
+                    )
+                `)
+                .order('useraccounts.staffaccounts.departments.deptName', { ascending: true });
+            
+            if (balanceError) {
+                console.error('❌ [Backend] Error fetching leave balances:', balanceError);
+            }
+            
+            // Format leave requests
+            const formattedLeaveRequests = leaveRequests.map(leave => ({
+                firstName: leave.useraccounts?.staffaccounts?.firstName || 'Unknown',
+                lastName: leave.useraccounts?.staffaccounts?.lastName || 'Unknown',
+                department: leave.useraccounts?.staffaccounts?.departments?.deptName || 'Unknown',
+                fromDate: leave.fromDate,
+                untilDate: leave.untilDate,
+                leaveType: leave.leave_types?.typeName || 'Unknown',
+                reason: leave.reason,
+                status: leave.status,
+                updatedDate: leave.updatedDate,
+                remarkByManager: leave.remarkByManager
+            }));
+            
+            // Format leave balances
+            const formattedLeaveBalances = (leaveBalances || []).map(balance => ({
+                firstName: balance.useraccounts?.staffaccounts?.firstName || 'Unknown',
+                lastName: balance.useraccounts?.staffaccounts?.lastName || 'Unknown',
+                department: balance.useraccounts?.staffaccounts?.departments?.deptName || 'Unknown',
+                leaveType: balance.leave_types?.typeName || 'Unknown',
+                totalLeaves: balance.totalLeaves,
+                usedLeaves: balance.usedLeaves,
+                remainingLeaves: balance.remainingLeaves
+            }));
+            
+            const response = {
                 success: true,
-                message: 'Leave requests report - Coming soon',
-                reportType,
-                startDate,
-                endDate,
-                generatedOn: new Date().toLocaleDateString()
-            });
-
+                reportType: reportType,
+                startDate: startDate,
+                endDate: endDate,
+                leaveRequests: formattedLeaveRequests,
+                leaveBalances: formattedLeaveBalances
+            };
+            
+            console.log(`✅ [Backend] Leave requests report generated with ${formattedLeaveRequests.length} requests`);
+            
+            res.json(response);
+            
         } catch (error) {
-            console.error('❌ [Backend] Error in getLeaveRequestsReport:', error);
-            return res.status(500).json({
+            console.error('❌ [Backend] Error generating leave requests report:', error);
+            res.status(500).json({
                 success: false,
-                message: 'Failed to generate leave requests report'
+                message: 'Failed to generate leave requests report: ' + error.message
             });
         }
     },
