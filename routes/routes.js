@@ -430,6 +430,8 @@ router.get('/hr/existing-trainings', hrController.getExistingTrainings);
 router.post('/hr/training/reassign', hrController.reassignTraining); 
 router.get('/hr/training/:trainingId/details', hrController.getTrainingDetails);
 router.get('/hr/employee-dashboard', hrController.getEmployeeTrainingDashboard);
+router.get('/hr/budget-overview', hrController.getBudgetOverview);
+router.post('/hr/update-budget', hrController.updateBudget);
 
 
 router.get('/hr/offboarding-dashboard-stats', hrController.getOffboardingDashboardStats);

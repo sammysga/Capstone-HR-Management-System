@@ -1760,6 +1760,265 @@ reassignTraining: async function (req, res) {
         }
     },
 
+    getBudgetOverview: async function (req, res) {
+        try {
+            console.log('🏢 Loading HR budget overview...');
+
+            // Fetch all training budgets
+            const { data: trainingBudgets, error: budgetsError } = await supabase
+                .from('training_budgets')
+                .select('*')
+                .order('departmentId', { ascending: true });
+
+            if (budgetsError) {
+                console.error('Error fetching training budgets:', budgetsError);
+                throw budgetsError;
+            }
+
+            // Fetch all departments
+            const { data: departments, error: deptError } = await supabase
+                .from('departments')
+                .select('*');
+
+            if (deptError) {
+                console.error('Error fetching departments:', deptError);
+                throw deptError;
+            }
+
+            console.log(`Found ${trainingBudgets?.length || 0} budget entries`);
+            console.log(`Found ${departments?.length || 0} departments`);
+
+            // Fetch approved training records with costs and department info
+            const { data: trainingRecords, error: recordsError } = await supabase
+                .from('training_records')
+                .select(`
+                    trainingRecordId,
+                    userId,
+                    trainingId,
+                    isApproved,
+                    dateRequested,
+                    trainings!inner(cost, trainingName),
+                    staffaccounts!inner(departmentId, firstName, lastName)
+                `)
+                .eq('isApproved', true); // Only count approved trainings
+
+            if (recordsError) {
+                console.error('Error fetching training records:', recordsError);
+                // Continue without spending data rather than failing
+            }
+
+            console.log(`Found ${trainingRecords?.length || 0} approved training records`);
+
+            // Calculate spending per department
+            const departmentSpending = {};
+            (trainingRecords || []).forEach(record => {
+                const departmentId = record.staffaccounts?.departmentId;
+                const cost = record.trainings?.cost || 0;
+                
+                if (departmentId) {
+                    if (!departmentSpending[departmentId]) {
+                        departmentSpending[departmentId] = {
+                            totalSpent: 0,
+                            trainingCount: 0,
+                            recentTrainings: []
+                        };
+                    }
+                    
+                    departmentSpending[departmentId].totalSpent += cost;
+                    departmentSpending[departmentId].trainingCount++;
+                    
+                    // Keep track of recent trainings for details
+                    departmentSpending[departmentId].recentTrainings.push({
+                        trainingName: record.trainings.trainingName,
+                        cost: cost,
+                        employeeName: `${record.staffaccounts.firstName} ${record.staffaccounts.lastName}`,
+                        dateAssigned: record.dateRequested
+                    });
+                }
+            });
+
+            console.log('Department spending calculated:', Object.keys(departmentSpending).length, 'departments with spending');
+
+            // Create enhanced budget overview with spending data
+            const budgetOverview = (departments || []).map(dept => {
+                const budget = trainingBudgets?.find(b => b.departmentId === dept.departmentId);
+                const spending = departmentSpending[dept.departmentId] || { totalSpent: 0, trainingCount: 0, recentTrainings: [] };
+                
+                const budgetAmount = budget?.amount || 0;
+                const spentAmount = spending.totalSpent;
+                const remainingAmount = budgetAmount - spentAmount;
+                const utilizationPercentage = budgetAmount > 0 ? Math.round((spentAmount / budgetAmount) * 100) : 0;
+                
+                return {
+                    departmentId: dept.departmentId,
+                    departmentName: dept.deptName,
+                    budgetAmount: budgetAmount,
+                    spentAmount: spentAmount,
+                    remainingAmount: remainingAmount,
+                    utilizationPercentage: utilizationPercentage,
+                    trainingCount: spending.trainingCount,
+                    fiscalYear: budget?.fiscalYear || new Date().getFullYear(),
+                    status: utilizationPercentage >= 90 ? 'critical' : 
+                            utilizationPercentage >= 75 ? 'warning' : 'good',
+                    recentTrainings: spending.recentTrainings.slice(-5) // Last 5 trainings
+                };
+            });
+
+            console.log('Budget overview created:', budgetOverview);
+
+            res.json({
+                success: true,
+                data: {
+                    departments: budgetOverview,
+                    totalBudget: budgetOverview.reduce((sum, dept) => sum + dept.budgetAmount, 0),
+                    totalSpent: budgetOverview.reduce((sum, dept) => sum + dept.spentAmount, 0),
+                    totalRemaining: budgetOverview.reduce((sum, dept) => sum + dept.remainingAmount, 0),
+                    summary: {
+                        departmentCount: budgetOverview.length,
+                        budgetedDepartments: budgetOverview.filter(d => d.budgetAmount > 0).length,
+                        departmentsWithSpending: budgetOverview.filter(d => d.spentAmount > 0).length,
+                        departmentsOverBudget: budgetOverview.filter(d => d.remainingAmount < 0).length,
+                        departmentsCritical: budgetOverview.filter(d => d.status === 'critical').length,
+                        departmentsWarning: budgetOverview.filter(d => d.status === 'warning').length,
+                        avgBudgetPerDepartment: budgetOverview.length > 0 ? 
+                            Math.round(budgetOverview.reduce((sum, dept) => sum + dept.budgetAmount, 0) / budgetOverview.length) : 0,
+                        avgSpendingPerDepartment: budgetOverview.length > 0 ? 
+                            Math.round(budgetOverview.reduce((sum, dept) => sum + dept.spentAmount, 0) / budgetOverview.length) : 0,
+                        overallUtilization: budgetOverview.reduce((sum, dept) => sum + dept.budgetAmount, 0) > 0 ?
+                            Math.round((budgetOverview.reduce((sum, dept) => sum + dept.spentAmount, 0) / 
+                                    budgetOverview.reduce((sum, dept) => sum + dept.budgetAmount, 0)) * 100) : 0
+                    }
+                },
+                message: `Budget overview loaded: ${budgetOverview.length} departments analyzed`
+            });
+
+        } catch (error) {
+            console.error('Error in getBudgetOverview:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to load budget overview',
+                error: error.message
+            });
+        }
+    },
+
+    updateBudget: async function (req, res) {
+        try {
+            console.log('🔄 Updating department budget...');
+            
+            const { departmentId, amount, fiscalYear, notes } = req.body;
+            
+            // Validation
+            if (!departmentId || amount === undefined || !fiscalYear) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Department ID, amount, and fiscal year are required'
+                });
+            }
+
+            if (amount < 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Budget amount cannot be negative'
+                });
+            }
+
+            console.log(`Updating budget for department ${departmentId}: ₱${amount} for FY ${fiscalYear}`);
+
+            // Check if budget record exists
+            const { data: existingBudget, error: checkError } = await supabase
+                .from('training_budgets')
+                .select('*')
+                .eq('departmentId', departmentId)
+                .eq('fiscalYear', fiscalYear)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+                console.error('Error checking existing budget:', checkError);
+                throw checkError;
+            }
+
+            let result;
+            
+            if (existingBudget) {
+                // Update existing budget
+                console.log('Updating existing budget record');
+                const { data, error } = await supabase
+                    .from('training_budgets')
+                    .update({
+                        amount: parseFloat(amount),
+                        fiscalYear: fiscalYear,
+                        notes: notes || null,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('departmentId', departmentId)
+                    .eq('fiscalYear', fiscalYear)
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Error updating budget:', error);
+                    throw error;
+                }
+
+                result = data;
+                console.log('Budget updated successfully');
+
+            } else {
+                // Create new budget record
+                console.log('Creating new budget record');
+                const { data, error } = await supabase
+                    .from('training_budgets')
+                    .insert({
+                        departmentId: parseInt(departmentId),
+                        amount: parseFloat(amount),
+                        fiscalYear: fiscalYear,
+                        notes: notes || null,
+                        created_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Error creating budget:', error);
+                    throw error;
+                }
+
+                result = data;
+                console.log('Budget created successfully');
+            }
+
+            // Get department name for response
+            const { data: department } = await supabase
+                .from('departments')
+                .select('deptName')
+                .eq('departmentId', departmentId)
+                .single();
+
+            res.json({
+                success: true,
+                data: {
+                    budgetId: result.trainingBugetId || result.id,
+                    departmentId: departmentId,
+                    departmentName: department?.deptName || 'Unknown Department',
+                    amount: result.amount,
+                    fiscalYear: result.fiscalYear,
+                    notes: result.notes,
+                    isNewRecord: !existingBudget
+                },
+                message: `Budget ${existingBudget ? 'updated' : 'created'} successfully for ${department?.deptName || 'department'}`
+            });
+
+        } catch (error) {
+            console.error('Error in updateBudget:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to update budget',
+                error: error.message
+            });
+        }
+    },
+
     getHRNotifications: async function(req, res) {
         // Check for authentication
         if (!req.session.user) {

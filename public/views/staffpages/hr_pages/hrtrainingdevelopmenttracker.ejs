@@ -312,6 +312,149 @@
             </div>
         </div>
 
+        <!-- Department Details Modal -->
+        <div class="modal-overlay" id="departmentDetailsModal">
+            <div class="modal-content" style="max-width: 900px;">
+                <div class="modal-header">
+                    <h2 class="modal-title">Department Budget Details</h2>
+                    <button type="button" class="close-modal-btn" onclick="closeDepartmentDetailsModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div style="max-height: 70vh; overflow-y: auto;">
+                    <!-- Department Overview -->
+                    <div class="dept-details-section">
+                        <h4>Department Overview</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <p><strong>Department:</strong> <span id="modalDeptName">-</span></p>
+                                <p><strong>Department ID:</strong> <span id="modalDeptId">-</span></p>
+                                <p><strong>Fiscal Year:</strong> <span id="modalFiscalYear">-</span></p>
+                                <p><strong>Employee Count:</strong> <span id="modalEmployeeCount">-</span></p>
+                            </div>
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                                <h5 style="margin-bottom: 15px; color: #334155;">Budget Summary</h5>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                        <div style="font-size: 18px; font-weight: 600; color: #3b82f6;" id="modalTotalBudget">₱0</div>
+                                        <div style="font-size: 11px; color: #64748b;">Total Budget</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                        <div style="font-size: 18px; font-weight: 600; color: #dc2626;" id="modalTotalSpent">₱0</div>
+                                        <div style="font-size: 11px; color: #64748b;">Total Spent</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                        <div style="font-size: 18px; font-weight: 600; color: #10b981;" id="modalRemaining">₱0</div>
+                                        <div style="font-size: 11px; color: #64748b;">Remaining</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                        <div style="font-size: 18px; font-weight: 600; color: #8b5cf6;" id="modalUtilization">0%</div>
+                                        <div style="font-size: 11px; color: #64748b;">Utilization</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Training Assignments -->
+                    <div class="dept-details-section">
+                        <h4>Recent Training Assignments</h4>
+                        <div class="recent-trainings-list" id="recentTrainingsList">
+                            <!-- Training items will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Budget Utilization Chart -->
+                    <div class="dept-details-section">
+                        <h4>Budget Utilization</h4>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 8px;">
+                            <div class="budget-progress-container" style="max-width: 100%; height: 20px; margin-bottom: 10px;">
+                                <div class="budget-progress-bar" id="modalProgressBar" style="width: 0%;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #64748b;">
+                                <span>₱0</span>
+                                <span id="modalProgressText">0% Used</span>
+                                <span id="modalBudgetLimit">₱0</span>
+                            </div>
+                            
+                            <!-- Status and Recommendations -->
+                            <div style="margin-top: 15px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span>Status:</span>
+                                    <span class="budget-status-badge" id="modalStatusBadge">Good</span>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <strong>Recommendations:</strong>
+                                    <ul id="modalRecommendations" style="margin: 5px 0 0 20px; font-size: 14px; color: #64748b;">
+                                        <!-- Recommendations will be populated by JavaScript -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeDepartmentDetailsModal()">Close</button>
+                    <button type="button" class="btn-primary" onclick="editDepartmentBudget()">
+                        <i class="fas fa-edit"></i> Edit Budget
+                    </button>
+                    <button type="button" class="btn-primary" onclick="viewDepartmentTrainings()" style="margin-left: 10px;">
+                        <i class="fas fa-graduation-cap"></i> View All Trainings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Budget Modal -->
+        <div class="modal-overlay" id="editBudgetModal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 class="modal-title">Edit Department Budget</h2>
+                    <button type="button" class="close-modal-btn" onclick="closeEditBudgetModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="editBudgetForm">
+                    <div class="form-group">
+                        <label class="form-label">Department:</label>
+                        <input type="text" class="form-input" id="editDeptName" readonly>
+                        <input type="hidden" id="editDeptId">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Budget Amount (PHP):</label>
+                        <input type="number" class="form-input" id="editBudgetAmount" 
+                            placeholder="Enter budget amount" min="0" step="1000" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Fiscal Year:</label>
+                        <select class="form-select" id="editFiscalYear" required>
+                            <option value="2024">2024</option>
+                            <option value="2025" selected>2025</option>
+                            <option value="2026">2026</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Notes (Optional):</label>
+                        <textarea class="form-textarea" id="editBudgetNotes" 
+                                placeholder="Add any notes about this budget allocation..." rows="3"></textarea>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeEditBudgetModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Save Budget
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- TABS CONTAINER -->
         <div class="tabs-container">
             <ul class="tabs-nav">
@@ -320,6 +463,9 @@
                 </button></li>
                 <li><button class="tab-button" data-tab="employee-assignments-tab">
                     <i class="fas fa-users"></i> View Employee Training Assignments
+                </button></li>
+                    <li><button class="tab-button" data-tab="budget-management-tab">
+                    <i class="fas fa-coins"></i> Budget Management
                 </button></li>
             </ul>
 
@@ -487,6 +633,77 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="budget-management-tab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Training Budget Overview</h3>
+                            <div class="budget-export-section">
+                                <button class="export-btn excel" onclick="exportBudgetReport('excel')">
+                                    <i class="fas fa-file-excel"></i> Export Excel
+                                </button>
+                                <button class="export-btn pdf" onclick="exportBudgetReport('pdf')">
+                                    <i class="fas fa-file-pdf"></i> Export PDF
+                                </button>
+                                <button class="btn btn-primary" onclick="refreshBudgetData()">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Budget Summary Cards -->
+                        <div class="budget-overview-grid" id="budgetOverviewGrid">
+                            <!-- Loading state -->
+                            <div class="loading-state" style="grid-column: 1 / -1;">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                Loading budget overview...
+                            </div>
+                        </div>
+
+                        <!-- Filters Section -->
+                        <div class="budget-filters-section">
+                            <div class="budget-filter-group">
+                                <label class="budget-filter-label">Status Filter:</label>
+                                <select class="budget-filter-select" id="statusFilter" onchange="filterDepartments()">
+                                    <option value="">All Departments</option>
+                                    <option value="good">Good (< 75%)</option>
+                                    <option value="warning">Warning (75-90%)</option>
+                                    <option value="critical">Critical (> 90%)</option>
+                                </select>
+                            </div>
+
+                            <div class="budget-filter-group">
+                                <label class="budget-filter-label">Budget Range:</label>
+                                <select class="budget-filter-select" id="budgetRangeFilter" onchange="filterDepartments()">
+                                    <option value="">All Ranges</option>
+                                    <option value="0-50000">₱0 - ₱50,000</option>
+                                    <option value="50000-100000">₱50,000 - ₱100,000</option>
+                                    <option value="100000-500000">₱100,000 - ₱500,000</option>
+                                    <option value="500000+">₱500,000+</option>
+                                </select>
+                            </div>
+
+                            <div class="budget-filter-group" style="flex: 1;">
+                                <label class="budget-filter-label">Search Department:</label>
+                                <input type="text" class="budget-search-input" id="departmentSearch" 
+                                    placeholder="Search by department name..." onkeyup="filterDepartments()">
+                            </div>
+
+                            <button class="btn btn-secondary" onclick="clearAllFilters()">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </button>
+                        </div>
+
+                        <!-- Department Budget Table -->
+                        <div class="department-budget-table" id="departmentBudgetTable">
+                            <!-- Loading state -->
+                            <div class="loading-state" style="padding: 40px; text-align: center;">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                Loading department budget data...
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -496,6 +713,9 @@
         let employeeDashboardData = [];
         let filteredEmployees = [];
         let dashboardStats = {};
+        let budgetData = null;
+        let filteredDepartments = [];
+        let currentSelectedDepartment = null;
 
         // Initialize page with better error handling
         document.addEventListener('DOMContentLoaded', function() {
@@ -518,6 +738,25 @@
                     progressBar.style.width = progress + '%';
                 }
             });
+
+            const budgetTab = document.querySelector('[data-tab="budget-management-tab"]');
+                if (budgetTab) {
+                    budgetTab.addEventListener('click', function() {
+                        console.log('Budget tab clicked - loading budget data...');
+                        // Load budget data when tab is clicked
+                        setTimeout(() => {
+                            loadBudgetData();
+                        }, 100);
+                    });
+                }
+
+            // Initialize edit budget form handler
+            const editBudgetForm = document.getElementById('editBudgetForm');
+            if (editBudgetForm) {
+                editBudgetForm.addEventListener('submit', handleEditBudgetSubmit);
+            } else {
+                console.warn('Edit budget form not found - will initialize later when modal opens');
+            }
             
             // Initialize arrays first
             selectedEmployees = [];
@@ -559,6 +798,571 @@
                 }
             }, 200);
         });
+
+         // ============================================================================
+        // HR BUDGET DASHBOARD FUNCTIONALITY - ADD THIS ENTIRE SECTION
+        // ============================================================================
+        async function loadBudgetData() {
+            try {
+                console.log('🏢 Loading HR budget data...');
+                
+                // Show loading state
+                showBudgetLoading();
+                
+                const response = await fetch('/hr/budget-overview', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    budgetData = result.data;
+                    filteredDepartments = [...budgetData.departments];
+                    
+                    console.log('✅ Budget data loaded:', budgetData);
+                    
+                    renderBudgetOverview();
+                    renderDepartmentTable();
+                    
+                } else {
+                    throw new Error(result.message || 'Failed to load budget data');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading budget data:', error);
+                showBudgetError(error.message);
+            }
+        }
+
+        // Show loading state
+        function showBudgetLoading() {
+            const overviewGrid = document.getElementById('budgetOverviewGrid');
+            const departmentTable = document.getElementById('departmentBudgetTable');
+            
+            if (overviewGrid) {
+                overviewGrid.innerHTML = `
+                    <div class="loading-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                        <p style="margin-top: 10px;">Loading budget overview...</p>
+                    </div>
+                `;
+            }
+            
+            if (departmentTable) {
+                departmentTable.innerHTML = `
+                    <div class="loading-state" style="padding: 40px; text-align: center;">
+                        <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                        <p style="margin-top: 10px;">Loading department budget data...</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Show error state
+        function showBudgetError(message) {
+            const overviewGrid = document.getElementById('budgetOverviewGrid');
+            const departmentTable = document.getElementById('departmentBudgetTable');
+            
+            const errorHTML = `
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px; color: #ef4444;"></i>
+                    <h3 style="margin: 0 0 10px 0; color: #475569;">Failed to Load Budget Data</h3>
+                    <p style="margin: 0 0 15px 0;">${message}</p>
+                    <button onclick="loadBudgetData()" class="btn btn-primary">
+                        <i class="fas fa-retry"></i> Try Again
+                    </button>
+                </div>
+            `;
+            
+            if (overviewGrid) {
+                overviewGrid.innerHTML = errorHTML;
+            }
+            
+            if (departmentTable) {
+                departmentTable.innerHTML = errorHTML;
+            }
+        }
+
+        // Render budget overview cards
+        function renderBudgetOverview() {
+            const overviewGrid = document.getElementById('budgetOverviewGrid');
+            if (!overviewGrid || !budgetData) return;
+            
+            const { totalBudget, totalSpent, totalRemaining, summary } = budgetData;
+            const overallUtilization = summary.overallUtilization || 0;
+            
+            overviewGrid.innerHTML = `
+                <div class="budget-summary-card total">
+                    <div class="budget-summary-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="budget-summary-number">₱${totalBudget.toLocaleString()}</div>
+                    <div class="budget-summary-label">Total Budget</div>
+                    <div class="budget-summary-sublabel">${summary.departmentCount} departments</div>
+                </div>
+                
+                <div class="budget-summary-card spent">
+                    <div class="budget-summary-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="budget-summary-number">₱${totalSpent.toLocaleString()}</div>
+                    <div class="budget-summary-label">Total Spent</div>
+                    <div class="budget-summary-sublabel">${summary.departmentsWithSpending} dept. with spending</div>
+                </div>
+                
+                <div class="budget-summary-card remaining">
+                    <div class="budget-summary-icon">
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <div class="budget-summary-number">₱${totalRemaining.toLocaleString()}</div>
+                    <div class="budget-summary-label">Remaining Budget</div>
+                    <div class="budget-summary-sublabel">${summary.departmentsOverBudget} dept. over budget</div>
+                </div>
+                
+                <div class="budget-summary-card utilization">
+                    <div class="budget-summary-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="budget-summary-number">${overallUtilization}%</div>
+                    <div class="budget-summary-label">Overall Utilization</div>
+                    <div class="budget-summary-sublabel">${summary.departmentsCritical} critical, ${summary.departmentsWarning} warning</div>
+                </div>
+            `;
+        }
+
+        // Render department budget table
+        function renderDepartmentTable() {
+            const departmentTable = document.getElementById('departmentBudgetTable');
+            if (!departmentTable || !filteredDepartments) return;
+            
+            if (filteredDepartments.length === 0) {
+                departmentTable.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px; color: #cbd5e1;"></i>
+                        <h3 style="margin: 0 0 10px 0; color: #475569;">No Departments Found</h3>
+                        <p style="margin: 0;">Try adjusting your filters or search criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Budget Allocated</th>
+                            <th>Amount Spent</th>
+                            <th>Remaining</th>
+                            <th>Utilization</th>
+                            <th>Status</th>
+                            <th>Trainings</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredDepartments.map(dept => `
+                            <tr onclick="showDepartmentDetails(${dept.departmentId})" style="cursor: pointer;">
+                                <td class="dept-name-cell">
+                                    ${dept.departmentName}
+                                    <span class="dept-id">ID: ${dept.departmentId}</span>
+                                </td>
+                                <td class="budget-amount">₱${dept.budgetAmount.toLocaleString()}</td>
+                                <td class="spent-amount">₱${dept.spentAmount.toLocaleString()}</td>
+                                <td class="remaining-amount ${dept.remainingAmount >= 0 ? 'positive' : 'negative'}">
+                                    ₱${dept.remainingAmount.toLocaleString()}
+                                </td>
+                                <td>
+                                    <div class="budget-progress-container">
+                                        <div class="budget-progress-bar ${dept.status}" style="width: ${Math.min(dept.utilizationPercentage, 100)}%"></div>
+                                    </div>
+                                    <div class="budget-progress-text">${dept.utilizationPercentage}%</div>
+                                </td>
+                                <td>
+                                    <span class="budget-status-badge ${dept.status}">
+                                        ${dept.status.charAt(0).toUpperCase() + dept.status.slice(1)}
+                                    </span>
+                                </td>
+                                <td style="text-align: center;">${dept.trainingCount || 0}</td>
+                                <td onclick="event.stopPropagation()">
+                                    <button class="budget-action-btn view" onclick="showDepartmentDetails(${dept.departmentId})">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    <button class="budget-action-btn edit" onclick="editDepartmentBudget(${dept.departmentId})">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            departmentTable.innerHTML = tableHTML;
+        }
+
+        // Filter departments based on search and filters
+        function filterDepartments() {
+            if (!budgetData || !budgetData.departments) return;
+            
+            const statusFilter = document.getElementById('statusFilter').value;
+            const budgetRangeFilter = document.getElementById('budgetRangeFilter').value;
+            const searchTerm = document.getElementById('departmentSearch').value.toLowerCase();
+            
+            filteredDepartments = budgetData.departments.filter(dept => {
+                // Status filter
+                if (statusFilter && dept.status !== statusFilter) {
+                    return false;
+                }
+                
+                // Budget range filter
+                if (budgetRangeFilter) {
+                    const budget = dept.budgetAmount;
+                    switch (budgetRangeFilter) {
+                        case '0-50000':
+                            if (budget < 0 || budget > 50000) return false;
+                            break;
+                        case '50000-100000':
+                            if (budget < 50000 || budget > 100000) return false;
+                            break;
+                        case '100000-500000':
+                            if (budget < 100000 || budget > 500000) return false;
+                            break;
+                        case '500000+':
+                            if (budget < 500000) return false;
+                            break;
+                    }
+                }
+                
+                // Search filter
+                if (searchTerm && !dept.departmentName.toLowerCase().includes(searchTerm)) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            renderDepartmentTable();
+        }
+
+        // Clear all filters
+        function clearAllFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('budgetRangeFilter').value = '';
+            document.getElementById('departmentSearch').value = '';
+            
+            if (budgetData) {
+                filteredDepartments = [...budgetData.departments];
+                renderDepartmentTable();
+            }
+        }
+
+        // Show department details modal
+        function showDepartmentDetails(departmentId) {
+            console.log('Showing details for department:', departmentId);
+            
+            const department = budgetData.departments.find(d => d.departmentId === departmentId);
+            if (!department) {
+                console.error('Department not found:', departmentId);
+                return;
+            }
+            
+            currentSelectedDepartment = department;
+            
+            // Update modal content
+            document.getElementById('modalDeptName').textContent = department.departmentName;
+            document.getElementById('modalDeptId').textContent = department.departmentId;
+            document.getElementById('modalFiscalYear').textContent = department.fiscalYear;
+            document.getElementById('modalEmployeeCount').textContent = department.employeeCount || 'N/A';
+            
+            document.getElementById('modalTotalBudget').textContent = `₱${department.budgetAmount.toLocaleString()}`;
+            document.getElementById('modalTotalSpent').textContent = `₱${department.spentAmount.toLocaleString()}`;
+            document.getElementById('modalRemaining').textContent = `₱${department.remainingAmount.toLocaleString()}`;
+            document.getElementById('modalUtilization').textContent = `${department.utilizationPercentage}%`;
+            
+            // Update progress bar
+            const progressBar = document.getElementById('modalProgressBar');
+            progressBar.className = `budget-progress-bar ${department.status}`;
+            progressBar.style.width = `${Math.min(department.utilizationPercentage, 100)}%`;
+            
+            document.getElementById('modalProgressText').textContent = `${department.utilizationPercentage}% Used`;
+            document.getElementById('modalBudgetLimit').textContent = `₱${department.budgetAmount.toLocaleString()}`;
+            
+            // Update status badge
+            const statusBadge = document.getElementById('modalStatusBadge');
+            statusBadge.className = `budget-status-badge ${department.status}`;
+            statusBadge.textContent = department.status.charAt(0).toUpperCase() + department.status.slice(1);
+            
+            // Update recent trainings
+            renderRecentTrainings(department.recentTrainings || []);
+            
+            // Update recommendations
+            renderRecommendations(department);
+            
+            // Show modal
+            document.getElementById('departmentDetailsModal').classList.add('show');
+        }
+
+        // Render recent trainings in modal
+        function renderRecentTrainings(trainings) {
+            const trainingsList = document.getElementById('recentTrainingsList');
+            
+            if (trainings.length === 0) {
+                trainingsList.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #64748b;">
+                        <i class="fas fa-graduation-cap" style="font-size: 32px; margin-bottom: 10px; color: #cbd5e1;"></i>
+                        <p>No recent training assignments found for this department.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            trainingsList.innerHTML = trainings.map(training => `
+                <div class="recent-training-item">
+                    <div class="training-info">
+                        <div class="training-name">${training.trainingName}</div>
+                        <div class="training-meta">
+                            Employee: ${training.employeeName} • 
+                            Assigned: ${new Date(training.dateAssigned).toLocaleDateString()}
+                        </div>
+                    </div>
+                    <div class="training-cost">₱${training.cost.toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        // Render recommendations based on department status
+        function renderRecommendations(department) {
+            const recommendationsList = document.getElementById('modalRecommendations');
+            const recommendations = [];
+            
+            if (department.utilizationPercentage >= 90) {
+                recommendations.push('Budget utilization is critical. Consider reviewing upcoming training assignments.');
+                recommendations.push('Request additional budget allocation for next fiscal year.');
+            } else if (department.utilizationPercentage >= 75) {
+                recommendations.push('Monitor spending closely for remaining fiscal year.');
+                recommendations.push('Prioritize essential training programs only.');
+            } else if (department.utilizationPercentage < 25) {
+                recommendations.push('Low budget utilization. Consider additional training opportunities.');
+                recommendations.push('Review training needs with department manager.');
+            } else {
+                recommendations.push('Budget utilization is healthy.');
+                recommendations.push('Continue monitoring spending trends.');
+            }
+            
+            if (department.remainingAmount < 0) {
+                recommendations.push('Department is over budget. Immediate review required.');
+            }
+            
+            recommendationsList.innerHTML = recommendations.map(rec => `<li>${rec}</li>`).join('');
+        }
+
+        // Close department details modal
+        function closeDepartmentDetailsModal() {
+            document.getElementById('departmentDetailsModal').classList.remove('show');
+            currentSelectedDepartment = null;
+        }
+
+        // Edit department budget
+        function editDepartmentBudget(departmentId) {
+            const department = departmentId ? 
+                budgetData.departments.find(d => d.departmentId === departmentId) : 
+                currentSelectedDepartment;
+            
+            if (!department) {
+                console.error('Department not found for editing:', departmentId);
+                return;
+            }
+            
+            // Close details modal if open
+            closeDepartmentDetailsModal();
+            
+            // Populate edit form
+            document.getElementById('editDeptName').value = department.departmentName;
+            document.getElementById('editDeptId').value = department.departmentId;
+            document.getElementById('editBudgetAmount').value = department.budgetAmount;
+            document.getElementById('editFiscalYear').value = department.fiscalYear;
+            document.getElementById('editBudgetNotes').value = '';
+            
+            // Show edit modal
+            document.getElementById('editBudgetModal').classList.add('show');
+
+            setTimeout(()=> {
+                initializeEditBudgetForm();
+            }, 100);
+        }
+
+        // Close edit budget modal
+        function closeEditBudgetModal() {
+            document.getElementById('editBudgetModal').classList.remove('show');
+        }
+
+        // Handle edit budget form submission
+        async function handleEditBudgetSubmit(e) {
+            e.preventDefault();
+            
+            const departmentId = document.getElementById('editDeptId').value;
+            const budgetAmount = parseFloat(document.getElementById('editBudgetAmount').value);
+            const fiscalYear = document.getElementById('editFiscalYear').value;
+            const notes = document.getElementById('editBudgetNotes').value;
+            
+            console.log('Updating budget for department:', departmentId, 'Amount:', budgetAmount);
+            
+            try {
+                // Show loading state
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Saving...';
+                submitBtn.disabled = true;
+                
+                const response = await fetch('/hr/update-budget', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        departmentId: parseInt(departmentId),
+                        amount: budgetAmount,
+                        fiscalYear: fiscalYear,
+                        notes: notes
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Budget updated successfully!', 'success');
+                    closeEditBudgetModal();
+                    
+                    // Refresh budget data
+                    loadBudgetData();
+                } else {
+                    showNotification('Error updating budget: ' + result.message, 'error');
+                }
+                
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Error updating budget:', error);
+                showNotification('Error updating budget: ' + error.message, 'error');
+                
+                // Reset button
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.textContent = 'Save Budget';
+                submitBtn.disabled = false;
+            }
+        }
+
+        function initializeEditBudgetForm() {
+            const editBudgetForm = document.getElementById('editBudgetForm');
+            if (editBudgetForm && !editBudgetForm.hasAttribute('data-initialized')) {
+                editBudgetForm.addEventListener('submit', handleEditBudgetSubmit);
+                editBudgetForm.setAttribute('data-initialized', 'true');
+                console.log('Edit budget form initialized');
+            }
+        }
+
+        // Refresh budget data
+        function refreshBudgetData() {
+            console.log('Refreshing budget data...');
+            loadBudgetData();
+        }
+
+        // Export budget report
+        function exportBudgetReport(format) {
+            console.log('Exporting budget report in format:', format);
+            
+            if (!budgetData) {
+                showNotification('No budget data to export. Please load data first.', 'warning');
+                return;
+            }
+            
+            // Create export data
+            const exportData = {
+                summary: budgetData.summary,
+                departments: filteredDepartments,
+                exportDate: new Date().toISOString(),
+                exportFormat: format
+            };
+            
+            if (format === 'excel') {
+                exportToExcel(exportData);
+            } else if (format === 'pdf') {
+                exportToPDF(exportData);
+            }
+        }
+
+        // Export to Excel (placeholder)
+        function exportToExcel(data) {
+            console.log('Exporting to Excel:', data);
+            showNotification('Excel export functionality coming soon!', 'info');
+            // TODO: Implement Excel export
+        }
+
+        // Export to PDF (placeholder)
+        function exportToPDF(data) {
+            console.log('Exporting to PDF:', data);
+            showNotification('PDF export functionality coming soon!', 'info');
+            // TODO: Implement PDF export
+        }
+
+        // Utility: Show notification
+        function showNotification(message, type = 'info') {
+            console.log('Notification:', type, message);
+            
+            // Remove any existing notifications
+            const existingNotification = document.querySelector('.hr-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = 'hr-notification';
+            
+            // Set background color based on type
+            const colors = {
+                info: '#3b82f6',
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b'
+            };
+            notification.style.backgroundColor = colors[type] || colors.info;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // View department trainings (placeholder)
+        function viewDepartmentTrainings() {
+            if (currentSelectedDepartment) {
+                console.log('Viewing trainings for department:', currentSelectedDepartment.departmentName);
+                showNotification(`Viewing trainings for ${currentSelectedDepartment.departmentName}`, 'info');
+                // TODO: Implement department training view
+            }
+        }
 
         // ============================================================================
         // DASHBOARD FUNCTIONALITY

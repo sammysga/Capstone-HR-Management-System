@@ -1370,3 +1370,422 @@ input[type="checkbox"] {
         grid-template-columns: 1fr;
     }
 }
+
+/* HR Budget Dashboard CSS - Add to your hr_pages.css or create new budget.css */
+
+/* Budget Overview Cards */
+.budget-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.budget-summary-card {
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.budget-summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--card-accent-color);
+}
+
+.budget-summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.budget-summary-card.total {
+    --card-accent-color: #3b82f6;
+}
+
+.budget-summary-card.spent {
+    --card-accent-color: #f59e0b;
+}
+
+.budget-summary-card.remaining {
+    --card-accent-color: #10b981;
+}
+
+.budget-summary-card.utilization {
+    --card-accent-color: #8b5cf6;
+}
+
+.budget-summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 28px;
+    color: white;
+    background: var(--card-accent-color);
+}
+
+.budget-summary-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.budget-summary-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+}
+
+.budget-summary-sublabel {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Department Budget Table */
+.department-budget-table {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.department-budget-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.department-budget-table th {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.department-budget-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.department-budget-table tr:hover {
+    background-color: #f8fafc;
+}
+
+.department-budget-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Department Name Column */
+.dept-name-cell {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.dept-name-cell .dept-id {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: 400;
+    margin-left: 8px;
+}
+
+/* Budget Amount Styling */
+.budget-amount {
+    font-weight: 600;
+    color: #059669;
+}
+
+.spent-amount {
+    font-weight: 600;
+    color: #dc2626;
+}
+
+.remaining-amount {
+    font-weight: 600;
+}
+
+.remaining-amount.positive {
+    color: #059669;
+}
+
+.remaining-amount.negative {
+    color: #dc2626;
+}
+
+/* Progress Bars */
+.budget-progress-container {
+    width: 100%;
+    max-width: 120px;
+    height: 8px;
+    background-color: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.budget-progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.budget-progress-bar.good {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.budget-progress-bar.warning {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.budget-progress-bar.critical {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.budget-progress-bar.over-budget {
+    background: linear-gradient(90deg, #7c2d12, #991b1b);
+    width: 100% !important;
+}
+
+.budget-progress-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 4px;
+    text-align: center;
+}
+
+/* Status Badges */
+.budget-status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.budget-status-badge.good {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.budget-status-badge.warning {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.budget-status-badge.critical {
+    background-color: #fecaca;
+    color: #dc2626;
+}
+
+/* Action Buttons */
+.budget-action-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.budget-action-btn.view {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.budget-action-btn.view:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.budget-action-btn.edit {
+    background-color: #f59e0b;
+    color: white;
+    margin-left: 6px;
+}
+
+.budget-action-btn.edit:hover {
+    background-color: #d97706;
+    transform: translateY(-1px);
+}
+
+/* Department Details Modal */
+.dept-details-section {
+    margin-bottom: 25px;
+}
+
+.dept-details-section h4 {
+    margin-bottom: 15px;
+    color: #374151;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+.recent-trainings-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.recent-training-item {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.training-info {
+    flex: 1;
+}
+
+.training-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.training-meta {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.training-cost {
+    font-weight: 600;
+    color: #dc2626;
+    font-size: 0.9rem;
+}
+
+/* Filters and Search */
+.budget-filters-section {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.budget-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.budget-filter-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.budget-filter-select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background-color: white;
+}
+
+.budget-search-input {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    min-width: 200px;
+}
+
+/* Export and Report Buttons */
+.budget-export-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.export-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.export-btn.excel {
+    background-color: #059669;
+    color: white;
+}
+
+.export-btn.pdf {
+    background-color: #dc2626;
+    color: white;
+}
+
+.export-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .budget-overview-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .budget-filters-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .department-budget-table {
+        overflow-x: auto;
+    }
+    
+    .department-budget-table table {
+        min-width: 700px;
+    }
+    
+    .budget-export-section {
+        flex-direction: column;
+    }
+}
