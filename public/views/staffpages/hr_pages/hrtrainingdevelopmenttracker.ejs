@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="/css/hr_pages.css">
     <link rel="stylesheet" href="/css/hr_trainingdevelopment_tracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style id="hr-notification-styles">
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
@@ -496,6 +498,15 @@
                             </button>
                         </div>
 
+                        <div class="export-report-section">
+                            <button class="export-btn pdf" onclick="generateTrainingReport('courses', 'pdf')">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </button>
+                            <button class="export-btn excel" onclick="generateTrainingReport('courses', 'excel')">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </button>
+                        </div>
+
                         <!-- Training courses grid -->
                         <div class="training-courses-grid">
                             <% if (typeof trainings !== 'undefined' && trainings && trainings.length > 0) { %>
@@ -598,29 +609,79 @@
                             </div>
                         </div>
 
+                        <div class="export-report-section">
+                            <button class="export-btn pdf" onclick="generateTrainingReport('assignments', 'pdf')">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </button>
+                            <button class="export-btn excel" onclick="generateTrainingReport('assignments', 'excel')">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </button>
+                        </div>
+
                         <!-- Search and Filter Section -->
-                        <div class="search-filter-section" style="margin-top: 30px;">
-                            <div class="search-container">
-                                <i class="fas fa-search search-icon"></i>
-                                <input type="text" class="search-input" placeholder="Search employees..." id="employeeDashboardSearch">
+                        <div class="enhanced-filter-section">
+                            <div class="filter-row">
+                                <div class="enhanced-filter-group">
+                                    <label>Date Range</label>
+                                    <div class="date-range-container">
+                                        <input type="date" class="date-input" id="startDate" />
+                                        <span class="date-range-separator">to</span>
+                                        <input type="date" class="date-input" id="endDate" />
+                                    </div>
+                                </div>
+                                <div class="enhanced-filter-group">
+                                    <label>Status Filter</label>
+                                    <select id="statusFilterEnhanced">
+                                        <option value="">All Statuses</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Not Started">Not Started</option>
+                                        <option value="Overdue">Overdue</option>
+                                    </select>
+                                </div>
+                                <div class="enhanced-filter-group">
+                                    <label>Department</label>
+                                    <select id="departmentFilterEnhanced">
+                                        <option value="">All Departments</option>
+                                        <!-- Will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                                <div class="filter-actions">
+                                    <button class="filter-btn apply" onclick="applyEnhancedFilters()">
+                                        <i class="fas fa-filter"></i> Apply Filters
+                                    </button>
+                                    <button class="filter-btn" onclick="clearEnhancedFilters()">
+                                        <i class="fas fa-times"></i> Clear
+                                    </button>
+                                </div>
                             </div>
-                            
-                            <div class="filter-controls">
-                                <select class="filter-select" id="statusFilter">
-                                    <option value="">All Statuses</option>
-                                    <option value="Behind Schedule">Behind Schedule</option>
-                                    <option value="On Track">On Track</option>
-                                    <option value="All Complete">All Complete</option>
-                                </select>
-                                
-                                <select class="filter-select" id="departmentFilter">
-                                    <option value="">All Departments</option>
-                                    <!-- Will be populated by JavaScript -->
-                                </select>
-                                
-                                <button class="filter-btn" onclick="clearAllFilters()">
-                                    <i class="fas fa-times"></i> Clear Filters
-                                </button>
+                        </div>
+
+                        <div class="report-summary-cards" id="trainingReportSummary" style="display: none;">
+                            <div class="summary-stat-card total-assigned">
+                                <div class="summary-stat-number" id="totalAssignedStat">0</div>
+                                <div class="summary-stat-label">Total Assigned</div>
+                                <div class="summary-stat-sublabel">Training assignments</div>
+                            </div>
+                            <div class="summary-stat-card completed">
+                                <div class="summary-stat-number" id="completedStat">0</div>
+                                <div class="summary-stat-label">Completed</div>
+                                <div class="summary-stat-sublabel">Successfully finished</div>
+                            </div>
+                            <div class="summary-stat-card in-progress">
+                                <div class="summary-stat-number" id="inProgressStat">0</div>
+                                <div class="summary-stat-label">In Progress</div>
+                                <div class="summary-stat-sublabel">Currently active</div>
+                            </div>
+                            <div class="summary-stat-card overdue">
+                                <div class="summary-stat-number" id="overdueStat">0</div>
+                                <div class="summary-stat-label">Overdue</div>
+                                <div class="summary-stat-sublabel">Past due date</div>
+                            </div>
+                            <div class="summary-stat-card avg-completion">
+                                <div class="summary-stat-number" id="avgCompletionStat">0%</div>
+                                <div class="summary-stat-label">Avg Completion</div>
+                                <div class="summary-stat-sublabel">Overall progress</div>
                             </div>
                         </div>
 
@@ -706,6 +767,16 @@
                 </div>
             </div>
         </div>
+
+        <!-- PDF Generation Modal -->
+        <div class="pdf-generation-overlay" id="pdfGenerationOverlay">
+            <div class="pdf-generation-modal">
+                <div class="pdf-spinner"></div>
+                <div class="pdf-generation-text">Generating PDF Report...</div>
+                <div class="pdf-generation-subtext">Please wait while we compile your training data</div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -728,6 +799,7 @@
                         // Always load dashboard data when tab is clicked (removed the length check)
                         setTimeout(() => {
                             loadEmployeeDashboard();
+                            initializeEnhancedFilters();
                         }, 100);
                     });
                 }
@@ -1279,42 +1351,216 @@
             loadBudgetData();
         }
 
-        // Export budget report
-        function exportBudgetReport(format) {
-            console.log('Exporting budget report in format:', format);
+        async function exportBudgetReport(format) {
+            console.log('Exporting enhanced budget report in format:', format);
             
             if (!budgetData) {
                 showNotification('No budget data to export. Please load data first.', 'warning');
                 return;
             }
             
-            // Create export data
-            const exportData = {
-                summary: budgetData.summary,
-                departments: filteredDepartments,
-                exportDate: new Date().toISOString(),
-                exportFormat: format
-            };
-            
-            if (format === 'excel') {
-                exportToExcel(exportData);
-            } else if (format === 'pdf') {
-                exportToPDF(exportData);
+            try {
+                showPdfGenerationOverlay();
+                
+                // Fetch enhanced budget report data
+                const response = await fetch('/hr/budget-report');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const reportData = await response.json();
+                if (!reportData.success) {
+                    throw new Error(reportData.message);
+                }
+                
+                if (format === 'pdf') {
+                    generateBudgetPDF(reportData.data);
+                } else if (format === 'excel') {
+                    generateBudgetExcel(reportData.data);
+                }
+                
+            } catch (error) {
+                console.error('Error exporting budget report:', error);
+                showNotification('Error exporting budget report: ' + error.message, 'error');
+            } finally {
+                hidePdfGenerationOverlay();
             }
         }
 
-        // Export to Excel (placeholder)
-        function exportToExcel(data) {
-            console.log('Exporting to Excel:', data);
-            showNotification('Excel export functionality coming soon!', 'info');
-            // TODO: Implement Excel export
+        // Generate Budget Excel (enhanced placeholder)
+        function generateBudgetExcel(data) {
+            console.log('Enhanced Excel generation with analytics:', data);
+            
+            // Create CSV content for now (can be enhanced to actual Excel later)
+            let csvContent = 'Department Budget Report\n\n';
+            
+            // Add summary
+            csvContent += 'EXECUTIVE SUMMARY\n';
+            csvContent += `Total Budget Allocated,₱${data.insights.totalBudgetAllocated.toLocaleString()}\n`;
+            csvContent += `Total Spent,₱${data.insights.totalSpent.toLocaleString()}\n`;
+            csvContent += `Overall Utilization,${data.insights.overallUtilization}%\n`;
+            csvContent += `Total Trainings,${data.insights.totalTrainings}\n\n`;
+            
+            // Add department details
+            csvContent += 'DEPARTMENT BREAKDOWN\n';
+            csvContent += 'Department,Budget Allocated,Amount Spent,Remaining,Utilization %,Status,Training Count\n';
+            
+            data.departments.forEach(dept => {
+                csvContent += `${dept.departmentName},₱${dept.budgetAllocated.toLocaleString()},₱${dept.totalSpent.toLocaleString()},₱${dept.remainingBudget.toLocaleString()},${dept.utilizationPercentage}%,${dept.status},${dept.trainingCount}\n`;
+            });
+            
+            // Create download
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `budget_report_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('Enhanced budget CSV report downloaded successfully!', 'success');
         }
 
-        // Export to PDF (placeholder)
-        function exportToPDF(data) {
-            console.log('Exporting to PDF:', data);
-            showNotification('PDF export functionality coming soon!', 'info');
-            // TODO: Implement PDF export
+        // Updated generateBudgetPDF function with safety checks
+        function generateBudgetPDF(data) {
+            try {
+                // Check if jsPDF is available
+                if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+                    throw new Error('PDF library not loaded. Please refresh the page.');
+                }
+                
+                const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
+                const doc = new jsPDF();
+                
+                // Set up document header
+                doc.setFontSize(20);
+                doc.setTextColor(7, 172, 185);
+                doc.text('HR Training Budget Report', 20, 20);
+                
+                // Generation date
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+                
+                let yPosition = 45;
+                
+                // Executive Summary
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Executive Summary', 20, yPosition);
+                yPosition += 10;
+                
+                // FIXED: Add safety checks for data structure
+                const insights = data.insights || {};
+                
+                const summaryData = [
+                    ['Total Budget Allocated', `₱${(insights.totalBudgetAllocated || 0).toLocaleString()}`],
+                    ['Total Spent', `₱${(insights.totalSpent || 0).toLocaleString()}`],
+                    ['Remaining Budget', `₱${(insights.totalRemaining || 0).toLocaleString()}`],
+                    ['Overall Utilization', `${insights.overallUtilization || 0}%`],
+                    ['Total Trainings', insights.totalTrainings || 0],
+                    ['Departments Over Budget', insights.departmentsOverBudget || 0],
+                    ['Critical Departments', insights.departmentsCritical || 0],
+                    ['Warning Departments', insights.departmentsWarning || 0]
+                ];
+                
+                doc.autoTable({
+                    startY: yPosition,
+                    body: summaryData,
+                    styles: { fontSize: 10, cellPadding: 4 },
+                    columnStyles: { 
+                        0: { fontStyle: 'bold', fillColor: [240, 240, 240], cellWidth: 70 },
+                        1: { cellWidth: 50, halign: 'right' }
+                    },
+                    margin: { left: 20, right: 20 }
+                });
+                
+                yPosition = doc.lastAutoTable.finalY + 20;
+                
+                // Top Spending Departments - FIXED: Add safety check
+                if (insights.topSpendingDepartments && insights.topSpendingDepartments.length > 0) {
+                    doc.setFontSize(14);
+                    doc.text('Top Spending Departments', 20, yPosition);
+                    yPosition += 10;
+                    
+                    const topSpendingData = insights.topSpendingDepartments.map(dept => [
+                        dept.departmentName || 'Unknown',
+                        `₱${(dept.totalSpent || 0).toLocaleString()}`,
+                        `${dept.utilizationPercentage || 0}%`,
+                        dept.trainingCount || 0
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [['Department', 'Amount Spent', 'Utilization', 'Trainings']],
+                        body: topSpendingData,
+                        styles: { fontSize: 10, cellPadding: 4 },
+                        headStyles: { fillColor: [7, 172, 185], textColor: [255, 255, 255] },
+                        margin: { left: 20, right: 20 }
+                    });
+                    
+                    yPosition = doc.lastAutoTable.finalY + 20;
+                } else {
+                    // If no top spending departments, add a note
+                    doc.setFontSize(12);
+                    doc.text('No spending data available for departments.', 20, yPosition);
+                    yPosition += 20;
+                }
+                
+                // Add new page for detailed department breakdown
+                doc.addPage();
+                
+                // Department Breakdown
+                doc.setFontSize(16);
+                doc.text('Department Budget Breakdown', 20, 20);
+                
+                // FIXED: Add safety check for departments data
+                const departments = data.departments || [];
+                
+                if (departments.length > 0) {
+                    const departmentData = departments.map(dept => [
+                        dept.departmentName || 'Unknown',
+                        `₱${(dept.budgetAllocated || 0).toLocaleString()}`,
+                        `₱${(dept.totalSpent || 0).toLocaleString()}`,
+                        `₱${(dept.remainingBudget || 0).toLocaleString()}`,
+                        `${dept.utilizationPercentage || 0}%`,
+                        (dept.status || 'unknown').charAt(0).toUpperCase() + (dept.status || 'unknown').slice(1),
+                        dept.trainingCount || 0
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: 35,
+                        head: [['Department', 'Budget', 'Spent', 'Remaining', 'Utilization', 'Status', 'Trainings']],
+                        body: departmentData,
+                        styles: { fontSize: 8, cellPadding: 2 },
+                        headStyles: { fillColor: [7, 172, 185], textColor: [255, 255, 255] },
+                        columnStyles: {
+                            0: { cellWidth: 25 },
+                            1: { cellWidth: 25 },
+                            2: { cellWidth: 25 },
+                            3: { cellWidth: 25 },
+                            4: { cellWidth: 20 },
+                            5: { cellWidth: 20 },
+                            6: { cellWidth: 15 }
+                        },
+                        margin: { left: 10, right: 10 }
+                    });
+                } else {
+                    doc.text('No department data available.', 20, 35);
+                }
+                
+                // Save the PDF
+                const filename = `budget_report_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(filename);
+                
+                showNotification('Enhanced budget PDF report generated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error generating budget PDF:', error);
+                throw error;
+            }
         }
 
         // Utility: Show notification
@@ -3269,6 +3515,401 @@
         }
 
         // ============================================================================
+        // TRAINING REPORTS PDF GENERATION
+        // ============================================================================
+
+        // Global variables for enhanced filtering
+        let filteredTrainingData = [];
+        let enhancedFiltersApplied = false;
+
+        // Main function to generate training reports
+        async function generateTrainingReport(reportType, format) {
+            console.log(`🔄 Generating ${reportType} report in ${format} format`);
+            
+            // Show loading overlay
+            showPdfGenerationOverlay();
+            
+            try {
+                let endpoint = '';
+                let params = new URLSearchParams();
+                
+                // Set endpoints and collect parameters based on report type
+                switch(reportType) {
+                    case 'courses':
+                        endpoint = '/hr/training-reports/courses';
+                        // Add search filter if active
+                        const courseSearch = document.getElementById('courseSearch')?.value;
+                        if (courseSearch) params.append('search', courseSearch);
+                        break;
+                        
+                    case 'assignments':
+                        endpoint = '/hr/training-reports/assignments';
+                        // Add enhanced filters if applied
+                        if (enhancedFiltersApplied) {
+                            const startDate = document.getElementById('startDate')?.value;
+                            const endDate = document.getElementById('endDate')?.value;
+                            const statusFilter = document.getElementById('statusFilterEnhanced')?.value;
+                            const departmentFilter = document.getElementById('departmentFilterEnhanced')?.value;
+                            
+                            if (startDate) params.append('startDate', startDate);
+                            if (endDate) params.append('endDate', endDate);
+                            if (statusFilter) params.append('status', statusFilter);
+                            if (departmentFilter) params.append('department', departmentFilter);
+                        }
+                        break;
+                        
+                    default:
+                        throw new Error('Unknown report type');
+                }
+                
+                // Fetch data from backend
+                const response = await fetch(`${endpoint}?${params.toString()}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to generate report');
+                }
+                
+                if (format === 'pdf') {
+                    generateTrainingPDF(data, reportType);
+                } else if (format === 'excel') {
+                    generateTrainingExcel(data, reportType);
+                }
+                
+                console.log(`✅ ${reportType} report generated successfully`);
+                
+            } catch (error) {
+                console.error('❌ Error generating report:', error);
+                showNotification('Error generating report: ' + error.message, 'error');
+            } finally {
+                hidePdfGenerationOverlay();
+            }
+        }
+
+        function generateCoursesPDFContent(doc, coursesData, startY) {
+            if (!coursesData || coursesData.length === 0) {
+                doc.text('No training courses found.', 20, startY);
+                return;
+            }
+            
+            // Prepare table data for courses
+            const tableData = coursesData.map(course => [
+                course.title || '',
+                course.mode || '',
+                `${course.duration || 0}h`,
+                `₱${(course.cost || 0).toLocaleString()}`,
+                `${course.assignedEmployees || 0}`,
+                `${course.completedEmployees || 0}`,
+                course.completionRate || '0%',
+                course.isRequired ? 'Yes' : 'No'
+            ]);
+            
+            doc.autoTable({
+                startY: startY,
+                head: [['Course Name', 'Mode', 'Duration', 'Cost', 'Assigned', 'Completed', 'Rate', 'Required']],
+                body: tableData,
+                styles: { fontSize: 8, cellPadding: 3 },
+                headStyles: { fillColor: [7, 172, 185], textColor: [255, 255, 255] },
+                columnStyles: {
+                    0: { cellWidth: 30 }, // Course Name
+                    1: { cellWidth: 15 }, // Mode
+                    2: { cellWidth: 15 }, // Duration
+                    3: { cellWidth: 20 }, // Cost
+                    4: { cellWidth: 15 }, // Assigned
+                    5: { cellWidth: 15 }, // Completed
+                    6: { cellWidth: 15 }, // Rate
+                    7: { cellWidth: 15 }  // Required
+                },
+                margin: { left: 10, right: 10 },
+                theme: 'striped'
+            });
+        }
+
+        // Generate PDF for training reports
+        function generateTrainingPDF(data, reportType) {
+            try {
+                // Check if jsPDF is available
+                if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+                    throw new Error('PDF library not loaded. Please refresh the page.');
+                }
+                
+                const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
+                const doc = new jsPDF();
+                
+                // Set up document header
+                doc.setFontSize(20);
+                doc.setTextColor(7, 172, 185);
+                doc.text('HR Training & Development System', 20, 20);
+                
+                // Report title
+                doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
+                const titles = {
+                    'courses': 'Training Courses Report',
+                    'assignments': 'Employee Training Assignments Report'
+                };
+                doc.text(titles[reportType], 20, 35);
+                
+                // Generation date and filters
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
+                
+                if (data.filters && Object.keys(data.filters).length > 0) {
+                    doc.text(`Filters Applied: ${JSON.stringify(data.filters)}`, 20, 52);
+                }
+                
+                let yPosition = 65;
+                
+                // Add summary statistics
+                if (data.summary) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Summary Statistics', 20, yPosition);
+                    yPosition += 10;
+                    
+                    const summaryData = Object.entries(data.summary).map(([key, value]) => [
+                        key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
+                        String(value)
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        body: summaryData,
+                        styles: { fontSize: 10, cellPadding: 4 },
+                        columnStyles: { 
+                            0: { fontStyle: 'bold', fillColor: [240, 240, 240], cellWidth: 70 },
+                            1: { cellWidth: 40, halign: 'center' }
+                        },
+                        margin: { left: 20, right: 20 }
+                    });
+                    
+                    yPosition = doc.lastAutoTable.finalY + 20;
+                }
+                
+                // Generate specific content based on report type
+                if (reportType === 'courses' && data.data) {
+                    generateCoursesPDFContent(doc, data.data, yPosition);
+                } else if (reportType === 'assignments' && data.data) {
+                    generateAssignmentsPDFContent(doc, data.data, yPosition);
+                }
+                
+                // Save the PDF
+                const filename = `training_${reportType}_report_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(filename);
+                
+                showNotification('PDF report generated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                throw error;
+            }
+        }
+
+        
+
+        // Generate courses PDF content
+        function generateAssignmentsPDFContent(doc, assignmentsData, startY) {
+            if (!assignmentsData || assignmentsData.length === 0) {
+                doc.text('No training assignments found.', 20, startY);
+                return;
+            }
+            
+            // Split into smaller tables to fit page width
+            const tableData = assignmentsData.map(assignment => [
+                assignment.employeeName || '',
+                assignment.department || '',
+                assignment.trainingTitle?.substring(0, 20) + '...' || '', // Truncate long titles
+                assignment.status || '',
+                `${assignment.progress || 0}%`,
+                assignment.assignedDate ? new Date(assignment.assignedDate).toLocaleDateString() : '',
+                assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No due date'
+            ]);
+            
+            doc.autoTable({
+                startY: startY,
+                head: [['Employee', 'Department', 'Training', 'Status', 'Progress', 'Assigned', 'Due Date']],
+                body: tableData,
+                styles: { fontSize: 8, cellPadding: 3 },
+                headStyles: { fillColor: [7, 172, 185], textColor: [255, 255, 255] },
+                columnStyles: {
+                    0: { cellWidth: 25 }, // Employee
+                    1: { cellWidth: 20 }, // Department  
+                    2: { cellWidth: 30 }, // Training
+                    3: { cellWidth: 18 }, // Status
+                    4: { cellWidth: 15 }, // Progress
+                    5: { cellWidth: 20 }, // Assigned
+                    6: { cellWidth: 20 }  // Due Date
+                },
+                margin: { left: 10, right: 10 },
+                tableWidth: 'auto',
+                theme: 'striped'
+            });
+        }
+
+        // Generate Excel (placeholder for now)
+        function generateTrainingExcel(data, reportType) {
+            console.log('Excel generation requested:', reportType);
+            showNotification('Excel export feature coming soon!', 'info');
+        }
+
+        // ============================================================================
+        // ENHANCED FILTERING FUNCTIONALITY
+        // ============================================================================
+
+        // Apply enhanced filters
+        async function applyEnhancedFilters() {
+            console.log('🔍 Applying enhanced filters...');
+            
+            try {
+                const startDate = document.getElementById('startDate')?.value;
+                const endDate = document.getElementById('endDate')?.value;
+                const statusFilter = document.getElementById('statusFilterEnhanced')?.value;
+                const departmentFilter = document.getElementById('departmentFilterEnhanced')?.value;
+                
+                const filters = {
+                    startDate,
+                    endDate,
+                    status: statusFilter,
+                    department: departmentFilter
+                };
+                
+                // Remove empty filters
+                Object.keys(filters).forEach(key => {
+                    if (!filters[key]) delete filters[key];
+                });
+                
+                console.log('Applied filters:', filters);
+                
+                // Fetch filtered data
+                const params = new URLSearchParams(filters);
+                const response = await fetch(`/hr/training-reports/assignments/filtered?${params.toString()}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch filtered data: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    filteredTrainingData = result.data;
+                    enhancedFiltersApplied = true;
+                    
+                    // Update summary cards
+                    updateTrainingSummaryCards(result.summary);
+                    
+                    // Update dashboard display
+                    updateEmployeeDashboardWithFilters(result.data);
+                    
+                    showNotification(`Filters applied. Showing ${result.data.length} results.`, 'success');
+                } else {
+                    throw new Error(result.message || 'Failed to apply filters');
+                }
+                
+            } catch (error) {
+                console.error('Error applying filters:', error);
+                showNotification('Error applying filters: ' + error.message, 'error');
+            }
+        }
+
+        // Clear enhanced filters
+        function clearEnhancedFilters() {
+            console.log('🗑️ Clearing enhanced filters...');
+            
+            // Clear form inputs
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('statusFilterEnhanced').value = '';
+            document.getElementById('departmentFilterEnhanced').value = '';
+            
+            // Reset global variables
+            filteredTrainingData = [];
+            enhancedFiltersApplied = false;
+            
+            // Hide summary cards
+            const summaryCards = document.getElementById('trainingReportSummary');
+            if (summaryCards) {
+                summaryCards.style.display = 'none';
+            }
+            
+            // Reload original dashboard
+            loadEmployeeDashboard();
+            
+            showNotification('Filters cleared', 'info');
+        }
+
+        // Update training summary cards
+        function updateTrainingSummaryCards(summary) {
+            if (!summary) return;
+            
+            const summaryCards = document.getElementById('trainingReportSummary');
+            if (summaryCards) {
+                summaryCards.style.display = 'grid';
+                
+                document.getElementById('totalAssignedStat').textContent = summary.totalAssigned || 0;
+                document.getElementById('completedStat').textContent = summary.completed || 0;
+                document.getElementById('inProgressStat').textContent = summary.inProgress || 0;
+                document.getElementById('overdueStat').textContent = summary.overdue || 0;
+                document.getElementById('avgCompletionStat').textContent = `${summary.averageCompletion || 0}%`;
+            }
+        }
+
+        // Update employee dashboard with filtered data
+        function updateEmployeeDashboardWithFilters(filteredData) {
+            // This will update the existing dashboard display with filtered results
+            // Reuse your existing renderEmployeeDashboard function but with filtered data
+            if (typeof renderEmployeeDashboard === 'function') {
+                filteredEmployees = filteredData;
+                renderEmployeeDashboard();
+            }
+        }
+
+        // ============================================================================
+        // PDF GENERATION UI HELPERS
+        // ============================================================================
+
+        // Show PDF generation overlay
+        function showPdfGenerationOverlay() {
+            const overlay = document.getElementById('pdfGenerationOverlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+            }
+        }
+
+        // Hide PDF generation overlay
+        function hidePdfGenerationOverlay() {
+            const overlay = document.getElementById('pdfGenerationOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function initializeEnhancedFilters() {
+            console.log('Initializing enhanced filters...');
+            
+            // Populate department filter for enhanced filtering
+            const departmentFilterEnhanced = document.getElementById('departmentFilterEnhanced');
+            if (departmentFilterEnhanced && employeeDashboardData && employeeDashboardData.length > 0) {
+                const departments = [...new Set(employeeDashboardData.map(emp => emp.department))].sort();
+                
+                departmentFilterEnhanced.innerHTML = '<option value="">All Departments</option>';
+                departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept;
+                    option.textContent = dept;
+                    departmentFilterEnhanced.appendChild(option);
+                });
+            }
+            
+            console.log('Enhanced filters initialized');
+        }
+
+        // ============================================================================
         // ERROR HANDLING
         // ============================================================================
 
@@ -3316,6 +3957,10 @@
         window.showEmployeeTrainingDetails = showEmployeeTrainingDetails;
         window.closeEmployeeDetailsModal = closeEmployeeDetailsModal;
         window.assignNewTraining = assignNewTraining;
+        window.generateTrainingReport = generateTrainingReport;
+        window.applyEnhancedFilters = applyEnhancedFilters;
+        window.clearEnhancedFilters = clearEnhancedFilters;
+        window.initializeEnhancedFilters = initializeEnhancedFilters;
 
         // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {

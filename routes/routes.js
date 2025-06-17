@@ -432,6 +432,11 @@ router.get('/hr/training/:trainingId/details', hrController.getTrainingDetails);
 router.get('/hr/employee-dashboard', hrController.getEmployeeTrainingDashboard);
 router.get('/hr/budget-overview', hrController.getBudgetOverview);
 router.post('/hr/update-budget', hrController.updateBudget);
+router.get('/hr/training-reports/courses', hrController.getTrainingCoursesReport);
+router.get('/hr/training-reports/assignments', hrController.getTrainingAssignmentsReport);
+router.get('/hr/training-reports/assignments/filtered', hrController.getFilteredTrainingAssignments);
+router.get('/hr/budget-report', hrController.getBudgetReport);
+router.get('/hr/budget-export/:format', hrController.exportBudgetReport);
 
 
 router.get('/hr/offboarding-dashboard-stats', hrController.getOffboardingDashboardStats);

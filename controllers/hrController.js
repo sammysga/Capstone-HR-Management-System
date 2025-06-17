@@ -2242,6 +2242,553 @@ reassignTraining: async function (req, res) {
         }
     },
 
+    // ============================================================================
+    // TRAINING REPORTS CONTROLLER FUNCTIONS
+    // ============================================================================
+
+    // Training Courses Report
+    getTrainingCoursesReport: async function (req, res) {
+        try {
+            console.log('🔄 Generating training courses report...');
+            
+            const { search } = req.query;
+            
+            // Fetch all required trainings
+            let query = supabase
+                .from('trainings')
+                .select('*')
+                .eq('isActive', true)
+                .eq('isRequired', true);
+            
+            // Apply search filter if provided
+            if (search) {
+                query = query.ilike('trainingName', `%${search}%`);
+            }
+            
+            const { data: trainings, error: trainingsError } = await query.order('trainingName', { ascending: true });
+            
+            if (trainingsError) {
+                console.error('Error fetching trainings:', trainingsError);
+                throw trainingsError;
+            }
+            
+            console.log(`Found ${trainings?.length || 0} training courses`);
+            
+            // Get training statistics for each course
+            const coursesWithStats = await Promise.all(
+                (trainings || []).map(async (training) => {
+                    try {
+                        // Get assignment count and completion stats
+                        const { data: assignments, error: assignmentsError } = await supabase
+                            .from('training_records')
+                            .select(`
+                                trainingRecordId,
+                                userId,
+                                trainingStatus,
+                                progressPercentage,
+                                isApproved,
+                                dateRequested,
+                                setEndDate,
+                                completionDate
+                            `)
+                            .eq('trainingId', training.trainingId)
+                            .eq('isApproved', true);
+                        
+                        if (assignmentsError) {
+                            console.error(`Error fetching assignments for training ${training.trainingId}:`, assignmentsError);
+                        }
+                        
+                        const assignmentCount = assignments?.length || 0;
+                        const completedCount = assignments?.filter(a => 
+                            a.trainingStatus === 'Completed' || a.progressPercentage >= 100
+                        ).length || 0;
+                        
+                        const completionRate = assignmentCount > 0 ? 
+                            Math.round((completedCount / assignmentCount) * 100) : 0;
+                        
+                        return {
+                            id: training.trainingId,
+                            title: training.trainingName,
+                            description: training.trainingDesc,
+                            mode: training.isOnlineArrangement ? 'online' : 'onsite',
+                            duration: training.totalDuration || 0,
+                            cost: training.cost || 0,
+                            isRequired: training.isRequired,
+                            assignedEmployees: assignmentCount,
+                            completedEmployees: completedCount,
+                            completionRate: `${completionRate}%`,
+                            createdDate: training.dateCreated
+                        };
+                    } catch (error) {
+                        console.error(`Error processing training ${training.trainingId}:`, error);
+                        return {
+                            id: training.trainingId,
+                            title: training.trainingName,
+                            description: training.trainingDesc,
+                            mode: training.isOnlineArrangement ? 'online' : 'onsite',
+                            duration: training.totalDuration || 0,
+                            cost: training.cost || 0,
+                            isRequired: training.isRequired,
+                            assignedEmployees: 0,
+                            completedEmployees: 0,
+                            completionRate: '0%'
+                        };
+                    }
+                })
+            );
+            
+            // Calculate summary statistics
+            const summary = {
+                totalCourses: coursesWithStats.length,
+                totalAssignments: coursesWithStats.reduce((sum, course) => sum + course.assignedEmployees, 0),
+                totalCompleted: coursesWithStats.reduce((sum, course) => sum + course.completedEmployees, 0),
+                averageCompletionRate: coursesWithStats.length > 0 ? 
+                    Math.round(coursesWithStats.reduce((sum, course) => 
+                        sum + parseInt(course.completionRate), 0) / coursesWithStats.length) : 0,
+                totalCost: coursesWithStats.reduce((sum, course) => sum + (course.cost * course.assignedEmployees), 0),
+                onlineCourses: coursesWithStats.filter(course => course.mode === 'online').length,
+                onsiteCourses: coursesWithStats.filter(course => course.mode === 'onsite').length
+            };
+            
+            console.log('Training courses report generated successfully');
+            
+            res.json({
+                success: true,
+                data: coursesWithStats,
+                summary: summary,
+                filters: { search },
+                generatedAt: new Date().toISOString()
+            });
+            
+        } catch (error) {
+            console.error('Error generating training courses report:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to generate training courses report',
+                error: error.message
+            });
+        }
+    },
+
+    // Training Assignments Report
+    getTrainingAssignmentsReport: async function (req, res) {
+        try {
+            console.log('🔄 Generating training assignments report...');
+            
+            const { startDate, endDate, status, department } = req.query;
+            
+            // FIXED: Corrected table relationships
+            let query = supabase
+                .from('training_records')
+                .select(`
+                    *,
+                    trainings!inner(trainingName, isRequired, totalDuration, cost),
+                    staffaccounts!inner(firstName, lastName, departmentId, jobId),
+                    departments!inner(deptName),
+                    jobpositions!inner(jobTitle)
+                `)
+                .eq('trainings.isRequired', true)
+                .eq('trainings.isActive', true)
+                .eq('isApproved', true);
+            
+            // Apply filters safely
+            if (startDate) {
+                query = query.gte('dateRequested', startDate);
+            }
+            if (endDate) {
+                query = query.lte('dateRequested', endDate);
+            }
+            
+            const { data: assignments, error: assignmentsError } = await query
+                .order('dateRequested', { ascending: false });
+            
+            if (assignmentsError) {
+                console.error('Error fetching assignments:', assignmentsError);
+                // Return empty data instead of throwing error
+                return res.json({
+                    success: true,
+                    data: [],
+                    summary: {
+                        totalAssigned: 0,
+                        completed: 0,
+                        inProgress: 0,
+                        notStarted: 0,
+                        overdue: 0,
+                        averageCompletion: 0
+                    },
+                    filters: { startDate, endDate, status, department },
+                    generatedAt: new Date().toISOString()
+                });
+            }
+            
+            // Process assignments safely
+            const processedAssignments = (assignments || []).map(assignment => {
+                try {
+                    // Simplified processing to avoid nested async calls that cause timeouts
+                    const progressPercentage = assignment.progressPercentage || 0;
+                    
+                    let displayStatus = 'Not Started';
+                    const today = new Date();
+                    const endDate = assignment.setEndDate ? new Date(assignment.setEndDate) : null;
+                    
+                    if (progressPercentage >= 100) {
+                        displayStatus = 'Completed';
+                    } else if (endDate && today > endDate) {
+                        displayStatus = 'Overdue';
+                    } else if (progressPercentage > 0) {
+                        displayStatus = 'In Progress';
+                    }
+                    
+                    return {
+                        assignmentId: assignment.trainingRecordId,
+                        employeeName: `${assignment.staffaccounts?.firstName || ''} ${assignment.staffaccounts?.lastName || ''}`,
+                        employeeEmail: assignment.staffaccounts?.userEmail || 'N/A',
+                        department: assignment.departments?.deptName || 'N/A',
+                        jobTitle: assignment.jobpositions?.jobTitle || 'N/A',
+                        trainingTitle: assignment.trainings?.trainingName || 'N/A',
+                        trainingDuration: assignment.trainings?.totalDuration || 0,
+                        trainingCost: assignment.trainings?.cost || 0,
+                        status: displayStatus,
+                        progress: progressPercentage,
+                        assignedDate: assignment.dateRequested,
+                        startDate: assignment.setStartDate,
+                        dueDate: assignment.setEndDate,
+                        isRequired: assignment.trainings?.isRequired || false,
+                        isOverdue: displayStatus === 'Overdue'
+                    };
+                } catch (error) {
+                    console.error(`Error processing assignment:`, error);
+                    return null;
+                }
+            }).filter(assignment => assignment !== null);
+            
+            // Apply status filter if provided
+            let filteredAssignments = processedAssignments;
+            if (status) {
+                filteredAssignments = processedAssignments.filter(assignment => 
+                    assignment.status.toLowerCase().replace(' ', '-') === status.toLowerCase().replace(' ', '-')
+                );
+            }
+            
+            // Apply department filter if provided
+            if (department) {
+                filteredAssignments = filteredAssignments.filter(assignment => 
+                    assignment.department.toLowerCase().includes(department.toLowerCase())
+                );
+            }
+            
+            // Calculate summary
+            const summary = {
+                totalAssigned: filteredAssignments.length,
+                completed: filteredAssignments.filter(a => a.status === 'Completed').length,
+                inProgress: filteredAssignments.filter(a => a.status === 'In Progress').length,
+                notStarted: filteredAssignments.filter(a => a.status === 'Not Started').length,
+                overdue: filteredAssignments.filter(a => a.isOverdue).length,
+                averageCompletion: filteredAssignments.length > 0 ? 
+                    Math.round(filteredAssignments.reduce((sum, a) => sum + a.progress, 0) / filteredAssignments.length) : 0
+            };
+            
+            res.json({
+                success: true,
+                data: filteredAssignments,
+                summary: summary,
+                filters: { startDate, endDate, status, department },
+                generatedAt: new Date().toISOString()
+            });
+            
+        } catch (error) {
+            console.error('Error generating training assignments report:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to generate training assignments report',
+                error: error.message
+            });
+        }
+    },
+
+
+    // Filtered Training Assignments (for enhanced filters)
+    getFilteredTrainingAssignments: async function (req, res) {
+        try {
+            console.log('🔍 Getting filtered training assignments...');
+            
+            const { startDate, endDate, status, department } = req.query;
+            
+            // Reuse the assignments report logic but return employee dashboard format
+            const assignmentsResponse = await module.exports.getTrainingAssignmentsReport(req, { 
+                json: (data) => data 
+            });
+            
+            if (!assignmentsResponse.success) {
+                throw new Error(assignmentsResponse.message);
+            }
+            
+            // Transform assignments data to employee dashboard format for consistency
+            const employeeDashboardFormat = {};
+            
+            assignmentsResponse.data.forEach(assignment => {
+                const employeeKey = assignment.employeeName;
+                
+                if (!employeeDashboardFormat[employeeKey]) {
+                    employeeDashboardFormat[employeeKey] = {
+                        userId: assignment.assignmentId, // Use assignment ID as placeholder
+                        employeeName: assignment.employeeName,
+                        email: assignment.employeeEmail,
+                        department: assignment.department,
+                        jobTitle: assignment.jobTitle,
+                        trainings: [],
+                        totalTrainings: 0,
+                        completedTrainings: 0,
+                        inProgressTrainings: 0,
+                        notStartedTrainings: 0,
+                        overdueTrainings: 0,
+                        overallProgress: 0
+                    };
+                }
+                
+                const employee = employeeDashboardFormat[employeeKey];
+                employee.trainings.push({
+                    trainingName: assignment.trainingTitle,
+                    status: assignment.status,
+                    progress: assignment.progress,
+                    dueDate: assignment.dueDate,
+                    isOverdue: assignment.isOverdue
+                });
+                
+                employee.totalTrainings++;
+                
+                // Count by status
+                switch (assignment.status) {
+                    case 'Completed':
+                        employee.completedTrainings++;
+                        break;
+                    case 'In Progress':
+                        employee.inProgressTrainings++;
+                        break;
+                    case 'Overdue':
+                        employee.overdueTrainings++;
+                        break;
+                    default:
+                        employee.notStartedTrainings++;
+                }
+            });
+            
+            // Calculate overall progress for each employee
+            const employeeArray = Object.values(employeeDashboardFormat).map(employee => {
+                employee.overallProgress = employee.totalTrainings > 0 ? 
+                    Math.round(employee.trainings.reduce((sum, t) => sum + t.progress, 0) / employee.totalTrainings) : 0;
+                
+                // Determine overall status
+                let overallStatus = 'On Track';
+                if (employee.overdueTrainings > 0) {
+                    overallStatus = 'Behind Schedule';
+                } else if (employee.completedTrainings === employee.totalTrainings && employee.totalTrainings > 0) {
+                    overallStatus = 'All Complete';
+                }
+                employee.overallStatus = overallStatus;
+                
+                return employee;
+            });
+            
+            console.log(`Filtered assignments processed for ${employeeArray.length} employees`);
+            
+            res.json({
+                success: true,
+                data: employeeArray,
+                summary: assignmentsResponse.summary,
+                filters: { startDate, endDate, status, department },
+                generatedAt: new Date().toISOString()
+            });
+            
+        } catch (error) {
+            console.error('Error getting filtered training assignments:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to get filtered training assignments',
+                error: error.message
+            });
+        }
+    },
+
+    getBudgetReport: async function (req, res) {
+        try {
+            console.log('🔄 Generating budget report...');
+            
+            // Get departments first
+            const { data: departments, error: deptError } = await supabase
+                .from('departments')
+                .select('*')
+                .order('deptName', { ascending: true });
+            
+            if (deptError) {
+                console.error('Error fetching departments:', deptError);
+                throw deptError;
+            }
+            
+            // Simplified approach - just get basic training cost data
+            const { data: trainingCosts, error: costsError } = await supabase
+                .from('training_records')
+                .select(`
+                    trainingId,
+                    userId,
+                    trainings(cost, trainingName)
+                `)
+                .eq('isApproved', true);
+            
+            if (costsError) {
+                console.error('Error fetching training costs:', costsError);
+                // Continue with empty data instead of failing
+            }
+            
+            // Get staff department info separately to avoid complex joins
+            const { data: staffInfo, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('userId, departmentId, departments(deptName)');
+            
+            if (staffError) {
+                console.error('Error fetching staff info:', staffError);
+            }
+            
+            // Process department budget analysis with fallback values
+            const departmentAnalysis = (departments || []).map(dept => {
+                // Find staff in this department
+                const deptStaff = (staffInfo || []).filter(staff => 
+                    staff.departmentId === dept.departmentId
+                );
+                
+                // Find training costs for staff in this department
+                const deptTrainingCosts = (trainingCosts || []).filter(tc => 
+                    deptStaff.some(staff => staff.userId === tc.userId)
+                );
+                
+                const totalSpent = deptTrainingCosts.reduce((sum, tc) => 
+                    sum + ((tc.trainings?.cost || 0)), 0
+                );
+                
+                const trainingCount = deptTrainingCosts.length;
+                const budgetAllocated = 100000; // Default budget
+                const remainingBudget = budgetAllocated - totalSpent;
+                const utilizationPercentage = budgetAllocated > 0 ? 
+                    Math.round((totalSpent / budgetAllocated) * 100) : 0;
+                
+                let status = 'good';
+                if (utilizationPercentage >= 90) {
+                    status = 'critical';
+                } else if (utilizationPercentage >= 75) {
+                    status = 'warning';
+                }
+                
+                return {
+                    departmentId: dept.departmentId,
+                    departmentName: dept.deptName,
+                    budgetAllocated,
+                    totalSpent,
+                    remainingBudget,
+                    utilizationPercentage,
+                    status,
+                    trainingCount,
+                    employeeCount: deptStaff.length
+                };
+            });
+            
+            // Calculate totals
+            const totalBudgetAllocated = departmentAnalysis.reduce((sum, dept) => sum + dept.budgetAllocated, 0);
+            const totalSpent = departmentAnalysis.reduce((sum, dept) => sum + dept.totalSpent, 0);
+            const totalTrainings = departmentAnalysis.reduce((sum, dept) => sum + dept.trainingCount, 0);
+            
+            // FIXED: Add the missing topSpendingDepartments calculation
+            const topSpendingDepartments = departmentAnalysis
+                .filter(dept => dept.totalSpent > 0) // Only departments with spending
+                .sort((a, b) => b.totalSpent - a.totalSpent) // Sort by spending descending
+                .slice(0, 5) // Take top 5
+                .map(dept => ({
+                    departmentName: dept.departmentName,
+                    totalSpent: dept.totalSpent,
+                    utilizationPercentage: dept.utilizationPercentage,
+                    trainingCount: dept.trainingCount
+                }));
+            
+            const insights = {
+                totalBudgetAllocated,
+                totalSpent,
+                totalRemaining: totalBudgetAllocated - totalSpent,
+                overallUtilization: totalBudgetAllocated > 0 ? 
+                    Math.round((totalSpent / totalBudgetAllocated) * 100) : 0,
+                totalTrainings,
+                departmentCount: departmentAnalysis.length,
+                departmentsOverBudget: departmentAnalysis.filter(d => d.remainingBudget < 0).length,
+                departmentsCritical: departmentAnalysis.filter(d => d.status === 'critical').length,
+                departmentsWarning: departmentAnalysis.filter(d => d.status === 'warning').length,
+                // FIXED: Include the topSpendingDepartments in insights
+                topSpendingDepartments: topSpendingDepartments
+            };
+            
+            res.json({
+                success: true,
+                data: {
+                    departments: departmentAnalysis,
+                    insights,
+                    summary: insights
+                },
+                generatedAt: new Date().toISOString()
+            });
+            
+        } catch (error) {
+            console.error('Error generating budget report:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to generate budget report',
+                error: error.message
+            });
+        }
+    },
+
+    // Export Budget Report as PDF/Excel
+    exportBudgetReport: async function (req, res) {
+        try {
+            console.log('🔄 Exporting budget report...');
+            
+            const { format } = req.params; // 'pdf' or 'excel'
+            
+            // Get budget report data
+            const budgetData = await module.exports.getBudgetReport({ query: {} }, { 
+                json: (data) => data 
+            });
+            
+            if (!budgetData.success) {
+                throw new Error(budgetData.message);
+            }
+            
+            if (format === 'pdf') {
+                // For now, return the data for frontend PDF generation
+                res.json({
+                    success: true,
+                    data: budgetData.data,
+                    format: 'pdf',
+                    message: 'Budget report data ready for PDF generation'
+                });
+            } else if (format === 'excel') {
+                // For now, return the data for frontend Excel generation
+                res.json({
+                    success: true,
+                    data: budgetData.data,
+                    format: 'excel',
+                    message: 'Budget report data ready for Excel generation'
+                });
+            } else {
+                throw new Error('Invalid export format. Use pdf or excel.');
+            }
+            
+        } catch (error) {
+            console.error('Error exporting budget report:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to export budget report',
+                error: error.message
+            });
+        }
+    },
+
     getHRNotifications: async function(req, res) {
         // Check for authentication
         if (!req.session.user) {
