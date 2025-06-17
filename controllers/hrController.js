@@ -7382,8 +7382,336 @@ viewEvaluation: async function(req, res) {
             return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
         }
     },
-    
-    
+
+    getOffboardingReports: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            const { startDate, endDate, type, format } = req.query;
+            
+            console.log('🔍 [Offboarding Reports] Fetching offboarding data...');
+            console.log('📅 [Offboarding Reports] Filters:', { startDate, endDate, type, format });
+            
+            // Build query for offboarding requests (without joins)
+            let query = supabase
+                .from('offboarding_requests')
+                .select(`
+                    requestId,
+                    userId,
+                    offboardingType,
+                    reason,
+                    message,
+                    last_day,
+                    status,
+                    created_at,
+                    notice_period_start,
+                    clearance_sent_date,
+                    employee_completion_date,
+                    hr_decision_date
+                `)
+                .order('created_at', { ascending: false });
+
+            // Apply date filters
+            if (startDate) {
+                query = query.gte('created_at', startDate);
+                console.log('📅 [Offboarding Reports] Applied start date filter:', startDate);
+            }
+            if (endDate) {
+                const endDateTime = new Date(endDate);
+                endDateTime.setHours(23, 59, 59, 999);
+                query = query.lte('created_at', endDateTime.toISOString());
+                console.log('📅 [Offboarding Reports] Applied end date filter:', endDateTime.toISOString());
+            }
+
+            // Apply type filter
+            if (type && type !== 'all') {
+                query = query.eq('offboardingType', type);
+                console.log('📋 [Offboarding Reports] Applied type filter:', type);
+            }
+
+            const { data: offboardingData, error } = await query;
+
+            if (error) {
+                console.error('❌ [Offboarding Reports] Error fetching data:', error);
+                return res.status(500).json({ success: false, message: 'Error fetching offboarding data: ' + error.message });
+            }
+
+            console.log(`✅ [Offboarding Reports] Found ${offboardingData.length} offboarding requests`);
+
+            if (offboardingData.length === 0) {
+                return res.json({
+                    success: true,
+                    data: [],
+                    summary: {
+                        totalRequests: 0,
+                        resignations: 0,
+                        retirements: 0,
+                        pending: 0,
+                        inProgress: 0,
+                        completed: 0
+                    },
+                    monthlyData: [],
+                    generatedOn: new Date().toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    reportTitle: 'Resignation & Retirement Tracker Report (HR)'
+                });
+            }
+
+            // Get unique userIds from offboarding requests
+            const userIds = [...new Set(offboardingData.map(request => request.userId))];
+            
+            // Fetch user emails separately
+            const { data: userAccounts, error: userError } = await supabase
+                .from('useraccounts')
+                .select('userId, userEmail')
+                .in('userId', userIds);
+
+            if (userError) {
+                console.error('❌ [Offboarding Reports] Error fetching user accounts:', userError);
+                return res.status(500).json({ success: false, message: 'Error fetching user accounts: ' + userError.message });
+            }
+
+            // Fetch staff accounts separately
+            const { data: staffAccounts, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('userId, firstName, lastName, departmentId')
+                .in('userId', userIds);
+
+            if (staffError) {
+                console.error('❌ [Offboarding Reports] Error fetching staff accounts:', staffError);
+                return res.status(500).json({ success: false, message: 'Error fetching staff accounts: ' + staffError.message });
+            }
+
+            // Get unique departmentIds
+            const departmentIds = [...new Set(staffAccounts.map(staff => staff.departmentId).filter(Boolean))];
+            
+            // Fetch departments separately
+            const { data: departments, error: deptError } = await supabase
+                .from('departments')
+                .select('departmentId, deptName')
+                .in('departmentId', departmentIds);
+
+            if (deptError) {
+                console.error('❌ [Offboarding Reports] Error fetching departments:', deptError);
+                return res.status(500).json({ success: false, message: 'Error fetching departments: ' + deptError.message });
+            }
+
+            // Calculate summary statistics
+            const summary = {
+                totalRequests: offboardingData.length,
+                resignations: offboardingData.filter(r => r.offboardingType === 'Resignation').length,
+                retirements: offboardingData.filter(r => r.offboardingType === 'Retirement').length,
+                pending: offboardingData.filter(r => r.status === 'Pending HR').length,
+                inProgress: offboardingData.filter(r => 
+                    r.status === 'Sent to Employee' || r.status === 'Completed by Employee'
+                ).length,
+                completed: offboardingData.filter(r => r.status === 'Completed').length
+            };
+
+            // Process data for display by combining the separate queries
+            const processedData = offboardingData.map(request => {
+                // Find corresponding user account
+                const userAccount = userAccounts.find(user => user.userId === request.userId);
+                
+                // Find corresponding staff account
+                const staffAccount = staffAccounts.find(staff => staff.userId === request.userId);
+                
+                // Find corresponding department
+                const department = departments.find(dept => dept.departmentId === staffAccount?.departmentId);
+
+                // Calculate notice period
+                let noticePeriodDays = null;
+                if (request.notice_period_start && request.last_day) {
+                    const startDate = new Date(request.notice_period_start);
+                    const endDate = new Date(request.last_day);
+                    noticePeriodDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+                }
+
+                return {
+                    requestId: request.requestId,
+                    timestamp: new Date(request.created_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit' 
+                    }),
+                    employeeName: staffAccount ? `${staffAccount.firstName} ${staffAccount.lastName}` : 'Unknown Employee',
+                    department: department ? department.deptName : 'Unknown Department',
+                    type: request.offboardingType || 'Not Specified',
+                    reason: request.reason || request.message || 'Not Provided',
+                    lastDay: request.last_day ? 
+                        new Date(request.last_day).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: '2-digit', 
+                            day: '2-digit' 
+                        }) : 'Not Set',
+                    noticePeriodStart: request.notice_period_start ? 
+                        new Date(request.notice_period_start).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: '2-digit', 
+                            day: '2-digit' 
+                        }) : 'Not Set',
+                    noticePeriodDays: noticePeriodDays || 'N/A',
+                    clearanceSent: request.clearance_sent_date ? 
+                        new Date(request.clearance_sent_date).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: '2-digit', 
+                            day: '2-digit' 
+                        }) : 'Not Sent',
+                    employeeCompletion: request.employee_completion_date ? 
+                        new Date(request.employee_completion_date).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: '2-digit', 
+                            day: '2-digit' 
+                        }) : 'Not Completed',
+                    status: request.status || 'Pending'
+                };
+            });
+
+            // Monthly breakdown
+            const monthlyBreakdown = {};
+            offboardingData.forEach(request => {
+                const date = new Date(request.created_at);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!monthlyBreakdown[monthKey]) {
+                    monthlyBreakdown[monthKey] = {
+                        month: date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }),
+                        resignations: 0,
+                        retirements: 0,
+                        total: 0
+                    };
+                }
+                
+                monthlyBreakdown[monthKey].total++;
+                if (request.offboardingType === 'Resignation') {
+                    monthlyBreakdown[monthKey].resignations++;
+                } else if (request.offboardingType === 'Retirement') {
+                    monthlyBreakdown[monthKey].retirements++;
+                }
+            });
+
+            const monthlyData = Object.values(monthlyBreakdown).sort((a, b) => a.month.localeCompare(b.month));
+
+            // Add generation timestamp
+            const generatedOn = new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            console.log('📊 [Offboarding Reports] Summary stats:', summary);
+
+            if (format === 'pdf') {
+                console.log('📄 [Offboarding Reports] PDF format requested');
+                return res.json({
+                    success: true,
+                    reportType: 'offboarding',
+                    format: 'pdf',
+                    data: processedData,
+                    summary: summary,
+                    monthlyData: monthlyData,
+                    generatedOn: generatedOn,
+                    filters: { startDate, endDate, type },
+                    reportTitle: 'Resignation & Retirement Tracker Report (HR)',
+                    reportSubtitle: 'Comprehensive tracking of employee resignations and retirements with clearance status and timeline analysis'
+                });
+            }
+
+            return res.json({
+                success: true,
+                data: processedData,
+                summary: summary,
+                monthlyData: monthlyData,
+                generatedOn: generatedOn,
+                reportTitle: 'Resignation & Retirement Tracker Report (HR)'
+            });
+
+        } catch (error) {
+            console.error('❌ [Offboarding Reports] Error in getOffboardingReports:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+        }
+    },
+
+    getOffboardingDashboardStats: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            console.log('🔍 [Offboarding Dashboard] Fetching dashboard statistics...');
+
+            // Get all offboarding requests
+            const { data: allRequests, error: requestsError } = await supabase
+                .from('offboarding_requests')
+                .select(`
+                    requestId,
+                    offboardingType,
+                    status,
+                    created_at,
+                    last_day
+                `);
+
+            if (requestsError) {
+                console.error('❌ [Offboarding Dashboard] Error fetching requests:', requestsError);
+                throw requestsError;
+            }
+
+            console.log(`✅ [Offboarding Dashboard] Found ${allRequests.length} total requests`);
+
+            // Calculate statistics
+            const currentDate = new Date();
+            const thisMonth = allRequests.filter(r => {
+                const reqDate = new Date(r.created_at);
+                return reqDate.getMonth() === currentDate.getMonth() && 
+                    reqDate.getFullYear() === currentDate.getFullYear();
+            });
+
+            // Calculate average processing time for completed requests
+            const completedRequests = allRequests.filter(r => r.status === 'Completed');
+            let avgProcessingTime = 0;
+            if (completedRequests.length > 0) {
+                const processingTimes = completedRequests.map(r => {
+                    const startDate = new Date(r.created_at);
+                    const endDate = new Date(); // Assuming completion is recent
+                    return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+                });
+                avgProcessingTime = Math.round(processingTimes.reduce((sum, time) => sum + time, 0) / processingTimes.length);
+            }
+
+            const stats = {
+                totalRequests: allRequests.length,
+                resignations: allRequests.filter(r => r.offboardingType === 'Resignation').length,
+                retirements: allRequests.filter(r => r.offboardingType === 'Retirement').length,
+                pendingRequests: allRequests.filter(r => r.status === 'Pending HR').length,
+                avgProcessingTime: avgProcessingTime,
+                monthlyRequests: thisMonth.length
+            };
+
+            console.log('📊 [Offboarding Dashboard] Final stats:', stats);
+
+            return res.json({
+                success: true,
+                stats: stats
+            });
+
+        } catch (error) {
+            console.error('❌ [Offboarding Dashboard] Error fetching dashboard stats:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching dashboard statistics: ' + error.message 
+            });
+        }
+    }
+
 };
 
 
