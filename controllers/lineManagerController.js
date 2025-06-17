@@ -5626,8 +5626,7 @@ const { data: trainingObjectives, error: trainingObjError } = await supabase
     }
 },
     // code with midyearidp logic
-   // Fixed getUserProgressView function - specifically the stepper logic section
-getUserProgressView: async function(req, res) {
+  getUserProgressView: async function(req, res) {
     const user = req.user;
     console.log('Fetching records for userId:', user?.userId);
 
@@ -5673,11 +5672,9 @@ getUserProgressView: async function(req, res) {
 
             if (error) {
                 console.error(`Error fetching feedback data from ${table}:`, error);
-                req.flash('errors', { fetchError: `Error fetching data for ${table}. Please try again.` });
-                return res.redirect('/linemanager/records-performance-tracker');
             }
 
-            feedbackData[table] = data;
+            feedbackData[table] = data || [];
         }
 
         console.log("Feedback Data:", feedbackData);
@@ -5686,18 +5683,17 @@ getUserProgressView: async function(req, res) {
         const { data: objectiveSettings, error: objectivesError } = await supabase
             .from('objectivesettings')
             .select('*')
-            .eq('userId', user.userId);
+            .eq('userId', user.userId)
+            .eq('performancePeriodYear', selectedYear);
 
         if (objectivesError) {
             console.error('Error fetching objectives settings:', objectivesError);
-            req.flash('errors', { fetchError: 'Error fetching objectives settings. Please try again.' });
-            return res.redirect('/linemanager/records-performance-tracker');
         }
 
         let submittedObjectives = [];
         let objectiveQuestions = [];
 
-        if (objectiveSettings.length > 0) {
+        if (objectiveSettings && objectiveSettings.length > 0) {
             const objectiveSettingsIds = objectiveSettings.map(setting => setting.objectiveSettingsId);
 
             // Fetch the actual objectives related to the settings
@@ -5706,13 +5702,9 @@ getUserProgressView: async function(req, res) {
                 .select('*')
                 .in('objectiveSettingsId', objectiveSettingsIds);
 
-            if (objectivesFetchError) {
-                console.error('Error fetching objectives:', objectivesFetchError);
-                req.flash('errors', { fetchError: 'Error fetching objectives. Please try again.' });
-                return res.redirect('/linemanager/records-performance-tracker');
+            if (!objectivesFetchError && objectivesData) {
+                submittedObjectives = objectivesData;
             }
-
-            submittedObjectives = objectivesData;
 
             // Fetch questions related to the objectives
             const { data: objectiveQuestionData, error: questionError } = await supabase
@@ -5720,13 +5712,9 @@ getUserProgressView: async function(req, res) {
                 .select('objectiveId, objectiveQualiQuestion')
                 .in('objectiveId', submittedObjectives.map(obj => obj.objectiveId));
 
-            if (questionError) {
-                console.error('Error fetching objective questions:', questionError);
-                req.flash('errors', { fetchError: 'Error fetching objective questions. Please try again.' });
-                return res.redirect('/linemanager/records-performance-tracker');
+            if (!questionError && objectiveQuestionData) {
+                objectiveQuestions = objectiveQuestionData;
             }
-
-            objectiveQuestions = objectiveQuestionData;
         }
 
         // Map the `objectiveQuestions` to `submittedObjectives`
@@ -5746,35 +5734,29 @@ getUserProgressView: async function(req, res) {
 
         if (skillsError) {
             console.error('Error fetching job requirements skills:', skillsError);
-            req.flash('errors', { fetchError: 'Error fetching skills data. Please try again.' });
-            return res.redirect('/linemanager/records-performance-tracker');
         }
 
         // Classify skills into Hard and Soft
         const hardSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Hard') || [];
         const softSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Soft') || [];
 
-        // Check if Mid-Year IDP data exists to control access to steps
+        // FIXED: Check if Mid-Year IDP data exists (without year filtering for current schema)
         const { data: midYearData, error: midYearError } = await supabase
             .from('midyearidps')
             .select('*')
             .eq('userId', user.userId)
-            .eq('jobId', jobId)
-            .eq('year', selectedYear)
-            .maybeSingle(); // FIXED: Use maybeSingle() instead of single()
+            .maybeSingle();
 
         if (midYearError) {
             console.error('Error fetching mid-year IDP data:', midYearError);
         }
 
-        // Check if Final-Year IDP data exists
+        // FIXED: Check if Final-Year IDP data exists (without year filtering for current schema)
         const { data: finalYearData, error: finalYearError } = await supabase
             .from('finalyearidps')
             .select('*')
             .eq('userId', user.userId)
-            .eq('jobId', jobId)
-            .eq('year', selectedYear)
-            .maybeSingle(); // FIXED: Use maybeSingle() instead of single()
+            .maybeSingle();
 
         if (finalYearError) {
             console.error('Error fetching final-year IDP data:', finalYearError);
@@ -5797,7 +5779,7 @@ getUserProgressView: async function(req, res) {
             finalYearData: finalYearData,
             viewOnlyStatus: {
                 // Objective setting is view-only if objectives exist
-                objectivesettings: objectiveSettings.length > 0,
+                objectivesettings: objectiveSettings && objectiveSettings.length > 0,
                 
                 // Feedback quarters are view-only if they have data
                 feedbacks_Q1: feedbackData['feedbacks_Q1']?.length > 0,
@@ -5811,56 +5793,11 @@ getUserProgressView: async function(req, res) {
             },
         };
 
-        // FIXED: Function to calculate nextStep based on proper stepper progression
-        function calculateNextStep(viewState) {
-            let nextStep = null;
-
-            // Step 1: Objectives Setting (always accessible first)
-            if (!viewState.viewOnlyStatus.objectivesettings) {
-                nextStep = 1;  // Complete Objectives Setting
-            }
-            // Step 2: Q1 Feedback (accessible after objectives)
-            else if (!viewState.viewOnlyStatus.feedbacks_Q1) {
-                nextStep = 2;  // Complete Q1 Feedback
-            }
-            // Step 3: Q2 Feedback (accessible after Q1)
-            else if (!viewState.viewOnlyStatus.feedbacks_Q2) {
-                nextStep = 3;  // Complete Q2 Feedback
-            }
-            // Step 4: Mid-Year IDP (accessible after Q2)
-            else if (!viewState.viewOnlyStatus.midyearidp) {
-                nextStep = 4;  // Complete Mid-Year IDP
-            }
-            // Step 5: Q3 Feedback (accessible after Mid-Year IDP)
-            else if (!viewState.viewOnlyStatus.feedbacks_Q3) {
-                nextStep = 5;  // Complete Q3 Feedback
-            }
-            // Step 6: Q4 Feedback (accessible after Q3)
-            else if (!viewState.viewOnlyStatus.feedbacks_Q4) {
-                nextStep = 6;  // Complete Q4 Feedback
-            }
-            // Step 7: Final-Year IDP (accessible after Q4)
-            else if (!viewState.viewOnlyStatus.finalyearidp) {
-                nextStep = 7;  // Complete Final-Year IDP
-            }
-            // All steps completed
-            else {
-                nextStep = null;  // All steps completed
-            }
-
-            return nextStep;
-        }
-
-        // Add the nextStep to the viewState
-        viewState.nextAccessibleStep = calculateNextStep(viewState);
-
         console.log("View State:", viewState);
-        console.log("Next accessible step:", viewState.nextAccessibleStep);
 
         res.render('staffpages/linemanager_pages/managerrecordsperftracker-user', { 
             viewState: viewState, 
-            user, 
-            nextAccessibleStep: viewState.nextAccessibleStep
+            user
         });
 
     } catch (error) {
@@ -6160,7 +6097,8 @@ getFeedbackQuestionnaire: async function(req, res) {
             error: error.message
         });
     }
-},
+},// FIXED: Enhanced saveMidYearIDP controller with proper training saving
+// FIXED: saveMidYearIDP controller that works with current database schema
 saveMidYearIDP: async function(req, res) {
     try {
         // Get the user ID from the route parameters or form submission
@@ -6189,8 +6127,9 @@ saveMidYearIDP: async function(req, res) {
         console.log("Received form data:", req.body);
         console.log("Suggested trainings:", suggestedTrainings);
 
-        // FIXED: Ensure text fields are saved as strings, not arrays
+        // FIXED: Ensure text fields are saved as strings, not arrays - only include fields that exist in schema
         const textData = {
+            userId: parseInt(userId),
             profStrengths: Array.isArray(profStrengths) ? profStrengths.join(' ') : (profStrengths || ''),
             profAreasForDevelopment: Array.isArray(profAreasForDevelopment) ? profAreasForDevelopment.join(' ') : (profAreasForDevelopment || ''),
             profActionsToTake: Array.isArray(profActionsToTake) ? profActionsToTake.join(' ') : (profActionsToTake || ''),
@@ -6204,14 +6143,14 @@ saveMidYearIDP: async function(req, res) {
 
         console.log("Processed text data:", textData);
 
-        // Check if there's already an entry for this user
+        // FIXED: Check if there's already an entry for this user (without jobId and year)
         const { data: existingRecord, error: checkError } = await supabase
             .from("midyearidps")
             .select("midyearidpId")
             .eq("userId", userId)
-            .single();
+            .maybeSingle();
 
-        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        if (checkError) {
             console.error("Error checking for existing midyearidp:", checkError);
             return res.status(500).json({ success: false, message: "Error checking for existing record" });
         }
@@ -6240,10 +6179,7 @@ saveMidYearIDP: async function(req, res) {
             console.log("Creating new midyearidp record for userId:", userId);
             const { data, error } = await supabase
                 .from("midyearidps")
-                .insert({
-                    userId,
-                    ...textData
-                })
+                .insert(textData)
                 .select();
 
             if (error) {
@@ -6286,8 +6222,10 @@ saveMidYearIDP: async function(req, res) {
 
             if (trainingsError) {
                 console.error("Error inserting suggested trainings:", trainingsError);
-                // Don't fail the entire operation, just log the error
-                console.warn("Mid-Year IDP saved but suggested trainings could not be saved");
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "Mid-Year IDP saved but suggested trainings could not be saved: " + trainingsError.message 
+                });
             } else {
                 console.log("Successfully saved suggested trainings:", trainingsData);
             }
@@ -6325,6 +6263,150 @@ saveMidYearIDP: async function(req, res) {
         // Otherwise, redirect with error message
         req.flash('errors', { dbError: 'An error occurred while saving the Mid-Year IDP.' });
         return res.redirect(`/linemanager/midyear-idp/${req.params.userId || req.body.userId}`);
+    }
+},
+
+// FIXED: getMidYearIDP controller for current schema
+getMidYearIDP: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        console.log("Getting Mid-Year IDP for userId:", userId);
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // FIXED: Get Mid-Year IDP data without jobId and year filtering
+        const { data: midyearData, error: midyearError } = await supabase
+            .from("midyearidps")
+            .select("*")
+            .eq("userId", userId)
+            .maybeSingle();
+
+        if (midyearError) {
+            console.error("Error fetching Mid-Year IDP:", midyearError);
+            return res.status(500).json({ success: false, message: "Error fetching Mid-Year IDP data" });
+        }
+
+        let suggestedTrainings = [];
+        
+        if (midyearData) {
+            // Get suggested trainings with training details
+            const { data: trainingsData, error: trainingsError } = await supabase
+                .from("midyearidps_suggestedtrainings")
+                .select(`
+                    *,
+                    trainings (
+                        trainingId,
+                        trainingName,
+                        trainingDesc
+                    )
+                `)
+                .eq("midyearidpId", midyearData.midyearidpId);
+
+            if (!trainingsError && trainingsData) {
+                suggestedTrainings = trainingsData;
+            }
+        }
+
+        // Prepare view state
+        const viewState = {
+            success: true,
+            isViewOnly: midyearData ? true : false,
+            midYearData: midyearData,
+            suggestedTrainings: suggestedTrainings
+        };
+
+        console.log("Mid-Year IDP view state:", viewState);
+
+        // If it's an API request, return JSON
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(200).json({
+                success: true,
+                data: viewState
+            });
+        }
+
+        // Otherwise, render the view
+        return res.render('staffpages/linemanager_pages/midyear-idp', { 
+            viewState,
+            userId 
+        });
+
+    } catch (error) {
+        console.error("Error in getMidYearIDP:", error);
+        
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(500).json({
+                success: false,
+                message: "An error occurred while fetching Mid-Year IDP data",
+                error: error.message
+            });
+        }
+
+        req.flash('errors', { dbError: 'An error occurred while loading the Mid-Year IDP.' });
+        return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
+    }
+},
+
+// FIXED: getMidYearIDPTrainings controller for current schema
+getMidYearIDPTrainings: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        console.log("Getting Mid-Year IDP trainings for userId:", userId);
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // FIXED: Get Mid-Year IDP data without jobId and year filtering
+        const { data: midyearData, error: midyearError } = await supabase
+            .from("midyearidps")
+            .select("midyearidpId")
+            .eq("userId", userId)
+            .maybeSingle();
+
+        if (midyearError) {
+            console.error("Error fetching Mid-Year IDP:", midyearError);
+            return res.status(500).json({ success: false, message: "Error fetching Mid-Year IDP data" });
+        }
+
+        let suggestedTrainings = [];
+        
+        if (midyearData) {
+            // Get suggested trainings with training details
+            const { data: trainingsData, error: trainingsError } = await supabase
+                .from("midyearidps_suggestedtrainings")
+                .select(`
+                    trainingId,
+                    remarks,
+                    trainings (
+                        trainingId,
+                        trainingName,
+                        trainingDesc
+                    )
+                `)
+                .eq("midyearidpId", midyearData.midyearidpId);
+
+            if (!trainingsError && trainingsData) {
+                suggestedTrainings = trainingsData;
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                suggestedTrainings: suggestedTrainings
+            }
+        });
+
+    } catch (error) {
+        console.error("Error in getMidYearIDPTrainings:", error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while fetching Mid-Year IDP trainings",
+            error: error.message
+        });
     }
 },
     // Aggregated Mid-Year Average 360 Degree Objective and Skills Feedback
