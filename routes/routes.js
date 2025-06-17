@@ -447,6 +447,10 @@ router.get('/hr/reports/employees', hrController.getEmployeesForReports);
 router.get('/hr/reports/daily-attendance', hrController.getDailyAttendanceReport);
 router.get('/hr/reports/employee-attendance', hrController.getEmployeeAttendanceReport);
 router.get('/hr/reports/leave-requests', hrController.getLeaveRequestsReport);
+router.get('/linemanager/reports/employees', lineManagerController.getDepartmentEmployeesForReports);
+router.get('/linemanager/reports/daily-attendance', lineManagerController.getDepartmentDailyAttendanceReport);
+router.get('/linemanager/reports/employee-attendance', lineManagerController.getDepartmentEmployeeAttendanceReport);
+router.get('/linemanager/reports/leave-requests', lineManagerController.getDepartmentLeaveRequestsReport);
 
 
 module.exports = router; 

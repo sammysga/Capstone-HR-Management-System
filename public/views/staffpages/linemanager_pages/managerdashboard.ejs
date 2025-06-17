@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,33 +8,15 @@
     <link rel="stylesheet" href="/css/hr_pages.css"> <!-- Linking Main Content CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <style>
+   <style>
         /* Adding styles for the dashboard */
-        body {
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
-        
         h2 {
             color: #2385B0; /* Color for the dashboard title */
             margin-left: 40px; /* Increased space from the left */
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
         h3 {
             margin-left: 40px; /* Increased space from the left for the sub-header */
         }
-        
-        /* Added this class to avoid conflict with content vs notification-text */
-        .notification-text {
-            color: #666;
-            font-size: 13px;
-            margin-bottom: 4px;
-        }
-        
         .content {
             margin-left: 220px; /* Adjust based on your sidebar width to prevent overlap */
             padding: 20px; /* Adding some padding for better spacing */
@@ -44,7 +26,6 @@
             width: 80%; /* Full width for the table */
             border-collapse: collapse; /* Collapse borders */
             margin: 10px auto 30px; /* Center table and add space above and below */
-            table-layout: fixed; /* Add fixed table layout to prevent expansion */
         }
         th, td {
             border: 1px solid #ddd; /* Border for table cells */
@@ -57,24 +38,36 @@
         tr:hover {
             background-color: #f1f1f1; /* Hover effect for table rows */
         }
-        .action-button {
-            background-color: #2385B0; /* Match your theme color */
+        .manage-leaves-button {
+            padding: 10px 15px;
+            background-color: #2385B0; /* Your preferred color */
             color: white;
-            padding: 6px 10px;
             text-decoration: none;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
+            border-radius: 5px;
+            transition: background-color 0.3s;
         }
-        .action-button:hover {
+        .manage-leaves-button:hover {
             background-color: #1a5f78; /* Darker shade for hover effect */
+        }
+        .action-required-btn {
+            background-color: #2385B0;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            padding: 5px 10px;
+            cursor: pointer;
+            border: none;
+        }
+        .action-required-btn:hover {
+            background-color: #1a5f78;
         }
         
         /* Enhanced Dashboard Styles */
         .kpi-cards {
             display: grid;
             grid-template-columns: repeat(1, 1fr);
-            gap: 15px;
+            gap: 20px;
             margin: 20px auto;
             width: 90%;
             max-width: 1400px;
@@ -160,10 +153,10 @@
             max-width: 100%;
             height: 200px; /* Reduced chart height */
         }
+
         .chart-box canvas, .chart-card canvas {
             max-height: 180px !important; /* Make charts even smaller */
         }
-        
         
         .chart-header {
             display: flex;
@@ -235,7 +228,6 @@
             margin-bottom: 20px;
         }
         
-        
         .tab-content.active {
             display: block;
         }
@@ -258,15 +250,942 @@
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             padding: 15px;
-            height: auto;
         }
+
         .chart-card h3 {
             margin-left: 0;
             margin-bottom: 10px;
             font-size: 16px;
             color: #333;
         }
-        
+
+        .department-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: auto;
+        }
+
+        /* Attendance Reports Integration Styling */
+        .attendance-reports-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .reports-section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #2385B0;
+        }
+
+        .reports-section-header h3 {
+            margin: 0;
+            color: #2385B0;
+            font-size: 20px;
+            font-weight: 600;
+            margin-left: 0;
+        }
+
+        .reports-section-header i {
+            margin-right: 10px;
+            font-size: 20px;
+            color: #2385B0;
+        }
+
+        .reports-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .reports-grid {
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            }
+        }
+
+        .report-item {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .report-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .report-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+            color: white;
+        }
+
+        .report-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            font-size: 18px;
+        }
+
+        .report-info h4 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .report-info p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .report-form {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 13px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2385B0;
+            box-shadow: 0 0 0 0.2rem rgba(35, 133, 176, 0.25);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-report {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-report:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-report.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-report.loading::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            top: 50%;
+            left: 50%;
+            margin-left: -7px;
+            margin-top: -7px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #1a5f78 0%, #144a5e 100%);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #2385B0;
+            border: 1px solid #2385B0;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #2385B0;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .report-results {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2385B0;
+        }
+
+        .results-header h5 {
+            color: #2385B0;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .summary-stat {
+            text-align: center;
+            padding: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .summary-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2385B0;
+            margin-bottom: 4px;
+        }
+
+        .summary-stat-label {
+            font-size: 11px;
+            color: #6c757d;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table-container {
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+            margin-bottom: 15px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+            color: white;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        .department-section {
+            margin: 20px 0;
+        }
+
+        .department-title {
+            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+            color: white;
+            padding: 10px 15px;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 6px 6px 0 0;
+            margin: 0;
+        }
+
+        .status-badge {
+            padding: 3px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-present {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-late {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-early-out {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-on-leave {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+
+        .status-absent {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .leave-badge {
+            background-color: #e7f3ff;
+            color: #0066cc;
+            padding: 2px 5px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 500;
+        }
+
+        .hours-display {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .late-time {
+            color: #856404;
+            font-weight: 600;
+        }
+
+        .early-out-time {
+            color: #721c24;
+            font-weight: 600;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 30px 20px;
+            color: #6c757d;
+            font-style: italic;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .results-summary {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                padding: 12px;
+            }
+            
+            .data-table {
+                font-size: 10px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 6px 4px;
+            }
+        }
+
+        .employee-report-enhanced {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .employee-report-enhanced .report-icon {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .period-selection-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #1976d2;
+        }
+
+        .period-selection-info i {
+            margin-right: 6px;
+            color: #2196f3;
+        }
+
+        .form-group.enhanced-select {
+            position: relative;
+        }
+
+        .form-group.enhanced-select::after {
+            content: '\f107';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 12px;
+            top: 32px;
+            pointer-events: none;
+            color: #2385B0;
+        }
+
+        .form-group select {
+            appearance: none;
+            background: white;
+            cursor: pointer;
+        }
+
+        .employee-info-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .employee-info-preview.show {
+            display: block;
+        }
+
+        .employee-info-preview h6 {
+            margin: 0 0 8px 0;
+            color: #2385B0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .employee-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+        }
+
+        .employee-info-item {
+            font-size: 12px;
+        }
+
+        .employee-info-item strong {
+            color: #495057;
+        }
+
+        .leave-requests-report-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    /* Report header */
+    .leave-report-header {
+        background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .leave-report-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+        letter-spacing: 0.5px;
+    }
+
+    .leave-report-subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .leave-report-date {
+        font-size: 12px;
+        opacity: 0.8;
+        margin: 8px 0 0 0;
+        font-style: italic;
+    }
+
+    /* Summary statistics section */
+    .leave-summary-section {
+        padding: 25px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .leave-summary-title {
+        color: #2385B0;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        display: flex;
+        align-items: center;
+        border-bottom: 2px solid #2385B0;
+        padding-bottom: 10px;
+    }
+
+    .leave-summary-title i {
+        margin-right: 10px;
+        font-size: 20px;
+    }
+
+    .leave-summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .leave-summary-stat {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .leave-summary-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .leave-summary-stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #2385B0;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .leave-summary-stat-label {
+        font-size: 13px;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        line-height: 1.3;
+    }
+
+    /* Detailed requests section */
+    .leave-detailed-section {
+        padding: 25px;
+    }
+
+    .leave-detailed-title {
+        color: #2385B0;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 25px 0;
+        display: flex;
+        align-items: center;
+        border-bottom: 2px solid #2385B0;
+        padding-bottom: 10px;
+    }
+
+    .leave-detailed-title i {
+        margin-right: 10px;
+        font-size: 20px;
+    }
+
+    /* Department sections */
+    .leave-department-section {
+        margin-bottom: 30px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+    }
+
+    .leave-department-header {
+        background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+        color: white;
+        padding: 15px 20px;
+        font-weight: 600;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .leave-department-header i {
+        margin-right: 10px;
+        font-size: 18px;
+    }
+
+    .leave-department-count {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* Department table */
+    .leave-department-table-container {
+        background: white;
+        overflow-x: auto;
+    }
+
+    .leave-department-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        min-width: 900px;
+    }
+
+    .leave-department-table th {
+        background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+        color: white;
+        padding: 12px 8px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+
+    .leave-department-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .leave-department-table tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .leave-department-table tr:hover {
+        background-color: #e3f2fd;
+    }
+
+    /* Department summary row */
+    .leave-department-summary {
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .leave-department-summary td {
+        padding: 15px 8px;
+        border-top: 2px solid #adb5bd;
+        font-size: 13px;
+    }
+
+    /* Status badges */
+    .leave-status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .leave-status-approved {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .leave-status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+
+    .leave-status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Leave type badges */
+    .leave-type-badge {
+        background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%);
+        color: #0066cc;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 600;
+        border: 1px solid #b8daff;
+        display: inline-block;
+    }
+
+    /* Balance display */
+    .leave-balance-display {
+        font-weight: 600;
+        color: #495057;
+        font-size: 11px;
+    }
+
+    .leave-balance-positive {
+        color: #28a745;
+    }
+
+    .leave-balance-warning {
+        color: #ffc107;
+    }
+
+    .leave-balance-negative {
+        color: #dc3545;
+    }
+
+    /* Timestamp formatting */
+    .leave-timestamp {
+        color: #6c757d;
+        font-size: 11px;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Duration display */
+    .leave-duration {
+        font-weight: 600;
+        color: #495057;
+        text-align: center;
+    }
+
+    /* Date range display */
+    .leave-date-range {
+        font-size: 11px;
+        color: #495057;
+        white-space: nowrap;
+    }
+
+    /* Remarks display */
+    .leave-remarks {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #6c757d;
+        font-style: italic;
+        font-size: 11px;
+    }
+
+    .leave-remarks:hover {
+        overflow: visible;
+        white-space: normal;
+        background: #f8f9fa;
+        padding: 4px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 10;
+    }
+
+    /* Total summary */
+    .leave-total-summary {
+        margin-top: 25px;
+        padding: 20px;
+        background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+        color: white;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .leave-total-summary-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 10px 0;
+    }
+
+    .leave-total-summary-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    /* No data state */
+    .leave-no-data {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+        font-style: italic;
+        background: white;
+        border-radius: 8px;
+        border: 2px dashed #dee2e6;
+        margin: 20px 0;
+    }
+
+    .leave-no-data i {
+        font-size: 48px;
+        color: #dee2e6;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .action-button {
+        background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+        color: white;
+        padding: 6px 12px;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        display: inline-block;
+    }
+
+    .action-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(35, 133, 176, 0.3);
+        text-decoration: none;
+        color: white;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .leave-summary-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+    }
+
+    /* Alert classes */
+    .alert {
+        padding: 15px;
+        margin: 15px 0;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+
+    .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+
+    .alert-error {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+
+    /* Additional status badge classes for dynamic content */
+    .status-badge.status-working {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-badge.status-checked-out {
+        background-color: #cce5ff;
+        color: #004085;
+        border: 1px solid #b8daff;
+    }
+
+    .status-badge.status-not-checked {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Leave status badge classes for dynamic content */
+    .leave-status-badge.leave-status-pending-for-approval {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
     </style>
 </head>
 <body>
@@ -351,6 +1270,146 @@
                         <h3>Team Working Hours</h3>
                     </div>
                     <canvas id="workingHoursChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Department Reports Section (Line Manager) -->
+            <div class="attendance-reports-section">
+                <div class="reports-section-header">
+                    <i class="fas fa-file-chart-line"></i>
+                    <h3>Department Reports</h3>
+                    <span class="department-badge" id="manager-department">Your Department</span>
+                </div>
+                
+                <div class="reports-grid">
+                    <!-- Daily Department Attendance Report -->
+                    <div class="report-item">
+                        <div class="report-header">
+                            <div class="report-icon">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="report-info">
+                                <h4>Daily Department Attendance</h4>
+                                <p>Daily attendance overview for your department with detailed employee lists and metrics</p>
+                            </div>
+                        </div>
+                        
+                        <form class="report-form" id="lm-daily-attendance-form">
+                            <div class="form-group">
+                                <label for="lm-daily-attendance-date">Select Date</label>
+                                <input type="date" id="lm-daily-attendance-date" name="attendanceDate" required>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-report btn-primary" onclick="generateDepartmentReport('daily-attendance', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn-report btn-secondary" onclick="generateDepartmentReport('daily-attendance', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="report-results" id="lm-daily-attendance-results"></div>
+                    </div>
+                    
+                    <!-- Individual Employee Report (Department) -->
+                    <div class="report-item">
+                        <div class="report-header">
+                            <div class="report-icon">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="report-info">
+                                <h4>Individual Employee Report</h4>
+                                <p>Weekly or monthly report for department employees with attendance and leave details</p>
+                            </div>
+                        </div>
+                        
+                        <form class="report-form" id="lm-employee-report-form">
+                            <div class="form-group">
+                                <label for="lm-employee-select">Select Employee</label>
+                                <select id="lm-employee-select" name="employeeId" required>
+                                    <option value="">Choose a team member...</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="lm-employee-report-type">Report Period</label>
+                                <select id="lm-employee-report-type" name="reportType" required>
+                                    <option value="weekly">Weekly Report</option>
+                                    <option value="monthly">Monthly Report</option>
+                                </select>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group">
+                                    <label for="lm-employee-start-date">Start Date</label>
+                                    <input type="date" id="lm-employee-start-date" name="startDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lm-employee-end-date">End Date</label>
+                                    <input type="date" id="lm-employee-end-date" name="endDate" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-report btn-primary" onclick="generateDepartmentReport('employee-report', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn-report btn-secondary" onclick="generateDepartmentReport('employee-report', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="report-results" id="lm-employee-report-results"></div>
+                    </div>
+                    
+                    <!-- Department Leave Requests Report -->
+                    <div class="report-item">
+                        <div class="report-header">
+                            <div class="report-icon">
+                                <i class="fas fa-calendar-times"></i>
+                            </div>
+                            <div class="report-info">
+                                <h4>Department Leave Summary</h4>
+                                <p>Leave requests and balances overview for your department team members</p>
+                            </div>
+                        </div>
+                        
+                        <form class="report-form" id="lm-leave-report-form">
+                            <div class="form-group">
+                                <label for="lm-leave-requests-report-type">Report Period</label>
+                                <select id="lm-leave-requests-report-type" name="reportType" required>
+                                    <option value="weekly">Weekly Report</option>
+                                    <option value="monthly">Monthly Report</option>
+                                </select>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group">
+                                    <label for="lm-leave-requests-start-date">Start Date</label>
+                                    <input type="date" id="lm-leave-requests-start-date" name="startDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lm-leave-requests-end-date">End Date</label>
+                                    <input type="date" id="lm-leave-requests-end-date" name="endDate" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-report btn-primary" onclick="generateDepartmentReport('leave-report', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn-report btn-secondary" onclick="generateDepartmentReport('leave-report', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="report-results" id="lm-leave-requests-report-results"></div>
+                    </div>
                 </div>
             </div>
             
@@ -624,16 +1683,37 @@
         </div>
     </div>
     <!-- Script for the Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-// Get data from backend with safer defaults
-const attendanceLogs = typeof window.attendanceLogs !== 'undefined' ? window.attendanceLogs : [];
-const allLeaves = typeof window.allLeaves !== 'undefined' ? window.allLeaves : [];
-const approvedLeaves = typeof window.approvedLeaves !== 'undefined' ? window.approvedLeaves : [];
-const pendingApprovalStatus = typeof window.pendingApprovalStatus !== 'undefined' ? window.pendingApprovalStatus : '';
-const notifications = typeof window.notifications !== 'undefined' ? window.notifications : [];
+        // Define global variables with safe defaults
+        let attendanceLogs = [];
+        let allLeaves = [];
+        let approvedLeaves = [];
+        let notifications = [];
+
+        // Try to get data from server-side variables if they exist
+        try {
+            if (typeof window.attendanceLogs !== 'undefined') attendanceLogs = window.attendanceLogs;
+            if (typeof window.allLeaves !== 'undefined') allLeaves = window.allLeaves;
+            if (typeof window.approvedLeaves !== 'undefined') approvedLeaves = window.approvedLeaves;
+            if (typeof window.notifications !== 'undefined') notifications = window.notifications;
+        } catch (e) {
+            console.log('Using default empty data arrays');
+        }
+
+        // Mock data for demonstration (remove this when you have real data)
+        if (attendanceLogs.length === 0) {
+            attendanceLogs = [
+                { firstName: 'John', lastName: 'Smith', department: 'Engineering', timeIn: '09:00', timeOut: '18:00', city: 'Office', activeWorkingHours: '8.0', date: '2025-06-18', jobTitle: 'Software Engineer' },
+                { firstName: 'Jane', lastName: 'Doe', department: 'Engineering', timeIn: '09:15', timeOut: '17:45', city: 'Office', activeWorkingHours: '7.5', date: '2025-06-18', jobTitle: 'Senior Developer' }
+            ];
+        }
+
             // Function to ensure consistent chart dimensions
             function setupChartDimensions() {
                 document.querySelectorAll('.chart-card canvas').forEach(canvas => {
@@ -643,6 +1723,8 @@ const notifications = typeof window.notifications !== 'undefined' ? window.notif
             
             // Call this initially
             setupChartDimensions();
+
+            initializeLineManagerReports(); 
             
             // Calculate KPI values
             function calculateKPIs() {
@@ -1113,6 +2195,23 @@ const notifications = typeof window.notifications !== 'undefined' ? window.notif
             
             // Call our new function
             setupShowMoreLinks();
+
+             // Display manager's department
+            function displayManagerDepartment() {
+                // Get department from attendance logs or other available data
+                if (attendanceLogs && attendanceLogs.length > 0) {
+                    const managerDepartment = attendanceLogs[0].department || 'Unknown Department';
+                    const departmentBadge = document.getElementById('manager-department');
+                    if (departmentBadge) {
+                        departmentBadge.textContent = managerDepartment;
+                    }
+                } else {
+                    const departmentBadge = document.getElementById('manager-department');
+                    if (departmentBadge) {
+                        departmentBadge.textContent = 'Your Department';
+                    }
+                }
+            }
             
             // Handle existing "Show More" rows
             document.querySelectorAll('.show-more-row').forEach(row => {
@@ -1148,6 +2247,967 @@ const notifications = typeof window.notifications !== 'undefined' ? window.notif
                 setupChartDimensions();
             });
         });
+
+        function displayManagerDepartment() {
+            // Get department from attendance logs or other available data
+            if (attendanceLogs && attendanceLogs.length > 0) {
+                const managerDepartment = attendanceLogs[0].department || 'Unknown Department';
+                const departmentBadge = document.getElementById('manager-department');
+                if (departmentBadge) {
+                    departmentBadge.textContent = managerDepartment;
+                }
+            } else {
+                const departmentBadge = document.getElementById('manager-department');
+                if (departmentBadge) {
+                    departmentBadge.textContent = 'Your Department';
+                }
+            }
+        }
+
+        // Initialize line manager reports
+        function initializeLineManagerReports() {
+            console.log('🔄 Initializing line manager department reports...');
+            
+            // Set default dates
+            setLineManagerReportDefaultDates();
+            
+            // Load department employees
+            loadDepartmentEmployees();
+            
+            // Setup report handlers
+            setupLineManagerReportHandlers();
+            
+            // Get and display manager's department
+            displayManagerDepartment();
+        }
+
+        // Set default dates for line manager reports
+        function setLineManagerReportDefaultDates() {
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            
+            // Set today for daily attendance report
+            const dailyDateInput = document.getElementById('lm-daily-attendance-date');
+            if (dailyDateInput) {
+                dailyDateInput.value = todayString;
+            }
+            
+            // Set current week for employee reports
+            const currentWeekStart = new Date(today);
+            currentWeekStart.setDate(today.getDate() - today.getDay());
+            const currentWeekEnd = new Date(currentWeekStart);
+            currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+            
+            const employeeStartDate = document.getElementById('lm-employee-start-date');
+            const employeeEndDate = document.getElementById('lm-employee-end-date');
+            if (employeeStartDate && employeeEndDate) {
+                employeeStartDate.value = currentWeekStart.toISOString().split('T')[0];
+                employeeEndDate.value = currentWeekEnd.toISOString().split('T')[0];
+            }
+            
+            // Set current month for leave reports
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            const leaveStartDate = document.getElementById('lm-leave-requests-start-date');
+            const leaveEndDate = document.getElementById('lm-leave-requests-end-date');
+            if (leaveStartDate && leaveEndDate) {
+                leaveStartDate.value = firstDay.toISOString().split('T')[0];
+                leaveEndDate.value = lastDay.toISOString().split('T')[0];
+            }
+        }
+
+        // Load department employees for dropdown
+        async function loadDepartmentEmployees() {
+            try {
+                console.log('🔄 Loading department employees...');
+                
+                const response = await fetch('/linemanager/reports/employees');
+                                
+                if (!response.ok) {
+                    console.warn('Could not load department employees, using mock data');
+                    // Use mock data for demonstration
+                    const mockEmployees = [
+                        { userId: '1', firstName: 'John', lastName: 'Smith', department: 'Engineering' },
+                        { userId: '2', firstName: 'Jane', lastName: 'Doe', department: 'Engineering' }
+                    ];
+                    
+                    const employeeSelect = document.getElementById('lm-employee-select');
+                    if (employeeSelect) {
+                        employeeSelect.innerHTML = '<option value="">Choose a team member...</option>';
+                        mockEmployees.forEach(employee => {
+                            const option = document.createElement('option');
+                            option.value = employee.userId;
+                            option.textContent = `${employee.firstName} ${employee.lastName} - ${employee.department}`;
+                            employeeSelect.appendChild(option);
+                        });
+                    }
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to load department employees');
+                }
+                
+                const employeeSelect = document.getElementById('lm-employee-select');
+                if (employeeSelect && result.employees) {
+                    // Clear existing options except the first one
+                    employeeSelect.innerHTML = '<option value="">Choose a team member...</option>';
+                    
+                    // Add employee options
+                    result.employees.forEach(employee => {
+                        const option = document.createElement('option');
+                        option.value = employee.userId;
+                        option.textContent = `${employee.firstName} ${employee.lastName} - ${employee.department}`;
+                        employeeSelect.appendChild(option);
+                    });
+                    
+                    console.log(`✅ Loaded ${result.employees.length} department employees`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading department employees:', error);
+                
+                const employeeSelect = document.getElementById('lm-employee-select');
+                if (employeeSelect) {
+                    employeeSelect.innerHTML = '<option value="">Error loading employees</option>';
+                }
+            }
+        }
+
+        // Setup report type change handlers for line manager
+        function setupLineManagerReportHandlers() {
+            const reportTypeSelect = document.getElementById('lm-employee-report-type');
+            const startDateInput = document.getElementById('lm-employee-start-date');
+            const endDateInput = document.getElementById('lm-employee-end-date');
+            
+            if (reportTypeSelect) {
+                reportTypeSelect.addEventListener('change', function() {
+                    const reportType = this.value;
+                    const today = new Date();
+                    
+                    if (reportType === 'weekly') {
+                        const currentWeekStart = new Date(today);
+                        currentWeekStart.setDate(today.getDate() - today.getDay());
+                        const currentWeekEnd = new Date(currentWeekStart);
+                        currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+                        
+                        if (startDateInput) startDateInput.value = currentWeekStart.toISOString().split('T')[0];
+                        if (endDateInput) endDateInput.value = currentWeekEnd.toISOString().split('T')[0];
+                    } else if (reportType === 'monthly') {
+                        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                        
+                        if (startDateInput) startDateInput.value = firstDay.toISOString().split('T')[0];
+                        if (endDateInput) endDateInput.value = lastDay.toISOString().split('T')[0];
+                    }
+                });
+            }
+            
+            // Handle leave report type changes
+            const leaveReportTypeSelect = document.getElementById('lm-leave-requests-report-type');
+            const leaveStartDateInput = document.getElementById('lm-leave-requests-start-date');
+            const leaveEndDateInput = document.getElementById('lm-leave-requests-end-date');
+            
+            if (leaveReportTypeSelect) {
+                leaveReportTypeSelect.addEventListener('change', function() {
+                    const reportType = this.value;
+                    const today = new Date();
+                    
+                    if (reportType === 'weekly') {
+                        const currentWeekStart = new Date(today);
+                        currentWeekStart.setDate(today.getDate() - today.getDay());
+                        const currentWeekEnd = new Date(currentWeekStart);
+                        currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+                        
+                        if (leaveStartDateInput) leaveStartDateInput.value = currentWeekStart.toISOString().split('T')[0];
+                        if (leaveEndDateInput) leaveEndDateInput.value = currentWeekEnd.toISOString().split('T')[0];
+                    } else if (reportType === 'monthly') {
+                        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                        
+                        if (leaveStartDateInput) leaveStartDateInput.value = firstDay.toISOString().split('T')[0];
+                        if (leaveEndDateInput) leaveEndDateInput.value = lastDay.toISOString().split('T')[0];
+                    }
+                });
+            }
+        }
+
+        
+
+        // PDF generation functions
+        function generateDailyAttendancePDF(doc, data) {
+            // Set up document header
+            doc.setFontSize(20);
+            doc.setTextColor(35, 133, 176);
+            doc.text('Department Daily Attendance Report', 20, 20);
+            
+            // Add date and department info
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Date: ${data.reportDate}`, 20, 35);
+            doc.text(`Department: ${data.department || 'Your Department'}`, 20, 45);
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 55);
+            
+            let yPosition = 70;
+            
+            // Department Summary Statistics
+            if (data.summary) {
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Department Attendance Summary', 20, yPosition);
+                yPosition += 10;
+                
+                const summaryData = [
+                    ['Total Team Members', data.summary.totalEmployees.toString()],
+                    ['Present Today', data.summary.present.toString()],
+                    ['On Leave', data.summary.onLeave.toString()],
+                    ['Late Arrivals', data.summary.late.toString()],
+                    ['Early Departures', data.summary.earlyOut.toString()]
+                ];
+                
+                doc.autoTable({
+                    startY: yPosition,
+                    head: [['Department Metrics', 'Count']],
+                    body: summaryData,
+                    styles: { fontSize: 10 },
+                    headStyles: { fillColor: [35, 133, 176] },
+                    columnStyles: {
+                        0: { fontStyle: 'bold', cellWidth: 80 },
+                        1: { halign: 'center', cellWidth: 30 }
+                    }
+                });
+                
+                yPosition = doc.lastAutoTable.finalY + 20;
+            }
+            
+            // Detailed Team Attendance
+            if (data.detailedAttendance && Object.keys(data.detailedAttendance).length > 0) {
+                const department = Object.keys(data.detailedAttendance)[0];
+                const employees = data.detailedAttendance[department];
+                
+                if (employees && employees.length > 0) {
+                    if (yPosition > 150) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                    
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(`${department} Team Members`, 20, yPosition);
+                    yPosition += 10;
+                    
+                    const empData = employees.map(emp => [
+                        `${emp.lastName}, ${emp.firstName}`,
+                        emp.timeIn || 'N/A',
+                        emp.timeOut || 'N/A',
+                        emp.hoursWorked || 'N/A',
+                        emp.status || 'N/A',
+                        (emp.lateMinutes || 0).toString(),
+                        (emp.earlyOutMinutes || 0).toString(),
+                        emp.onLeave ? 'Yes' : 'No'
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [['Name', 'Time In', 'Time Out', 'Hours', 'Status', 'Late (min)', 'Early (min)', 'On Leave']],
+                        body: empData,
+                        styles: { fontSize: 8 },
+                        headStyles: { fillColor: [35, 133, 176], fontSize: 8 },
+                        margin: { left: 10, right: 10 }
+                    });
+                }
+            }
+        }
+
+        function generateEmployeeReportPDF(doc, data) {
+            // Set up document header
+            doc.setFontSize(18);
+            doc.setTextColor(35, 133, 176);
+            doc.text('Employee Attendance & Leave Report', 20, 20);
+            
+            // Employee Information
+            if (data.employee) {
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Employee Information', 20, 40);
+                
+                doc.setFontSize(10);
+                doc.text(`Name: ${data.employee.employeeName}`, 20, 50);
+                doc.text(`Position: ${data.employee.position}`, 20, 55);
+                doc.text(`Department: ${data.employee.department}`, 20, 60);
+                doc.text(`Reporting Period: ${data.reportingPeriod.startDate} - ${data.reportingPeriod.endDate}`, 20, 65);
+                doc.text(`Report Generated: ${data.reportGenerated}`, 20, 70);
+            }
+            
+            let yPosition = 85;
+            
+            // Period Overview
+            if (data.periodOverview) {
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Period Overview', 20, yPosition);
+                yPosition += 10;
+                
+                const overviewData = [
+                    ['Working Days in Period', data.periodOverview.workingDaysInPeriod.toString()],
+                    ['Days Present', data.periodOverview.daysPresent.toString()],
+                    ['Days on Leave', data.periodOverview.daysOnLeave.toString()],
+                    ['Late Arrivals', data.periodOverview.lateArrivals.toString()],
+                    ['Early Outs', data.periodOverview.earlyOuts.toString()],
+                    ['Total Work Hours', data.periodOverview.totalWorkHours]
+                ];
+                
+                doc.autoTable({
+                    startY: yPosition,
+                    head: [['Metric', 'Count']],
+                    body: overviewData,
+                    styles: { fontSize: 10 },
+                    headStyles: { fillColor: [35, 133, 176] },
+                    columnStyles: {
+                        0: { fontStyle: 'bold', cellWidth: 80 },
+                        1: { halign: 'center', cellWidth: 40 }
+                    }
+                });
+                
+                yPosition = doc.lastAutoTable.finalY + 20;
+            }
+            
+            // Current Leave Balances
+            if (data.currentLeaveBalances && data.currentLeaveBalances.length > 0) {
+                if (yPosition > 200) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Current Leave Balances', 20, yPosition);
+                yPosition += 10;
+                
+                const balanceData = data.currentLeaveBalances.map(balance => [
+                    balance.leaveType,
+                    balance.annualEntitlement.toString(),
+                    balance.used.toString(),
+                    balance.remaining.toString()
+                ]);
+                
+                doc.autoTable({
+                    startY: yPosition,
+                    head: [['Leave Type', 'Annual Entitlement', 'Used', 'Remaining']],
+                    body: balanceData,
+                    styles: { fontSize: 10 },
+                    headStyles: { fillColor: [35, 133, 176] }
+                });
+                
+                yPosition = doc.lastAutoTable.finalY + 20;
+            }
+            
+            // Detailed Attendance Record
+            if (data.detailedAttendanceRecord && data.detailedAttendanceRecord.length > 0) {
+                if (yPosition > 150) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Detailed Attendance Record', 20, yPosition);
+                yPosition += 10;
+                
+                const attendanceData = data.detailedAttendanceRecord.map(record => [
+                    record.date,
+                    record.timeIn,
+                    record.timeOut,
+                    record.hoursWorked,
+                    record.status,
+                    record.lateMinutes.toString(),
+                    record.earlyOutMinutes.toString(),
+                    record.onLeave ? 'Y' : 'N'
+                ]);
+                
+                doc.autoTable({
+                    startY: yPosition,
+                    head: [['Date', 'Time In', 'Time Out', 'Hours', 'Status', 'Late', 'Early', 'Leave']],
+                    body: attendanceData,
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [35, 133, 176], fontSize: 8 },
+                    margin: { left: 10, right: 10 }
+                });
+                
+                yPosition = doc.lastAutoTable.finalY + 15;
+            }
+            
+            // Leave Taken
+            if (data.leaveTaken && data.leaveTaken.length > 0) {
+                if (yPosition > 150) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Leave Taken', 20, yPosition);
+                yPosition += 10;
+                
+                const leaveData = data.leaveTaken.map(leave => [
+                    leave.date,
+                    leave.leaveType,
+                    leave.requestedDates,
+                    leave.duration.toString(),
+                    leave.status,
+                    leave.approvedBy,
+                    leave.approvalDate
+                ]);
+                
+                doc.autoTable({
+                    startY: yPosition,
+                    head: [['Date', 'Type', 'Requested Dates', 'Duration', 'Status', 'Approved By', 'Approval Date']],
+                    body: leaveData,
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [35, 133, 176], fontSize: 8 },
+                    margin: { left: 5, right: 5 }
+                });
+            }
+        }
+
+        function generateLeaveRequestsReportPDF(doc, data) {
+            // Set up document header
+            doc.setFontSize(18);
+            doc.setTextColor(35, 133, 176);
+            doc.text('Department Leave Requests & Balances Report', 20, 20);
+            
+            // Add generation date
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+            doc.text(`Period: ${data.startDate} to ${data.endDate}`, 20, 35);
+            doc.text(`Department: ${data.department || 'Your Department'}`, 20, 40);
+            
+            let yPosition = 55;
+            
+            // Calculate and add summary statistics
+            const stats = calculateLeaveRequestsStatistics(data.leaveRequests || []);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Department Leave Summary Statistics', 20, yPosition);
+            yPosition += 10;
+            
+            const summaryData = [
+                ['Total Leave Requests', stats.totalRequests.toString()],
+                ['Approved Requests', stats.approvedRequests.toString()],
+                ['Pending Your Approval', stats.pendingRequests.toString()],
+                ['Rejected Requests', stats.rejectedRequests.toString()],
+                ['Total Leave Days Requested', stats.totalDaysRequested.toString()],
+                ['Total Leave Days Approved', stats.totalDaysApproved.toString()]
+            ];
+            
+            doc.autoTable({
+                startY: yPosition,
+                head: [['Summary Statistics', 'Count']],
+                body: summaryData,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [35, 133, 176] },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 80 },
+                    1: { halign: 'center', cellWidth: 30 }
+                }
+            });
+            
+            yPosition = doc.lastAutoTable.finalY + 20;
+            
+            // Detailed leave requests
+            if (data.leaveRequests && data.leaveRequests.length > 0) {
+                if (yPosition > 200) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Detailed Leave Requests', 20, yPosition);
+                yPosition += 10;
+                
+                const requestData = data.leaveRequests.map(request => {
+                    const fromDate = new Date(request.fromDate);
+                    const untilDate = new Date(request.untilDate);
+                    const duration = Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                    const isApproved = (request.status || '').toLowerCase() === 'approved' ? 'Y' : 'N';
+                    
+                    return [
+                        request.updatedDate ? new Date(request.updatedDate).toLocaleDateString() : new Date(request.fromDate).toLocaleDateString(),
+                        `${request.lastName}, ${request.firstName}`,
+                        request.leaveType || 'Unknown',
+                        `${fromDate.toLocaleDateString()} - ${untilDate.toLocaleDateString()}`,
+                        duration.toString(),
+                        isApproved,
+                        request.remainingBalance || 'N/A',
+                        (request.reason || 'No remarks').substring(0, 25) + '...'
+                    ];
+                });
+                
+                doc.autoTable({
+                    startY: yPosition,
+                    head: [['Date Filed', 'Team Member', 'Leave Type', 'Dates', 'Days', 'Approved', 'Balance', 'Remarks']],
+                    body: requestData,
+                    styles: { fontSize: 7 },
+                    headStyles: { fillColor: [35, 133, 176], fontSize: 7 },
+                    margin: { left: 5, right: 5 }
+                });
+                
+                yPosition = doc.lastAutoTable.finalY + 15;
+            }
+            
+            // Department summary footer
+            if (yPosition > 250) {
+                doc.addPage();
+                yPosition = 20;
+            }
+            
+            doc.setFontSize(12);
+            doc.setTextColor(35, 133, 176);
+            doc.text(`Total Department Leave Requests: ${stats.totalRequests}`, 20, yPosition);
+            doc.text(`Pending Your Review: ${stats.pendingRequests}`, 20, yPosition + 10);
+        }
+
+        // Main function to generate department reports
+        async function generateDepartmentReport(reportType, format) {
+            const form = document.getElementById(`lm-${reportType}-form`);
+            const button = event.target;
+            const resultsDiv = document.getElementById(`lm-${reportType}-results`);
+            
+            // Add loading state
+            button.classList.add('loading');
+            button.disabled = true;
+            
+            try {
+                console.log(`🔄 [Line Manager] Generating ${reportType} department report in ${format} format...`);
+                
+                // Check if form exists
+                if (!form) {
+                    throw new Error(`Form with ID lm-${reportType}-form not found`);
+                }
+
+                const formData = new FormData(form);
+                const params = new URLSearchParams();
+                
+                // Add all form data to params
+                for (let [key, value] of formData.entries()) {
+                    if (value) {
+                        params.append(key, value);
+                    }
+                }
+                
+                // Add format parameter
+                if (format) params.append('format', format);
+                
+                // Special validation for employee report
+                if (reportType === 'employee-report') {
+                    const employeeId = formData.get('employeeId');
+                    if (!employeeId) {
+                        throw new Error('Please select a team member before generating the report.');
+                    }
+                }
+                
+                // Determine endpoint based on report type
+                let endpoint = '';
+                switch(reportType) {
+                    case 'daily-attendance':
+                        endpoint = '/linemanager/reports/daily-attendance';
+                        break;
+                    case 'employee-report':
+                        endpoint = '/linemanager/reports/employee-attendance';
+                        break;
+                    case 'leave-report':
+                        endpoint = '/linemanager/reports/leave-requests';
+                        break;
+                    default:
+                        throw new Error('Unknown report type: ' + reportType);
+                }
+                
+                console.log(`🌐 [Line Manager] Making request to: ${endpoint}?${params.toString()}`);
+                
+                if (format === 'pdf') {
+                    // Fetch data first
+                    const response = await fetch(`${endpoint}?${params.toString()}`);
+
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            // Show mock report for demonstration
+                            showMockReport(resultsDiv, reportType);
+                            return;
+                        }
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to generate report');
+                    }
+                    
+                    // Generate PDF
+                    try {
+                        // Check for both jsPDF and autoTable
+                        if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+                            throw new Error('jsPDF library is not loaded. Please refresh the page and try again.');
+                        }
+                        
+                        let jsPDF;
+                        if (window.jspdf && window.jspdf.jsPDF) {
+                            jsPDF = window.jspdf.jsPDF;
+                        } else if (window.jsPDF) {
+                            jsPDF = window.jsPDF;
+                        } else {
+                            throw new Error('jsPDF not found. Please refresh the page.');
+                        }
+                        
+                        const doc = new jsPDF();
+                        
+                        // Check if autoTable is available
+                        if (typeof doc.autoTable !== 'function') {
+                            throw new Error('jsPDF autoTable plugin is not loaded. Please refresh the page.');
+                        }
+                        
+                        // Use the same PDF generation functions as HR but add department context
+                        if (reportType === 'daily-attendance') {
+                            generateDailyAttendancePDF(doc, data);
+                        } else if (reportType === 'employee-report') {
+                            generateEmployeeReportPDF(doc, data);
+                        } else if (reportType === 'leave-report') {
+                            generateLeaveRequestsReportPDF(doc, data);
+                        }
+                        
+                        // Download the PDF
+                        const filename = `department_${reportType.replace('-', '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+                        doc.save(filename);
+                        
+                        console.log(`✅ Department PDF generated and downloaded: ${filename}`);
+                        
+                    } catch (pdfError) {
+                        console.error('❌ Error generating PDF:', pdfError);
+                        alert('Error generating PDF: ' + pdfError.message);
+                    }
+                    
+                } else {
+                    // Fetch data for viewing
+                    const response = await fetch(`${endpoint}?${params.toString()}`);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log(`✅ [Line Manager] Received data:`, data);
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to fetch report data');
+                    }
+                    
+                    // Display the data using the same functions as HR
+                    if (reportType === 'daily-attendance' || reportType === 'employee-report') {
+                        displayAttendanceReportResults(resultsDiv, data, reportType);
+                    } else if (reportType === 'leave-report') {
+                         displayDepartmentLeaveRequestsReport(resultsDiv, data);
+                    }
+                    
+                    console.log(`✅ [Line Manager] ${reportType} department report displayed successfully`);
+                }
+                
+            } catch (error) {
+                console.error(`❌ [Line Manager] Error generating ${reportType} report:`, error);
+                alert('Error generating department report: ' + error.message);
+            } finally {
+                // Remove loading state
+                button.classList.remove('loading');
+                button.disabled = false;
+            }
+        }
+
+        // Calculate statistics from leave requests data
+        function calculateLeaveRequestsStatistics(leaveRequests) {
+            const stats = {
+                totalRequests: 0,
+                approvedRequests: 0,
+                pendingRequests: 0,
+                rejectedRequests: 0,
+                totalDaysRequested: 0,
+                totalDaysApproved: 0
+            };
+            
+            leaveRequests.forEach(request => {
+                stats.totalRequests++;
+                
+                // Calculate duration
+                const fromDate = new Date(request.fromDate);
+                const untilDate = new Date(request.untilDate);
+                const duration = Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                
+                stats.totalDaysRequested += duration;
+                
+                // Count by status
+                const status = (request.status || '').toLowerCase();
+                if (status === 'approved') {
+                    stats.approvedRequests++;
+                    stats.totalDaysApproved += duration;
+                } else if (status === 'pending' || status === 'pending for approval') {
+                    stats.pendingRequests++;
+                } else if (status === 'rejected') {
+                    stats.rejectedRequests++;
+                }
+            });
+            
+            return stats;
+        }
+
+        // Display functions for reports
+        function displayAttendanceReportResults(resultsDiv, data, reportType) {
+            if (!resultsDiv) return;
+            
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = `
+                <div class="results-header">
+                    <h5>${reportType === 'daily-attendance' ? 'Daily Attendance Report' : 'Employee Attendance Report'}</h5>
+                    <span class="report-date">${data.reportDate || data.reportingPeriod?.startDate || 'N/A'}</span>
+                </div>
+                
+                <div class="results-summary">
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.summary?.totalEmployees || data.periodOverview?.workingDaysInPeriod || 0}</div>
+                        <div class="summary-stat-label">${reportType === 'daily-attendance' ? 'Total Employees' : 'Working Days'}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.summary?.present || data.periodOverview?.daysPresent || 0}</div>
+                        <div class="summary-stat-label">${reportType === 'daily-attendance' ? 'Present' : 'Days Present'}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.summary?.onLeave || data.periodOverview?.daysOnLeave || 0}</div>
+                        <div class="summary-stat-label">On Leave</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.summary?.late || data.periodOverview?.lateArrivals || 0}</div>
+                        <div class="summary-stat-label">Late</div>
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Time In</th>
+                                <th>Time Out</th>
+                                <th>Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${generateTableRows(data)}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function displayLeaveRequestsReport(resultsDiv, data) {
+            if (!resultsDiv) return;
+            
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = `
+                <div class="results-header">
+                    <h5>Leave Requests Report</h5>
+                    <span class="report-date">${data.startDate} to ${data.endDate}</span>
+                </div>
+                
+                <div class="results-summary">
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.statistics?.totalRequests || 0}</div>
+                        <div class="summary-stat-label">Total Requests</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.statistics?.approvedRequests || 0}</div>
+                        <div class="summary-stat-label">Approved</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.statistics?.pendingRequests || 0}</div>
+                        <div class="summary-stat-label">Pending</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.statistics?.rejectedRequests || 0}</div>
+                        <div class="summary-stat-label">Rejected</div>
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Leave Type</th>
+                                <th>From Date</th>
+                                <th>Until Date</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${generateLeaveTableRows(data)}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generateTableRows(data) {
+            if (data.detailedAttendance) {
+                // Daily attendance report
+                const department = Object.keys(data.detailedAttendance)[0];
+                const employees = data.detailedAttendance[department] || [];
+                
+                return employees.map(emp => `
+                    <tr>
+                        <td>${emp.firstName} ${emp.lastName}</td>
+                        <td><span class="status-badge status-${emp.status.toLowerCase().replace(' ', '-')}">${emp.status}</span></td>
+                        <td>${emp.timeIn}</td>
+                        <td>${emp.timeOut}</td>
+                        <td>${emp.hoursWorked}</td>
+                    </tr>
+                `).join('');
+            } else if (data.detailedAttendanceRecord) {
+                // Employee report
+                return data.detailedAttendanceRecord.map(record => `
+                    <tr>
+                        <td>${record.date}</td>
+                        <td><span class="status-badge status-${record.status.toLowerCase().replace(' ', '-')}">${record.status}</span></td>
+                        <td>${record.timeIn}</td>
+                        <td>${record.timeOut}</td>
+                        <td>${record.hoursWorked}</td>
+                    </tr>
+                `).join('');
+            }
+            return '<tr><td colspan="5">No data available</td></tr>';
+        }
+
+        function generateLeaveTableRows(data) {
+            if (!data.leaveRequests || data.leaveRequests.length === 0) {
+                return '<tr><td colspan="6">No leave requests found</td></tr>';
+            }
+            
+            return data.leaveRequests.map(leave => `
+                <tr>
+                    <td>${leave.firstName} ${leave.lastName}</td>
+                    <td>${leave.leaveType}</td>
+                    <td>${leave.fromDate}</td>
+                    <td>${leave.untilDate}</td>
+                    <td><span class="leave-status-badge leave-status-${leave.status.toLowerCase().replace(' ', '-')}">${leave.status}</span></td>
+                    <td>${leave.duration} days</td>
+                </tr>
+            `).join('');
+        }
+
+        // Department-specific leave report display
+        function displayDepartmentLeaveRequestsReport(resultsDiv, data) {
+            if (!resultsDiv) {
+                console.error('❌ Results div not found');
+                return;
+            }
+            
+            resultsDiv.style.display = 'block';
+            
+            // Fallback to simple display
+            resultsDiv.innerHTML = `
+                <div class="results-header">
+                    <h5>Department Leave Requests Report</h5>
+                    <span class="report-date">${data.startDate} to ${data.endDate}</span>
+                </div>
+                
+                <div class="results-summary">
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.statistics?.totalRequests || 0}</div>
+                        <div class="summary-stat-label">Total Team Requests</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.statistics?.approvedRequests || 0}</div>
+                        <div class="summary-stat-label">Approved</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.statistics?.pendingRequests || 0}</div>
+                        <div class="summary-stat-label">Pending Your Approval</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value">${data.statistics?.rejectedRequests || 0}</div>
+                        <div class="summary-stat-label">Rejected</div>
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Team Member</th>
+                                <th>Leave Type</th>
+                                <th>From Date</th>
+                                <th>Until Date</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Remaining Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${generateDepartmentLeaveTableRows(data)}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Generate table rows for department leave requests
+        function generateDepartmentLeaveTableRows(data) {
+            if (!data.leaveRequests || data.leaveRequests.length === 0) {
+                return '<tr><td colspan="7">No leave requests found for your department</td></tr>';
+            }
+            
+            return data.leaveRequests.map(leave => {
+                const fromDate = new Date(leave.fromDate);
+                const untilDate = new Date(leave.untilDate);
+                const duration = Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                
+                return `
+                    <tr>
+                        <td>${leave.firstName} ${leave.lastName}</td>
+                        <td><span class="leave-type-badge">${leave.leaveType}</span></td>
+                        <td>${leave.fromDate}</td>
+                        <td>${leave.untilDate}</td>
+                        <td>${duration} day(s)</td>
+                        <td><span class="leave-status-badge leave-status-${leave.status.toLowerCase().replace(/\s+/g, '-')}">${leave.status}</span></td>
+                        <td class="leave-balance-display">${leave.remainingBalance || 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showMockReport(resultsDiv, reportType) {
+            if (!resultsDiv) return;
+            
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = `
+                <div class="results-header">
+                    <h5>Demo ${reportType.charAt(0).toUpperCase() + reportType.slice(1).replace('-', ' ')} Report</h5>
+                    <span class="report-date">Demo Data</span>
+                </div>
+                <div class="no-data">
+                    <i class="fas fa-info-circle"></i>
+                    <p>This is a demo report. Connect your backend routes to see real data.</p>
+                </div>
+            `;
+        }
         
         // Original sidebar functionality 
         document.querySelectorAll('.sidebar ul li a').forEach(link => {

@@ -8734,20 +8734,26 @@ viewEvaluation: async function(req, res) {
         try {
             console.log('🔄 [Backend] Fetching employees for dropdown...');
             
+            // Alternative approach: Query staffaccounts directly and join with useraccounts
             const { data: employees, error } = await supabase
-                .from('useraccounts')
+                .from('staffaccounts')
                 .select(`
                     userId,
-                    staffaccounts (
-                        firstName,
-                        lastName,
-                        departments (
-                            deptName
-                        )
+                    firstName,
+                    lastName,
+                    departmentId,
+                    departments (
+                        deptName
+                    ),
+                    useraccounts!inner (
+                        userRole,
+                        userEmail
                     )
                 `)
-                .neq('userRole', 'HR')
-                .order('staffaccounts.firstName', { ascending: true });
+                .neq('useraccounts.userRole', 'HR')
+                .not('firstName', 'is', null)
+                .not('lastName', 'is', null)
+                .order('firstName', { ascending: true });
             
             if (error) {
                 console.error('❌ [Backend] Error fetching employees:', error);
@@ -8757,17 +8763,24 @@ viewEvaluation: async function(req, res) {
                 });
             }
             
-            // Format the data for frontend
-            const formattedEmployees = employees
-                .filter(emp => emp.staffaccounts) // Filter out users without staff accounts
-                .map(emp => ({
-                    userId: emp.userId,
-                    firstName: emp.staffaccounts.firstName,
-                    lastName: emp.staffaccounts.lastName,
-                    department: emp.staffaccounts.departments?.deptName || 'Unknown'
-                }));
+            console.log(`📊 [Backend] Found ${employees?.length || 0} employees with staff accounts`);
             
-            console.log(`✅ [Backend] Found ${formattedEmployees.length} employees`);
+            // Format the data for frontend
+            const formattedEmployees = (employees || []).map(emp => ({
+                userId: emp.userId,
+                firstName: emp.firstName,
+                lastName: emp.lastName,
+                department: emp.departments?.deptName || 'Unknown',
+                email: emp.useraccounts?.userEmail || 'Unknown'
+            }));
+            
+            console.log(`✅ [Backend] Formatted ${formattedEmployees.length} employees`);
+            
+            // Log some sample data for debugging
+            if (formattedEmployees.length > 0) {
+                console.log(`📝 [Backend] Sample employee:`, formattedEmployees[0]);
+            }
+            
             res.json({
                 success: true,
                 employees: formattedEmployees
@@ -9151,7 +9164,7 @@ viewEvaluation: async function(req, res) {
             const calculateWorkingDays = (start, end) => {
                 let workingDays = 0;
                 const currentDate = new Date(start);
-                const periodEndDate = new Date(end);
+                const endDate = new Date(end);
                 
                 while (currentDate <= endDate) {
                     const dayOfWeek = currentDate.getDay();
@@ -9194,9 +9207,9 @@ viewEvaluation: async function(req, res) {
             let totalWorkHours = 0;
             
             const currentDate = new Date(startDate);
-            const periodEndDate = new Date(endDate);
+            const endDateObj = new Date(endDate);
             
-            while (currentDate <= periodEndDate) {
+            while (currentDate <= endDateObj) {
                 const dayOfWeek = currentDate.getDay();
                 
                 // Only process working days (Monday to Friday)
@@ -9401,7 +9414,7 @@ viewEvaluation: async function(req, res) {
     getLeaveRequestsReport: async (req, res) => {
         try {
             const { startDate, endDate, reportType } = req.query;
-            console.log(`🔄 [Backend] Generating leave requests report from ${startDate} to ${endDate}`);
+            console.log(`🔄 [Backend] Generating leave requests report from ${startDate} to ${endDate}, type: ${reportType}`);
             
             if (!startDate || !endDate) {
                 return res.status(400).json({
@@ -9410,17 +9423,20 @@ viewEvaluation: async function(req, res) {
                 });
             }
             
-            // Get leave requests for the date range
+            // Get leave requests for the date range with comprehensive data
             const { data: leaveRequests, error: leaveError } = await supabase
                 .from('leaverequests')
                 .select(`
+                    leaveRequestId,
                     fromDate,
                     untilDate,
                     reason,
                     status,
+                    created_at,
                     updatedDate,
                     remarkByManager,
-                    useraccounts (
+                    userId,
+                    useraccounts!inner (
                         staffaccounts (
                             firstName,
                             lastName,
@@ -9433,7 +9449,7 @@ viewEvaluation: async function(req, res) {
                         typeName
                     )
                 `)
-                .or(`fromDate.gte.${startDate},fromDate.lte.${endDate},untilDate.gte.${startDate},untilDate.lte.${endDate}`)
+                .or(`and(fromDate.gte.${startDate},fromDate.lte.${endDate}),and(untilDate.gte.${startDate},untilDate.lte.${endDate}),and(fromDate.lte.${startDate},untilDate.gte.${endDate})`)
                 .order('fromDate', { ascending: false });
             
             if (leaveError) {
@@ -9444,67 +9460,177 @@ viewEvaluation: async function(req, res) {
                 });
             }
             
-            // Get leave balances
-            const { data: leaveBalances, error: balanceError } = await supabase
-                .from('leavebalances')
-                .select(`
-                    totalLeaves,
-                    usedLeaves,
-                    remainingLeaves,
-                    useraccounts (
-                        staffaccounts (
-                            firstName,
-                            lastName,
-                            departments (
-                                deptName
-                            )
-                        )
-                    ),
-                    leave_types (
-                        typeName
-                    )
-                `)
-                .order('useraccounts.staffaccounts.departments.deptName', { ascending: true });
+            console.log(`📊 [Backend] Found ${leaveRequests?.length || 0} leave requests`);
+            console.log('🔍 [Debug] Sample leave request data:', JSON.stringify(leaveRequests[0], null, 2));
             
-            if (balanceError) {
-                console.error('❌ [Backend] Error fetching leave balances:', balanceError);
+            // Get current leave balances for all employees with leave requests
+            const userIds = [...new Set(leaveRequests.map(req => req.userId))];
+            
+            let leaveBalances = [];
+            if (userIds.length > 0) {
+                const { data: balances, error: balanceError } = await supabase
+                    .from('leavebalances')
+                    .select(`
+                        userId,
+                        totalLeaves,
+                        usedLeaves,
+                        remainingLeaves,
+                        leaveTypeId,
+                        leave_types (
+                            typeName
+                        )
+                    `)
+                    .in('userId', userIds);
+                
+                if (balanceError) {
+                    console.error('❌ [Backend] Error fetching leave balances:', balanceError);
+                } else {
+                    leaveBalances = balances || [];
+                }
             }
             
-            // Format leave requests
-            const formattedLeaveRequests = leaveRequests.map(leave => ({
-                firstName: leave.useraccounts?.staffaccounts?.firstName || 'Unknown',
-                lastName: leave.useraccounts?.staffaccounts?.lastName || 'Unknown',
-                department: leave.useraccounts?.staffaccounts?.departments?.deptName || 'Unknown',
-                fromDate: leave.fromDate,
-                untilDate: leave.untilDate,
-                leaveType: leave.leave_types?.typeName || 'Unknown',
-                reason: leave.reason,
-                status: leave.status,
-                updatedDate: leave.updatedDate,
-                remarkByManager: leave.remarkByManager
-            }));
+            console.log(`💰 [Backend] Found ${leaveBalances.length} leave balance records`);
             
-            // Format leave balances
-            const formattedLeaveBalances = (leaveBalances || []).map(balance => ({
-                firstName: balance.useraccounts?.staffaccounts?.firstName || 'Unknown',
-                lastName: balance.useraccounts?.staffaccounts?.lastName || 'Unknown',
-                department: balance.useraccounts?.staffaccounts?.departments?.deptName || 'Unknown',
-                leaveType: balance.leave_types?.typeName || 'Unknown',
-                totalLeaves: balance.totalLeaves,
-                usedLeaves: balance.usedLeaves,
-                remainingLeaves: balance.remainingLeaves
-            }));
+            // Get all departments for consistency
+            const { data: departments, error: deptError } = await supabase
+                .from('departments')
+                .select('departmentId, deptName')
+                .order('deptName', { ascending: true });
             
-            const response = {
-                success: true,
-                reportType: reportType,
-                startDate: startDate,
-                endDate: endDate,
-                leaveRequests: formattedLeaveRequests,
-                leaveBalances: formattedLeaveBalances
+            if (deptError) {
+                console.error('❌ [Backend] Error fetching departments:', deptError);
+            }
+            
+            // Helper function to calculate leave duration
+            const calculateDuration = (fromDate, untilDate) => {
+                const start = new Date(fromDate);
+                const end = new Date(untilDate);
+                return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
             };
             
-            console.log(`✅ [Backend] Leave requests report generated with ${formattedLeaveRequests.length} requests`);
+            // Format leave requests with enhanced data
+            const formattedLeaveRequests = leaveRequests.map(leave => {
+                const duration = calculateDuration(leave.fromDate, leave.untilDate);
+                
+                return {
+                    leaveRequestId: leave.leaveRequestId,
+                    userId: leave.userId,
+                    firstName: leave.useraccounts?.staffaccounts?.[0]?.firstName || 'Unknown',
+                    lastName: leave.useraccounts?.staffaccounts?.[0]?.lastName || 'Unknown',
+                    department: leave.useraccounts?.staffaccounts?.[0]?.departments?.deptName || 'Unknown',
+                    fromDate: leave.fromDate,
+                    untilDate: leave.untilDate,
+                    leaveType: leave.leave_types?.typeName || 'Unknown',
+                    reason: leave.reason || 'No reason provided',
+                    status: leave.status || 'Pending',
+                    createdAt: leave.created_at,
+                    updatedDate: leave.updatedDate,
+                    remarkByManager: leave.remarkByManager || '',
+                    duration: duration,
+                    // Format dates for display
+                    requestDate: leave.created_at ? new Date(leave.created_at).toLocaleDateString() : 'Unknown',
+                    approvalDate: leave.updatedDate ? new Date(leave.updatedDate).toLocaleDateString() : 'Pending'
+                };
+            });
+            
+            // Format leave balances with user mapping
+            const formattedLeaveBalances = leaveBalances.map(balance => ({
+                userId: balance.userId,
+                firstName: balance.staffaccounts?.firstName || 'Unknown',
+                lastName: balance.staffaccounts?.lastName || 'Unknown',
+                department: balance.staffaccounts?.departments?.deptName || 'Unknown',
+                leaveType: balance.leave_types?.typeName || 'Unknown',
+                totalLeaves: balance.totalLeaves || 0,
+                usedLeaves: balance.usedLeaves || 0,
+                remainingLeaves: balance.remainingLeaves || 0,
+                leaveTypeId: balance.leaveTypeId
+            }));
+            
+            // Calculate comprehensive statistics
+            const statistics = {
+                totalRequests: formattedLeaveRequests.length,
+                approvedRequests: formattedLeaveRequests.filter(req => req.status === 'Approved').length,
+                pendingRequests: formattedLeaveRequests.filter(req => req.status === 'Pending').length,
+                rejectedRequests: formattedLeaveRequests.filter(req => req.status === 'Rejected').length,
+                totalDaysRequested: formattedLeaveRequests.reduce((sum, req) => sum + req.duration, 0),
+                totalDaysApproved: formattedLeaveRequests
+                    .filter(req => req.status === 'Approved')
+                    .reduce((sum, req) => sum + req.duration, 0)
+            };
+            
+            // Group requests by department for analysis
+            const departmentBreakdown = {};
+            const allDepartments = [...new Set([
+                ...formattedLeaveRequests.map(req => req.department),
+                ...(departments || []).map(dept => dept.deptName)
+            ])].sort();
+            
+            allDepartments.forEach(dept => {
+                const deptRequests = formattedLeaveRequests.filter(req => req.department === dept);
+                departmentBreakdown[dept] = {
+                    department: dept,
+                    totalRequests: deptRequests.length,
+                    approvedRequests: deptRequests.filter(req => req.status === 'Approved').length,
+                    pendingRequests: deptRequests.filter(req => req.status === 'Pending').length,
+                    rejectedRequests: deptRequests.filter(req => req.status === 'Rejected').length,
+                    totalDaysRequested: deptRequests.reduce((sum, req) => sum + req.duration, 0),
+                    totalDaysApproved: deptRequests
+                        .filter(req => req.status === 'Approved')
+                        .reduce((sum, req) => sum + req.duration, 0),
+                    requests: deptRequests
+                };
+            });
+            
+            // Group leave types statistics
+            const leaveTypeBreakdown = {};
+            const allLeaveTypes = [...new Set(formattedLeaveRequests.map(req => req.leaveType))];
+            
+            allLeaveTypes.forEach(type => {
+                const typeRequests = formattedLeaveRequests.filter(req => req.leaveType === type);
+                leaveTypeBreakdown[type] = {
+                    leaveType: type,
+                    totalRequests: typeRequests.length,
+                    approvedRequests: typeRequests.filter(req => req.status === 'Approved').length,
+                    pendingRequests: typeRequests.filter(req => req.status === 'Pending').length,
+                    totalDaysRequested: typeRequests.reduce((sum, req) => sum + req.duration, 0),
+                    totalDaysApproved: typeRequests
+                        .filter(req => req.status === 'Approved')
+                        .reduce((sum, req) => sum + req.duration, 0)
+                };
+            });
+            
+            // Build comprehensive response
+            const response = {
+                success: true,
+                reportType: reportType || 'monthly',
+                startDate: startDate,
+                endDate: endDate,
+                generatedAt: new Date().toISOString(),
+                
+                // Summary statistics
+                statistics: statistics,
+                
+                // Main data
+                leaveRequests: formattedLeaveRequests,
+                leaveBalances: formattedLeaveBalances,
+                
+                // Breakdowns for analysis
+                departmentBreakdown: Object.values(departmentBreakdown),
+                leaveTypeBreakdown: Object.values(leaveTypeBreakdown),
+                
+                // Additional metadata
+                totalDepartments: allDepartments.length,
+                totalLeaveTypes: allLeaveTypes.length,
+                dateRange: {
+                    start: startDate,
+                    end: endDate,
+                    duration: Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1
+                }
+            };
+            
+            console.log(`✅ [Backend] Leave requests report generated successfully`);
+            console.log(`📈 [Backend] Summary: ${statistics.totalRequests} total requests, ${statistics.approvedRequests} approved, ${statistics.pendingRequests} pending`);
+            console.log(`📊 [Backend] Department breakdown: ${Object.keys(departmentBreakdown).length} departments`);
             
             res.json(response);
             

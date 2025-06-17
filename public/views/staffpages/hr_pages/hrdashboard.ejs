@@ -669,6 +669,444 @@
                 padding: 6px 4px;
             }
         }
+
+        .employee-report-enhanced {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .employee-report-enhanced .report-icon {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .period-selection-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #1976d2;
+        }
+
+        .period-selection-info i {
+            margin-right: 6px;
+            color: #2196f3;
+        }
+
+        .form-group.enhanced-select {
+            position: relative;
+        }
+
+        .form-group.enhanced-select::after {
+            content: '\f107';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 12px;
+            top: 32px;
+            pointer-events: none;
+            color: #2385B0;
+        }
+
+        .form-group select {
+            appearance: none;
+            background: white;
+            cursor: pointer;
+        }
+
+        .employee-info-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .employee-info-preview.show {
+            display: block;
+        }
+
+        .employee-info-preview h6 {
+            margin: 0 0 8px 0;
+            color: #2385B0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .employee-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+        }
+
+        .employee-info-item {
+            font-size: 12px;
+        }
+
+        .employee-info-item strong {
+            color: #495057;
+        }
+
+        .leave-requests-report-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    /* Report header */
+    .leave-report-header {
+        background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .leave-report-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+        letter-spacing: 0.5px;
+    }
+
+    .leave-report-subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .leave-report-date {
+        font-size: 12px;
+        opacity: 0.8;
+        margin: 8px 0 0 0;
+        font-style: italic;
+    }
+
+    /* Summary statistics section */
+    .leave-summary-section {
+        padding: 25px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .leave-summary-title {
+        color: #2385B0;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        display: flex;
+        align-items: center;
+        border-bottom: 2px solid #2385B0;
+        padding-bottom: 10px;
+    }
+
+    .leave-summary-title i {
+        margin-right: 10px;
+        font-size: 20px;
+    }
+
+    .leave-summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .leave-summary-stat {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .leave-summary-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .leave-summary-stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #2385B0;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .leave-summary-stat-label {
+        font-size: 13px;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        line-height: 1.3;
+    }
+
+    /* Detailed requests section */
+    .leave-detailed-section {
+        padding: 25px;
+    }
+
+    .leave-detailed-title {
+        color: #2385B0;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 25px 0;
+        display: flex;
+        align-items: center;
+        border-bottom: 2px solid #2385B0;
+        padding-bottom: 10px;
+    }
+
+    .leave-detailed-title i {
+        margin-right: 10px;
+        font-size: 20px;
+    }
+
+    /* Department sections */
+    .leave-department-section {
+        margin-bottom: 30px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+    }
+
+    .leave-department-header {
+        background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+        color: white;
+        padding: 15px 20px;
+        font-weight: 600;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .leave-department-header i {
+        margin-right: 10px;
+        font-size: 18px;
+    }
+
+    .leave-department-count {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* Department table */
+    .leave-department-table-container {
+        background: white;
+        overflow-x: auto;
+    }
+
+    .leave-department-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        min-width: 900px;
+    }
+
+    .leave-department-table th {
+        background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+        color: white;
+        padding: 12px 8px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+
+    .leave-department-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .leave-department-table tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .leave-department-table tr:hover {
+        background-color: #e3f2fd;
+    }
+
+    /* Department summary row */
+    .leave-department-summary {
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .leave-department-summary td {
+        padding: 15px 8px;
+        border-top: 2px solid #adb5bd;
+        font-size: 13px;
+    }
+
+    /* Status badges */
+    .leave-status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .leave-status-approved {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .leave-status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+
+    .leave-status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Leave type badges */
+    .leave-type-badge {
+        background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%);
+        color: #0066cc;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 600;
+        border: 1px solid #b8daff;
+        display: inline-block;
+    }
+
+    /* Balance display */
+    .leave-balance-display {
+        font-weight: 600;
+        color: #495057;
+        font-size: 11px;
+    }
+
+    .leave-balance-positive {
+        color: #28a745;
+    }
+
+    .leave-balance-warning {
+        color: #ffc107;
+    }
+
+    .leave-balance-negative {
+        color: #dc3545;
+    }
+
+    /* Timestamp formatting */
+    .leave-timestamp {
+        color: #6c757d;
+        font-size: 11px;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Duration display */
+    .leave-duration {
+        font-weight: 600;
+        color: #495057;
+        text-align: center;
+    }
+
+    /* Date range display */
+    .leave-date-range {
+        font-size: 11px;
+        color: #495057;
+        white-space: nowrap;
+    }
+
+    /* Remarks display */
+    .leave-remarks {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #6c757d;
+        font-style: italic;
+        font-size: 11px;
+    }
+
+    .leave-remarks:hover {
+        overflow: visible;
+        white-space: normal;
+        background: #f8f9fa;
+        padding: 4px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 10;
+    }
+
+    /* Total summary */
+    .leave-total-summary {
+        margin-top: 25px;
+        padding: 20px;
+        background: linear-gradient(135deg, #2385B0 0%, #1a5f78 100%);
+        color: white;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .leave-total-summary-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 10px 0;
+    }
+
+    .leave-total-summary-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    /* No data state */
+    .leave-no-data {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+        font-style: italic;
+        background: white;
+        border-radius: 8px;
+        border: 2px dashed #dee2e6;
+        margin: 20px 0;
+    }
+
+    .leave-no-data i {
+        font-size: 48px;
+        color: #dee2e6;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .leave-summary-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+    }
     </style>
 </head>
 <body>
@@ -790,8 +1228,8 @@
                                 <i class="fas fa-user-clock"></i>
                             </div>
                             <div class="report-info">
-                                <h4>Employee Attendance & Leave</h4>
-                                <p>Detailed weekly or monthly report for individual employees with attendance patterns and leave usage</p>
+                                <h4>Individual Employee Attendance & Leave</h4>
+                                <p>Comprehensive weekly or monthly report for individual employees with detailed attendance patterns, leave usage, and performance metrics</p>
                             </div>
                         </div>
                         
@@ -828,7 +1266,7 @@
                                     <i class="fas fa-eye"></i> View Report
                                 </button>
                                 <button type="button" class="btn-report btn-secondary" onclick="generateAttendanceReport('employee-report', 'pdf')">
-                                    <i class="fas fa-file-pdf"></i> PDF
+                                    <i class="fas fa-file-pdf"></i> Download PDF
                                 </button>
                             </div>
                         </form>
@@ -843,15 +1281,15 @@
                                 <i class="fas fa-calendar-times"></i>
                             </div>
                             <div class="report-info">
-                                <h4>Leave Requests & Balances</h4>
-                                <p>Comprehensive leave management report with requests, approvals, and utilization patterns</p>
+                                <h4>Weekly/Monthly Leave Requests & Balances</h4>
+                                <p>Comprehensive HR report with leave statistics, department breakdowns, and detailed request tracking</p>
                             </div>
                         </div>
                         
-                        <form class="report-form" id="leave-report-form">
+                        <form class="report-form" id="leave-requests-report-form">
                             <div class="form-group">
-                                <label for="leave-report-type">Report Period</label>
-                                <select id="leave-report-type" name="reportType" required>
+                                <label for="leave-requests-report-type">Report Period</label>
+                                <select id="leave-requests-report-type" name="reportType" required>
                                     <option value="weekly">Weekly Report</option>
                                     <option value="monthly">Monthly Report</option>
                                 </select>
@@ -859,27 +1297,152 @@
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                 <div class="form-group">
-                                    <label for="leave-start-date">Start Date</label>
-                                    <input type="date" id="leave-start-date" name="startDate" required>
+                                    <label for="leave-requests-start-date">Start Date</label>
+                                    <input type="date" id="leave-requests-start-date" name="startDate" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="leave-end-date">End Date</label>
-                                    <input type="date" id="leave-end-date" name="endDate" required>
+                                    <label for="leave-requests-end-date">End Date</label>
+                                    <input type="date" id="leave-requests-end-date" name="endDate" required>
                                 </div>
                             </div>
                             
                             <div class="form-actions">
-                                <button type="button" class="btn-report btn-primary" onclick="generateAttendanceReport('leave-report', 'view')">
+                                <button type="button" class="btn-report btn-primary" onclick="generateLeaveRequestsReport('view')">
                                     <i class="fas fa-eye"></i> View Report
                                 </button>
-                                <button type="button" class="btn-report btn-secondary" onclick="generateAttendanceReport('leave-report', 'pdf')">
-                                    <i class="fas fa-file-pdf"></i> PDF
+                                <button type="button" class="btn-report btn-secondary" onclick="generateLeaveRequestsReport('pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
                                 </button>
                             </div>
                         </form>
                         
-                        <div class="report-results" id="leave-report-results"></div>
+                        <div class="report-results" id="leave-requests-report-results"></div>
                     </div>
+
+                    <!-- Report Results Display Template (hidden by default) -->
+                    <template id="leave-requests-report-template">
+                        <div class="leave-requests-report-container">
+                            <!-- Report Header -->
+                            <div class="leave-report-header">
+                                <h2 class="leave-report-title">Weekly/Monthly Leave Requests & Balances Report (HR)</h2>
+                                <p class="leave-report-subtitle">Comprehensive Leave Management Overview</p>
+                                <p class="leave-report-date">Generated on <span id="report-generation-date"></span></p>
+                            </div>
+                            
+                            <!-- Summary Statistics Section -->
+                            <div class="leave-summary-section">
+                                <h3 class="leave-summary-title">
+                                    <i class="fas fa-chart-bar"></i>
+                                    Leave Summary Statistics
+                                </h3>
+                                
+                                <div class="leave-summary-stats">
+                                    <div class="leave-summary-stat">
+                                        <span class="leave-summary-stat-value" id="total-requests">0</span>
+                                        <div class="leave-summary-stat-label">Total Leave Requests</div>
+                                    </div>
+                                    <div class="leave-summary-stat">
+                                        <span class="leave-summary-stat-value" id="approved-requests">0</span>
+                                        <div class="leave-summary-stat-label">Approved Requests</div>
+                                    </div>
+                                    <div class="leave-summary-stat">
+                                        <span class="leave-summary-stat-value" id="pending-requests">0</span>
+                                        <div class="leave-summary-stat-label">Pending Requests</div>
+                                    </div>
+                                    <div class="leave-summary-stat">
+                                        <span class="leave-summary-stat-value" id="total-days-requested">0</span>
+                                        <div class="leave-summary-stat-label">Total Leave Days Requested</div>
+                                    </div>
+                                    <div class="leave-summary-stat">
+                                        <span class="leave-summary-stat-value" id="total-days-approved">0</span>
+                                        <div class="leave-summary-stat-label">Total Leave Days Approved</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Detailed Requests Section -->
+                            <div class="leave-detailed-section">
+                                <h3 class="leave-detailed-title">
+                                    <i class="fas fa-list-alt"></i>
+                                    Detailed Leave Requests List
+                                </h3>
+                                
+                                <!-- Department sections will be populated here -->
+                                <div id="department-sections-container">
+                                    <!-- Dynamic department sections -->
+                                </div>
+                                
+                                <!-- Total Summary -->
+                                <div class="leave-total-summary">
+                                    <h4 class="leave-total-summary-title">Total Leave Requests</h4>
+                                    <p class="leave-total-summary-value" id="final-total-requests">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Department Section Template -->
+                    <template id="department-section-template">
+                        <div class="leave-department-section">
+                            <div class="leave-department-header">
+                                <span>
+                                    <i class="fas fa-building"></i>
+                                    <span class="department-name"></span>
+                                </span>
+                                <span class="leave-department-count">
+                                    <span class="department-request-count">0</span> requests
+                                </span>
+                            </div>
+                            
+                            <div class="leave-department-table-container">
+                                <table class="leave-department-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>Last Name</th>
+                                            <th>First Name</th>
+                                            <th>Leave Type</th>
+                                            <th>Requested Dates</th>
+                                            <th>Duration</th>
+                                            <th>Approved (Y/N)</th>
+                                            <th>Total Balance after Approval</th>
+                                            <th>Leave Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="department-table-body">
+                                        <!-- Dynamic rows -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="leave-department-summary">
+                                            <td colspan="8" style="text-align: right; font-weight: bold;">
+                                                Total Department Requested Leaves:
+                                            </td>
+                                            <td style="font-weight: bold;" class="department-total-days">0</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Leave Request Row Template -->
+                    <template id="leave-request-row-template">
+                        <tr>
+                            <td class="leave-timestamp"></td>
+                            <td class="employee-last-name"></td>
+                            <td class="employee-first-name"></td>
+                            <td>
+                                <span class="leave-type-badge leave-type-name"></span>
+                            </td>
+                            <td class="leave-date-range"></td>
+                            <td class="leave-duration"></td>
+                            <td>
+                                <span class="leave-status-badge leave-approval-status"></span>
+                            </td>
+                            <td class="leave-balance-display leave-remaining-balance"></td>
+                            <td class="leave-remarks leave-request-remarks"></td>
+                        </tr>
+                    </template>
                 </div>
             </div>
             
@@ -1657,6 +2220,12 @@
                 
                 // Load employees for the dropdown
                 loadEmployeesForAttendanceReport();
+
+                // Setup employee report handlers
+                setupEmployeeReportHandlers();
+
+                // Initialize leave requests report
+                initializeLeaveRequestsReport();
             }
 
             // Set default dates for attendance report forms
@@ -1758,13 +2327,27 @@
                     const formData = new FormData(form);
                     const params = new URLSearchParams();
                     
+                    // Add all form data to params
                     for (let [key, value] of formData.entries()) {
-                        if (value) params.append(key, value);
+                        if (value) {
+                            params.append(key, value);
+                            console.log(`📋 [Frontend] Form field ${key}: ${value}`);
+                        }
                     }
                     
+                    // Add format parameter
                     if (format) params.append('format', format);
                     
-                    console.log(`📋 [Frontend] Form parameters:`, Object.fromEntries(params));
+                    // Special validation for employee report
+                    if (reportType === 'employee-report') {
+                        const employeeId = formData.get('employeeId');
+                        if (!employeeId) {
+                            throw new Error('Please select an employee before generating the report.');
+                        }
+                        console.log(`👤 [Frontend] Selected employee ID: ${employeeId}`);
+                    }
+                    
+                    console.log(`📋 [Frontend] Final parameters:`, Object.fromEntries(params));
                     
                     // Determine endpoint based on report type
                     let endpoint = '';
@@ -1782,6 +2365,8 @@
                             throw new Error('Unknown report type: ' + reportType);
                     }
                     
+                    console.log(`🌐 [Frontend] Making request to: ${endpoint}?${params.toString()}`);
+                    
                     if (format === 'pdf') {
                         console.log(`📄 [Frontend] PDF generation requested for ${reportType}`);
                         
@@ -1789,7 +2374,9 @@
                         const response = await fetch(`${endpoint}?${params.toString()}`);
                         
                         if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                            const errorText = await response.text();
+                            console.error(`❌ [Frontend] HTTP Error ${response.status}:`, errorText);
+                            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
                         }
                         
                         const data = await response.json();
@@ -1841,7 +2428,9 @@
                         const response = await fetch(`${endpoint}?${params.toString()}`);
                         
                         if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                            const errorText = await response.text();
+                            console.error(`❌ [Frontend] HTTP Error ${response.status}:`, errorText);
+                            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
                         }
                         
                         const data = await response.json();
@@ -1873,7 +2462,7 @@
                 let html = '<div class="results-header"><h5>Report Results</h5></div>';
                 
                 if (reportType === 'daily-attendance') {
-                    // Add summary if available
+                    // Daily attendance report display (existing code)
                     if (data.summary) {
                         html += '<div class="results-summary">';
                         html += `
@@ -1901,7 +2490,7 @@
                         html += '</div>';
                     }
                     
-                    // Department breakdown
+                    // Department breakdown and detailed attendance (existing code)
                     if (data.departmentBreakdown && data.departmentBreakdown.length > 0) {
                         html += `
                             <div class="data-table-container">
@@ -1936,7 +2525,7 @@
                         html += '</tbody></table></div>';
                     }
                     
-                    // Detailed attendance by department
+                    // Detailed attendance by department (existing code continues...)
                     if (data.detailedAttendance && Object.keys(data.detailedAttendance).length > 0) {
                         Object.keys(data.detailedAttendance).forEach(department => {
                             const employees = data.detailedAttendance[department];
@@ -1986,6 +2575,241 @@
                             }
                         });
                     }
+                } 
+                else if (reportType === 'employee-report') {
+                    // NEW: Employee report display
+                    if (data.employee) {
+                        // Employee Information Section
+                        html += `
+                            <div class="employee-info-section" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                                <h4 style="color: #2385B0; margin: 0 0 15px 0; border-bottom: 2px solid #2385B0; padding-bottom: 10px;">
+                                    <i class="fas fa-user-circle" style="margin-right: 8px;"></i>Employee Information
+                                </h4>
+                                <div class="employee-info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                    <div class="info-item">
+                                        <strong style="color: #495057;">Employee Name:</strong><br>
+                                        <span style="font-size: 16px; color: #2385B0; font-weight: 600;">${data.employee.employeeName}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <strong style="color: #495057;">Position:</strong><br>
+                                        <span>${data.employee.position}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <strong style="color: #495057;">Department:</strong><br>
+                                        <span>${data.employee.department}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <strong style="color: #495057;">Reporting Period:</strong><br>
+                                        <span>${data.reportingPeriod.startDate} - ${data.reportingPeriod.endDate}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <strong style="color: #495057;">Report Generated:</strong><br>
+                                        <span>${data.reportGenerated}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Period Overview Section
+                    if (data.periodOverview) {
+                        html += `
+                            <div class="period-overview-section" style="margin-bottom: 20px;">
+                                <h4 style="color: #2385B0; margin: 0 0 15px 0; border-bottom: 2px solid #2385B0; padding-bottom: 10px;">
+                                    <i class="fas fa-chart-bar" style="margin-right: 8px;"></i>Period Overview
+                                </h4>
+                                <div class="results-summary">
+                                    <div class="summary-stat">
+                                        <div class="summary-stat-value">${data.periodOverview.workingDaysInPeriod}</div>
+                                        <div class="summary-stat-label">Working Days in Period</div>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <div class="summary-stat-value">${data.periodOverview.daysPresent}</div>
+                                        <div class="summary-stat-label">Days Present</div>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <div class="summary-stat-value">${data.periodOverview.daysOnLeave}</div>
+                                        <div class="summary-stat-label">Days on Leave</div>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <div class="summary-stat-value">${data.periodOverview.lateArrivals}</div>
+                                        <div class="summary-stat-label">Late Arrivals</div>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <div class="summary-stat-value">${data.periodOverview.earlyOuts}</div>
+                                        <div class="summary-stat-label">Early Outs</div>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <div class="summary-stat-value">${data.periodOverview.totalWorkHours}</div>
+                                        <div class="summary-stat-label">Total Work Hours</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Current Leave Balances Section
+                    if (data.currentLeaveBalances && data.currentLeaveBalances.length > 0) {
+                        html += `
+                            <div class="leave-balances-section" style="margin-bottom: 20px;">
+                                <h4 style="color: #2385B0; margin: 0 0 15px 0; border-bottom: 2px solid #2385B0; padding-bottom: 10px;">
+                                    <i class="fas fa-balance-scale" style="margin-right: 8px;"></i>Current Leave Balances
+                                </h4>
+                                <div class="data-table-container">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Leave Type</th>
+                                                <th>Annual Entitlement</th>
+                                                <th>Used</th>
+                                                <th>Remaining</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                        `;
+                        
+                        data.currentLeaveBalances.forEach(balance => {
+                            html += `
+                                <tr>
+                                    <td><strong>${balance.leaveType}</strong></td>
+                                    <td style="text-align: center;">${balance.annualEntitlement}</td>
+                                    <td style="text-align: center;">${balance.used}</td>
+                                    <td style="text-align: center; font-weight: 600; color: ${balance.remaining > 0 ? '#28a745' : '#dc3545'};">${balance.remaining}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table></div></div>';
+                    }
+                    
+                    // Detailed Attendance Record Section
+                    if (data.detailedAttendanceRecord && data.detailedAttendanceRecord.length > 0) {
+                        html += `
+                            <div class="detailed-attendance-section" style="margin-bottom: 20px;">
+                                <h4 style="color: #2385B0; margin: 0 0 15px 0; border-bottom: 2px solid #2385B0; padding-bottom: 10px;">
+                                    <i class="fas fa-calendar-check" style="margin-right: 8px;"></i>Detailed Attendance Record
+                                </h4>
+                                <div class="data-table-container">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Time In</th>
+                                                <th>Time Out</th>
+                                                <th>Hours Worked</th>
+                                                <th>Status</th>
+                                                <th>Late (mins)</th>
+                                                <th>Early Out (mins)</th>
+                                                <th>On Leave</th>
+                                                <th>Leave Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                        `;
+                        
+                        data.detailedAttendanceRecord.forEach(record => {
+                            const statusClass = getAttendanceStatusClass(record.status);
+                            html += `
+                                <tr>
+                                    <td style="font-weight: 600;">${record.date}</td>
+                                    <td>${record.timeIn}</td>
+                                    <td>${record.timeOut}</td>
+                                    <td class="hours-display">${record.hoursWorked}</td>
+                                    <td><span class="status-badge ${statusClass}">${record.status}</span></td>
+                                    <td class="late-time">${record.lateMinutes || '0'}</td>
+                                    <td class="early-out-time">${record.earlyOutMinutes || '0'}</td>
+                                    <td>${record.onLeave ? 'Yes' : 'No'}</td>
+                                    <td>${record.leaveRemarks !== 'N/A' ? `<span class="leave-badge">${record.leaveRemarks}</span>` : 'N/A'}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table></div></div>';
+                    }
+                    
+                    // Leave Taken Section
+                    if (data.leaveTaken && data.leaveTaken.length > 0) {
+                        html += `
+                            <div class="leave-taken-section" style="margin-bottom: 20px;">
+                                <h4 style="color: #2385B0; margin: 0 0 15px 0; border-bottom: 2px solid #2385B0; padding-bottom: 10px;">
+                                    <i class="fas fa-calendar-times" style="margin-right: 8px;"></i>Leave Taken
+                                </h4>
+                                <div class="data-table-container">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Leave Type</th>
+                                                <th>Requested Dates</th>
+                                                <th>Duration</th>
+                                                <th>Status</th>
+                                                <th>Approved By</th>
+                                                <th>Approval Date</th>
+                                                <th>Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                        `;
+                        
+                        data.leaveTaken.forEach(leave => {
+                            html += `
+                                <tr>
+                                    <td style="font-weight: 600;">${leave.date}</td>
+                                    <td><span class="leave-badge">${leave.leaveType}</span></td>
+                                    <td>${leave.requestedDates}</td>
+                                    <td style="text-align: center;">${leave.duration} day(s)</td>
+                                    <td><span class="status-badge status-present">${leave.status}</span></td>
+                                    <td>${leave.approvedBy}</td>
+                                    <td>${leave.approvalDate}</td>
+                                    <td>${leave.remarks}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table></div></div>';
+                    }
+                    
+                    // Pending Leave Requests Section
+                    if (data.pendingLeaveRequests && data.pendingLeaveRequests.length > 0) {
+                        html += `
+                            <div class="pending-leave-section" style="margin-bottom: 20px;">
+                                <h4 style="color: #2385B0; margin: 0 0 15px 0; border-bottom: 2px solid #2385B0; padding-bottom: 10px;">
+                                    <i class="fas fa-hourglass-half" style="margin-right: 8px;"></i>Pending Leave Requests
+                                </h4>
+                                <div class="data-table-container">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Leave Type</th>
+                                                <th>Requested Dates</th>
+                                                <th>Duration</th>
+                                                <th>Status</th>
+                                                <th>Decision By</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                        `;
+                        
+                        data.pendingLeaveRequests.forEach(leave => {
+                            html += `
+                                <tr>
+                                    <td style="font-weight: 600;">${leave.date}</td>
+                                    <td><span class="leave-badge">${leave.leaveType}</span></td>
+                                    <td>${leave.requestedDates}</td>
+                                    <td style="text-align: center;">${leave.duration} day(s)</td>
+                                    <td><span class="status-badge status-late">${leave.status}</span></td>
+                                    <td>${leave.decisionBy}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table></div></div>';
+                    }
+                }
+                else if (reportType === 'leave-report') {
+                    // Leave report display (implement as needed)
+                    html += '<div class="no-data">Leave report display coming soon...</div>';
                 }
                 
                 if (html === '<div class="results-header"><h5>Report Results</h5></div>') {
@@ -1993,6 +2817,441 @@
                 }
                 
                 resultsDiv.innerHTML = html;
+            }
+
+            // Initialize leave requests report when page loads
+            function initializeLeaveRequestsReport() {
+                console.log('🔄 Initializing leave requests report...');
+                
+                // Set default dates
+                setLeaveRequestsReportDefaultDates();
+                
+                // Setup report type change handler
+                setupLeaveRequestsReportHandlers();
+            }
+
+            // Set default dates for leave requests report
+            function setLeaveRequestsReportDefaultDates() {
+                const today = new Date();
+                
+                // Set current month for leave reports (default to monthly)
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                
+                const startDateInput = document.getElementById('leave-requests-start-date');
+                const endDateInput = document.getElementById('leave-requests-end-date');
+                
+                if (startDateInput && endDateInput) {
+                    startDateInput.value = firstDay.toISOString().split('T')[0];
+                    endDateInput.value = lastDay.toISOString().split('T')[0];
+                    console.log('✅ Set leave requests report dates to current month');
+                }
+            }
+
+            // Setup event handlers for leave requests report
+            function setupLeaveRequestsReportHandlers() {
+                const reportTypeSelect = document.getElementById('leave-requests-report-type');
+                const startDateInput = document.getElementById('leave-requests-start-date');
+                const endDateInput = document.getElementById('leave-requests-end-date');
+                
+                if (reportTypeSelect) {
+                    reportTypeSelect.addEventListener('change', function() {
+                        const reportType = this.value;
+                        const today = new Date();
+                        
+                        if (reportType === 'weekly') {
+                            // Set current week
+                            const currentWeekStart = new Date(today);
+                            currentWeekStart.setDate(today.getDate() - today.getDay());
+                            const currentWeekEnd = new Date(currentWeekStart);
+                            currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+                            
+                            if (startDateInput) startDateInput.value = currentWeekStart.toISOString().split('T')[0];
+                            if (endDateInput) endDateInput.value = currentWeekEnd.toISOString().split('T')[0];
+                        } else if (reportType === 'monthly') {
+                            // Set current month
+                            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                            
+                            if (startDateInput) startDateInput.value = firstDay.toISOString().split('T')[0];
+                            if (endDateInput) endDateInput.value = lastDay.toISOString().split('T')[0];
+                        }
+                    });
+                }
+            }
+
+            // Main function to generate leave requests report
+            async function generateLeaveRequestsReport(format) {
+                const form = document.getElementById('leave-requests-report-form');
+                const button = event.target;
+                const resultsDiv = document.getElementById('leave-requests-report-results');
+                
+                // Add loading state
+                button.classList.add('loading');
+                button.disabled = true;
+                
+                try {
+                    console.log(`🔄 [Frontend] Generating leave requests report in ${format} format...`);
+                    
+                    // Get form data
+                    const formData = new FormData(form);
+                    const params = new URLSearchParams();
+                    
+                    // Add all form data to params
+                    for (let [key, value] of formData.entries()) {
+                        if (value) {
+                            params.append(key, value);
+                            console.log(`📋 [Frontend] Form field ${key}: ${value}`);
+                        }
+                    }
+                    
+                    // Add format parameter
+                    if (format) params.append('format', format);
+                    
+                    console.log(`📋 [Frontend] Final parameters:`, Object.fromEntries(params));
+                    
+                    const endpoint = '/hr/reports/leave-requests';
+                    console.log(`🌐 [Frontend] Making request to: ${endpoint}?${params.toString()}`);
+                    
+                    if (format === 'pdf') {
+                        console.log(`📄 [Frontend] PDF generation requested for leave requests report`);
+                        
+                        // Fetch data first
+                        const response = await fetch(`${endpoint}?${params.toString()}`);
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error(`❌ [Frontend] HTTP Error ${response.status}:`, errorText);
+                            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to generate report');
+                        }
+                        
+                        // Generate PDF
+                        try {
+                            if (typeof window.jspdf === 'undefined') {
+                                throw new Error('jsPDF library is not loaded. Please refresh the page and try again.');
+                            }
+                            
+                            let jsPDF;
+                            if (window.jspdf && window.jspdf.jsPDF) {
+                                jsPDF = window.jspdf.jsPDF;
+                            } else if (window.jsPDF) {
+                                jsPDF = window.jsPDF;
+                            } else {
+                                throw new Error('jsPDF not found. Please refresh the page.');
+                            }
+                            
+                            const doc = new jsPDF();
+                            generateLeaveRequestsReportPDF(doc, data);
+                            
+                            // Download the PDF
+                            const filename = `leave_requests_report_${new Date().toISOString().split('T')[0]}.pdf`;
+                            doc.save(filename);
+                            
+                            console.log(`✅ PDF generated and downloaded: ${filename}`);
+                            
+                        } catch (pdfError) {
+                            console.error('❌ Error generating PDF:', pdfError);
+                            alert('Error generating PDF: ' + pdfError.message);
+                        }
+                        
+                    } else {
+                        console.log(`👁️ [Frontend] View mode requested for leave requests report`);
+                        
+                        // Fetch data for viewing
+                        const response = await fetch(`${endpoint}?${params.toString()}`);
+                        
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error(`❌ [Frontend] HTTP Error ${response.status}:`, errorText);
+                            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                        }
+                        
+                        const data = await response.json();
+                        console.log(`✅ [Frontend] Received data:`, data);
+                        
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to fetch report data');
+                        }
+                        
+                        // Display the data
+                        displayLeaveRequestsReport(resultsDiv, data);
+                        console.log(`✅ [Frontend] Leave requests report displayed successfully`);
+                    }
+                    
+                } catch (error) {
+                    console.error(`❌ [Frontend] Error generating leave requests report:`, error);
+                    alert('Error generating report: ' + error.message);
+                } finally {
+                    // Remove loading state
+                    button.classList.remove('loading');
+                    button.disabled = false;
+                }
+            }
+
+            // Display leave requests report in the UI
+            function displayLeaveRequestsReport(resultsDiv, data) {
+                resultsDiv.style.display = 'block';
+                
+                // Get the template
+                const template = document.getElementById('leave-requests-report-template');
+                if (!template) {
+                    console.error('❌ Leave requests report template not found');
+                    return;
+                }
+                
+                // Clone the template
+                const reportContent = template.content.cloneNode(true);
+                
+                // Set generation date
+                const generationDate = reportContent.getElementById('report-generation-date');
+                if (generationDate) {
+                    generationDate.textContent = new Date().toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                
+                // Process and calculate statistics
+                const stats = calculateLeaveRequestsStatistics(data.leaveRequests || []);
+                
+                // Update summary statistics
+                updateSummaryStatistics(reportContent, stats);
+                
+                // Group requests by department
+                const departmentGroups = groupLeaveRequestsByDepartment(data.leaveRequests || []);
+                
+                // Generate department sections
+                generateDepartmentSections(reportContent, departmentGroups, data.leaveBalances || []);
+                
+                // Update final total
+                const finalTotal = reportContent.getElementById('final-total-requests');
+                if (finalTotal) {
+                    finalTotal.textContent = stats.totalRequests;
+                }
+                
+                // Clear and append to results div
+                resultsDiv.innerHTML = '';
+                resultsDiv.appendChild(reportContent);
+            }
+
+            // Calculate statistics from leave requests data
+            function calculateLeaveRequestsStatistics(leaveRequests) {
+                const stats = {
+                    totalRequests: 0,
+                    approvedRequests: 0,
+                    pendingRequests: 0,
+                    rejectedRequests: 0,
+                    totalDaysRequested: 0,
+                    totalDaysApproved: 0
+                };
+                
+                leaveRequests.forEach(request => {
+                    stats.totalRequests++;
+                    
+                    // Calculate duration
+                    const fromDate = new Date(request.fromDate);
+                    const untilDate = new Date(request.untilDate);
+                    const duration = Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                    
+                    stats.totalDaysRequested += duration;
+                    
+                    // Count by status
+                    const status = (request.status || '').toLowerCase();
+                    if (status === 'approved') {
+                        stats.approvedRequests++;
+                        stats.totalDaysApproved += duration;
+                    } else if (status === 'pending') {
+                        stats.pendingRequests++;
+                    } else if (status === 'rejected') {
+                        stats.rejectedRequests++;
+                    }
+                });
+                
+                return stats;
+            }
+
+            // Update summary statistics in the report
+            function updateSummaryStatistics(reportContent, stats) {
+                const elements = {
+                    'total-requests': stats.totalRequests,
+                    'approved-requests': stats.approvedRequests,
+                    'pending-requests': stats.pendingRequests,
+                    'total-days-requested': stats.totalDaysRequested,
+                    'total-days-approved': stats.totalDaysApproved
+                };
+                
+                Object.entries(elements).forEach(([id, value]) => {
+                    const element = reportContent.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
+            }
+
+            // Group leave requests by department
+            function groupLeaveRequestsByDepartment(leaveRequests) {
+                const groups = {};
+                
+                leaveRequests.forEach(request => {
+                    const dept = request.department || 'Unknown';
+                    if (!groups[dept]) {
+                        groups[dept] = [];
+                    }
+                    groups[dept].push(request);
+                });
+                
+                // Sort departments alphabetically
+                const sortedGroups = {};
+                Object.keys(groups).sort().forEach(dept => {
+                    sortedGroups[dept] = groups[dept];
+                });
+                
+                return sortedGroups;
+            }
+
+            // Generate department sections
+            function generateDepartmentSections(reportContent, departmentGroups, leaveBalances) {
+                const container = reportContent.getElementById('department-sections-container');
+                const deptTemplate = document.getElementById('department-section-template');
+                const rowTemplate = document.getElementById('leave-request-row-template');
+                
+                if (!container || !deptTemplate || !rowTemplate) {
+                    console.error('❌ Required templates not found');
+                    return;
+                }
+                
+                // Create balances lookup
+                const balancesLookup = {};
+                leaveBalances.forEach(balance => {
+                    const key = `${balance.firstName}_${balance.lastName}_${balance.leaveType}`;
+                    balancesLookup[key] = balance;
+                });
+                
+                Object.entries(departmentGroups).forEach(([deptName, requests]) => {
+                    // Clone department section template
+                    const deptSection = deptTemplate.content.cloneNode(true);
+                    
+                    // Set department name
+                    const deptNameElement = deptSection.querySelector('.department-name');
+                    if (deptNameElement) {
+                        deptNameElement.textContent = deptName;
+                    }
+                    
+                    // Set request count
+                    const countElement = deptSection.querySelector('.department-request-count');
+                    if (countElement) {
+                        countElement.textContent = requests.length;
+                    }
+                    
+                    // Get table body
+                    const tableBody = deptSection.querySelector('.department-table-body');
+                    let totalDepartmentDays = 0;
+                    
+                    if (tableBody) {
+                        requests.forEach(request => {
+                            // Clone row template
+                            const row = rowTemplate.content.cloneNode(true);
+                            
+                            // Calculate duration
+                            const fromDate = new Date(request.fromDate);
+                            const untilDate = new Date(request.untilDate);
+                            const duration = Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                            totalDepartmentDays += duration;
+                            
+                            // Get remaining balance
+                            const balanceKey = `${request.firstName}_${request.lastName}_${request.leaveType}`;
+                            const balance = balancesLookup[balanceKey];
+                            const remainingBalance = balance ? balance.remainingLeaves : 'N/A';
+                            
+                            // Populate row data
+                            populateLeaveRequestRow(row, request, duration, remainingBalance);
+                            
+                            tableBody.appendChild(row);
+                        });
+                    }
+                    
+                    // Set total department days
+                    const totalElement = deptSection.querySelector('.department-total-days');
+                    if (totalElement) {
+                        totalElement.textContent = totalDepartmentDays;
+                    }
+                    
+                    container.appendChild(deptSection);
+                });
+            }
+
+            // Populate individual leave request row
+            function populateLeaveRequestRow(row, request, duration, remainingBalance) {
+                // Format dates
+                const fromDate = new Date(request.fromDate);
+                const untilDate = new Date(request.untilDate);
+                const dateRange = `${fromDate.toLocaleDateString()} - ${untilDate.toLocaleDateString()}`;
+                
+                // Set timestamp (using updatedDate or fromDate)
+                const timestamp = request.updatedDate ? 
+                    new Date(request.updatedDate).toLocaleString() : 
+                    new Date(request.fromDate).toLocaleString();
+                
+                // Get approval status
+                const isApproved = (request.status || '').toLowerCase() === 'approved' ? 'Y' : 'N';
+                const statusClass = getLeaveStatusClass(request.status);
+                
+                // Populate all fields
+                const fields = {
+                    '.leave-timestamp': timestamp,
+                    '.employee-last-name': request.lastName || 'Unknown',
+                    '.employee-first-name': request.firstName || 'Unknown',
+                    '.leave-type-name': request.leaveType || 'Unknown',
+                    '.leave-date-range': dateRange,
+                    '.leave-duration': duration.toString(),
+                    '.leave-approval-status': isApproved,
+                    '.leave-remaining-balance': remainingBalance.toString(),
+                    '.leave-request-remarks': request.reason || 'No remarks'
+                };
+                
+                Object.entries(fields).forEach(([selector, value]) => {
+                    const element = row.querySelector(selector);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
+                
+                // Add status class
+                const statusElement = row.querySelector('.leave-approval-status');
+                if (statusElement && statusClass) {
+                    statusElement.classList.add(statusClass);
+                }
+                
+                // Add balance styling
+                const balanceElement = row.querySelector('.leave-remaining-balance');
+                if (balanceElement && typeof remainingBalance === 'number') {
+                    if (remainingBalance > 5) {
+                        balanceElement.classList.add('leave-balance-positive');
+                    } else if (remainingBalance > 0) {
+                        balanceElement.classList.add('leave-balance-warning');
+                    } else {
+                        balanceElement.classList.add('leave-balance-negative');
+                    }
+                }
+            }
+
+            // Get status CSS class
+            function getLeaveStatusClass(status) {
+                if (!status) return 'leave-status-pending';
+                
+                const statusLower = status.toLowerCase();
+                if (statusLower === 'approved') return 'leave-status-approved';
+                if (statusLower === 'pending') return 'leave-status-pending';
+                if (statusLower === 'rejected') return 'leave-status-rejected';
+                
+                return 'leave-status-pending';
             }
 
             // Get status CSS class for attendance
@@ -2135,13 +3394,305 @@
                 }
             }
 
-            // Placeholder functions for other report types (to be implemented later)
             function generateEmployeeReportPDF(doc, data) {
-                doc.text('Employee Report - Coming Soon', 20, 20);
+                // Set up document header
+                doc.setFontSize(20);
+                doc.setTextColor(35, 133, 176);
+                doc.text('Employee Attendance & Leave Report', 20, 20);
+                
+                // Employee Information
+                if (data.employee) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Employee Information', 20, 40);
+                    
+                    doc.setFontSize(10);
+                    doc.text(`Name: ${data.employee.employeeName}`, 20, 50);
+                    doc.text(`Position: ${data.employee.position}`, 20, 55);
+                    doc.text(`Department: ${data.employee.department}`, 20, 60);
+                    doc.text(`Reporting Period: ${data.reportingPeriod.startDate} - ${data.reportingPeriod.endDate}`, 20, 65);
+                    doc.text(`Report Generated: ${data.reportGenerated}`, 20, 70);
+                }
+                
+                let yPosition = 85;
+                
+                // Period Overview
+                if (data.periodOverview) {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Period Overview', 20, yPosition);
+                    yPosition += 10;
+                    
+                    const overviewData = [
+                        ['Working Days in Period', data.periodOverview.workingDaysInPeriod.toString()],
+                        ['Days Present', data.periodOverview.daysPresent.toString()],
+                        ['Days on Leave', data.periodOverview.daysOnLeave.toString()],
+                        ['Late Arrivals', data.periodOverview.lateArrivals.toString()],
+                        ['Early Outs', data.periodOverview.earlyOuts.toString()],
+                        ['Total Work Hours', data.periodOverview.totalWorkHours]
+                    ];
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [['Metric', 'Count']],
+                        body: overviewData,
+                        styles: { fontSize: 10 },
+                        headStyles: { fillColor: [35, 133, 176] },
+                        columnStyles: {
+                            0: { fontStyle: 'bold', cellWidth: 80 },
+                            1: { halign: 'center', cellWidth: 40 }
+                        }
+                    });
+                    
+                    yPosition = doc.lastAutoTable.finalY + 20;
+                }
+                
+                // Current Leave Balances
+                if (data.currentLeaveBalances && data.currentLeaveBalances.length > 0) {
+                    if (yPosition > 200) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                    
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Current Leave Balances', 20, yPosition);
+                    yPosition += 10;
+                    
+                    const balanceData = data.currentLeaveBalances.map(balance => [
+                        balance.leaveType,
+                        balance.annualEntitlement.toString(),
+                        balance.used.toString(),
+                        balance.remaining.toString()
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [['Leave Type', 'Annual Entitlement', 'Used', 'Remaining']],
+                        body: balanceData,
+                        styles: { fontSize: 10 },
+                        headStyles: { fillColor: [35, 133, 176] }
+                    });
+                    
+                    yPosition = doc.lastAutoTable.finalY + 20;
+                }
+                
+                // Detailed Attendance Record
+                if (data.detailedAttendanceRecord && data.detailedAttendanceRecord.length > 0) {
+                    if (yPosition > 150) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                    
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Detailed Attendance Record', 20, yPosition);
+                    yPosition += 10;
+                    
+                    const attendanceData = data.detailedAttendanceRecord.map(record => [
+                        record.date,
+                        record.timeIn,
+                        record.timeOut,
+                        record.hoursWorked,
+                        record.status,
+                        record.lateMinutes.toString(),
+                        record.earlyOutMinutes.toString(),
+                        record.onLeave ? 'Y' : 'N'
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [['Date', 'Time In', 'Time Out', 'Hours', 'Status', 'Late', 'Early', 'Leave']],
+                        body: attendanceData,
+                        styles: { fontSize: 8 },
+                        headStyles: { fillColor: [35, 133, 176], fontSize: 8 },
+                        margin: { left: 10, right: 10 }
+                    });
+                    
+                    yPosition = doc.lastAutoTable.finalY + 15;
+                }
+                
+                // Leave Taken
+                if (data.leaveTaken && data.leaveTaken.length > 0) {
+                    if (yPosition > 150) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                    
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Leave Taken', 20, yPosition);
+                    yPosition += 10;
+                    
+                    const leaveData = data.leaveTaken.map(leave => [
+                        leave.date,
+                        leave.leaveType,
+                        leave.requestedDates,
+                        leave.duration.toString(),
+                        leave.status,
+                        leave.approvedBy,
+                        leave.approvalDate
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [['Date', 'Type', 'Requested Dates', 'Duration', 'Status', 'Approved By', 'Approval Date']],
+                        body: leaveData,
+                        styles: { fontSize: 8 },
+                        headStyles: { fillColor: [35, 133, 176], fontSize: 8 },
+                        margin: { left: 5, right: 5 }
+                    });
+                }
             }
 
-            function generateLeaveReportPDF(doc, data) {
-                doc.text('Leave Report - Coming Soon', 20, 20);
+            function generateLeaveRequestsReportPDF(doc, data) {
+                // Set up document header
+                doc.setFontSize(18);
+                doc.setTextColor(35, 133, 176);
+                doc.text('Weekly/Monthly Leave Requests & Balances Report (HR)', 20, 20);
+                
+                // Add generation date
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+                doc.text(`Period: ${data.startDate} to ${data.endDate}`, 20, 35);
+                
+                let yPosition = 50;
+                
+                // Calculate and add summary statistics
+                const stats = calculateLeaveRequestsStatistics(data.leaveRequests || []);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Leave Summary Statistics', 20, yPosition);
+                yPosition += 10;
+                
+                const summaryData = [
+                    ['Total Leave Requests', stats.totalRequests.toString()],
+                    ['Approved Requests', stats.approvedRequests.toString()],
+                    ['Pending Requests', stats.pendingRequests.toString()],
+                    ['Total Leave Days Requested', stats.totalDaysRequested.toString()],
+                    ['Total Leave Days Approved', stats.totalDaysApproved.toString()]
+                ];
+                
+                doc.autoTable({
+                    startY: yPosition,
+                    head: [['Summary Statistics', 'Count']],
+                    body: summaryData,
+                    styles: { fontSize: 10 },
+                    headStyles: { fillColor: [35, 133, 176] },
+                    columnStyles: {
+                        0: { fontStyle: 'bold', cellWidth: 80 },
+                        1: { halign: 'center', cellWidth: 30 }
+                    }
+                });
+                
+                yPosition = doc.lastAutoTable.finalY + 20;
+                
+                // Group and display by department
+                const departmentGroups = groupLeaveRequestsByDepartment(data.leaveRequests || []);
+                
+                Object.entries(departmentGroups).forEach(([deptName, requests]) => {
+                    if (yPosition > 200) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                    
+                    doc.setFontSize(12);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(deptName, 20, yPosition);
+                    yPosition += 10;
+                    
+                    const requestData = requests.map(request => {
+                        const fromDate = new Date(request.fromDate);
+                        const untilDate = new Date(request.untilDate);
+                        const duration = Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                        const isApproved = (request.status || '').toLowerCase() === 'approved' ? 'Y' : 'N';
+                        
+                        return [
+                            request.updatedDate ? new Date(request.updatedDate).toLocaleDateString() : new Date(request.fromDate).toLocaleDateString(),
+                            request.lastName || 'Unknown',
+                            request.firstName || 'Unknown',
+                            request.leaveType || 'Unknown',
+                            `${fromDate.toLocaleDateString()} - ${untilDate.toLocaleDateString()}`,
+                            duration.toString(),
+                            isApproved,
+                            'N/A', // Balance after approval
+                            (request.reason || 'No remarks').substring(0, 20) + '...'
+                        ];
+                    });
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [['Timestamp', 'Last Name', 'First Name', 'Type', 'Dates', 'Days', 'Approved', 'Balance', 'Remarks']],
+                        body: requestData,
+                        styles: { fontSize: 7 },
+                        headStyles: { fillColor: [35, 133, 176], fontSize: 7 },
+                        margin: { left: 5, right: 5 }
+                    });
+                    
+                    yPosition = doc.lastAutoTable.finalY + 15;
+                });
+            }
+
+
+            function setupEmployeeReportHandlers() {
+                const employeeSelect = document.getElementById('employee-select');
+                const reportTypeSelect = document.getElementById('employee-report-type');
+                const startDateInput = document.getElementById('employee-start-date');
+                const endDateInput = document.getElementById('employee-end-date');
+                
+                // Handle report type change to adjust date ranges
+                if (reportTypeSelect) {
+                    reportTypeSelect.addEventListener('change', function() {
+                        const reportType = this.value;
+                        const today = new Date();
+                        
+                        if (reportType === 'weekly') {
+                            // Set current week
+                            const currentWeekStart = new Date(today);
+                            currentWeekStart.setDate(today.getDate() - today.getDay());
+                            const currentWeekEnd = new Date(currentWeekStart);
+                            currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+                            
+                            if (startDateInput) startDateInput.value = currentWeekStart.toISOString().split('T')[0];
+                            if (endDateInput) endDateInput.value = currentWeekEnd.toISOString().split('T')[0];
+                        } else if (reportType === 'monthly') {
+                            // Set current month
+                            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                            
+                            if (startDateInput) startDateInput.value = firstDay.toISOString().split('T')[0];
+                            if (endDateInput) endDateInput.value = lastDay.toISOString().split('T')[0];
+                        }
+                    });
+                }
+                
+                // Handle employee selection change
+                if (employeeSelect) {
+                    employeeSelect.addEventListener('change', function() {
+                        const selectedEmployeeId = this.value;
+                        const employeePreview = document.getElementById('employee-info-preview');
+                        
+                        if (selectedEmployeeId && employeePreview) {
+                            // Show employee info preview (optional feature)
+                            const selectedOption = this.options[this.selectedIndex];
+                            const employeeName = selectedOption.textContent;
+                            
+                            employeePreview.innerHTML = `
+                                <h6>Selected Employee</h6>
+                                <div class="employee-info-grid">
+                                    <div class="employee-info-item">
+                                        <strong>Name:</strong> ${employeeName}
+                                    </div>
+                                </div>
+                            `;
+                            employeePreview.classList.add('show');
+                        } else if (employeePreview) {
+                            employeePreview.classList.remove('show');
+                        }
+                    });
+                }
             }
 
             // Original functionality from your template
