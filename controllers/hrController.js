@@ -73,6 +73,229 @@ async function fileUpload(req, uploadType = 'normal') {
     });
 }
 
+// Helper function to process attendance data for daily report
+async function processAttendanceData(attendanceData, leaveData, allEmployees, reportDate) {
+    const departments = ['HR', 'IT', 'Marketing', 'Partnerships', 'Investor Relations', 'Finance'];
+    
+    // Create employee lookup for easier processing
+    const employeeLookup = {};
+    allEmployees.forEach(emp => {
+        if (emp.staffaccounts && emp.staffaccounts.length > 0) {
+            employeeLookup[emp.userId] = {
+                firstName: emp.staffaccounts[0].firstName,
+                lastName: emp.staffaccounts[0].lastName,
+                department: emp.staffaccounts[0].departments?.deptName || 'N/A'
+            };
+        }
+    });
+
+    // Create leave lookup
+    const leaveLookup = {};
+    leaveData.forEach(leave => {
+        leaveLookup[leave.userId] = {
+            leaveType: leave.leave_types?.typeName || 'Leave',
+            fromDate: leave.fromDate,
+            untilDate: leave.untilDate
+        };
+    });
+
+    // Process attendance logs to group by employee and calculate working hours
+    const employeeAttendance = {};
+    attendanceData.forEach(log => {
+        const userId = log.userId;
+        const attendanceTime = log.attendanceTime || '00:00:00';
+        const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
+        const localDate = new Date(log.attendanceDate);
+        localDate.setHours(hours, minutes, seconds);
+
+        if (!employeeAttendance[userId]) {
+            employeeAttendance[userId] = {
+                userId,
+                timeIn: null,
+                timeOut: null,
+                useraccounts: log.useraccounts
+            };
+        }
+
+        if (log.attendanceAction === 'Time In') {
+            employeeAttendance[userId].timeIn = localDate;
+        } else if (log.attendanceAction === 'Time Out') {
+            employeeAttendance[userId].timeOut = localDate;
+        }
+    });
+
+    // Process each employee's attendance
+    const processedEmployees = {};
+    departments.forEach(dept => {
+        processedEmployees[dept] = [];
+    });
+
+    const summary = {
+        totalEmployees: Object.keys(employeeLookup).length,
+        present: 0,
+        onLeave: 0,
+        late: 0,
+        earlyOut: 0,
+        absent: 0
+    };
+
+    const departmentBreakdown = {};
+    departments.forEach(dept => {
+        departmentBreakdown[dept] = {
+            department: dept,
+            totalEmployees: 0,
+            present: 0,
+            late: 0,
+            onLeave: 0,
+            earlyOut: 0,
+            absent: 0
+        };
+    });
+
+    // Count total employees per department
+    Object.values(employeeLookup).forEach(emp => {
+        const dept = emp.department;
+        if (departmentBreakdown[dept]) {
+            departmentBreakdown[dept].totalEmployees++;
+        }
+    });
+
+    // Process each employee
+    Object.keys(employeeLookup).forEach(userId => {
+        const employee = employeeLookup[userId];
+        const attendance = employeeAttendance[userId];
+        const leave = leaveLookup[userId];
+        const department = employee.department;
+
+        let status = 'Absent';
+        let hoursWorked = 'N/A';
+        let timeIn = 'N/A';
+        let timeOut = 'N/A';
+        let lateMinutes = 0;
+        let earlyOutMinutes = 0;
+        let onLeave = false;
+        let leaveRemarks = 'N/A';
+
+        // Check if employee is on leave
+        if (leave) {
+            status = 'On Leave';
+            onLeave = true;
+            leaveRemarks = leave.leaveType;
+            summary.onLeave++;
+            if (departmentBreakdown[department]) {
+                departmentBreakdown[department].onLeave++;
+            }
+        } else if (attendance) {
+            // Employee has attendance record
+            if (attendance.timeIn) {
+                status = 'Present';
+                timeIn = attendance.timeIn.toLocaleTimeString();
+                summary.present++;
+                if (departmentBreakdown[department]) {
+                    departmentBreakdown[department].present++;
+                }
+
+                // Check if late (after 9:00 AM)
+                const startOfDay = new Date(attendance.timeIn);
+                startOfDay.setHours(9, 0, 0, 0);
+                
+                if (attendance.timeIn > startOfDay) {
+                    lateMinutes = Math.round((attendance.timeIn - startOfDay) / (1000 * 60));
+                    status = 'Late';
+                    summary.late++;
+                    summary.present--; // Remove from present count
+                    if (departmentBreakdown[department]) {
+                        departmentBreakdown[department].late++;
+                        departmentBreakdown[department].present--;
+                    }
+                }
+
+                // Calculate working hours
+                if (attendance.timeOut) {
+                    timeOut = attendance.timeOut.toLocaleTimeString();
+                    const workingMilliseconds = attendance.timeOut - attendance.timeIn;
+                    const workingHours = workingMilliseconds / (1000 * 60 * 60);
+                    const hours = Math.floor(workingHours);
+                    const minutes = Math.round((workingHours - hours) * 60);
+                    hoursWorked = `${hours} hrs ${minutes} mins`;
+
+                    // Check if early out (before 5:00 PM)
+                    const endOfDay = new Date(attendance.timeOut);
+                    endOfDay.setHours(17, 0, 0, 0);
+                    
+                    if (attendance.timeOut < endOfDay) {
+                        earlyOutMinutes = Math.round((endOfDay - attendance.timeOut) / (1000 * 60));
+                        if (status === 'Present') {
+                            status = 'Early Out';
+                        }
+                        summary.earlyOut++;
+                        if (departmentBreakdown[department]) {
+                            departmentBreakdown[department].earlyOut++;
+                        }
+                    }
+                } else {
+                    // Still in work or didn't record time out
+                    const now = new Date();
+                    const endOfDay = new Date(reportDate);
+                    endOfDay.setHours(23, 59, 59, 999);
+                    
+                    if (new Date(reportDate).toDateString() === now.toDateString() && now <= endOfDay) {
+                        timeOut = '(In Work)';
+                        const workingMilliseconds = now - attendance.timeIn;
+                        const workingHours = workingMilliseconds / (1000 * 60 * 60);
+                        const hours = Math.floor(workingHours);
+                        const minutes = Math.round((workingHours - hours) * 60);
+                        hoursWorked = `${hours} hrs ${minutes} mins`;
+                    } else {
+                        timeOut = '(No Time Out)';
+                        const workingMilliseconds = endOfDay - attendance.timeIn;
+                        const workingHours = workingMilliseconds / (1000 * 60 * 60);
+                        const hours = Math.floor(workingHours);
+                        const minutes = Math.round((workingHours - hours) * 60);
+                        hoursWorked = `${hours} hrs ${minutes} mins`;
+                    }
+                }
+            }
+        } else {
+            // No attendance record and not on leave
+            summary.absent++;
+            if (departmentBreakdown[department]) {
+                departmentBreakdown[department].absent++;
+            }
+        }
+
+        const employeeData = {
+            lastName: employee.lastName,
+            firstName: employee.firstName,
+            timeIn,
+            timeOut,
+            hoursWorked,
+            status,
+            lateMinutes,
+            earlyOutMinutes,
+            onLeave,
+            leaveRemarks
+        };
+
+        if (processedEmployees[department]) {
+            processedEmployees[department].push(employeeData);
+        }
+    });
+
+    // Sort employees within each department
+    Object.keys(processedEmployees).forEach(dept => {
+        processedEmployees[dept].sort((a, b) => 
+            `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
+        );
+    });
+
+    return {
+        summary,
+        departmentBreakdown: Object.values(departmentBreakdown),
+        detailedAttendance: processedEmployees
+    };
+}
+
 const hrController = {
     getHRDashboard: async function(req, res) {
         if (!req.session.user) {
@@ -7969,7 +8192,255 @@ viewEvaluation: async function(req, res) {
                 message: 'Error fetching dashboard statistics: ' + error.message 
             });
         }
-    }
+    },
+
+    // Get employees for reports dropdown
+    getEmployeesForReports: async function(req, res) {
+        if (!req.session.user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized. Access only for authorized users.' 
+            });
+        }
+
+        try {
+            console.log('🔄 [Backend] Fetching employees for reports dropdown...');
+
+            const { data: employees, error } = await supabase
+                .from('useraccounts')
+                .select(`
+                    userId,
+                    staffaccounts (
+                        firstName,
+                        lastName,
+                        departmentId,
+                        departments (deptName)
+                    )
+                `)
+                .eq('userRole', 'Staff')
+                .not('staffaccounts', 'is', null);
+
+            if (error) {
+                console.error('❌ [Backend] Error fetching employees:', error);
+                throw error;
+            }
+
+            const formattedEmployees = employees
+                .filter(emp => emp.staffaccounts && emp.staffaccounts.length > 0)
+                .map(emp => ({
+                    userId: emp.userId,
+                    firstName: emp.staffaccounts[0].firstName,
+                    lastName: emp.staffaccounts[0].lastName,
+                    department: emp.staffaccounts[0].departments?.deptName || 'N/A'
+                }))
+                .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+
+            console.log(`✅ [Backend] Found ${formattedEmployees.length} employees for dropdown`);
+
+            return res.json({
+                success: true,
+                employees: formattedEmployees
+            });
+
+        } catch (error) {
+            console.error('❌ [Backend] Error in getEmployeesForReports:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch employees for reports'
+            });
+        }
+    },
+
+    // Get daily attendance report
+    getDailyAttendanceReport: async function(req, res) {
+        if (!req.session.user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized. Access only for authorized users.' 
+            });
+        }
+
+        try {
+            const { attendanceDate } = req.query;
+            
+            if (!attendanceDate) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Attendance date is required'
+                });
+            }
+
+            console.log(`🔄 [Backend] Generating daily attendance report for ${attendanceDate}...`);
+
+            // Fetch attendance data for the specified date
+            const { data: attendanceData, error: attendanceError } = await supabase
+                .from('attendance')
+                .select(`
+                    userId,
+                    attendanceDate,
+                    attendanceAction,
+                    attendanceTime,
+                    city,
+                    useraccounts (
+                        userId,
+                        staffaccounts (
+                            staffId,
+                            firstName,
+                            lastName,
+                            departmentId,
+                            jobId,
+                            departments: departmentId (deptName),
+                            jobpositions: jobId (jobTitle)
+                        )
+                    )
+                `)
+                .eq('attendanceDate', attendanceDate)
+                .order('attendanceTime', { ascending: true });
+
+            if (attendanceError) {
+                console.error('❌ [Backend] Error fetching attendance data:', attendanceError);
+                throw attendanceError;
+            }
+
+            // Fetch leave data for the specified date
+            const { data: leaveData, error: leaveError } = await supabase
+                .from('leaverequests')
+                .select(`
+                    userId,
+                    fromDate,
+                    untilDate,
+                    status,
+                    leave_types (typeName),
+                    useraccounts (
+                        userId,
+                        staffaccounts (
+                            firstName,
+                            lastName,
+                            departmentId,
+                            departments: departmentId (deptName)
+                        )
+                    )
+                `)
+                .eq('status', 'Approved')
+                .lte('fromDate', attendanceDate)
+                .gte('untilDate', attendanceDate);
+
+            if (leaveError) {
+                console.error('❌ [Backend] Error fetching leave data:', leaveError);
+                throw leaveError;
+            }
+
+            // Get all employees for total count
+            const { data: allEmployees, error: employeeError } = await supabase
+                .from('useraccounts')
+                .select(`
+                    userId,
+                    staffaccounts (
+                        firstName,
+                        lastName,
+                        departmentId,
+                        departments: departmentId (deptName)
+                    )
+                `)
+                .eq('userRole', 'Staff')
+                .not('staffaccounts', 'is', null);
+
+            if (employeeError) {
+                console.error('❌ [Backend] Error fetching employee data:', employeeError);
+                throw employeeError;
+            }
+
+            // Process attendance data
+            const processedData = await processAttendanceData(attendanceData, leaveData, allEmployees, attendanceDate);
+
+            console.log(`✅ [Backend] Daily attendance report generated successfully for ${attendanceDate}`);
+
+            return res.json({
+                success: true,
+                reportDate: attendanceDate,
+                generatedOn: new Date().toLocaleDateString(),
+                ...processedData
+            });
+
+        } catch (error) {
+            console.error('❌ [Backend] Error in getDailyAttendanceReport:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to generate daily attendance report'
+            });
+        }
+    },
+
+    // Get employee attendance report (placeholder for now)
+    getEmployeeAttendanceReport: async function(req, res) {
+        if (!req.session.user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized. Access only for authorized users.' 
+            });
+        }
+
+        try {
+            const { employeeId, reportType, startDate, endDate } = req.query;
+            
+            console.log(`🔄 [Backend] Generating employee attendance report for employee ${employeeId} from ${startDate} to ${endDate}...`);
+
+            // TODO: Implement employee-specific attendance report logic
+            // For now, return a placeholder response
+            
+            return res.json({
+                success: true,
+                message: 'Employee attendance report - Coming soon',
+                reportType,
+                employeeId,
+                startDate,
+                endDate,
+                generatedOn: new Date().toLocaleDateString()
+            });
+
+        } catch (error) {
+            console.error('❌ [Backend] Error in getEmployeeAttendanceReport:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to generate employee attendance report'
+            });
+        }
+    },
+
+    // Get leave requests report (placeholder for now)
+    getLeaveRequestsReport: async function(req, res) {
+        if (!req.session.user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Unauthorized. Access only for authorized users.' 
+            });
+        }
+
+        try {
+            const { reportType, startDate, endDate } = req.query;
+            
+            console.log(`🔄 [Backend] Generating leave requests report from ${startDate} to ${endDate}...`);
+
+            // TODO: Implement leave requests report logic
+            // For now, return a placeholder response
+            
+            return res.json({
+                success: true,
+                message: 'Leave requests report - Coming soon',
+                reportType,
+                startDate,
+                endDate,
+                generatedOn: new Date().toLocaleDateString()
+            });
+
+        } catch (error) {
+            console.error('❌ [Backend] Error in getLeaveRequestsReport:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to generate leave requests report'
+            });
+        }
+    },
 
 };
 

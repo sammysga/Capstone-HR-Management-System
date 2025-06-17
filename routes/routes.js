@@ -437,6 +437,11 @@ router.post('/hr/update-budget', hrController.updateBudget);
 router.get('/hr/offboarding-dashboard-stats', hrController.getOffboardingDashboardStats);
 router.get('/hr/offboarding-reports', hrController.getOffboardingReports);
 
+router.get('/reports/employees', hrController.getEmployeesForReports);
+router.get('/reports/daily-attendance', hrController.getDailyAttendanceReport);
+router.get('/reports/employee-attendance', hrController.getEmployeeAttendanceReport);
+router.get('/reports/leave-requests', hrController.getLeaveRequestsReport);
+
 
 module.exports = router; 
 
