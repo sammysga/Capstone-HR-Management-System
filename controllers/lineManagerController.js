@@ -1134,7 +1134,6 @@ ${process.env.NODE_ENV === 'development' ?
 // ============================
 // PENDING TRAINING REQUESTS MANAGEMENT
 // ============================
-
 // Approve single training request by record ID
 approveTrainingRequestByRecord: async function (req, res) {
     try {
@@ -1148,51 +1147,121 @@ approveTrainingRequestByRecord: async function (req, res) {
             });
         }
         
-        console.log('Record ID to approve:', recordId);
-        
-        // First, get the current record to check if it exists
-        const { data: existingRecord, error: fetchError } = await supabase
+        // Get training record with training and job position details
+        const { data: trainingRecord, error: fetchError } = await supabase
             .from('training_records')
-            .select('*')
+            .select(`
+                trainingId,
+                userId,
+                trainings(cost, jobId, jobpositions(departmentId))
+            `)
             .eq('trainingRecordId', recordId)
             .single();
         
-        if (fetchError || !existingRecord) {
+        if (fetchError || !trainingRecord) {
             console.error('Training record not found:', fetchError);
             return res.status(404).json({
                 success: false,
                 message: 'Training request not found'
             });
         }
+
+        // Verify required data
+        if (!trainingRecord.trainings?.cost || !trainingRecord.trainings.jobpositions?.departmentId) {
+            console.error('Missing required data:', {
+                cost: trainingRecord.trainings?.cost,
+                departmentId: trainingRecord.trainings.jobpositions?.departmentId
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required training cost or department information'
+            });
+        }
+
+        const trainingCost = trainingRecord.trainings.cost;
+        const departmentId = trainingRecord.trainings.jobpositions.departmentId;
+
+        // Get department budget
+        const { data: budgetData, error: budgetError } = await supabase
+            .from('training_budgets')
+            .select('amount, trainingBugetId')
+            .eq('departmentId', departmentId)
+            .single();
+
+        if (budgetError || !budgetData) {
+            console.error('Training budget not found:', budgetError);
+            return res.status(404).json({
+                success: false,
+                message: 'Training budget not found for department'
+            });
+        }
+
+        // Check budget
+        if (budgetData.amount < trainingCost) {
+            return res.status(400).json({
+                success: false,
+                message: 'Insufficient training budget for this request'
+            });
+        }
         
-        // Update the training record to set isApproved = true
+        // Update record
         const { data, error } = await supabase
             .from('training_records')
             .update({ 
                 isApproved: true,
-                trainingStatus: 'Not Started' // Change from 'For Approval' to 'Not Started' when approved
+                trainingStatus: 'Not Started'
             })
             .eq('trainingRecordId', recordId)
             .select();
         
         if (error) {
-            console.error('Error approving training request:', error);
+            console.error('Error approving request:', error);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to approve training request: ' + error.message
             });
         }
+
+        // Update budget
+        const newBudgetAmount = budgetData.amount - trainingCost;
+        const { error: budgetUpdateError } = await supabase
+            .from('training_budgets')
+            .update({ amount: newBudgetAmount })
+            .eq('trainingBugetId', budgetData.trainingBugetId);
+
+        if (budgetUpdateError) {
+            console.error('Budget update failed:', budgetUpdateError);
+            // Rollback
+            await supabase
+                .from('training_records')
+                .update({ 
+                    isApproved: false,
+                    trainingStatus: 'For Approval'
+                })
+                .eq('trainingRecordId', recordId);
+
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to update budget: ' + budgetUpdateError.message
+            });
+        }
         
-        console.log('Training request approved successfully:', data[0]);
+        console.log('Request approved. Budget updated:', {
+            departmentId,
+            deducted: trainingCost,
+            remaining: newBudgetAmount
+        });
         
         res.json({
             success: true,
             message: 'Training request approved successfully',
-            data: data[0]
+            data: data[0],
+            budgetDeducted: trainingCost,
+            remainingBudget: newBudgetAmount
         });
         
     } catch (error) {
-        console.error('Error in approveTrainingRequestByRecord:', error);
+        console.error('Error in approval:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error: ' + error.message
@@ -1265,8 +1334,6 @@ rejectTrainingRequestByRecord: async function (req, res) {
         });
     }
 },
-
-// Approve multiple training requests in bulk
 approveTrainingRequestsBulk: async function (req, res) {
     try {
         console.log('🟢 Bulk approving training requests...');
@@ -1279,70 +1346,144 @@ approveTrainingRequestsBulk: async function (req, res) {
             });
         }
         
-        console.log('Record IDs to approve:', recordIds);
-        
-        // First, check which records exist
-        const { data: existingRecords, error: fetchError } = await supabase
+        // Get all training records with their training and job position details
+        const { data: trainingRecords, error: fetchError } = await supabase
             .from('training_records')
-            .select('trainingRecordId')
+            .select(`
+                trainingRecordId,
+                trainingId,
+                userId,
+                trainings(cost, jobId, jobpositions(departmentId))
+            `)
             .in('trainingRecordId', recordIds);
         
         if (fetchError) {
-            console.error('Error fetching training records:', fetchError);
+            console.error('Error fetching records:', fetchError);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to fetch training records: ' + fetchError.message
             });
         }
         
-        const existingRecordIds = existingRecords.map(record => record.trainingRecordId);
-        console.log('Found existing records:', existingRecordIds.length, 'out of', recordIds.length);
-        
-        if (existingRecordIds.length === 0) {
+        const validRecords = trainingRecords.filter(record => 
+            record.trainings?.cost && record.trainings.jobpositions?.departmentId
+        );
+
+        if (validRecords.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'No training requests found'
+                message: 'No valid training requests found with complete information'
             });
         }
-        
-        // Update multiple training records to set isApproved = true
-        const { data, error } = await supabase
+
+        // Group by department and check budgets
+        const departmentCosts = {};
+        const insufficientBudgetRecords = [];
+        const recordsToApprove = [];
+
+        // First pass: organize by department and check budgets
+        for (const record of validRecords) {
+            const cost = record.trainings.cost;
+            const departmentId = record.trainings.jobpositions.departmentId;
+
+            if (!departmentCosts[departmentId]) {
+                const { data: budgetData, error: budgetError } = await supabase
+                    .from('training_budgets')
+                    .select('amount, trainingBugetId')
+                    .eq('departmentId', departmentId)
+                    .single();
+
+                if (budgetError || !budgetData) {
+                    console.error('Budget not found for department:', departmentId);
+                    continue;
+                }
+
+                departmentCosts[departmentId] = {
+                    currentAmount: budgetData.amount,
+                    trainingBugetId: budgetData.trainingBugetId,
+                    totalDeduction: 0,
+                    records: []
+                };
+            }
+
+            if (departmentCosts[departmentId].currentAmount >= 
+                departmentCosts[departmentId].totalDeduction + cost) {
+                departmentCosts[departmentId].totalDeduction += cost;
+                departmentCosts[departmentId].records.push(record.trainingRecordId);
+                recordsToApprove.push(record.trainingRecordId);
+            } else {
+                insufficientBudgetRecords.push(record.trainingRecordId);
+            }
+        }
+
+        if (recordsToApprove.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No records could be approved due to insufficient budgets',
+                insufficientBudgetRecords
+            });
+        }
+
+        // Bulk approve
+        const { data: approvedRecords, error: approvalError } = await supabase
             .from('training_records')
             .update({ 
                 isApproved: true,
-                trainingStatus: 'Not Started' // Change from 'For Approval' to 'Not Started' when approved
+                trainingStatus: 'Not Started'
             })
-            .in('trainingRecordId', existingRecordIds)
+            .in('trainingRecordId', recordsToApprove)
             .select();
-        
-        if (error) {
-            console.error('Error bulk approving training requests:', error);
+
+        if (approvalError) {
+            console.error('Bulk approval failed:', approvalError);
             return res.status(500).json({
                 success: false,
-                message: 'Failed to approve training requests: ' + error.message
+                message: 'Failed to approve requests: ' + approvalError.message
             });
         }
-        
-        console.log(`Bulk approved ${data?.length || 0} training requests`);
+
+        // Update budgets
+        const budgetUpdates = Object.keys(departmentCosts).map(deptId => {
+            const dept = departmentCosts[deptId];
+            const newAmount = dept.currentAmount - dept.totalDeduction;
+            return supabase
+                .from('training_budgets')
+                .update({ amount: newAmount })
+                .eq('trainingBugetId', dept.trainingBugetId);
+        });
+
+        const budgetResults = await Promise.all(budgetUpdates);
+        const budgetErrors = budgetResults.filter(r => r.error);
+
+        if (budgetErrors.length > 0) {
+            console.error('Some budget updates failed:', budgetErrors);
+            // In production, you might want to rollback approvals here
+        }
+
+        console.log(`Bulk approved ${approvedRecords?.length || 0} requests`);
         
         res.json({
             success: true,
-            message: `Successfully approved ${data?.length || 0} training requests`,
-            data: data,
-            approvedCount: data?.length || 0,
+            message: `Approved ${approvedRecords?.length || 0} training requests`,
+            data: approvedRecords,
+            approvedCount: approvedRecords?.length || 0,
             requestedCount: recordIds.length,
-            foundCount: existingRecordIds.length
+            insufficientBudgetRecords,
+            budgetUpdates: Object.keys(departmentCosts).map(deptId => ({
+                departmentId: deptId,
+                amountDeducted: departmentCosts[deptId].totalDeduction,
+                newAmount: departmentCosts[deptId].currentAmount - departmentCosts[deptId].totalDeduction
+            }))
         });
         
     } catch (error) {
-        console.error('Error in approveTrainingRequestsBulk:', error);
+        console.error('Error in bulk approval:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error: ' + error.message
         });
     }
 },
-
 // Reject multiple training requests in bulk
 rejectTrainingRequestsBulk: async function (req, res) {
     try {
@@ -7423,9 +7564,7 @@ saveMidYearIDP: async function(req, res) {
             res.status(500).json({ success: false, message: error.message });
         }
     },    
-
-    
-    getFeedbackData: async function(req, res) {
+getFeedbackData: async function(req, res) {
     try {
         const userId = req.params.userId;
         const quarter = req.query.quarter; // e.g., "Q1", "Q2", etc.
@@ -7535,7 +7674,7 @@ saveMidYearIDP: async function(req, res) {
                 jobpositions!inner (jobTitle)
             `)
             .eq('departmentId', departmentId)
-            .not('jobId', 'is', null); // Only count staff with job positions
+            .not('jobId', 'is', null);
             
         if (deptStaffError) {
             console.error('Error fetching department staff:', deptStaffError);
@@ -7545,13 +7684,13 @@ saveMidYearIDP: async function(req, res) {
             });
         }
         
-        // 5. FIXED: Count UNIQUE reviewers for this specific feedback only
+        // 5. Count UNIQUE reviewers for this specific feedback only
         const { data: feedbackAnswers, error: feedbackAnswersError } = await supabase
             .from('feedbacks_answers')
             .select(`
                 feedbackId_answerId,
                 reviewerUserId,
-                userld,
+                userId,
                 reviewDate,
                 ${feedbackIdField}
             `)
@@ -7566,7 +7705,7 @@ saveMidYearIDP: async function(req, res) {
             });
         }
         
-        // FIXED: Get unique reviewers for THIS specific feedback only
+        // Get unique reviewers for THIS specific feedback only
         const uniqueReviewers = new Set();
         const answerIds = [];
         
@@ -7577,10 +7716,9 @@ saveMidYearIDP: async function(req, res) {
             }
         });
         
-        const totalResponses = uniqueReviewers.size; // This should now show 1 if only 1 person responded
+        const totalResponses = uniqueReviewers.size;
         
-        // 6. FIXED: Calculate department-wide completion rate
-        // Get all feedback records for this quarter in the department
+        // 6. Calculate department-wide completion rate
         const departmentUserIds = departmentStaff.map(staff => staff.userId);
         
         const { data: allDepartmentFeedbacks, error: allFeedbackError } = await supabase
@@ -7838,22 +7976,52 @@ saveMidYearIDP: async function(req, res) {
             });
         }
         
-        // 15. FIXED: Build individual responder data with full names and job titles
+        // 15. FIXED: Build individual answers using complete join like your SQL
         const individualAnswers = [];
+        
+        console.log(`Fetching individual answers for userId: ${userId}, quarter: ${quarter}`);
+        
+        // Get all feedback answers for this user and quarter
+        const { data: allFeedbackAnswers, error: allFeedbackAnswersError } = await supabase
+            .from('feedbacks_answers')
+            .select(`
+                feedbackId_answerId,
+                ${feedbackIdField},
+                userId,
+                reviewerUserId,
+                reviewDate,
+                remarks
+            `)
+            .eq(feedbackIdField, feedbackId)
+            .not('reviewerUserId', 'is', null);
+            
+        if (allFeedbackAnswersError) {
+            console.error('Error fetching all feedback answers:', allFeedbackAnswersError);
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving feedback answers."
+            });
+        }
+        
+        console.log(`Found ${allFeedbackAnswers?.length || 0} feedback answers`);
         
         // Group by unique reviewers
         const reviewerGroups = new Map();
         
-        for (const feedbackAnswer of feedbackAnswers || []) {
+        for (const feedbackAnswer of allFeedbackAnswers || []) {
             if (!reviewerGroups.has(feedbackAnswer.reviewerUserId)) {
                 reviewerGroups.set(feedbackAnswer.reviewerUserId, []);
             }
             reviewerGroups.get(feedbackAnswer.reviewerUserId).push(feedbackAnswer);
         }
         
-        // Process each unique reviewer
+        console.log(`Found ${reviewerGroups.size} unique reviewers`);
+        
+        // Process each unique reviewer with FIXED data fetching using your SQL approach
         for (const [reviewerUserId, answers] of reviewerGroups) {
-            // Get reviewer info from staffaccounts with job title
+            console.log(`Processing reviewer ${reviewerUserId} with ${answers.length} answer records`);
+            
+            // Get reviewer info from staffaccounts
             const { data: reviewerData, error: reviewerError } = await supabase
                 .from('staffaccounts')
                 .select(`
@@ -7871,92 +8039,205 @@ saveMidYearIDP: async function(req, res) {
                 continue;
             }
             
-            // Get all answers from this reviewer across all their submissions
-            const allAnswerIds = answers.map(a => a.feedbackId_answerId);
+            // Get all answer IDs from this reviewer
+            const reviewerAnswerIds = answers.map(a => a.feedbackId_answerId);
+            console.log(`Reviewer ${reviewerUserId} answer IDs:`, reviewerAnswerIds);
             
-            // Get objective answers for this reviewer
-            const { data: objAnswers, error: objAnswersError } = await supabase
-                .from('feedbacks_answers-objectives')
-                .select(`
-                    objectiveQualInput,
-                    objectiveQuantInput,
-                    feedback_qObjectivesId
-                `)
-                .in('feedback_answerObjectivesId', allAnswerIds);
+            // FIXED: Use the same SQL approach for objective answers
+            // This replicates your working SQL query structure
+            const { data: rawObjectiveData, error: objDataError } = await supabase
+                .rpc('get_objective_feedback_data', {
+                    target_user_id: parseInt(userId),
+                    target_quarter: quarter,
+                    target_year: feedbackData.year || new Date().getFullYear(),
+                    target_reviewer_id: reviewerUserId
+                });
             
-            // Get skill answers for this reviewer
-            const { data: skillAnswers, error: skillAnswersError } = await supabase
-                .from('feedbacks_answers-skills')
-                .select(`
-                    skillsQualInput,
-                    skillsQuantInput,
-                    feedback_qSkillsId
-                `)
-                .in('feedback_answerSkillsId', allAnswerIds);
-            
-            // Format objective answers
-            const formattedObjAnswers = [];
-            if (objAnswers && objAnswers.length > 0) {
-                for (const answer of objAnswers) {
-                    const questionMapping = (objectiveQuestionsMapping || []).find(q => 
-                        q.feedback_qObjectivesId === answer.feedback_qObjectivesId
-                    );
-                    
-                    if (questionMapping) {
-                        const objective = (objectives || []).find(o => 
-                            o.objectiveId === questionMapping.objectiveId
+            // Fallback if RPC doesn't exist - use manual joins like your SQL
+            let objectiveAnswersData = [];
+            if (objDataError || !rawObjectiveData) {
+                console.log('Using fallback method for objective data...');
+                
+                // Manual approach replicating your SQL
+                const { data: objAnswers, error: objError } = await supabase
+                    .from('feedbacks_answers-objectives')
+                    .select(`
+                        objectiveQualInput,
+                        objectiveQuantInput,
+                        feedback_qObjectivesId,
+                        feedback_answerObjectivesId,
+                        created_at
+                    `)
+                    .in('feedback_answerObjectivesId', reviewerAnswerIds);
+                
+                if (!objError && objAnswers) {
+                    // Now get the complete data by joining with questions and objectives
+                    for (const objAnswer of objAnswers) {
+                        // Find the question mapping
+                        const questionMapping = (objectiveQuestionsMapping || []).find(q => 
+                            q.feedback_qObjectivesId === objAnswer.feedback_qObjectivesId
                         );
                         
-                        formattedObjAnswers.push({
-                            objectiveId: questionMapping.objectiveId,
-                            objectiveName: objective?.objectiveDescrpt || 'Unknown Objective',
-                            rating: answer.objectiveQuantInput,
-                            comment: answer.objectiveQualInput
-                        });
-                    }
-                }
-            }
-            
-            // Format skill answers
-            const formattedSkillRatings = {};
-            if (skillAnswers && skillAnswers.length > 0) {
-                for (const answer of skillAnswers) {
-                    const questionMapping = (skillQuestionsMapping || []).find(q => 
-                        q.feedback_qSkillsId === answer.feedback_qSkillsId
-                    );
-                    
-                    if (questionMapping) {
-                        const skill = (skills || []).find(s => s.jobReqSkillId === questionMapping.jobReqSkillId);
-                        if (skill) {
-                            formattedSkillRatings[skill.jobReqSkillName] = {
-                                rating: answer.skillsQuantInput,
-                                skillType: skill.jobReqSkillType,
-                                skillId: skill.jobReqSkillId
-                            };
+                        if (questionMapping) {
+                            // Find the objective details
+                            const objective = (objectives || []).find(o => 
+                                o.objectiveId === questionMapping.objectiveId
+                            );
+                            
+                            if (objective) {
+                                objectiveAnswersData.push({
+                                    ...objAnswer,
+                                    objectiveId: questionMapping.objectiveId,
+                                    objectiveDescrpt: objective.objectiveDescrpt,
+                                    objectiveKPI: objective.objectiveKPI,
+                                    objectiveTarget: objective.objectiveTarget,
+                                    objectiveUOM: objective.objectiveUOM,
+                                    objectiveAssignedWeight: objective.objectiveAssignedWeight,
+                                    objectiveQualiQuestion: questionMapping.objectiveQualiQuestion
+                                });
+                            }
                         }
                     }
                 }
+            } else {
+                objectiveAnswersData = rawObjectiveData;
             }
+            
+            // FIXED: Use the same SQL approach for skill answers
+            const { data: rawSkillData, error: skillDataError } = await supabase
+                .rpc('get_skill_feedback_data', {
+                    target_user_id: parseInt(userId),
+                    target_quarter: quarter,
+                    target_year: feedbackData.year || new Date().getFullYear(),
+                    target_reviewer_id: reviewerUserId
+                });
+            
+            // Fallback if RPC doesn't exist - use manual joins like your SQL
+            let skillAnswersData = [];
+            if (skillDataError || !rawSkillData) {
+                console.log('Using fallback method for skill data...');
+                
+                // Manual approach replicating your SQL
+                const { data: skillAnswers, error: skillError } = await supabase
+                    .from('feedbacks_answers-skills')
+                    .select(`
+                        skillsQualInput,
+                        skillsQuantInput,
+                        feedback_qSkillsId,
+                        feedback_answerSkillsId,
+                        created_at
+                    `)
+                    .in('feedback_answerSkillsId', reviewerAnswerIds);
+                
+                if (!skillError && skillAnswers) {
+                    // Now get the complete data by joining with questions and skills
+                    for (const skillAnswer of skillAnswers) {
+                        // Find all skill question mappings for this feedback
+                        const skillMappings = (skillQuestionsMapping || []).filter(q => 
+                            q.feedback_qSkillsId === skillAnswer.feedback_qSkillsId
+                        );
+                        
+                        // For each mapping, get the skill details
+                        for (const mapping of skillMappings) {
+                            const skill = (skills || []).find(s => 
+                                s.jobReqSkillId === mapping.jobReqSkillId
+                            );
+                            
+                            if (skill) {
+                                skillAnswersData.push({
+                                    ...skillAnswer,
+                                    jobReqSkillId: mapping.jobReqSkillId,
+                                    jobReqSkillName: skill.jobReqSkillName,
+                                    jobReqSkillType: skill.jobReqSkillType
+                                });
+                            }
+                        }
+                    }
+                }
+            } else {
+                skillAnswersData = rawSkillData;
+            }
+            
+            console.log(`Found ${objectiveAnswersData.length} objective answers and ${skillAnswersData.length} skill answers for reviewer ${reviewerUserId}`);
+            
+            // Format objective answers
+            const formattedObjAnswers = objectiveAnswersData.map(obj => ({
+                objectiveId: obj.objectiveId,
+                objectiveName: obj.objectiveDescrpt || 'Unknown Objective',
+                objectiveKPI: obj.objectiveKPI || 'N/A',
+                objectiveTarget: obj.objectiveTarget || 'N/A',
+                objectiveUOM: obj.objectiveUOM || 'N/A',
+                objectiveWeight: obj.objectiveAssignedWeight || 0,
+                guideQuestion: obj.objectiveQualiQuestion || 'No guide question',
+                rating: obj.objectiveQuantInput,
+                comment: obj.objectiveQualInput || 'No comment provided',
+                submittedDate: obj.created_at
+            }));
+            
+            // Format skill answers
+            const formattedSkillRatings = {};
+            const formattedSkillComments = {};
+            
+            skillAnswersData.forEach(skill => {
+                const skillKey = skill.jobReqSkillName;
+                
+                formattedSkillRatings[skillKey] = {
+                    rating: skill.skillsQuantInput,
+                    skillType: skill.jobReqSkillType,
+                    skillId: skill.jobReqSkillId,
+                    submittedDate: skill.created_at
+                };
+                
+                formattedSkillComments[skillKey] = {
+                    comment: skill.skillsQualInput || 'No comment provided',
+                    skillType: skill.jobReqSkillType,
+                    skillId: skill.jobReqSkillId,
+                    submittedDate: skill.created_at
+                };
+            });
             
             // Determine responder type
             let responderType = 'Peer';
             if (reviewerUserId === parseInt(userId)) {
                 responderType = 'Self';
             }
-            // Add logic for Manager/Direct Report if needed
             
-            individualAnswers.push({
+            // Build comprehensive individual answer object
+            const individualAnswer = {
                 responderId: reviewerUserId,
                 responderName: reviewerData ? `${reviewerData.firstName} ${reviewerData.lastName}` : 'Anonymous',
+                responderFirstName: reviewerData?.firstName || 'Unknown',
+                responderLastName: reviewerData?.lastName || 'Unknown',
                 responderJobTitle: reviewerData?.jobpositions?.jobTitle || 'Unknown Position',
                 responderType: responderType,
-                submittedDate: answers[0]?.reviewDate,
+                submittedDate: answers[0]?.reviewDate || answers[0]?.created_at,
+                totalObjectiveAnswers: formattedObjAnswers.length,
+                totalSkillAnswers: Object.keys(formattedSkillRatings).length,
                 objectiveAnswers: formattedObjAnswers,
-                skillRatings: formattedSkillRatings
-            });
+                skillRatings: formattedSkillRatings,
+                skillComments: formattedSkillComments
+            };
+            
+            individualAnswers.push(individualAnswer);
+            
+            console.log(`Added reviewer ${reviewerUserId}: ${formattedObjAnswers.length} objectives, ${Object.keys(formattedSkillRatings).length} skills`);
         }
         
-        // 16. ENHANCED: Generate filter options with full names and objectives/skills
+        // Sort individual answers by submission date (most recent first)
+        individualAnswers.sort((a, b) => {
+            const dateA = new Date(a.submittedDate || 0);
+            const dateB = new Date(b.submittedDate || 0);
+            return dateB - dateA;
+        });
+        
+        console.log(`=== INDIVIDUAL ANSWERS SUMMARY ===`);
+        console.log(`Total reviewers: ${individualAnswers.length}`);
+        individualAnswers.forEach((answer, index) => {
+            console.log(`Reviewer ${index + 1}: ${answer.responderName} - ${answer.totalObjectiveAnswers} objectives, ${answer.totalSkillAnswers} skills`);
+        });
+        console.log(`=== END SUMMARY ===`);
+        
+        // 16. Generate filter options
         const questionFilterOptions = [
             { value: 'all', label: 'All Questions' }
         ];
@@ -8004,44 +8285,35 @@ saveMidYearIDP: async function(req, res) {
             }
         }
         
-        // ENHANCED: Responder filter options with full names
+        // SIMPLIFIED: Responder filter options with individual names only
         const responderFilterOptions = [
             { value: 'all', label: 'All Responders' }
         ];
         
-        // Add individual responders
+        // Add individual responders only
         individualAnswers.forEach(answer => {
             responderFilterOptions.push({
                 value: answer.responderId.toString(),
-                label: `${answer.responderName} (${answer.responderJobTitle})`
+                label: `${answer.responderFirstName} ${answer.responderLastName} (${answer.responderJobTitle})`
             });
         });
-        
-        // Add responder type filters
-        responderFilterOptions.push(
-            { value: 'separator', label: '--- By Type ---', disabled: true },
-            { value: 'peer', label: 'Peers' },
-            { value: 'self', label: 'Self Assessment' },
-            { value: 'manager', label: 'Managers' },
-            { value: 'direct', label: 'Direct Reports' }
-        );
         
         // 17. Return the compiled data
         return res.status(200).json({
             success: true,
             stats: {
-                totalResponses, // Fixed to show correct count
+                totalResponses,
                 averageRating: averageRating.toFixed(1),
-                completionRate: `${completionRate}%`, // Fixed to be department-wide
+                completionRate: `${completionRate}%`,
                 departmentStaffCount: totalStaffInDept,
-                departmentResponseCount: departmentResponseCount, // DEBUG: to help verify the count
-                uniqueReviewersCount: uniqueReviewers.size // DEBUG: to help verify the count
+                departmentResponseCount: departmentResponseCount,
+                uniqueReviewersCount: uniqueReviewers.size
             },
             objectiveFeedback,
             skillsFeedback,
             individualAnswers,
             questionFilterOptions,
-            responderFilterOptions, // New: Enhanced filter options
+            responderFilterOptions, // Simplified - no type groups
             departmentStaff: departmentStaff.map(staff => ({
                 userId: staff.userId,
                 name: `${staff.firstName} ${staff.lastName}`,
@@ -8676,7 +8948,7 @@ submitFeedback: async function(req, res) {
             .insert({
                 [feedbackIdField]: feedbackId,
                 reviewerUserId: currentUserId,
-                userld: userId, // Note: this field name might need correction in DB
+                userId: userId, // Note: this field name might need correction in DB
                 reviewDate: new Date().toISOString().split('T')[0],
                 remarks: feedbackResponses.generalRemarks || null
             })
@@ -9877,7 +10149,7 @@ submitFeedback: async function (req, res) {
             .insert({
                 [idField]: feedbackId,
                 reviewerUserId: currentUserId,
-                userld: userId, // Note: following the schema's 'userld' spelling
+                userId: userId, // Note: following the schema's 'userId' spelling
                 reviewDate: new Date().toISOString().split('T')[0],
                 created_at: new Date()
             })
@@ -11020,7 +11292,6 @@ getTrainingRequestDetails: async function(req, res) {
         });
     }
 },
-// Approve training request - REVISED
 approveTrainingRequest: async function(req, res) {
     const userId = req.session?.user?.userId;
     const userRole = req.session?.user?.userRole;
@@ -11036,7 +11307,7 @@ approveTrainingRequest: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Line manager ${userId} approving training request`);
 
     try {
-        const { remarks, trainingRecordId, userId: requestUserId } = req.body;
+        const { remarks, trainingRecordId } = req.body;
 
         if (!remarks || !remarks.trim()) {
             return res.status(400).json({
@@ -11054,59 +11325,153 @@ approveTrainingRequest: async function(req, res) {
             });
         }
 
-        const approvedDate = new Date().toISOString().split('T')[0]; // Today's date
+        // Get training record with training and job position details
+        const { data: trainingRecord, error: fetchError } = await supabase
+            .from('training_records')
+            .select(`
+                trainingId,
+                userId,
+                trainings(cost, jobId, jobpositions(departmentId))
+            `)
+            .eq('trainingRecordId', trainingRecordId)
+            .is('isApproved', null)
+            .single();
 
-        // REVISED: Update the training record with proper enum and approval status
+        if (fetchError || !trainingRecord) {
+            console.error(`[${new Date().toISOString()}] Error fetching training record:`, fetchError);
+            return res.status(fetchError ? 500 : 404).json({
+                success: false,
+                message: fetchError ? 'Error fetching training record' : 'Training request not found or already processed',
+                error: fetchError?.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Verify we have all required data
+        if (!trainingRecord.trainings?.cost || !trainingRecord.trainings.jobpositions?.departmentId) {
+            console.error(`[${new Date().toISOString()}] Missing required data:`, {
+                cost: trainingRecord.trainings?.cost,
+                departmentId: trainingRecord.trainings.jobpositions?.departmentId
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required training cost or department information',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        const trainingCost = trainingRecord.trainings.cost;
+        const departmentId = trainingRecord.trainings.jobpositions.departmentId;
+
+        // Get current department training budget
+        const { data: budgetData, error: budgetError } = await supabase
+            .from('training_budgets')
+            .select('amount, trainingBugetId')
+            .eq('departmentId', departmentId)
+            .single();
+
+        if (budgetError || !budgetData) {
+            console.error(`[${new Date().toISOString()}] Error fetching training budget:`, budgetError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching department training budget',
+                error: budgetError?.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Check budget sufficiency
+        if (budgetData.amount < trainingCost) {
+            return res.status(400).json({
+                success: false,
+                message: 'Insufficient training budget for approval',
+                details: {
+                    required: trainingCost,
+                    available: budgetData.amount,
+                    departmentId: departmentId
+                },
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        const approvedDate = new Date().toISOString().split('T')[0];
+
+        // Update training record
         const { data: updatedRecord, error } = await supabase
             .from('training_records')
             .update({
-                trainingStatus: 'Not Started', // Set to enum value
-                isApproved: true, // Set to approved
-                decisionDate: approvedDate, // Record decision date
-                decisionRemarks: remarks // Record approval remarks
+                trainingStatus: 'Not Started',
+                isApproved: true,
+                decisionDate: approvedDate,
+                decisionRemarks: remarks
             })
             .eq('trainingRecordId', trainingRecordId)
-            .is('isApproved', null) // Only update if still pending
-            .select() // Return the updated record
+            .is('isApproved', null)
+            .select()
             .single();
 
-        if (error) {
+        if (error || !updatedRecord) {
             console.error(`[${new Date().toISOString()}] Error approving training request:`, error);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to approve training request',
-                error: error.message,
+                error: error?.message,
                 timestamp: new Date().toISOString()
             });
         }
 
-        // Check if any record was actually updated
-        if (!updatedRecord) {
-            return res.status(404).json({
+        // Deduct from budget
+        const newBudgetAmount = budgetData.amount - trainingCost;
+        const { error: budgetUpdateError } = await supabase
+            .from('training_budgets')
+            .update({ amount: newBudgetAmount })
+            .eq('trainingBugetId', budgetData.trainingBugetId);
+
+        if (budgetUpdateError) {
+            console.error(`[${new Date().toISOString()}] Error updating budget:`, budgetUpdateError);
+            
+            // Rollback approval
+            await supabase
+                .from('training_records')
+                .update({
+                    trainingStatus: 'For Approval',
+                    isApproved: null,
+                    decisionDate: null,
+                    decisionRemarks: null
+                })
+                .eq('trainingRecordId', trainingRecordId);
+
+            return res.status(500).json({
                 success: false,
-                message: 'Training request not found or already processed',
+                message: 'Failed to update training budget - approval rolled back',
+                error: budgetUpdateError.message,
                 timestamp: new Date().toISOString()
             });
         }
 
-        console.log(`[${new Date().toISOString()}] Training request ${trainingRecordId} approved successfully - Status: Not Started, Approved: true`);
+        console.log(`[${new Date().toISOString()}] Approved training ${trainingRecordId}. Budget updated: ${budgetData.amount} -> ${newBudgetAmount}`);
 
         res.json({
             success: true,
-            message: 'Training request approved successfully! Employee can now start the training.',
+            message: 'Training request approved successfully!',
             data: {
                 trainingRecordId,
                 trainingStatus: 'Not Started',
                 isApproved: true,
                 approvedBy: userId,
                 decisionDate: approvedDate,
-                decisionRemarks: remarks
+                decisionRemarks: remarks,
+                budgetImpact: {
+                    departmentId,
+                    amountDeducted: trainingCost,
+                    remainingBudget: newBudgetAmount
+                }
             },
             timestamp: new Date().toISOString()
         });
 
     } catch (error) {
-        console.error(`[${new Date().toISOString()}] Error in training approval:`, error);
+        console.error(`[${new Date().toISOString()}] Error in approval:`, error);
         res.status(500).json({
             success: false,
             message: 'Internal server error during approval',
