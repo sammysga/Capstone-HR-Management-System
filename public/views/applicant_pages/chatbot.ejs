@@ -855,87 +855,124 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
         localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
     }
 
-  
-    async function uploadFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+  async function uploadFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-        console.log("Uploading file:", file.name);
-        
-        // Create loading message
-        addMessage("Bot", "Uploading file... Please wait.");
-        
-        // Show upload progress
-        const uploadProgressDiv = document.createElement('div');
-        uploadProgressDiv.classList.add('upload-progress');
-        uploadProgressDiv.style.display = 'block';
-        
-        const progressBar = document.createElement('div');
-        progressBar.classList.add('upload-progress-bar');
-        uploadProgressDiv.appendChild(progressBar);
-        
-        const chatMessages = document.getElementById("chat-messages");
-        chatMessages.appendChild(uploadProgressDiv);
-        
-        // Simulate progress
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += 5;
-            progressBar.style.width = `${Math.min(progress, 95)}%`;
-            if (progress >= 95) clearInterval(progressInterval);
-        }, 200);
-        
-        const formData = new FormData();
-        formData.append("file", file);
+    console.log("Uploading file:", file.name);
+    
+    // Determine upload type based on the data attribute
+    const uploadType = event.target.getAttribute('data-upload-type') || 'regular';
+    const endpoint = uploadType === 'reupload' ? '/handleReuploadsFileUpload' : '/handleFileUpload';
+    
+    console.log(`Using ${uploadType} upload endpoint: ${endpoint}`);
+    
+    // Create loading message
+    const loadingMessageDiv = document.createElement("div");
+    loadingMessageDiv.classList.add("message", "bot-message");
+    loadingMessageDiv.textContent = "Uploading file... Please wait.";
+    loadingMessageDiv.id = "loading-message"; // Add ID for easy removal
+    
+    const chatMessages = document.getElementById("chat-messages");
+    chatMessages.appendChild(loadingMessageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Show upload progress
+    const uploadProgressDiv = document.createElement('div');
+    uploadProgressDiv.classList.add('upload-progress');
+    uploadProgressDiv.style.display = 'block';
+    uploadProgressDiv.id = "progress-container"; // Add ID for easy removal
+    
+    const progressBar = document.createElement('div');
+    progressBar.classList.add('upload-progress-bar');
+    uploadProgressDiv.appendChild(progressBar);
+    
+    chatMessages.appendChild(uploadProgressDiv);
+    
+    // Simulate progress
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += 5;
+        progressBar.style.width = `${Math.min(progress, 95)}%`;
+        if (progress >= 95) clearInterval(progressInterval);
+    }, 200);
+    
+    const formData = new FormData();
+    formData.append("file", file);
 
-        try {
-            const response = await fetch("/handleFileUpload", {
-                method: "POST",
-                body: formData,
-            });
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            body: formData,
+        });
 
-            if (!response.ok) throw new Error("Failed to upload file");
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-            const result = await response.json();
+        const result = await response.json();
+        console.log("Upload result:", result);
+        
+        // Complete progress and remove progress bar
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        
+        setTimeout(() => {
+            // Remove loading message and progress bar
+            const loadingMsg = document.getElementById("loading-message");
+            const progressContainer = document.getElementById("progress-container");
             
-            // Complete progress and remove
-            clearInterval(progressInterval);
-            progressBar.style.width = '100%';
-            setTimeout(() => {
-                uploadProgressDiv.remove();
-            }, 500);
-
-            // Remove loading message
-            if (chatMessages.lastChild && chatMessages.lastChild.textContent === "Uploading file... Please wait.") {
-                chatMessages.removeChild(chatMessages.lastChild);
-            }
-
-            // Display success message
-            if (result.response && result.response.text) {
-                addMessage("Bot", result.response.text);
-                
-                // Update stepper if we're uploading resume
-                if (currentStage === 'resume_upload') {
-                    updateStepper('P1 - Awaiting for HR Action');
+            if (loadingMsg) loadingMsg.remove();
+            if (progressContainer) progressContainer.remove();
+            
+            // Display the actual response from server
+            if (result.response) {
+                if (result.response.text) {
+                    addMessage("Bot", result.response.text);
+                    
+                    // Update stepper if needed
+                    if (result.response.applicantStage) {
+                        updateStepper(result.response.applicantStage);
+                    }
                 }
                 
-                // Handle next question if it exists
-                if (result.response.nextQuestion) {
-                    // Small delay to make it feel more natural
+                // Handle next message if it exists
+                if (result.response.nextMessage) {
                     setTimeout(() => {
-                        displayBotResponse(result.response.nextQuestion);
+                        addMessage("Bot", result.response.nextMessage.text);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
                     }, 1000);
                 }
             } else {
                 addMessage("Bot", "File uploaded successfully!");
             }
-        } catch (error) {
-            console.error("Error uploading file:", error);
-            clearInterval(progressInterval);
-            uploadProgressDiv.remove();
-            addMessage("Bot", "Error uploading file. Please try again.");
-        }
+            
+            // Reset file input and data attribute
+            document.getElementById("fileUpload").value = "";
+            document.getElementById("fileUpload").removeAttribute('data-upload-type');
+            
+        }, 500);
+
+    } catch (error) {
+        console.error("Error uploading file:", error);
+        
+        // Clean up on error
+        clearInterval(progressInterval);
+        const loadingMsg = document.getElementById("loading-message");
+        const progressContainer = document.getElementById("progress-container");
+        
+        if (loadingMsg) loadingMsg.remove();
+        if (progressContainer) progressContainer.remove();
+        
+        // Show error message
+        addMessage("Bot", "Error uploading file. Please try again.");
+        
+        // Reset file input and data attribute
+        document.getElementById("fileUpload").value = "";
+        document.getElementById("fileUpload").removeAttribute('data-upload-type');
     }
+}
+
 function displayBotResponse(response, isFromHistory = false) {
     console.log("Bot response:", response);
     const chatMessages = document.getElementById("chat-messages");
@@ -966,9 +1003,23 @@ function displayBotResponse(response, isFromHistory = false) {
                 btn.innerText = button.text;
                 
                 if (button.type === "file_upload") {
+                    // Regular file upload (for initial 3 documents)
                     btn.classList.add("file-upload-button");
                     btn.innerHTML = `<i class="fas fa-file-upload"></i> ${button.text}`;
-                    btn.onclick = () => document.getElementById("fileUpload").click();
+                    btn.onclick = () => {
+                        // Set the upload type for regular uploads
+                        document.getElementById("fileUpload").setAttribute('data-upload-type', 'regular');
+                        document.getElementById("fileUpload").click();
+                    };
+                } else if (button.type === "file_upload_reupload") {
+                    // Reupload file upload (for HR-requested reuploads)
+                    btn.classList.add("file-upload-button");
+                    btn.innerHTML = `<i class="fas fa-file-upload"></i> ${button.text}`;
+                    btn.onclick = () => {
+                        // Set the upload type for reuploads
+                        document.getElementById("fileUpload").setAttribute('data-upload-type', 'reupload');
+                        document.getElementById("fileUpload").click();
+                    };
                 } else if (button.url) {
                     // Handle URL buttons (like Calendly link)
                     btn.classList.add("job-button", "calendly-button");

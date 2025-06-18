@@ -47,7 +47,9 @@ router.get('/applicant/awaiting-account-setup', function(req, res) {
 // Chatbot routes
 router.get('/chatbothome', applicantController.getChatbotPage);
 router.post('/chatbothome', applicantController.handleChatbotMessage);
-router.post('/handleFileUpload', applicantController.handleFileUpload); // Directly use the controller method for file handling
+// File upload routes
+router.post('/handleFileUpload', applicantController.handleFileUpload); // For initial 3 documents (degree, cert, resume)
+router.post('/handleReuploadsFileUpload', applicantController.handleReuploadsFileUpload); // For HR-requested reuploads
 
 // Staff Log in
 router.get('/staff/login', staffLoginController.getStaffLogin);
@@ -289,7 +291,7 @@ router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositi
 router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
 router.post('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', hrController.updateStatusToP1AwaitingforLineManager);
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
-router.post('/handleFileUpload', applicantController.handleInitialFileUpload);
+router.post('/handleFileUpload', applicantController.handleReuploadsFileUpload);
 
 router.post('/hr/request-document-reupload', hrController.requestDocumentReupload);
 router.get('/hr/get-additional-document/:userId', hrController.getAdditionalDocument);
@@ -391,8 +393,9 @@ router.get('/employee/training/:trainingRecordId/details', employeeController.ge
 
 // Training management
 router.get('/employee/trainings/dropdown', employeeController.getTrainingsByJobAndDept); // Use the newer function
-router.get('/employee/trainings/:trainingId/details', employeeController.getTrainingSkillsAndObjectives); // Use the newer function
+router.get('/employee/training/:trainingId/details', employeeController.getTrainingSkillsAndObjectives);
 router.post('/employee/training-requests', employeeController.createTrainingRequest);
+
 
 // Activity updates
 router.put('/employee/training/:trainingRecordId/activity/:activityId', employeeController.updateSingleActivity);
