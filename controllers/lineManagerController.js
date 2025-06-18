@@ -4346,138 +4346,167 @@ console.log('Final applicants list:', applicants);
             return res.status(500).json({ success: false, message: "Error getting email templates: " + error.message });
         }
     },
-
-    updateP1Statuses: async function(req, res) {
-        try {
-            console.log('✅ [LineManager] Updating P1 statuses after Gmail emails sent');
-            
-            const { passedUserIds, failedUserIds } = req.body;
-            
-            if (!passedUserIds || !failedUserIds) {
-                return res.status(400).json({ success: false, message: "Missing user IDs" });
-            }
-            
-            console.log(`✅ [LineManager] P1 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
-            
-            let updateResults = {
-                passed: { updated: 0, errors: [] },
-                failed: { updated: 0, errors: [] }
-            };
-            
-            // Update passed applicants
-            for (const userId of passedUserIds) {
-                try {
-                    console.log(`✅ [LineManager] Updating P1 PASSED status for userId: ${userId}`);
+updateP1Statuses: async function(req, res) {
+    try {
+        console.log('✅ [LineManager] Updating P1 statuses after Gmail emails sent');
+        
+        const { passedUserIds, failedUserIds } = req.body;
+        
+        if (!passedUserIds || !failedUserIds) {
+            return res.status(400).json({ success: false, message: "Missing user IDs" });
+        }
+        
+        console.log(`✅ [LineManager] P1 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+        
+        let updateResults = {
+            passed: { updated: 0, errors: [] },
+            failed: { updated: 0, errors: [] }
+        };
+        
+        // Update passed applicants
+        for (const userId of passedUserIds) {
+            try {
+                console.log(`✅ [LineManager] Updating P1 PASSED status for userId: ${userId}`);
+                
+                // Update applicant status in the database
+                const { data: updateData, error: updateError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'P1 - PASSED' })
+                    .eq('userId', userId);
                     
-                    // Update applicant status in the database
-                    const { data: updateData, error: updateError } = await supabase
-                        .from('applicantaccounts')
-                        .update({ applicantStatus: 'P1 - PASSED' })
-                        .eq('userId', userId);
-                        
-                    if (updateError) {
-                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                        updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
-                        continue;
-                    }
-                    
-                    updateResults.passed.updated++;
-                    
-                    // Add chatbot message
-                    const { data: chatData, error: chatError } = await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify({ text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage." }),
-                            sender: 'bot',
-                            timestamp: new Date().toISOString(),
-                            applicantStage: 'P1 - PASSED'
-                        }]);
-                        
-                    if (chatError) {
-                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
-                    }
-                    
-                } catch (error) {
-                    console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
-                    updateResults.passed.errors.push(`${userId}: ${error.message}`);
+                if (updateError) {
+                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                    updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
+                    continue;
                 }
-            }
-            
-            // Update failed applicants
-            for (const userId of failedUserIds) {
-                try {
-                    console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
+                
+                updateResults.passed.updated++;
+                
+                // Add congratulations message (first message)
+                const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage via Calendly.";
+                
+                const { data: chatData1, error: chatError1 } = await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ text: congratsMessage }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P1 - PASSED'
+                    }]);
                     
-                    // Update applicant status in the database
-                    const { data: updateData, error: updateError } = await supabase
-                        .from('applicantaccounts')
-                        .update({ applicantStatus: 'P1 - FAILED' })
-                        .eq('userId', userId);
-                        
-                    if (updateError) {
-                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                        updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
-                        continue;
-                    }
-                    
-                    updateResults.failed.updated++;
-                    
-                    // Add chatbot message
-                    const { data: chatData, error: chatError } = await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify({ text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Prime Infrastructure, and we wish you the best in your future endeavors." }),
-                            sender: 'bot',
-                            timestamp: new Date().toISOString(),
-                            applicantStage: 'P1 - FAILED'
-                        }]);
-                        
-                    if (chatError) {
-                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
-                    }
-                    
-                } catch (error) {
-                    console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
-                    updateResults.failed.errors.push(`${userId}: ${error.message}`);
+                if (chatError1) {
+                    console.error(`❌ [LineManager] Error adding congratulations message for ${userId}:`, chatError1);
                 }
+                
+                // Add Calendly link message (second message with slight delay)
+                const calendlyMessage = "Please click the button below to schedule your interview at your convenience:";
+                
+                const { data: chatData2, error: chatError2 } = await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ 
+                            text: calendlyMessage,
+                            buttons: [
+                                { 
+                                    text: "Schedule Interview", 
+                                    value: "schedule_interview",
+                                    url: "/applicant/schedule-interview"
+                                }
+                            ]
+                        }),
+                        sender: 'bot',
+                        timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
+                        applicantStage: 'P1 - PASSED'
+                    }]);
+                    
+                if (chatError2) {
+                    console.error(`❌ [LineManager] Error adding Calendly message for ${userId}:`, chatError2);
+                }
+                
+            } catch (error) {
+                console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
+                updateResults.passed.errors.push(`${userId}: ${error.message}`);
             }
-            
-            // Prepare response
-            const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
-            const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
-            
-            if (totalErrors > 0) {
-                console.warn(`⚠️ [LineManager] P1 status update completed with ${totalErrors} errors`);
-                return res.status(207).json({ // 207 Multi-Status for partial success
-                    success: true,
-                    message: `P1 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
-                    updateResults: updateResults,
-                    passedUpdated: updateResults.passed.updated,
-                    failedUpdated: updateResults.failed.updated,
-                    totalErrors: totalErrors
-                });
-            } else {
-                console.log(`✅ [LineManager] P1 status update completed successfully`);
-                return res.status(200).json({ 
-                    success: true, 
-                    message: "P1 statuses updated successfully. All applicants have been processed.",
-                    updateResults: updateResults,
-                    passedUpdated: updateResults.passed.updated,
-                    failedUpdated: updateResults.failed.updated,
-                    totalUpdated: totalUpdated
-                });
+        }
+        
+        // Update failed applicants
+        for (const userId of failedUserIds) {
+            try {
+                console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
+                
+                // Update applicant status in the database
+                const { data: updateData, error: updateError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'P1 - FAILED' })
+                    .eq('userId', userId);
+                    
+                if (updateError) {
+                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                    updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
+                    continue;
+                }
+                
+                updateResults.failed.updated++;
+                
+                // Add rejection message
+                const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Prime Infrastructure, and we wish you the best in your future endeavors.";
+                
+                const { data: chatData, error: chatError } = await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ text: rejectionMessage }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P1 - FAILED'
+                    }]);
+                    
+                if (chatError) {
+                    console.error(`❌ [LineManager] Error adding rejection message for ${userId}:`, chatError);
+                }
+                
+            } catch (error) {
+                console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
+                updateResults.failed.errors.push(`${userId}: ${error.message}`);
             }
-            
-        } catch (error) {
-            console.error('❌ [LineManager] Error updating P1 statuses:', error);
-            return res.status(500).json({ 
-                success: false, 
-                message: "Error updating P1 statuses: " + error.message 
+        }
+        
+        // Prepare response
+        const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
+        const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
+        
+        if (totalErrors > 0) {
+            console.warn(`⚠️ [LineManager] P1 status update completed with ${totalErrors} errors`);
+            return res.status(207).json({ // 207 Multi-Status for partial success
+                success: true,
+                message: `P1 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
+                updateResults: updateResults,
+                passedUpdated: updateResults.passed.updated,
+                failedUpdated: updateResults.failed.updated,
+                totalErrors: totalErrors
+            });
+        } else {
+            console.log(`✅ [LineManager] P1 status update completed successfully`);
+            return res.status(200).json({ 
+                success: true, 
+                message: "P1 statuses updated successfully. All applicants have been processed.",
+                updateResults: updateResults,
+                passedUpdated: updateResults.passed.updated,
+                failedUpdated: updateResults.failed.updated,
+                totalUpdated: totalUpdated
             });
         }
-    },
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error updating P1 statuses:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error updating P1 statuses: " + error.message 
+        });
+    }
+},
 
     markAsP1Passed: async function(req, res) {
         try {
