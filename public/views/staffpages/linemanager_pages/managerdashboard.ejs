@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1189,9 +1189,17 @@
     </style>
 </head>
 <body>
+<script>
+// Pass server data to JavaScript
+window.attendanceLogs = <%- JSON.stringify(attendanceLogs || []) %>;
+window.allLeaves = <%- JSON.stringify(allLeaves || []) %>;
+window.approvedLeaves = <%- JSON.stringify(approvedLeaves || []) %>;
+window.notifications = <%- JSON.stringify(notifications || []) %>;
+</script>
+
     <%- include('../../partials/linemanager_partials') %>
     <!-- Main content -->
-    <div class="main-content">
+    <div class="content">
         <h2>
             Line Manager Dashboard
         </h2>
