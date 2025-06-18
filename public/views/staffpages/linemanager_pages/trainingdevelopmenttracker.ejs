@@ -3813,7 +3813,7 @@ function calculateTotalDuration() {
 }
 
 
-// FIXED: Proper event listener setup for Job Positions dropdown
+// Load training form data from backend
 async function loadTrainingFormData() {
     try {
         console.log('Loading training form data...');
@@ -3868,8 +3868,13 @@ async function loadTrainingFormData() {
             populateSkills(result.data.skills.all);
             populateActivityTypes(result.data.activityTypes);
             
-            // CRITICAL FIX: Ensure event listener is properly attached
-            setupJobPositionChangeListener();
+            // Add event listener for job position changes (remove existing first)
+            const jobPositionsSelect = document.getElementById('jobPositions');
+            if (jobPositionsSelect) {
+                // Remove existing listeners to prevent duplicates
+                jobPositionsSelect.removeEventListener('change', onJobPositionChange);
+                jobPositionsSelect.addEventListener('change', onJobPositionChange);
+            }
             
         } else {
             console.error('Failed to load form data:', result.message);
@@ -3880,41 +3885,6 @@ async function loadTrainingFormData() {
         alert('Error loading form data. Please check your connection and try again.\n\nError: ' + error.message);
     }
 }
-
-// NEW: Dedicated function to setup the job position change listener
-function setupJobPositionChangeListener() {
-    const jobPositionsSelect = document.getElementById('jobPositions');
-    
-    if (!jobPositionsSelect) {
-        console.error('❌ Job positions select element not found!');
-        return;
-    }
-    
-    console.log('🔧 Setting up job position change listener...');
-    
-    // Remove any existing listeners to prevent duplicates
-    jobPositionsSelect.removeEventListener('change', onJobPositionChange);
-    
-    // Add the event listener
-    jobPositionsSelect.addEventListener('change', function(event) {
-        console.log('🎯 Job position dropdown changed!');
-        console.log('Event triggered from element:', event.target.id);
-        console.log('New value:', event.target.value);
-        
-        // Call the main function
-        onJobPositionChange();
-    });
-    
-    console.log('✅ Job position change listener setup complete');
-    
-    // Test the listener immediately
-    setTimeout(() => {
-        console.log('🧪 Testing job position listener...');
-        console.log('Current job positions dropdown value:', jobPositionsSelect.value);
-        console.log('Available options:', Array.from(jobPositionsSelect.options).map(opt => `${opt.value}: ${opt.text}`));
-    }, 500);
-}
-
 // ENHANCED: Form submission with better debugging
 // ENHANCED: Form submission with better debugging and location data
 document.addEventListener('DOMContentLoaded', function() {
@@ -4493,47 +4463,39 @@ function populateObjectives(objectives) {
     });
 }
 
-// Enhanced populateSkills to show ONLY the filtered skills
+// Populate skills dropdown with skill type and name
 function populateSkills(skills) {
     const skillDropdown = document.getElementById('skillDropdown');
-    skillDropdown.innerHTML = '';
-    
-    console.log('📋 === POPULATING SKILLS DROPDOWN ===');
-    console.log('Skills to populate:', skills.length);
-    
+    skillDropdown.innerHTML = ''; // Clear existing options
+
     if (!skills || skills.length === 0) {
+        // If no skills found
         const option = document.createElement('option');
         option.value = '';
-        option.textContent = 'No skills available for this specific job position.';
+        option.textContent = 'No skills available. Please coordinate with HR to set up the skills for the respective job position.';
         skillDropdown.appendChild(option);
-        console.log('❌ No skills to display for this job position');
         return;
     }
 
     // Default first option
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
-    defaultOption.textContent = `Select skill area (${skills.length} available)`;
+    defaultOption.textContent = 'Select skill area';
     skillDropdown.appendChild(defaultOption);
 
-    // Group skills by type for this specific job
+    // Group skills by type
     const groupedSkills = skills.reduce((acc, skill) => {
-        const skillType = skill.jobReqSkillType || 'Other';
-        if (!acc[skillType]) {
-            acc[skillType] = [];
+        if (!acc[skill.jobReqSkillType]) {
+            acc[skill.jobReqSkillType] = [];
         }
-        acc[skillType].push(skill);
+        acc[skill.jobReqSkillType].push(skill);
         return acc;
     }, {});
 
-    console.log('Skill groups for this job:', Object.keys(groupedSkills));
-
     // Create optgroups for each skill type
     Object.entries(groupedSkills).forEach(([type, typeSkills]) => {
-        console.log(`Adding ${typeSkills.length} skills for type: ${type}`);
-        
         const optgroup = document.createElement('optgroup');
-        optgroup.label = `${type} Skills (${typeSkills.length})`;
+        optgroup.label = `${type} Skills`;
 
         typeSkills.forEach(skill => {
             const option = document.createElement('option');
@@ -4544,15 +4506,12 @@ function populateSkills(skills) {
             option.setAttribute('data-type', skill.jobReqSkillType);
             option.setAttribute('data-name', skill.jobReqSkillName);
             optgroup.appendChild(option);
-            
-            console.log(`  ✓ Added: ${skill.jobReqSkillName} (Job: ${skill.jobTitle})`);
         });
 
         skillDropdown.appendChild(optgroup);
     });
-    
-    console.log(`✅ Successfully populated ${skills.length} skills for this specific job position`);
 }
+
 
 // Function to populate activity types
 function populateActivityTypes(activityTypes) {
@@ -4569,26 +4528,13 @@ function populateActivityTypes(activityTypes) {
     });
 }
 
-// ENHANCED: Job position change function with better debugging
+// UPDATE your onJobPositionChange function to populate suggested trainings
 function onJobPositionChange() {
-    console.log('🚀 === JOB POSITION CHANGE TRIGGERED ===');
-    console.log('Timestamp:', new Date().toLocaleTimeString());
-    
     const jobPositionsSelect = document.getElementById('jobPositions');
-    
-    if (!jobPositionsSelect) {
-        console.error('❌ Job positions select element not found in onJobPositionChange!');
-        return;
-    }
-    
     const selectedJobId = jobPositionsSelect.value;
-    const selectedJobText = jobPositionsSelect.options[jobPositionsSelect.selectedIndex]?.text || 'Unknown';
     const suggestedTrainingsSelect = document.getElementById('suggestedTrainings');
     
-    console.log('Selected Job ID:', selectedJobId, '(type:', typeof selectedJobId, ')');
-    console.log('Selected Job Text:', selectedJobText);
-    console.log('Dropdown element found:', !!jobPositionsSelect);
-    console.log('Total options in dropdown:', jobPositionsSelect.options.length);
+    console.log('Job position changed to:', selectedJobId);
     
     // Clear current selections
     selectedObjectives = [];
@@ -4596,141 +4542,109 @@ function onJobPositionChange() {
     updateObjectivesDisplay();
     updateSkillsDisplay();
     
-    // Clear suggested trainings if it exists
-    if (suggestedTrainingsSelect) {
-        suggestedTrainingsSelect.innerHTML = '';
-    }
+    // Clear and reset suggested trainings dropdown
+    suggestedTrainingsSelect.innerHTML = '';
     
-    if (!selectedJobId || selectedJobId === '') {
-        console.log('❌ No job selected - showing all data');
+    if (!selectedJobId) {
+        // No job selected
+        suggestedTrainingsSelect.disabled = true;
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Please select a job position first';
+        suggestedTrainingsSelect.appendChild(option);
         
-        if (suggestedTrainingsSelect) {
-            suggestedTrainingsSelect.disabled = true;
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'Please select a job position first';
-            suggestedTrainingsSelect.appendChild(option);
-        }
-        
-        // Show all data when no job is selected
-        populateObjectives(allFormData.objectives || []);
-        populateSkills(allFormData.skills?.all || []);
+        // Reset to show all objectives and skills
+        console.log('No job selected, showing all data');
+        populateObjectives(allFormData.objectives);
+        populateSkills(allFormData.skills.all);
         return;
     }
     
-    // Convert to number for strict comparison
-    const selectedJobIdNumber = parseInt(selectedJobId);
-    console.log('✅ Job selected - filtering for job ID:', selectedJobIdNumber);
+    // Enable suggested trainings dropdown
+    suggestedTrainingsSelect.disabled = false;
     
-    // Enable suggested trainings dropdown if it exists
-    if (suggestedTrainingsSelect) {
-        suggestedTrainingsSelect.disabled = false;
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Select from suggested trainings (optional)';
+    suggestedTrainingsSelect.appendChild(defaultOption);
+    
+    // Add static training templates
+    const staticTrainings = [
+        { value: 'leadership', text: 'Leadership Development Program' },
+        { value: 'safety', text: 'Safety and Compliance Training' },
+        { value: 'communication', text: 'Communication Excellence' },
+        { value: 'timemanagement', text: 'Time Management Skills' },
+        { value: 'customerservice', text: 'Customer Service Training' },
+        { value: 'projectmanagement', text: 'Project Management Fundamentals' },
+        { value: 'dataanalysis', text: 'Data Analysis and Reporting' },
+        { value: 'teambuilding', text: 'Team Building Workshop' },
+        { value: 'cybersecurity', text: 'Cybersecurity Awareness' },
+        { value: 'diversity', text: 'Diversity and Inclusion Training' }
+    ];
+    
+    // Add optgroup for static templates
+    const staticOptgroup = document.createElement('optgroup');
+    staticOptgroup.label = 'General Training Templates';
+    
+    staticTrainings.forEach(training => {
+        const option = document.createElement('option');
+        option.value = training.value;
+        option.textContent = training.text;
+        staticOptgroup.appendChild(option);
+    });
+    
+    suggestedTrainingsSelect.appendChild(staticOptgroup);
+    
+    // Filter and add database trainings for this specific job
+    const filteredTrainings = allSuggestedTrainings.filter(training => 
+        training.jobId === parseInt(selectedJobId)
+    );
+    
+    console.log(`Found ${filteredTrainings.length} suggested trainings for job ID ${selectedJobId}`);
+    
+    if (filteredTrainings.length > 0) {
+        // Add optgroup for database trainings
+        const dbOptgroup = document.createElement('optgroup');
+        dbOptgroup.label = `Existing Trainings for ${jobPositionsSelect.options[jobPositionsSelect.selectedIndex].text}`;
         
-        // Add default option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'Select from suggested trainings (optional)';
-        suggestedTrainingsSelect.appendChild(defaultOption);
-        
-        // Add static training templates
-        const staticTrainings = [
-            { value: 'leadership', text: 'Leadership Development Program' },
-            { value: 'safety', text: 'Safety and Compliance Training' },
-            { value: 'communication', text: 'Communication Excellence' },
-            { value: 'timemanagement', text: 'Time Management Skills' },
-            { value: 'customerservice', text: 'Customer Service Training' },
-            { value: 'projectmanagement', text: 'Project Management Fundamentals' },
-            { value: 'dataanalysis', text: 'Data Analysis and Reporting' },
-            { value: 'teambuilding', text: 'Team Building Workshop' },
-            { value: 'cybersecurity', text: 'Cybersecurity Awareness' },
-            { value: 'diversity', text: 'Diversity and Inclusion Training' }
-        ];
-        
-        const staticOptgroup = document.createElement('optgroup');
-        staticOptgroup.label = 'General Training Templates';
-        
-        staticTrainings.forEach(training => {
+        filteredTrainings.forEach(training => {
             const option = document.createElement('option');
-            option.value = training.value;
-            option.textContent = training.text;
-            staticOptgroup.appendChild(option);
+            option.value = `db_${training.id}`;
+            option.textContent = training.name;
+            option.setAttribute('data-name', training.name);
+            option.setAttribute('data-description', training.description);
+            option.setAttribute('data-job-title', training.jobTitle);
+            option.setAttribute('data-department', training.department);
+            option.setAttribute('data-mode', training.mode);
+            option.setAttribute('data-cost', training.cost);
+            option.setAttribute('data-duration', training.duration);
+            option.setAttribute('data-country', training.location?.country || '');
+            option.setAttribute('data-address', training.location?.address || '');
+            dbOptgroup.appendChild(option);
         });
         
-        suggestedTrainingsSelect.appendChild(staticOptgroup);
-        
-        // Filter suggested trainings by job
-        if (typeof allSuggestedTrainings !== 'undefined') {
-            const filteredTrainings = allSuggestedTrainings.filter(training => 
-                training.jobId === selectedJobIdNumber
-            );
-            
-            if (filteredTrainings.length > 0) {
-                const dbOptgroup = document.createElement('optgroup');
-                dbOptgroup.label = `Existing Trainings for ${selectedJobText}`;
-                
-                filteredTrainings.forEach(training => {
-                    const option = document.createElement('option');
-                    option.value = `db_${training.id}`;
-                    option.textContent = training.name;
-                    option.setAttribute('data-name', training.name);
-                    option.setAttribute('data-description', training.description);
-                    option.setAttribute('data-job-title', training.jobTitle);
-                    option.setAttribute('data-department', training.department);
-                    option.setAttribute('data-mode', training.mode);
-                    option.setAttribute('data-cost', training.cost);
-                    option.setAttribute('data-duration', training.duration);
-                    option.setAttribute('data-country', training.location?.country || '');
-                    option.setAttribute('data-address', training.location?.address || '');
-                    dbOptgroup.appendChild(option);
-                });
-                
-                suggestedTrainingsSelect.appendChild(dbOptgroup);
-            }
-        }
+        suggestedTrainingsSelect.appendChild(dbOptgroup);
     }
     
-    // FILTER OBJECTIVES by exact job ID
-    console.log('🔍 === FILTERING OBJECTIVES ===');
-    const filteredObjectives = (allFormData.objectives || []).filter(obj => {
-        const isMatch = obj.jobId === selectedJobIdNumber;
-        if (isMatch) {
-            console.log(`✅ Objective match: "${obj.objectiveDescrpt}" (Job ID: ${obj.jobId})`);
-        }
-        return isMatch;
-    });
-    console.log(`Found ${filteredObjectives.length} objectives for job ID ${selectedJobIdNumber}`);
+    // Continue with existing job position change logic for objectives and skills
+    const filteredObjectives = allFormData.objectives.filter(obj => 
+        obj.jobId === parseInt(selectedJobId)
+    );
     
-    // FILTER SKILLS by exact job ID
-    console.log('🎯 === FILTERING SKILLS ===');
-    console.log('Available skills:', allFormData.skills?.all?.length || 0);
-    console.log('Looking for job ID:', selectedJobIdNumber);
+    const filteredSkills = allFormData.skills.all.filter(skill => 
+        skill.jobId === parseInt(selectedJobId)
+    );
     
-    const filteredSkills = (allFormData.skills?.all || []).filter(skill => {
-        const isMatch = skill.jobId === selectedJobIdNumber;
-        if (isMatch) {
-            console.log(`✅ Skill match: "${skill.jobReqSkillName}" (${skill.jobReqSkillType}) - Job ID: ${skill.jobId} - Job Title: ${skill.jobTitle}`);
-        }
-        return isMatch;
-    });
+    console.log(`Job ID ${selectedJobId} selected:`);
+    console.log(`- Found ${filteredObjectives.length} matching objectives`);
+    console.log(`- Found ${filteredSkills.length} matching skills`);
+    console.log(`- Found ${filteredTrainings.length} matching suggested trainings`);
     
-    console.log(`Found ${filteredSkills.length} skills for job ID ${selectedJobIdNumber}`);
-    
-    // Show available job IDs if no skills found
-    if (filteredSkills.length === 0) {
-        const availableJobIds = [...new Set((allFormData.skills?.all || []).map(skill => skill.jobId))];
-        console.log('⚠️ No skills found for this job ID');
-        console.log('Available job IDs in skills data:', availableJobIds);
-        console.log('Selected job ID:', selectedJobIdNumber);
-    }
-    
-    // Update the dropdowns
-    console.log('📝 === UPDATING DROPDOWNS ===');
+    // Update dropdowns with filtered data
     populateObjectives(filteredObjectives);
     populateSkills(filteredSkills);
-    
-    console.log('✅ === JOB POSITION CHANGE COMPLETE ===\n');
 }
-
 function openEmployeeModal(employeeId) {
     console.log('🔍 === OPENING EMPLOYEE MODAL ===');
     console.log('Requested employee ID:', employeeId, '(type:', typeof employeeId, ')');
