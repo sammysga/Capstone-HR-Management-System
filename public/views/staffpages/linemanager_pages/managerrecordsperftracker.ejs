@@ -42,6 +42,320 @@
             font-weight: bold;
         }
 
+        /* ============================
+           360 FEEDBACK REPORTS - CSS STYLES
+           ============================ */
+
+        /* Dashboard Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e4e8;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Report Generation Form */
+        .report-form {
+            background: #ffffff;
+            border: 1px solid #e0e4e8;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        /* Report Preview Section */
+        .report-preview {
+            background: #ffffff;
+            border: 1px solid #e0e4e8;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .report-preview.show {
+            display: block;
+        }
+
+        .report-header {
+            border-bottom: 2px solid #e0e4e8;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .report-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .employee-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        /* Report Sections */
+        .report-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e4e8;
+        }
+
+        /* Data Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            border: 1px solid #e0e4e8;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .rating-cell {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .rating-excellent {
+            color: #28a745;
+        }
+
+        .rating-good {
+            color: #17a2b8;
+        }
+
+        .rating-average {
+            color: #ffc107;
+        }
+
+        .rating-poor {
+            color: #dc3545;
+        }
+
+        /* Loading and Status */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        /* Tab Styles for multiple sections */
+        .tab-container {
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid #e0e4e8;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-button.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .tab-button:hover {
+            color: #007bff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .main-content {
@@ -51,43 +365,855 @@
             .sidebar {
                 display: none; /* Hide sidebar on small screens if needed */
             }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .employee-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-table {
+                font-size: 0.9rem;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 8px;
+            }
         }
     </style>
 </head>
 <body>
     <%- include('../../partials/linemanager_partials') %>
+    
     <div class="main-content">
-        <h1>View Employee's Records and Performance History</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th><strong>Last Name</strong></th>
-                    <th><strong>First Name</strong></th>
-                    <th><strong>Department</strong></th>
-                    <th><strong>Job Position</strong></th>
-                    <th><strong>Email</strong></th>
-                </tr>
-            </thead>
-            <tbody>
-                <% employees.forEach(employee => { %>
-                    <% if (employee.userId) { %>
-                        <tr onclick="window.location.href='/linemanager/records-performance-tracker/<%= employee.userId %>'">
-                            <td><%= employee.lastName %></td>
-                            <td><%= employee.firstName %></td>
-                            <td><%= employee.deptName || 'N/A' %></td>
-                            <td><%= employee.jobTitle || 'N/A' %></td>
-                            <td><%= employee.email %></td>
-                        </tr>
-                    <% } else { %>
-                        <tr>
-                            <td colspan="5">No ID available</td>
-                        </tr>
-                    <% } %>
-                <% }) %>
-            </tbody>
+        <!-- Tab Navigation -->
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="showTab('records')">Employee Records</button>
+                <button class="tab-button" onclick="showTab('feedback-reports')">360 Feedback Reports</button>
+            </div>
+
+            <!-- New sub-tabs for feedback reports -->
+            <div id="feedback-sub-tabs" class="tab-container" style="display: none;">
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="showFeedbackSubTab('quarterly')">Quarterly Reports</button>
+                    <button class="tab-button" onclick="showFeedbackSubTab('mid-year')">Mid-Year Reports</button>
+                    <button class="tab-button" onclick="showFeedbackSubTab('final-year')">Final-Year Reports</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Records Tab (Original Content) -->
+        <div id="records" class="tab-content active">
+            <h1>View Employee's Records and Performance History</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th><strong>Last Name</strong></th>
+                        <th><strong>First Name</strong></th>
+                        <th><strong>Department</strong></th>
+                        <th><strong>Job Position</strong></th>
+                        <th><strong>Email</strong></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% employees.forEach(employee => { %>
+                        <% if (employee.userId) { %>
+                            <tr onclick="window.location.href='/linemanager/records-performance-tracker/<%= employee.userId %>'">
+                                <td><%= employee.lastName %></td>
+                                <td><%= employee.firstName %></td>
+                                <td><%= employee.deptName || 'N/A' %></td>
+                                <td><%= employee.jobTitle || 'N/A' %></td>
+                                <td><%= employee.email %></td>
+                            </tr>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5">No ID available</td>
+                            </tr>
+                        <% } %>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 360 Feedback Reports Tab (New Content) -->
+        <div id="feedback-reports" class="tab-content">
+            <h1>Quarterly 360 Feedback Reports</h1>
+            <p>Department: <strong><%= typeof departmentName !== 'undefined' ? departmentName : 'Not Available' %></strong></p>
+
+            <!-- Dashboard Statistics -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number"><%= stats ? stats.totalEmployees : 0 %></div>
+                    <div class="stat-label">Total Employees</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number"><%= stats ? stats.employeesWithFeedback : 0 %></div>
+                    <div class="stat-label">Employees with Feedback</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number"><%= stats && stats.completedQuarters ? stats.completedQuarters.length : 0 %></div>
+                    <div class="stat-label">Active Quarters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number"><%= stats ? stats.currentYear : new Date().getFullYear() %></div>
+                    <div class="stat-label">Current Year</div>
+                </div>
+            </div>
+
+        <!-- Report Generation Form -->
+        <div class="report-form">
+            <h3>Generate 360 Feedback Report</h3>
             
-        </table>
-    </div>    
+            <!-- Error/Success Messages -->
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+            
+            <form id="reportForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="employeeSelect">Select Employee:</label>
+                        <select id="employeeSelect" name="employeeId" required>
+                            <option value="">-- Select Employee --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="yearSelect">Year:</label>
+                        <select id="yearSelect" name="year" required>
+                            <option value="">-- Select Year --</option>
+                            <% if (typeof availableYears !== 'undefined' && availableYears.length > 0) { %>
+                                <% availableYears.forEach(year => { %>
+                                    <option value="<%= year %>" <%= year === (typeof currentYear !== 'undefined' ? currentYear : new Date().getFullYear()) ? 'selected' : '' %>><%= year %></option>
+                                <% }) %>
+                            <% } else { %>
+                                <option value="<%= new Date().getFullYear() %>" selected><%= new Date().getFullYear() %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quarterSelect">Quarter:</label>
+                        <select id="quarterSelect" name="quarter" required>
+                            <option value="">-- Select Quarter --</option>
+                            <% if (typeof availableQuarters !== 'undefined' && availableQuarters.length > 0) { %>
+                                <% availableQuarters.forEach(quarter => { %>
+                                    <option value="<%= quarter %>"><%= quarter %></option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="reportTypeGroup" style="display: none;">
+                        <label for="reportTypeSelect">Report Type:</label>
+                        <select id="reportTypeSelect" name="reportType" required>
+                            <option value="">-- Select Report Type --</option>
+                            <option value="mid-year">Mid-Year (Q1 + Q2)</option>
+                            <option value="final-year">Final-Year (Q3 + Q4)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="button" id="previewBtn" class="btn btn-primary">Preview Report</button>
+                    <button type="button" id="generatePdfBtn" class="btn btn-success">Generate PDF</button>
+                    <button type="button" id="refreshDataBtn" class="btn btn-secondary">Refresh Data</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading">
+            <p>Loading report data...</p>
+        </div>
+
+        <!-- Report Preview Section -->
+        <div id="reportPreview" class="report-preview">
+            <div class="report-header">
+                <div class="report-title">Quarterly Qualitative & Quantitative 360 Feedback Report</div>
+            </div>
+            
+            <!-- Employee Information -->
+            <div id="employeeInfo" class="employee-info">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <!-- Objectives Assessment Section -->
+            <div class="report-section">
+                <div class="section-title">Objectives Assessment</div>
+                <table class="data-table" id="objectivesTable">
+                    <thead>
+                        <tr>
+                            <th>KRA/Objectives</th>
+                            <th>KPI</th>
+                            <th>Target</th>
+                            <th>UOM</th>
+                            <th>Assigned Weight</th>
+                            <th>Weighted Score</th>
+                            <th>Average Rating (1-5)</th>
+                            <th>Qualitative Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Hard Skills Assessment Section -->
+            <div class="report-section">
+                <div class="section-title">Hard Skills Assessment</div>
+                <table class="data-table" id="hardSkillsTable">
+                    <thead>
+                        <tr>
+                            <th>Hard Skill</th>
+                            <th>Average Rating (1-5)</th>
+                            <th>Qualitative Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Soft Skills Assessment Section -->
+            <div class="report-section">
+                <div class="section-title">Soft Skills Assessment</div>
+                <table class="data-table" id="softSkillsTable">
+                    <thead>
+                        <tr>
+                            <th>Soft Skill</th>
+                            <th>Average Rating (1-5)</th>
+                            <th>Qualitative Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Summary Section -->
+            <div class="report-section">
+                <div class="section-title">Performance Summary</div>
+                <div id="performanceSummary" class="employee-info">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        // Global variables
+        let currentReportData = null;
+        let departmentEmployees = [];
+        
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Initialize feedback reports if switching to that tab
+            if (tabName === 'feedback-reports' && !departmentEmployees.length) {
+                initializeFeedbackReports();
+            }
+        }
+        
+        // Initialize feedback reports functionality
+        function initializeFeedbackReports() {
+            console.log('🔄 Initializing 360 Feedback Reports...');
+            
+            // Load employees when feedback reports tab is accessed
+            loadDepartmentEmployees();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Initialize form state
+            updateQuartersForYear();
+        }
+        
+        // Initialize page when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔄 Page loaded - Employee Records and Feedback Reports');
+        });
+        
+        // Placeholder for JavaScript functions - will be implemented in Phase 3C
+        function loadDepartmentEmployees() {
+            console.log('Loading department employees...');
+        }
+        
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
+        }
+        
+        function updateQuartersForYear() {
+            console.log('Updating quarters for selected year...');
+        }
+
+        // ============================
+        // 360 FEEDBACK REPORTS - JAVASCRIPT FUNCTIONS
+        // ============================
+
+        // Load department employees for feedback reports
+        async function loadDepartmentEmployees() {
+            console.log('🔄 Loading department employees for feedback reports...');
+            
+            try {
+                showLoading(true);
+                hideMessages();
+                
+                // Make sure the endpoint matches your routes
+                const response = await fetch('/linemanager/reports/feedback-employees');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('📊 API Response:', result);
+                
+                if (result.success) {
+                    departmentEmployees = result.employees;
+                    populateEmployeeDropdown(result.employees);
+                    showSuccessMessage(`Loaded ${result.employees.length} employees`);
+                    console.log('✅ Employees loaded successfully:', result.employees.length);
+                } else {
+                    showErrorMessage(result.message || 'Failed to load employees');
+                    console.error('❌ Failed to load employees:', result.message);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading employees:', error);
+                showErrorMessage('Error loading department employees: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Populate employee dropdown
+        function populateEmployeeDropdown(employees) {
+            const employeeSelect = document.getElementById('employeeSelect');
+            
+            // Clear existing options except the first one
+            employeeSelect.innerHTML = '<option value="">-- Select Employee --</option>';
+            
+            employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee.userId;
+                option.textContent = `${employee.fullName} (${employee.jobTitle})`;
+                option.dataset.feedbackAvailability = JSON.stringify(employee.feedbackAvailability || {});
+                employeeSelect.appendChild(option);
+            });
+            
+            console.log('✅ Employee dropdown populated with', employees.length, 'employees');
+        }
+
+        // Setup event listeners for feedback reports
+        function setupEventListeners() {
+            console.log('🔄 Setting up feedback reports event listeners...');
+            
+            // Employee selection change
+            document.getElementById('employeeSelect').addEventListener('change', function() {
+                updateQuartersForEmployee();
+                hideReportPreview();
+            });
+            
+            // Year selection change
+            document.getElementById('yearSelect').addEventListener('change', function() {
+                updateQuartersForYear();
+                hideReportPreview();
+            });
+            
+            // Quarter selection change
+            document.getElementById('quarterSelect').addEventListener('change', function() {
+                hideReportPreview();
+            });
+            
+            // Preview button
+            document.getElementById('previewBtn').addEventListener('click', function() {
+                generateReport('preview');
+            });
+            
+            // Generate PDF button
+            document.getElementById('generatePdfBtn').addEventListener('click', function() {
+                generateReport('pdf');
+            });
+            
+            // Refresh data button
+            document.getElementById('refreshDataBtn').addEventListener('click', function() {
+                loadDepartmentEmployees();
+            });
+            
+            console.log('✅ Event listeners set up successfully');
+        }
+
+        // Update quarters based on selected employee and year
+        function updateQuartersForEmployee() {
+            const employeeSelect = document.getElementById('employeeSelect');
+            const quarterSelect = document.getElementById('quarterSelect');
+            const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+            
+            // Clear quarter options
+            quarterSelect.innerHTML = '<option value="">-- Select Quarter --</option>';
+            
+            if (selectedOption && selectedOption.dataset.feedbackAvailability) {
+                try {
+                    const availability = JSON.parse(selectedOption.dataset.feedbackAvailability);
+                    
+                    ['Q1', 'Q2', 'Q3', 'Q4'].forEach(quarter => {
+                        if (availability[quarter]) {
+                            const option = document.createElement('option');
+                            option.value = quarter;
+                            option.textContent = quarter;
+                            quarterSelect.appendChild(option);
+                        }
+                    });
+                    
+                    console.log('✅ Quarters updated for employee:', selectedOption.textContent);
+                } catch (error) {
+                    console.error('❌ Error parsing feedback availability:', error);
+                }
+            }
+        }
+
+        // Update quarters based on selected year
+        function updateQuartersForYear() {
+            // This function can be enhanced to fetch quarters dynamically based on year
+            // For now, it works with the employee-based quarter filtering
+            console.log('📅 Year changed, quarters will be updated when employee is selected');
+        }
+
+        // Generate report (preview or PDF)
+        async function generateReport(format) {
+            console.log(`🔄 Generating ${format} report...`);
+            
+            const employeeId = document.getElementById('employeeSelect').value;
+            const quarter = document.getElementById('quarterSelect').value;
+            const year = document.getElementById('yearSelect').value;
+            
+            // Validate form
+            if (!employeeId || !quarter || !year) {
+                showErrorMessage('Please select employee, quarter, and year');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                hideMessages();
+                
+                const url = `/linemanager/reports/quarterly-feedback?employeeId=${employeeId}&quarter=${quarter}&year=${year}&format=${format}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentReportData = result.data;
+                    
+                    if (format === 'pdf') {
+                        generatePDFReport(result.data, result.filename);
+                        showSuccessMessage('PDF report generated successfully');
+                    } else {
+                        displayReportPreview(result.data);
+                        showSuccessMessage('Report preview loaded successfully');
+                    }
+                    
+                    console.log('✅ Report generated successfully:', format);
+                } else {
+                    showErrorMessage(result.message || 'Failed to generate report');
+                    console.error('❌ Failed to generate report:', result.message);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error generating report:', error);
+                showErrorMessage('Error generating report: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Display report preview
+        function displayReportPreview(reportData) {
+            console.log('🔄 Displaying report preview...');
+            
+            // Populate employee information
+            populateEmployeeInfo(reportData);
+            
+            // Populate objectives table
+            populateObjectivesTable(reportData.objectives);
+            
+            // Populate hard skills table
+            populateSkillsTable('hardSkillsTable', reportData.hardSkills);
+            
+            // Populate soft skills table
+            populateSkillsTable('softSkillsTable', reportData.softSkills);
+            
+            // Populate summary
+            populatePerformanceSummary(reportData.summary);
+            
+            // Show the preview
+            document.getElementById('reportPreview').classList.add('show');
+            
+            // Scroll to preview
+            document.getElementById('reportPreview').scrollIntoView({ behavior: 'smooth' });
+            
+            console.log('✅ Report preview displayed successfully');
+        }
+
+        // Populate employee information section
+        function populateEmployeeInfo(reportData) {
+            const employeeInfoDiv = document.getElementById('employeeInfo');
+            if (!employeeInfoDiv) {
+                console.error('Employee info div not found');
+                return;
+            }
+            
+            const startDate = new Date(reportData.reportingPeriod.startDate).toLocaleDateString();
+            const endDate = new Date(reportData.reportingPeriod.endDate).toLocaleDateString();
+            
+            employeeInfoDiv.innerHTML = `
+                <div class="info-item">
+                    <div class="info-label">Employee Name</div>
+                    <div class="info-value">${reportData.employee.fullName}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Position</div>
+                    <div class="info-value">${reportData.employee.jobTitle}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Department</div>
+                    <div class="info-value">${reportData.employee.department}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Line Manager</div>
+                    <div class="info-value">${reportData.lineManager.fullName}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Reporting Period</div>
+                    <div class="info-value">${reportData.reportingPeriod.quarter} ${reportData.reportingPeriod.year} (${startDate} - ${endDate})</div>
+                </div>
+            `;
+        }
+
+        // Populate objectives table
+        function populateObjectivesTable(objectives) {
+            const tbody = document.querySelector('#objectivesTable tbody');
+            if (!tbody) {
+                console.error('Objectives table tbody not found');
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            if (!objectives || objectives.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No objectives data available</td></tr>';
+                return;
+            }
+            
+            objectives.forEach(objective => {
+                const row = document.createElement('tr');
+                const rating = parseFloat(objective.averageRating);
+                const ratingClass = getRatingClass(rating);
+                
+                row.innerHTML = `
+                    <td>${objective.objective}</td>
+                    <td>${objective.kpi}</td>
+                    <td>${objective.target}</td>
+                    <td>${objective.uom}</td>
+                    <td style="text-align: center;">${objective.assignedWeight}%</td>
+                    <td style="text-align: center;">${objective.weightedScore}</td>
+                    <td class="rating-cell ${ratingClass}">${objective.averageRating}</td>
+                    <td>${objective.qualitativeFeedback}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Populate skills table (hard or soft skills)
+        function populateSkillsTable(tableId, skills) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            tbody.innerHTML = '';
+            
+            if (!skills || skills.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No skills data available</td></tr>';
+                return;
+            }
+            
+            skills.forEach(skill => {
+                const row = document.createElement('tr');
+                const rating = parseFloat(skill.averageRating);
+                const ratingClass = getRatingClass(rating);
+                
+                row.innerHTML = `
+                    <td>${skill.skillName}</td>
+                    <td class="rating-cell ${ratingClass}">${skill.averageRating}</td>
+                    <td>${skill.qualitativeFeedback}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Populate performance summary
+        function populatePerformanceSummary(summary) {
+            const summaryDiv = document.getElementById('performanceSummary');
+            
+            summaryDiv.innerHTML = `
+                <div class="info-item">
+                    <div class="info-label">Total Objectives</div>
+                    <div class="info-value">${summary.objectivesCount}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Total Hard Skills</div>
+                    <div class="info-value">${summary.hardSkillsCount}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Total Soft Skills</div>
+                    <div class="info-value">${summary.softSkillsCount}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Average Objective Rating</div>
+                    <div class="info-value ${getRatingClass(parseFloat(summary.averageObjectiveRating))}">${summary.averageObjectiveRating}/5.0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Average Hard Skills Rating</div>
+                    <div class="info-value ${getRatingClass(parseFloat(summary.averageHardSkillRating))}">${summary.averageHardSkillRating}/5.0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Average Soft Skills Rating</div>
+                    <div class="info-value ${getRatingClass(parseFloat(summary.averageSoftSkillRating))}">${summary.averageSoftSkillRating}/5.0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Total Weighted Score</div>
+                    <div class="info-value">${summary.totalWeightedScore}/${summary.totalWeight}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Overall Performance Score</div>
+                    <div class="info-value ${getRatingClass(parseFloat(summary.overallPerformanceScore))}">${summary.overallPerformanceScore}/5.0</div>
+                </div>
+            `;
+        }
+
+        // Generate PDF report
+        function generatePDFReport(reportData, filename) {
+            console.log('🔄 Generating PDF report...');
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // PDF Title
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('Quarterly Qualitative & Quantitative 360 Feedback Report', 20, 20);
+                
+                // Employee Information
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text('Employee Information', 20, 35);
+                
+                doc.setFont(undefined, 'normal');
+                const startDate = new Date(reportData.reportingPeriod.startDate).toLocaleDateString();
+                const endDate = new Date(reportData.reportingPeriod.endDate).toLocaleDateString();
+                
+                doc.text(`Employee Name: ${reportData.employee.fullName}`, 20, 45);
+                doc.text(`Position: ${reportData.employee.jobTitle}`, 20, 52);
+                doc.text(`Department: ${reportData.employee.department}`, 20, 59);
+                doc.text(`Line Manager: ${reportData.lineManager.fullName}`, 20, 66);
+                doc.text(`Reporting Period: ${reportData.reportingPeriod.quarter} ${reportData.reportingPeriod.year} (${startDate} - ${endDate})`, 20, 73);
+                
+                let currentY = 85;
+                
+                // Objectives Assessment
+                if (reportData.objectives && reportData.objectives.length > 0) {
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Objectives Assessment', 20, currentY);
+                    currentY += 10;
+                    
+                    const objectivesData = reportData.objectives.map(obj => [
+                        String(obj.objective || '').substring(0, 30) + (String(obj.objective || '').length > 30 ? '...' : ''),
+                        String(obj.kpi || '').substring(0, 15) + (String(obj.kpi || '').length > 15 ? '...' : ''),
+                        String(obj.target || '').substring(0, 10) + (String(obj.target || '').length > 10 ? '...' : ''),
+                        String(obj.uom || ''),
+                        String(obj.assignedWeight || 0) + '%',
+                        String(obj.weightedScore || 0),
+                        String(obj.averageRating || 0),
+                        String(obj.qualitativeFeedback || '').substring(0, 40) + (String(obj.qualitativeFeedback || '').length > 40 ? '...' : '')
+                    ]);
+                    
+                    doc.autoTable({
+                        head: [['KRA/Objectives', 'KPI', 'Target', 'UOM', 'Weight', 'W.Score', 'Rating', 'Feedback']],
+                        body: objectivesData,
+                        startY: currentY,
+                        styles: { fontSize: 8 },
+                        headStyles: { fillColor: [224, 228, 232] }
+                    });
+                    
+                    currentY = doc.lastAutoTable.finalY + 15;
+                }
+                
+                // Hard Skills Assessment
+                if (reportData.hardSkills && reportData.hardSkills.length > 0) {
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Hard Skills Assessment', 20, currentY);
+                    currentY += 10;
+                    
+                const hardSkillsData = reportData.hardSkills.map(skill => [
+                    String(skill.skillName || ''),
+                    String(skill.averageRating || 0),
+                    String(skill.qualitativeFeedback || '').substring(0, 60) + (String(skill.qualitativeFeedback || '').length > 60 ? '...' : '')
+                ]);
+                    
+                    doc.autoTable({
+                        head: [['Hard Skill', 'Average Rating (1-5)', 'Qualitative Feedback']],
+                        body: hardSkillsData,
+                        startY: currentY,
+                        styles: { fontSize: 9 },
+                        headStyles: { fillColor: [224, 228, 232] }
+                    });
+                    
+                    currentY = doc.lastAutoTable.finalY + 15;
+                }
+                
+                // Soft Skills Assessment
+                if (reportData.softSkills && reportData.softSkills.length > 0) {
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Soft Skills Assessment', 20, currentY);
+                    currentY += 10;
+                    
+                const softSkillsData = reportData.softSkills.map(skill => [
+                    String(skill.skillName || ''),
+                    String(skill.averageRating || 0),
+                    String(skill.qualitativeFeedback || '').substring(0, 60) + (String(skill.qualitativeFeedback || '').length > 60 ? '...' : '')
+                ]);
+                                    
+                    doc.autoTable({
+                        head: [['Soft Skill', 'Average Rating (1-5)', 'Qualitative Feedback']],
+                        body: softSkillsData,
+                        startY: currentY,
+                        styles: { fontSize: 9 },
+                        headStyles: { fillColor: [224, 228, 232] }
+                    });
+                    
+                    currentY = doc.lastAutoTable.finalY + 15;
+                }
+                
+                // Performance Summary
+                if (currentY > 250) {
+                    doc.addPage();
+                    currentY = 20;
+                }
+                
+                doc.setFont(undefined, 'bold');
+                doc.text('Performance Summary', 20, currentY);
+                currentY += 10;
+                
+                doc.setFont(undefined, 'normal');
+                doc.text(`Overall Performance Score: ${reportData.summary.overallPerformanceScore}/5.0`, 20, currentY);
+                currentY += 7;
+                doc.text(`Total Weighted Score: ${reportData.summary.totalWeightedScore}/${reportData.summary.totalWeight}`, 20, currentY);
+                currentY += 7;
+                doc.text(`Average Objective Rating: ${reportData.summary.averageObjectiveRating}/5.0`, 20, currentY);
+                currentY += 7;
+                doc.text(`Average Hard Skills Rating: ${reportData.summary.averageHardSkillRating}/5.0`, 20, currentY);
+                currentY += 7;
+                doc.text(`Average Soft Skills Rating: ${reportData.summary.averageSoftSkillRating}/5.0`, 20, currentY);
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.text(`Generated on: ${new Date().toLocaleDateString()} | Page ${i} of ${pageCount}`, 20, 285);
+                }
+                
+                // Save the PDF
+                doc.save(filename || 'feedback_report.pdf');
+                
+                console.log('✅ PDF generated successfully:', filename);
+                
+            } catch (error) {
+                console.error('❌ Error generating PDF:', error);
+                showErrorMessage('Error generating PDF: ' + error.message);
+            }
+        }
+
+        // Utility functions
+        function getRatingClass(rating) {
+            if (rating >= 4.5) return 'rating-excellent';
+            if (rating >= 3.5) return 'rating-good';
+            if (rating >= 2.5) return 'rating-average';
+            return 'rating-poor';
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loadingIndicator');
+            if (show) {
+                loading.classList.add('show');
+            } else {
+                loading.classList.remove('show');
+            }
+        }
+
+        function showErrorMessage(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        function showSuccessMessage(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.classList.add('show');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                successDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        function hideReportPreview() {
+            document.getElementById('reportPreview').classList.remove('show');
+        }
+    </script>
+
+    <!-- Original Sidebar Toggle Scripts -->
     <script>
         // Toggle active class for sidebar links
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
@@ -115,6 +1241,5 @@
             });
         });
     </script>
-
 </body>
 </html>

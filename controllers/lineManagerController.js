@@ -5291,7 +5291,22 @@ console.log('Final applicants list:', applicants);
                 console.log("Employee data fetched successfully:", employeeList);
     
                 const errors = req.flash('errors') || {};  
-                res.render('staffpages/linemanager_pages/managerrecordsperftracker', { errors, employees: employeeList });
+                
+                const departmentName = employeeData[0]?.departments?.deptName || 'Department';
+                const stats = null;
+                const availableYears = [];
+                const availableQuarters = [];
+                const currentYear = new Date().getFullYear();
+
+                res.render('staffpages/linemanager_pages/managerrecordsperftracker', { 
+                    errors, 
+                    employees: employeeList,
+                    departmentName: departmentName,
+                    stats: stats,
+                    availableYears: availableYears,
+                    availableQuarters: availableQuarters,
+                    currentYear: currentYear
+                });
     
             } catch (error) {
                 console.error('Error fetching Employee Records and Performance History data:', error);
@@ -8839,139 +8854,80 @@ checkFeedbackStatus: async function(req, res) {
     }
 },
 
-getDepartmentFeedbackStats: async function(req, res) {
-    const currentUserId = req.session?.user?.userId;
-    const quarter = req.query.quarter || 'Q1';
-    
-    if (!currentUserId) {
-        return res.status(400).json({
-            success: false,
-            message: 'Authentication required'
-        });
-    }
-    
+getDepartmentFeedbackStats: async function(departmentId) {
     try {
-        // Get current user's department
-        const { data: userData, error: userError } = await supabase
-            .from('staffaccounts')
-            .select('departmentId, departments(deptName)')
-            .eq('userId', currentUserId)
-            .single();
-            
-        if (userError || !userData) {
-            return res.status(404).json({
-                success: false,
-                message: 'User department information not found'
-            });
-        }
+        console.log('🔍 Getting department feedback stats for department:', departmentId);
         
-        const departmentId = userData.departmentId;
-        
-        // Get all staff in the department
-        const { data: departmentStaff, error: staffError } = await supabase
+        // Get all employees in department
+        const { data: employees, error: empError } = await supabase
             .from('staffaccounts')
-            .select(`
-                userId,
-                firstName,
-                lastName,
-                jobId,
-                jobpositions(jobTitle)
-            `)
+            .select('userId')
             .eq('departmentId', departmentId);
-            
-        if (staffError) {
-            return res.status(500).json({
-                success: false,
-                message: 'Error fetching department staff'
-            });
+
+        if (empError) {
+            console.error('Error fetching department employees:', empError);
+            return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [] };
         }
+
+        console.log('📊 Found employees in department:', employees?.length || 0);
         
-        // Get feedback table info
-        const feedbackTable = `feedbacks_${quarter}`;
-        const feedbackIdField = `feedbackq${quarter.substring(1)}_Id`;
+        const employeeIds = employees?.map(emp => emp.userId) || [];
+        const currentYear = new Date().getFullYear();
+        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
         
-        // Get all feedback records for this quarter in the department
-        const staffUserIds = departmentStaff.map(staff => staff.userId);
-        
-        const { data: feedbackRecords, error: feedbackError } = await supabase
-            .from(feedbackTable)
-            .select(`userId, ${feedbackIdField}`)
-            .in('userId', staffUserIds);
+        let totalEmployeesWithFeedback = new Set(); // Use Set to avoid duplicates
+        const completedQuarters = [];
+
+        // Check each quarter for feedback completion
+        for (const quarter of quarters) {
+            const feedbackTable = `feedbacks_${quarter}`;
             
-        if (feedbackError) {
-            console.error('Error fetching feedback records:', feedbackError);
-            return res.status(500).json({
-                success: false,
-                message: 'Error fetching feedback records'
-            });
-        }
-        
-        // Calculate statistics
-        let totalResponses = 0;
-        let totalRatings = 0;
-        let ratingCount = 0;
-        
-        for (const feedbackRecord of feedbackRecords || []) {
-            const feedbackId = feedbackRecord[feedbackIdField];
-            
-            // Count responses for this feedback
-            const { data: answers, error: answersError } = await supabase
-                .from('feedbacks_answers')
-                .select(`
-                    reviewerUserId,
-                    feedbacks_answers-objectives(objectiveQuantInput),
-                    feedbacks_answers-skills(skillsQuantInput)
-                `)
-                .eq(feedbackIdField, feedbackId);
+            try {
+                console.log(`🔍 Checking table: ${feedbackTable} for year: ${currentYear}`);
                 
-            if (!answersError && answers) {
-                const uniqueReviewers = new Set(answers.map(a => a.reviewerUserId));
-                totalResponses += uniqueReviewers.size;
-                
-                // Calculate ratings
-                answers.forEach(answer => {
-                    if (answer['feedbacks_answers-objectives']) {
-                        answer['feedbacks_answers-objectives'].forEach(obj => {
-                            if (obj.objectiveQuantInput) {
-                                totalRatings += obj.objectiveQuantInput;
-                                ratingCount++;
-                            }
-                        });
-                    }
+                const { data: quarterFeedback, error: quarterError } = await supabase
+                    .from(feedbackTable)
+                    .select('userId')
+                    .in('userId', employeeIds)
+                    .eq('quarter', quarter)
+                    .eq('year', currentYear);
+
+                if (quarterError) {
+                    console.log(`⚠️ Error or table doesn't exist: ${feedbackTable}`, quarterError);
+                    continue;
+                }
+
+                if (quarterFeedback && quarterFeedback.length > 0) {
+                    console.log(`✅ Found ${quarterFeedback.length} feedback records in ${quarter}`);
                     
-                    if (answer['feedbacks_answers-skills']) {
-                        answer['feedbacks_answers-skills'].forEach(skill => {
-                            if (skill.skillsQuantInput) {
-                                totalRatings += skill.skillsQuantInput;
-                                ratingCount++;
-                            }
-                        });
-                    }
-                });
+                    completedQuarters.push({
+                        quarter: quarter,
+                        employeeCount: quarterFeedback.length
+                    });
+                    
+                    // Add unique employee IDs to our set
+                    quarterFeedback.forEach(fb => totalEmployeesWithFeedback.add(fb.userId));
+                } else {
+                    console.log(`📝 No feedback found for ${quarter} ${currentYear}`);
+                }
+            } catch (tableError) {
+                console.log(`❌ Table ${feedbackTable} might not exist:`, tableError.message);
             }
         }
+
+        const stats = {
+            totalEmployees: employees?.length || 0,
+            employeesWithFeedback: totalEmployeesWithFeedback.size,
+            completedQuarters: completedQuarters,
+            currentYear: currentYear
+        };
         
-        const averageRating = ratingCount > 0 ? (totalRatings / ratingCount) : 0;
-        const completionRate = departmentStaff.length > 0 ? 
-            Math.round((totalResponses / departmentStaff.length) * 100) : 0;
-        
-        return res.json({
-            success: true,
-            stats: {
-                totalResponses,
-                averageRating: averageRating.toFixed(1),
-                completionRate: `${completionRate}%`,
-                departmentName: userData.departments?.deptName,
-                totalStaff: departmentStaff.length
-            }
-        });
-        
+        console.log('📈 Final stats:', stats);
+        return stats;
+
     } catch (error) {
-        console.error('Error in getDepartmentFeedbackStats:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error while calculating department statistics'
-        });
+        console.error('❌ Error getting department feedback stats:', error);
+        return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [] };
     }
 },
 
@@ -12738,6 +12694,1233 @@ getDepartmentLeaveRequestsReport: async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to generate department leave report: ' + error.message
+        });
+    }
+},
+
+// ============================
+// 360 FEEDBACK REPORTS MODULE - BACKEND CONTROLLER FUNCTIONS (FIXED)
+// ============================
+
+// Main dashboard for 360 feedback reports
+getQuarterlyFeedbackReportsDashboard: async function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'Line Manager') {
+        try {
+            console.log('🔄 [Line Manager] Loading quarterly feedback reports dashboard...');
+            console.log('👤 User session:', {
+                userId: req.session.user.userId,
+                userRole: req.session.user.userRole
+            });
+            
+            const lineManagerId = req.session.user.userId;
+            console.log('🔍 Line Manager ID:', lineManagerId);
+            
+            // Get the line manager's department ID
+            const { data: lineManagerData, error: lineManagerError } = await supabase
+                .from('staffaccounts')
+                .select(`
+                    departmentId,
+                    departments(deptName)
+                `)
+                .eq('userId', lineManagerId)
+                .single();
+
+            console.log('🏢 Line Manager Query Result:', lineManagerData);
+            console.log('❌ Line Manager Query Error:', lineManagerError);
+
+            if (lineManagerError) {
+                console.error('Error fetching line manager department:', lineManagerError);
+                req.flash('errors', { dbError: 'Error fetching line manager information.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+
+            if (!lineManagerData) {
+                console.error('No line manager data found');
+                req.flash('errors', { authError: 'Line manager account not found.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+
+            const lineManagerDepartmentId = lineManagerData?.departmentId;
+            const departmentName = lineManagerData?.departments?.deptName;
+            
+            console.log('🏢 Department ID:', lineManagerDepartmentId);
+            console.log('🏢 Department Name:', departmentName);
+
+            if (!lineManagerDepartmentId) {
+                req.flash('errors', { authError: 'Department not assigned to your account. Please contact HR.' });
+                return res.redirect('/linemanager/dashboard');
+            }
+
+            // Add debugging verification
+            await lineManagerController.verifyDatabaseData(lineManagerDepartmentId);
+
+            // Get department statistics
+            const stats = await lineManagerController.getDepartmentFeedbackStats(lineManagerDepartmentId);
+            console.log('📈 Stats result:', stats);
+            
+            // Get available years with feedback data
+            const availableYears = await lineManagerController.getAvailableReportYears(lineManagerDepartmentId);
+            console.log('📅 Available years:', availableYears);
+            
+            // Get available quarters for current year
+            const currentYear = new Date().getFullYear();
+            const availableQuarters = await lineManagerController.getAvailableQuarters(lineManagerDepartmentId, currentYear);
+            console.log('📋 Available quarters:', availableQuarters);
+
+            res.render('staffpages/linemanager_pages/records-performance-tracker', {
+                user: req.session.user,
+                departmentName: departmentName,
+                departmentId: lineManagerDepartmentId,
+                stats: stats,
+                availableYears: availableYears,
+                availableQuarters: availableQuarters,
+                currentYear: currentYear,
+                employees: [] // Add empty employees array for the original records tab
+            });
+
+        } catch (error) {
+            console.error('❌ Error loading feedback reports dashboard:', error);
+            req.flash('errors', { dbError: 'Error loading feedback reports dashboard: ' + error.message });
+            res.redirect('/linemanager/dashboard');
+        }
+    } else {
+        req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+        res.redirect('/staff/login');
+    }
+},
+
+// Get department employees for reports dropdown
+getDepartmentEmployeesForFeedbackReports: async function(req, res) {
+    try {
+        console.log('🔄 [Line Manager] Fetching department employees for feedback reports...');
+        
+        const lineManagerId = req.session.user?.userId;
+        if (!lineManagerId) {
+            console.error('❌ Line Manager not authenticated');
+            return res.status(401).json({
+                success: false,
+                message: 'Line Manager not authenticated'
+            });
+        }
+
+        console.log('👤 Line Manager ID:', lineManagerId);
+
+        // Get the line manager's department
+        const { data: lineManagerData, error: lineManagerError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', lineManagerId)
+            .single();
+
+        console.log('🏢 Line Manager Department Query:', lineManagerData);
+        if (lineManagerError) console.log('❌ Line Manager Department Error:', lineManagerError);
+
+        if (lineManagerError || !lineManagerData) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to get line manager department information: ' + (lineManagerError?.message || 'No data')
+            });
+        }
+
+        const departmentId = lineManagerData.departmentId;
+        console.log('🏢 Department ID:', departmentId);
+
+        // Get all employees in the department (excluding the line manager)
+        const { data: employees, error: employeeError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                userId,
+                firstName,
+                lastName,
+                hireDate,
+                jobpositions!staffaccounts_jobId_fkey(jobTitle),
+                departments!staffaccounts_departmentId_fkey(deptName)
+            `)
+            .eq('departmentId', departmentId)
+            .neq('userId', lineManagerId)
+            .order('firstName', { ascending: true });
+
+        console.log('👥 Employee Query Result:', employees?.length || 0);
+        if (employeeError) console.log('❌ Employee Query Error:', employeeError);
+
+        if (employeeError) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch department employees: ' + employeeError.message
+            });
+        }
+
+        // Check which employees have feedback data for each quarter
+        const enrichedEmployees = [];
+        
+        for (const employee of employees || []) {
+            console.log(`🔍 Checking feedback availability for: ${employee.firstName} ${employee.lastName} (ID: ${employee.userId})`);
+            
+            // FIXED: Call the function directly instead of using 'this'
+            const feedbackAvailability = await lineManagerController.checkEmployeeFeedbackAvailability(employee.userId);
+            
+            enrichedEmployees.push({
+                userId: employee.userId,
+                firstName: employee.firstName,
+                lastName: employee.lastName,
+                fullName: `${employee.firstName} ${employee.lastName}`,
+                jobTitle: employee.jobpositions?.jobTitle || 'Unknown',
+                department: employee.departments?.deptName || 'Unknown',
+                hireDate: employee.hireDate,
+                feedbackAvailability: feedbackAvailability
+            });
+        }
+
+        console.log('✅ Enriched employees:', enrichedEmployees.length);
+
+        return res.json({
+            success: true,
+            employees: enrichedEmployees,
+            departmentId: departmentId
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error fetching department employees:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch department employees: ' + error.message
+        });
+    }
+},
+
+// Generate quarterly feedback report (view or PDF)
+generateQuarterlyFeedbackReport: async function(req, res) {
+    try {
+        console.log('🔄 [Line Manager] Generating quarterly feedback report...');
+        
+        const { employeeId, quarter, year, format } = req.query;
+        const lineManagerId = req.session.user?.userId;
+
+        // Validate required parameters
+        if (!employeeId || !quarter || !year) {
+            return res.status(400).json({
+                success: false,
+                message: 'Employee ID, quarter, and year are required'
+            });
+        }
+
+        // Verify employee is in line manager's department
+        const isAuthorized = await lineManagerController.verifyEmployeeInDepartment(lineManagerId, employeeId);
+        if (!isAuthorized) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only generate reports for employees in your department'
+            });
+        }
+
+        // Get employee information
+        const employeeInfo = await lineManagerController.getEmployeeBasicInfo(employeeId);
+        if (!employeeInfo.success) {
+            return res.status(404).json({
+                success: false,
+                message: 'Employee not found'
+            });
+        }
+
+        // Get line manager information
+        const lineManagerInfo = await lineManagerController.getEmployeeBasicInfo(lineManagerId);
+
+        // Get feedback data for the specified quarter
+        const feedbackData = await lineManagerController.getQuarterlyFeedbackData(employeeId, quarter, year);
+        if (!feedbackData.success) {
+            return res.status(404).json({
+                success: false,
+                message: 'No feedback data found for the specified period'
+            });
+        }
+
+        // Prepare the complete report data
+        const reportData = {
+            employee: employeeInfo.data,
+            lineManager: lineManagerInfo.data,
+            reportingPeriod: {
+                quarter: quarter,
+                year: parseInt(year),
+                startDate: feedbackData.data.startDate,
+                endDate: feedbackData.data.endDate
+            },
+            objectives: feedbackData.data.objectives,
+            hardSkills: feedbackData.data.hardSkills,
+            softSkills: feedbackData.data.softSkills,
+            summary: feedbackData.data.summary,
+            generatedDate: new Date().toISOString(),
+            generatedBy: `${lineManagerInfo.data.firstName} ${lineManagerInfo.data.lastName}`
+        };
+
+        if (format === 'pdf') {
+            // Return data for PDF generation on frontend
+            return res.json({
+                success: true,
+                data: reportData,
+                generatePDF: true,
+                filename: `360_Feedback_Report_${employeeInfo.data.firstName}_${employeeInfo.data.lastName}_${quarter}_${year}.pdf`
+            });
+        } else {
+            // Return JSON data for view
+            return res.json({
+                success: true,
+                data: reportData
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error generating feedback report:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to generate feedback report: ' + error.message
+        });
+    }
+},
+
+// Generate mid-year feedback report (Q1 + Q2)
+generateMidYearFeedbackReport: async function(req, res) {
+    try {
+        console.log('🔄 [Line Manager] Generating mid-year feedback report...');
+        
+        const { employeeId, year, format } = req.query;
+        const lineManagerId = req.session.user?.userId;
+
+        // Validate required parameters
+        if (!employeeId || !year) {
+            return res.status(400).json({
+                success: false,
+                message: 'Employee ID and year are required'
+            });
+        }
+
+        // Verify employee is in line manager's department
+        const isAuthorized = await lineManagerController.verifyEmployeeInDepartment(lineManagerId, employeeId);
+        if (!isAuthorized) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only generate reports for employees in your department'
+            });
+        }
+
+        // Get combined Q1 + Q2 data
+        const midYearData = await lineManagerController.getCombinedQuarterData(employeeId, ['Q1', 'Q2'], year);
+        
+        if (!midYearData.success) {
+            return res.status(404).json({
+                success: false,
+                message: 'Insufficient feedback data for mid-year report'
+            });
+        }
+
+        // Get employee and line manager info
+        const employeeInfo = await lineManagerController.getEmployeeBasicInfo(employeeId);
+        const lineManagerInfo = await lineManagerController.getEmployeeBasicInfo(lineManagerId);
+
+        const reportData = {
+            employee: employeeInfo.data,
+            lineManager: lineManagerInfo.data,
+            reportingPeriod: {
+                type: 'mid-year',
+                year: parseInt(year),
+                quarters: ['Q1', 'Q2'],
+                q1Period: midYearData.data.q1Period,
+                q2Period: midYearData.data.q2Period
+            },
+            objectives: midYearData.data.objectives,
+            hardSkills: midYearData.data.hardSkills,
+            softSkills: midYearData.data.softSkills,
+            summary: midYearData.data.summary,
+            generatedDate: new Date().toISOString(),
+            generatedBy: `${lineManagerInfo.data.firstName} ${lineManagerInfo.data.lastName}`
+        };
+
+        if (format === 'pdf') {
+            return res.json({
+                success: true,
+                data: reportData,
+                generatePDF: true,
+                filename: `Mid_Year_360_Report_${employeeInfo.data.firstName}_${employeeInfo.data.lastName}_${year}.pdf`
+            });
+        } else {
+            return res.json({
+                success: true,
+                data: reportData
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error generating mid-year report:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to generate mid-year report: ' + error.message
+        });
+    }
+},
+
+// Generate final-year feedback report (Q3 + Q4)
+generateFinalYearFeedbackReport: async function(req, res) {
+    try {
+        console.log('🔄 [Line Manager] Generating final-year feedback report...');
+        
+        const { employeeId, year, format } = req.query;
+        const lineManagerId = req.session.user?.userId;
+
+        if (!employeeId || !year) {
+            return res.status(400).json({
+                success: false,
+                message: 'Employee ID and year are required'
+            });
+        }
+
+        const isAuthorized = await lineManagerController.verifyEmployeeInDepartment(lineManagerId, employeeId);
+        if (!isAuthorized) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only generate reports for employees in your department'
+            });
+        }
+
+        // Get combined Q3 + Q4 data
+        const finalYearData = await lineManagerController.getCombinedQuarterData(employeeId, ['Q3', 'Q4'], year);
+        
+        if (!finalYearData.success) {
+            return res.status(404).json({
+                success: false,
+                message: 'Insufficient feedback data for final-year report'
+            });
+        }
+
+        const employeeInfo = await lineManagerController.getEmployeeBasicInfo(employeeId);
+        const lineManagerInfo = await lineManagerController.getEmployeeBasicInfo(lineManagerId);
+
+        const reportData = {
+            employee: employeeInfo.data,
+            lineManager: lineManagerInfo.data,
+            reportingPeriod: {
+                type: 'final-year',
+                year: parseInt(year),
+                quarters: ['Q3', 'Q4'],
+                q3Period: finalYearData.data.q3Period,
+                q4Period: finalYearData.data.q4Period
+            },
+            objectives: finalYearData.data.objectives,
+            hardSkills: finalYearData.data.hardSkills,
+            softSkills: finalYearData.data.softSkills,
+            summary: finalYearData.data.summary,
+            generatedDate: new Date().toISOString(),
+            generatedBy: `${lineManagerInfo.data.firstName} ${lineManagerInfo.data.lastName}`
+        };
+
+        if (format === 'pdf') {
+            return res.json({
+                success: true,
+                data: reportData,
+                generatePDF: true,
+                filename: `Final_Year_360_Report_${employeeInfo.data.firstName}_${employeeInfo.data.lastName}_${year}.pdf`
+            });
+        } else {
+            return res.json({
+                success: true,
+                data: reportData
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error generating final-year report:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to generate final-year report: ' + error.message
+        });
+    }
+},
+
+// Helper function: Get department feedback statistics
+getDepartmentFeedbackStats: async function(departmentId) {
+    try {
+        console.log('📊 Getting department feedback stats for department:', departmentId);
+        
+        // Get all employees in department
+        const { data: employees, error: empError } = await supabase
+            .from('staffaccounts')
+            .select('userId')
+            .eq('departmentId', departmentId);
+
+        if (empError) {
+            console.error('Error fetching department employees:', empError);
+            return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [] };
+        }
+
+        console.log('📊 Found employees in department:', employees?.length || 0);
+        
+        const employeeIds = employees?.map(emp => emp.userId) || [];
+        const currentYear = new Date().getFullYear();
+        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        
+        let totalEmployeesWithFeedback = new Set(); // Use Set to avoid duplicates
+        const completedQuarters = [];
+
+        // Check each quarter for feedback completion
+        for (const quarter of quarters) {
+            const feedbackTable = `feedbacks_${quarter}`;
+            
+            try {
+                console.log(`🔍 Checking table: ${feedbackTable} for year: ${currentYear}`);
+                
+                const { data: quarterFeedback, error: quarterError } = await supabase
+                    .from(feedbackTable)
+                    .select('userId')
+                    .in('userId', employeeIds)
+                    .eq('quarter', quarter)
+                    .eq('year', currentYear);
+
+                if (quarterError) {
+                    console.log(`⚠️ Error checking ${feedbackTable}:`, quarterError.message);
+                    continue;
+                }
+
+                if (quarterFeedback && quarterFeedback.length > 0) {
+                    console.log(`✅ Found ${quarterFeedback.length} feedback records in ${quarter}`);
+                    
+                    completedQuarters.push({
+                        quarter: quarter,
+                        employeeCount: quarterFeedback.length
+                    });
+                    
+                    // Add unique employee IDs to our set
+                    quarterFeedback.forEach(fb => totalEmployeesWithFeedback.add(fb.userId));
+                } else {
+                    console.log(`📝 No feedback found for ${quarter} ${currentYear}`);
+                }
+            } catch (tableError) {
+                console.log(`❌ Table ${feedbackTable} might not exist:`, tableError.message);
+            }
+        }
+
+        const stats = {
+            totalEmployees: employees?.length || 0,
+            employeesWithFeedback: totalEmployeesWithFeedback.size,
+            completedQuarters: completedQuarters,
+            currentYear: currentYear
+        };
+        
+        console.log('📈 Final stats:', stats);
+        return stats;
+
+    } catch (error) {
+        console.error('❌ Error getting department feedback stats:', error);
+        return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [] };
+    }
+},
+
+// Helper function: Get available report years
+getAvailableReportYears: async function(departmentId) {
+    try {
+        const { data: employees, error: empError } = await supabase
+            .from('staffaccounts')
+            .select('userId')
+            .eq('departmentId', departmentId);
+
+        if (empError) return [new Date().getFullYear()];
+
+        const employeeIds = employees?.map(emp => emp.userId) || [];
+        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        const yearsSet = new Set();
+
+        for (const quarter of quarters) {
+            try {
+                const { data: yearData, error: yearError } = await supabase
+                    .from(`feedbacks_${quarter}`)
+                    .select('year')
+                    .in('userId', employeeIds);
+
+                if (!yearError && yearData) {
+                    yearData.forEach(item => yearsSet.add(item.year));
+                }
+            } catch (tableError) {
+                // Table might not exist, continue
+            }
+        }
+
+        const years = Array.from(yearsSet).sort((a, b) => b - a);
+        return years.length > 0 ? years : [new Date().getFullYear()];
+
+    } catch (error) {
+        console.error('Error getting available years:', error);
+        return [new Date().getFullYear()];
+    }
+},
+
+// Helper function: Get available quarters for a year
+getAvailableQuarters: async function(departmentId, year) {
+    try {
+        const { data: employees, error: empError } = await supabase
+            .from('staffaccounts')
+            .select('userId')
+            .eq('departmentId', departmentId);
+
+        if (empError) return [];
+
+        const employeeIds = employees?.map(emp => emp.userId) || [];
+        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        const availableQuarters = [];
+
+        for (const quarter of quarters) {
+            try {
+                const { data: quarterData, error: quarterError } = await supabase
+                    .from(`feedbacks_${quarter}`)
+                    .select('quarter')
+                    .in('userId', employeeIds)
+                    .eq('year', year)
+                    .limit(1);
+
+                if (!quarterError && quarterData && quarterData.length > 0) {
+                    availableQuarters.push(quarter);
+                }
+            } catch (tableError) {
+                // Table might not exist
+            }
+        }
+
+        return availableQuarters;
+
+    } catch (error) {
+        console.error('Error getting available quarters:', error);
+        return [];
+    }
+},
+
+// Helper function: Check employee feedback availability
+checkEmployeeFeedbackAvailability: async function(userId) {
+    const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+    const currentYear = new Date().getFullYear();
+    const availability = {};
+
+    console.log(`🔍 Checking feedback availability for user ${userId} in year ${currentYear}`);
+
+    for (const quarter of quarters) {
+        try {
+            const feedbackTable = `feedbacks_${quarter}`;
+            console.log(`🔍 Checking table: ${feedbackTable}`);
+            
+            const { data: feedbackData, error: feedbackError } = await supabase
+                .from(feedbackTable)
+                .select('quarter')
+                .eq('userId', userId)
+                .eq('quarter', quarter)
+                .eq('year', currentYear)
+                .limit(1);
+
+            if (feedbackError) {
+                console.log(`⚠️ Error checking ${feedbackTable}:`, feedbackError.message);
+                availability[quarter] = false;
+            } else {
+                const hasData = feedbackData && feedbackData.length > 0;
+                availability[quarter] = hasData;
+                console.log(`📋 ${quarter}: ${hasData ? 'Available' : 'Not available'}`);
+            }
+        } catch (tableError) {
+            console.log(`❌ Table ${feedbackTable} error:`, tableError.message);
+            availability[quarter] = false;
+        }
+    }
+
+    console.log(`✅ Final availability for user ${userId}:`, availability);
+    return availability;
+},
+
+// Helper function: Verify employee is in line manager's department
+verifyEmployeeInDepartment: async function(lineManagerId, employeeId) {
+    try {
+        const { data: lineManagerData, error: lmError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', lineManagerId)
+            .single();
+
+        const { data: employeeData, error: empError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', employeeId)
+            .single();
+
+        if (lmError || empError || !lineManagerData || !employeeData) {
+            return false;
+        }
+
+        return lineManagerData.departmentId === employeeData.departmentId;
+
+    } catch (error) {
+        console.error('Error verifying employee in department:', error);
+        return false;
+    }
+},
+
+// Helper function: Check if table exists
+checkTableExists: async function(tableName) {
+    try {
+        const { data, error } = await supabase
+            .from(tableName)
+            .select('*')
+            .limit(1);
+        
+        if (error) {
+            console.log(`❌ Table ${tableName} error:`, error.message);
+            return false;
+        }
+        
+        console.log(`✅ Table ${tableName} exists`);
+        return true;
+    } catch (error) {
+        console.log(`❌ Table ${tableName} does not exist:`, error.message);
+        return false;
+    }
+},
+
+// Helper function: Verify database data
+verifyDatabaseData: async function(departmentId) {
+    console.log('🔍 DEBUGGING - Verifying database data for department:', departmentId);
+    
+    try {
+        // Check if department exists
+        const { data: dept, error: deptError } = await supabase
+            .from('departments')
+            .select('*')
+            .eq('departmentId', departmentId);
+        
+        console.log('🏢 Department data:', dept?.length || 0, dept);
+        if (deptError) console.log('🏢 Department error:', deptError);
+        
+        // Check employees in department
+        const { data: emps, error: empError } = await supabase
+            .from('staffaccounts')
+            .select('userId, firstName, lastName, departmentId')
+            .eq('departmentId', departmentId);
+        
+        console.log('👥 Employees in department:', emps?.length || 0);
+        if (empError) console.log('👥 Employee error:', empError);
+        
+        // Check each feedback table
+        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        for (const quarter of quarters) {
+            const tableName = `feedbacks_${quarter}`;
+            const exists = await lineManagerController.checkTableExists(tableName);
+            if (exists) {
+                const { data: feedbacks, error } = await supabase
+                    .from(tableName)
+                    .select('*')
+                    .limit(3);
+                console.log(`📋 Sample data from ${tableName}:`, feedbacks?.length || 0);
+                if (error) console.log(`📋 Error from ${tableName}:`, error);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error in verifyDatabaseData:', error);
+    }
+},
+
+// Helper function: Get employee basic information
+getEmployeeBasicInfo: async function(userId) {
+    try {
+        const { data: employee, error: empError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                userId,
+                firstName,
+                lastName,
+                hireDate,
+                jobpositions(jobTitle),
+                departments(deptName),
+                useraccounts(userEmail)
+            `)
+            .eq('userId', userId)
+            .single();
+
+        if (empError || !employee) {
+            return { success: false, message: 'Employee not found' };
+        }
+
+        return {
+            success: true,
+            data: {
+                userId: employee.userId,
+                firstName: employee.firstName,
+                lastName: employee.lastName,
+                fullName: `${employee.firstName} ${employee.lastName}`,
+                jobTitle: employee.jobpositions?.jobTitle || 'Unknown',
+                department: employee.departments?.deptName || 'Unknown',
+                email: employee.useraccounts?.userEmail || 'N/A',
+                hireDate: employee.hireDate
+            }
+        };
+
+    } catch (error) {
+        console.error('Error getting employee basic info:', error);
+        return { success: false, message: 'Error fetching employee information' };
+    }
+},
+
+// Helper function: Get quarterly feedback data for report
+getQuarterlyFeedbackData: async function(userId, quarter, year) {
+    try {
+        console.log(`🔄 Fetching feedback data for user ${userId}, ${quarter} ${year}`);
+
+        const feedbackTable = `feedbacks_${quarter}`;
+        const feedbackIdField = `feedbackq${quarter.substring(1)}_Id`;
+
+        // Get the feedback record
+        const { data: feedbackRecord, error: feedbackError } = await supabase
+            .from(feedbackTable)
+            .select(`
+                ${feedbackIdField},
+                setStartDate,
+                setEndDate,
+                userId,
+                jobId
+            `)
+            .eq('userId', userId)
+            .eq('quarter', quarter)
+            .eq('year', year)
+            .single();
+
+        if (feedbackError || !feedbackRecord) {
+            return { success: false, message: 'No feedback record found' };
+        }
+
+        const feedbackId = feedbackRecord[feedbackIdField];
+
+        // Get objectives data
+        const objectivesData = await lineManagerController.getObjectivesReportData(feedbackId, feedbackIdField);
+        
+        // Get skills data
+        const skillsData = await lineManagerController.getSkillsReportData(feedbackId, feedbackIdField, feedbackRecord.jobId);
+
+        // Calculate summary statistics
+        const summary = lineManagerController.calculateFeedbackSummary(objectivesData, skillsData);
+
+        return {
+            success: true,
+            data: {
+                startDate: feedbackRecord.setStartDate,
+                endDate: feedbackRecord.setEndDate,
+                objectives: objectivesData,
+                hardSkills: skillsData.hardSkills,
+                softSkills: skillsData.softSkills,
+                summary: summary
+            }
+        };
+
+    } catch (error) {
+        console.error('Error getting quarterly feedback data:', error);
+        return { success: false, message: 'Error fetching feedback data' };
+    }
+},
+
+// Helper function: Get combined quarter data for mid-year/final-year reports
+getCombinedQuarterData: async function(userId, quarters, year) {
+    try {
+        console.log(`🔄 Fetching combined data for user ${userId}, quarters ${quarters.join(', ')}, year ${year}`);
+
+        const quarterData = {};
+        let allObjectives = [];
+        let allHardSkills = [];
+        let allSoftSkills = [];
+
+        // Get data for each quarter
+        for (const quarter of quarters) {
+            const singleQuarterData = await lineManagerController.getQuarterlyFeedbackData(userId, quarter, year);
+            
+            if (singleQuarterData.success) {
+                quarterData[quarter.toLowerCase()] = {
+                    startDate: singleQuarterData.data.startDate,
+                    endDate: singleQuarterData.data.endDate,
+                    objectives: singleQuarterData.data.objectives,
+                    hardSkills: singleQuarterData.data.hardSkills,
+                    softSkills: singleQuarterData.data.softSkills
+                };
+            }
+        }
+
+        // Check if we have data for both quarters
+        if (Object.keys(quarterData).length < 2) {
+            return { success: false, message: 'Insufficient data for both quarters' };
+        }
+
+        // Combine objectives data
+        const objectivesMap = new Map();
+        
+        quarters.forEach(quarter => {
+            const qData = quarterData[quarter.toLowerCase()];
+            if (qData && qData.objectives) {
+                qData.objectives.forEach(obj => {
+                    const key = obj.objective;
+                    if (!objectivesMap.has(key)) {
+                        objectivesMap.set(key, {
+                            objective: obj.objective,
+                            kpi: obj.kpi,
+                            target: obj.target,
+                            uom: obj.uom,
+                            assignedWeight: obj.assignedWeight,
+                            quarterData: {}
+                        });
+                    }
+                    objectivesMap.get(key).quarterData[quarter] = {
+                        averageRating: parseFloat(obj.averageRating),
+                        weightedScore: parseFloat(obj.weightedScore)
+                    };
+                });
+            }
+        });
+
+        // Calculate combined averages for objectives
+        objectivesMap.forEach((obj, key) => {
+            const ratings = Object.values(obj.quarterData).map(q => q.averageRating).filter(r => r > 0);
+            const weightedScores = Object.values(obj.quarterData).map(q => q.weightedScore).filter(s => s > 0);
+            
+            obj.combinedAverageRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length) : 0;
+            obj.combinedWeightedScore = weightedScores.length > 0 ? (weightedScores.reduce((a, b) => a + b, 0) / weightedScores.length) : 0;
+        });
+
+        allObjectives = Array.from(objectivesMap.values());
+
+        // Combine skills data (similar process for hard and soft skills)
+        [allHardSkills, allSoftSkills] = lineManagerController.combineSkillsData(quarterData, quarters);
+
+        // Calculate combined summary
+        const combinedSummary = lineManagerController.calculateCombinedSummary(allObjectives, allHardSkills, allSoftSkills);
+
+        return {
+            success: true,
+            data: {
+                [`${quarters[0].toLowerCase()}Period`]: quarterData[quarters[0].toLowerCase()],
+                [`${quarters[1].toLowerCase()}Period`]: quarterData[quarters[1].toLowerCase()],
+                objectives: allObjectives,
+                hardSkills: allHardSkills,
+                softSkills: allSoftSkills,
+                summary: combinedSummary
+            }
+        };
+
+    } catch (error) {
+        console.error('Error getting combined quarter data:', error);
+        return { success: false, message: 'Error fetching combined quarter data' };
+    }
+},
+
+// Helper function: Combine skills data from multiple quarters
+combineSkillsData: function(quarterData, quarters) {
+    const hardSkillsMap = new Map();
+    const softSkillsMap = new Map();
+
+    quarters.forEach(quarter => {
+        const qData = quarterData[quarter.toLowerCase()];
+        if (qData) {
+            // Process hard skills
+            if (qData.hardSkills) {
+                qData.hardSkills.forEach(skill => {
+                    const key = skill.skillName;
+                    if (!hardSkillsMap.has(key)) {
+                        hardSkillsMap.set(key, {
+                            skillName: skill.skillName,
+                            quarterData: {}
+                        });
+                    }
+                    hardSkillsMap.get(key).quarterData[quarter] = {
+                        averageRating: parseFloat(skill.averageRating)
+                    };
+                });
+            }
+
+            // Process soft skills
+            if (qData.softSkills) {
+                qData.softSkills.forEach(skill => {
+                    const key = skill.skillName;
+                    if (!softSkillsMap.has(key)) {
+                        softSkillsMap.set(key, {
+                            skillName: skill.skillName,
+                            quarterData: {}
+                        });
+                    }
+                    softSkillsMap.get(key).quarterData[quarter] = {
+                        averageRating: parseFloat(skill.averageRating)
+                    };
+                });
+            }
+        }
+    });
+
+    // Calculate combined averages
+    hardSkillsMap.forEach((skill, key) => {
+        const ratings = Object.values(skill.quarterData).map(q => q.averageRating).filter(r => r > 0);
+        skill.combinedAverageRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length) : 0;
+    });
+
+    softSkillsMap.forEach((skill, key) => {
+        const ratings = Object.values(skill.quarterData).map(q => q.averageRating).filter(r => r > 0);
+        skill.combinedAverageRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length) : 0;
+    });
+
+    return [Array.from(hardSkillsMap.values()), Array.from(softSkillsMap.values())];
+},
+
+// Helper function: Calculate combined summary statistics
+calculateCombinedSummary: function(objectives, hardSkills, softSkills) {
+    const objectiveRatings = objectives.map(obj => obj.combinedAverageRating).filter(r => r > 0);
+    const hardSkillRatings = hardSkills.map(skill => skill.combinedAverageRating).filter(r => r > 0);
+    const softSkillRatings = softSkills.map(skill => skill.combinedAverageRating).filter(r => r > 0);
+
+    const totalWeightedScore = objectives.reduce((sum, obj) => sum + obj.combinedWeightedScore, 0);
+    const totalWeight = objectives.reduce((sum, obj) => sum + obj.assignedWeight, 0);
+
+    return {
+        objectivesCount: objectives.length,
+        hardSkillsCount: hardSkills.length,
+        softSkillsCount: softSkills.length,
+        averageObjectiveRating: objectiveRatings.length > 0 
+            ? (objectiveRatings.reduce((a, b) => a + b, 0) / objectiveRatings.length).toFixed(1)
+            : '0.0',
+        averageHardSkillRating: hardSkillRatings.length > 0 
+            ? (hardSkillRatings.reduce((a, b) => a + b, 0) / hardSkillRatings.length).toFixed(1)
+            : '0.0',
+        averageSoftSkillRating: softSkillRatings.length > 0 
+            ? (softSkillRatings.reduce((a, b) => a + b, 0) / softSkillRatings.length).toFixed(1)
+            : '0.0',
+        totalWeightedScore: totalWeightedScore.toFixed(2),
+        totalWeight: totalWeight,
+        overallPerformanceScore: totalWeight > 0 ? (totalWeightedScore / totalWeight).toFixed(1) : '0.0'
+    };
+},
+
+// Helper function: Get objectives report data
+getObjectivesReportData: async function(feedbackId, feedbackIdField) {
+    try {
+        // Get objective questions
+        const { data: objectiveQuestions, error: objQError } = await supabase
+            .from('feedbacks_questions-objectives')
+            .select(`
+                feedback_qObjectivesId,
+                objectiveId,
+                objectiveQualiQuestion,
+                ${feedbackIdField}
+            `)
+            .eq(feedbackIdField, feedbackId);
+
+        if (objQError || !objectiveQuestions) {
+            return [];
+        }
+
+        const objectivesReport = [];
+
+        for (const objQuestion of objectiveQuestions) {
+            // Get objective details
+            const { data: objectiveDetail, error: objDetailError } = await supabase
+                .from('objectivesettings_objectives')
+                .select('*')
+                .eq('objectiveId', objQuestion.objectiveId)
+                .single();
+
+            // Get all answers for this objective
+            const { data: answers, error: answersError } = await supabase
+                .from('feedbacks_answers-objectives')
+                .select('objectiveQuantInput, objectiveQualInput')
+                .eq('feedback_qObjectivesId', objQuestion.feedback_qObjectivesId);
+
+            if (!answersError && answers && answers.length > 0) {
+                // Calculate average rating
+                const validRatings = answers.filter(a => a.objectiveQuantInput).map(a => a.objectiveQuantInput);
+                const averageRating = validRatings.length > 0 
+                    ? (validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length) 
+                    : 0;
+
+                // Calculate weighted score
+                const weight = objectiveDetail?.objectiveAssignedWeight || 0;
+                const weightedScore = (averageRating * weight);
+
+                // Combine qualitative feedback
+                const qualitativeFeedback = answers
+                    .map(a => a.objectiveQualInput)
+                    .filter(feedback => feedback && feedback.trim())
+                    .join('; ');
+
+                objectivesReport.push({
+                    objective: objectiveDetail?.objectiveDescrpt || 'Unknown Objective',
+                    kpi: objectiveDetail?.objectiveKPI || 'N/A',
+                    target: objectiveDetail?.objectiveTarget || 'N/A',
+                    uom: objectiveDetail?.objectiveUOM || 'N/A',
+                    assignedWeight: weight,
+                    weightedScore: weightedScore.toFixed(2),
+                    averageRating: averageRating.toFixed(1),
+                    qualitativeFeedback: qualitativeFeedback || 'No feedback provided',
+                    responseCount: validRatings.length
+                });
+            }
+        }
+
+        return objectivesReport;
+
+    } catch (error) {
+        console.error('Error getting objectives report data:', error);
+        return [];
+    }
+},
+
+// Helper function: Get skills report data
+getSkillsReportData: async function(feedbackId, feedbackIdField, jobId) {
+    try {
+        // Get all job skills
+        const { data: jobSkills, error: skillsError } = await supabase
+            .from('jobreqskills')
+            .select('*')
+            .eq('jobId', jobId);
+
+        if (skillsError || !jobSkills) {
+            return { hardSkills: [], softSkills: [] };
+        }
+
+        // Get skill questions
+        const { data: skillQuestions, error: skillQError } = await supabase
+            .from('feedbacks_questions-skills')
+            .select(`
+                feedback_qSkillsId,
+                jobReqSkillId,
+                ${feedbackIdField}
+            `)
+            .eq(feedbackIdField, feedbackId);
+
+        if (skillQError || !skillQuestions) {
+            return { hardSkills: [], softSkills: [] };
+        }
+
+        const hardSkills = [];
+        const softSkills = [];
+
+        for (const skillQuestion of skillQuestions) {
+            // Find the skill details
+            const skill = jobSkills.find(s => s.jobReqSkillId === skillQuestion.jobReqSkillId);
+            if (!skill) continue;
+
+            // Get answers for this skill
+            const { data: answers, error: answersError } = await supabase
+                .from('feedbacks_answers-skills')
+                .select('skillsQuantInput, skillsQualInput')
+                .eq('feedback_qSkillsId', skillQuestion.feedback_qSkillsId);
+
+            if (!answersError && answers && answers.length > 0) {
+                // Calculate average rating
+                const validRatings = answers.filter(a => a.skillsQuantInput).map(a => a.skillsQuantInput);
+                const averageRating = validRatings.length > 0 
+                    ? (validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length) 
+                    : 0;
+
+                // Combine qualitative feedback
+                const qualitativeFeedback = answers
+                    .map(a => a.skillsQualInput)
+                    .filter(feedback => feedback && feedback.trim())
+                    .join('; ');
+
+                const skillData = {
+                    skillName: skill.jobReqSkillName,
+                    averageRating: averageRating.toFixed(1),
+                    qualitativeFeedback: qualitativeFeedback || 'No feedback provided',
+                    responseCount: validRatings.length
+                };
+
+                if (skill.jobReqSkillType === 'Hard') {
+                    hardSkills.push(skillData);
+                } else {
+                    softSkills.push(skillData);
+                }
+            }
+        }
+
+        return { hardSkills, softSkills };
+
+    } catch (error) {
+        console.error('Error getting skills report data:', error);
+        return { hardSkills: [], softSkills: [] };
+    }
+},
+
+// Helper function: Calculate feedback summary
+calculateFeedbackSummary: function(objectives, skills) {
+    const allObjectiveRatings = objectives.map(obj => parseFloat(obj.averageRating)).filter(rating => rating > 0);
+    const allHardSkillRatings = skills.hardSkills.map(skill => parseFloat(skill.averageRating)).filter(rating => rating > 0);
+    const allSoftSkillRatings = skills.softSkills.map(skill => parseFloat(skill.averageRating)).filter(rating => rating > 0);
+
+    const totalWeightedScore = objectives.reduce((sum, obj) => sum + parseFloat(obj.weightedScore), 0);
+    const totalWeight = objectives.reduce((sum, obj) => sum + obj.assignedWeight, 0);
+
+    return {
+        objectivesCount: objectives.length,
+        hardSkillsCount: skills.hardSkills.length,
+        softSkillsCount: skills.softSkills.length,
+        averageObjectiveRating: allObjectiveRatings.length > 0 
+            ? (allObjectiveRatings.reduce((sum, rating) => sum + rating, 0) / allObjectiveRatings.length).toFixed(1)
+            : '0.0',
+        averageHardSkillRating: allHardSkillRatings.length > 0 
+            ? (allHardSkillRatings.reduce((sum, rating) => sum + rating, 0) / allHardSkillRatings.length).toFixed(1)
+            : '0.0',
+        averageSoftSkillRating: allSoftSkillRatings.length > 0 
+            ? (allSoftSkillRatings.reduce((sum, rating) => sum + rating, 0) / allSoftSkillRatings.length).toFixed(1)
+            : '0.0',
+        totalWeightedScore: totalWeightedScore.toFixed(2),
+        totalWeight: totalWeight,
+        overallPerformanceScore: totalWeight > 0 ? (totalWeightedScore / totalWeight).toFixed(1) : '0.0'
+    };
+},
+
+// DEBUGGING ENDPOINT - Add this to test your database
+testDatabaseConnection: async function(req, res) {
+    try {
+        console.log('🔍 TESTING DATABASE CONNECTION...');
+        
+        // Test basic tables
+        const { data: departments } = await supabase.from('departments').select('*').limit(5);
+        const { data: staffaccounts } = await supabase.from('staffaccounts').select('*').limit(5);
+        const { data: useraccounts } = await supabase.from('useraccounts').select('*').limit(5);
+        
+        // Test feedback tables
+        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        const feedbackData = {};
+        
+        for (const quarter of quarters) {
+            try {
+                const { data } = await supabase.from(`feedbacks_${quarter}`).select('*').limit(5);
+                feedbackData[quarter] = data || [];
+            } catch (error) {
+                feedbackData[quarter] = `Error: ${error.message}`;
+            }
+        }
+        
+        // Test line manager's data specifically
+        const lineManagerId = req.session.user?.userId;
+        let lineManagerData = null;
+        if (lineManagerId) {
+            const { data: lmData } = await supabase
+                .from('staffaccounts')
+                .select(`
+                    *,
+                    departments(*),
+                    jobpositions(*)
+                `)
+                .eq('userId', lineManagerId)
+                .single();
+            lineManagerData = lmData;
+        }
+        
+        res.json({
+            success: true,
+            departments: departments?.length || 0,
+            staffaccounts: staffaccounts?.length || 0,
+            useraccounts: useraccounts?.length || 0,
+            feedbackData,
+            lineManagerData,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            error: error.message,
+            timestamp: new Date().toISOString()
         });
     }
 },

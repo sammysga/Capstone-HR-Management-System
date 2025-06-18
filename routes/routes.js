@@ -452,6 +452,16 @@ router.get('/linemanager/reports/daily-attendance', lineManagerController.getDep
 router.get('/linemanager/reports/employee-attendance', lineManagerController.getDepartmentEmployeeAttendanceReport);
 router.get('/linemanager/reports/leave-requests', lineManagerController.getDepartmentLeaveRequestsReport);
 
+// ============================
+// 360 FEEDBACK REPORTS MODULE - ROUTES
+// ============================
+
+router.get('/linemanager/reports/feedback-dashboard', lineManagerController.getQuarterlyFeedbackReportsDashboard);
+router.get('/linemanager/reports/feedback-employees', lineManagerController.getDepartmentEmployeesForFeedbackReports);
+router.get('/linemanager/reports/quarterly-feedback', lineManagerController.generateQuarterlyFeedbackReport);
+router.get('/linemanager/reports/mid-year-feedback', lineManagerController.generateMidYearFeedbackReport);
+router.get('/linemanager/reports/final-year-feedback', lineManagerController.generateFinalYearFeedbackReport);
+router.get('/debug/test-database', lineManagerController.testDatabaseConnection);
 
 module.exports = router; 
 
