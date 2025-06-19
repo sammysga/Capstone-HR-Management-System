@@ -224,6 +224,7 @@ router.post('/submit-interview-evaluation/:applicantId', lineManagerController.s
 router.get('/applicant/:applicantId', lineManagerController.getApplicantDetails);
 
 // Route to view the completed interview form
+router.get('/interview-form/:applicantId', lineManagerController.getInterviewForm);
 router.get('/view-interview-form/:applicantId', lineManagerController.getViewInterviewForm);
 
 // Routes for passing and rejecting applicants through web interface
@@ -334,6 +335,10 @@ router.post('/linemanager/api/submitFeedback', lineManagerController.submitFeedb
 router.get('/linemanager/midyear-idp/:userId', lineManagerController.getMidYearIDP);
 router.post('/linemanager/midyear-idp/:userId', lineManagerController.saveMidYearIDP);
 router.get('/linemanager/midyear-idp-trainings/:userId', lineManagerController.getMidYearIDPWithTrainings);
+
+router.get('/linemanager/training-categories/:userId', lineManagerController.getTrainingCategories);
+router.post('/linemanager/training-categories/:userId', lineManagerController.addTrainingCategory);
+
 // Route for getting Mid-Year feedback aggregates
 router.get('/linemanager/midyear-feedback-aggregates/:userId', 
     lineManagerController.getRecordsPerformanceTrackerByUserId,
@@ -392,9 +397,15 @@ router.get('/employee/training-progress', employeeController.getTrainingProgress
 router.get('/employee/training/:trainingRecordId/details', employeeController.getTrainingRecordDetails);
 
 // Training management
-router.get('/employee/trainings/dropdown', employeeController.getTrainingsByJobAndDept); // Use the newer function
-router.get('/employee/training/:trainingId/details', employeeController.getTrainingSkillsAndObjectives);
-router.post('/employee/training-requests', employeeController.createTrainingRequest);
+// router.get('/employee/trainings/dropdown', employeeController.getTrainingsByJobAndDept); // Use the newer function
+// router.get('/employee/training/:trainingId/details', employeeController.getTrainingSkillsAndObjectives);
+// router.post('/employee/training-requests', employeeController.createTrainingRequest);
+
+router.get('/employee/idp-periods', employeeController.getIdpPeriods);
+router.get('/employee/idp/:idpId/categories', employeeController.getIdpCategories);
+router.get('/employee/objectives', employeeController.getUserObjectives);
+router.get('/employee/skills', employeeController.getUserSkills);
+router.post('/employee/training-requests/new', employeeController.createNewTrainingRequest);
 
 
 // Activity updates

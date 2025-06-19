@@ -416,6 +416,7 @@
 
      
 /* Form Sections */
+/* Additional styles for the new modal */
 .form-section {
     padding: 25px 30px;
     border-bottom: 1px solid #f1f5f9;
@@ -432,7 +433,7 @@
     margin-bottom: 20px;
 }
 
-.section-header h3 {
+.section-header h3, .section-header h4 {
     font-size: 1.2rem;
     font-weight: 600;
     color: #1e293b;
@@ -442,20 +443,395 @@
     gap: 10px;
 }
 
-.section-header h3 i {
+.section-header h3 i, .section-header h4 i {
     color: #07ACB9;
 }
 
-.duration-info {
-    background: #f0f9ff;
-    color: #0369a1;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
+.form-group {
+    margin-bottom: 20px;
 }
 
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
+.form-label i {
+    color: #07ACB9;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #07ACB9;
+    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+}
+
+textarea.form-input {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.dropdown-container {
+    position: relative;
+}
+
+.dropdown-input {
+    width: 100%;
+    padding: 12px 40px 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: white;
+}
+
+.dropdown-input:focus {
+    outline: none;
+    border-color: #07ACB9;
+    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
+}
+
+.dropdown-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-container.open .dropdown-icon {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: none;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.dropdown-container.open .dropdown-list {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 15px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background: #f8fafc;
+}
+
+.dropdown-item-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-item-meta {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.loading, .no-results {
+    padding: 20px;
+    text-align: center;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.training-categories-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.categories-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 50px;
+    border: 2px dashed #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    background: #f8fafc;
+}
+
+.category-tag {
+    background: linear-gradient(135deg, #07ACB9 0%, #059ca4 100%);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(7, 172, 185, 0.2);
+}
+
+.focus-areas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.focus-area-column {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.focus-area-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.focus-area-header i {
+    color: #07ACB9;
+}
+
+.onsite-fields {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.activities-container {
+    min-height: 100px;
+    margin-bottom: 20px;
+}
+
+.activity-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+    border-color: #07ACB9;
+    background: #f0fdff;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.activity-number {
+    background: linear-gradient(135deg, #07ACB9 0%, #059ca4 100%);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.activity-fields {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.activity-remarks {
+    width: 100%;
+}
+
+.remove-activity {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.remove-activity:hover {
+    background: #dc2626;
+}
+
+.total-duration-display {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 2px solid #10b981;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    color: #065f46;
+    font-size: 16px;
+}
+
+.empty-state {
+    color: #94a3b8;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    background: white;
+}
+
+.btn-secondary, .btn-primary {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+}
+
+.btn-secondary {
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #124A5C 0%, #07ACB9 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(18, 74, 92, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(18, 74, 92, 0.4);
+}
+
+.btn-primary:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.modal-actions {
+    padding: 25px 30px;
+    background: #f8fafc;
+    border-radius: 0 0 20px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.idp-data-content {
+    padding: 30px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.idp-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.idp-section h4 {
+    color: #1e293b;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.idp-section h4 i {
+    color: #07ACB9;
+}
+
+.idp-text {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .focus-areas-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .activity-fields {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .btn-secondary, .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+}
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
@@ -3090,240 +3466,232 @@
         </div>
         
         <form id="trainingRequestForm">
-            <!-- Training Selection -->
+            <!-- Basic Training Information -->
             <div class="form-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-graduation-cap"></i> Training Information</h3>
+                </div>
+                
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="fas fa-graduation-cap"></i>
-                        Select Training Course
+                        <i class="fas fa-book"></i>
+                        Training Name
                     </label>
-                    <div class="dropdown-container" id="trainingDropdown">
+                    <input type="text" class="form-input" id="trainingName" name="trainingName" placeholder="Enter training name" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-align-left"></i>
+                        Training Description
+                    </label>
+                    <textarea class="form-input" id="trainingDesc" name="trainingDesc" rows="3" placeholder="Describe the training objectives and content" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-peso-sign"></i>
+                        Cost (PHP)
+                    </label>
+                    <input type="number" class="form-input" id="cost" name="cost" step="0.01" min="0" placeholder="0.00" required>
+                </div>
+            </div>
+
+            <!-- IDP Selection -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Individual Development Plan (IDP)</h3>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-calendar"></i>
+                        IDP Period
+                    </label>
+                    <div class="dropdown-container" id="idpDropdown">
                         <input 
                             type="text" 
                             class="dropdown-input" 
-                            id="trainingCourseInput" 
-                            placeholder="Search and select a training course..."
-                            autocomplete="off"
+                            id="idpPeriodInput" 
+                            placeholder="Select IDP period..."
+                            readonly
                             required
                         >
                         <i class="fas fa-chevron-down dropdown-icon"></i>
-                        <div class="dropdown-list" id="trainingDropdownList">
-                            <div class="loading">Loading available trainings...</div>
+                        <div class="dropdown-list" id="idpDropdownList">
+                            <div class="loading">Loading IDP periods...</div>
                         </div>
                     </div>
-                    <input type="hidden" id="selectedTrainingId" name="selectedTrainingId">
+                    <input type="hidden" id="selectedIdpId" name="selectedIdpId">
+                    <input type="hidden" id="selectedIdpType" name="selectedIdpType">
                 </div>
 
-                <!-- Training Details Card -->
-                <div class="training-details-card" id="trainingDetailsCard" style="display: none;">
-                    <div class="training-card-header">
-                        <div class="training-icon">
-                            <i class="fas fa-book-open"></i>
-                        </div>
-                        <div class="training-info">
-                            <h4 id="selectedTrainingName">Selected Training</h4>
-                            <div class="training-meta">
-                                <span id="trainingDuration" class="meta-item">
-                                    <i class="fas fa-clock"></i> 0 hours
-                                </span>
-                                <span id="trainingType" class="meta-item">
-                                    <i class="fas fa-laptop"></i> Online
-                                </span>
-                              <span id="trainingCost" class="meta-item">
-    <span class="peso-symbol">Php</span> Free
-</span>
-
-
-                            </div>
-                        </div>
+                <!-- Training Categories -->
+                <div class="training-categories-section" id="trainingCategoriesSection" style="display: none;">
+                    <div class="section-header">
+                        <h4><i class="fas fa-tags"></i> Training Categories</h4>
+                        <button type="button" class="btn-secondary" id="viewIdpDataBtn" style="display: none;">
+                            <i class="fas fa-eye"></i> View IDP Data
+                        </button>
+                    </div>
+                    <div class="categories-container" id="categoriesContainer">
+                        <div class="empty-state">Select an IDP period to view training categories</div>
                     </div>
                 </div>
             </div>
 
-           <!-- Focus Areas Section - UPDATED to include Activities -->
-<div class="form-section" id="focusAreasSection" style="display: none;">
-    <div class="section-header">
-        <h3><i class="fas fa-target"></i> Training Focus Areas</h3>
-    </div>
-    
-    <div class="focus-areas-grid">
-        <div class="focus-area-column">
-            <div class="focus-area-header">
-                <i class="fas fa-bullseye"></i>
-                <span>Objectives</span>
-            </div>
-            <div class="tags-container" id="objectivesContainer">
-                <div class="empty-state">No objectives defined</div>
-            </div>
-        </div>
-        
-        <div class="focus-area-column">
-            <div class="focus-area-header">
-                <i class="fas fa-cogs"></i>
-                <span>Skills</span>
-            </div>
-            <div class="tags-container" id="skillsContainer">
-                <div class="empty-state">No skills defined</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- NEW: Training Activities Section -->
-<div class="form-section" id="activitiesSection" style="display: none;">
-    <div class="section-header">
-        <h3><i class="fas fa-tasks"></i> Training Activities</h3>
-        <div class="duration-info" id="activitiesDurationInfo">
-            Activities Overview
-        </div>
-    </div>
-    
-    <div class="activities-container" id="activitiesContainer">
-        <div class="empty-state">No activities defined</div>
-    </div>
-</div>
-
-            <!-- Schedule Selection -->
-            <div class="form-section" id="scheduleSection" style="display: none;">
-                <div class="section-header">
-                    <h3><i class="fas fa-calendar-alt"></i> Training Schedule</h3>
-                    <div class="duration-info" id="durationInfo">
-                        Duration: <span id="totalHours">0</span> hours
-                    </div>
-                </div>
-
-                <!-- Schedule Options -->
-                <div class="schedule-options">
-                    <div class="schedule-option" onclick="selectScheduleType('intensive')">
-                        <input type="radio" name="scheduleType" value="intensive" id="intensive">
-                        <label for="intensive">
-                            <div class="option-icon">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <div class="option-content">
-                                <h4>Intensive Schedule</h4>
-                                <p>8 hours per day</p>
-                                <div class="schedule-preview" id="intensivePreview">0 days</div>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="schedule-option" onclick="selectScheduleType('regular')">
-                        <input type="radio" name="scheduleType" value="regular" id="regular">
-                        <label for="regular">
-                            <div class="option-icon">
-                                <i class="fas fa-calendar-day"></i>
-                            </div>
-                            <div class="option-content">
-                                <h4>Regular Schedule</h4>
-                                <p>4 hours per day</p>
-                                <div class="schedule-preview" id="regularPreview">0 days</div>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="schedule-option" onclick="selectScheduleType('flexible')">
-                        <input type="radio" name="scheduleType" value="flexible" id="flexible">
-                        <label for="flexible">
-                            <div class="option-icon">
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="option-content">
-                                <h4>Flexible Schedule</h4>
-                                <p>2 hours per day</p>
-                                <div class="schedule-preview" id="flexiblePreview">0 days</div>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="schedule-option" onclick="selectScheduleType('custom')">
-                        <input type="radio" name="scheduleType" value="custom" id="custom">
-                        <label for="custom">
-                            <div class="option-icon">
-                                <i class="fas fa-cog"></i>
-                            </div>
-                            <div class="option-content">
-                                <h4>Custom Schedule</h4>
-                                <p>Set your own pace</p>
-                                <div class="schedule-preview">Manual dates</div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-<!-- Date Selection -->
-<div class="date-selection">
-    <div class="date-input-group">
-        <div class="date-field">
-            <label class="form-label">Start Date</label>
-            <input type="date" class="form-input date-input" id="startDate" required>
-        </div>
-        <div class="date-arrow">
-            <i class="fas fa-arrow-right"></i>
-        </div>
-        <div class="date-field">
-            <label class="form-label">End Date</label>
-            <input type="date" class="form-input date-input" id="endDate" required readonly>
-            <div class="date-helper" id="endDateHelper">
-                End date will be calculated automatically
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom Schedule Notice -->
-    <div class="custom-schedule-notice" id="customScheduleNotice">
-        <div class="custom-note">
-            <i class="fas fa-info-circle"></i>
-            <div>
-                <strong>Custom Schedule:</strong> You can set your own training pace and timeline. 
-                Choose your preferred start and end dates based on your availability.
-            </div>
-        </div>
-    </div>
-</div>
-
-                <!-- Schedule Summary -->
-                <div class="schedule-summary" id="scheduleSummary" style="display: none;">
-                    <div class="summary-card">
-                        <div class="summary-header">
-                            <i class="fas fa-calendar-check"></i>
-                            <span>Training Schedule Summary</span>
-                        </div>
-                        <div class="summary-content">
-                            <div class="summary-row">
-                                <span>Training Duration:</span>
-                                <strong id="summaryDuration">0 hours</strong>
-                            </div>
-                            <div class="summary-row">
-                                <span>Schedule Type:</span>
-                                <strong id="summaryScheduleType">-</strong>
-                            </div>
-                            <div class="summary-row">
-                                <span>Hours per Day:</span>
-                                <strong id="summaryHoursPerDay">-</strong>
-                            </div>
-                            <div class="summary-row">
-                                <span>Training Period:</span>
-                                <strong id="summaryDateRange">-</strong>
-                            </div>
-                            <div class="summary-row">
-                                <span>Total Days:</span>
-                                <strong id="summaryTotalDays">-</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Confirmation -->
+            <!-- Training Arrangement -->
             <div class="form-section">
-                <div class="confirmation-note">
-                    <div class="note-icon">
-                        <i class="fas fa-exclamation-circle"></i>
+                <div class="section-header">
+                    <h3><i class="fas fa-laptop"></i> Training Arrangement</h3>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-globe"></i>
+                        Training Mode
+                    </label>
+                    <div class="dropdown-container" id="arrangementDropdown">
+                        <input 
+                            type="text" 
+                            class="dropdown-input" 
+                            id="arrangementInput" 
+                            placeholder="Select training mode..."
+                            readonly
+                            required
+                        >
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                        <div class="dropdown-list" id="arrangementDropdownList">
+                            <div class="dropdown-item" onclick="selectArrangement(true, 'Online')">
+                                <div class="dropdown-item-title">
+                                    <i class="fas fa-laptop"></i> Online Training
+                                </div>
+                                <div class="dropdown-item-meta">Conducted remotely via digital platforms</div>
+                            </div>
+                            <div class="dropdown-item" onclick="selectArrangement(false, 'Onsite')">
+                                <div class="dropdown-item-title">
+                                    <i class="fas fa-map-marker-alt"></i> Onsite Training
+                                </div>
+                                <div class="dropdown-item-meta">Conducted at physical location</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="note-content">
-                        <strong>Important:</strong> Please ensure your training request aligns with your Individual Development Plan (IDP). 
-                        Your line manager will review and approve this request.
+                    <input type="hidden" id="isOnlineArrangement" name="isOnlineArrangement">
+                </div>
+
+                <!-- Onsite Location Fields -->
+                <div class="onsite-fields" id="onsiteFields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Address
+                        </label>
+                        <input type="text" class="form-input" id="address" name="address" placeholder="Enter training venue address">
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-globe-asia"></i>
+                            Country
+                        </label>
+                        <input type="text" class="form-input" id="country" name="country" placeholder="Enter country" value="Philippines">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learning Objectives & Skills -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-target"></i> Learning Focus</h3>
+                </div>
+                
+                <div class="focus-areas-grid">
+                    <div class="focus-area-column">
+                        <div class="focus-area-header">
+                            <i class="fas fa-bullseye"></i>
+                            <span>Objective</span>
+                        </div>
+                        <div class="form-group">
+                            <div class="dropdown-container" id="objectiveDropdown">
+                                <input 
+                                    type="text" 
+                                    class="dropdown-input" 
+                                    id="objectiveInput" 
+                                    placeholder="Select learning objective..."
+                                    readonly
+                                >
+                                <i class="fas fa-chevron-down dropdown-icon"></i>
+                                <div class="dropdown-list" id="objectiveDropdownList">
+                                    <div class="loading">Loading objectives...</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="selectedObjectiveId" name="objectiveId">
+                        </div>
+                    </div>
+                    
+                    <div class="focus-area-column">
+                        <div class="focus-area-header">
+                            <i class="fas fa-cogs"></i>
+                            <span>Required Skill</span>
+                        </div>
+                        <div class="form-group">
+                            <div class="dropdown-container" id="skillDropdown">
+                                <input 
+                                    type="text" 
+                                    class="dropdown-input" 
+                                    id="skillInput" 
+                                    placeholder="Select required skill..."
+                                    readonly
+                                >
+                                <i class="fas fa-chevron-down dropdown-icon"></i>
+                                <div class="dropdown-list" id="skillDropdownList">
+                                    <div class="loading">Loading skills...</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="selectedSkillId" name="jobReqSkillId">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Training Activities -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-tasks"></i> Training Activities</h3>
+                    <button type="button" class="btn-secondary" id="addActivityBtn">
+                        <i class="fas fa-plus"></i> Add Activity
+                    </button>
+                </div>
+                
+                <div class="activities-container" id="activitiesContainer">
+                    <!-- Activities will be added here -->
+                </div>
+                
+                <div class="total-duration-display" id="totalDurationDisplay">
+                    <strong>Total Training Duration: <span id="totalDurationValue">0</span> hours</strong>
+                </div>
+            </div>
+
+            <!-- Certification -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-certificate"></i> Training Certificate</h3>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-award"></i>
+                        Certificate Title
+                    </label>
+                    <input type="text" class="form-input" id="trainingCertTitle" name="trainingCertTitle" placeholder="Enter certificate title" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-file-alt"></i>
+                        Certificate Description
+                    </label>
+                    <textarea class="form-input" id="trainingCertDesc" name="trainingCertDesc" rows="2" placeholder="Describe the certificate requirements and criteria" required></textarea>
                 </div>
             </div>
 
@@ -3333,12 +3701,38 @@
                     <i class="fas fa-times"></i>
                     Cancel
                 </button>
-               <button type="submit" class="btn btn-submit" id="submitButton" disabled>
-    <i class="fas fa-paper-plane"></i>
-    Submit Request
-</button>
+                <button type="submit" class="btn-primary" id="submitTrainingRequest">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Request
+                </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- IDP Data View Modal -->
+<div class="modal-overlay" id="idpDataModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">IDP Data Review</h2>
+            <button class="modal-close" onclick="closeIdpDataModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="idp-data-content" id="idpDataContent">
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading IDP data...
+            </div>
+        </div>
+        
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeIdpDataModal()">
+                <i class="fas fa-times"></i>
+                Close
+            </button>
+        </div>
     </div>
 </div>
 
@@ -3364,6 +3758,14 @@
         let allCoursesData = [];
         let currentDate = new Date();
         let currentView = 'list';
+
+        let selectedIdpData = null;
+
+
+        let selectedObjective = null;
+        let selectedSkill = null;
+        let activityCount = 0;
+        let totalDuration = 0;
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -3539,110 +3941,659 @@ function setupTrainingRequestModal() {
     });
 }
 
-
-function openTrainingRequestModal() {
-    console.log('Opening training request modal...');
-    
-    const modal = document.getElementById('trainingRequestModal');
-    if (!modal) {
-        console.error('Modal element not found!');
-        return;
-    }
-    
-    // Show the modal
-    modal.classList.add('show');
-    modal.style.display = 'flex';
-    
-    // Set minimum date to today
-    const today = new Date().toISOString().split('T')[0];
-    const startDateInput = document.getElementById('startDate');
-    if (startDateInput) {
-        startDateInput.min = today;
-    }
-    
-    // Load trainings if not already loaded
-    if (filteredTrainings.length === 0) {
-        loadTrainings();
-    }
-    
-    // Focus on the training input
-    const trainingInput = document.getElementById('trainingCourseInput');
-    if (trainingInput) {
-        setTimeout(() => trainingInput.focus(), 100);
-    }
-}
-
+// REPLACE the existing closeTrainingRequestModal function with this:
 function closeTrainingRequestModal() {
     const modal = document.getElementById('trainingRequestModal');
     if (modal) {
         modal.classList.remove('show');
         setTimeout(() => {
             modal.style.display = 'none';
-            resetModal();
+            resetNewModal();
         }, 300);
     }
 }
 
-
-function resetModal() {
+// REPLACE the existing resetModal function with this:
+function resetNewModal() {
     // Reset form
     document.getElementById('trainingRequestForm').reset();
-    document.getElementById('selectedTrainingId').value = '';
     
     // Reset global variables
-    selectedTraining = null;
-    selectedScheduleType = null;
+    selectedIdpData = null;
+    selectedObjective = null;
+    selectedSkill = null;
+    activityCount = 0;
+    totalDuration = 0;
     
     // Hide sections
-    document.getElementById('trainingDetailsCard').style.display = 'none';
-    document.getElementById('focusAreasSection').style.display = 'none';
-    document.getElementById('activitiesSection').style.display = 'none';
-    document.getElementById('scheduleSection').style.display = 'none';
-    document.getElementById('scheduleSummary').style.display = 'none';
-    document.getElementById('customScheduleNotice').style.display = 'none';
+    document.getElementById('trainingCategoriesSection').style.display = 'none';
+    document.getElementById('onsiteFields').style.display = 'none';
+    document.getElementById('viewIdpDataBtn').style.display = 'none';
     
     // Clear containers
-    document.getElementById('objectivesContainer').innerHTML = '<div class="empty-state">No objectives defined</div>';
-    document.getElementById('skillsContainer').innerHTML = '<div class="empty-state">No skills defined</div>';
-    document.getElementById('activitiesContainer').innerHTML = '<div class="empty-state">No activities defined</div>';
+    document.getElementById('categoriesContainer').innerHTML = '<div class="empty-state">Select an IDP period to view training categories</div>';
+    document.getElementById('activitiesContainer').innerHTML = '';
+    document.getElementById('totalDurationValue').textContent = '0';
     
-    // Close dropdown
-    document.getElementById('trainingDropdown').classList.remove('open');
-    
-    // Reset schedule options
-    document.querySelectorAll('input[name="scheduleType"]').forEach(radio => {
-        radio.checked = false;
+    // Close dropdowns
+    document.querySelectorAll('.dropdown-container').forEach(dropdown => {
+        dropdown.classList.remove('open');
     });
     
-    // Reset date fields
-    const startDateInput = document.getElementById('startDate');
-    const endDateInput = document.getElementById('endDate');
-    const endDateHelper = document.getElementById('endDateHelper');
-    
-    startDateInput.value = '';
-    endDateInput.value = '';
-    endDateInput.readOnly = true;
-    endDateHelper.textContent = 'End date will be calculated automatically';
-    endDateHelper.classList.remove('custom');
-    
-    // Reset date minimums
-    const today = new Date().toISOString().split('T')[0];
-    startDateInput.min = today;
-    endDateInput.min = '';
-    
-    // Clear training input
-    document.getElementById('trainingCourseInput').value = '';
-    
-    // Reset dropdown list
-    document.getElementById('trainingDropdownList').innerHTML = '<div class="loading">Loading available trainings...</div>';
-    
-    // Disable submit button
-    const submitButton = document.getElementById('submitButton');
-    submitButton.disabled = true;
-    submitButton.style.opacity = '0.6';
-    submitButton.style.cursor = 'not-allowed';
-    submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+    // Clear hidden fields
+    document.getElementById('selectedIdpId').value = '';
+    document.getElementById('selectedIdpType').value = '';
+    document.getElementById('selectedObjectiveId').value = '';
+    document.getElementById('selectedSkillId').value = '';
+    document.getElementById('isOnlineArrangement').value = '';
 }
+
+function renderIdpPeriods(periods) {
+    const dropdownList = document.getElementById('idpDropdownList');
+    
+    if (!periods || periods.length === 0) {
+        dropdownList.innerHTML = '<div class="no-results"><i class="fas fa-info-circle"></i> No IDP periods found</div>';
+        return;
+    }
+
+    const periodsHTML = periods.map(period => `
+        <div class="dropdown-item" onclick="selectIdpPeriod('${period.id}', '${period.type}', '${period.year}')">
+            <div class="dropdown-item-title">
+                <i class="fas fa-calendar"></i> ${period.type} ${period.year}
+            </div>
+            <div class="dropdown-item-meta">
+                Individual Development Plan for ${period.type.toLowerCase()} year ${period.year}
+            </div>
+        </div>
+    `).join('');
+
+    dropdownList.innerHTML = periodsHTML;
+}
+
+// Select IDP period and load training categories
+async function selectIdpPeriod(idpId, type, year) {
+    console.log('Selected IDP:', { idpId, type, year });
+    
+    // Update input and hidden fields
+    document.getElementById('idpPeriodInput').value = `${type} ${year}`;
+    document.getElementById('selectedIdpId').value = idpId;
+    document.getElementById('selectedIdpType').value = type;
+    
+    // Close dropdown
+    document.getElementById('idpDropdown').classList.remove('open');
+    
+    try {
+        // Fetch IDP data and training categories
+        const response = await fetch(`/employee/idp/${idpId}/categories?type=${type}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            selectedIdpData = result.data;
+            displayTrainingCategories(result.data.trainingCategories || []);
+            document.getElementById('trainingCategoriesSection').style.display = 'block';
+            document.getElementById('viewIdpDataBtn').style.display = 'block';
+        } else {
+            throw new Error(result.message || 'Failed to fetch IDP data');
+        }
+    } catch (error) {
+        console.error('Failed to load IDP data:', error);
+        document.getElementById('categoriesContainer').innerHTML = 
+            '<div class="empty-state" style="color: #ef4444;">Failed to load training categories</div>';
+    }
+}
+
+function displayTrainingCategories(categories) {
+    const container = document.getElementById('categoriesContainer');
+    
+    if (!categories || categories.length === 0) {
+        container.innerHTML = '<div class="empty-state">No training categories defined for this IDP</div>';
+        return;
+    }
+    
+    const categoriesHTML = categories.map(category => `
+        <div class="category-tag">
+            <i class="fas fa-tag"></i>
+            ${category}
+        </div>
+    `).join('');
+    
+    container.innerHTML = categoriesHTML;
+}
+
+// View IDP data modal
+function viewIdpData() {
+    if (!selectedIdpData) {
+        alert('No IDP data selected');
+        return;
+    }
+    
+    const modal = document.getElementById('idpDataModal');
+    const content = document.getElementById('idpDataContent');
+    
+    // Build IDP data display
+    let idpHTML = '';
+    
+    if (selectedIdpData.profStrengths) {
+        idpHTML += `
+            <div class="idp-section">
+                <h4><i class="fas fa-thumbs-up"></i> Professional Strengths</h4>
+                <div class="idp-text">${selectedIdpData.profStrengths}</div>
+            </div>
+        `;
+    }
+    
+    if (selectedIdpData.profAreasForDevelopment) {
+        idpHTML += `
+            <div class="idp-section">
+                <h4><i class="fas fa-chart-line"></i> Areas for Development</h4>
+                <div class="idp-text">${selectedIdpData.profAreasForDevelopment}</div>
+            </div>
+        `;
+    }
+    
+    if (selectedIdpData.profActionsToTake) {
+        idpHTML += `
+            <div class="idp-section">
+                <h4><i class="fas fa-tasks"></i> Actions to Take</h4>
+                <div class="idp-text">${selectedIdpData.profActionsToTake}</div>
+            </div>
+        `;
+    }
+    
+    if (selectedIdpData.leaderStrengths) {
+        idpHTML += `
+            <div class="idp-section">
+                <h4><i class="fas fa-user-tie"></i> Leadership Strengths</h4>
+                <div class="idp-text">${selectedIdpData.leaderStrengths}</div>
+            </div>
+        `;
+    }
+    
+    if (selectedIdpData.leaderAreasForDevelopment) {
+        idpHTML += `
+            <div class="idp-section">
+                <h4><i class="fas fa-users"></i> Leadership Development Areas</h4>
+                <div class="idp-text">${selectedIdpData.leaderAreasForDevelopment}</div>
+            </div>
+        `;
+    }
+    
+    if (selectedIdpData.nextRoleShortTerm || selectedIdpData.nextRoleLongTerm) {
+        idpHTML += `
+            <div class="idp-section">
+                <h4><i class="fas fa-road"></i> Career Goals</h4>
+                ${selectedIdpData.nextRoleShortTerm ? `<div class="idp-text"><strong>Short-term:</strong> ${selectedIdpData.nextRoleShortTerm}</div>` : ''}
+                ${selectedIdpData.nextRoleLongTerm ? `<div class="idp-text"><strong>Long-term:</strong> ${selectedIdpData.nextRoleLongTerm}</div>` : ''}
+            </div>
+        `;
+    }
+    
+    if (selectedIdpData.trainingRemarks) {
+        idpHTML += `
+            <div class="idp-section">
+                <h4><i class="fas fa-comment"></i> Training Remarks</h4>
+                <div class="idp-text">${selectedIdpData.trainingRemarks}</div>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = idpHTML || '<div class="empty-state">No additional IDP data available</div>';
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+}
+
+function closeIdpDataModal() {
+    const modal = document.getElementById('idpDataModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Training arrangement selection
+function selectArrangement(isOnline, displayText) {
+    document.getElementById('arrangementInput').value = displayText;
+    document.getElementById('isOnlineArrangement').value = isOnline;
+    document.getElementById('arrangementDropdown').classList.remove('open');
+    
+    // Show/hide onsite fields
+    const onsiteFields = document.getElementById('onsiteFields');
+    if (isOnline) {
+        onsiteFields.style.display = 'none';
+        // Clear onsite field requirements
+        document.getElementById('address').removeAttribute('required');
+        document.getElementById('country').removeAttribute('required');
+    } else {
+        onsiteFields.style.display = 'block';
+        // Add onsite field requirements
+        document.getElementById('address').setAttribute('required', 'required');
+        document.getElementById('country').setAttribute('required', 'required');
+    }
+}
+
+// Load objectives
+async function loadObjectives() {
+    try {
+        const response = await fetch('/employee/objectives', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            renderObjectives(result.data || []);
+        } else {
+            throw new Error(result.message || 'Failed to fetch objectives');
+        }
+    } catch (error) {
+        console.error('Failed to load objectives:', error);
+        document.getElementById('objectiveDropdownList').innerHTML = 
+            '<div class="no-results"><i class="fas fa-exclamation-triangle"></i> Failed to load objectives</div>';
+    }
+}
+
+function renderObjectives(objectives) {
+    const dropdownList = document.getElementById('objectiveDropdownList');
+    
+    if (!objectives || objectives.length === 0) {
+        dropdownList.innerHTML = '<div class="no-results"><i class="fas fa-info-circle"></i> No objectives found</div>';
+        return;
+    }
+
+    const objectivesHTML = objectives.map(objective => `
+        <div class="dropdown-item" onclick="selectObjective(${objective.objectiveId}, '${objective.objectiveDescrpt.replace(/'/g, "\\'")}')">
+            <div class="dropdown-item-title">
+                <i class="fas fa-bullseye"></i> ${objective.objectiveDescrpt}
+            </div>
+            <div class="dropdown-item-meta">
+                ${objective.objectiveKPI ? `KPI: ${objective.objectiveKPI}` : ''}
+                ${objective.objectiveUOM ? ` | UOM: ${objective.objectiveUOM}` : ''}
+            </div>
+        </div>
+    `).join('');
+
+    dropdownList.innerHTML = objectivesHTML;
+}
+
+function selectObjective(objectiveId, description) {
+    selectedObjective = { objectiveId, description };
+    document.getElementById('objectiveInput').value = description;
+    document.getElementById('selectedObjectiveId').value = objectiveId;
+    document.getElementById('objectiveDropdown').classList.remove('open');
+}
+
+// Load skills
+async function loadSkills() {
+    try {
+        const response = await fetch('/employee/skills', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            renderSkills(result.data || []);
+        } else {
+            throw new Error(result.message || 'Failed to fetch skills');
+        }
+    } catch (error) {
+        console.error('Failed to load skills:', error);
+        document.getElementById('skillDropdownList').innerHTML = 
+            '<div class="no-results"><i class="fas fa-exclamation-triangle"></i> Failed to load skills</div>';
+    }
+}
+
+function renderSkills(skills) {
+    const dropdownList = document.getElementById('skillDropdownList');
+    
+    if (!skills || skills.length === 0) {
+        dropdownList.innerHTML = '<div class="no-results"><i class="fas fa-info-circle"></i> No skills found</div>';
+        return;
+    }
+
+    const skillsHTML = skills.map(skill => `
+        <div class="dropdown-item" onclick="selectSkill(${skill.jobReqSkillId}, '${skill.jobReqSkillName.replace(/'/g, "\\'")}', '${skill.jobReqSkillType.replace(/'/g, "\\'")}')">
+            <div class="dropdown-item-title">
+                <i class="fas fa-cogs"></i> ${skill.jobReqSkillName}
+            </div>
+            <div class="dropdown-item-meta">
+                Type: ${skill.jobReqSkillType}
+            </div>
+        </div>
+    `).join('');
+
+    dropdownList.innerHTML = skillsHTML;
+}
+
+function selectSkill(skillId, skillName, skillType) {
+    selectedSkill = { skillId, skillName, skillType };
+    document.getElementById('skillInput').value = `${skillName} (${skillType})`;
+    document.getElementById('selectedSkillId').value = skillId;
+    document.getElementById('skillDropdown').classList.remove('open');
+}
+
+// Activity management
+function addActivity() {
+    activityCount++;
+    const activityHTML = `
+        <div class="activity-item" id="activity-${activityCount}">
+            <div class="activity-header">
+                <div class="activity-number">${activityCount}</div>
+                <button type="button" class="remove-activity" onclick="removeActivity(${activityCount})">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+            <div class="activity-fields">
+                <div>
+                    <label class="form-label">Activity Name</label>
+                    <input type="text" class="form-input" name="activityName[]" placeholder="Enter activity name" required>
+                </div>
+                <div>
+                    <label class="form-label">Activity Type</label>
+                    <input type="text" class="form-input" name="activityType[]" placeholder="e.g., Lecture, Workshop" required>
+                </div>
+                <div>
+                    <label class="form-label">Duration (hours)</label>
+                    <input type="number" class="form-input duration-input" name="estActivityDuration[]" 
+                           step="0.5" min="0.5" placeholder="0.5" required onchange="updateTotalDuration()">
+                </div>
+            </div>
+            <div class="activity-remarks">
+                <label class="form-label">Remarks (optional)</label>
+                <textarea class="form-input" name="activityRemarks[]" rows="2" placeholder="Additional notes about this activity"></textarea>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('activitiesContainer').insertAdjacentHTML('beforeend', activityHTML);
+    updateTotalDuration();
+}
+
+function removeActivity(activityNumber) {
+    const activityElement = document.getElementById(`activity-${activityNumber}`);
+    if (activityElement) {
+        activityElement.remove();
+        updateTotalDuration();
+        renumberActivities();
+    }
+}
+
+function renumberActivities() {
+    const activities = document.querySelectorAll('.activity-item');
+    activities.forEach((activity, index) => {
+        const number = index + 1;
+        activity.querySelector('.activity-number').textContent = number;
+    });
+}
+
+
+
+function updateTotalDuration() {
+    const durationInputs = document.querySelectorAll('.duration-input');
+    totalDuration = 0;
+    
+    durationInputs.forEach(input => {
+        const value = parseFloat(input.value) || 0;
+        totalDuration += value;
+    });
+    
+    document.getElementById('totalDurationValue').textContent = totalDuration.toFixed(1);
+}
+
+// Dropdown toggle functions
+function toggleDropdown(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    const isOpen = dropdown.classList.contains('open');
+    
+    // Close all dropdowns first
+    document.querySelectorAll('.dropdown-container').forEach(d => {
+        d.classList.remove('open');
+    });
+    
+    // Toggle the clicked dropdown
+    if (!isOpen) {
+        dropdown.classList.add('open');
+    }
+}
+
+// Form submission handler - REPLACE existing handleFormSubmit with this:
+async function handleNewFormSubmit(e) {
+    e.preventDefault();
+    
+    console.log('Submitting new training request...');
+    
+    // Validate required fields
+    if (!validateNewForm()) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    // Collect form data
+    const formData = {
+        trainingName: document.getElementById('trainingName').value,
+        trainingDesc: document.getElementById('trainingDesc').value,
+        cost: parseFloat(document.getElementById('cost').value) || 0,
+        midyearidpId: document.getElementById('selectedIdpType').value === 'Midyear' ? 
+                      parseInt(document.getElementById('selectedIdpId').value) : null,
+        finalyearidpId: document.getElementById('selectedIdpType').value === 'Final' ? 
+                        parseInt(document.getElementById('selectedIdpId').value) : null,
+        isOnlineArrangement: document.getElementById('isOnlineArrangement').value === 'true',
+        address: document.getElementById('address').value || null,
+        country: document.getElementById('country').value || null,
+        objectiveId: parseInt(document.getElementById('selectedObjectiveId').value) || null,
+        jobReqSkillId: parseInt(document.getElementById('selectedSkillId').value) || null,
+        totalDuration: totalDuration,
+        trainingCertTitle: document.getElementById('trainingCertTitle').value,
+        trainingCertDesc: document.getElementById('trainingCertDesc').value,
+        activities: collectActivities()
+    };
+    
+    console.log('Form data:', formData);
+    
+    const submitButton = document.getElementById('submitTrainingRequest');
+    const originalText = submitButton.innerHTML;
+    
+    // Disable button and show loading
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    
+    try {
+        const response = await fetch('/employee/training-requests/new', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            alert(`✅ Training request submitted successfully!\n\nTraining: ${formData.trainingName}\nTotal Duration: ${formData.totalDuration} hours\nActivities: ${formData.activities.length}\n\nYour request has been sent for approval.`);
+            
+            closeTrainingRequestModal();
+            
+            // Refresh the data
+            setTimeout(() => {
+                if (typeof loadTrainingProgress === 'function') loadTrainingProgress();
+                if (typeof loadAllCourses === 'function') loadAllCourses();
+            }, 1000);
+            
+        } else {
+            throw new Error(result.message || 'Failed to submit training request');
+        }
+        
+    } catch (error) {
+        console.error('Error submitting training request:', error);
+        alert('❌ Failed to submit training request: ' + (error.message || 'Please try again later.'));
+        
+        // Re-enable button
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+    }
+}
+
+// ADD these event listeners to your existing DOMContentLoaded section:
+document.addEventListener('DOMContentLoaded', function() {
+    // Existing code...
+    
+    // NEW: Add activity button
+    const addActivityBtn = document.getElementById('addActivityBtn');
+    if (addActivityBtn) {
+        addActivityBtn.addEventListener('click', addActivity);
+    }
+    
+    // NEW: View IDP data button
+    const viewIdpDataBtn = document.getElementById('viewIdpDataBtn');
+    if (viewIdpDataBtn) {
+        viewIdpDataBtn.addEventListener('click', viewIdpData);
+    }
+    
+    // NEW: Dropdown toggles
+    const idpPeriodInput = document.getElementById('idpPeriodInput');
+    if (idpPeriodInput) {
+        idpPeriodInput.addEventListener('click', () => toggleDropdown('idpDropdown'));
+    }
+    
+    const arrangementInput = document.getElementById('arrangementInput');
+    if (arrangementInput) {
+        arrangementInput.addEventListener('click', () => toggleDropdown('arrangementDropdown'));
+    }
+    
+    const objectiveInput = document.getElementById('objectiveInput');
+    if (objectiveInput) {
+        objectiveInput.addEventListener('click', () => toggleDropdown('objectiveDropdown'));
+    }
+    
+    const skillInput = document.getElementById('skillInput');
+    if (skillInput) {
+        skillInput.addEventListener('click', () => toggleDropdown('skillDropdown'));
+    }
+    
+    // NEW: Form submission - replace existing form handler
+    const newForm = document.getElementById('trainingRequestForm');
+    if (newForm) {
+        // Remove old handlers
+        newForm.removeEventListener('submit', handleFormSubmit);
+        // Add new handler
+        newForm.addEventListener('submit', handleNewFormSubmit);
+    }
+});
+
+
+
+function validateNewForm() {
+    const requiredFields = [
+        'trainingName',
+        'trainingDesc', 
+        'cost',
+        'selectedIdpId',
+        'isOnlineArrangement',
+        'trainingCertTitle',
+        'trainingCertDesc'
+    ];
+    
+    for (const fieldId of requiredFields) {
+        const field = document.getElementById(fieldId);
+        if (!field || !field.value.trim()) {
+            console.log(`Validation failed for field: ${fieldId}`);
+            return false;
+        }
+    }
+    
+    // Check if arrangement is onsite and address/country are required
+    const isOnline = document.getElementById('isOnlineArrangement').value === 'true';
+    if (!isOnline) {
+        const address = document.getElementById('address').value.trim();
+        const country = document.getElementById('country').value.trim();
+        if (!address || !country) {
+            console.log('Validation failed: Onsite training requires address and country');
+            return false;
+        }
+    }
+    
+    // Check if at least one activity is added
+    const activities = document.querySelectorAll('.activity-item');
+    if (activities.length === 0) {
+        console.log('Validation failed: At least one activity is required');
+        alert('Please add at least one training activity.');
+        return false;
+    }
+    
+    // Validate activity fields
+    for (const activity of activities) {
+        const nameInput = activity.querySelector('input[name="activityName[]"]');
+        const typeInput = activity.querySelector('input[name="activityType[]"]');
+        const durationInput = activity.querySelector('input[name="estActivityDuration[]"]');
+        
+        if (!nameInput.value.trim() || !typeInput.value.trim() || !durationInput.value || parseFloat(durationInput.value) <= 0) {
+            console.log('Validation failed: Activity fields incomplete');
+            alert('Please complete all activity fields with valid values.');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function collectActivities() {
+    const activities = [];
+    const activityItems = document.querySelectorAll('.activity-item');
+    
+    activityItems.forEach(item => {
+        const name = item.querySelector('input[name="activityName[]"]').value.trim();
+        const type = item.querySelector('input[name="activityType[]"]').value.trim();
+        const duration = parseFloat(item.querySelector('input[name="estActivityDuration[]"]').value) || 0;
+        const remarks = item.querySelector('textarea[name="activityRemarks[]"]').value.trim();
+        
+        if (name && type && duration > 0) {
+            activities.push({
+                activityName: name,
+                activityType: type,
+                estActivityDuration: duration,
+                activityRemarks: remarks || null
+            });
+        }
+    });
+    
+    return activities;
+}
+
+
+// Make functions globally available
+window.openTrainingRequestModal = openTrainingRequestModal;
+window.closeTrainingRequestModal = closeTrainingRequestModal;
+window.selectIdpPeriod = selectIdpPeriod;
+window.selectArrangement = selectArrangement;
+window.selectObjective = selectObjective;
+window.selectSkill = selectSkill;
+window.addActivity = addActivity;
+window.removeActivity = removeActivity;
+window.viewIdpData = viewIdpData;
+window.closeIdpDataModal = closeIdpDataModal;
+window.updateTotalDuration = updateTotalDuration;
 
 async function testTrainingDetailsAPI(trainingId) {
     console.log(`Testing API for training ID: ${trainingId}`);
