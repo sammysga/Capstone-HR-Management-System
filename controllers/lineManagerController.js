@@ -3070,7 +3070,121 @@ getJobOfferDetails: async function(req, res) {
         return res.redirect('/linemanager/applicant-tracker');
     }
 },
+getInterviewForm: async function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'Line Manager') {
+        try {
+            // Extract the applicantId from the URL parameters 
+            const applicantId = req.params.applicantId;
+            
+            // Log for debugging
+            console.log('Fetching interview form for applicantId:', applicantId);
+            
+            // Check if applicantId is valid
+            if (!applicantId || applicantId === ':applicantId') {
+                console.error('Invalid applicantId provided:', applicantId);
+                req.flash('errors', { message: 'Invalid Applicant ID.' });
+                return res.redirect('/linemanager/applicant-tracker');
+            }
+            
+            // Fetch applicant data from the database
+            const { data: applicant, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    userId,
+                    firstName,
+                    lastName,
+                    phoneNo,
+                    applicantStatus,
+                    departmentId,
+                    jobId
+                `)
+                .eq('applicantId', applicantId)
+                .single();
+                
+            if (applicantError) {
+                console.error('Error fetching applicant:', applicantError);
+                req.flash('errors', { message: 'Error fetching applicant data.' });
+                return res.redirect('/linemanager/applicant-tracker');
+            }
+            
+            if (!applicant) {
+                console.error('No applicant found with ID:', applicantId);
+                req.flash('errors', { message: 'Applicant not found.' });
+                return res.redirect('/linemanager/applicant-tracker');
+            }
+            
+            // Verify this applicant is eligible for P3 evaluation
+            if (!applicant.applicantStatus || !applicant.applicantStatus.includes('P3 - Awaiting for Line Manager Evaluation')) {
+                console.error('Applicant not eligible for P3 evaluation. Current status:', applicant.applicantStatus);
+                req.flash('errors', { message: 'This applicant is not awaiting line manager evaluation.' });
+                return res.redirect('/linemanager/applicant-tracker');
+            }
+            
+            console.log('Successfully fetched applicant for P3 evaluation:', applicant);
+            
+            // Fetch user email
+            const { data: userData, error: userError } = await supabase
+                .from('useraccounts')
+                .select('userEmail')
+                .eq('userId', applicant.userId)
+                .single();
+                
+            if (!userError && userData) {
+                applicant.email = userData.userEmail;
+            } else {
+                applicant.email = 'Email not available';
+            }
+            
+            // Fetch job title
+            const { data: jobData, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobTitle')
+                .eq('jobId', applicant.jobId)
+                .single();
+                
+            if (!jobError && jobData) {
+                applicant.jobTitle = jobData.jobTitle;
+            } else {
+                applicant.jobTitle = 'Job title not available';
+            }
+            
+            // Fetch department name
+            const { data: deptData, error: deptError } = await supabase
+                .from('departments')
+                .select('deptName')
+                .eq('departmentId', applicant.departmentId)
+                .single();
+                
+            if (!deptError && deptData) {
+                applicant.department = deptData.deptName;
+            } else {
+                applicant.department = 'Department not available';
+            }
+            
+            console.log('Rendering P3 interview form with data:', { 
+                applicantId: applicant.applicantId,
+                name: `${applicant.firstName} ${applicant.lastName}`,
+                email: applicant.email,
+                status: applicant.applicantStatus
+            });
+        
+            // Render the interview form with the applicant data
+            return res.render('staffpages/linemanager_pages/interview-form-linemanager', {
+                applicant: applicant,
+                user: req.session.user
+            });
+            
+        } catch (error) {
+            console.error('Error in getInterviewForm:', error);
+            req.flash('errors', { message: 'An error occurred while processing your request.' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+    } 
 
+    req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+    return res.redirect('/staff/login');
+},
 // View the interview evaluation form
 getViewInterviewForm: async function(req, res) {
     try {
@@ -4346,167 +4460,138 @@ console.log('Final applicants list:', applicants);
             return res.status(500).json({ success: false, message: "Error getting email templates: " + error.message });
         }
     },
-updateP1Statuses: async function(req, res) {
-    try {
-        console.log('✅ [LineManager] Updating P1 statuses after Gmail emails sent');
-        
-        const { passedUserIds, failedUserIds } = req.body;
-        
-        if (!passedUserIds || !failedUserIds) {
-            return res.status(400).json({ success: false, message: "Missing user IDs" });
-        }
-        
-        console.log(`✅ [LineManager] P1 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
-        
-        let updateResults = {
-            passed: { updated: 0, errors: [] },
-            failed: { updated: 0, errors: [] }
-        };
-        
-        // Update passed applicants
-        for (const userId of passedUserIds) {
-            try {
-                console.log(`✅ [LineManager] Updating P1 PASSED status for userId: ${userId}`);
-                
-                // Update applicant status in the database
-                const { data: updateData, error: updateError } = await supabase
-                    .from('applicantaccounts')
-                    .update({ applicantStatus: 'P1 - PASSED' })
-                    .eq('userId', userId);
-                    
-                if (updateError) {
-                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                    updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
-                    continue;
-                }
-                
-                updateResults.passed.updated++;
-                
-                // Add congratulations message (first message)
-                const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage via Calendly.";
-                
-                const { data: chatData1, error: chatError1 } = await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify({ text: congratsMessage }),
-                        sender: 'bot',
-                        timestamp: new Date().toISOString(),
-                        applicantStage: 'P1 - PASSED'
-                    }]);
-                    
-                if (chatError1) {
-                    console.error(`❌ [LineManager] Error adding congratulations message for ${userId}:`, chatError1);
-                }
-                
-                // Add Calendly link message (second message with slight delay)
-                const calendlyMessage = "Please click the button below to schedule your interview at your convenience:";
-                
-                const { data: chatData2, error: chatError2 } = await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify({ 
-                            text: calendlyMessage,
-                            buttons: [
-                                { 
-                                    text: "Schedule Interview", 
-                                    value: "schedule_interview",
-                                    url: "/applicant/schedule-interview"
-                                }
-                            ]
-                        }),
-                        sender: 'bot',
-                        timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
-                        applicantStage: 'P1 - PASSED'
-                    }]);
-                    
-                if (chatError2) {
-                    console.error(`❌ [LineManager] Error adding Calendly message for ${userId}:`, chatError2);
-                }
-                
-            } catch (error) {
-                console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
-                updateResults.passed.errors.push(`${userId}: ${error.message}`);
+
+    updateP1Statuses: async function(req, res) {
+        try {
+            console.log('✅ [LineManager] Updating P1 statuses after Gmail emails sent');
+            
+            const { passedUserIds, failedUserIds } = req.body;
+            
+            if (!passedUserIds || !failedUserIds) {
+                return res.status(400).json({ success: false, message: "Missing user IDs" });
             }
-        }
-        
-        // Update failed applicants
-        for (const userId of failedUserIds) {
-            try {
-                console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
-                
-                // Update applicant status in the database
-                const { data: updateData, error: updateError } = await supabase
-                    .from('applicantaccounts')
-                    .update({ applicantStatus: 'P1 - FAILED' })
-                    .eq('userId', userId);
+            
+            console.log(`✅ [LineManager] P1 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+            
+            let updateResults = {
+                passed: { updated: 0, errors: [] },
+                failed: { updated: 0, errors: [] }
+            };
+            
+            // Update passed applicants
+            for (const userId of passedUserIds) {
+                try {
+                    console.log(`✅ [LineManager] Updating P1 PASSED status for userId: ${userId}`);
                     
-                if (updateError) {
-                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                    updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
-                    continue;
-                }
-                
-                updateResults.failed.updated++;
-                
-                // Add rejection message
-                const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Prime Infrastructure, and we wish you the best in your future endeavors.";
-                
-                const { data: chatData, error: chatError } = await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify({ text: rejectionMessage }),
-                        sender: 'bot',
-                        timestamp: new Date().toISOString(),
-                        applicantStage: 'P1 - FAILED'
-                    }]);
+                    // Update applicant status in the database
+                    const { data: updateData, error: updateError } = await supabase
+                        .from('applicantaccounts')
+                        .update({ applicantStatus: 'P1 - PASSED' })
+                        .eq('userId', userId);
+                        
+                    if (updateError) {
+                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                        updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
+                        continue;
+                    }
                     
-                if (chatError) {
-                    console.error(`❌ [LineManager] Error adding rejection message for ${userId}:`, chatError);
+                    updateResults.passed.updated++;
+                    
+                    // Add chatbot message
+                    const { data: chatData, error: chatError } = await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify({ text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage." }),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString(),
+                            applicantStage: 'P1 - PASSED'
+                        }]);
+                        
+                    if (chatError) {
+                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
+                    }
+                    
+                } catch (error) {
+                    console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
+                    updateResults.passed.errors.push(`${userId}: ${error.message}`);
                 }
-                
-            } catch (error) {
-                console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
-                updateResults.failed.errors.push(`${userId}: ${error.message}`);
             }
-        }
-        
-        // Prepare response
-        const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
-        const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
-        
-        if (totalErrors > 0) {
-            console.warn(`⚠️ [LineManager] P1 status update completed with ${totalErrors} errors`);
-            return res.status(207).json({ // 207 Multi-Status for partial success
-                success: true,
-                message: `P1 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
-                updateResults: updateResults,
-                passedUpdated: updateResults.passed.updated,
-                failedUpdated: updateResults.failed.updated,
-                totalErrors: totalErrors
-            });
-        } else {
-            console.log(`✅ [LineManager] P1 status update completed successfully`);
-            return res.status(200).json({ 
-                success: true, 
-                message: "P1 statuses updated successfully. All applicants have been processed.",
-                updateResults: updateResults,
-                passedUpdated: updateResults.passed.updated,
-                failedUpdated: updateResults.failed.updated,
-                totalUpdated: totalUpdated
+            
+            // Update failed applicants
+            for (const userId of failedUserIds) {
+                try {
+                    console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
+                    
+                    // Update applicant status in the database
+                    const { data: updateData, error: updateError } = await supabase
+                        .from('applicantaccounts')
+                        .update({ applicantStatus: 'P1 - FAILED' })
+                        .eq('userId', userId);
+                        
+                    if (updateError) {
+                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                        updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
+                        continue;
+                    }
+                    
+                    updateResults.failed.updated++;
+                    
+                    // Add chatbot message
+                    const { data: chatData, error: chatError } = await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify({ text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Prime Infrastructure, and we wish you the best in your future endeavors." }),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString(),
+                            applicantStage: 'P1 - FAILED'
+                        }]);
+                        
+                    if (chatError) {
+                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
+                    }
+                    
+                } catch (error) {
+                    console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
+                    updateResults.failed.errors.push(`${userId}: ${error.message}`);
+                }
+            }
+            
+            // Prepare response
+            const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
+            const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
+            
+            if (totalErrors > 0) {
+                console.warn(`⚠️ [LineManager] P1 status update completed with ${totalErrors} errors`);
+                return res.status(207).json({ // 207 Multi-Status for partial success
+                    success: true,
+                    message: `P1 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
+                    updateResults: updateResults,
+                    passedUpdated: updateResults.passed.updated,
+                    failedUpdated: updateResults.failed.updated,
+                    totalErrors: totalErrors
+                });
+            } else {
+                console.log(`✅ [LineManager] P1 status update completed successfully`);
+                return res.status(200).json({ 
+                    success: true, 
+                    message: "P1 statuses updated successfully. All applicants have been processed.",
+                    updateResults: updateResults,
+                    passedUpdated: updateResults.passed.updated,
+                    failedUpdated: updateResults.failed.updated,
+                    totalUpdated: totalUpdated
+                });
+            }
+            
+        } catch (error) {
+            console.error('❌ [LineManager] Error updating P1 statuses:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: "Error updating P1 statuses: " + error.message 
             });
         }
-        
-    } catch (error) {
-        console.error('❌ [LineManager] Error updating P1 statuses:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: "Error updating P1 statuses: " + error.message 
-        });
-    }
-},
+    },
 
     markAsP1Passed: async function(req, res) {
         try {
@@ -6141,11 +6226,123 @@ getFeedbackQuestionnaire: async function(req, res) {
             error: error.message
         });
     }
-},// FIXED: Enhanced saveMidYearIDP controller with proper training saving
-// FIXED: saveMidYearIDP controller that works with current database schema
+},
+getTrainingCategories: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // Get user's department ID
+        const { data: userData, error: userError } = await supabase
+            .from("staffaccounts")
+            .select("departmentId")
+            .eq("userId", userId)
+            .single();
+
+        if (userError) {
+            console.error("Error fetching user data:", userError);
+            return res.status(500).json({ success: false, message: "Error fetching user data" });
+        }
+
+        if (!userData || !userData.departmentId) {
+            return res.status(404).json({ success: false, message: "User department not found" });
+        }
+
+        // Get training categories for the user's department
+        const { data: categories, error: categoriesError } = await supabase
+            .from("training_categories")
+            .select("*")
+            .eq("departmentId", userData.departmentId)
+            .order("category", { ascending: true });
+
+        if (categoriesError) {
+            console.error("Error fetching training categories:", categoriesError);
+            return res.status(500).json({ success: false, message: "Error fetching training categories" });
+        }
+
+        return res.status(200).json({ 
+            success: true, 
+            categories: categories || [],
+            departmentId: userData.departmentId
+        });
+
+    } catch (error) {
+        console.error("Error in getTrainingCategories:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while fetching training categories",
+            error: error.message 
+        });
+    }
+},
+
+// Function to add a new training category
+addTrainingCategory: async function(req, res) {
+    try {
+        const { category, departmentId } = req.body;
+        
+        if (!category || !departmentId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Category name and department ID are required" 
+            });
+        }
+
+        // Check if category already exists for this department
+        const { data: existing, error: checkError } = await supabase
+            .from("training_categories")
+            .select("trainingCategoriesId")
+            .eq("category", category.trim())
+            .eq("departmentId", departmentId)
+            .single();
+
+        if (existing) {
+            return res.status(409).json({ 
+                success: false, 
+                message: "Category already exists for this department" 
+            });
+        }
+
+        // Insert new category
+        const { data: newCategory, error: insertError } = await supabase
+            .from("training_categories")
+            .insert({
+                category: category.trim(),
+                departmentId: departmentId
+            })
+            .select()
+            .single();
+
+        if (insertError) {
+            console.error("Error inserting training category:", insertError);
+            return res.status(500).json({ 
+                success: false, 
+                message: "Error adding training category" 
+            });
+        }
+
+        return res.status(201).json({ 
+            success: true, 
+            category: newCategory,
+            message: "Training category added successfully" 
+        });
+
+    } catch (error) {
+        console.error("Error in addTrainingCategory:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while adding the training category",
+            error: error.message 
+        });
+    }
+},
+
+// Updated saveMidYearIDP function to handle training categories
 saveMidYearIDP: async function(req, res) {
     try {
-        // Get the user ID from the route parameters or form submission
         const userId = req.params.userId || req.body.userId;
         console.log("Starting saveMidYearIDP for userId:", userId);
 
@@ -6165,51 +6362,49 @@ saveMidYearIDP: async function(req, res) {
             nextRoleShortTerm,
             nextRoleLongTerm,
             nextRoleMobility,
-            suggestedTrainings // Array of training objects with trainingId and remarks
+            trainingCategories, // Array of selected category objects
+            trainingRemarks,    // Training remarks text
+            year               // Year for the IDP
         } = req.body;
 
         console.log("Received form data:", req.body);
-        console.log("Suggested trainings:", suggestedTrainings);
 
-        // FIXED: Ensure text fields are saved as strings, not arrays - only include fields that exist in schema
-        const textData = {
-            userId: parseInt(userId),
-            profStrengths: Array.isArray(profStrengths) ? profStrengths.join(' ') : (profStrengths || ''),
-            profAreasForDevelopment: Array.isArray(profAreasForDevelopment) ? profAreasForDevelopment.join(' ') : (profAreasForDevelopment || ''),
-            profActionsToTake: Array.isArray(profActionsToTake) ? profActionsToTake.join(' ') : (profActionsToTake || ''),
-            leaderStrengths: Array.isArray(leaderStrengths) ? leaderStrengths.join(' ') : (leaderStrengths || ''),
-            leaderAreasForDevelopment: Array.isArray(leaderAreasForDevelopment) ? leaderAreasForDevelopment.join(' ') : (leaderAreasForDevelopment || ''),
-            leaderActionsToTake: Array.isArray(leaderActionsToTake) ? leaderActionsToTake.join(' ') : (leaderActionsToTake || ''),
-            nextRoleShortTerm: Array.isArray(nextRoleShortTerm) ? nextRoleShortTerm.join(' ') : (nextRoleShortTerm || ''),
-            nextRoleLongTerm: Array.isArray(nextRoleLongTerm) ? nextRoleLongTerm.join(' ') : (nextRoleLongTerm || ''),
-            nextRoleMobility: Array.isArray(nextRoleMobility) ? nextRoleMobility.join(' ') : (nextRoleMobility || '')
-        };
-
-        console.log("Processed text data:", textData);
-
-        // FIXED: Check if there's already an entry for this user (without jobId and year)
+        // Check if there's already an entry for this user and year
         const { data: existingRecord, error: checkError } = await supabase
             .from("midyearidps")
             .select("midyearidpId")
             .eq("userId", userId)
-            .maybeSingle();
+            .eq("year", year || new Date().getFullYear())
+            .single();
 
-        if (checkError) {
+        if (checkError && checkError.code !== 'PGRST116') {
             console.error("Error checking for existing midyearidp:", checkError);
             return res.status(500).json({ success: false, message: "Error checking for existing record" });
         }
 
         let result;
-        let midyearidpId;
-        
+        const currentYear = year || new Date().getFullYear();
+
         if (existingRecord) {
             // Update existing record
             console.log("Updating existing midyearidp record:", existingRecord.midyearidpId);
             const { data, error } = await supabase
                 .from("midyearidps")
-                .update(textData)
-                .eq("midyearidpId", existingRecord.midyearidpId)
-                .select();
+                .update({
+                    profStrengths,
+                    profAreasForDevelopment,
+                    profActionsToTake,
+                    leaderStrengths,
+                    leaderAreasForDevelopment,
+                    leaderActionsToTake,
+                    nextRoleShortTerm,
+                    nextRoleLongTerm,
+                    nextRoleMobility,
+                    trainingCategories: trainingCategories || [],
+                    trainingRemarks: trainingRemarks || null,
+                    year: currentYear
+                })
+                .eq("midyearidpId", existingRecord.midyearidpId);
 
             if (error) {
                 console.error("Error updating midyearidp:", error);
@@ -6217,13 +6412,26 @@ saveMidYearIDP: async function(req, res) {
             }
             
             result = data;
-            midyearidpId = existingRecord.midyearidpId;
         } else {
             // Create new record
             console.log("Creating new midyearidp record for userId:", userId);
             const { data, error } = await supabase
                 .from("midyearidps")
-                .insert(textData)
+                .insert({
+                    userId,
+                    profStrengths,
+                    profAreasForDevelopment,
+                    profActionsToTake,
+                    leaderStrengths,
+                    leaderAreasForDevelopment,
+                    leaderActionsToTake,
+                    nextRoleShortTerm,
+                    nextRoleLongTerm,
+                    nextRoleMobility,
+                    trainingCategories: trainingCategories || [],
+                    trainingRemarks: trainingRemarks || null,
+                    year: currentYear
+                })
                 .select();
 
             if (error) {
@@ -6232,49 +6440,6 @@ saveMidYearIDP: async function(req, res) {
             }
             
             result = data;
-            midyearidpId = data[0].midyearidpId;
-        }
-
-        // FIXED: Handle suggested trainings properly
-        if (suggestedTrainings && Array.isArray(suggestedTrainings) && suggestedTrainings.length > 0) {
-            console.log("Processing suggested trainings:", suggestedTrainings);
-            
-            // First, delete existing suggested trainings for this midyearidp
-            const { error: deleteError } = await supabase
-                .from("midyearidps_suggestedtrainings")
-                .delete()
-                .eq("midyearidpId", midyearidpId);
-
-            if (deleteError) {
-                console.error("Error deleting existing suggested trainings:", deleteError);
-                // Don't fail the entire operation, just log the error
-            }
-
-            // Insert new suggested trainings
-            const trainingsToInsert = suggestedTrainings.map(training => ({
-                midyearidpId: midyearidpId,
-                trainingId: parseInt(training.trainingId), // Ensure it's an integer
-                remarks: training.remarks || null
-            }));
-
-            console.log("Trainings to insert:", trainingsToInsert);
-
-            const { data: trainingsData, error: trainingsError } = await supabase
-                .from("midyearidps_suggestedtrainings")
-                .insert(trainingsToInsert)
-                .select();
-
-            if (trainingsError) {
-                console.error("Error inserting suggested trainings:", trainingsError);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: "Mid-Year IDP saved but suggested trainings could not be saved: " + trainingsError.message 
-                });
-            } else {
-                console.log("Successfully saved suggested trainings:", trainingsData);
-            }
-        } else {
-            console.log("No suggested trainings to save");
         }
 
         console.log("Mid-Year IDP saved successfully:", result);
@@ -6284,7 +6449,7 @@ saveMidYearIDP: async function(req, res) {
             return res.status(200).json({ 
                 success: true, 
                 message: "Mid-Year IDP saved successfully",
-                midyearidpId: midyearidpId
+                data: result
             });
         }
 
@@ -6307,6 +6472,48 @@ saveMidYearIDP: async function(req, res) {
         // Otherwise, redirect with error message
         req.flash('errors', { dbError: 'An error occurred while saving the Mid-Year IDP.' });
         return res.redirect(`/linemanager/midyear-idp/${req.params.userId || req.body.userId}`);
+    }
+},
+
+// Updated getMidYearIDPWithTrainings to handle categories
+getMidYearIDPWithTrainings: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        const year = req.query.year || new Date().getFullYear();
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // Get Mid-Year IDP data with training categories
+        const { data: midyearData, error: midyearError } = await supabase
+            .from("midyearidps")
+            .select("*")
+            .eq("userId", userId)
+            .eq("year", year)
+            .single();
+
+        if (midyearError && midyearError.code !== 'PGRST116') {
+            console.error("Error fetching Mid-Year IDP:", midyearError);
+            return res.status(500).json({ success: false, message: "Error fetching Mid-Year IDP data" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                midyearIDP: midyearData,
+                trainingCategories: midyearData?.trainingCategories || [],
+                trainingRemarks: midyearData?.trainingRemarks || ""
+            }
+        });
+
+    } catch (error) {
+        console.error("Error in getMidYearIDPWithTrainings:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while fetching Mid-Year IDP data",
+            error: error.message 
+        });
     }
 },
 

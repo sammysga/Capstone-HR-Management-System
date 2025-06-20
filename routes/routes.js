@@ -337,7 +337,7 @@ router.post('/linemanager/midyear-idp/:userId', lineManagerController.saveMidYea
 router.get('/linemanager/midyear-idp-trainings/:userId', lineManagerController.getMidYearIDPWithTrainings);
 
 router.get('/linemanager/training-categories/:userId', lineManagerController.getTrainingCategories);
-router.post('/linemanager/training-categories/:userId', lineManagerController.addTrainingCategory);
+router.post('/linemanager/training-categories', lineManagerController.addTrainingCategory);
 
 // Route for getting Mid-Year feedback aggregates
 router.get('/linemanager/midyear-feedback-aggregates/:userId', 
