@@ -2584,112 +2584,112 @@
                 </p>
             </div>
 
-            <!-- Category Selection Dropdown -->
-            <div class="category-dropdown-container" style="position: relative; margin-bottom: 20px;">
-                <label for="trainingCategorySelect" style="
-                    display: block;
-                    font-weight: 600;
-                    color: var(--primary-color);
-                    margin-bottom: 8px;
-                    font-size: 14px;
-                ">
-                    <i class="fas fa-list"></i> Choose Training Category:
-                </label>
-                
-                <div style="display: flex; align-items: flex-start; gap: 10px;">
-                    <!-- Enhanced Select Element with Search -->
-                    <div style="flex: 1; position: relative;">
-                        <select id="trainingCategorySelect" style="
-                            width: 100%;
-                            padding: 12px 15px;
-                            border: 2px solid #ddd;
-                            border-radius: var(--border-radius);
-                            background-color: white;
-                            color: var(--primary-color);
-                            font-weight: 500;
-                            cursor: pointer;
-                            transition: var(--transition);
-                            font-size: 13px;
-                            line-height: 1.3;
-                            height: auto;
-                            min-height: 45px;
-                        " onchange="handleCategorySelection(this)">
-                            <option value="">-- Select a Training Category --</option>
-                            <!-- Categories will be loaded dynamically -->
-                        </select>
-                        
-                        <!-- Search Input (initially hidden) -->
-                        <input type="text" id="categorySearchInput" placeholder="Search or type new category..." style="
-                            width: 100%;
-                            padding: 12px 15px;
-                            border: 2px solid #ddd;
-                            border-radius: var(--border-radius);
-                            background-color: white;
-                            color: var(--primary-color);
-                            font-weight: 500;
-                            transition: var(--transition);
-                            font-size: 13px;
-                            line-height: 1.3;
-                            height: auto;
-                            min-height: 45px;
-                            display: none;
-                        " onkeyup="filterCategories()" onkeydown="handleCategoryKeydown(event)">
-                    </div>
-                    
-                    <!-- Toggle Search Button -->
-                    <button type="button" id="toggleSearchBtn" style="
-                        background-color: var(--secondary-color);
-                        color: white;
-                        border: none;
-                        padding: 12px 15px;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-weight: 500;
-                        transition: var(--transition);
-                        white-space: nowrap;
-                        min-height: 45px;
-                    " onclick="toggleCategorySearch()">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                    
-                    <!-- Add Category Button -->
-                    <button type="button" id="addCategoryBtn" style="
-                        background-color: var(--success-color);
-                        color: white;
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: var(--border-radius);
-                        cursor: pointer;
-                        font-weight: 500;
-                        transition: var(--transition);
-                        white-space: nowrap;
-                        min-height: 45px;
-                    " onclick="addSelectedCategory()">
-                        <i class="fas fa-plus"></i> Add Category
-                    </button>
-                </div>
-                
-                <!-- Search Results Dropdown (for filtered categories) -->
-                <div id="categorySearchResults" style="
-                    position: absolute;
-                    top: 100%;
-                    left: 0;
-                    right: 0;
-                    background: white;
-                    border: 2px solid var(--secondary-color);
-                    border-radius: var(--border-radius);
-                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-                    z-index: 1000;
-                    display: none;
-                    max-height: 300px;
-                    overflow-y: auto;
-                    margin-top: 5px;
-                ">
-                    <div id="categorySearchList" style="padding: 10px;">
-                        <!-- Filtered results will be populated here -->
-                    </div>
-                </div>
-            </div>
+<!-- Category Selection Dropdown -->
+<div class="category-dropdown-container" style="position: relative; margin-bottom: 20px;">
+    <label for="trainingCategorySelect" style="
+        display: block;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 8px;
+        font-size: 14px;
+    ">
+        <i class="fas fa-list"></i> Search or Add New Category:
+    </label>
+    
+    <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <!-- Enhanced Select Element with Search -->
+        <div style="flex: 1; position: relative;">
+            <select id="trainingCategorySelect" style="
+                width: 100%;
+                padding: 12px 15px;
+                border: 2px solid #ddd;
+                border-radius: var(--border-radius);
+                background-color: white;
+                color: var(--primary-color);
+                font-weight: 500;
+                cursor: pointer;
+                transition: var(--transition);
+                font-size: 13px;
+                line-height: 1.3;
+                height: auto;
+                min-height: 45px;
+            " onchange="handleCategorySelection(this)">
+                <option value="">-- Search or Add New Category --</option>
+                <!-- Categories will be loaded dynamically -->
+            </select>
+            
+            <!-- Search Input (initially hidden) -->
+            <input type="text" id="categorySearchInput" placeholder="Search or Add New Category..." style="
+                width: 100%;
+                padding: 12px 15px;
+                border: 2px solid #ddd;
+                border-radius: var(--border-radius);
+                background-color: white;
+                color: var(--primary-color);
+                font-weight: 500;
+                transition: var(--transition);
+                font-size: 13px;
+                line-height: 1.3;
+                height: auto;
+                min-height: 45px;
+                display: none;
+            " onkeyup="filterCategories()" onkeydown="handleCategoryKeydown(event)">
+        </div>
+        
+        <!-- Toggle Search Button -->
+        <button type="button" id="toggleSearchBtn" style="
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            white-space: nowrap;
+            min-height: 45px;
+        " onclick="toggleCategorySearch()">
+            <i class="fas fa-search"></i> Search
+        </button>
+        
+        <!-- Add Category Button -->
+        <button type="button" id="addCategoryBtn" style="
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            white-space: nowrap;
+            min-height: 45px;
+        " onclick="addSelectedCategory()">
+            <i class="fas fa-plus"></i> Add Category
+        </button>
+    </div>
+    
+    <!-- Search Results Dropdown (for filtered categories) -->
+    <div id="categorySearchResults" style="
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 2px solid var(--secondary-color);
+        border-radius: var(--border-radius);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+        margin-top: 5px;
+    ">
+        <div id="categorySearchList" style="padding: 10px;">
+            <!-- Filtered results will be populated here -->
+        </div>
+    </div>
+</div>
 
             <!-- Selected Categories Display -->
             <div id="selectedCategoriesContainer" style="margin-top: 20px;">
@@ -3097,8 +3097,7 @@ function toggleCategorySearch() {
         searchInput.value = '';
     }
 }
-
-// Filter categories based on search input
+// Enhanced function to filter categories based on search input with word-by-word search
 function filterCategories() {
     const searchInput = document.getElementById('categorySearchInput');
     const searchResults = document.getElementById('categorySearchResults');
@@ -3111,10 +3110,16 @@ function filterCategories() {
         return;
     }
     
-    // Filter existing categories
-    const filteredCategories = availableCategories.filter(category => 
-        category.category.toLowerCase().includes(searchTerm)
-    );
+    // Split search term into individual words for better matching
+    const searchWords = searchTerm.split(' ').filter(word => word.length > 0);
+    
+    // Filter existing categories with word-by-word matching
+    const filteredCategories = availableCategories.filter(category => {
+        const categoryText = category.category.toLowerCase();
+        
+        // Check if ALL search words are found in the category text
+        return searchWords.every(word => categoryText.includes(word));
+    });
     
     // Generate search results HTML
     let resultsHTML = '';
@@ -3122,30 +3127,45 @@ function filterCategories() {
     // Add filtered existing categories
     filteredCategories.forEach(category => {
         const isSelected = selectedCategories.find(cat => cat.id === category.trainingCategoriesId.toString());
+        
+        // Highlight matching words in the category name
+        let highlightedName = category.category;
+        searchWords.forEach(word => {
+            const regex = new RegExp(`(${word})`, 'gi');
+            highlightedName = highlightedName.replace(regex, '<mark style="background-color: yellow; padding: 1px 2px;">$1</mark>');
+        });
+        
         resultsHTML += `
             <div class="search-result-item ${isSelected ? 'disabled' : ''}" 
                  data-category-id="${category.trainingCategoriesId}"
                  data-category-name="${category.category}"
                  onclick="selectCategoryFromSearch(this)"
                  style="
-                     padding: 10px;
+                     padding: 12px;
                      cursor: ${isSelected ? 'not-allowed' : 'pointer'};
-                     border-radius: 4px;
-                     margin-bottom: 5px;
+                     border-radius: 6px;
+                     margin-bottom: 8px;
                      background-color: ${isSelected ? '#f5f5f5' : 'white'};
                      border: 1px solid ${isSelected ? '#ddd' : '#e1e5eb'};
                      opacity: ${isSelected ? '0.6' : '1'};
                      transition: all 0.2s ease;
+                     position: relative;
                  "
-                 onmouseover="if(!this.classList.contains('disabled')) this.style.backgroundColor='#f0f8ff'"
-                 onmouseout="if(!this.classList.contains('disabled')) this.style.backgroundColor='white'">
-                <i class="fas fa-folder"></i> ${category.category}
-                ${isSelected ? '<span style="float: right; color: #666;"><i class="fas fa-check"></i> Selected</span>' : ''}
+                 onmouseover="if(!this.classList.contains('disabled')) this.style.backgroundColor='#f0f8ff'; this.style.borderColor='var(--secondary-color)'"
+                 onmouseout="if(!this.classList.contains('disabled')) this.style.backgroundColor='white'; this.style.borderColor='#e1e5eb'">
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-tag" style="color: var(--primary-color);"></i>
+                    <span style="flex: 1; font-weight: 500;">${highlightedName}</span>
+                    ${isSelected ? '<span style="color: #666; font-size: 12px;"><i class="fas fa-check"></i> Selected</span>' : ''}
+                </div>
+                
+                ${!isSelected ? '<div style="font-size: 11px; color: #666; margin-top: 4px;"><i class="fas fa-mouse-pointer"></i> Click to select</div>' : ''}
             </div>
         `;
     });
     
-    // Add option to create new category if no exact match
+    // Add option to create new category if no exact match and search term is valid
     const exactMatch = filteredCategories.find(cat => 
         cat.category.toLowerCase() === searchTerm.toLowerCase()
     );
@@ -3156,36 +3176,65 @@ function filterCategories() {
                  data-new-category="${searchTerm}"
                  onclick="selectNewCategoryFromSearch(this)"
                  style="
-                     padding: 10px;
+                     padding: 12px;
                      cursor: pointer;
-                     border-radius: 4px;
-                     margin-bottom: 5px;
-                     background-color: #e8f5e8;
-                     border: 1px solid #4CAF50;
+                     border-radius: 6px;
+                     margin-bottom: 8px;
+                     background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+                     border: 2px solid #4CAF50;
                      transition: all 0.2s ease;
+                     position: relative;
                  "
-                 onmouseover="this.style.backgroundColor='#d4edda'"
-                 onmouseout="this.style.backgroundColor='#e8f5e8'">
-                <i class="fas fa-plus-circle" style="color: #4CAF50;"></i> 
-                Create new: "<strong>${searchTerm}</strong>"
+                 onmouseover="this.style.background='linear-gradient(135deg, #d4edda, #e8f5e8)'; this.style.borderColor='#28a745'"
+                 onmouseout="this.style.background='linear-gradient(135deg, #e8f5e8, #f0f8f0)'; this.style.borderColor='#4CAF50'">
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-plus-circle" style="color: #4CAF50; font-size: 16px;"></i>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #2e7d32;">Create new category:</div>
+                        <div style="font-size: 14px; color: #4CAF50; margin-top: 2px;">"<strong>${searchTerm}</strong>"</div>
+                    </div>
+                    <i class="fas fa-arrow-right" style="color: #4CAF50; font-size: 12px;"></i>
+                </div>
+                
+                <div style="font-size: 10px; color: #666; margin-top: 6px; padding-left: 26px;">
+                    <i class="fas fa-info-circle"></i> This will be added to your department's training categories
+                </div>
+            </div>
+        `;
+    }
+    
+    // Show results count
+    let countMessage = '';
+    if (filteredCategories.length > 0) {
+        countMessage = `
+            <div style="padding: 8px 12px; background-color: #f8f9fa; border-bottom: 1px solid #e9ecef; font-size: 12px; color: #6c757d;">
+                <i class="fas fa-search"></i> Found ${filteredCategories.length} matching categor${filteredCategories.length === 1 ? 'y' : 'ies'}
             </div>
         `;
     }
     
     if (resultsHTML) {
-        searchList.innerHTML = resultsHTML;
+        searchList.innerHTML = countMessage + resultsHTML;
         searchResults.style.display = 'block';
     } else {
-        searchList.innerHTML = '<div style="padding: 15px; text-align: center; color: #666;">No categories found</div>';
+        searchList.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #666;">
+                <i class="fas fa-search" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                <div style="font-weight: 500; margin-bottom: 5px;">No categories found</div>
+                <div style="font-size: 12px;">Try different keywords or create a new category</div>
+            </div>
+        `;
         searchResults.style.display = 'block';
     }
 }
 
-// Handle keyboard navigation in search input
 function handleCategoryKeydown(event) {
+    const searchInput = document.getElementById('categorySearchInput');
+    const searchResults = document.getElementById('categorySearchResults');
+    
     if (event.key === 'Enter') {
         event.preventDefault();
-        const searchInput = document.getElementById('categorySearchInput');
         const searchTerm = searchInput.value.trim();
         
         if (searchTerm) {
@@ -3195,6 +3244,7 @@ function handleCategoryKeydown(event) {
             );
             
             if (exactMatch) {
+                // Select existing category
                 selectExistingCategory(exactMatch.trainingCategoriesId, exactMatch.category);
             } else {
                 // Create new category
@@ -3202,8 +3252,65 @@ function handleCategoryKeydown(event) {
             }
         }
     } else if (event.key === 'Escape') {
-        const searchResults = document.getElementById('categorySearchResults');
         searchResults.style.display = 'none';
+        searchInput.blur();
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        // Enhanced keyboard navigation through search results
+        event.preventDefault();
+        navigateSearchResults(event.key === 'ArrowDown' ? 'down' : 'up');
+    }
+}
+
+// NEW: Function to navigate search results with keyboard
+function navigateSearchResults(direction) {
+    const searchResults = document.querySelectorAll('.search-result-item:not(.disabled)');
+    let currentIndex = -1;
+    
+    // Find currently highlighted item
+    searchResults.forEach((item, index) => {
+        if (item.classList.contains('keyboard-highlight')) {
+            currentIndex = index;
+        }
+    });
+    
+    // Remove current highlight
+    searchResults.forEach(item => {
+        item.classList.remove('keyboard-highlight');
+        item.style.backgroundColor = item.classList.contains('new-category') ? 
+            'linear-gradient(135deg, #e8f5e8, #f0f8f0)' : 'white';
+    });
+    
+    // Calculate new index
+    if (direction === 'down') {
+        currentIndex = (currentIndex + 1) % searchResults.length;
+    } else {
+        currentIndex = currentIndex <= 0 ? searchResults.length - 1 : currentIndex - 1;
+    }
+    
+    // Highlight new item
+    if (searchResults[currentIndex]) {
+        const item = searchResults[currentIndex];
+        item.classList.add('keyboard-highlight');
+        item.style.backgroundColor = item.classList.contains('new-category') ? 
+            'linear-gradient(135deg, #d4edda, #e8f5e8)' : '#f0f8ff';
+        
+        // Scroll into view if needed
+        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        
+        // Add Enter key listener for selection
+        const handleEnter = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                item.click();
+                document.removeEventListener('keydown', handleEnter);
+            }
+        };
+        document.addEventListener('keydown', handleEnter);
+        
+        // Remove listener after 5 seconds to prevent memory leaks
+        setTimeout(() => {
+            document.removeEventListener('keydown', handleEnter);
+        }, 5000);
     }
 }
 
@@ -3249,21 +3356,44 @@ function selectExistingCategory(categoryId, categoryName) {
     
     console.log('Selected existing category:', categoryName);
 }
-
-// Create and select a new category
+// Enhanced function to create and select a new category with improved UX
 async function createAndSelectNewCategory(categoryName) {
     if (!categoryName || !userDepartmentId) {
         showCategoryNotification('Invalid category name or department', 'error');
         return;
     }
     
+    // Validate category name
+    if (categoryName.length < 2) {
+        showCategoryNotification('Category name must be at least 2 characters long', 'warning');
+        return;
+    }
+    
+    if (categoryName.length > 100) {
+        showCategoryNotification('Category name must be less than 100 characters', 'warning');
+        return;
+    }
+    
+    // Clean up the category name
+    const cleanedCategoryName = categoryName.trim().replace(/\s+/g, ' ');
+    
     try {
-        // Show loading state
+        // Show enhanced loading state
         const addBtn = document.getElementById('addCategoryBtn');
+        const searchInput = document.getElementById('categorySearchInput');
+        
         if (addBtn) {
             addBtn.disabled = true;
-            addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
         }
+        
+        if (searchInput) {
+            searchInput.disabled = true;
+            searchInput.style.backgroundColor = '#f8f9fa';
+        }
+        
+        // Show loading notification
+        showCategoryNotification(`Creating category: "${cleanedCategoryName}"...`, 'info');
         
         // Create new category on server
         const response = await fetch('/linemanager/training-categories', {
@@ -3272,7 +3402,7 @@ async function createAndSelectNewCategory(categoryName) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                category: categoryName,
+                category: cleanedCategoryName,
                 departmentId: userDepartmentId
             })
         });
@@ -3297,8 +3427,11 @@ async function createAndSelectNewCategory(categoryName) {
             // Clear selection
             clearCategorySelection();
             
-            // Show success message
-            showCategoryNotification(`Created and added new category: ${categoryName}`, 'success');
+            // Show enhanced success message
+            showCategoryNotification(
+                `✨ Successfully created and added: "${cleanedCategoryName}"`, 
+                'success'
+            );
             
             console.log('Created new category:', result.category);
         } else {
@@ -3306,17 +3439,33 @@ async function createAndSelectNewCategory(categoryName) {
         }
     } catch (error) {
         console.error('Error creating new category:', error);
-        showCategoryNotification('Failed to create new category: ' + error.message, 'error');
+        
+        let errorMessage = 'Failed to create new category';
+        if (error.message.includes('already exists')) {
+            errorMessage = 'A category with this name already exists';
+        } else if (error.message.includes('network')) {
+            errorMessage = 'Network error. Please check your connection and try again';
+        } else {
+            errorMessage += ': ' + error.message;
+        }
+        
+        showCategoryNotification(errorMessage, 'error');
     } finally {
-        // Reset button state
+        // Reset UI state
         const addBtn = document.getElementById('addCategoryBtn');
+        const searchInput = document.getElementById('categorySearchInput');
+        
         if (addBtn) {
             addBtn.disabled = false;
             addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Category';
         }
+        
+        if (searchInput) {
+            searchInput.disabled = false;
+            searchInput.style.backgroundColor = 'white';
+        }
     }
 }
-
 // Add selected category (from dropdown or search)
 function addSelectedCategory() {
     if (isSearchMode) {
@@ -3363,7 +3512,6 @@ function clearCategorySelection() {
     if (searchInput) searchInput.value = '';
     if (searchResults) searchResults.style.display = 'none';
 }
-
 // Update selected categories display
 function updateSelectedCategoriesDisplay() {
     const container = document.getElementById('selectedCategoriesList');
@@ -3381,7 +3529,7 @@ function updateSelectedCategoriesDisplay() {
                 font-style: italic;
                 padding: 20px;
             ">
-                <i class="fas fa-info-circle"></i> No training categories selected yet. Use the dropdown above to add categories.
+                <i class="fas fa-info-circle"></i> No training categories selected yet. Use the search above to add categories.
             </div>
         `;
         return;
@@ -3406,7 +3554,7 @@ function updateSelectedCategoriesDisplay() {
             ">
                 <div style="flex: 1;">
                     <span style="font-weight: 500; color: var(--primary-color);">
-                        <i class="fas fa-folder"></i> ${category.name}
+                        <i class="fas fa-tag"></i> ${category.name}
                     </span>
                     ${category.isNew ? `
                         <span style="
@@ -3516,26 +3664,38 @@ function updateCharCounter(fieldId) {
         counter.textContent = field.value.length;
     }
 }
-
-// Show category notification
+// Enhanced function to show category notification with better UX
 function showCategoryNotification(message, type = 'info') {
+    // Remove any existing notifications first
+    const existingNotifications = document.querySelectorAll('.category-notification');
+    existingNotifications.forEach(notification => {
+        if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+        }
+    });
+    
     const notification = document.createElement('div');
+    notification.className = 'category-notification';
     
     let backgroundColor = '#2196F3';
     let icon = 'info-circle';
+    let borderColor = '#1976D2';
     
     switch (type) {
         case 'success':
             backgroundColor = '#4CAF50';
             icon = 'check-circle';
+            borderColor = '#388E3C';
             break;
         case 'warning':
             backgroundColor = '#FF9800';
             icon = 'exclamation-triangle';
+            borderColor = '#F57C00';
             break;
         case 'error':
             backgroundColor = '#f44336';
             icon = 'times-circle';
+            borderColor = '#D32F2F';
             break;
     }
     
@@ -3543,18 +3703,34 @@ function showCategoryNotification(message, type = 'info') {
         position: fixed;
         top: 20px;
         right: 20px;
-        background-color: ${backgroundColor};
+        background: linear-gradient(135deg, ${backgroundColor}, ${borderColor});
         color: white;
-        padding: 12px 20px;
-        border-radius: var(--border-radius);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         z-index: 10000;
         font-weight: 500;
         transform: translateX(100%);
-        transition: transform 0.3s ease-in-out;
-        max-width: 350px;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        max-width: 400px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
     `;
-    notification.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-${icon}" style="font-size: 18px; flex-shrink: 0;"></i>
+            <div style="flex: 1; line-height: 1.4;">
+                ${message}
+            </div>
+            <button onclick="this.parentElement.parentElement.style.transform='translateX(100%)'" 
+                    style="background: none; border: none; color: white; cursor: pointer; padding: 4px; border-radius: 4px; opacity: 0.8; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'; this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.opacity='0.8'; this.style.backgroundColor='transparent'">
+                <i class="fas fa-times" style="font-size: 12px;"></i>
+            </button>
+        </div>
+    `;
     
     document.body.appendChild(notification);
     
@@ -3563,15 +3739,17 @@ function showCategoryNotification(message, type = 'info') {
         notification.style.transform = 'translateX(0)';
     }, 100);
     
-    // Remove after 4 seconds
+    // Auto-remove after 5 seconds (longer for better UX)
     setTimeout(() => {
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (document.body.contains(notification)) {
-                document.body.removeChild(notification);
-            }
-        }, 300);
-    }, 4000);
+        if (document.body.contains(notification)) {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 400);
+        }
+    }, 5000);
 }
 
 // Show category error
