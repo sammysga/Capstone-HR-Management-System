@@ -4644,9 +4644,6 @@ getTrainingSkillsAndObjectives: async function(req, res) {
         });
     }
 }, 
-
-// ADD these new functions to your employeeController
-
 // Get IDP periods for the current user
 getIdpPeriods: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Fetching IDP periods for user ${req.session?.user?.userId}`);
@@ -4974,7 +4971,6 @@ getUserSkills: async function(req, res) {
     }
 },
 
-// Create new training request with all fields
 createNewTrainingRequest: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Creating new training request for user ${req.session?.user?.userId}`);
     console.log('Request body:', req.body);
@@ -5000,16 +4996,15 @@ createNewTrainingRequest: async function(req, res) {
             objectiveId,
             jobReqSkillId,
             totalDuration,
-            trainingCertTitle,
-            trainingCertDesc,
-            activities
+            activities,
+            certificates
         } = req.body;
 
         // Validate required fields
-        if (!trainingName || !trainingDesc || !trainingCertTitle || !trainingCertDesc) {
+        if (!trainingName || !trainingDesc) {
             return res.status(400).json({
                 success: false,
-                message: 'Training name, description, and certificate details are required'
+                message: 'Training name and description are required'
             });
         }
 
@@ -5024,6 +5019,13 @@ createNewTrainingRequest: async function(req, res) {
             return res.status(400).json({
                 success: false,
                 message: 'At least one training activity is required'
+            });
+        }
+
+        if (!certificates || certificates.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'At least one training certificate is required'
             });
         }
 
@@ -5061,8 +5063,6 @@ createNewTrainingRequest: async function(req, res) {
             address: isOnlineArrangement ? null : address,
             country: isOnlineArrangement ? null : country,
             totalDuration: parseFloat(totalDuration) || 0,
-            trainingCertTitle: trainingCertTitle,
-            trainingCertDesc: trainingCertDesc,
             jobId: staff.jobId,
             dateRequested: new Date().toISOString().split('T')[0],
             isApproved: null, // Pending approval
@@ -5176,38 +5176,46 @@ createNewTrainingRequest: async function(req, res) {
             }
         }
 
-        // Create certificate record
-        let certificateCreated = false;
-        try {
-            const certificateRecordData = {
-                trainingRecordId: trainingRecordId,
-                trainingCertTitle: trainingCertTitle,
-                trainingCertDesc: trainingCertDesc,
-                certificate_url: null, // Will be populated when certificate is issued
-                created_at: new Date().toISOString()
-            };
+        // Create certificate records
+        let certificatesCreated = 0;
+        let certificatesFailed = 0;
 
-            const { data: certificateRecord, error: certificateError } = await supabase
-                .from('training_records_certificates')
-                .insert([certificateRecordData])
-                .select()
-                .single();
+        for (const [index, certificate] of certificates.entries()) {
+            try {
+                const certificateRecordData = {
+                    trainingRecordId: trainingRecordId,
+                    trainingCertTitle: certificate.trainingCertTitle,
+                    trainingCertDesc: certificate.trainingCertDesc,
+                    certificate_url: null, // Will be populated when certificate is issued
+                    created_at: new Date().toISOString()
+                };
 
-            if (certificateError) {
-                console.error('Error creating certificate record:', certificateError);
-            } else {
-                certificateCreated = true;
-                console.log(`Successfully created certificate record: ${certificateRecord.trainingRecordCertificateId}`);
+                console.log(`Creating certificate record ${index + 1}:`, certificateRecordData);
+
+                const { data: certificateRecord, error: certificateError } = await supabase
+                    .from('training_records_certificates')
+                    .insert([certificateRecordData])
+                    .select()
+                    .single();
+
+                if (certificateError) {
+                    console.error(`Error creating certificate record ${index + 1}:`, certificateError);
+                    certificatesFailed++;
+                } else {
+                    certificatesCreated++;
+                    console.log(`Successfully created certificate record: ${certificateRecord.trainingRecordCertificateId}`);
+                }
+            } catch (certificateError) {
+                console.error(`Exception creating certificate record ${index + 1}:`, certificateError);
+                certificatesFailed++;
             }
-        } catch (certificateError) {
-            console.error('Exception creating certificate record:', certificateError);
         }
 
         console.log(`Training request created successfully: ${trainingRecordId}`);
         console.log(`- Activities: ${activitiesCreated}/${activities.length} created`);
+        console.log(`- Certificates: ${certificatesCreated}/${certificates.length} created`);
         console.log(`- Objective linked: ${objectiveCreated}`);
         console.log(`- Skill linked: ${skillCreated}`);
-        console.log(`- Certificate record: ${certificateCreated}`);
 
         res.status(201).json({
             success: true,
@@ -5220,9 +5228,12 @@ createNewTrainingRequest: async function(req, res) {
                 totalActivities: activities.length,
                 activitiesFailed: activitiesFailed,
                 allActivitiesCreated: activitiesCreated === activities.length,
+                certificatesCreated: certificatesCreated,
+                totalCertificates: certificates.length,
+                certificatesFailed: certificatesFailed,
+                allCertificatesCreated: certificatesCreated === certificates.length,
                 objectiveLinked: objectiveCreated,
                 skillLinked: skillCreated,
-                certificateRecordCreated: certificateCreated,
                 isOnline: isOnlineArrangement,
                 status: 'Pending Approval'
             }

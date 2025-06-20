@@ -333,505 +333,256 @@
             background-color: #0d3c4a;
             transform: translateY(-2px);
         }
+:root {
+            --primary-color: #124A5C;
+            --secondary-color: #059ca4;
+            --success-color: #4CAF50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
 
+      .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            /* Changed from justify-content/align-items to flexbox centering */
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
 
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    padding: 20px;
-}
+        .modal-overlay.show {
+            display: flex !important;
+            opacity: 1;
+        }
 
-.modal-overlay.show {
-    display: flex !important;
-    animation: modalFadeIn 0.3s ease-out;
-}
+        .modal-content {
+            /* Removed fixed positioning since parent handles centering */
+            position: relative;
+            top: auto;
+            left: auto;
+            transform: none;
+            background: white;
+            border-radius: 20px;
+            padding: 0;
+            /* Increased width significantly */
+            max-width: 1200px; /* Increased from 900px */
+            width: 95%; /* Increased from 90% */
+            max-height: 95vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            /* Added transform for smooth animation */
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
 
-.modal-content {
-    background: white;
-    border-radius: 20px;
-    width: 100%;
-    max-width: 800px;
-    max-height: 95vh;
-    overflow-y: auto;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-    position: relative;
-    animation: modalSlideIn 0.3s ease-out;
-}
-
-@keyframes modalSlideIn {
-    from { 
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
 .modal-header {
-    padding: 30px 30px 20px 30px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background:  #07ACB9 100%;
-    color: white;
-    border-radius: 20px 20px 0 0;
-}
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 25px 30px; /* Increased padding */
+            border-radius: 20px 20px 0 0; /* Increased border radius */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.modal-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-}
+        .modal-header h2 {
+            font-size: 1.5rem; /* Slightly larger title */
+            margin: 0;
+        }
 
-.modal-close {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
+        .modal-body {
+            padding: 30px; /* Increased padding */
+        }
 
-.modal-close:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
-}
+        .form-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e1e5eb;
+            border-radius: var(--border-radius);
+            background-color: #f9f9f9;
+        }
 
-     
-/* Form Sections */
-/* Additional styles for the new modal */
-.form-section {
-    padding: 25px 30px;
-    border-bottom: 1px solid #f1f5f9;
-}
+        .form-section h3 {
+            margin: 0 0 15px 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 8px;
+        }
 
-.form-section:last-child {
-    border-bottom: none;
-}
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
 
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
+        .form-group {
+            flex: 1;
+            margin-bottom: 15px;
+        }
 
-.section-header h3, .section-header h4 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 14px;
+        }
 
-.section-header h3 i, .section-header h4 i {
-    color: #07ACB9;
-}
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: var(--transition);
+            box-sizing: border-box;
+        }
 
-.form-group {
-    margin-bottom: 20px;
-}
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(5, 156, 164, 0.2);
+        }
 
-.form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-.form-label i {
-    color: #07ACB9;
-}
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
 
-.form-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-}
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
 
-.form-input:focus {
-    outline: none;
-    border-color: #07ACB9;
-    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
-}
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
 
-textarea.form-input {
-    resize: vertical;
-    min-height: 80px;
-}
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
 
-.dropdown-container {
-    position: relative;
-}
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
 
-.dropdown-input {
-    width: 100%;
-    padding: 12px 40px 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    background: white;
-}
+        .idp-overview-card {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border: 2px solid var(--success-color);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-top: 15px;
+        }
 
-.dropdown-input:focus {
-    outline: none;
-    border-color: #07ACB9;
-    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
-}
+        .categories-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
 
-.dropdown-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #64748b;
-    pointer-events: none;
-    transition: transform 0.2s ease;
-}
+        .category-tag {
+            background-color: rgba(5, 156, 164, 0.1);
+            color: var(--primary-color);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            border: 1px solid rgba(5, 156, 164, 0.2);
+        }
 
-.dropdown-container.open .dropdown-icon {
-    transform: translateY(-50%) rotate(180deg);
-}
+        .activities-container {
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+        }
 
-.dropdown-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    display: none;
-    max-height: 250px;
-    overflow-y: auto;
-}
+        .activity-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+        }
 
-.dropdown-container.open .dropdown-list {
-    display: block;
-}
+        .activity-item:last-child {
+            border-bottom: none;
+        }
 
-.dropdown-item {
-    padding: 15px 20px;
-    cursor: pointer;
-    border-bottom: 1px solid #f1f5f9;
-    transition: all 0.2s ease;
-}
+        .certificates-container {
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+        }
 
-.dropdown-item:last-child {
-    border-bottom: none;
-}
+        .certificate-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+        }
 
-.dropdown-item:hover {
-    background: #f8fafc;
-}
+        .certificate-item:last-child {
+            border-bottom: none;
+        }
 
-.dropdown-item-title {
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+        .conditional-field {
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
 
-.dropdown-item-meta {
-    font-size: 12px;
-    color: #64748b;
-}
+        .conditional-field.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-.loading, .no-results {
-    padding: 20px;
-    text-align: center;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
+        .loading-state {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
 
-.training-categories-section {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #f1f5f9;
-}
-
-.categories-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    min-height: 50px;
-    border: 2px dashed #e2e8f0;
-    border-radius: 8px;
-    padding: 15px;
-    background: #f8fafc;
-}
-
-.category-tag {
-    background: linear-gradient(135deg, #07ACB9 0%, #059ca4 100%);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: 0 2px 4px rgba(7, 172, 185, 0.2);
-}
-
-.focus-areas-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 25px;
-}
-
-.focus-area-column {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 20px;
-}
-
-.focus-area-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 15px;
-    font-weight: 600;
-    color: #374151;
-}
-
-.focus-area-header i {
-    color: #07ACB9;
-}
-
-.onsite-fields {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #f1f5f9;
-}
-
-.activities-container {
-    min-height: 100px;
-    margin-bottom: 20px;
-}
-
-.activity-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    transition: all 0.2s ease;
-}
-
-.activity-item:hover {
-    border-color: #07ACB9;
-    background: #f0fdff;
-}
-
-.activity-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.activity-number {
-    background: linear-gradient(135deg, #07ACB9 0%, #059ca4 100%);
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    flex-shrink: 0;
-}
-
-.activity-fields {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 10px;
-}
-
-.activity-remarks {
-    width: 100%;
-}
-
-.remove-activity {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.remove-activity:hover {
-    background: #dc2626;
-}
-
-.total-duration-display {
-    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-    border: 2px solid #10b981;
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-    color: #065f46;
-    font-size: 16px;
-}
-
-.empty-state {
-    color: #94a3b8;
-    font-style: italic;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 50px;
-    border: 2px dashed #cbd5e1;
-    border-radius: 8px;
-    background: white;
-}
-
-.btn-secondary, .btn-primary {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: none;
-}
-
-.btn-secondary {
-    background: white;
-    color: #64748b;
-    border: 2px solid #e2e8f0;
-}
-
-.btn-secondary:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #124A5C 0%, #07ACB9 100%);
-    color: white;
-    border: none;
-    box-shadow: 0 4px 12px rgba(18, 74, 92, 0.3);
-}
-
-.btn-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(18, 74, 92, 0.4);
-}
-
-.btn-primary:disabled {
-    background: #94a3b8;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.modal-actions {
-    padding: 25px 30px;
-    background: #f8fafc;
-    border-radius: 0 0 20px 20px;
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-}
-
-.idp-data-content {
-    padding: 30px;
-    max-height: 70vh;
-    overflow-y: auto;
-}
-
-.idp-section {
-    margin-bottom: 30px;
-    padding: 20px;
-    background: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-}
-
-.idp-section h4 {
-    color: #1e293b;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.idp-section h4 i {
-    color: #07ACB9;
-}
-
-.idp-text {
-    color: #64748b;
-    line-height: 1.6;
-    margin-bottom: 10px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .focus-areas-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .activity-fields {
-        grid-template-columns: 1fr;
-    }
-    
-    .modal-actions {
-        flex-direction: column;
-    }
-    
-    .btn-secondary, .btn-primary {
-        width: 100%;
-        justify-content: center;
-    }
-}
+        .error-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--danger-color);
+            background-color: #ffebee;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--danger-color);
+        }
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
@@ -3454,261 +3205,264 @@ textarea.form-input {
             </div>
         </div>
     </div>
-
-<!-- Training Request Modal -->
-<div class="modal-overlay" id="trainingRequestModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 class="modal-title">Request New Training</h2>
-            <button class="modal-close" onclick="closeTrainingRequestModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <form id="trainingRequestForm">
-            <!-- Basic Training Information -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-graduation-cap"></i> Training Information</h3>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-book"></i>
-                        Training Name
-                    </label>
-                    <input type="text" class="form-input" id="trainingName" name="trainingName" placeholder="Enter training name" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-align-left"></i>
-                        Training Description
-                    </label>
-                    <textarea class="form-input" id="trainingDesc" name="trainingDesc" rows="3" placeholder="Describe the training objectives and content" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-peso-sign"></i>
-                        Cost (PHP)
-                    </label>
-                    <input type="number" class="form-input" id="cost" name="cost" step="0.01" min="0" placeholder="0.00" required>
-                </div>
+<!-- Modal Overlay -->
+    <div class="modal-overlay" id="trainingRequestModal">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h2><i class="fas fa-graduation-cap"></i> Request New Training</h2>
+                <button type="button" class="btn btn-danger" onclick="closeTrainingModal()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
-            <!-- IDP Selection -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-calendar-alt"></i> Individual Development Plan (IDP)</h3>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-calendar"></i>
-                        IDP Period
-                    </label>
-                    <div class="dropdown-container" id="idpDropdown">
-                        <input 
-                            type="text" 
-                            class="dropdown-input" 
-                            id="idpPeriodInput" 
-                            placeholder="Select IDP period..."
-                            readonly
-                            required
-                        >
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                        <div class="dropdown-list" id="idpDropdownList">
-                            <div class="loading">Loading IDP periods...</div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <form id="newTrainingRequestForm">
+                    <!-- IDP Selection Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-clipboard-list"></i> Individual Development Plan (IDP) Selection</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="idpType">
+                                    <i class="fas fa-calendar-alt"></i> IDP Type *
+                                </label>
+                                <select id="idpType" name="idpType" required onchange="loadIdpPeriods()">
+                                    <option value="">Select IDP Type</option>
+                                    <option value="midyear">Mid-Year IDP</option>
+                                    <option value="finalyear">Final-Year IDP</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="idpPeriod">
+                                    <i class="fas fa-calendar"></i> IDP Period *
+                                </label>
+                                <select id="idpPeriod" name="idpPeriod" required onchange="loadIdpDetails()" disabled>
+                                    <option value="">Select IDP Period</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- IDP Overview Card -->
+                        <div id="idpOverviewCard" class="idp-overview-card" style="display: none;">
+                            <h4><i class="fas fa-eye"></i> IDP Overview</h4>
+                            <div id="idpDetails">
+                                <!-- IDP details will be loaded here -->
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="viewFullIdp()" style="margin-top: 10px;">
+                                <i class="fas fa-external-link-alt"></i> View Full IDP
+                            </button>
                         </div>
                     </div>
-                    <input type="hidden" id="selectedIdpId" name="selectedIdpId">
-                    <input type="hidden" id="selectedIdpType" name="selectedIdpType">
-                </div>
 
-                <!-- Training Categories -->
-                <div class="training-categories-section" id="trainingCategoriesSection" style="display: none;">
-                    <div class="section-header">
-                        <h4><i class="fas fa-tags"></i> Training Categories</h4>
-                        <button type="button" class="btn-secondary" id="viewIdpDataBtn" style="display: none;">
-                            <i class="fas fa-eye"></i> View IDP Data
+                    <!-- Training Details Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-book"></i> Training Details</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trainingName">
+                                    <i class="fas fa-graduation-cap"></i> Training Name *
+                                </label>
+                                <input type="text" id="trainingName" name="trainingName" required 
+                                       placeholder="Enter training course name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="totalDuration">
+                                    <i class="fas fa-clock"></i> Total Duration (hours) *
+                                </label>
+                                <input type="number" id="totalDuration" name="totalDuration" required 
+                                       min="1" step="0.5" placeholder="e.g., 40">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="trainingDesc">
+                                <i class="fas fa-align-left"></i> Training Description *
+                            </label>
+                            <textarea id="trainingDesc" name="trainingDesc" rows="4" required 
+                                      placeholder="Describe the training content, objectives, and expected outcomes"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cost">
+                                    <i class="fas fa-dollar-sign"></i> Estimated Cost
+                                </label>
+                                <input type="number" id="cost" name="cost" min="0" step="0.01" 
+                                       placeholder="Enter cost (leave blank if unknown)">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="isOnlineArrangement">
+                                    <i class="fas fa-laptop"></i> Training Format *
+                                </label>
+                                <select id="isOnlineArrangement" name="isOnlineArrangement" required onchange="toggleLocationFields()">
+                                    <option value="">Select Format</option>
+                                    <option value="true">Online</option>
+                                    <option value="false">Onsite</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Location Fields (shown only for onsite) -->
+                        <div id="locationFields" class="conditional-field">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="address">
+                                        <i class="fas fa-map-marker-alt"></i> Training Address *
+                                    </label>
+                                    <input type="text" id="address" name="address" 
+                                           placeholder="Enter complete training venue address">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="country">
+                                        <i class="fas fa-globe"></i> Country *
+                                    </label>
+                                    <input type="text" id="country" name="country" 
+                                           placeholder="Enter country">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Training Alignment Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-bullseye"></i> Training Alignment</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="objectiveId">
+                                    <i class="fas fa-target"></i> Related Objective
+                                </label>
+                                <select id="objectiveId" name="objectiveId">
+                                    <option value="">Select Related Objective (Optional)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="jobReqSkillId">
+                                    <i class="fas fa-cogs"></i> Related Skill
+                                </label>
+                                <select id="jobReqSkillId" name="jobReqSkillId">
+                                    <option value="">Select Related Skill (Optional)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Training Activities Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-tasks"></i> Training Activities</h3>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <p style="margin: 0; color: #666; font-size: 14px;">
+                                Define the activities that will be part of this training program.
+                            </p>
+                            <button type="button" class="btn btn-success" onclick="addActivity()">
+                                <i class="fas fa-plus"></i> Add Activity
+                            </button>
+                        </div>
+
+                        <div id="activitiesContainer" class="activities-container">
+                            <div class="activity-item">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>
+                                            <i class="fas fa-play"></i> Activity Name *
+                                        </label>
+                                        <input type="text" name="activityName[]" required 
+                                               placeholder="e.g., Introduction to Python">
+                                    </div>
+                                    
+                                    <div class="form-group" style="flex: 0.6;">
+                                        <label>
+                                            <i class="fas fa-tag"></i> Activity Type *
+                                        </label>
+                                        <select name="activityType[]" required>
+                                            <option value="">Select Type</option>
+                                            <option value="Lecture">Lecture</option>
+                                            <option value="Workshop">Workshop</option>
+                                            <option value="Practical">Practical</option>
+                                            <option value="Assessment">Assessment</option>
+                                            <option value="Project">Project</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group" style="flex: 0.4;">
+                                        <label>
+                                            <i class="fas fa-clock"></i> Duration (hrs) *
+                                        </label>
+                                        <input type="number" name="estActivityDuration[]" required 
+                                               min="0.5" step="0.5" placeholder="2.5">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <i class="fas fa-comment"></i> Activity Remarks
+                                    </label>
+                                    <textarea name="activityRemarks[]" rows="2" 
+                                              placeholder="Additional notes about this activity"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Training Certificates Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-certificate"></i> Training Certificates</h3>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <p style="margin: 0; color: #666; font-size: 14px;">
+                                Define the certificates that will be awarded upon completion.
+                            </p>
+                            <button type="button" class="btn btn-success" onclick="addCertificate()">
+                                <i class="fas fa-plus"></i> Add Certificate
+                            </button>
+                        </div>
+
+                        <div id="certificatesContainer" class="certificates-container">
+                            <div class="certificate-item">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>
+                                            <i class="fas fa-award"></i> Certificate Title *
+                                        </label>
+                                        <input type="text" name="trainingCertTitle[]" required 
+                                               placeholder="e.g., Python Programming Certificate">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <i class="fas fa-file-alt"></i> Certificate Description *
+                                    </label>
+                                    <textarea name="trainingCertDesc[]" rows="3" required 
+                                              placeholder="Describe what this certificate validates and its significance"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-section" style="background-color: white; border: none; text-align: right;">
+                        <button type="button" class="btn btn-secondary" onclick="closeTrainingModal()" style="margin-right: 10px;">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i> Submit Training Request
                         </button>
                     </div>
-                    <div class="categories-container" id="categoriesContainer">
-                        <div class="empty-state">Select an IDP period to view training categories</div>
-                    </div>
-                </div>
+                </form>
             </div>
-
-            <!-- Training Arrangement -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-laptop"></i> Training Arrangement</h3>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-globe"></i>
-                        Training Mode
-                    </label>
-                    <div class="dropdown-container" id="arrangementDropdown">
-                        <input 
-                            type="text" 
-                            class="dropdown-input" 
-                            id="arrangementInput" 
-                            placeholder="Select training mode..."
-                            readonly
-                            required
-                        >
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                        <div class="dropdown-list" id="arrangementDropdownList">
-                            <div class="dropdown-item" onclick="selectArrangement(true, 'Online')">
-                                <div class="dropdown-item-title">
-                                    <i class="fas fa-laptop"></i> Online Training
-                                </div>
-                                <div class="dropdown-item-meta">Conducted remotely via digital platforms</div>
-                            </div>
-                            <div class="dropdown-item" onclick="selectArrangement(false, 'Onsite')">
-                                <div class="dropdown-item-title">
-                                    <i class="fas fa-map-marker-alt"></i> Onsite Training
-                                </div>
-                                <div class="dropdown-item-meta">Conducted at physical location</div>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="isOnlineArrangement" name="isOnlineArrangement">
-                </div>
-
-                <!-- Onsite Location Fields -->
-                <div class="onsite-fields" id="onsiteFields" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Address
-                        </label>
-                        <input type="text" class="form-input" id="address" name="address" placeholder="Enter training venue address">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-globe-asia"></i>
-                            Country
-                        </label>
-                        <input type="text" class="form-input" id="country" name="country" placeholder="Enter country" value="Philippines">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Learning Objectives & Skills -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-target"></i> Learning Focus</h3>
-                </div>
-                
-                <div class="focus-areas-grid">
-                    <div class="focus-area-column">
-                        <div class="focus-area-header">
-                            <i class="fas fa-bullseye"></i>
-                            <span>Objective</span>
-                        </div>
-                        <div class="form-group">
-                            <div class="dropdown-container" id="objectiveDropdown">
-                                <input 
-                                    type="text" 
-                                    class="dropdown-input" 
-                                    id="objectiveInput" 
-                                    placeholder="Select learning objective..."
-                                    readonly
-                                >
-                                <i class="fas fa-chevron-down dropdown-icon"></i>
-                                <div class="dropdown-list" id="objectiveDropdownList">
-                                    <div class="loading">Loading objectives...</div>
-                                </div>
-                            </div>
-                            <input type="hidden" id="selectedObjectiveId" name="objectiveId">
-                        </div>
-                    </div>
-                    
-                    <div class="focus-area-column">
-                        <div class="focus-area-header">
-                            <i class="fas fa-cogs"></i>
-                            <span>Required Skill</span>
-                        </div>
-                        <div class="form-group">
-                            <div class="dropdown-container" id="skillDropdown">
-                                <input 
-                                    type="text" 
-                                    class="dropdown-input" 
-                                    id="skillInput" 
-                                    placeholder="Select required skill..."
-                                    readonly
-                                >
-                                <i class="fas fa-chevron-down dropdown-icon"></i>
-                                <div class="dropdown-list" id="skillDropdownList">
-                                    <div class="loading">Loading skills...</div>
-                                </div>
-                            </div>
-                            <input type="hidden" id="selectedSkillId" name="jobReqSkillId">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Training Activities -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-tasks"></i> Training Activities</h3>
-                    <button type="button" class="btn-secondary" id="addActivityBtn">
-                        <i class="fas fa-plus"></i> Add Activity
-                    </button>
-                </div>
-                
-                <div class="activities-container" id="activitiesContainer">
-                    <!-- Activities will be added here -->
-                </div>
-                
-                <div class="total-duration-display" id="totalDurationDisplay">
-                    <strong>Total Training Duration: <span id="totalDurationValue">0</span> hours</strong>
-                </div>
-            </div>
-
-            <!-- Certification -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-certificate"></i> Training Certificate</h3>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-award"></i>
-                        Certificate Title
-                    </label>
-                    <input type="text" class="form-input" id="trainingCertTitle" name="trainingCertTitle" placeholder="Enter certificate title" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-file-alt"></i>
-                        Certificate Description
-                    </label>
-                    <textarea class="form-input" id="trainingCertDesc" name="trainingCertDesc" rows="2" placeholder="Describe the certificate requirements and criteria" required></textarea>
-                </div>
-            </div>
-
-            <!-- Form Actions -->
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" onclick="closeTrainingRequestModal()">
-                    <i class="fas fa-times"></i>
-                    Cancel
-                </button>
-                <button type="submit" class="btn-primary" id="submitTrainingRequest">
-                    <i class="fas fa-paper-plane"></i>
-                    Submit Request
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+
 
 <!-- IDP Data View Modal -->
 <div class="modal-overlay" id="idpDataModal">
@@ -3766,6 +3520,11 @@ textarea.form-input {
         let selectedSkill = null;
         let activityCount = 0;
         let totalDuration = 0;
+
+        let currentUser = null;
+        let idpPeriods = [];
+        let userObjectives = [];
+        let userSkills = [];
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -3827,7 +3586,93 @@ textarea.form-input {
                     document.body.removeChild(fileInput);
                 });
             }
+
+            // Setup form submission
+            document.getElementById('newTrainingRequestForm').addEventListener('submit', handleFormSubmit);
+            
+            // Load user data
+            loadUserObjectives();
+            loadUserSkills();s
+
         });
+
+        // Open training modal
+        function openTrainingModal() {
+            document.getElementById('trainingRequestModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close training modal
+        function closeTrainingModal() {
+            document.getElementById('trainingRequestModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            resetForm();
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('newTrainingRequestForm').reset();
+            document.getElementById('idpOverviewCard').style.display = 'none';
+            document.getElementById('locationFields').classList.remove('show');
+            document.getElementById('idpPeriod').disabled = true;
+            
+            // Reset activities and certificates to one item each
+            resetActivitiesContainer();
+            resetCertificatesContainer();
+        }
+
+        // Load IDP periods based on selected type
+        async function loadIdpPeriods() {
+            const idpType = document.getElementById('idpType').value;
+            const idpPeriodSelect = document.getElementById('idpPeriod');
+            
+            if (!idpType) {
+                idpPeriodSelect.disabled = true;
+                idpPeriodSelect.innerHTML = '<option value="">Select IDP Period</option>';
+                return;
+            }
+
+            try {
+                idpPeriodSelect.innerHTML = '<option value="">Loading...</option>';
+                idpPeriodSelect.disabled = true;
+
+                const response = await fetch('/employee/idp-periods');
+                const result = await response.json();
+
+                if (result.success) {
+                    idpPeriods = result.data;
+                    
+                    // Filter periods by selected type
+                    const filteredPeriods = idpPeriods.filter(period => {
+                        if (idpType === 'midyear') return period.type === 'Midyear';
+                        if (idpType === 'finalyear') return period.type === 'Final';
+                        return false;
+                    });
+
+                    idpPeriodSelect.innerHTML = '<option value="">Select IDP Period</option>';
+                    
+                    if (filteredPeriods.length > 0) {
+                        filteredPeriods.forEach(period => {
+                            const option = document.createElement('option');
+                            option.value = period.id;
+                            option.textContent = `${period.type} ${period.year}`;
+                            option.setAttribute('data-type', period.type);
+                            option.setAttribute('data-year', period.year);
+                            idpPeriodSelect.appendChild(option);
+                        });
+                        idpPeriodSelect.disabled = false;
+                    } else {
+                        idpPeriodSelect.innerHTML = '<option value="">No IDP periods available</option>';
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to load IDP periods');
+                }
+            } catch (error) {
+                console.error('Error loading IDP periods:', error);
+                idpPeriodSelect.innerHTML = '<option value="">Error loading periods</option>';
+                alert('Failed to load IDP periods: ' + error.message);
+            }
+        }
 
         
 
@@ -3843,6 +3688,157 @@ textarea.form-input {
         dropdown.classList.remove('open');
     }
 });
+// Load IDP details
+        async function loadIdpDetails() {
+            const idpPeriodSelect = document.getElementById('idpPeriod');
+            const selectedOption = idpPeriodSelect.options[idpPeriodSelect.selectedIndex];
+            const idpOverviewCard = document.getElementById('idpOverviewCard');
+            const idpDetails = document.getElementById('idpDetails');
+            
+            if (!idpPeriodSelect.value) {
+                idpOverviewCard.style.display = 'none';
+                return;
+            }
+
+            const idpId = idpPeriodSelect.value;
+            const idpType = selectedOption.getAttribute('data-type');
+
+            try {
+                idpDetails.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Loading IDP details...</div>';
+                idpOverviewCard.style.display = 'block';
+
+                const response = await fetch(`/employee/idp-categories/${idpId}?type=${idpType}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const idp = result.data;
+                    displayIdpOverview(idp, idpType);
+                } else {
+                    throw new Error(result.message || 'Failed to load IDP details');
+                }
+            } catch (error) {
+                console.error('Error loading IDP details:', error);
+                idpDetails.innerHTML = `<div class="error-state">Error loading IDP details: ${error.message}</div>`;
+            }
+        }
+
+        // Display IDP overview
+        function displayIdpOverview(idp, idpType) {
+            const idpDetails = document.getElementById('idpDetails');
+            
+            let categoriesHtml = '';
+            if (idp.trainingCategories && idp.trainingCategories.length > 0) {
+                categoriesHtml = `
+                    <div style="margin-bottom: 15px;">
+                        <strong><i class="fas fa-tags"></i> Training Categories:</strong>
+                        <div class="categories-display">
+                            ${idp.trainingCategories.map(cat => `
+                                <span class="category-tag">${cat.name || cat.category || 'Unknown Category'}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            let remarksHtml = '';
+            if (idp.trainingRemarks) {
+                remarksHtml = `
+                    <div style="margin-bottom: 15px;">
+                        <strong><i class="fas fa-comment"></i> Training Remarks:</strong>
+                        <div style="background-color: white; padding: 10px; border-radius: 4px; margin-top: 5px; font-style: italic;">
+                            "${idp.trainingRemarks}"
+                        </div>
+                    </div>
+                `;
+            }
+
+            idpDetails.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <strong><i class="fas fa-calendar-alt"></i> IDP Type:</strong> ${idpType} IDP
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong><i class="fas fa-calendar"></i> Year:</strong> ${idp.year}
+                </div>
+                ${categoriesHtml}
+                ${remarksHtml}
+                ${!categoriesHtml && !remarksHtml ? '<p style="color: #666; font-style: italic;">No training categories or remarks found for this IDP.</p>' : ''}
+            `;
+        }
+
+
+        // View full IDP (placeholder function)
+        function viewFullIdp() {
+            const idpPeriodSelect = document.getElementById('idpPeriod');
+            const selectedOption = idpPeriodSelect.options[idpPeriodSelect.selectedIndex];
+            
+            if (selectedOption) {
+                const idpType = selectedOption.getAttribute('data-type');
+                const year = selectedOption.getAttribute('data-year');
+                
+                // This would typically navigate to the full IDP view
+                alert(`This would open the full ${idpType} IDP for ${year}`);
+            }
+        }
+
+        // Toggle location fields based on training format
+        function toggleLocationFields() {
+            const isOnline = document.getElementById('isOnlineArrangement').value === 'true';
+            const locationFields = document.getElementById('locationFields');
+            const addressField = document.getElementById('address');
+            const countryField = document.getElementById('country');
+            
+            if (isOnline) {
+                locationFields.classList.remove('show');
+                addressField.removeAttribute('required');
+                countryField.removeAttribute('required');
+            } else {
+                locationFields.classList.add('show');
+                addressField.setAttribute('required', 'required');
+                countryField.setAttribute('required', 'required');
+            }
+        }
+
+        // Load user objectives
+        async function loadUserObjectives() {
+            try {
+                const response = await fetch('/employee/user-objectives');
+                const result = await response.json();
+
+                if (result.success) {
+                    userObjectives = result.data;
+                    const objectiveSelect = document.getElementById('objectiveId');
+                    
+                    userObjectives.forEach(objective => {
+                        const option = document.createElement('option');
+                        option.value = objective.objectiveId;
+                        option.textContent = `${objective.objectiveDescrpt} (${objective.objectiveKPI})`;
+                        objectiveSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading user objectives:', error);
+            }
+        }
+async function loadUserSkills() {
+            try {
+                const response = await fetch('/employee/user-skills');
+                const result = await response.json();
+
+                if (result.success) {
+                    userSkills = result.data;
+                    const skillSelect = document.getElementById('jobReqSkillId');
+                    
+                    userSkills.forEach(skill => {
+                        const option = document.createElement('option');
+                        option.value = skill.jobReqSkillId;
+                        option.textContent = `${skill.jobReqSkillName} (${skill.jobReqSkillType})`;
+                        skillSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading user skills:', error);
+            }
+        }
 
         // Update filters based on checkboxes
         function updateFilters() {
@@ -4294,52 +4290,189 @@ function selectSkill(skillId, skillName, skillType) {
     document.getElementById('selectedSkillId').value = skillId;
     document.getElementById('skillDropdown').classList.remove('open');
 }
+// Add activity
+        function addActivity() {
+            const container = document.getElementById('activitiesContainer');
+            const activityHtml = `
+                <div class="activity-item">
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                        <button type="button" class="btn btn-danger" onclick="removeActivity(this)" style="padding: 5px 10px; font-size: 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-play"></i> Activity Name *
+                            </label>
+                            <input type="text" name="activityName[]" required 
+                                   placeholder="e.g., Introduction to Python">
+                        </div>
+                        
+                        <div class="form-group" style="flex: 0.6;">
+                            <label>
+                                <i class="fas fa-tag"></i> Activity Type *
+                            </label>
+                            <select name="activityType[]" required>
+                                <option value="">Select Type</option>
+                                <option value="Lecture">Lecture</option>
+                                <option value="Workshop">Workshop</option>
+                                <option value="Practical">Practical</option>
+                                <option value="Assessment">Assessment</option>
+                                <option value="Project">Project</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="flex: 0.4;">
+                            <label>
+                                <i class="fas fa-clock"></i> Duration (hrs) *
+                            </label>
+                            <input type="number" name="estActivityDuration[]" required 
+                                   min="0.5" step="0.5" placeholder="2.5">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-comment"></i> Activity Remarks
+                        </label>
+                        <textarea name="activityRemarks[]" rows="2" 
+                                  placeholder="Additional notes about this activity"></textarea>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', activityHtml);
+        }
 
-// Activity management
-function addActivity() {
-    activityCount++;
-    const activityHTML = `
-        <div class="activity-item" id="activity-${activityCount}">
-            <div class="activity-header">
-                <div class="activity-number">${activityCount}</div>
-                <button type="button" class="remove-activity" onclick="removeActivity(${activityCount})">
-                    <i class="fas fa-trash"></i> Remove
-                </button>
-            </div>
-            <div class="activity-fields">
-                <div>
-                    <label class="form-label">Activity Name</label>
-                    <input type="text" class="form-input" name="activityName[]" placeholder="Enter activity name" required>
+        // Remove activity
+        function removeActivity(button) {
+            const activityItem = button.closest('.activity-item');
+            const container = document.getElementById('activitiesContainer');
+            
+            if (container.children.length > 1) {
+                activityItem.remove();
+            } else {
+                alert('At least one activity is required.');
+            }
+        }
+// Add certificate
+        function addCertificate() {
+            const container = document.getElementById('certificatesContainer');
+            const certificateHtml = `
+                <div class="certificate-item">
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                        <button type="button" class="btn btn-danger" onclick="removeCertificate(this)" style="padding: 5px 10px; font-size: 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-award"></i> Certificate Title *
+                            </label>
+                            <input type="text" name="trainingCertTitle[]" required 
+                                   placeholder="e.g., Python Programming Certificate">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-file-alt"></i> Certificate Description *
+                        </label>
+                        <textarea name="trainingCertDesc[]" rows="3" required 
+                                  placeholder="Describe what this certificate validates and its significance"></textarea>
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label">Activity Type</label>
-                    <input type="text" class="form-input" name="activityType[]" placeholder="e.g., Lecture, Workshop" required>
-                </div>
-                <div>
-                    <label class="form-label">Duration (hours)</label>
-                    <input type="number" class="form-input duration-input" name="estActivityDuration[]" 
-                           step="0.5" min="0.5" placeholder="0.5" required onchange="updateTotalDuration()">
-                </div>
-            </div>
-            <div class="activity-remarks">
-                <label class="form-label">Remarks (optional)</label>
-                <textarea class="form-input" name="activityRemarks[]" rows="2" placeholder="Additional notes about this activity"></textarea>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('activitiesContainer').insertAdjacentHTML('beforeend', activityHTML);
-    updateTotalDuration();
-}
+            `;
+            container.insertAdjacentHTML('beforeend', certificateHtml);
+        }
 
-function removeActivity(activityNumber) {
-    const activityElement = document.getElementById(`activity-${activityNumber}`);
-    if (activityElement) {
-        activityElement.remove();
-        updateTotalDuration();
-        renumberActivities();
-    }
-}
+        // Remove certificate
+        function removeCertificate(button) {
+            const certificateItem = button.closest('.certificate-item');
+            const container = document.getElementById('certificatesContainer');
+            
+            if (container.children.length > 1) {
+                certificateItem.remove();
+            } else {
+                alert('At least one certificate is required.');
+            }
+        }
+
+        // Reset activities container
+        function resetActivitiesContainer() {
+            const container = document.getElementById('activitiesContainer');
+            container.innerHTML = `
+                <div class="activity-item">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-play"></i> Activity Name *
+                            </label>
+                            <input type="text" name="activityName[]" required 
+                                   placeholder="e.g., Introduction to Python">
+                        </div>
+                        
+                        <div class="form-group" style="flex: 0.6;">
+                            <label>
+                                <i class="fas fa-tag"></i> Activity Type *
+                            </label>
+                            <select name="activityType[]" required>
+                                <option value="">Select Type</option>
+                                <option value="Lecture">Lecture</option>
+                                <option value="Workshop">Workshop</option>
+                                <option value="Practical">Practical</option>
+                                <option value="Assessment">Assessment</option>
+                                <option value="Project">Project</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="flex: 0.4;">
+                            <label>
+                                <i class="fas fa-clock"></i> Duration (hrs) *
+                            </label>
+                            <input type="number" name="estActivityDuration[]" required 
+                                   min="0.5" step="0.5" placeholder="2.5">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-comment"></i> Activity Remarks
+                        </label>
+                        <textarea name="activityRemarks[]" rows="2" 
+                                  placeholder="Additional notes about this activity"></textarea>
+                    </div>
+                </div>
+            `;
+        }
+
+
+         // Reset certificates container
+        function resetCertificatesContainer() {
+            const container = document.getElementById('certificatesContainer');
+            container.innerHTML = `
+                <div class="certificate-item">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-award"></i> Certificate Title *
+                            </label>
+                            <input type="text" name="trainingCertTitle[]" required 
+                                   placeholder="e.g., Python Programming Certificate">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-file-alt"></i> Certificate Description *
+                        </label>
+                        <textarea name="trainingCertDesc[]" rows="3" required 
+                                  placeholder="Describe what this certificate validates and its significance"></textarea>
+                    </div>
+                </div>
+            `;
+        }
 
 function renumberActivities() {
     const activities = document.querySelectorAll('.activity-item');
@@ -4378,82 +4511,231 @@ function toggleDropdown(dropdownId) {
         dropdown.classList.add('open');
     }
 }
-
-// Form submission handler - REPLACE existing handleFormSubmit with this:
-async function handleNewFormSubmit(e) {
-    e.preventDefault();
-    
-    console.log('Submitting new training request...');
-    
-    // Validate required fields
-    if (!validateNewForm()) {
-        alert('Please fill in all required fields.');
-        return;
-    }
-    
-    // Collect form data
-    const formData = {
-        trainingName: document.getElementById('trainingName').value,
-        trainingDesc: document.getElementById('trainingDesc').value,
-        cost: parseFloat(document.getElementById('cost').value) || 0,
-        midyearidpId: document.getElementById('selectedIdpType').value === 'Midyear' ? 
-                      parseInt(document.getElementById('selectedIdpId').value) : null,
-        finalyearidpId: document.getElementById('selectedIdpType').value === 'Final' ? 
-                        parseInt(document.getElementById('selectedIdpId').value) : null,
-        isOnlineArrangement: document.getElementById('isOnlineArrangement').value === 'true',
-        address: document.getElementById('address').value || null,
-        country: document.getElementById('country').value || null,
-        objectiveId: parseInt(document.getElementById('selectedObjectiveId').value) || null,
-        jobReqSkillId: parseInt(document.getElementById('selectedSkillId').value) || null,
-        totalDuration: totalDuration,
-        trainingCertTitle: document.getElementById('trainingCertTitle').value,
-        trainingCertDesc: document.getElementById('trainingCertDesc').value,
-        activities: collectActivities()
-    };
-    
-    console.log('Form data:', formData);
-    
-    const submitButton = document.getElementById('submitTrainingRequest');
-    const originalText = submitButton.innerHTML;
-    
-    // Disable button and show loading
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-    
-    try {
-        const response = await fetch('/employee/training-requests/new', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-            alert(`✅ Training request submitted successfully!\n\nTraining: ${formData.trainingName}\nTotal Duration: ${formData.totalDuration} hours\nActivities: ${formData.activities.length}\n\nYour request has been sent for approval.`);
+// Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
             
-            closeTrainingRequestModal();
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
             
-            // Refresh the data
-            setTimeout(() => {
-                if (typeof loadTrainingProgress === 'function') loadTrainingProgress();
-                if (typeof loadAllCourses === 'function') loadAllCourses();
-            }, 1000);
-            
-        } else {
-            throw new Error(result.message || 'Failed to submit training request');
+            try {
+                // Disable submit button and show loading
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                
+                // Collect form data
+                const formData = collectFormData();
+                
+                // Validate form data
+                if (!validateFormData(formData)) {
+                    return;
+                }
+                
+                // Submit to server
+                const response = await fetch('/employee/create-new-training-request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Training request submitted successfully!\n\nTraining: ${result.data.trainingName}\nStatus: ${result.data.status}\nTraining Record ID: ${result.data.trainingRecordId}`);
+                    closeTrainingModal();
+                    
+                    // Refresh the page or update the training list
+                    if (typeof refreshTrainingList === 'function') {
+                        refreshTrainingList();
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to submit training request');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting training request:', error);
+                alert('Error submitting training request: ' + error.message);
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-        
-    } catch (error) {
-        console.error('Error submitting training request:', error);
-        alert('❌ Failed to submit training request: ' + (error.message || 'Please try again later.'));
-        
-        // Re-enable button
-        submitButton.disabled = false;
-        submitButton.innerHTML = originalText;
-    }
-}
+
+
+        // Collect form data
+        function collectFormData() {
+            const form = document.getElementById('newTrainingRequestForm');
+            const formData = new FormData(form);
+            
+            // Convert FormData to object
+            const data = {};
+            
+            // Single value fields
+            for (const [key, value] of formData.entries()) {
+                if (!key.endsWith('[]')) {
+                    data[key] = value;
+                }
+            }
+            
+            // Handle array fields
+            data.activities = [];
+            const activityNames = formData.getAll('activityName[]');
+            const activityTypes = formData.getAll('activityType[]');
+            const activityDurations = formData.getAll('estActivityDuration[]');
+            const activityRemarks = formData.getAll('activityRemarks[]');
+            
+            for (let i = 0; i < activityNames.length; i++) {
+                data.activities.push({
+                    activityName: activityNames[i],
+                    activityType: activityTypes[i],
+                    estActivityDuration: parseFloat(activityDurations[i]) || 0,
+                    activityRemarks: activityRemarks[i] || null
+                });
+            }
+            
+            // Handle certificate arrays
+            data.certificates = [];
+            const certTitles = formData.getAll('trainingCertTitle[]');
+            const certDescs = formData.getAll('trainingCertDesc[]');
+            
+            for (let i = 0; i < certTitles.length; i++) {
+                data.certificates.push({
+                    trainingCertTitle: certTitles[i],
+                    trainingCertDesc: certDescs[i]
+                });
+            }
+            
+            // Convert boolean fields
+            data.isOnlineArrangement = data.isOnlineArrangement === 'true';
+            
+            // Convert numeric fields
+            if (data.cost) data.cost = parseFloat(data.cost);
+            if (data.totalDuration) data.totalDuration = parseFloat(data.totalDuration);
+            if (data.objectiveId) data.objectiveId = parseInt(data.objectiveId);
+            if (data.jobReqSkillId) data.jobReqSkillId = parseInt(data.jobReqSkillId);
+            
+            // Determine which IDP ID to use
+            const idpType = data.idpType;
+            if (idpType === 'midyear') {
+                data.midyearidpId = parseInt(data.idpPeriod);
+                data.finalyearidpId = null;
+            } else if (idpType === 'finalyear') {
+                data.finalyearidpId = parseInt(data.idpPeriod);
+                data.midyearidpId = null;
+            }
+            
+            // Clean up temporary fields
+            delete data.idpType;
+            delete data.idpPeriod;
+            
+            return data;
+        }
+
+
+        function validateFormData(data) {
+            // Required fields validation
+            if (!data.trainingName) {
+                alert('Training name is required.');
+                return false;
+            }
+            
+            if (!data.trainingDesc) {
+                alert('Training description is required.');
+                return false;
+            }
+            
+            if (!data.totalDuration || data.totalDuration <= 0) {
+                alert('Valid total duration is required.');
+                return false;
+            }
+            
+            if (data.isOnlineArrangement === null || data.isOnlineArrangement === undefined) {
+                alert('Please select training format (Online/Onsite).');
+                return false;
+            }
+            
+            if (!data.isOnlineArrangement) {
+                if (!data.address) {
+                    alert('Address is required for onsite training.');
+                    return false;
+                }
+                if (!data.country) {
+                    alert('Country is required for onsite training.');
+                    return false;
+                }
+            }
+            
+            if (!data.midyearidpId && !data.finalyearidpId) {
+                alert('Please select an IDP period.');
+                return false;
+            }
+            
+            // Activities validation
+            if (!data.activities || data.activities.length === 0) {
+                alert('At least one training activity is required.');
+                return false;
+            }
+            
+            for (let i = 0; i < data.activities.length; i++) {
+                const activity = data.activities[i];
+                if (!activity.activityName) {
+                    alert(`Activity ${i + 1}: Activity name is required.`);
+                    return false;
+                }
+                if (!activity.activityType) {
+                    alert(`Activity ${i + 1}: Activity type is required.`);
+                    return false;
+                }
+                if (!activity.estActivityDuration || activity.estActivityDuration <= 0) {
+                    alert(`Activity ${i + 1}: Valid duration is required.`);
+                    return false;
+                }
+            }
+            
+            // Certificates validation
+            if (!data.certificates || data.certificates.length === 0) {
+                alert('At least one training certificate is required.');
+                return false;
+            }
+            
+            for (let i = 0; i < data.certificates.length; i++) {
+                const cert = data.certificates[i];
+                if (!cert.trainingCertTitle) {
+                    alert(`Certificate ${i + 1}: Certificate title is required.`);
+                    return false;
+                }
+                if (!cert.trainingCertDesc) {
+                    alert(`Certificate ${i + 1}: Certificate description is required.`);
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('trainingRequestModal');
+            if (event.target === modal) {
+                closeTrainingModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('trainingRequestModal');
+                if (modal.style.display === 'block') {
+                    closeTrainingModal();
+                }
+            }
+        });
+
 
 // ADD these event listeners to your existing DOMContentLoaded section:
 document.addEventListener('DOMContentLoaded', function() {

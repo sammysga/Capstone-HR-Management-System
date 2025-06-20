@@ -397,15 +397,18 @@ router.get('/employee/training-progress', employeeController.getTrainingProgress
 router.get('/employee/training/:trainingRecordId/details', employeeController.getTrainingRecordDetails);
 
 // Training management
-// router.get('/employee/trainings/dropdown', employeeController.getTrainingsByJobAndDept); // Use the newer function
-// router.get('/employee/training/:trainingId/details', employeeController.getTrainingSkillsAndObjectives);
-// router.post('/employee/training-requests', employeeController.createTrainingRequest);
+router.get('/employee/user-objectives', employeeController.getUserObjectives);
+router.get('/employee/user-skills', employeeController.getUserSkills);
+router.get('/trainings-by-job-dept', employeeController.getTrainingsByJobAndDept);
+router.get('/training-details/:trainingId', employeeController.getTrainingSkillsAndObjectives);
+router.post('/employee/create-training-request', employeeController.createTrainingRequest);
 
 router.get('/employee/idp-periods', employeeController.getIdpPeriods);
+router.get('/employee/idp-categories/:idpId', employeeController.getIdpCategories);
 router.get('/employee/idp/:idpId/categories', employeeController.getIdpCategories);
 router.get('/employee/objectives', employeeController.getUserObjectives);
 router.get('/employee/skills', employeeController.getUserSkills);
-router.post('/employee/training-requests/new', employeeController.createNewTrainingRequest);
+router.post('/employee/create-new-training-request', employeeController.createNewTrainingRequest);
 
 
 // Activity updates

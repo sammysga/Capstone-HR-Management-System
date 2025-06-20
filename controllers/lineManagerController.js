@@ -6339,12 +6339,12 @@ addTrainingCategory: async function(req, res) {
         });
     }
 },
-
-// Updated saveMidYearIDP function to handle training categories
+// FIXED: saveMidYearIDP function to properly handle training categories
 saveMidYearIDP: async function(req, res) {
     try {
         const userId = req.params.userId || req.body.userId;
         console.log("Starting saveMidYearIDP for userId:", userId);
+        console.log("Request body:", req.body);
 
         if (!userId) {
             console.error("User ID is missing");
@@ -6352,7 +6352,7 @@ saveMidYearIDP: async function(req, res) {
         }
 
         // Get all form fields from the request body
-        const {
+        let {
             profStrengths,
             profAreasForDevelopment,
             profActionsToTake,
@@ -6362,49 +6362,110 @@ saveMidYearIDP: async function(req, res) {
             nextRoleShortTerm,
             nextRoleLongTerm,
             nextRoleMobility,
-            trainingCategories, // Array of selected category objects
-            trainingRemarks,    // Training remarks text
-            year               // Year for the IDP
+            trainingCategories,
+            trainingRemarks,
+            year
         } = req.body;
 
-        console.log("Received form data:", req.body);
+        // FIXED: Handle training categories - ensure it's an array of strings
+        let processedTrainingCategories = [];
+        
+        console.log("Raw trainingCategories received:", trainingCategories, typeof trainingCategories);
+        
+        if (trainingCategories) {
+            if (Array.isArray(trainingCategories)) {
+                // If it's already an array, filter out empty values
+                processedTrainingCategories = trainingCategories.filter(cat => {
+                    if (typeof cat === 'string') {
+                        return cat.trim() !== '';
+                    } else if (typeof cat === 'object' && cat !== null) {
+                        return (cat.name || cat.category || '').trim() !== '';
+                    }
+                    return false;
+                }).map(cat => {
+                    if (typeof cat === 'string') {
+                        return cat.trim();
+                    } else {
+                        return (cat.name || cat.category || '').trim();
+                    }
+                });
+            } else if (typeof trainingCategories === 'string') {
+                // If it's a string, make it an array
+                if (trainingCategories.trim() !== '') {
+                    processedTrainingCategories = [trainingCategories.trim()];
+                }
+            }
+        }
 
-        // Check if there's already an entry for this user and year
+        console.log("Processed trainingCategories:", processedTrainingCategories);
+
+        // Clean text fields
+        profStrengths = (profStrengths || '').toString().trim();
+        profAreasForDevelopment = (profAreasForDevelopment || '').toString().trim();
+        profActionsToTake = (profActionsToTake || '').toString().trim();
+        leaderStrengths = (leaderStrengths || '').toString().trim();
+        leaderAreasForDevelopment = (leaderAreasForDevelopment || '').toString().trim();
+        leaderActionsToTake = (leaderActionsToTake || '').toString().trim();
+        nextRoleShortTerm = (nextRoleShortTerm || '').toString().trim();
+        nextRoleLongTerm = (nextRoleLongTerm || '').toString().trim();
+        nextRoleMobility = (nextRoleMobility || '').toString().trim();
+        trainingRemarks = (trainingRemarks || '').toString().trim();
+
+        const currentYear = year || new Date().getFullYear();
+
+        console.log("Final processed data:", {
+            userId,
+            profStrengths,
+            profAreasForDevelopment,
+            profActionsToTake,
+            leaderStrengths,
+            leaderAreasForDevelopment,
+            leaderActionsToTake,
+            nextRoleShortTerm,
+            nextRoleLongTerm,
+            nextRoleMobility,
+            trainingCategories: processedTrainingCategories,
+            trainingRemarks,
+            year: currentYear
+        });
+
+        // Check if there's already an entry for this user
         const { data: existingRecord, error: checkError } = await supabase
             .from("midyearidps")
             .select("midyearidpId")
             .eq("userId", userId)
-            .eq("year", year || new Date().getFullYear())
-            .single();
+            .maybeSingle();
 
         if (checkError && checkError.code !== 'PGRST116') {
             console.error("Error checking for existing midyearidp:", checkError);
             return res.status(500).json({ success: false, message: "Error checking for existing record" });
         }
 
+        const dataToSave = {
+            profStrengths,
+            profAreasForDevelopment,
+            profActionsToTake,
+            leaderStrengths,
+            leaderAreasForDevelopment,
+            leaderActionsToTake,
+            nextRoleShortTerm,
+            nextRoleLongTerm,
+            nextRoleMobility,
+            trainingCategories: processedTrainingCategories,
+            trainingRemarks: trainingRemarks || null,
+            year: currentYear
+        };
+
         let result;
-        const currentYear = year || new Date().getFullYear();
 
         if (existingRecord) {
             // Update existing record
             console.log("Updating existing midyearidp record:", existingRecord.midyearidpId);
             const { data, error } = await supabase
                 .from("midyearidps")
-                .update({
-                    profStrengths,
-                    profAreasForDevelopment,
-                    profActionsToTake,
-                    leaderStrengths,
-                    leaderAreasForDevelopment,
-                    leaderActionsToTake,
-                    nextRoleShortTerm,
-                    nextRoleLongTerm,
-                    nextRoleMobility,
-                    trainingCategories: trainingCategories || [],
-                    trainingRemarks: trainingRemarks || null,
-                    year: currentYear
-                })
-                .eq("midyearidpId", existingRecord.midyearidpId);
+                .update(dataToSave)
+                .eq("midyearidpId", existingRecord.midyearidpId)
+                .select();
 
             if (error) {
                 console.error("Error updating midyearidp:", error);
@@ -6419,18 +6480,7 @@ saveMidYearIDP: async function(req, res) {
                 .from("midyearidps")
                 .insert({
                     userId,
-                    profStrengths,
-                    profAreasForDevelopment,
-                    profActionsToTake,
-                    leaderStrengths,
-                    leaderAreasForDevelopment,
-                    leaderActionsToTake,
-                    nextRoleShortTerm,
-                    nextRoleLongTerm,
-                    nextRoleMobility,
-                    trainingCategories: trainingCategories || [],
-                    trainingRemarks: trainingRemarks || null,
-                    year: currentYear
+                    ...dataToSave
                 })
                 .select();
 
@@ -6442,14 +6492,15 @@ saveMidYearIDP: async function(req, res) {
             result = data;
         }
 
-        console.log("Mid-Year IDP saved successfully:", result);
+        console.log("Mid-Year IDP saved successfully with categories:", processedTrainingCategories);
 
         // If it's an API request (AJAX), return JSON
         if (req.xhr || req.headers.accept?.includes('application/json')) {
             return res.status(200).json({ 
                 success: true, 
                 message: "Mid-Year IDP saved successfully",
-                data: result
+                data: result,
+                savedCategories: processedTrainingCategories
             });
         }
 
