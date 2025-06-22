@@ -391,22 +391,32 @@ router.get('/api/training/details/:id', lineManagerController.getTrainingDetails
 // ============================
 // Employee - TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================
+// Core training pages
 router.get('/employee/training/home', employeeController.getEmployeeTrainingHome);
 router.get('/employee/training/course/:trainingRecordId', employeeController.getEmployeeTrainingSpecific);
 
-// Training records and progress (CONSOLIDATED - removed duplicates)
-// duplicates - will fix
-router.get('/employee/training-records', employeeController.getEmployeeTrainingRecords);
-router.get('/employee/training-progress', employeeController.getTrainingProgress); // Use the newer function
+// FIXED: Training progress and records - removed duplicates and added missing endpoint
+router.get('/employee/training-progress', employeeController.getEmployeeTrainingProgress); // Frontend expects this
+router.get('/employee/training-records', employeeController.getEmployeeAllCourses); // For all courses tab
 router.get('/employee/training/:trainingRecordId/details', employeeController.getTrainingRecordDetails);
 
-router.get('/idp-periods', employeeController.getIDPPeriods);
-router.get('/idp/midyear/:idpId', employeeController.getMidYearIDPForEmployee);
-router.get('/idp/final/:idpId', employeeController.getFinalYearIDPForEmployee);
+// IDP Management
+router.get('/employee/idp-periods', employeeController.getIdpPeriods);
+router.get('/employee/idp/midyear/:idpId', employeeController.getMidYearIDPForEmployee);
+router.get('/employee/idp/final/:idpId', employeeController.getFinalYearIDPForEmployee);
 router.get('/employee/idp/:idpId/categories', employeeController.getIdpCategories);
+
+// User context data
 router.get('/employee/user-objectives', employeeController.getUserObjectives);
 router.get('/employee/user-skills', employeeController.getUserSkills);
+router.get('/employee/user-job-info', employeeController.getUserJobInfo);
+
+// Training request creation
 router.post('/employee/create-new-training-request', employeeController.createNewTrainingRequest);
+
+// REMOVED: Old training dropdown - not needed with new structure
+// router.get('/employee/trainings/dropdown', employeeController.getTrainingDropdown);
+// router.get('/employee/trainings/:trainingId/details', employeeController.getTrainingDetails);
 
 // Activity Types Management
 router.get('/employee/activity-types', employeeController.getActivityTypes);
@@ -423,11 +433,11 @@ router.post('/employee/certificates/upload', employeeController.uploadTrainingCe
 
 // Helper functions
 router.get('/employee/user-job-info', employeeController.getUserJobInfo);
-router.get('/employee/training-progress', employeeController.getTrainingProgress);
-router.get('/employee/all-courses', employeeController.getAllCourses);
+// router.get('/employee/training-progress', employeeController.getTrainingProgress);
+// router.get('/employee/all-courses', employeeController.getAllCourses);
 router.get('/employee/training/:trainingRecordId/certificates', employeeController.getCertificatesForTraining);
 // router.get('/employee/training-records', employeeController.getAllTrainingRecords);
-router.get('/employee/certificates', employeeController.getCertificates);
+// router.get('/employee/certificates', employeeController.getCertificates);
 
 // router.get('/employee/:certId/download', employeeController.downloadCertificate);
 
