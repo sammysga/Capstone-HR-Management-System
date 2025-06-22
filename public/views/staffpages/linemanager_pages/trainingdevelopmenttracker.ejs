@@ -17,28 +17,96 @@
         <p>Manage and review employee training requests awaiting your endorsement</p>
     </div>
 
-    <!-- Statistics Cards -->
+    <!-- Statistics Cards with Training Status Data -->
     <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number"><%= statistics.totalPendingEndorsements %></div>
-            <p class="stat-label">Pending Endorsements</p>
+        <div class="stat-card pending">
+            <div class="stat-card-content">
+                <div class="stat-info">
+                    <div class="stat-number"><%= statistics.statusStats.forLineManagerEndorsement %></div>
+                    <p class="stat-label">Pending Endorsement</p>
+                    <p class="stat-sublabel">Awaiting your approval</p>
+                </div>
+                <div class="stat-icon">⏰</div>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number">₱<%= statistics.costSummary.totalCost.toLocaleString() %></div>
-            <p class="stat-label">Total Training Cost</p>
+        
+        <div class="stat-card budget">
+            <div class="stat-card-content">
+                <div class="stat-info">
+                    <div class="stat-number"><%= statistics.statusStats.inProgress %></div>
+                    <p class="stat-label">In Progress</p>
+                    <p class="stat-sublabel">Currently training</p>
+                </div>
+                <div class="stat-icon">📚</div>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number">₱<%= statistics.costSummary.averageCost %></div>
-            <p class="stat-label">Average Cost per Training</p>
+        
+        <div class="stat-card average">
+            <div class="stat-card-content">
+                <div class="stat-info">
+                    <div class="stat-number"><%= statistics.statusStats.completed %></div>
+                    <p class="stat-label">Completed</p>
+                    <p class="stat-sublabel">Training finished</p>
+                </div>
+                <div class="stat-icon">✅</div>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number"><%= statistics.costSummary.onlineTrainings %></div>
-            <p class="stat-label">Online Trainings</p>
+        
+        <div class="stat-card online">
+            <div class="stat-card-content">
+                <div class="stat-info">
+                    <div class="stat-number"><%= statistics.totalEmployees %></div>
+                    <p class="stat-label">Total Employees</p>
+                    <p class="stat-sublabel">In your department</p>
+                </div>
+                <div class="stat-icon">👥</div>
+            </div>
         </div>
     </div>
 
-    <!-- Training Records Table -->
-    <div class="content-section">
+    <!-- Additional Status Breakdown (Optional) -->
+    <div class="status-breakdown">
+        <div class="breakdown-card">
+            <h3>Training Status Breakdown</h3>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-count"><%= statistics.statusStats.forHRApproval %></span>
+                    <span class="status-text">For HR Approval</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-count"><%= statistics.statusStats.notStarted %></span>
+                    <span class="status-text">Not Started</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-count"><%= statistics.statusStats.cancelled %></span>
+                    <span class="status-text">Cancelled</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-count"><%= statistics.statusStats.noTraining %></span>
+                    <span class="status-text">No Training</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <ul class="tab-list">
+            <li class="tab-item">
+                <button class="tab-button active" onclick="showTab('training-requests')">
+                    Training Requests
+                </button>
+            </li>
+            <li class="tab-item">
+                <button class="tab-button" onclick="showTab('view-employees')">
+                    View Employees
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Training Requests Tab Content -->
+    <div id="training-requests" class="tab-content active">
         <div class="section-header">
             <h2>Training Requests for Endorsement</h2>
         </div>
@@ -55,7 +123,7 @@
                             <th>Cost</th>
                             <th>Type</th>
                             <th>Requested Date</th>
-                            <th>Status</th>
+                            <th>Training Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -133,6 +201,86 @@
             </div>
         <% } %>
     </div>
+
+    <!-- View Employees Tab Content -->
+    <div id="view-employees" class="tab-content">
+        <div class="section-header">
+            <h2>Team Members</h2>
+            <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 0.9rem;">Manage and view your team members</p>
+        </div>
+        
+        <% if (employees && employees.length > 0) { %>
+            <div class="table-container">
+                <table class="employee-table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Position</th>
+                            <th>Department</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Hire Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% employees.forEach(function(employee) { %>
+                            <tr>
+                                <td>
+                                    <div class="employee-info">
+                                        <div class="employee-avatar">
+                                            <%= (employee.firstName?.charAt(0) || 'N') + (employee.lastName?.charAt(0) || 'A') %>
+                                        </div>
+                                        <div class="employee-details">
+                                            <h4><%= employee.firstName || 'No First Name' %> <%= employee.lastName || 'No Last Name' %></h4>
+                                            <p>ID: <%= employee.userId %></p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><%= employee.jobTitle || 'No Position' %></td>
+                                <td>
+                                    <span class="department-badge">
+                                        <%= employee.department || 'No Department' %>
+                                    </span>
+                                </td>
+                                <td><%= employee.userEmail || 'No Email' %></td>
+                                <td>
+                                    <div class="training-status-info">
+                                        <span class="training-status-badge <%= employee.statusClass %>">
+                                            <%= employee.trainingStatus %>
+                                        </span>
+                                        <% if (employee.latestTraining) { %>
+                                            <br><small style="color: #6c757d; font-size: 0.75rem;">
+                                                Latest: <%= employee.latestTraining.trainingName %>
+                                                <br>Requested: <%= new Date(employee.latestTraining.dateRequested).toLocaleDateString() %>
+                                            </small>
+                                        <% } %>
+                                    </div>
+                                </td>
+                                <td><%= employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : 'N/A' %></td>
+                                <td>
+                                    <div class="employee-actions">
+                                        <button class="btn btn-small btn-outline" onclick="viewEmployeeDetails('<%= employee.userId %>')">
+                                            View Profile
+                                        </button>
+                                        <button class="btn btn-small btn-view" onclick="viewEmployeeTrainings('<%= employee.userId %>')">
+                                            View Trainings
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="no-records">
+                <i>👥</i>
+                <h3>No Employees Found</h3>
+                <p>There are currently no employees under your management.</p>
+            </div>
+        <% } %>
+    </div>
 </div>
 
 <!-- Training Details Modal -->
@@ -146,210 +294,357 @@
   </div>
 </div>
 
-    <script>
-        // Toggle active class for sidebar links
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
+<!-- Employee Training History Modal -->
+<div id="employeeTrainingModal" class="modal">
+  <div class="modal-content large-modal">
+    <span class="close-modal" onclick="closeEmployeeTrainingModal()">&times;</span>
+    <h2 id="employeeTrainingTitle">Employee Training History</h2>
+    <div id="employeeTrainingContent">
+      <!-- Content will be loaded here dynamically -->
+    </div>
+  </div>
+</div>
 
-        // Toggle collapsible content
-        document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', function() {
-                var content = this.nextElementSibling;
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
+<script>
+    // Tab functionality
+    function showTab(tabId) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        // Show selected tab content
+        document.getElementById(tabId).classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+
+    // Training approval functions
+    function approveTraining(trainingRecordId) {
+        if (confirm('Are you sure you want to endorse this training request to HR?')) {
+            fetch('/api/training/endorse', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    trainingRecordId: trainingRecordId,
+                    decision: 'endorsed',
+                    status: 'For HR Approval'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Training request endorsed to HR successfully!');
+                    location.reload();
                 } else {
-                    // Hide all other collapsible contents
-                    document.querySelectorAll('.collapsible-content').forEach(item => {
-                        if (item !== content) {
-                            item.style.display = 'none';
-                        }
-                    });
-                    content.style.display = 'block';
+                    alert('Error endorsing training request: ' + data.message);
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while endorsing the training request.');
             });
-        });
-
-        // Training approval functions
-        function approveTraining(trainingRecordId) {
-            if (confirm('Are you sure you want to endorse this training request to HR?')) {
-                fetch('/api/training/endorse', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        trainingRecordId: trainingRecordId,
-                        decision: 'endorsed',
-                        status: 'For HR Approval'
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Training request endorsed to HR successfully!');
-                        location.reload();
-                    } else {
-                        alert('Error endorsing training request: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while endorsing the training request.');
-                });
-            }
         }
+    }
 
-        function rejectTraining(trainingRecordId) {
-            const remarks = prompt('Please provide reason for cancellation:');
-            if (remarks !== null) {
-                fetch('/api/training/reject', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        trainingRecordId: trainingRecordId,
-                        decision: 'rejected',
-                        status: 'Cancelled',
-                        remarks: remarks
-                    })
+    function rejectTraining(trainingRecordId) {
+        const remarks = prompt('Please provide reason for cancellation:');
+        if (remarks !== null) {
+            fetch('/api/training/reject', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    trainingRecordId: trainingRecordId,
+                    decision: 'rejected',
+                    status: 'Cancelled',
+                    remarks: remarks
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Training request has been cancelled successfully!');
-                        location.reload();
-                    } else {
-                        alert('Error cancelling training request: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while cancelling the training request.');
-                });
-            }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Training request has been cancelled successfully!');
+                    location.reload();
+                } else {
+                    alert('Error cancelling training request: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while cancelling the training request.');
+            });
         }
+    }
 
-        // Modal functionality
-        const modal = document.getElementById("trainingDetailsModal");
-        const modalContent = document.getElementById("modalContent");
+    // Employee functions
+    function viewEmployeeDetails(userId) {
+        alert('Employee details for user ID: ' + userId + '\n(Feature to be implemented)');
+    }
 
-        // Close modal when clicking X
-        document.querySelector(".close-modal").onclick = function() {
-            modal.style.display = "none";
+    // 1. First, let's add better error handling to the frontend JavaScript
+
+// Complete viewEmployeeTrainings function with all features
+async function viewEmployeeTrainings(userId) {
+    try {
+        console.log('🔍 Fetching training data for user:', userId);
+        
+        // Show loading state
+        document.getElementById('employeeTrainingContent').innerHTML = '<div class="loading-spinner"><p>Loading training history...</p></div>';
+        document.getElementById('employeeTrainingModal').style.display = 'block';
+        
+        // Fetch comprehensive training data with better error handling
+        const response = await fetch(`/linemanager/api/employee/trainings/${userId}`);
+        
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response URL:', response.url);
+        
+        // Check if response is ok
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
+        
+        // Check content type
+        const contentType = response.headers.get('content-type');
+        console.log('📄 Content type:', contentType);
+        
+        if (!contentType || !contentType.includes('application/json')) {
+            const textResponse = await response.text();
+            console.error('❌ Expected JSON but got:', textResponse.substring(0, 200));
+            throw new Error('Server returned HTML instead of JSON. Check if the API route is set up correctly.');
         }
-
-        // View training details
-        async function viewTrainingDetails(trainingRecordId) {
-            try {
-                // Show loading state
-                modalContent.innerHTML = '<p>Loading details...</p>';
-                modal.style.display = "block";
-                
-                // Fetch training details
-                const response = await fetch(`/api/training/details/${trainingRecordId}`);
-                const data = await response.json();
-                
-                if (data.error) throw new Error(data.error);
-                
-                // Format and display the details
-                const training = data.data;
-                modalContent.innerHTML = `
-                    <div class="detail-row">
-                        <div class="detail-label">Employee:</div>
-                        <div>${training.staffaccounts?.firstName || ''} ${training.staffaccounts?.lastName || ''}</div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Email:</div>
-                        <div>${training.useraccounts?.userEmail || 'No email'}</div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Position:</div>
-                        <div>${training.jobpositions?.jobTitle || 'No position'}</div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Training:</div>
-                        <div><strong>${training.trainingName}</strong></div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Description:</div>
-                        <div>${training.trainingDesc || 'No description provided'}</div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Dates:</div>
-                        <div>
-                            ${new Date(training.setStartDate).toLocaleDateString()} - 
-                            ${new Date(training.setEndDate).toLocaleDateString()}
-                            (${training.totalDuration} hours)
+        
+        const data = await response.json();
+        console.log('📋 Received data:', data);
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        const employee = data.employee;
+        const trainings = data.trainings;
+        
+        // Update modal title
+        document.getElementById('employeeTrainingTitle').innerHTML = 
+            `Training History - ${employee.firstName} ${employee.lastName}`;
+        
+        // Build comprehensive training history HTML
+        let trainingHTML = '';
+        
+        if (trainings && trainings.length > 0) {
+            trainings.forEach((training, index) => {
+                trainingHTML += `
+                    <div class="training-record-card">
+                        <div class="training-header">
+                            <div class="training-title-section">
+                                <h3>${training.trainingName}</h3>
+                                <span class="training-status-badge ${getStatusClass(training.status)}">
+                                    ${training.status}
+                                </span>
+                            </div>
+                            <div class="training-meta">
+                                <p><strong>Duration:</strong> ${training.totalDuration || 0} hours</p>
+                                <p><strong>Cost:</strong> ₱${parseFloat(training.cost || 0).toLocaleString()}</p>
+                                <p><strong>Type:</strong> ${training.isOnlineArrangement ? 'Online' : 'On-site'}</p>
+                                <p><strong>Requested:</strong> ${new Date(training.dateRequested).toLocaleDateString()}</p>
+                                ${training.setStartDate && training.setEndDate ? `
+                                    <p><strong>Duration:</strong> ${new Date(training.setStartDate).toLocaleDateString()} - ${new Date(training.setEndDate).toLocaleDateString()}</p>
+                                ` : ''}
+                                ${training.address && !training.isOnlineArrangement ? `
+                                    <p><strong>Location:</strong> ${training.address}, ${training.country || ''}</p>
+                                ` : ''}
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Cost:</div>
-                        <div>₱${parseFloat(training.cost || 0).toLocaleString()}</div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Type:</div>
-                        <div>${training.isOnlineArrangement ? 'Online' : 'On-site'}</div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Location:</div>
-                        <div>${training.address || 'N/A'} ${training.country ? ', ' + training.country : ''}</div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Status:</div>
-                        <div class="status-badge ${training.status === 'For HR Approval' ? 'status-hr' : 
-                                              training.status === 'Cancelled' ? 'status-cancelled' : 
-                                              'status-pending'}">
-                            ${training.status}
+                        
+                        <div class="training-body">
+                            <div class="training-section">
+                                <h4>Description</h4>
+                                <p>${training.trainingDesc || 'No description provided'}</p>
+                            </div>
+                            
+                            ${training.activities && training.activities.length > 0 ? `
+                            <div class="training-section">
+                                <h4>Activities (${training.activities.length})</h4>
+                                <div class="activities-grid">
+                                    ${training.activities.map(activity => `
+                                        <div class="activity-card">
+                                            <div class="activity-header">
+                                                <span class="activity-name">${activity.activityName || 'Unnamed Activity'}</span>
+                                                <span class="activity-type">${activity.activityType || 'N/A'}</span>
+                                            </div>
+                                            <div class="activity-details">
+                                                <p><strong>Duration:</strong> ${activity.estActivityDuration || 0} hours</p>
+                                                <p><strong>Status:</strong> ${activity.status || 'Unknown'}</p>
+                                                ${activity.timestampzStarted ? `<p><strong>Started:</strong> ${new Date(activity.timestampzStarted).toLocaleString()}</p>` : ''}
+                                                ${activity.timestampzCompleted ? `<p><strong>Completed:</strong> ${new Date(activity.timestampzCompleted).toLocaleString()}</p>` : ''}
+                                                ${activity.activityRemarks ? `<p><strong>Remarks:</strong> ${activity.activityRemarks}</p>` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ` : '<div class="training-section"><h4>Activities</h4><p>No activities recorded for this training.</p></div>'}
+                            
+                            ${training.skills && training.skills.length > 0 ? `
+                            <div class="training-section">
+                                <h4>Skills Covered (${training.skills.length})</h4>
+                                <div class="skills-list">
+                                    ${training.skills.map(skill => `
+                                        <span class="skill-badge ${skill.jobReqSkillType ? skill.jobReqSkillType.toLowerCase().replace(/\s+/g, '-') : 'general'}">${skill.jobReqSkillName || 'Unknown Skill'}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ` : '<div class="training-section"><h4>Skills</h4><p>No specific skills listed for this training.</p></div>'}
+                            
+                            ${training.objectives && training.objectives.length > 0 ? `
+                            <div class="training-section">
+                                <h4>Learning Objectives (${training.objectives.length})</h4>
+                                <ul class="objectives-list">
+                                    ${training.objectives.map(obj => `<li>${obj.objectiveName || 'Learning objective'}</li>`).join('')}
+                                </ul>
+                            </div>
+                            ` : '<div class="training-section"><h4>Objectives</h4><p>No learning objectives specified.</p></div>'}
+                            
+                            ${training.categories && training.categories.length > 0 ? `
+                            <div class="training-section">
+                                <h4>Training Categories</h4>
+                                <div class="categories-list">
+                                    ${training.categories.map(cat => `<span class="category-badge">${cat.categoryName || 'Category'}</span>`).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.certificates && training.certificates.length > 0 ? `
+                            <div class="training-section">
+                                <h4>Certificates (${training.certificates.length})</h4>
+                                <div class="certificates-list">
+                                    ${training.certificates.map(cert => `
+                                        <div class="certificate-card">
+                                            <h5>${cert.trainingCertTitle || 'Certificate'}</h5>
+                                            <p>${cert.trainingCertDesc || 'No description available'}</p>
+                                            ${cert.certificate_url ? `<a href="${cert.certificate_url}" target="_blank" class="btn btn-small btn-view">View Certificate</a>` : '<span class="text-muted">Certificate file not available</span>'}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.lmDecisionRemarks || training.hrDecisionRemarks ? `
+                            <div class="training-section">
+                                <h4>Decision History</h4>
+                                ${training.lmDecisionDate ? `<p><strong>Manager Decision Date:</strong> ${new Date(training.lmDecisionDate).toLocaleDateString()}</p>` : ''}
+                                ${training.lmDecisionRemarks ? `<p><strong>Manager Remarks:</strong> ${training.lmDecisionRemarks}</p>` : ''}
+                                ${training.hrDecisionDate ? `<p><strong>HR Decision Date:</strong> ${new Date(training.hrDecisionDate).toLocaleDateString()}</p>` : ''}
+                                ${training.hrDecisionRemarks ? `<p><strong>HR Remarks:</strong> ${training.hrDecisionRemarks}</p>` : ''}
+                            </div>
+                            ` : ''}
                         </div>
-                    </div>
-                    
-                    ${training.lmDecisionRemarks ? `
-                    <div class="detail-row">
-                        <div class="detail-label">Manager Remarks:</div>
-                        <div>${training.lmDecisionRemarks}</div>
-                    </div>
-                    ` : ''}
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">Request Date:</div>
-                        <div>${new Date(training.dateRequested).toLocaleDateString()}</div>
                     </div>
                 `;
-                
-            } catch (error) {
-                console.error('Error loading details:', error);
-                modalContent.innerHTML = `
-                    <p style="color: red;">Error loading training details:</p>
+            });
+        } else {
+            trainingHTML = `
+                <div class="no-records">
+                    <i style="font-size: 4rem; display: block; margin-bottom: 20px; opacity: 0.5;">📚</i>
+                    <h3>No Training Records</h3>
+                    <p>This employee has no training history.</p>
+                    <p style="color: #6c757d; font-size: 0.9rem;">When they request training, it will appear here.</p>
+                </div>
+            `;
+        }
+        
+        document.getElementById('employeeTrainingContent').innerHTML = trainingHTML;
+        
+    } catch (error) {
+        console.error('❌ Error loading employee trainings:', error);
+        document.getElementById('employeeTrainingContent').innerHTML = `
+            <div style="color: red; text-align: center; padding: 40px;">
+                <h3 style="color: #dc3545; margin-bottom: 15px;">⚠️ Error Loading Training History</h3>
+                <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 20px; margin: 20px 0; color: #721c24;">
+                    <p><strong>Error Details:</strong></p>
                     <p>${error.message}</p>
-                `;
-            }
-        }
+                </div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-small" onclick="closeEmployeeTrainingModal()" style="margin-right: 10px;">Close</button>
+                    <button class="btn btn-small btn-outline" onclick="viewEmployeeTrainings('${userId}')" style="background: #007bff; color: white;">Try Again</button>
+                </div>
+                <details style="margin-top: 20px; text-align: left;">
+                    <summary style="cursor: pointer; padding: 10px; background: #e9ecef; border-radius: 4px;">Technical Details</summary>
+                    <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; margin-top: 10px; font-family: monospace; font-size: 0.8rem;">
+                        <p><strong>User ID:</strong> ${userId}</p>
+                        <p><strong>Error Type:</strong> ${error.name || 'Unknown'}</p>
+                        <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+                        <p><strong>Expected URL:</strong> /linemanager/api/employee/trainings/${userId}</p>
+                    </div>
+                </details>
+            </div>
+        `;
+    }
+}
 
-        // Auto-refresh every 5 minutes to check for new requests
-        setInterval(function() {
-            location.reload();
-        }, 300000); // 5 minutes
-    </script>
+// Helper function to get status CSS class
+function getStatusClass(status) {
+    switch (status) {
+        case 'For Line Manager Endorsement': 
+            return 'status-pending-lm';
+        case 'For HR Approval': 
+            return 'status-pending-hr';
+        case 'Cancelled': 
+            return 'status-cancelled';
+        case 'Not Started': 
+            return 'status-not-started';
+        case 'In Progress': 
+            return 'status-in-progress';
+        case 'Completed': 
+            return 'status-completed';
+        default: 
+            return 'status-unknown';
+    }
+}
+
+// Close employee training modal
+function closeEmployeeTrainingModal() {
+    document.getElementById('employeeTrainingModal').style.display = 'none';
+}
+
+    // Auto-refresh every 5 minutes to check for new requests
+    setInterval(function() {
+        location.reload();
+    }, 300000); // 5 minutes
+</script>
 </body>
 </html>
