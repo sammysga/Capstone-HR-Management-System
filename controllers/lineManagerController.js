@@ -3846,8 +3846,6 @@ getApplicantDetails: async function(req, res) {
     }
 },
 
-// Add these functions to your lineManagerController.js to handle applicant approval and rejection
-
 // Handle applicant approval
 approveApplicant: async function(req, res) {
     try {

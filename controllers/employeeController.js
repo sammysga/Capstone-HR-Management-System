@@ -4485,165 +4485,6 @@ getCertificates: async function(req, res) {
         });
     }
         }, 
-getTrainingsByJobAndDept: async function(req, res) {
-    console.log(`[${new Date().toISOString()}] Fetching trainings for modal dropdown - user ${req.session?.user?.userId}`);
-    
-    try {
-        const userId = req.session?.user?.userId;
-        if (!userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'User not authenticated'
-            });
-        }
-
-        // Get user's job and department from staffaccounts
-        const { data: staff, error: staffError } = await supabase
-            .from('staffaccounts')
-            .select('jobId, departmentId')
-            .eq('userId', userId)
-            .single();
-
-        if (staffError || !staff) {
-            console.error('Error fetching staff details:', staffError);
-            return res.status(404).json({
-                success: false,
-                message: 'Staff information not found'
-            });
-        }
-
-        // Get trainings for user's job
-        const { data: trainings, error: trainingsError } = await supabase
-            .from('trainings')
-            .select('trainingId, trainingName, trainingDesc, isOnlineArrangement, cost, totalDuration, address, country')
-            .eq('jobId', staff.jobId)
-            .eq('isActive', true)
-            .order('trainingName', { ascending: true });
-
-        if (trainingsError) {
-            console.error('Error fetching trainings:', trainingsError);
-            throw new Error(`Failed to fetch trainings: ${trainingsError.message}`);
-        }
-
-        console.log(`Found ${trainings?.length || 0} trainings for user's job`);
-
-        res.json({
-            success: true,
-            data: trainings || [],
-            count: trainings?.length || 0
-        });
-
-    } catch (error) {
-        console.error('Error in getTrainingsByJobAndDept:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch trainings',
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-},
-getTrainingSkillsAndObjectives: async function(req, res) {
-    console.log(`[${new Date().toISOString()}] Fetching details for training ${req.params.trainingId}`);
-
-    try {
-        const { trainingId } = req.params;
-
-        if (!trainingId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Training ID is required'
-            });
-        }
-
-        // Get training activities with types
-        const { data: activities, error: activitiesError } = await supabase
-            .from('training_activities')
-            .select(`
-                activityId,
-                activityName,
-                activityType,
-                estActivityDuration,
-                activityRemarks
-            `)
-            .eq('trainingId', parseInt(trainingId))
-            .order('activityId', { ascending: true });
-
-        if (activitiesError) {
-            console.error('Error fetching training activities:', activitiesError);
-        }
-
-        // Get training skills
-        const { data: trainingSkills, error: skillsError } = await supabase
-            .from('training_skills')
-            .select('jobReqSkillId')
-            .eq('trainingId', parseInt(trainingId));
-
-        if (skillsError) {
-            console.error('Error fetching training skills:', skillsError);
-        }
-
-        // Get skill details if any skills exist
-        let skills = [];
-        if (trainingSkills && trainingSkills.length > 0) {
-            const skillIds = trainingSkills.map(ts => ts.jobReqSkillId);
-            const { data: skillDetails, error: skillDetailsError } = await supabase
-                .from('jobreqskills')
-                .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
-                .in('jobReqSkillId', skillIds)
-                .order('jobReqSkillName', { ascending: true });
-
-            if (!skillDetailsError && skillDetails) {
-                skills = skillDetails;
-            }
-        }
-
-        // Get training objectives
-        const { data: trainingObjectives, error: objectivesError } = await supabase
-            .from('training_objectives')
-            .select('objectiveId')
-            .eq('trainingId', parseInt(trainingId));
-
-        if (objectivesError) {
-            console.error('Error fetching training objectives:', objectivesError);
-        }
-
-        // Get objective details if any objectives exist
-        let objectives = [];
-        if (trainingObjectives && trainingObjectives.length > 0) {
-            const objectiveIds = trainingObjectives.map(to => to.objectiveId);
-            const { data: objectiveDetails, error: objectiveDetailsError } = await supabase
-                .from('objectivesettings_objectives')
-                .select('objectiveId, objectiveDescrpt, objectiveKPI, objectiveUOM')
-                .in('objectiveId', objectiveIds)
-                .order('objectiveDescrpt', { ascending: true });
-
-            if (!objectiveDetailsError && objectiveDetails) {
-                objectives = objectiveDetails;
-            }
-        }
-
-        console.log(`Found ${activities?.length || 0} activities, ${skills.length} skills and ${objectives.length} objectives for training ${trainingId}`);
-
-        res.json({
-            success: true,
-            data: {
-                activities: activities || [],
-                skills: skills,
-                objectives: objectives
-            }
-        });
-
-    } catch (error) {
-        console.error('Error in getTrainingSkillsAndObjectives:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch training details',
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-}, 
 // Get IDP periods for the current user
 getIdpPeriods: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Fetching IDP periods for user ${req.session?.user?.userId}`);
@@ -4730,7 +4571,418 @@ getIdpPeriods: async function(req, res) {
     }
 },
 
-// Get IDP data and training categories
+
+// Get activity types (new method)
+getActivityTypes: async function(req, res) {
+    try {
+        const { data: activityTypes, error } = await supabase
+            .from("training_records_activities_types")
+            .select("*")
+            .order("activityType", { ascending: true });
+
+        if (error) {
+            console.error("Error fetching activity types:", error);
+            return res.status(500).json({ success: false, message: "Error fetching activity types" });
+        }
+
+        return res.status(200).json({ 
+            success: true, 
+            data: activityTypes || []
+        });
+
+    } catch (error) {
+        console.error("Error in getActivityTypes:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while fetching activity types",
+            error: error.message 
+        });
+    }
+},
+
+// Add new activity type (new method)
+addActivityType: async function(req, res) {
+    try {
+        const { activityType } = req.body;
+        
+        if (!activityType) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Activity type is required" 
+            });
+        }
+
+        // Check if activity type already exists
+        const { data: existing, error: checkError } = await supabase
+            .from("training_records_activities_types")
+            .select("activityTypeId")
+            .eq("activityType", activityType.trim())
+            .single();
+
+        if (existing) {
+            return res.status(409).json({ 
+                success: false, 
+                message: "Activity type already exists" 
+            });
+        }
+
+        // Insert new activity type
+        const { data: newType, error: insertError } = await supabase
+            .from("training_records_activities_types")
+            .insert({
+                activityType: activityType.trim()
+            })
+            .select()
+            .single();
+
+        if (insertError) {
+            console.error("Error inserting activity type:", insertError);
+            return res.status(500).json({ 
+                success: false, 
+                message: "Error adding activity type" 
+            });
+        }
+
+        return res.status(201).json({ 
+            success: true, 
+            data: newType,
+            message: "Activity type added successfully" 
+        });
+
+    } catch (error) {
+        console.error("Error in addActivityType:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while adding the activity type",
+            error: error.message 
+        });
+    }
+},
+
+// UPDATED: Enhanced createNewTrainingRequest with auto-duration calculation
+createNewTrainingRequest: async function(req, res) {
+    console.log(`[${new Date().toISOString()}] Creating new training request for user ${req.session?.user?.userId}`);
+    console.log('Request body:', req.body);
+
+    try {
+        const userId = req.session?.user?.userId;
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User not authenticated'
+            });
+        }
+
+        const {
+            trainingName,
+            trainingDesc,
+            cost,
+            midyearidpId,
+            finalyearidpId,
+            isOnlineArrangement,
+            address,
+            country,
+            activities,
+            certificates,
+            objectives = [], // Default to empty array
+            skills = [] // Default to empty array
+        } = req.body;
+
+        // Validate required fields
+        if (!trainingName || !trainingDesc) {
+            return res.status(400).json({
+                success: false,
+                message: 'Training name and description are required'
+            });
+        }
+
+        if (!midyearidpId && !finalyearidpId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Either midyear or finalyear IDP ID is required'
+            });
+        }
+
+        if (!activities || activities.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'At least one training activity is required'
+            });
+        }
+
+        if (!certificates || certificates.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'At least one training certificate is required'
+            });
+        }
+
+        // Validate onsite training requirements
+        if (!isOnlineArrangement && (!address || !country)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Address and country are required for onsite training'
+            });
+        }
+
+        // UPDATED: Calculate total duration from activities
+        const totalDuration = activities.reduce((sum, activity) => {
+            return sum + (parseFloat(activity.estActivityDuration) || 0);
+        }, 0);
+
+        if (totalDuration <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Total duration must be greater than 0. Please check activity durations.'
+            });
+        }
+
+        // Get user's job and department
+        const { data: staff, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('jobId, departmentId')
+            .eq('userId', userId)
+            .single();
+
+        if (staffError || !staff) {
+            console.error('Error fetching staff details:', staffError);
+            return res.status(404).json({
+                success: false,
+                message: 'Staff information not found'
+            });
+        }
+
+        // Create the training record
+        const trainingRecordData = {
+            userId: userId,
+            trainingName: trainingName,
+            trainingDesc: trainingDesc,
+            cost: parseFloat(cost) || 0,
+            midyearidpId: midyearidpId ? parseInt(midyearidpId) : null,
+            finalyearidpId: finalyearidpId ? parseInt(finalyearidpId) : null,
+            isOnlineArrangement: isOnlineArrangement,
+            address: isOnlineArrangement ? null : address,
+            country: isOnlineArrangement ? null : country,
+            totalDuration: totalDuration, // Use calculated duration
+            jobId: staff.jobId,
+            dateRequested: new Date().toISOString().split('T')[0],
+            isApproved: null, // Pending approval
+            created_at: new Date().toISOString(),
+            status: 'Pending Approval'
+        };
+
+        console.log('Creating training record with data:', trainingRecordData);
+
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .insert([trainingRecordData])
+            .select()
+            .single();
+
+        if (recordError) {
+            console.error('Error creating training record:', recordError);
+            throw new Error(`Failed to create training record: ${recordError.message}`);
+        }
+
+        const trainingRecordId = trainingRecord.trainingRecordId;
+        console.log(`Training record created with ID: ${trainingRecordId}`);
+
+        // UPDATED: Create activity records with proper type handling
+        let activitiesCreated = 0;
+        let activitiesFailed = 0;
+
+        for (const [index, activity] of activities.entries()) {
+            try {
+                // Get or create activity type
+                let activityTypeId = null;
+                
+                if (activity.activityType) {
+                    // First, try to find existing activity type
+                    const { data: existingType, error: typeCheckError } = await supabase
+                        .from("training_records_activities_types")
+                        .select("activityTypeId")
+                        .eq("activityType", activity.activityType.trim())
+                        .single();
+
+                    if (existingType) {
+                        activityTypeId = existingType.activityTypeId;
+                    } else {
+                        // Create new activity type if it doesn't exist
+                        const { data: newType, error: newTypeError } = await supabase
+                            .from("training_records_activities_types")
+                            .insert({ activityType: activity.activityType.trim() })
+                            .select("activityTypeId")
+                            .single();
+
+                        if (!newTypeError && newType) {
+                            activityTypeId = newType.activityTypeId;
+                        }
+                    }
+                }
+
+                const activityRecordData = {
+                    trainingRecordId: trainingRecordId,
+                    activityName: activity.activityName,
+                    activityTypeId: activityTypeId,
+                    estActivityDuration: activity.estActivityDuration.toString(),
+                    activityRemarks: activity.activityRemarks || null,
+                    status: 'Not Started',
+                    created_at: new Date().toISOString()
+                };
+
+                console.log(`Creating activity record ${index + 1}:`, activityRecordData);
+
+                const { data: activityRecord, error: activityError } = await supabase
+                    .from('training_records_activities')
+                    .insert([activityRecordData])
+                    .select()
+                    .single();
+
+                if (activityError) {
+                    console.error(`Error creating activity record ${index + 1}:`, activityError);
+                    activitiesFailed++;
+                } else {
+                    activitiesCreated++;
+                    console.log(`Successfully created activity record: ${activityRecord.trainingRecordActivityId}`);
+                }
+            } catch (activityError) {
+                console.error(`Exception creating activity record ${index + 1}:`, activityError);
+                activitiesFailed++;
+            }
+        }
+
+        // UPDATED: Create objective relationships (multiple)
+        let objectivesCreated = 0;
+        if (objectives && objectives.length > 0) {
+            for (const objective of objectives) {
+                try {
+                    const objectiveRecordData = {
+                        trainingRecordId: trainingRecordId,
+                        objectiveId: parseInt(objective.objectiveId),
+                        created_at: new Date().toISOString()
+                    };
+
+                    const { data: objectiveRecord, error: objectiveError } = await supabase
+                        .from('training_records_objectives')
+                        .insert([objectiveRecordData])
+                        .select()
+                        .single();
+
+                    if (objectiveError) {
+                        console.error('Error creating objective record:', objectiveError);
+                    } else {
+                        objectivesCreated++;
+                        console.log(`Successfully created objective record: ${objectiveRecord.trainingRecordObjectiveId}`);
+                    }
+                } catch (objectiveError) {
+                    console.error('Exception creating objective record:', objectiveError);
+                }
+            }
+        }
+
+        // UPDATED: Create skill relationships (multiple)
+        let skillsCreated = 0;
+        if (skills && skills.length > 0) {
+            for (const skill of skills) {
+                try {
+                    const skillRecordData = {
+                        trainingRecordId: trainingRecordId,
+                        jobReqSkillId: parseInt(skill.skillId),
+                        created_at: new Date().toISOString()
+                    };
+
+                    const { data: skillRecord, error: skillError } = await supabase
+                        .from('training_records_skills')
+                        .insert([skillRecordData])
+                        .select()
+                        .single();
+
+                    if (skillError) {
+                        console.error('Error creating skill record:', skillError);
+                    } else {
+                        skillsCreated++;
+                        console.log(`Successfully created skill record: ${skillRecord.trainingRecordSkillId}`);
+                    }
+                } catch (skillError) {
+                    console.error('Exception creating skill record:', skillError);
+                }
+            }
+        }
+
+        // Create certificate records
+        let certificatesCreated = 0;
+        let certificatesFailed = 0;
+
+        for (const [index, certificate] of certificates.entries()) {
+            try {
+                const certificateRecordData = {
+                    trainingRecordId: trainingRecordId,
+                    trainingCertTitle: certificate.trainingCertTitle,
+                    trainingCertDesc: certificate.trainingCertDesc,
+                    certificate_url: null, // Will be populated when certificate is issued
+                    created_at: new Date().toISOString()
+                };
+
+                console.log(`Creating certificate record ${index + 1}:`, certificateRecordData);
+
+                const { data: certificateRecord, error: certificateError } = await supabase
+                    .from('training_records_certificates')
+                    .insert([certificateRecordData])
+                    .select()
+                    .single();
+
+                if (certificateError) {
+                    console.error(`Error creating certificate record ${index + 1}:`, certificateError);
+                    certificatesFailed++;
+                } else {
+                    certificatesCreated++;
+                    console.log(`Successfully created certificate record: ${certificateRecord.trainingRecordCertificateId}`);
+                }
+            } catch (certificateError) {
+                console.error(`Exception creating certificate record ${index + 1}:`, certificateError);
+                certificatesFailed++;
+            }
+        }
+
+        console.log(`Training request created successfully: ${trainingRecordId}`);
+        console.log(`- Activities: ${activitiesCreated}/${activities.length} created`);
+        console.log(`- Certificates: ${certificatesCreated}/${certificates.length} created`);
+        console.log(`- Objectives linked: ${objectivesCreated}/${objectives.length}`);
+        console.log(`- Skills linked: ${skillsCreated}/${skills.length}`);
+
+        res.status(201).json({
+            success: true,
+            message: 'Training request submitted successfully and is pending approval',
+            data: {
+                trainingRecordId: trainingRecordId,
+                trainingName: trainingName,
+                totalDuration: totalDuration,
+                activitiesCreated: activitiesCreated,
+                totalActivities: activities.length,
+                activitiesFailed: activitiesFailed,
+                allActivitiesCreated: activitiesCreated === activities.length,
+                certificatesCreated: certificatesCreated,
+                totalCertificates: certificates.length,
+                certificatesFailed: certificatesFailed,
+                allCertificatesCreated: certificatesCreated === certificates.length,
+                objectivesLinked: objectivesCreated,
+                skillsLinked: skillsCreated,
+                isOnline: isOnlineArrangement,
+                status: 'Pending Approval'
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in createNewTrainingRequest:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create training request',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+},
+
 getIdpCategories: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Fetching IDP categories for ID ${req.params.idpId}`);
     
@@ -4744,7 +4996,7 @@ getIdpCategories: async function(req, res) {
         }
 
         const { idpId } = req.params;
-        const { type } = req.query; // Will be passed from frontend
+        const { type } = req.query;
 
         if (!idpId) {
             return res.status(400).json({
@@ -4757,7 +5009,7 @@ getIdpCategories: async function(req, res) {
         let tableName = '';
         let idField = '';
 
-        // Determine which table to query based on type or try both
+        // Determine which table to query based on type
         if (type === 'Midyear') {
             tableName = 'midyearidps';
             idField = 'midyearidpId';
@@ -4765,7 +5017,7 @@ getIdpCategories: async function(req, res) {
             tableName = 'finalyearidps';
             idField = 'finalyearidpId';
         } else {
-            // Try midyear first, then finalyear
+            // Try both tables if type not specified
             const { data: midyearData, error: midyearError } = await supabase
                 .from('midyearidps')
                 .select('*')
@@ -4815,16 +5067,18 @@ getIdpCategories: async function(req, res) {
             });
         }
 
-        // Extract training categories from the JSON field
+        // Extract training categories from the JSONB field
         let trainingCategories = [];
         if (idpData.trainingCategories) {
-            try {
-                trainingCategories = Array.isArray(idpData.trainingCategories) ? 
-                    idpData.trainingCategories : 
-                    JSON.parse(idpData.trainingCategories);
-            } catch (parseError) {
-                console.error('Error parsing training categories:', parseError);
-                trainingCategories = [];
+            if (Array.isArray(idpData.trainingCategories)) {
+                trainingCategories = idpData.trainingCategories;
+            } else if (typeof idpData.trainingCategories === 'string') {
+                try {
+                    trainingCategories = JSON.parse(idpData.trainingCategories);
+                } catch (parseError) {
+                    console.error('Error parsing training categories:', parseError);
+                    trainingCategories = [];
+                }
             }
         }
 
@@ -4848,10 +5102,7 @@ getIdpCategories: async function(req, res) {
     }
 },
 
-// Get user's objectives
 getUserObjectives: async function(req, res) {
-    console.log(`[${new Date().toISOString()}] Fetching objectives for user ${req.session?.user?.userId}`);
-    
     try {
         const userId = req.session?.user?.userId;
         if (!userId) {
@@ -4861,62 +5112,79 @@ getUserObjectives: async function(req, res) {
             });
         }
 
-        // Get user's objective settings and then the objectives
+        // Get user's job ID from staff account
+        const { data: staffData, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('jobId')
+            .eq('userId', userId)
+            .single();
+
+        if (staffError || !staffData) {
+            console.error('Error fetching staff data:', staffError);
+            return res.status(404).json({
+                success: false,
+                message: 'Staff information not found'
+            });
+        }
+
+        const jobId = staffData.jobId;
+
+        // Get objectives for this user and job
         const { data: objectiveSettings, error: settingsError } = await supabase
             .from('objectivesettings')
             .select('objectiveSettingsId')
             .eq('userId', userId)
-            .order('created_at', { ascending: false });
+            .eq('jobId', jobId);
 
         if (settingsError) {
             console.error('Error fetching objective settings:', settingsError);
-            throw new Error(`Failed to fetch objective settings: ${settingsError.message}`);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching objective settings'
+            });
         }
 
         if (!objectiveSettings || objectiveSettings.length === 0) {
             return res.json({
                 success: true,
                 data: [],
-                message: 'No objective settings found for user'
+                message: 'No objectives found for this user'
             });
         }
 
-        // Get objectives for all the user's objective settings
+        // Get all objectives for these settings
         const settingsIds = objectiveSettings.map(setting => setting.objectiveSettingsId);
         
         const { data: objectives, error: objectivesError } = await supabase
             .from('objectivesettings_objectives')
-            .select('objectiveId, objectiveDescrpt, objectiveKPI, objectiveUOM, objectiveTarget')
+            .select('objectiveId, objectiveDescrpt, objectiveKPI, objectiveUOM')
             .in('objectiveSettingsId', settingsIds)
             .order('objectiveDescrpt', { ascending: true });
 
         if (objectivesError) {
             console.error('Error fetching objectives:', objectivesError);
-            throw new Error(`Failed to fetch objectives: ${objectivesError.message}`);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching objectives'
+            });
         }
-
-        console.log(`Found ${objectives?.length || 0} objectives for user`);
 
         res.json({
             success: true,
-            data: objectives || [],
-            count: objectives?.length || 0
+            data: objectives || []
         });
 
     } catch (error) {
         console.error('Error in getUserObjectives:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch objectives',
+            message: 'Failed to fetch user objectives',
             error: error.message
         });
     }
 },
 
-// Get user's job required skills
 getUserSkills: async function(req, res) {
-    console.log(`[${new Date().toISOString()}] Fetching skills for user ${req.session?.user?.userId}`);
-    
     try {
         const userId = req.session?.user?.userId;
         if (!userId) {
@@ -4926,580 +5194,227 @@ getUserSkills: async function(req, res) {
             });
         }
 
-        // Get user's job from staffaccounts
-        const { data: staff, error: staffError } = await supabase
+        // Get user's job ID from staff account
+        const { data: staffData, error: staffError } = await supabase
             .from('staffaccounts')
             .select('jobId')
             .eq('userId', userId)
             .single();
 
-        if (staffError || !staff) {
-            console.error('Error fetching staff details:', staffError);
+        if (staffError || !staffData) {
+            console.error('Error fetching staff data:', staffError);
             return res.status(404).json({
                 success: false,
                 message: 'Staff information not found'
             });
         }
 
-        // Get job required skills
+        const jobId = staffData.jobId;
+
+        // Get skills required for this job
         const { data: skills, error: skillsError } = await supabase
             .from('jobreqskills')
             .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
-            .eq('jobId', staff.jobId)
+            .eq('jobId', jobId)
             .order('jobReqSkillName', { ascending: true });
 
         if (skillsError) {
-            console.error('Error fetching job required skills:', skillsError);
-            throw new Error(`Failed to fetch skills: ${skillsError.message}`);
+            console.error('Error fetching job skills:', skillsError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching job skills'
+            });
         }
-
-        console.log(`Found ${skills?.length || 0} skills for user's job`);
 
         res.json({
             success: true,
-            data: skills || [],
-            count: skills?.length || 0
+            data: skills || []
         });
 
     } catch (error) {
         console.error('Error in getUserSkills:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch skills',
+            message: 'Failed to fetch user skills',
             error: error.message
         });
     }
 },
 
-createNewTrainingRequest: async function(req, res) {
-    console.log(`[${new Date().toISOString()}] Creating new training request for user ${req.session?.user?.userId}`);
-    console.log('Request body:', req.body);
-
+// Get Mid-Year IDP with full data
+getMidYearIDPForEmployee: async function(req, res) {
     try {
-        const userId = req.session?.user?.userId;
-        if (!userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'User not authenticated'
-            });
+        const idpId = req.params.idpId;
+        const userId = req.user.userId; // Assuming user is in session
+        
+        if (!idpId) {
+            return res.status(400).json({ success: false, message: "IDP ID is required" });
         }
 
-        const {
-            trainingName,
-            trainingDesc,
-            cost,
-            midyearidpId,
-            finalyearidpId,
-            isOnlineArrangement,
-            address,
-            country,
-            objectiveId,
-            jobReqSkillId,
-            totalDuration,
-            activities,
-            certificates
-        } = req.body;
-
-        // Validate required fields
-        if (!trainingName || !trainingDesc) {
-            return res.status(400).json({
-                success: false,
-                message: 'Training name and description are required'
-            });
-        }
-
-        if (!midyearidpId && !finalyearidpId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Either midyear or finalyear IDP ID is required'
-            });
-        }
-
-        if (!activities || activities.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'At least one training activity is required'
-            });
-        }
-
-        if (!certificates || certificates.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'At least one training certificate is required'
-            });
-        }
-
-        // Validate onsite training requirements
-        if (!isOnlineArrangement && (!address || !country)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Address and country are required for onsite training'
-            });
-        }
-
-        // Get user's job and department for validation
-        const { data: staff, error: staffError } = await supabase
-            .from('staffaccounts')
-            .select('jobId, departmentId')
-            .eq('userId', userId)
+        // Get Mid-Year IDP data
+        const { data: midyearData, error: midyearError } = await supabase
+            .from("midyearidps")
+            .select("*")
+            .eq("midyearidpId", idpId)
+            .eq("userId", userId)
             .single();
 
-        if (staffError || !staff) {
-            console.error('Error fetching staff details:', staffError);
-            return res.status(404).json({
-                success: false,
-                message: 'Staff information not found'
-            });
+        if (midyearError) {
+            console.error("Error fetching Mid-Year IDP:", midyearError);
+            return res.status(500).json({ success: false, message: "Error fetching Mid-Year IDP data" });
         }
 
-        // Create the training record
-        const trainingRecordData = {
-            userId: userId,
-            trainingName: trainingName,
-            trainingDesc: trainingDesc,
-            cost: parseFloat(cost) || 0,
-            midyearidpId: midyearidpId ? parseInt(midyearidpId) : null,
-            isOnlineArrangement: isOnlineArrangement,
-            address: isOnlineArrangement ? null : address,
-            country: isOnlineArrangement ? null : country,
-            totalDuration: parseFloat(totalDuration) || 0,
-            jobId: staff.jobId,
-            dateRequested: new Date().toISOString().split('T')[0],
-            isApproved: null, // Pending approval
-            created_at: new Date().toISOString()
-        };
+        let suggestedTrainings = [];
+        
+        if (midyearData) {
+            // Get suggested trainings with training details
+            const { data: trainingsData, error: trainingsError } = await supabase
+                .from("midyearidps_suggestedtrainings")
+                .select(`
+                    *,
+                    trainings (
+                        trainingId,
+                        trainingName,
+                        trainingDesc
+                    )
+                `)
+                .eq("midyearidpId", midyearData.midyearidpId);
 
-        console.log('Creating training record with data:', trainingRecordData);
-
-        const { data: trainingRecord, error: recordError } = await supabase
-            .from('training_records')
-            .insert([trainingRecordData])
-            .select()
-            .single();
-
-        if (recordError) {
-            console.error('Error creating training record:', recordError);
-            throw new Error(`Failed to create training record: ${recordError.message}`);
-        }
-
-        const trainingRecordId = trainingRecord.trainingRecordId;
-        console.log(`Training record created with ID: ${trainingRecordId}`);
-
-        // Create activity records
-        let activitiesCreated = 0;
-        let activitiesFailed = 0;
-
-        for (const [index, activity] of activities.entries()) {
-            try {
-                const activityRecordData = {
-                    trainingRecordId: trainingRecordId,
-                    activityName: activity.activityName,
-                    activityType: activity.activityType,
-                    estActivityDuration: parseFloat(activity.estActivityDuration) || 0,
-                    activityRemarks: activity.activityRemarks || null,
-                    status: 'Not Started',
-                    created_at: new Date().toISOString()
-                };
-
-                console.log(`Creating activity record ${index + 1}:`, activityRecordData);
-
-                const { data: activityRecord, error: activityError } = await supabase
-                    .from('training_records_activities')
-                    .insert([activityRecordData])
-                    .select()
-                    .single();
-
-                if (activityError) {
-                    console.error(`Error creating activity record ${index + 1}:`, activityError);
-                    activitiesFailed++;
-                } else {
-                    activitiesCreated++;
-                    console.log(`Successfully created activity record: ${activityRecord.trainingRecordActivityId}`);
-                }
-            } catch (activityError) {
-                console.error(`Exception creating activity record ${index + 1}:`, activityError);
-                activitiesFailed++;
+            if (!trainingsError && trainingsData) {
+                suggestedTrainings = trainingsData;
             }
         }
 
-        // Create objective relationship if provided
-        let objectiveCreated = false;
-        if (objectiveId) {
-            try {
-                const objectiveRecordData = {
-                    trainingRecordId: trainingRecordId,
-                    objectiveId: parseInt(objectiveId),
-                    created_at: new Date().toISOString()
-                };
-
-                const { data: objectiveRecord, error: objectiveError } = await supabase
-                    .from('training_records_objectives')
-                    .insert([objectiveRecordData])
-                    .select()
-                    .single();
-
-                if (objectiveError) {
-                    console.error('Error creating objective record:', objectiveError);
-                } else {
-                    objectiveCreated = true;
-                    console.log(`Successfully created objective record: ${objectiveRecord.trainingRecordObjectiveId}`);
-                }
-            } catch (objectiveError) {
-                console.error('Exception creating objective record:', objectiveError);
-            }
-        }
-
-        // Create skill relationship if provided
-        let skillCreated = false;
-        if (jobReqSkillId) {
-            try {
-                const skillRecordData = {
-                    trainingRecordId: trainingRecordId,
-                    jobReqSkillId: parseInt(jobReqSkillId),
-                    created_at: new Date().toISOString()
-                };
-
-                const { data: skillRecord, error: skillError } = await supabase
-                    .from('training_records_skills')
-                    .insert([skillRecordData])
-                    .select()
-                    .single();
-
-                if (skillError) {
-                    console.error('Error creating skill record:', skillError);
-                } else {
-                    skillCreated = true;
-                    console.log(`Successfully created skill record: ${skillRecord.trainingRecordSkillId}`);
-                }
-            } catch (skillError) {
-                console.error('Exception creating skill record:', skillError);
-            }
-        }
-
-        // Create certificate records
-        let certificatesCreated = 0;
-        let certificatesFailed = 0;
-
-        for (const [index, certificate] of certificates.entries()) {
-            try {
-                const certificateRecordData = {
-                    trainingRecordId: trainingRecordId,
-                    trainingCertTitle: certificate.trainingCertTitle,
-                    trainingCertDesc: certificate.trainingCertDesc,
-                    certificate_url: null, // Will be populated when certificate is issued
-                    created_at: new Date().toISOString()
-                };
-
-                console.log(`Creating certificate record ${index + 1}:`, certificateRecordData);
-
-                const { data: certificateRecord, error: certificateError } = await supabase
-                    .from('training_records_certificates')
-                    .insert([certificateRecordData])
-                    .select()
-                    .single();
-
-                if (certificateError) {
-                    console.error(`Error creating certificate record ${index + 1}:`, certificateError);
-                    certificatesFailed++;
-                } else {
-                    certificatesCreated++;
-                    console.log(`Successfully created certificate record: ${certificateRecord.trainingRecordCertificateId}`);
-                }
-            } catch (certificateError) {
-                console.error(`Exception creating certificate record ${index + 1}:`, certificateError);
-                certificatesFailed++;
-            }
-        }
-
-        console.log(`Training request created successfully: ${trainingRecordId}`);
-        console.log(`- Activities: ${activitiesCreated}/${activities.length} created`);
-        console.log(`- Certificates: ${certificatesCreated}/${certificates.length} created`);
-        console.log(`- Objective linked: ${objectiveCreated}`);
-        console.log(`- Skill linked: ${skillCreated}`);
-
-        res.status(201).json({
+        return res.status(200).json({
             success: true,
-            message: 'Training request submitted successfully and is pending approval',
             data: {
-                trainingRecordId: trainingRecordId,
-                trainingName: trainingName,
-                totalDuration: parseFloat(totalDuration) || 0,
-                activitiesCreated: activitiesCreated,
-                totalActivities: activities.length,
-                activitiesFailed: activitiesFailed,
-                allActivitiesCreated: activitiesCreated === activities.length,
-                certificatesCreated: certificatesCreated,
-                totalCertificates: certificates.length,
-                certificatesFailed: certificatesFailed,
-                allCertificatesCreated: certificatesCreated === certificates.length,
-                objectiveLinked: objectiveCreated,
-                skillLinked: skillCreated,
-                isOnline: isOnlineArrangement,
-                status: 'Pending Approval'
+                midYearData: midyearData,
+                suggestedTrainings: suggestedTrainings,
+                year: midyearData.year,
+                type: 'Midyear'
             }
         });
 
     } catch (error) {
-        console.error('Error in createNewTrainingRequest:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create training request',
-            error: error.message,
-            timestamp: new Date().toISOString()
+        console.error("Error in getMidYearIDPForEmployee:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while fetching Mid-Year IDP data",
+            error: error.message 
         });
     }
 },
 
-// FIXED: Create training request function
-createTrainingRequest: async function(req, res) {
-    console.log(`[${new Date().toISOString()}] Creating enhanced training request for user ${req.session?.user?.userId}`);
-    console.log('Request body:', req.body);
-
+// Get Final-Year IDP with full data
+getFinalYearIDPForEmployee: async function(req, res) {
     try {
-        const userId = req.session?.user?.userId;
-        if (!userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'User not authenticated'
-            });
-        }
-
-        const { trainingId, startDate, endDate, scheduleType } = req.body;
-
-        // Validate required fields
-        if (!trainingId || !startDate || !endDate) {
-            return res.status(400).json({
-                success: false,
-                message: 'Training ID, start date, and end date are required'
-            });
-        }
-
-        // Validate dates
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        const idpId = req.params.idpId;
+        const userId = req.user.userId; // Assuming user is in session
         
-        if (end <= start) {
-            return res.status(400).json({
-                success: false,
-                message: 'End date must be after start date'
-            });
+        if (!idpId) {
+            return res.status(400).json({ success: false, message: "IDP ID is required" });
         }
 
-        // Check if training exists and is active
-        const { data: training, error: trainingError } = await supabase
-            .from('trainings')
-            .select('trainingId, trainingName, isOnlineArrangement, totalDuration')
-            .eq('trainingId', parseInt(trainingId))
-            .eq('isActive', true)
+        // Get Final-Year IDP data
+        const { data: finalyearData, error: finalyearError } = await supabase
+            .from("finalyearidps")
+            .select("*")
+            .eq("finalyearidpId", idpId)
+            .eq("userId", userId)
             .single();
 
-        if (trainingError || !training) {
-            console.error('Training not found or inactive:', trainingError);
-            return res.status(404).json({
-                success: false,
-                message: 'Training not found or inactive'
-            });
+        if (finalyearError) {
+            console.error("Error fetching Final-Year IDP:", finalyearError);
+            return res.status(500).json({ success: false, message: "Error fetching Final-Year IDP data" });
         }
 
-        // FIXED: Check for existing active requests with proper enum values
-    // FIXED: Check for existing active requests with proper enum values
-const { data: existingRequests, error: existingError } = await supabase
-    .from('training_records')
-    .select('trainingRecordId, setStartDate, setEndDate, trainingStatus')
-    .eq('userId', userId)
-    .eq('trainingId', parseInt(trainingId))
-    .in('trainingStatus', ['For Approval', 'Not Started', 'In Progress']); // FIXED: Include 'For Approval' status
-
-        if (existingError && existingError.code !== 'PGRST116') {
-            console.error('Error checking existing requests:', existingError);
-            throw new Error(`Failed to check existing requests: ${existingError.message}`);
-        }
-
-        // Check for overlapping dates
-        if (existingRequests && existingRequests.length > 0) {
-            const hasOverlap = existingRequests.some(request => {
-                const requestStart = new Date(request.setStartDate);
-                const requestEnd = new Date(request.setEndDate);
-                
-                return (start <= requestEnd && end >= requestStart);
-            });
-
-            if (hasOverlap) {
-                const overlapping = existingRequests[0];
-                return res.status(400).json({
-                    success: false,
-                    message: `You already have an active training request for this course (${overlapping.setStartDate} to ${overlapping.setEndDate}). Please choose different dates.`
-                });
-            }
-        }
-
-     // FIXED: Use correct enum values for training status - set to 'For Approval' initially
-const trainingRecordData = {
-    userId: userId,
-    trainingId: parseInt(trainingId),
-    setStartDate: startDate,
-    setEndDate: endDate,
-    trainingStatus: 'For Approval', // FIXED: Set to 'For Approval' for new requests
-    isApproved: null, // Will be set by manager (null = pending approval)
-    dateRequested: new Date().toISOString().split('T')[0], // FIXED: Add dateRequested
-};
-
-        console.log('Creating training record with data:', trainingRecordData);
-
-        const { data: trainingRecord, error: recordError } = await supabase
-            .from('training_records')
-            .insert([trainingRecordData])
-            .select()
-            .single();
-
-        if (recordError) {
-            console.error('Error creating training record:', recordError);
-            throw new Error(`Failed to create training record: ${recordError.message}`);
-        }
-
-        const trainingRecordId = trainingRecord.trainingRecordId;
-        console.log(`Training record created with ID: ${trainingRecordId}`);
-
-        // Get training activities
-        console.log(`Fetching activities for training ID: ${trainingId}`);
-        const { data: activities, error: activitiesError } = await supabase
-            .from('training_activities')
-            .select('activityId, activityName, estActivityDuration, activityType')
-            .eq('trainingId', parseInt(trainingId))
-            .order('activityId', { ascending: true });
-
-        let activitiesCreated = 0;
-        let activitiesFailed = 0;
+        let suggestedTrainings = [];
         
-        if (activitiesError) {
-            console.error('Error fetching training activities:', activitiesError);
-            console.log('Continuing without activities...');
-        } else if (activities && activities.length > 0) {
-            console.log(`Found ${activities.length} activities for training:`, activities);
-            
-            // Create activity records
-            for (const activity of activities) {
-                try {
-                    const activityRecordData = {
-                        trainingRecordId: trainingRecordId,
-                        activityId: activity.activityId,
-                        status: 'Not Started', // All activities start as 'Not Started'
-                        timestampzStarted: null,
-                        timestampzCompleted: null
-                    };
+        if (finalyearData) {
+            // Get suggested trainings with training details
+            const { data: trainingsData, error: trainingsError } = await supabase
+                .from("finalyearidps_suggestedtrainings")
+                .select(`
+                    *,
+                    trainings (
+                        trainingId,
+                        trainingName,
+                        trainingDesc
+                    )
+                `)
+                .eq("finalyearidpId", finalyearData.finalyearidpId);
 
-                    console.log('Creating activity record:', activityRecordData);
-
-                    const { data: activityRecord, error: activityInsertError } = await supabase
-                        .from('training_records_activities')
-                        .insert([activityRecordData])
-                        .select()
-                        .single();
-
-                    if (activityInsertError) {
-                        console.error(`Error creating activity record for activity ${activity.activityId}:`, activityInsertError);
-                        activitiesFailed++;
-                    } else {
-                        activitiesCreated++;
-                        console.log(`Successfully created activity record: ${activityRecord.trainingRecordActivityId} for activity ${activity.activityId}`);
-                    }
-                } catch (activityError) {
-                    console.error(`Exception creating activity record for activity ${activity.activityId}:`, activityError);
-                    activitiesFailed++;
-                }
+            if (!trainingsError && trainingsData) {
+                suggestedTrainings = trainingsData;
             }
-            
-            console.log(`Activity creation summary:`);
-            console.log(`- Total activities found: ${activities.length}`);
-            console.log(`- Activities successfully created: ${activitiesCreated}`);
-            console.log(`- Activities failed to create: ${activitiesFailed}`);
-        } else {
-            console.log('No activities found for this training');
         }
 
-        // Get training certifications and create certificate records
-        console.log(`Fetching certifications for training ID: ${trainingId}`);
-        const { data: certifications, error: certificationsError } = await supabase
-            .from('training_certifications')
-            .select('trainingCertId, trainingCertTitle')
-            .eq('trainingId', parseInt(trainingId));
-
-        let certificatesCreated = 0;
-        let certificatesFailed = 0;
-
-        if (certificationsError) {
-            console.error('Error fetching training certifications:', certificationsError);
-            console.log('Continuing without certifications...');
-        } else if (certifications && certifications.length > 0) {
-            console.log(`Found ${certifications.length} certifications for training`);
-
-            // Create certificate records
-            for (const cert of certifications) {
-                try {
-                    const certificateRecordData = {
-                        trainingRecordId: trainingRecordId,
-                        trainingCertId: cert.trainingCertId,
-                        certificate_url: null // Initially null, to be updated when certificate is issued
-                    };
-
-                    console.log('Creating certificate record:', certificateRecordData);
-
-                    const { data: certificateRecord, error: certInsertError } = await supabase
-                        .from('training_records_certificates')
-                        .insert([certificateRecordData])
-                        .select()
-                        .single();
-
-                    if (certInsertError) {
-                        console.error(`Error creating certificate record for certification ${cert.trainingCertId}:`, certInsertError);
-                        certificatesFailed++;
-                    } else {
-                        certificatesCreated++;
-                        console.log(`Successfully created certificate record: ${certificateRecord.trainingRecordCertificateId}`);
-                    }
-                } catch (certError) {
-                    console.error(`Exception creating certificate record for certification ${cert.trainingCertId}:`, certError);
-                    certificatesFailed++;
-                }
+        return res.status(200).json({
+            success: true,
+            data: {
+                finalYearData: finalyearData,
+                suggestedTrainings: suggestedTrainings,
+                year: finalyearData.year,
+                type: 'Final'
             }
-
-            console.log(`Certificate creation summary:`);
-            console.log(`- Total certifications found: ${certifications.length}`);
-            console.log(`- Certificates successfully created: ${certificatesCreated}`);
-            console.log(`- Certificates failed to create: ${certificatesFailed}`);
-        } else {
-            console.log('No certifications found for this training');
-        }
-
-        console.log(`Enhanced training request created successfully: ${trainingRecordId} with ${activitiesCreated}/${activities ? activities.length : 0} activities and ${certificatesCreated}/${certifications ? certifications.length : 0} certificates`);
-res.status(201).json({
-    success: true,
-    message: 'Training request submitted successfully and is pending approval',
-    data: {
-        trainingRecordId: trainingRecordId,
-        trainingName: training.trainingName,
-        status: 'For Approval', // Explicitly set status
-        isApproved: null, // Explicitly set as null (pending)
-        scheduleType: scheduleType,
-        isOnline: training.isOnlineArrangement,
-        activitiesCreated: activitiesCreated,
-        totalActivitiesAvailable: activities ? activities.length : 0,
-        activitiesFailed: activitiesFailed,
-        allActivitiesCreated: activitiesCreated === (activities ? activities.length : 0),
-        certificatesCreated: certificatesCreated,
-        totalCertificatesAvailable: certifications ? certifications.length : 0,
-        certificatesFailed: certificatesFailed,
-        allCertificatesCreated: certificatesCreated === (certifications ? certifications.length : 0)
-    }
-});
+        });
 
     } catch (error) {
-        console.error('Error in enhanced createTrainingRequest:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create training request',
-            error: error.message,
-            timestamp: new Date().toISOString()
+        console.error("Error in getFinalYearIDPForEmployee:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while fetching Final-Year IDP data",
+            error: error.message 
+        });
+    }
+},
+
+// Get IDP periods for employee
+getIDPPeriods: async function(req, res) {
+    try {
+        const userId = req.user.userId;
+        
+        // Get both midyear and final year IDPs
+        const [midyearResult, finalyearResult] = await Promise.all([
+            supabase
+                .from("midyearidps")
+                .select("midyearidpId as id, year, 'Midyear' as type")
+                .eq("userId", userId)
+                .order("year", { ascending: false }),
+            supabase
+                .from("finalyearidps")
+                .select("finalyearidpId as id, year, 'Final' as type")
+                .eq("userId", userId)
+                .order("year", { ascending: false })
+        ]);
+
+        const periods = [];
+        
+        if (midyearResult.data) {
+            periods.push(...midyearResult.data);
+        }
+        
+        if (finalyearResult.data) {
+            periods.push(...finalyearResult.data);
+        }
+
+        // Sort by year and type
+        periods.sort((a, b) => {
+            if (a.year !== b.year) return b.year - a.year;
+            return a.type === 'Final' ? -1 : 1;
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: periods
+        });
+
+    } catch (error) {
+        console.error("Error in getIDPPeriods:", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while fetching IDP periods",
+            error: error.message 
         });
     }
 },
@@ -6763,101 +6678,6 @@ getUserJobInfo: async function(req, res) {
         res.status(500).json({
             success: false,
             message: 'Failed to fetch user job information',
-            error: error.message
-        });
-    }
-},
-
-// NEW: Get job skills
-getJobSkills: async function(req, res) {
-    if (!req.session.user || req.session.user.userRole !== 'Employee') {
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Unauthorized. Employee access only.' 
-        });
-    }
-
-    try {
-        const { jobId } = req.params;
-
-        const { data: skills, error: skillsError } = await supabase
-            .from('jobreqskills')
-            .select('jobReqSkillId, jobReqSkillName, jobReqSkillType')
-            .eq('jobId', parseInt(jobId))
-            .order('jobReqSkillName', { ascending: true });
-
-        if (skillsError) {
-            console.error('Error fetching job skills:', skillsError);
-            throw skillsError;
-        }
-
-        res.json({
-            success: true,
-            data: skills || []
-        });
-    } catch (error) {
-        console.error('Error in getJobSkills:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch job skills',
-            error: error.message
-        });
-    }
-},
-
-// NEW: Get user objectives
-getUserObjectives: async function(req, res) {
-    if (!req.session.user || req.session.user.userRole !== 'Employee') {
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Unauthorized. Employee access only.' 
-        });
-    }
-
-    try {
-        const userId = req.session.user.userId;
-
-        // Get user's objective settings
-        const { data: objectiveSettings, error: settingsError } = await supabase
-            .from('objectivesettings')
-            .select('objectiveSettingsId')
-            .eq('userId', userId)
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-        if (settingsError) {
-            console.error('Error fetching objective settings:', settingsError);
-            throw settingsError;
-        }
-
-        if (!objectiveSettings || objectiveSettings.length === 0) {
-            return res.json({
-                success: true,
-                data: []
-            });
-        }
-
-        // Get objectives for the latest settings
-        const { data: objectives, error: objectivesError } = await supabase
-            .from('objectivesettings_objectives')
-            .select('objectiveId, objectiveDescrpt, objectiveKPI, objectiveUOM, objectiveTarget, objectiveAssignedWeight')
-            .eq('objectiveSettingsId', objectiveSettings[0].objectiveSettingsId)
-            .order('objectiveDescrpt', { ascending: true });
-
-        if (objectivesError) {
-            console.error('Error fetching objectives:', objectivesError);
-            throw objectivesError;
-        }
-
-        res.json({
-            success: true,
-            data: objectives || []
-        });
-    } catch (error) {
-        console.error('Error in getUserObjectives:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch user objectives',
             error: error.message
         });
     }
