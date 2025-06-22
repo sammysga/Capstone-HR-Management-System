@@ -375,15 +375,15 @@ router.post('/linemanager/training/approve', lineManagerController.approveTraini
 router.post('/linemanager/training/reject', lineManagerController.rejectTrainingRequest); // Fixed path
 
 // NEW: Pending training requests management routes (ADD THESE 4 LINES)
-router.post('/linemanager/training-request/approve', lineManagerController.approveTrainingRequestByRecord);
-router.post('/linemanager/training-request/reject', lineManagerController.rejectTrainingRequestByRecord);
-router.post('/linemanager/training-request/approve-bulk', lineManagerController.approveTrainingRequestsBulk);
-router.post('/linemanager/training-request/reject-bulk', lineManagerController.rejectTrainingRequestsBulk);
+// router.post('/linemanager/training-request/approve', lineManagerController.approveTrainingRequestByRecord);
+// router.post('/linemanager/training-request/reject', lineManagerController.rejectTrainingRequestByRecord);
+// router.post('/linemanager/training-request/approve-bulk', lineManagerController.approveTrainingRequestsBulk);
+// router.post('/linemanager/training-request/reject-bulk', lineManagerController.rejectTrainingRequestsBulk);
 
-// Add this line with your other training routes
-router.get('/linemanager/training/:trainingId/objectives', lineManagerController.getTrainingObjectives);
-// Add this line with your other training routes
-router.get('/linemanager/training/:trainingId/skills', lineManagerController.getTrainingSkills);
+// // Add this line with your other training routes
+// router.get('/linemanager/training/:trainingId/objectives', lineManagerController.getTrainingObjectives);
+// // Add this line with your other training routes
+// router.get('/linemanager/training/:trainingId/skills', lineManagerController.getTrainingSkills);
 
 // ============================
 // Employee - TRAINING MODULE CONTROLLER FUNCTIONS
