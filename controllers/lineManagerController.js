@@ -466,667 +466,188 @@ getLeaveRequest: async function(req, res) {
     
 getTrainingDevelopmentTracker: async function (req, res) {
     try {
-        console.log('🚀 === TRAINING DEVELOPMENT TRACKER STARTED ===');
+        console.log('🚀 Loading Training Development Tracker...');
         console.log('User:', req.session?.user?.userId);
-        console.log('Timestamp:', new Date().toISOString());
+        console.log('User Session:', req.session?.user);
         
-        console.log('Loading training development tracker...');
-
-        // Fetch all active training courses (no joins)
-        const { data: trainings, error: trainingsError } = await supabase
-            .from('trainings')
-            .select('*')
-            .eq('isActive', true)
-            .order('trainingName', { ascending: true });
-
-        if (trainingsError) {
-            console.error('Error fetching trainings:', trainingsError);
-            throw trainingsError;
-        }
-
-        console.log(`Found ${trainings?.length || 0} training courses`);
-
-        // Fetch job positions (no joins)
-        const { data: jobPositions, error: jobsError } = await supabase
-            .from('jobpositions')
-            .select('*');
-
-        if (jobsError) {
-            console.error('Error fetching job positions:', jobsError);
-        } else {
-            console.log(`Found ${jobPositions?.length || 0} job positions`);
-        }
-
-        // Fetch departments (no joins) 
-        const { data: departments, error: departmentsError } = await supabase
-            .from('departments')
-            .select('*');
-
-        if (departmentsError) {
-            console.error('Error fetching departments:', departmentsError);
-        } else {
-            console.log(`Found ${departments?.length || 0} departments`);
-        }
-
-        // Fetch training budgets
-        const { data: trainingBudgets, error: budgetsError } = await supabase
-            .from('training_budgets')
-            .select('*');
-
-        if (budgetsError) {
-            console.error('Error fetching training budgets:', budgetsError);
-        } else {
-            console.log(`Found ${trainingBudgets?.length || 0} training budgets`);
-        }
-
-        // Create training budgets lookup by departmentId
-        const trainingBudgetsMap = (trainingBudgets || []).reduce((acc, budget) => {
-            const departmentId = budget.departmentId || budget.department_id;
-            if (departmentId) {
-                acc[departmentId] = {
-                    amount: budget.amount || 0,
-                    fiscalYear: budget.fiscalYear || new Date().getFullYear()
-                };
-            }
-            return acc;
-        }, {});
-
-        // Fetch employees/staff accounts
-        const { data: employees, error: employeesError } = await supabase
-            .from('staffaccounts')
-            .select('*');
-
-        if (employeesError) {
-            console.error('Error fetching employees:', employeesError);
-        } else {
-            console.log(`Found ${employees?.length || 0} employees`);
-        }
-
-        // *** ENHANCED: Fetch user accounts with detailed logging ***
-        const { data: userAccounts, error: userAccountsError } = await supabase
-            .from('useraccounts')
-            .select('*'); // Select all columns to see what's available
-
-        if (userAccountsError) {
-            console.error('Error fetching user accounts:', userAccountsError);
-        } else {
-            console.log(`Found ${userAccounts?.length || 0} user accounts`);
-            
-            // Debug: Log all user accounts to see structure
-            console.log('=== USER ACCOUNTS DEBUG ===');
-            if (userAccounts && userAccounts.length > 0) {
-                console.log('Sample user account structure:', Object.keys(userAccounts[0]));
-                console.log('First few user accounts:');
-                userAccounts.slice(0, 3).forEach(user => {
-                    console.log(`  User ID: ${user.userId}, Email: ${user.userEmail}, Department: ${user.departmentId || 'NULL'}`);
-                });
-                
-                // Look specifically for the current user
-                const currentUser = userAccounts.find(u => u.userId === req.session?.user?.userId);
-                if (currentUser) {
-                    console.log('🎯 CURRENT USER FOUND IN USERACCOUNTS:');
-                    console.log('  Full user object:', currentUser);
-                    console.log('  Department ID field:', currentUser.departmentId);
-                } else {
-                    console.log('❌ Current user NOT found in useraccounts table');
-                    console.log('  Looking for user ID:', req.session?.user?.userId);
-                    console.log('  Available user IDs:', userAccounts.map(u => u.userId));
-                }
-            }
-        }
-
-        // *** ENHANCED: Try multiple sources for department ID ***
-        let currentUserDepartmentId = null;
-        let currentUserBudget = 0;
-
-        if (req.session?.user?.userId) {
-            const userId = req.session.user.userId;
-            console.log('=== DEPARTMENT ID DETECTION ===');
-            console.log('Looking for department for user ID:', userId);
-
-            // Method 1: Check useraccounts table
-            const userAccount = userAccounts?.find(u => u.userId === userId);
-            if (userAccount && userAccount.departmentId) {
-                currentUserDepartmentId = userAccount.departmentId;
-                console.log('✅ Method 1: Found department ID in useraccounts:', currentUserDepartmentId);
-            } else {
-                console.log('❌ Method 1: No department ID in useraccounts for user', userId);
-                if (userAccount) {
-                    console.log('  User account exists but departmentId is:', userAccount.departmentId);
-                } else {
-                    console.log('  User account not found in useraccounts table');
-                }
-            }
-
-            // Method 2: Check staffaccounts table (sometimes department is stored here)
-            if (!currentUserDepartmentId) {
-                const staffAccount = employees?.find(e => e.userId === userId);
-                if (staffAccount) {
-                    // Check various possible department field names
-                    const possibleDeptFields = ['departmentId', 'department_id', 'deptId', 'dept_id'];
-                    for (const field of possibleDeptFields) {
-                        if (staffAccount[field]) {
-                            currentUserDepartmentId = staffAccount[field];
-                            console.log(`✅ Method 2: Found department ID in staffaccounts.${field}:`, currentUserDepartmentId);
-                            break;
-                        }
-                    }
-                    if (!currentUserDepartmentId) {
-                        console.log('❌ Method 2: No department ID found in staffaccounts');
-                        console.log('  Staff account fields:', Object.keys(staffAccount));
-                    }
-                } else {
-                    console.log('❌ Method 2: No staff account found for user', userId);
-                }
-            }
-
-            // Method 3: Try to get department from job position
-            if (!currentUserDepartmentId) {
-                const staffAccount = employees?.find(e => e.userId === userId);
-                if (staffAccount && staffAccount.jobId) {
-                    const job = jobPositions?.find(j => j.jobId === staffAccount.jobId);
-                    if (job && job.departmentId) {
-                        currentUserDepartmentId = job.departmentId;
-                        console.log('✅ Method 3: Found department ID via job position:', currentUserDepartmentId);
-                    } else {
-                        console.log('❌ Method 3: No department found via job position');
-                    }
-                } else {
-                    console.log('❌ Method 3: No job ID found for user');
-                }
-            }
-
-            // Method 4: Hardcode for user 19 (temporary debug fix)
-            if (!currentUserDepartmentId && userId === 19) {
-                currentUserDepartmentId = 4; // Based on your log showing department 4
-                console.log('🔧 Method 4: Hardcoded department 4 for user 19 (temporary fix)');
-            }
-
-            // Get budget if we found a department
-            if (currentUserDepartmentId) {
-                console.log('🏢 Final department ID:', currentUserDepartmentId);
-                console.log('💰 Available training budgets:', Object.keys(trainingBudgetsMap));
-                
-                if (trainingBudgetsMap[currentUserDepartmentId]) {
-                    currentUserBudget = trainingBudgetsMap[currentUserDepartmentId].amount || 0;
-                    console.log('✅ Found budget for department:', currentUserBudget);
-                } else {
-                    console.log('❌ No budget found for department:', currentUserDepartmentId);
-                    console.log('  Available budget departments:', Object.keys(trainingBudgetsMap));
-                    console.log('  Budget map contents:', trainingBudgetsMap);
-                }
-            } else {
-                console.log('❌ Could not determine department ID for user', userId);
-            }
-        }
-
-        // Fetch training records to get actual employee-training assignments
-        const { data: trainingRecords, error: trainingRecordsError } = await supabase
+        // Fetch training records with "For Line Manager Endorsement" status using Supabase
+        const { data: trainingRecords, error: trainingError } = await supabase
             .from('training_records')
-            .select('*');
+            .select(`
+                trainingRecordId,
+                userId,
+                setStartDate,
+                setEndDate,
+                isApproved,
+                dateRequested,
+                jobId,
+                created_at,
+                trainingName,
+                trainingDesc,
+                cost,
+                totalDuration,
+                isOnlineArrangement,
+                address,
+                country,
+                status,
+                lmDecisionDate,
+                lmDecisionRemarks,
+                hrDecisionDate,
+                hrDecisionRemarks,
+                useraccounts!userId (
+                    userEmail
+                ),
+                jobpositions!jobId (
+                    jobTitle
+                )
+            `)
+            .eq('status', 'For Line Manager Endorsement')
+            .order('dateRequested', { ascending: false });
 
-        if (trainingRecordsError) {
-            console.error('Error fetching training records:', trainingRecordsError);
-        } else {
-            console.log(`Found ${trainingRecords?.length || 0} training records`);
+        if (trainingError) {
+            console.error('❌ Error fetching training records:', trainingError);
+            throw trainingError;
         }
 
-        // Create lookup maps - FIXED DEPARTMENT LOOKUP
-        const departmentsMap = (departments || []).reduce((acc, dept) => {
-            const deptId = dept.departmentId || dept.department_id || dept.dept_id || dept.id;
-            const deptName = dept.deptName || dept.departmentName || dept.department_name || 
-                            dept.dept_name || dept.name || dept.title || 'Unknown Department';
-            
-            console.log(`Department mapping: ID ${deptId} -> "${deptName}"`);
-            
-            acc[deptId] = {
-                ...dept,
-                id: deptId,
-                name: deptName
-            };
-            return acc;
-        }, {});
+        console.log('📋 Training records fetched:', trainingRecords?.length || 0);
+        console.log('📋 Sample training record:', trainingRecords?.[0]);
 
-        // FIXED: Job positions lookup with proper department reference
-        const jobsMap = (jobPositions || []).reduce((acc, job) => {
-            const jobId = job.jobId || job.job_id || job.id;
-            const departmentId = job.departmentId || job.department_id || job.dept_id;
-            
-            const department = departmentsMap[departmentId] || {};
-            
-            console.log(`Job mapping: Job ID ${jobId} -> Department ID ${departmentId} -> Department "${department.name}"`);
-            
-            acc[jobId] = {
-                ...job,
-                id: jobId,
-                title: job.jobTitle || job.job_title || job.title || job.name || 'Unknown Position',
-                description: job.jobDescrpt || job.job_description || job.description || '',
-                departmentId: departmentId,
-                departmentName: department.name || 'Unknown Department'
-            };
-            return acc;
-        }, {});
+        // Get all unique userIds from training records
+        const userIds = trainingRecords ? [...new Set(trainingRecords.map(record => record.userId))] : [];
+        console.log('👥 User IDs to fetch:', userIds);
 
-        // Fix the employeesMap creation to use userId as the key
-        const employeesMap = (employees || []).reduce((acc, employee) => {
-            const userId = employee.userId || employee.user_id;
-            const staffId = employee.staffId || employee.staff_id || employee.id;
-            const firstName = employee.staffFName || employee.staff_fname || employee.first_name || employee.firstName || 'Unknown';
-            const lastName = employee.staffLName || employee.staff_lname || employee.last_name || employee.lastName || 'User';
-            const email = employee.staffEmail || employee.staff_email || employee.email || 'no-email@company.com';
-            const jobId = employee.jobId || employee.job_id;
-            
-            if (userId) {
-                acc[userId] = {
-                    ...employee,
-                    staffId: staffId,
-                    userId: userId,
-                    firstName: firstName,
-                    lastName: lastName,
-                    fullName: `${firstName} ${lastName}`,
-                    email: email,
-                    jobId: jobId
-                };
-            }
-            
-            return acc;
-        }, {});
+        // Fetch applicant accounts data separately
+        let applicantAccounts = [];
+        if (userIds.length > 0) {
+            const { data: applicantData, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    userId,
+                    firstName,
+                    lastName
+                `)
+                .in('userId', userIds);
 
-        // Create user accounts lookup map for emails and department
-        const userAccountsMap = (userAccounts || []).reduce((acc, user) => {
-            acc[user.userId] = {
-                userId: user.userId,
-                email: user.userEmail || 'no-email@company.com',
-                departmentId: user.departmentId || null
-            };
-            return acc;
-        }, {});
-
-        console.log('📧 USER ACCOUNTS EMAIL MAP:');
-        console.log(`Created email lookup for ${Object.keys(userAccountsMap).length} users`);
-
-        // Create trainings lookup map
-        const trainingsMap = (trainings || []).reduce((acc, training) => {
-            const trainingId = training.trainingId || training.training_id || training.id;
-            acc[trainingId] = {
-                ...training,
-                id: trainingId,
-                name: training.trainingName || 'Untitled Training',
-                description: training.trainingDesc || 'No description available',
-                mode: training.isOnlineArrangement ? 'online' : 'onsite',
-                cost: training.cost || 0,
-                duration: training.totalDuration || 0
-            };
-            return acc;
-        }, {});
-
-        // FIXED: Transform training data with proper department resolution
-        const formattedTrainings = (trainings || []).map(training => {
-            const job = jobsMap[training.jobId] || {};
-            const departmentName = job.departmentName || 'Unknown Department';
-            const trainingOwner = employeesMap[training.userId] || {};
-            
-            console.log(`Training "${training.trainingName}" -> Job "${job.title}" -> Department "${departmentName}"`);
-            
-            return {
-                id: training.trainingId,
-                title: training.trainingName || 'Untitled Training',
-                description: training.trainingDesc || 'No description available',
-                mode: training.isOnlineArrangement ? 'online' : 'onsite',
-                location: training.isOnlineArrangement ? null : {
-                    country: training.country,
-                    address: training.address
-                },
-                cost: training.cost || 0,
-                duration: training.totalDuration || 0,
-                department: departmentName,
-                jobTitle: job.title || 'Unknown Position',
-                jobId: training.jobId,
-                createdBy: trainingOwner.fullName || 'Unknown Creator',
-                createdByEmail: trainingOwner.email || '',
-                badges: [
-                    training.isOnlineArrangement ? 'online' : 'onsite'
-                ]
-            };
-        });
-
-        // FIXED: Create suggested trainings list with proper department names
-        const suggestedTrainings = (trainings || []).map(training => {
-            const job = jobsMap[training.jobId] || {};
-            const departmentName = job.departmentName || 'Unknown Department';
-            
-            return {
-                id: training.trainingId,
-                name: training.trainingName || 'Untitled Training',
-                description: training.trainingDesc || 'No description available',
-                jobId: training.jobId,
-                jobTitle: job.title || 'Unknown Position',
-                department: departmentName,
-                mode: training.isOnlineArrangement ? 'online' : 'onsite',
-                cost: training.cost || 0,
-                duration: training.totalDuration || 0,
-                isActive: training.isActive,
-                createdDate: training.createdAt || training.created_at,
-                location: training.isOnlineArrangement ? null : {
-                    country: training.country,
-                    address: training.address
-                }
-            };
-        });
-
-        // Group suggested trainings by jobId for easier frontend filtering
-        const suggestedTrainingsByJob = suggestedTrainings.reduce((acc, training) => {
-            if (!acc[training.jobId]) {
-                acc[training.jobId] = [];
-            }
-            acc[training.jobId].push(training);
-            return acc;
-        }, {});
-
-        // Create employee assignments based on training_records
-        let employeeAssignments = [];
-
-        if (trainingRecords && trainingRecords.length > 0) {
-            console.log(`Creating assignments from ${trainingRecords.length} training records`);
-            
-            employeeAssignments = trainingRecords.map((record) => {
-                const employee = employeesMap[record.userId] || {};
-                const userAccount = userAccountsMap[record.userId] || {};
-                const employeeEmail = userAccount.email || employee.email || 'no-email@company.com';
-                const training = trainingsMap[record.trainingId] || {};
-                const job = jobsMap[employee.jobId] || {};
-                
-                console.log(`Processing record: Employee ${employee.fullName || record.userId} (${employeeEmail}) -> Training "${training.name || record.trainingId}"`);
-                
-                let progress = 0;
-                let status = 'not-started';
-                
-                if (record.progress !== undefined && record.progress !== null) {
-                    progress = Math.round(record.progress);
-                } else if (record.completionDate) {
-                    progress = 100;
-                    status = 'completed';
-                } else if (record.startDate) {
-                    progress = Math.floor(Math.random() * 60) + 20;
-                    status = 'in-progress';
-                }
-                
-                if (record.status) {
-                    status = record.status.toLowerCase();
-                    if (status === 'completed' && progress < 100) {
-                        progress = 100;
-                    } else if (status === 'not-started') {
-                        progress = 0;
-                    }
-                } else {
-                    if (progress >= 100) {
-                        status = 'completed';
-                    } else if (progress > 0) {
-                        status = 'in-progress';
-                    } else {
-                        status = 'not-started';
-                    }
-                }
-                
-                const startDate = record.startDate ? new Date(record.startDate) : 
-                                record.enrollmentDate ? new Date(record.enrollmentDate) : new Date();
-                const dueDate = record.dueDate ? new Date(record.dueDate) : 
-                              new Date(Date.now() + (training.duration || 30) * 24 * 60 * 60 * 1000);
-                
-                const now = new Date();
-                const isOverdue = status !== 'completed' && dueDate < now;
-                if (isOverdue && status === 'not-started') {
-                    status = 'overdue';
-                }
-                
-                const recordId = record.trainingRecordId || record.recordId || record.id || null;
-                
-                return {
-                    employeeId: record.userId,
-                    userId: record.userId,
-                    employeeName: employee.fullName || `User ${record.userId}`,
-                    employeeEmail: employeeEmail,
-                    jobTitle: job.title || 'Unknown Position',
-                    departmentId: userAccount.departmentId || null,
-                    
-                    trainingTitle: training.name || `Training ${record.trainingId}`,
-                    trainingId: record.trainingId,
-                    trainingDescription: training.description || '',
-                    trainingMode: training.mode || 'unknown',
-                    trainingDuration: training.duration || 0,
-                    trainingCost: training.cost || 0,
-                    
-                    status: status,
-                    progress: progress,
-                    startDate: startDate,
-                    dueDate: dueDate,
-                    hasTraining: true,
-                    isOverdue: isOverdue,
-                    
-                    isApproved: record.isApproved,
-                    trainingStatus: record.trainingStatus,
-                    
-                    recordId: recordId,
-                    enrollmentDate: record.enrollmentDate || record.createdAt || record.created_at || startDate,
-                    completionDate: record.completionDate || record.completion_date || null,
-                    lastUpdated: record.updatedAt || record.updated_at || record.lastUpdated || null,
-                    
-                    daysRemaining: Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)),
-                    daysSinceStart: Math.ceil((now - startDate) / (1000 * 60 * 60 * 24))
-                };
-            });
-            
-            console.log(`Created ${employeeAssignments.length} employee assignments from training records`);
-        }
-
-        // If no employees found at all, create demo data
-        if (employeeAssignments.length === 0) {
-            console.log('No employees or training records found, creating demo employee list');
-            employeeAssignments = [
-                {
-                    employeeId: 'demo-1',
-                    employeeName: 'John Doe',
-                    employeeEmail: 'john.doe@company.com',
-                    jobTitle: 'Software Engineer',
-                    departmentId: 1,
-                    trainingTitle: 'No Training Assigned',
-                    trainingId: null,
-                    status: 'no-training',
-                    progress: 0,
-                    startDate: null,
-                    dueDate: null,
-                    hasTraining: false
-                },
-                {
-                    employeeId: 'demo-2',
-                    employeeName: 'Jane Smith',
-                    employeeEmail: 'jane.smith@company.com',
-                    jobTitle: 'Operations Manager',
-                    departmentId: 2,
-                    trainingTitle: 'No Training Assigned',
-                    trainingId: null,
-                    status: 'no-training',
-                    progress: 0,
-                    startDate: null,
-                    dueDate: null,
-                    hasTraining: false
-                }
-            ];
-        }
-
-        // Group assignments by employee for proper modal display
-        const groupedAssignments = {};
-        employeeAssignments.forEach(assignment => {
-            const empId = assignment.employeeId;
-            if (!groupedAssignments[empId]) {
-                groupedAssignments[empId] = [];
-            }
-            groupedAssignments[empId].push(assignment);
-        });
-
-        // Create a display list that shows one item per employee (for the main list)
-        const employeeDisplayList = Object.keys(groupedAssignments).map(employeeId => {
-            const employeeTrainingAssignments = groupedAssignments[employeeId];
-            const primaryAssignment = employeeTrainingAssignments[0];
-            
-            let totalProgress = 0;
-            let completedTrainings = 0;
-            let inProgressTrainings = 0;
-            let notStartedTrainings = 0;
-            let overdueTrainings = 0;
-
-            employeeTrainingAssignments.forEach(assignment => {
-                totalProgress += (assignment.progress || 0);
-                
-                switch(assignment.status) {
-                    case 'completed':
-                        completedTrainings++;
-                        break;
-                    case 'in-progress':
-                        inProgressTrainings++;
-                        break;
-                    case 'overdue':
-                        overdueTrainings++;
-                        break;
-                    default:
-                        notStartedTrainings++;
-                }
-            });
-
-            const averageProgress = Math.round(totalProgress / employeeTrainingAssignments.length);
-            
-            let overallStatus = 'not-started';
-            if (completedTrainings === employeeTrainingAssignments.length) {
-                overallStatus = 'completed';
-            } else if (overdueTrainings > 0) {
-                overallStatus = 'overdue';
-            } else if (inProgressTrainings > 0) {
-                overallStatus = 'in-progress';
-            }
-
-            let trainingsSummary = '';
-            if (employeeTrainingAssignments.length > 1) {
-                trainingsSummary = `${employeeTrainingAssignments.length} trainings assigned`;
-                if (completedTrainings > 0) {
-                    trainingsSummary += ` • ${completedTrainings} completed`;
-                }
-                if (inProgressTrainings > 0) {
-                    trainingsSummary += ` • ${inProgressTrainings} in progress`;
-                }
-                if (overdueTrainings > 0) {
-                    trainingsSummary += ` • ${overdueTrainings} overdue`;
-                }
+            if (applicantError) {
+                console.error('❌ Error fetching applicant accounts:', applicantError);
             } else {
-                trainingsSummary = primaryAssignment.trainingTitle;
+                applicantAccounts = applicantData || [];
+                console.log('👤 Applicant accounts fetched:', applicantAccounts?.length || 0);
+                console.log('👤 Sample applicant account:', applicantAccounts?.[0]);
             }
+        }
 
+        // Create a map for quick lookup of applicant data
+        const applicantMap = {};
+        applicantAccounts.forEach(applicant => {
+            applicantMap[applicant.userId] = applicant;
+        });
+        console.log('🗺️ Applicant map created:', Object.keys(applicantMap));
+
+        // Merge applicant data with training records
+        const trainingRecordsWithApplicants = trainingRecords ? trainingRecords.map(record => {
+            const applicantData = applicantMap[record.userId];
+            console.log(`🔗 Mapping userId ${record.userId}:`, applicantData);
             return {
-                ...primaryAssignment,
-                trainingTitle: employeeTrainingAssignments.length > 1 ? 
-                    `Multiple Trainings (${employeeTrainingAssignments.length})` : 
-                    primaryAssignment.trainingTitle,
-                progress: averageProgress,
-                status: overallStatus,
-                trainingsSummary: trainingsSummary,
-                hasMultipleTrainings: employeeTrainingAssignments.length > 1,
-                trainingCount: employeeTrainingAssignments.length
+                ...record,
+                applicantaccounts: applicantData || null
             };
-        });
+        }) : [];
 
-        console.log('Employee display list created:', employeeDisplayList.length, 'employees');
-        console.log('Grouped assignments:', Object.keys(groupedAssignments).length, 'employees with assignments');
+        console.log('📊 Final merged record sample:', trainingRecordsWithApplicants?.[0]);
 
-        // Enhanced user object with department information
-        const enhancedUser = {
-            ...(req.session?.user || {}),
-            departmentId: currentUserDepartmentId,
-            departmentBudget: currentUserBudget
+        // Calculate statistics
+        const totalPendingEndorsements = trainingRecordsWithApplicants?.length || 0;
+        
+        // Group by training type/category for better insights
+        const trainingByType = {};
+        const costSummary = {
+            totalCost: 0,
+            averageCost: 0,
+            onlineTrainings: 0,
+            onsiteTrainings: 0
         };
 
-        console.log('=== FINAL USER OBJECT ===');
-        console.log('Enhanced user object:', {
-            userId: enhancedUser.userId,
-            departmentId: enhancedUser.departmentId,
-            departmentBudget: enhancedUser.departmentBudget
-        });
+        if (trainingRecordsWithApplicants) {
+            trainingRecordsWithApplicants.forEach(record => {
+                // Group by training name
+                if (!trainingByType[record.trainingName]) {
+                    trainingByType[record.trainingName] = 0;
+                }
+                trainingByType[record.trainingName]++;
 
-        // Get summary statistics
-        const stats = {
-            totalTrainings: formattedTrainings.length,
-            onlineTrainings: formattedTrainings.filter(t => t.mode === 'online').length,
-            onsiteTrainings: formattedTrainings.filter(t => t.mode === 'onsite').length,
-            totalAssignments: employeeAssignments.length,
-            inProgressAssignments: employeeAssignments.filter(a => a.status === 'in-progress').length,
-            completedAssignments: employeeAssignments.filter(a => a.status === 'completed').length,
-            overdueAssignments: employeeAssignments.filter(a => a.status === 'not-started' && new Date(a.dueDate) < new Date()).length,
-            totalSuggestedTrainings: suggestedTrainings.length,
-            jobsWithTrainings: Object.keys(suggestedTrainingsByJob).length,
-            avgTrainingsPerJob: Object.keys(suggestedTrainingsByJob).length > 0 ? 
-                (suggestedTrainings.length / Object.keys(suggestedTrainingsByJob).length).toFixed(1) : 0
+                // Calculate cost statistics
+                const cost = parseFloat(record.cost) || 0;
+                costSummary.totalCost += cost;
+
+                // Count online vs onsite
+                if (record.isOnlineArrangement) {
+                    costSummary.onlineTrainings++;
+                } else {
+                    costSummary.onsiteTrainings++;
+                }
+            });
+        }
+
+        // Calculate average cost
+        costSummary.averageCost = totalPendingEndorsements > 0 
+            ? (costSummary.totalCost / totalPendingEndorsements).toFixed(2)
+            : 0;
+
+        // Get pending requests by month for trend analysis
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+        const { data: monthlyRequests, error: monthlyError } = await supabase
+            .from('training_records')
+            .select('dateRequested')
+            .eq('status', 'For Line Manager Endorsement')
+            .gte('dateRequested', sixMonthsAgo.toISOString());
+
+        // Process monthly data client-side since Supabase doesn't support GROUP BY in the same way
+        const monthlyTrends = {};
+        if (monthlyRequests) {
+            monthlyRequests.forEach(record => {
+                const month = new Date(record.dateRequested).toISOString().substring(0, 7); // YYYY-MM format
+                monthlyTrends[month] = (monthlyTrends[month] || 0) + 1;
+            });
+        }
+
+        // Convert to array format for easier use in template
+        const monthlyTrendsArray = Object.entries(monthlyTrends)
+            .map(([month, count]) => ({ month, count }))
+            .sort((a, b) => b.month.localeCompare(a.month)); // Sort descending
+
+        const statistics = {
+            totalPendingEndorsements,
+            trainingByType,
+            costSummary,
+            monthlyTrends: monthlyTrendsArray
         };
 
-        console.log('Final data summary:', {
-            trainings: formattedTrainings.length,
-            assignments: employeeAssignments.length,
-            displayList: employeeDisplayList.length,
-            trainingRecords: trainingRecords?.length || 0,
-            userAccounts: userAccounts?.length || 0,
-            suggestedTrainings: suggestedTrainings.length,
-            currentUserDepartmentId: currentUserDepartmentId,
-            currentUserBudget: currentUserBudget,
-            stats
-        });
+        console.log('📊 Statistics calculated:', statistics);
+        console.log('📋 Found', totalPendingEndorsements, 'pending endorsements');
 
-        // Render the training development tracker page with data
         res.render('staffpages/linemanager_pages/trainingdevelopmenttracker', {
             title: 'Employee Training & Development Tracker',
-            trainings: formattedTrainings,
-            assignments: employeeDisplayList,
-            allAssignments: employeeAssignments,
-            suggestedTrainings: suggestedTrainings,
-            suggestedTrainingsByJob: suggestedTrainingsByJob,
-            jobPositions: jobPositions || [],
-            departments: departments || [],
-            trainingBudgets: trainingBudgetsMap,
-            stats: stats,
-            user: enhancedUser, // Enhanced user object with department info
-            currentUserDepartmentId: currentUserDepartmentId, // For easier template access
-            currentDate: new Date().toISOString(),
-            formatDate: (date) => {
-                return new Date(date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-            },
-            debugMode: process.env.NODE_ENV === 'development'
+            user: req.session?.user || null,
+            trainingRecords: trainingRecordsWithApplicants || [],
+            statistics: statistics
         });
         
-        console.log('✅ res.render() called successfully');
+        console.log('✅ Page rendered successfully');
         
     } catch (error) {
         console.error('💥 ERROR in getTrainingDevelopmentTracker:', error);
-        console.error('Error stack:', error.stack);
         
         res.status(500).send(`
             <h1>Error Loading Training Tracker</h1>
             <p>There was an error loading the training development tracker.</p>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <h3>Error Details:</h3>
-                <pre style="background: #e9ecef; padding: 10px; border-radius: 3px; overflow-x: auto;">
-${process.env.NODE_ENV === 'development' ? 
-    `Message: ${error.message}\n\nStack: ${error.stack}` : 
-    'Internal Server Error - Check server logs for details'
-}
-                </pre>
-            </div>
+            <p>Error: ${error.message}</p>
             <div style="margin-top: 20px;">
                 <a href="/linemanager/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                     ← Return to Dashboard
                 </a>
-                <button onclick="window.location.reload()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-left: 10px; cursor: pointer;">
-                    🔄 Retry
-                </button>
             </div>
         `);
     }
@@ -1135,503 +656,503 @@ ${process.env.NODE_ENV === 'development' ?
 // PENDING TRAINING REQUESTS MANAGEMENT
 // ============================
 // Approve single training request by record ID
-approveTrainingRequestByRecord: async function (req, res) {
-    try {
-        console.log('🟢 Approving training request by record ID...');
-        const { recordId } = req.body;
+// approveTrainingRequestByRecord: async function (req, res) {
+//     try {
+//         console.log('🟢 Approving training request by record ID...');
+//         const { recordId } = req.body;
         
-        if (!recordId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Record ID is required'
-            });
-        }
+//         if (!recordId) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Record ID is required'
+//             });
+//         }
         
-        // Get training record with training and job position details
-        const { data: trainingRecord, error: fetchError } = await supabase
-            .from('training_records')
-            .select(`
-                trainingId,
-                userId,
-                trainings(cost, jobId, jobpositions(departmentId))
-            `)
-            .eq('trainingRecordId', recordId)
-            .single();
+//         // Get training record with training and job position details
+//         const { data: trainingRecord, error: fetchError } = await supabase
+//             .from('training_records')
+//             .select(`
+//                 trainingId,
+//                 userId,
+//                 trainings(cost, jobId, jobpositions(departmentId))
+//             `)
+//             .eq('trainingRecordId', recordId)
+//             .single();
         
-        if (fetchError || !trainingRecord) {
-            console.error('Training record not found:', fetchError);
-            return res.status(404).json({
-                success: false,
-                message: 'Training request not found'
-            });
-        }
+//         if (fetchError || !trainingRecord) {
+//             console.error('Training record not found:', fetchError);
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Training request not found'
+//             });
+//         }
 
-        // Verify required data
-        if (!trainingRecord.trainings?.cost || !trainingRecord.trainings.jobpositions?.departmentId) {
-            console.error('Missing required data:', {
-                cost: trainingRecord.trainings?.cost,
-                departmentId: trainingRecord.trainings.jobpositions?.departmentId
-            });
-            return res.status(400).json({
-                success: false,
-                message: 'Missing required training cost or department information'
-            });
-        }
+//         // Verify required data
+//         if (!trainingRecord.trainings?.cost || !trainingRecord.trainings.jobpositions?.departmentId) {
+//             console.error('Missing required data:', {
+//                 cost: trainingRecord.trainings?.cost,
+//                 departmentId: trainingRecord.trainings.jobpositions?.departmentId
+//             });
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Missing required training cost or department information'
+//             });
+//         }
 
-        const trainingCost = trainingRecord.trainings.cost;
-        const departmentId = trainingRecord.trainings.jobpositions.departmentId;
+//         const trainingCost = trainingRecord.trainings.cost;
+//         const departmentId = trainingRecord.trainings.jobpositions.departmentId;
 
-        // Get department budget
-        const { data: budgetData, error: budgetError } = await supabase
-            .from('training_budgets')
-            .select('amount, trainingBugetId')
-            .eq('departmentId', departmentId)
-            .single();
+//         // Get department budget
+//         const { data: budgetData, error: budgetError } = await supabase
+//             .from('training_budgets')
+//             .select('amount, trainingBugetId')
+//             .eq('departmentId', departmentId)
+//             .single();
 
-        if (budgetError || !budgetData) {
-            console.error('Training budget not found:', budgetError);
-            return res.status(404).json({
-                success: false,
-                message: 'Training budget not found for department'
-            });
-        }
+//         if (budgetError || !budgetData) {
+//             console.error('Training budget not found:', budgetError);
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Training budget not found for department'
+//             });
+//         }
 
-        // Check budget
-        if (budgetData.amount < trainingCost) {
-            return res.status(400).json({
-                success: false,
-                message: 'Insufficient training budget for this request'
-            });
-        }
+//         // Check budget
+//         if (budgetData.amount < trainingCost) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Insufficient training budget for this request'
+//             });
+//         }
         
-        // Update record
-        const { data, error } = await supabase
-            .from('training_records')
-            .update({ 
-                isApproved: true,
-                trainingStatus: 'Not Started'
-            })
-            .eq('trainingRecordId', recordId)
-            .select();
+//         // Update record
+//         const { data, error } = await supabase
+//             .from('training_records')
+//             .update({ 
+//                 isApproved: true,
+//                 trainingStatus: 'Not Started'
+//             })
+//             .eq('trainingRecordId', recordId)
+//             .select();
         
-        if (error) {
-            console.error('Error approving request:', error);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to approve training request: ' + error.message
-            });
-        }
+//         if (error) {
+//             console.error('Error approving request:', error);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to approve training request: ' + error.message
+//             });
+//         }
 
-        // Update budget
-        const newBudgetAmount = budgetData.amount - trainingCost;
-        const { error: budgetUpdateError } = await supabase
-            .from('training_budgets')
-            .update({ amount: newBudgetAmount })
-            .eq('trainingBugetId', budgetData.trainingBugetId);
+//         // Update budget
+//         const newBudgetAmount = budgetData.amount - trainingCost;
+//         const { error: budgetUpdateError } = await supabase
+//             .from('training_budgets')
+//             .update({ amount: newBudgetAmount })
+//             .eq('trainingBugetId', budgetData.trainingBugetId);
 
-        if (budgetUpdateError) {
-            console.error('Budget update failed:', budgetUpdateError);
-            // Rollback
-            await supabase
-                .from('training_records')
-                .update({ 
-                    isApproved: false,
-                    trainingStatus: 'For Approval'
-                })
-                .eq('trainingRecordId', recordId);
+//         if (budgetUpdateError) {
+//             console.error('Budget update failed:', budgetUpdateError);
+//             // Rollback
+//             await supabase
+//                 .from('training_records')
+//                 .update({ 
+//                     isApproved: false,
+//                     trainingStatus: 'For Approval'
+//                 })
+//                 .eq('trainingRecordId', recordId);
 
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to update budget: ' + budgetUpdateError.message
-            });
-        }
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to update budget: ' + budgetUpdateError.message
+//             });
+//         }
         
-        console.log('Request approved. Budget updated:', {
-            departmentId,
-            deducted: trainingCost,
-            remaining: newBudgetAmount
-        });
+//         console.log('Request approved. Budget updated:', {
+//             departmentId,
+//             deducted: trainingCost,
+//             remaining: newBudgetAmount
+//         });
         
-        res.json({
-            success: true,
-            message: 'Training request approved successfully',
-            data: data[0],
-            budgetDeducted: trainingCost,
-            remainingBudget: newBudgetAmount
-        });
+//         res.json({
+//             success: true,
+//             message: 'Training request approved successfully',
+//             data: data[0],
+//             budgetDeducted: trainingCost,
+//             remainingBudget: newBudgetAmount
+//         });
         
-    } catch (error) {
-        console.error('Error in approval:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error: ' + error.message
-        });
-    }
-},
+//     } catch (error) {
+//         console.error('Error in approval:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error: ' + error.message
+//         });
+//     }
+// },
 
-// Reject single training request by record ID
-rejectTrainingRequestByRecord: async function (req, res) {
-    try {
-        console.log('🔴 Rejecting training request by record ID...');
-        const { recordId, reason } = req.body;
+// // Reject single training request by record ID
+// rejectTrainingRequestByRecord: async function (req, res) {
+//     try {
+//         console.log('🔴 Rejecting training request by record ID...');
+//         const { recordId, reason } = req.body;
         
-        if (!recordId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Record ID is required'
-            });
-        }
+//         if (!recordId) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Record ID is required'
+//             });
+//         }
         
-        console.log('Record ID to reject:', recordId);
-        console.log('Rejection reason:', reason);
+//         console.log('Record ID to reject:', recordId);
+//         console.log('Rejection reason:', reason);
         
-        // First, get the current record to check if it exists
-        const { data: existingRecord, error: fetchError } = await supabase
-            .from('training_records')
-            .select('*')
-            .eq('trainingRecordId', recordId)
-            .single();
+//         // First, get the current record to check if it exists
+//         const { data: existingRecord, error: fetchError } = await supabase
+//             .from('training_records')
+//             .select('*')
+//             .eq('trainingRecordId', recordId)
+//             .single();
         
-        if (fetchError || !existingRecord) {
-            console.error('Training record not found:', fetchError);
-            return res.status(404).json({
-                success: false,
-                message: 'Training request not found'
-            });
-        }
+//         if (fetchError || !existingRecord) {
+//             console.error('Training record not found:', fetchError);
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Training request not found'
+//             });
+//         }
         
-        // Update the training record to set isApproved = false and trainingStatus = cancelled
-        const { data, error } = await supabase
-            .from('training_records')
-            .update({ 
-                isApproved: false,
-                trainingStatus: 'Cancelled' // Set to Cancelled when rejected
-            })
-            .eq('trainingRecordId', recordId)
-            .select();
+//         // Update the training record to set isApproved = false and trainingStatus = cancelled
+//         const { data, error } = await supabase
+//             .from('training_records')
+//             .update({ 
+//                 isApproved: false,
+//                 trainingStatus: 'Cancelled' // Set to Cancelled when rejected
+//             })
+//             .eq('trainingRecordId', recordId)
+//             .select();
         
-        if (error) {
-            console.error('Error rejecting training request:', error);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to reject training request: ' + error.message
-            });
-        }
+//         if (error) {
+//             console.error('Error rejecting training request:', error);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to reject training request: ' + error.message
+//             });
+//         }
         
-        console.log('Training request rejected successfully:', data[0]);
+//         console.log('Training request rejected successfully:', data[0]);
         
-        res.json({
-            success: true,
-            message: 'Training request rejected successfully',
-            data: data[0]
-        });
+//         res.json({
+//             success: true,
+//             message: 'Training request rejected successfully',
+//             data: data[0]
+//         });
         
-    } catch (error) {
-        console.error('Error in rejectTrainingRequestByRecord:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error: ' + error.message
-        });
-    }
-},
-approveTrainingRequestsBulk: async function (req, res) {
-    try {
-        console.log('🟢 Bulk approving training requests...');
-        const { recordIds } = req.body;
+//     } catch (error) {
+//         console.error('Error in rejectTrainingRequestByRecord:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error: ' + error.message
+//         });
+//     }
+// },
+// approveTrainingRequestsBulk: async function (req, res) {
+//     try {
+//         console.log('🟢 Bulk approving training requests...');
+//         const { recordIds } = req.body;
         
-        if (!recordIds || !Array.isArray(recordIds) || recordIds.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Record IDs array is required'
-            });
-        }
+//         if (!recordIds || !Array.isArray(recordIds) || recordIds.length === 0) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Record IDs array is required'
+//             });
+//         }
         
-        // Get all training records with their training and job position details
-        const { data: trainingRecords, error: fetchError } = await supabase
-            .from('training_records')
-            .select(`
-                trainingRecordId,
-                trainingId,
-                userId,
-                trainings(cost, jobId, jobpositions(departmentId))
-            `)
-            .in('trainingRecordId', recordIds);
+//         // Get all training records with their training and job position details
+//         const { data: trainingRecords, error: fetchError } = await supabase
+//             .from('training_records')
+//             .select(`
+//                 trainingRecordId,
+//                 trainingId,
+//                 userId,
+//                 trainings(cost, jobId, jobpositions(departmentId))
+//             `)
+//             .in('trainingRecordId', recordIds);
         
-        if (fetchError) {
-            console.error('Error fetching records:', fetchError);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to fetch training records: ' + fetchError.message
-            });
-        }
+//         if (fetchError) {
+//             console.error('Error fetching records:', fetchError);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to fetch training records: ' + fetchError.message
+//             });
+//         }
         
-        const validRecords = trainingRecords.filter(record => 
-            record.trainings?.cost && record.trainings.jobpositions?.departmentId
-        );
+//         const validRecords = trainingRecords.filter(record => 
+//             record.trainings?.cost && record.trainings.jobpositions?.departmentId
+//         );
 
-        if (validRecords.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No valid training requests found with complete information'
-            });
-        }
+//         if (validRecords.length === 0) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'No valid training requests found with complete information'
+//             });
+//         }
 
-        // Group by department and check budgets
-        const departmentCosts = {};
-        const insufficientBudgetRecords = [];
-        const recordsToApprove = [];
+//         // Group by department and check budgets
+//         const departmentCosts = {};
+//         const insufficientBudgetRecords = [];
+//         const recordsToApprove = [];
 
-        // First pass: organize by department and check budgets
-        for (const record of validRecords) {
-            const cost = record.trainings.cost;
-            const departmentId = record.trainings.jobpositions.departmentId;
+//         // First pass: organize by department and check budgets
+//         for (const record of validRecords) {
+//             const cost = record.trainings.cost;
+//             const departmentId = record.trainings.jobpositions.departmentId;
 
-            if (!departmentCosts[departmentId]) {
-                const { data: budgetData, error: budgetError } = await supabase
-                    .from('training_budgets')
-                    .select('amount, trainingBugetId')
-                    .eq('departmentId', departmentId)
-                    .single();
+//             if (!departmentCosts[departmentId]) {
+//                 const { data: budgetData, error: budgetError } = await supabase
+//                     .from('training_budgets')
+//                     .select('amount, trainingBugetId')
+//                     .eq('departmentId', departmentId)
+//                     .single();
 
-                if (budgetError || !budgetData) {
-                    console.error('Budget not found for department:', departmentId);
-                    continue;
-                }
+//                 if (budgetError || !budgetData) {
+//                     console.error('Budget not found for department:', departmentId);
+//                     continue;
+//                 }
 
-                departmentCosts[departmentId] = {
-                    currentAmount: budgetData.amount,
-                    trainingBugetId: budgetData.trainingBugetId,
-                    totalDeduction: 0,
-                    records: []
-                };
-            }
+//                 departmentCosts[departmentId] = {
+//                     currentAmount: budgetData.amount,
+//                     trainingBugetId: budgetData.trainingBugetId,
+//                     totalDeduction: 0,
+//                     records: []
+//                 };
+//             }
 
-            if (departmentCosts[departmentId].currentAmount >= 
-                departmentCosts[departmentId].totalDeduction + cost) {
-                departmentCosts[departmentId].totalDeduction += cost;
-                departmentCosts[departmentId].records.push(record.trainingRecordId);
-                recordsToApprove.push(record.trainingRecordId);
-            } else {
-                insufficientBudgetRecords.push(record.trainingRecordId);
-            }
-        }
+//             if (departmentCosts[departmentId].currentAmount >= 
+//                 departmentCosts[departmentId].totalDeduction + cost) {
+//                 departmentCosts[departmentId].totalDeduction += cost;
+//                 departmentCosts[departmentId].records.push(record.trainingRecordId);
+//                 recordsToApprove.push(record.trainingRecordId);
+//             } else {
+//                 insufficientBudgetRecords.push(record.trainingRecordId);
+//             }
+//         }
 
-        if (recordsToApprove.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'No records could be approved due to insufficient budgets',
-                insufficientBudgetRecords
-            });
-        }
+//         if (recordsToApprove.length === 0) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'No records could be approved due to insufficient budgets',
+//                 insufficientBudgetRecords
+//             });
+//         }
 
-        // Bulk approve
-        const { data: approvedRecords, error: approvalError } = await supabase
-            .from('training_records')
-            .update({ 
-                isApproved: true,
-                trainingStatus: 'Not Started'
-            })
-            .in('trainingRecordId', recordsToApprove)
-            .select();
+//         // Bulk approve
+//         const { data: approvedRecords, error: approvalError } = await supabase
+//             .from('training_records')
+//             .update({ 
+//                 isApproved: true,
+//                 trainingStatus: 'Not Started'
+//             })
+//             .in('trainingRecordId', recordsToApprove)
+//             .select();
 
-        if (approvalError) {
-            console.error('Bulk approval failed:', approvalError);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to approve requests: ' + approvalError.message
-            });
-        }
+//         if (approvalError) {
+//             console.error('Bulk approval failed:', approvalError);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to approve requests: ' + approvalError.message
+//             });
+//         }
 
-        // Update budgets
-        const budgetUpdates = Object.keys(departmentCosts).map(deptId => {
-            const dept = departmentCosts[deptId];
-            const newAmount = dept.currentAmount - dept.totalDeduction;
-            return supabase
-                .from('training_budgets')
-                .update({ amount: newAmount })
-                .eq('trainingBugetId', dept.trainingBugetId);
-        });
+//         // Update budgets
+//         const budgetUpdates = Object.keys(departmentCosts).map(deptId => {
+//             const dept = departmentCosts[deptId];
+//             const newAmount = dept.currentAmount - dept.totalDeduction;
+//             return supabase
+//                 .from('training_budgets')
+//                 .update({ amount: newAmount })
+//                 .eq('trainingBugetId', dept.trainingBugetId);
+//         });
 
-        const budgetResults = await Promise.all(budgetUpdates);
-        const budgetErrors = budgetResults.filter(r => r.error);
+//         const budgetResults = await Promise.all(budgetUpdates);
+//         const budgetErrors = budgetResults.filter(r => r.error);
 
-        if (budgetErrors.length > 0) {
-            console.error('Some budget updates failed:', budgetErrors);
-            // In production, you might want to rollback approvals here
-        }
+//         if (budgetErrors.length > 0) {
+//             console.error('Some budget updates failed:', budgetErrors);
+//             // In production, you might want to rollback approvals here
+//         }
 
-        console.log(`Bulk approved ${approvedRecords?.length || 0} requests`);
+//         console.log(`Bulk approved ${approvedRecords?.length || 0} requests`);
         
-        res.json({
-            success: true,
-            message: `Approved ${approvedRecords?.length || 0} training requests`,
-            data: approvedRecords,
-            approvedCount: approvedRecords?.length || 0,
-            requestedCount: recordIds.length,
-            insufficientBudgetRecords,
-            budgetUpdates: Object.keys(departmentCosts).map(deptId => ({
-                departmentId: deptId,
-                amountDeducted: departmentCosts[deptId].totalDeduction,
-                newAmount: departmentCosts[deptId].currentAmount - departmentCosts[deptId].totalDeduction
-            }))
-        });
+//         res.json({
+//             success: true,
+//             message: `Approved ${approvedRecords?.length || 0} training requests`,
+//             data: approvedRecords,
+//             approvedCount: approvedRecords?.length || 0,
+//             requestedCount: recordIds.length,
+//             insufficientBudgetRecords,
+//             budgetUpdates: Object.keys(departmentCosts).map(deptId => ({
+//                 departmentId: deptId,
+//                 amountDeducted: departmentCosts[deptId].totalDeduction,
+//                 newAmount: departmentCosts[deptId].currentAmount - departmentCosts[deptId].totalDeduction
+//             }))
+//         });
         
-    } catch (error) {
-        console.error('Error in bulk approval:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error: ' + error.message
-        });
-    }
-},
-// Reject multiple training requests in bulk
-rejectTrainingRequestsBulk: async function (req, res) {
-    try {
-        console.log('🔴 Bulk rejecting training requests...');
-        const { recordIds, reason } = req.body;
+//     } catch (error) {
+//         console.error('Error in bulk approval:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error: ' + error.message
+//         });
+//     }
+// },
+// // Reject multiple training requests in bulk
+// rejectTrainingRequestsBulk: async function (req, res) {
+//     try {
+//         console.log('🔴 Bulk rejecting training requests...');
+//         const { recordIds, reason } = req.body;
         
-        if (!recordIds || !Array.isArray(recordIds) || recordIds.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Record IDs array is required'
-            });
-        }
+//         if (!recordIds || !Array.isArray(recordIds) || recordIds.length === 0) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Record IDs array is required'
+//             });
+//         }
         
-        console.log('Record IDs to reject:', recordIds);
-        console.log('Rejection reason:', reason);
+//         console.log('Record IDs to reject:', recordIds);
+//         console.log('Rejection reason:', reason);
         
-        // First, check which records exist
-        const { data: existingRecords, error: fetchError } = await supabase
-            .from('training_records')
-            .select('trainingRecordId')
-            .in('trainingRecordId', recordIds);
+//         // First, check which records exist
+//         const { data: existingRecords, error: fetchError } = await supabase
+//             .from('training_records')
+//             .select('trainingRecordId')
+//             .in('trainingRecordId', recordIds);
         
-        if (fetchError) {
-            console.error('Error fetching training records:', fetchError);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to fetch training records: ' + fetchError.message
-            });
-        }
+//         if (fetchError) {
+//             console.error('Error fetching training records:', fetchError);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to fetch training records: ' + fetchError.message
+//             });
+//         }
         
-        const existingRecordIds = existingRecords.map(record => record.trainingRecordId);
-        console.log('Found existing records:', existingRecordIds.length, 'out of', recordIds.length);
+//         const existingRecordIds = existingRecords.map(record => record.trainingRecordId);
+//         console.log('Found existing records:', existingRecordIds.length, 'out of', recordIds.length);
         
-        if (existingRecordIds.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No training requests found'
-            });
-        }
+//         if (existingRecordIds.length === 0) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'No training requests found'
+//             });
+//         }
         
-        // Update multiple training records to set isApproved = false
-        const { data, error } = await supabase
-            .from('training_records')
-            .update({ 
-                isApproved: false,
-                trainingStatus: 'Cancelled' // Set to Cancelled when rejected
-            })
-            .in('trainingRecordId', existingRecordIds)
-            .select();
+//         // Update multiple training records to set isApproved = false
+//         const { data, error } = await supabase
+//             .from('training_records')
+//             .update({ 
+//                 isApproved: false,
+//                 trainingStatus: 'Cancelled' // Set to Cancelled when rejected
+//             })
+//             .in('trainingRecordId', existingRecordIds)
+//             .select();
         
-        if (error) {
-            console.error('Error bulk rejecting training requests:', error);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to reject training requests: ' + error.message
-            });
-        }
+//         if (error) {
+//             console.error('Error bulk rejecting training requests:', error);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to reject training requests: ' + error.message
+//             });
+//         }
         
-        console.log(`Bulk rejected ${data?.length || 0} training requests`);
+//         console.log(`Bulk rejected ${data?.length || 0} training requests`);
         
-        res.json({
-            success: true,
-            message: `Successfully rejected ${data?.length || 0} training requests`,
-            data: data,
-            rejectedCount: data?.length || 0,
-            requestedCount: recordIds.length,
-            foundCount: existingRecordIds.length
-        });
+//         res.json({
+//             success: true,
+//             message: `Successfully rejected ${data?.length || 0} training requests`,
+//             data: data,
+//             rejectedCount: data?.length || 0,
+//             requestedCount: recordIds.length,
+//             foundCount: existingRecordIds.length
+//         });
         
-    } catch (error) {
-        console.error('Error in rejectTrainingRequestsBulk:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error: ' + error.message
-        });
-    }
-},
+//     } catch (error) {
+//         console.error('Error in rejectTrainingRequestsBulk:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error: ' + error.message
+//         });
+//     }
+// },
 
-getTrainingObjectives: async function(req, res) {
-    try {
-        const trainingId = req.params.trainingId;
+// getTrainingObjectives: async function(req, res) {
+//     try {
+//         const trainingId = req.params.trainingId;
         
-        // Get objectives for this training
-        const { data: trainingObjectives, error } = await supabase
-            .from('training_objectives')
-            .select(`
-                objectiveId,
-                objectivesettings_objectives(objectiveDescrpt)
-            `)
-            .eq('trainingId', trainingId);
+//         // Get objectives for this training
+//         const { data: trainingObjectives, error } = await supabase
+//             .from('training_objectives')
+//             .select(`
+//                 objectiveId,
+//                 objectivesettings_objectives(objectiveDescrpt)
+//             `)
+//             .eq('trainingId', trainingId);
 
-        if (error) {
-            console.error('Error fetching training objectives:', error);
-            return res.json({ success: false, message: 'Error fetching objectives' });
-        }
+//         if (error) {
+//             console.error('Error fetching training objectives:', error);
+//             return res.json({ success: false, message: 'Error fetching objectives' });
+//         }
 
-        // Format the objectives
-        const objectives = (trainingObjectives || []).map(item => ({
-            id: item.objectiveId,
-            description: item.objectivesettings_objectives?.objectiveDescrpt || 'No description'
-        }));
+//         // Format the objectives
+//         const objectives = (trainingObjectives || []).map(item => ({
+//             id: item.objectiveId,
+//             description: item.objectivesettings_objectives?.objectiveDescrpt || 'No description'
+//         }));
 
-        res.json({ 
-            success: true, 
-            objectives: objectives 
-        });
+//         res.json({ 
+//             success: true, 
+//             objectives: objectives 
+//         });
 
-    } catch (error) {
-        console.error('Error in getTrainingObjectives:', error);
-        res.json({ success: false, message: 'Server error' });
-    }
-},
+//     } catch (error) {
+//         console.error('Error in getTrainingObjectives:', error);
+//         res.json({ success: false, message: 'Server error' });
+//     }
+// },
 
-getTrainingSkills: async function(req, res) {
-    try {
-        const trainingId = req.params.trainingId;
+// getTrainingSkills: async function(req, res) {
+//     try {
+//         const trainingId = req.params.trainingId;
         
-        // Get skills for this training
-        const { data: trainingSkills, error } = await supabase
-            .from('training_skills')
-            .select(`
-                jobReqSkillId,
-                jobreqskills(jobReqSkillName, jobReqSkillType)
-            `)
-            .eq('trainingId', trainingId);
+//         // Get skills for this training
+//         const { data: trainingSkills, error } = await supabase
+//             .from('training_skills')
+//             .select(`
+//                 jobReqSkillId,
+//                 jobreqskills(jobReqSkillName, jobReqSkillType)
+//             `)
+//             .eq('trainingId', trainingId);
 
-        if (error) {
-            console.error('Error fetching training skills:', error);
-            return res.json({ success: false, message: 'Error fetching skills' });
-        }
+//         if (error) {
+//             console.error('Error fetching training skills:', error);
+//             return res.json({ success: false, message: 'Error fetching skills' });
+//         }
 
-        // Format the skills
-        const skills = (trainingSkills || []).map(item => ({
-            id: item.jobReqSkillId,
-            name: item.jobreqskills?.jobReqSkillName || 'Unknown Skill',
-            type: item.jobreqskills?.jobReqSkillType || 'Unknown Type'
-        }));
+//         // Format the skills
+//         const skills = (trainingSkills || []).map(item => ({
+//             id: item.jobReqSkillId,
+//             name: item.jobreqskills?.jobReqSkillName || 'Unknown Skill',
+//             type: item.jobreqskills?.jobReqSkillType || 'Unknown Type'
+//         }));
 
-        res.json({ 
-            success: true, 
-            skills: skills 
-        });
+//         res.json({ 
+//             success: true, 
+//             skills: skills 
+//         });
 
-    } catch (error) {
-        console.error('Error in getTrainingSkills:', error);
-        res.json({ success: false, message: 'Server error' });
-    }
-},
+//     } catch (error) {
+//         console.error('Error in getTrainingSkills:', error);
+//         res.json({ success: false, message: 'Server error' });
+//     }
+// },
 
 updateLeaveRequest: async function(req, res) {
     const leaveRequestId = req.body.leaveRequestId || req.query.leaveRequestId;
