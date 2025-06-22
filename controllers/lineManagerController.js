@@ -468,9 +468,8 @@ getTrainingDevelopmentTracker: async function (req, res) {
     try {
         console.log('🚀 Loading Training Development Tracker...');
         console.log('User:', req.session?.user?.userId);
-        console.log('User Session:', req.session?.user);
         
-        // Fetch training records with "For Line Manager Endorsement" status using Supabase
+        // Fetch training records first
         const { data: trainingRecords, error: trainingError } = await supabase
             .from('training_records')
             .select(`
@@ -510,56 +509,98 @@ getTrainingDevelopmentTracker: async function (req, res) {
         }
 
         console.log('📋 Training records fetched:', trainingRecords?.length || 0);
-        console.log('📋 Sample training record:', trainingRecords?.[0]);
+        console.log('📋 Sample training record:', JSON.stringify(trainingRecords?.[0], null, 2));
 
-        // Get all unique userIds from training records
+        // Get unique userIds from training records
         const userIds = trainingRecords ? [...new Set(trainingRecords.map(record => record.userId))] : [];
-        console.log('👥 User IDs to fetch:', userIds);
+        console.log('👥 User IDs from training records:', userIds);
 
-        // Fetch applicant accounts data separately
-        let applicantAccounts = [];
+        // Debug: Check what's in useraccounts for these userIds
+        const { data: userAccountsCheck, error: userAccountsError } = await supabase
+            .from('useraccounts')
+            .select('userId, userEmail')
+            .in('userId', userIds);
+
+        if (userAccountsError) {
+            console.error('❌ Error checking useraccounts:', userAccountsError);
+        } else {
+            console.log('👥 UserAccounts found:', JSON.stringify(userAccountsCheck, null, 2));
+        }
+
+        // Debug: Check what's in staffaccounts for these userIds
+        const { data: staffAccountsCheck, error: staffAccountsError } = await supabase
+            .from('staffaccounts')
+            .select('userId, firstName, lastName')
+            .in('userId', userIds);
+
+        if (staffAccountsError) {
+            console.error('❌ Error checking staffaccounts:', staffAccountsError);
+        } else {
+            console.log('👤 StaffAccounts found:', JSON.stringify(staffAccountsCheck, null, 2));
+        }
+
+        // Fetch staff names using the userIds
+        let staffNames = [];
         if (userIds.length > 0) {
-            const { data: applicantData, error: applicantError } = await supabase
-                .from('applicantaccounts')
-                .select(`
-                    userId,
-                    firstName,
-                    lastName
-                `)
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('userId, firstName, lastName')
                 .in('userId', userIds);
 
-            if (applicantError) {
-                console.error('❌ Error fetching applicant accounts:', applicantError);
+            if (staffError) {
+                console.error('❌ Error fetching staff names:', staffError);
             } else {
-                applicantAccounts = applicantData || [];
-                console.log('👤 Applicant accounts fetched:', applicantAccounts?.length || 0);
-                console.log('👤 Sample applicant account:', applicantAccounts?.[0]);
+                staffNames = staffData || [];
+                console.log('📝 Staff names fetched:', staffNames?.length);
+                console.log('📝 All staff names:', JSON.stringify(staffNames, null, 2));
             }
         }
 
-        // Create a map for quick lookup of applicant data
-        const applicantMap = {};
-        applicantAccounts.forEach(applicant => {
-            applicantMap[applicant.userId] = applicant;
+        // Create lookup map
+        const nameMap = {};
+        staffNames.forEach(staff => {
+            if (staff?.userId) {
+                nameMap[staff.userId] = staff;
+                console.log(`🗺️ Added to map: userId ${staff.userId} = ${staff.firstName} ${staff.lastName}`);
+            }
         });
-        console.log('🗺️ Applicant map created:', Object.keys(applicantMap));
 
-        // Merge applicant data with training records
-        const trainingRecordsWithApplicants = trainingRecords ? trainingRecords.map(record => {
-            const applicantData = applicantMap[record.userId];
-            console.log(`🔗 Mapping userId ${record.userId}:`, applicantData);
+        console.log('🗺️ Name map keys:', Object.keys(nameMap));
+        console.log('🗺️ Complete name map:', JSON.stringify(nameMap, null, 2));
+
+        // Merge names with training records
+        const trainingRecordsWithNames = trainingRecords ? trainingRecords.map(record => {
+            const nameData = nameMap[record.userId];
+            console.log(`🔗 Looking up userId ${record.userId}:`);
+            console.log(`   - Found in map:`, nameData);
+            
+            const fullName = nameData ? 
+                `${nameData.firstName || ''} ${nameData.lastName || ''}`.trim() : 
+                'Name not found';
+            
+            console.log(`   - Final name: "${fullName}"`);
+            
             return {
                 ...record,
-                applicantaccounts: applicantData || null
+                staffaccounts: nameData || null,
+                fullName: fullName
             };
         }) : [];
 
-        console.log('📊 Final merged record sample:', trainingRecordsWithApplicants?.[0]);
+        console.log('📊 Final records with names:', trainingRecordsWithNames?.length);
+
+        // Show first few records for debugging
+        trainingRecordsWithNames.slice(0, 3).forEach((record, index) => {
+            console.log(`📝 Record ${index + 1}:`);
+            console.log(`   - Training ID: ${record.trainingRecordId}`);
+            console.log(`   - User ID: ${record.userId}`);
+            console.log(`   - Full Name: "${record.fullName}"`);
+            console.log(`   - Has applicant data: ${!!record.applicantaccounts}`);
+        });
 
         // Calculate statistics
-        const totalPendingEndorsements = trainingRecordsWithApplicants?.length || 0;
+        const totalPendingEndorsements = trainingRecordsWithNames?.length || 0;
         
-        // Group by training type/category for better insights
         const trainingByType = {};
         const costSummary = {
             totalCost: 0,
@@ -568,19 +609,16 @@ getTrainingDevelopmentTracker: async function (req, res) {
             onsiteTrainings: 0
         };
 
-        if (trainingRecordsWithApplicants) {
-            trainingRecordsWithApplicants.forEach(record => {
-                // Group by training name
+        if (trainingRecordsWithNames) {
+            trainingRecordsWithNames.forEach(record => {
                 if (!trainingByType[record.trainingName]) {
                     trainingByType[record.trainingName] = 0;
                 }
                 trainingByType[record.trainingName]++;
 
-                // Calculate cost statistics
                 const cost = parseFloat(record.cost) || 0;
                 costSummary.totalCost += cost;
 
-                // Count online vs onsite
                 if (record.isOnlineArrangement) {
                     costSummary.onlineTrainings++;
                 } else {
@@ -589,12 +627,10 @@ getTrainingDevelopmentTracker: async function (req, res) {
             });
         }
 
-        // Calculate average cost
         costSummary.averageCost = totalPendingEndorsements > 0 
             ? (costSummary.totalCost / totalPendingEndorsements).toFixed(2)
             : 0;
 
-        // Get pending requests by month for trend analysis
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -604,19 +640,17 @@ getTrainingDevelopmentTracker: async function (req, res) {
             .eq('status', 'For Line Manager Endorsement')
             .gte('dateRequested', sixMonthsAgo.toISOString());
 
-        // Process monthly data client-side since Supabase doesn't support GROUP BY in the same way
         const monthlyTrends = {};
         if (monthlyRequests) {
             monthlyRequests.forEach(record => {
-                const month = new Date(record.dateRequested).toISOString().substring(0, 7); // YYYY-MM format
+                const month = new Date(record.dateRequested).toISOString().substring(0, 7);
                 monthlyTrends[month] = (monthlyTrends[month] || 0) + 1;
             });
         }
 
-        // Convert to array format for easier use in template
         const monthlyTrendsArray = Object.entries(monthlyTrends)
             .map(([month, count]) => ({ month, count }))
-            .sort((a, b) => b.month.localeCompare(a.month)); // Sort descending
+            .sort((a, b) => b.month.localeCompare(a.month));
 
         const statistics = {
             totalPendingEndorsements,
@@ -626,12 +660,11 @@ getTrainingDevelopmentTracker: async function (req, res) {
         };
 
         console.log('📊 Statistics calculated:', statistics);
-        console.log('📋 Found', totalPendingEndorsements, 'pending endorsements');
 
         res.render('staffpages/linemanager_pages/trainingdevelopmenttracker', {
             title: 'Employee Training & Development Tracker',
             user: req.session?.user || null,
-            trainingRecords: trainingRecordsWithApplicants || [],
+            trainingRecords: trainingRecordsWithNames || [],
             statistics: statistics
         });
         
@@ -650,6 +683,112 @@ getTrainingDevelopmentTracker: async function (req, res) {
                 </a>
             </div>
         `);
+    }
+},
+
+endorseTrainingToHR: async function (req, res) {
+    try {
+        const { trainingRecordId } = req.body;
+        const currentDate = new Date().toISOString();
+
+        const { data, error } = await supabase
+            .from('training_records')
+            .update({
+                status: 'For HR Approval',
+                lmDecisionDate: currentDate,
+                lmDecisionRemarks: 'Endorsed to HR for approval'
+            })
+            .eq('trainingRecordId', trainingRecordId)
+            .select();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            message: 'Training successfully endorsed to HR',
+            data: data
+        });
+    } catch (error) {
+        console.error('Error endorsing training:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+},
+
+cancelTraining: async function (req, res) {
+    try {
+        const { trainingRecordId, remarks } = req.body;
+        const currentDate = new Date().toISOString();
+
+        const { data, error } = await supabase
+            .from('training_records')
+            .update({
+                status: 'Cancelled',
+                lmDecisionDate: currentDate,
+                lmDecisionRemarks: remarks || 'Training cancelled by line manager'
+            })
+            .eq('trainingRecordId', trainingRecordId)
+            .select();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            message: 'Training successfully cancelled',
+            data: data
+        });
+    } catch (error) {
+        console.error('Error cancelling training:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+},
+getTrainingDetailsAPI: async function (req, res) {
+    try {
+        const { id } = req.params;
+        
+        // First get the training record
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .select(`
+                *,
+                useraccounts!userId (userEmail),
+                jobpositions!jobId (jobTitle)
+            `)
+            .eq('trainingRecordId', id)
+            .single();
+
+        if (recordError) throw recordError;
+        if (!trainingRecord) throw new Error('Training record not found');
+
+        // Then get staff details separately
+        const { data: staffData, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('firstName, lastName, position, department')
+            .eq('userId', trainingRecord.userId)
+            .single();
+
+        // Combine the data
+        const responseData = {
+            ...trainingRecord,
+            staffaccounts: staffError ? null : staffData
+        };
+
+        res.json({
+            success: true,
+            data: responseData
+        });
+
+    } catch (error) {
+        console.error('Error fetching training details:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 },
 // ============================

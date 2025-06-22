@@ -373,6 +373,9 @@ router.get('/linemanager/training-request/:userId', lineManagerController.getTra
 router.get('/linemanager/api/training-request/:userId/details', lineManagerController.getTrainingRequestDetails); // Fixed path
 router.post('/linemanager/training/approve', lineManagerController.approveTrainingRequest); // Fixed path
 router.post('/linemanager/training/reject', lineManagerController.rejectTrainingRequest); // Fixed path
+router.post('/api/training/endorse', lineManagerController.endorseTrainingToHR);
+router.post('/api/training/reject', lineManagerController.cancelTraining);
+router.get('/api/training/details/:id', lineManagerController.getTrainingDetailsAPI);
 
 // NEW: Pending training requests management routes (ADD THESE 4 LINES)
 // router.post('/linemanager/training-request/approve', lineManagerController.approveTrainingRequestByRecord);

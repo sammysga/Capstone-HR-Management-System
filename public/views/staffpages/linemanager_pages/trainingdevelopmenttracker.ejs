@@ -5,348 +5,146 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Training & Development</title>
     <link rel="stylesheet" href="/css/sidebar.css">
-    <style>
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-            background-color: #f5f5f5;
-            min-height: 100vh;
-        }
-
-        .header-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-section h1 {
-            margin: 0 0 10px 0;
-            font-size: 2.5rem;
-            font-weight: 300;
-        }
-
-        .header-section p {
-            margin: 0;
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            transition: transform 0.2s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 1rem;
-            margin: 0;
-        }
-
-        .content-section {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .section-header {
-            background: #f8f9fa;
-            padding: 20px 30px;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .section-header h2 {
-            margin: 0;
-            color: #333;
-            font-size: 1.5rem;
-        }
-
-        .table-container {
-            overflow-x: auto;
-        }
-
-        .training-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .training-table th,
-        .training-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .training-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-            position: sticky;
-            top: 0;
-        }
-
-        .training-table tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            background-color: #ffc107;
-            color: #856404;
-        }
-
-        .online-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 15px;
-            font-size: 0.75rem;
-            background-color: #28a745;
-            color: white;
-        }
-
-        .onsite-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 15px;
-            font-size: 0.75rem;
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        .cost-cell {
-            font-weight: 600;
-            color: #28a745;
-        }
-
-        .duration-cell {
-            color: #6c757d;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            transition: all 0.2s ease;
-        }
-
-        .btn-approve {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .btn-reject {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-view {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .btn:hover {
-            opacity: 0.8;
-            transform: translateY(-1px);
-        }
-
-        .no-records {
-            text-align: center;
-            padding: 60px 30px;
-            color: #6c757d;
-        }
-
-        .no-records i {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 15px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .training-table {
-                font-size: 0.9rem;
-            }
-
-            .training-table th,
-            .training-table td {
-                padding: 10px 8px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/linemanagertrainingdevelopment.css">
 </head>
 <body>
-    <%- include('../../partials/linemanager_partials') %>
+   <%- include('../../partials/linemanager_partials') %>
     
-    <div class="main-content">
-        <!-- Header Section -->
-        <div class="header-section">
-            <h1>Training & Development Tracker</h1>
-            <p>Manage and review employee training requests awaiting your endorsement</p>
-        </div>
+<div class="main-content">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1>Training & Development Tracker</h1>
+        <p>Manage and review employee training requests awaiting your endorsement</p>
+    </div>
 
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number"><%= statistics.totalPendingEndorsements %></div>
-                <p class="stat-label">Pending Endorsements</p>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">₱<%= statistics.costSummary.totalCost.toLocaleString() %></div>
-                <p class="stat-label">Total Training Cost</p>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">₱<%= statistics.costSummary.averageCost %></div>
-                <p class="stat-label">Average Cost per Training</p>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number"><%= statistics.costSummary.onlineTrainings %></div>
-                <p class="stat-label">Online Trainings</p>
-            </div>
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number"><%= statistics.totalPendingEndorsements %></div>
+            <p class="stat-label">Pending Endorsements</p>
         </div>
-
-        <!-- Training Records Table -->
-        <div class="content-section">
-            <div class="section-header">
-                <h2>Training Requests for Endorsement</h2>
-            </div>
-            
-            <% if (trainingRecords && trainingRecords.length > 0) { %>
-                <!-- Debug: Let's see what data we're getting -->
-                <script>
-                    console.log('Training Records Data:', <%- JSON.stringify(trainingRecords) %>);
-                </script>
-                <div class="table-container">
-                    <table class="training-table">
-                        <thead>
-                            <tr>
-                                <th>Employee</th>
-                                <th>Email</th>
-                                <th>Training Details</th>
-                                <th>Duration</th>
-                                <th>Cost</th>
-                                <th>Type</th>
-                                <th>Requested Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% trainingRecords.forEach(function(record) { %>
-                                <tr>
-                                    <td>
-                                        <!-- Debug: Show what we're getting -->
-                                        <% if (record.applicantaccounts) { %>
-                                            <strong>
-                                                <%= record.applicantaccounts.firstName || 'No First Name' %> 
-                                                <%= record.applicantaccounts.lastName || 'No Last Name' %>
-                                            </strong>
-                                        <% } else { %>
-                                            <strong style="color: red;">No Applicant Data Found (UserID: <%= record.userId %>)</strong>
-                                        <% } %>
-                                        <% if (record.jobpositions?.jobTitle) { %>
-                                            <br><small style="color: #6c757d;"><%= record.jobpositions.jobTitle %></small>
-                                        <% } %>
-                                    </td>
-                                    <td><%= record.useraccounts?.userEmail || 'No Email' %></td>
-                                    <td>
-                                        <strong><%= record.trainingName %></strong>
-                                        <% if (record.trainingDesc) { %>
-                                            <br><small style="color: #6c757d;"><%= record.trainingDesc.substring(0, 100) %>...</small>
-                                        <% } %>
-                                        <% if (record.address && !record.isOnlineArrangement) { %>
-                                            <br><small style="color: #6c757d;">📍 <%= record.address %>, <%= record.country %></small>
-                                        <% } %>
-                                    </td>
-                                    <td class="duration-cell">
-                                        <%= record.totalDuration %> hours
-                                        <% if (record.setStartDate && record.setEndDate) { %>
-                                            <br><small><%= new Date(record.setStartDate).toLocaleDateString() %> - <%= new Date(record.setEndDate).toLocaleDateString() %></small>
-                                        <% } %>
-                                    </td>
-                                    <td class="cost-cell">₱<%= parseFloat(record.cost || 0).toLocaleString() %></td>
-                                    <td>
-                                        <% if (record.isOnlineArrangement) { %>
-                                            <span class="online-badge">Online</span>
-                                        <% } else { %>
-                                            <span class="onsite-badge">On-site</span>
-                                        <% } %>
-                                    </td>
-                                    <td><%= new Date(record.dateRequested).toLocaleDateString() %></td>
-                                    <td><span class="status-badge">For Line Manager Endorsement</span></td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn btn-approve" onclick="approveTraining('<%= record.trainingRecordId %>')">
-                                                Approve
-                                            </button>
-                                            <button class="btn btn-reject" onclick="rejectTraining('<%= record.trainingRecordId %>')">
-                                                Reject
-                                            </button>
-                                            <a href="/training/details/<%= record.trainingRecordId %>" class="btn btn-view">
-                                                View Details
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <% }); %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } else { %>
-                <div class="no-records">
-                    <i>📚</i>
-                    <h3>No Training Requests Pending</h3>
-                    <p>There are currently no training requests awaiting your endorsement.</p>
-                </div>
-            <% } %>
+        <div class="stat-card">
+            <div class="stat-number">₱<%= statistics.costSummary.totalCost.toLocaleString() %></div>
+            <p class="stat-label">Total Training Cost</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">₱<%= statistics.costSummary.averageCost %></div>
+            <p class="stat-label">Average Cost per Training</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number"><%= statistics.costSummary.onlineTrainings %></div>
+            <p class="stat-label">Online Trainings</p>
         </div>
     </div>
+
+    <!-- Training Records Table -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2>Training Requests for Endorsement</h2>
+        </div>
+        
+        <% if (trainingRecords && trainingRecords.length > 0) { %>
+            <div class="table-container">
+                <table class="training-table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Email</th>
+                            <th>Training Details</th>
+                            <th>Duration</th>
+                            <th>Cost</th>
+                            <th>Type</th>
+                            <th>Requested Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% trainingRecords.forEach(function(record) { %>
+                            <tr>
+                                <td>
+                                    <% if (record.staffaccounts) { %>
+                                        <strong>
+                                            <%= record.staffaccounts.firstName || 'No First Name' %> 
+                                            <%= record.staffaccounts.lastName || 'No Last Name' %>
+                                        </strong>
+                                    <% } else { %>
+                                        <strong style="color: red;">No Staff Data Found (UserID: <%= record.userId %>)</strong>
+                                    <% } %>
+                                    <% if (record.jobpositions?.jobTitle) { %>
+                                        <br><small style="color: #6c757d;"><%= record.jobpositions.jobTitle %></small>
+                                    <% } %>
+                                </td>
+                                <td><%= record.useraccounts?.userEmail || 'No Email' %></td>
+                                <td>
+                                    <strong><%= record.trainingName %></strong>
+                                    <% if (record.trainingDesc) { %>
+                                        <br><small style="color: #6c757d;"><%= record.trainingDesc.substring(0, 100) %>...</small>
+                                    <% } %>
+                                    <% if (record.address && !record.isOnlineArrangement) { %>
+                                        <br><small style="color: #6c757d;">📍 <%= record.address %>, <%= record.country %></small>
+                                    <% } %>
+                                </td>
+                                <td class="duration-cell">
+                                    <%= record.totalDuration %> hours
+                                    <% if (record.setStartDate && record.setEndDate) { %>
+                                        <br><small><%= new Date(record.setStartDate).toLocaleDateString() %> - <%= new Date(record.setEndDate).toLocaleDateString() %></small>
+                                    <% } %>
+                                </td>
+                                <td class="cost-cell">₱<%= parseFloat(record.cost || 0).toLocaleString() %></td>
+                                <td>
+                                    <% if (record.isOnlineArrangement) { %>
+                                        <span class="online-badge">Online</span>
+                                    <% } else { %>
+                                        <span class="onsite-badge">On-site</span>
+                                    <% } %>
+                                </td>
+                                <td><%= new Date(record.dateRequested).toLocaleDateString() %></td>
+                                <td>
+                                    <span class="status-badge <%= record.status === 'For HR Approval' ? 'status-hr' : 
+                                         record.status === 'Cancelled' ? 'status-cancelled' : 
+                                         'status-pending' %>">
+                                        <%= record.status %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-approve" onclick="approveTraining('<%= record.trainingRecordId %>')">
+                                            Endorse to HR
+                                        </button>
+                                        <button class="btn btn-reject" onclick="rejectTraining('<%= record.trainingRecordId %>')">
+                                            Return for Revision
+                                        </button>
+                                        <button class="btn btn-view" onclick="viewTrainingDetails('<%= record.trainingRecordId %>')">
+                                            View Details
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="no-records">
+                <i>📚</i>
+                <h3>No Training Requests Pending</h3>
+                <p>There are currently no training requests awaiting your endorsement.</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Training Details Modal -->
+<div id="trainingDetailsModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <h2>Training Request Details</h2>
+    <div id="modalContent">
+      <!-- Content will be loaded here dynamically -->
+    </div>
+  </div>
+</div>
 
     <script>
         // Toggle active class for sidebar links
@@ -377,37 +175,37 @@
 
         // Training approval functions
         function approveTraining(trainingRecordId) {
-            if (confirm('Are you sure you want to approve this training request?')) {
-                // Add your approval logic here
-                fetch('/api/training/approve', {
+            if (confirm('Are you sure you want to endorse this training request to HR?')) {
+                fetch('/api/training/endorse', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         trainingRecordId: trainingRecordId,
-                        decision: 'approved'
+                        decision: 'endorsed',
+                        status: 'For HR Approval'
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Training request approved successfully!');
+                        alert('Training request endorsed to HR successfully!');
                         location.reload();
                     } else {
-                        alert('Error approving training request: ' + data.message);
+                        alert('Error endorsing training request: ' + data.message);
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while approving the training request.');
+                    alert('An error occurred while endorsing the training request.');
                 });
             }
         }
 
         function rejectTraining(trainingRecordId) {
-            const remarks = prompt('Please provide rejection remarks:');
-            if (remarks) {
+            const remarks = prompt('Please provide reason for cancellation:');
+            if (remarks !== null) {
                 fetch('/api/training/reject', {
                     method: 'POST',
                     headers: {
@@ -416,22 +214,135 @@
                     body: JSON.stringify({
                         trainingRecordId: trainingRecordId,
                         decision: 'rejected',
+                        status: 'Cancelled',
                         remarks: remarks
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Training request rejected successfully!');
+                        alert('Training request has been cancelled successfully!');
                         location.reload();
                     } else {
-                        alert('Error rejecting training request: ' + data.message);
+                        alert('Error cancelling training request: ' + data.message);
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while rejecting the training request.');
+                    alert('An error occurred while cancelling the training request.');
                 });
+            }
+        }
+
+        // Modal functionality
+        const modal = document.getElementById("trainingDetailsModal");
+        const modalContent = document.getElementById("modalContent");
+
+        // Close modal when clicking X
+        document.querySelector(".close-modal").onclick = function() {
+            modal.style.display = "none";
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // View training details
+        async function viewTrainingDetails(trainingRecordId) {
+            try {
+                // Show loading state
+                modalContent.innerHTML = '<p>Loading details...</p>';
+                modal.style.display = "block";
+                
+                // Fetch training details
+                const response = await fetch(`/api/training/details/${trainingRecordId}`);
+                const data = await response.json();
+                
+                if (data.error) throw new Error(data.error);
+                
+                // Format and display the details
+                const training = data.data;
+                modalContent.innerHTML = `
+                    <div class="detail-row">
+                        <div class="detail-label">Employee:</div>
+                        <div>${training.staffaccounts?.firstName || ''} ${training.staffaccounts?.lastName || ''}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Email:</div>
+                        <div>${training.useraccounts?.userEmail || 'No email'}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Position:</div>
+                        <div>${training.jobpositions?.jobTitle || 'No position'}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Training:</div>
+                        <div><strong>${training.trainingName}</strong></div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Description:</div>
+                        <div>${training.trainingDesc || 'No description provided'}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Dates:</div>
+                        <div>
+                            ${new Date(training.setStartDate).toLocaleDateString()} - 
+                            ${new Date(training.setEndDate).toLocaleDateString()}
+                            (${training.totalDuration} hours)
+                        </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Cost:</div>
+                        <div>₱${parseFloat(training.cost || 0).toLocaleString()}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Type:</div>
+                        <div>${training.isOnlineArrangement ? 'Online' : 'On-site'}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Location:</div>
+                        <div>${training.address || 'N/A'} ${training.country ? ', ' + training.country : ''}</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Status:</div>
+                        <div class="status-badge ${training.status === 'For HR Approval' ? 'status-hr' : 
+                                              training.status === 'Cancelled' ? 'status-cancelled' : 
+                                              'status-pending'}">
+                            ${training.status}
+                        </div>
+                    </div>
+                    
+                    ${training.lmDecisionRemarks ? `
+                    <div class="detail-row">
+                        <div class="detail-label">Manager Remarks:</div>
+                        <div>${training.lmDecisionRemarks}</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Request Date:</div>
+                        <div>${new Date(training.dateRequested).toLocaleDateString()}</div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error loading details:', error);
+                modalContent.innerHTML = `
+                    <p style="color: red;">Error loading training details:</p>
+                    <p>${error.message}</p>
+                `;
             }
         }
 
