@@ -543,2236 +543,703 @@ const hrController = {
         }
     },
 
-   getHrTrainingDevelopmentTracker: async function (req, res) {
-    try {
-        console.log('Loading training development tracker...');
-
-        // Fetch only REQUIRED trainings for HR
-        const { data: trainings, error: trainingsError } = await supabase
-            .from('trainings')
-            .select('*')
-            .eq('isActive', true)
-            .eq('isRequired', true) // Only fetch required trainings
-            .order('trainingName', { ascending: true });
-
-        if (trainingsError) throw trainingsError;
-
-        // Fetch job positions and departments
-        const { data: jobPositions } = await supabase.from('jobpositions').select('*');
-        const { data: departments } = await supabase.from('departments').select('*');
-        const { data: employees } = await supabase.from('staffaccounts').select('*').limit(20);
-
-        // Fetch training assignments for required trainings only
-        let assignments = [];
+    // ============================================================================
+    // MAIN HR DASHBOARD - Show pending training requests for approval
+    // ============================================================================
+    getHrTrainingDevelopmentTracker: async function (req, res) {
         try {
-            const { data: assignmentData } = await supabase
+            console.log('Loading HR Training Dashboard...');
+
+            // Get all training requests that need HR approval
+            const pendingRequests = await hrController.getPendingTrainingRequests();
+            
+            // Get budget overview for decision making
+            const budgetData = await hrController.getBudgetOverviewData();
+            
+            res.render('staffpages/hr_pages/hrtrainingdevelopmenttracker', {
+                title: 'HR Training Approvals',
+                pendingRequests: pendingRequests,
+                budgetData: budgetData,
+                user: req.user || null
+            });
+            
+        } catch (error) {
+            console.error('Error loading HR dashboard:', error);
+            res.status(500).send('Error loading dashboard');
+        }
+    },
+
+    // ============================================================================
+    // GET PENDING TRAINING REQUESTS - Only "For HR Approval" status
+    // ============================================================================
+    getPendingTrainingRequests: async function (req, res = null) {
+        try {
+            console.log('Fetching pending training requests...');
+
+            const { data: requests, error } = await supabase
                 .from('training_records')
                 .select(`
                     *,
-                    trainings!inner(trainingName, isRequired),
-                    staffaccounts!inner(staffFName, staffLName, staffEmail, jobId, departmentId),
-                    jobpositions!inner(jobTitle),
-                    departments!inner(deptName)
+                    useraccounts!training_records_userId_fkey (
+                        userId,
+                        userEmail
+                    )
                 `)
-                .eq('trainings.isRequired', true) // Only assignments for required trainings
-                .eq('trainings.isActive', true)
+                .eq('status', 'For HR Approval')
                 .order('dateRequested', { ascending: false });
+
+            if (error) throw error;
+
+            // Get all user IDs from the requests
+            const userIds = requests?.map(req => req.userId) || [];
             
-            if (assignmentData) {
-                assignments = assignmentData.map(assignment => ({
-                    assignmentId: assignment.trainingRecordId,
-                    trainingId: assignment.trainingId,
-                    employeeId: assignment.userId,
-                    employeeName: `${assignment.staffaccounts.staffFName} ${assignment.staffaccounts.staffLName}`,
-                    employeeEmail: assignment.staffaccounts.staffEmail,
-                    trainingTitle: assignment.trainings.trainingName + ' (REQUIRED)',
-                    jobTitle: assignment.jobpositions?.jobTitle || 'Unknown Position',
-                    department: assignment.departments?.deptName || 'Unknown Department',
-                    status: assignment.trainingStatus?.toLowerCase().replace(' ', '-') || 'not-started',
-                    progress: assignment.progressPercentage || 0,
-                    startDate: assignment.setStartDate ? new Date(assignment.setStartDate) : new Date(),
-                    dueDate: assignment.setEndDate ? new Date(assignment.setEndDate) : null,
-                    assignedDate: assignment.dateRequested ? new Date(assignment.dateRequested) : new Date(),
-                    completionDate: assignment.completionDate ? new Date(assignment.completionDate) : null,
-                    isApproved: assignment.isApproved
-                }));
-            }
-        } catch (error) {
-            console.log('Training assignments table not found or error:', error);
-            // Fallback to demo assignments for required trainings
-            assignments = [
-                {
-                    assignmentId: 1,
-                    trainingId: 1,
-                    employeeId: 'john-doe',
-                    employeeName: 'John Doe',
-                    employeeEmail: 'john.doe@company.com',
-                    trainingTitle: 'Safety Training (REQUIRED)',
-                    jobTitle: 'Frontend Developer',
-                    department: 'IT',
-                    status: 'in-progress',
-                    progress: 75,
-                    startDate: new Date('2024-01-15'),
-                    assignedDate: new Date('2024-01-10'),
-                    isApproved: true
-                },
-                {
-                    assignmentId: 2,
-                    trainingId: 2,
-                    employeeId: 'jane-smith',
-                    employeeName: 'Jane Smith',
-                    employeeEmail: 'jane.smith@company.com',
-                    trainingTitle: 'Data Privacy Training (REQUIRED)',
-                    jobTitle: 'Operations Manager',
-                    department: 'Operations',
-                    status: 'completed',
-                    progress: 100,
-                    startDate: new Date('2024-01-10'),
-                    completionDate: new Date('2024-01-25'),
-                    assignedDate: new Date('2024-01-05'),
-                    isApproved: true
-                },
-                {
-                    assignmentId: 3,
-                    trainingId: 3,
-                    employeeId: 'mike-johnson',
-                    employeeName: 'Mike Johnson',
-                    employeeEmail: 'mike.johnson@company.com',
-                    trainingTitle: 'Compliance Training (REQUIRED)',
-                    jobTitle: 'Data Analyst',
-                    department: 'Analytics',
-                    status: 'not-started',
-                    progress: 0,
-                    startDate: new Date('2024-01-20'),
-                    dueDate: new Date('2024-02-20'),
-                    assignedDate: new Date('2024-01-15'),
-                    isApproved: true
-                }
-            ];
-        }
-
-        // Create lookup maps
-        const jobsMap = (jobPositions || []).reduce((acc, job) => {
-            acc[job.jobId] = job;
-            return acc;
-        }, {});
-
-        const departmentsMap = (departments || []).reduce((acc, dept) => {
-            acc[dept.departmentId] = dept;
-            return acc;
-        }, {});
-
-        // Format trainings (only required ones)
-        const formattedTrainings = (trainings || []).map(training => {
-            const job = jobsMap[training.jobId] || {};
-            const department = departmentsMap[job.departmentId] || {};
-            
-            // Count assignments for this training
-            const trainingAssignments = assignments.filter(a => a.trainingId === training.trainingId);
-            const completedCount = trainingAssignments.filter(a => a.status === 'completed').length;
-            const inProgressCount = trainingAssignments.filter(a => a.status === 'in-progress').length;
-            const notStartedCount = trainingAssignments.filter(a => a.status === 'not-started').length;
-            
-            return {
-                id: training.trainingId,
-                title: training.trainingName || 'Untitled Training',
-                description: training.trainingDesc || 'No description available',
-                mode: training.isOnlineArrangement ? 'online' : 'onsite',
-                location: training.isOnlineArrangement ? null : {
-                    country: training.country,
-                    address: training.address
-                },
-                cost: training.cost || 0,
-                duration: training.totalDuration || 0,
-                department: department.departmentName || 'Unknown Department',
-                jobTitle: job.jobTitle || 'Unknown Position',
-                badges: [
-                    training.isOnlineArrangement ? 'online' : 'onsite',
-                    'required' // All trainings are required now
-                ],
-                // Assignment statistics
-                assignmentStats: {
-                    total: trainingAssignments.length,
-                    completed: completedCount,
-                    inProgress: inProgressCount,
-                    notStarted: notStartedCount
-                },
-                assignments: trainingAssignments // Include assignments for this training
-            };
-        });
-
-        res.render('staffpages/hr_pages/hrtrainingdevelopmenttracker', {
-            title: 'Required Training & Development Tracker',
-            trainings: formattedTrainings,
-            assignments: assignments,
-            user: req.user || null
-        });
-        
-    } catch (error) {
-        console.error('Error loading training tracker:', error);
-        res.status(500).send('Error loading training tracker');
-    }
-},
-
-getTrainingDetails: async function (req, res) {
-    try {
-        const trainingId = req.params.trainingId;
-        console.log('=== TRAINING DETAILS DEBUG ===');
-        console.log('Requested training ID:', trainingId);
-
-        if (!trainingId) {
-            console.log('ERROR: No training ID provided');
-            return res.status(400).json({
-                success: false,
-                message: 'Training ID is required'
-            });
-        }
-
-        // Get training details
-        console.log('Fetching training from database...');
-        const { data: training, error: trainingError } = await supabase
-            .from('trainings')
-            .select('*')
-            .eq('trainingId', trainingId)
-            .eq('isActive', true)
-            .single();
-
-        if (trainingError || !training) {
-            console.log('Training not found or error:', trainingError);
-            return res.status(404).json({
-                success: false,
-                message: 'Training not found',
-                debug: { trainingId, error: trainingError }
-            });
-        }
-
-        console.log('Training found:', training.trainingName);
-
-        // Get job and department info
-        let jobInfo = null;
-        let departmentInfo = null;
-
-        if (training.jobId) {
-            const { data: job } = await supabase
-                .from('jobpositions')
-                .select('jobTitle, departmentId')
-                .eq('jobId', training.jobId)
-                .single();
-            
-            jobInfo = job;
-
-            if (job && job.departmentId) {
-                const { data: department } = await supabase
-                    .from('departments')
-                    .select('deptName')
-                    .eq('departmentId', job.departmentId)
-                    .single();
-                
-                departmentInfo = department;
-            }
-        }
-
-        // Get training records first
-        console.log('Fetching training assignments...');
-        const { data: trainingRecords, error: recordsError } = await supabase
-            .from('training_records')
-            .select(`
-                *,
-                trainings!inner (
-                    trainingName,
-                    trainingDesc,
-                    isOnlineArrangement,
-                    isRequired,
-                    totalDuration,
-                    cost,
-                    address
-                )
-            `)
-            .eq('trainingId', trainingId)
-            .order('dateRequested', { ascending: false });
-
-        if (recordsError) {
-            console.error('Error fetching training records:', recordsError);
-            return res.status(500).json({
-                success: false,
-                message: 'Error fetching training records'
-            });
-        }
-
-        console.log(`Found ${trainingRecords?.length || 0} training records`);
-
-        // NEW: Use the SAME progress calculation logic as employee side
-        let assignments = [];
-        
-        if (trainingRecords && trainingRecords.length > 0) {
-            const userIds = trainingRecords.map(record => record.userId);
-            
-            // Get user accounts
-            const { data: userAccounts, error: userError } = await supabase
-                .from('useraccounts')
-                .select('userId, userEmail')
-                .in('userId', userIds);
-
-            // Get staff accounts
-            const { data: staffAccounts, error: staffError } = await supabase
-                .from('staffaccounts')
-                .select('userId, firstName, lastName, jobId, departmentId')
-                .in('userId', userIds);
-
-            // Get job positions
-            const jobIds = [...new Set(staffAccounts?.map(staff => staff.jobId).filter(Boolean))];
-            let jobPositions = [];
-            if (jobIds.length > 0) {
-                const { data: jobs } = await supabase
-                    .from('jobpositions')
-                    .select('jobId, jobTitle')
-                    .in('jobId', jobIds);
-                jobPositions = jobs || [];
-            }
-
-            // Get departments
-            const departmentIds = [...new Set(staffAccounts?.map(staff => staff.departmentId).filter(Boolean))];
-            let departments = [];
-            if (departmentIds.length > 0) {
-                const { data: depts } = await supabase
-                    .from('departments')
-                    .select('departmentId, deptName')
-                    .in('departmentId', departmentIds);
-                departments = depts || [];
-            }
-
-            // REUSE EMPLOYEE LOGIC: Process each training record to add progress information
-            const enrichedRecords = await Promise.all(
-                trainingRecords.map(async (record) => {
-                    try {
-                        // Get activities count (SAME as employee side)
-                        const { data: activities, error: activitiesError } = await supabase
-                            .from('training_activities')
-                            .select('activityId')
-                            .eq('trainingId', record.trainingId);
-
-                        if (activitiesError) {
-                            console.error(`Error fetching activities for training ${record.trainingId}:`, activitiesError);
-                        }
-
-                        // Get completed activities (SAME as employee side)
-                        const { data: completedActivities, error: completedError } = await supabase
-                            .from('training_records_activities')
-                            .select('activityId, status')
-                            .eq('trainingRecordId', record.trainingRecordId);
-
-                        if (completedError) {
-                            console.error(`Error fetching completed activities for record ${record.trainingRecordId}:`, completedError);
-                        }
-
-                        const totalActivities = activities?.length || 0;
-                        const completedCount = completedActivities?.filter(a => a.status === 'Completed').length || 0;
-                        const inProgressCount = completedActivities?.filter(a => a.status === 'In Progress').length || 0;
-
-                        // SAME CALCULATION as employee renderTrainingListItem
-                        let progressPercentage = 0;
-                        if (totalActivities > 0) {
-                            // FIXED: Use the SAME enhanced percentage calculation as employee side
-                            const partialProgress = (completedCount * 1.0) + (inProgressCount * 0.5);
-                            progressPercentage = Math.round((partialProgress / totalActivities) * 100);
-                        }
-
-                        // Check for certificates (SAME as employee side)
-                        const { data: certificates, error: certError } = await supabase
-                            .from('training_records_certificates')
-                            .select('certificate_url')
-                            .eq('trainingRecordId', record.trainingRecordId);
-
-                        const hasValidCertificates = certificates?.some(cert => 
-                            cert.certificate_url && cert.certificate_url.trim() !== ''
-                        ) || false;
-
-                        // SAME STATUS DETERMINATION as employee getTrainingProgress
-                        let displayStatus = 'Not Started';
-                        const today = new Date();
-                        const startDate = record.setStartDate ? new Date(record.setStartDate) : null;
-                        const endDate = record.setEndDate ? new Date(record.setEndDate) : null;
-
-                        // Check approval status first (SAME as employee side)
-                        if (record.isApproved === null) {
-                            displayStatus = 'Awaiting Approval';
-                        } else if (record.isApproved === false) {
-                            displayStatus = 'Rejected';
-                        } else if (record.isApproved === true) {
-                            // For approved trainings, use the calculated status (SAME as employee side)
-                            if (hasValidCertificates) {
-                                displayStatus = 'Completed';
-                                progressPercentage = 100; // Override percentage if certificates exist
-                            } else if (endDate && today > endDate && progressPercentage < 100) {
-                                displayStatus = 'Overdue';
-                            } else if (inProgressCount > 0 || completedCount > 0) {
-                                displayStatus = 'In Progress';
-                            } else {
-                                displayStatus = 'Not Started';
-                            }
-                        }
-
-                        // Get user and staff details
-                        const userAccount = userAccounts?.find(user => user.userId === record.userId);
-                        const staffAccount = staffAccounts?.find(staff => staff.userId === record.userId);
-                        const jobPosition = jobPositions.find(job => job.jobId === staffAccount?.jobId);
-                        const department = departments.find(dept => dept.departmentId === staffAccount?.departmentId);
-
-                        console.log(`Employee ${staffAccount?.firstName} ${staffAccount?.lastName}: ${progressPercentage}% (${completedCount}/${totalActivities} completed, ${inProgressCount} in progress, status: ${displayStatus})`);
-
-                        return {
-                            assignmentId: record.trainingRecordId,
-                            employeeId: record.userId,
-                            employeeName: staffAccount ? `${staffAccount.firstName} ${staffAccount.lastName}` : 'Unknown Employee',
-                            employeeEmail: userAccount?.userEmail || 'no-email@company.com',
-                            jobTitle: jobPosition?.jobTitle || 'Unknown Position',
-                            department: department?.deptName || 'Unknown Department',
-                            status: displayStatus,
-                            progress: progressPercentage, // SAME calculation as employee side
-                            startDate: record.setStartDate,
-                            endDate: record.setEndDate,
-                            assignedDate: record.dateRequested,
-                            completionDate: record.decisionDate,
-                            isApproved: record.isApproved,
-                            approvalRemarks: record.decisionRemarks,
-                            // Add activity breakdown for debugging
-                            activityBreakdown: {
-                                total: totalActivities,
-                                completed: completedCount,
-                                inProgress: inProgressCount,
-                                hasValidCertificates: hasValidCertificates
-                            }
-                        };
-                    } catch (error) {
-                        console.error(`Error processing training record ${record.trainingRecordId}:`, error);
-                        return {
-                            assignmentId: record.trainingRecordId,
-                            employeeId: record.userId,
-                            employeeName: 'Unknown Employee',
-                            status: 'Error',
-                            progress: 0,
-                            error: error.message
-                        };
-                    }
-                })
-            );
-
-            assignments = enrichedRecords;
-            console.log(`Successfully processed ${assignments.length} assignments using employee-side logic`);
-        }
-
-        // Get training activities
-        const { data: activities } = await supabase
-            .from('training_activities')
-            .select('*')
-            .eq('trainingId', trainingId)
-            .order('activityId', { ascending: true });
-
-        // Get training certifications
-        const { data: certifications } = await supabase
-            .from('training_certifications')
-            .select('*')
-            .eq('trainingId', trainingId)
-            .order('trainingCertId', { ascending: true });
-
-        // Calculate statistics with progress awareness
-        const stats = {
-            totalAssigned: assignments.length,
-            completed: assignments.filter(a => a.status === 'Completed').length,
-            inProgress: assignments.filter(a => a.status === 'In Progress').length,
-            notStarted: assignments.filter(a => 
-                a.status === 'Assigned' || 
-                a.status === 'Not Started' || 
-                !a.status
-            ).length,
-            overdue: assignments.filter(a => {
-                if (!a.endDate) return false;
-                const dueDate = new Date(a.endDate);
-                const today = new Date();
-                return dueDate < today && a.status !== 'Completed';
-            }).length,
-            // Calculate average progress
-            averageProgress: assignments.length > 0 ? 
-                Math.round(assignments.reduce((sum, a) => sum + a.progress, 0) / assignments.length) : 0
-        };
-
-        // Format training data
-        const formattedTraining = {
-            id: training.trainingId,
-            title: training.trainingName,
-            description: training.trainingDesc,
-            mode: training.isOnlineArrangement ? 'online' : 'onsite',
-            location: training.isOnlineArrangement ? null : {
-                country: training.country,
-                address: training.address
-            },
-            cost: training.cost || 0,
-            duration: training.totalDuration || 0,
-            isRequired: training.isRequired || false,
-            isActive: training.isActive,
-            createdDate: training.dateCreated || null,
-            jobTitle: jobInfo?.jobTitle || 'Unknown Position',
-            department: departmentInfo?.deptName || 'Unknown Department',
-            activities: activities || [],
-            certifications: certifications || [],
-            assignments: assignments,
-            statistics: stats
-        };
-
-        console.log(`Training details loaded: ${formattedTraining.title} with ${assignments.length} assignments, average progress: ${stats.averageProgress}%`);
-
-        res.json({
-            success: true,
-            data: formattedTraining,
-            message: `Training details loaded successfully with synchronized progress`
-        });
-
-    } catch (error) {
-        console.error('Error getting training details:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to get training details',
-            error: error.message
-        });
-    }
-},
-
-getEmployees: async function (req, res) {
-    try {
-        console.log('Fetching employees from database...');
-        
-        const { data: employees, error } = await supabase
-            .from('staffaccounts')
-            .select(`
-                staffId, 
-                lastName, 
-                firstName, 
-                userId,
-                jobId,
-                departmentId,
-                jobpositions(jobTitle, departmentId),
-                departments(deptName),
-                useraccounts(userEmail)
-            `)
-            .order('firstName', { ascending: true });
-
-        if (error) {
-            console.error('Supabase error:', error);
-            throw error;
-        }
-
-        console.log(`Found ${employees?.length || 0} employees in database`);
-
-        // Format the employees data
-        const formattedEmployees = (employees || []).map(emp => {
-            const fullName = `${emp.firstName || 'Unknown'} ${emp.lastName || 'User'}`;
-            
-            return {
-                id: emp.staffId,
-                userId: emp.userId, // Make sure this field is included
-                firstName: emp.firstName || 'Unknown',
-                lastName: emp.lastName || 'User',
-                fullName: fullName,
-                email: emp.useraccounts?.userEmail || 'no-email@company.com',
-                jobId: emp.jobId,
-                jobTitle: emp.jobpositions?.jobTitle || 'Unknown Position',
-                departmentId: emp.departmentId || emp.jobpositions?.departmentId,
-                department: emp.departments?.deptName || 'Unknown Department'
-            };
-        });
-
-        console.log('Formatted employees:', formattedEmployees.length);
-        if (formattedEmployees.length > 0) {
-            console.log('Sample employee data:', formattedEmployees[0]);
-        }
-
-        res.json({
-            success: true,
-            data: formattedEmployees,
-            message: `Successfully fetched ${formattedEmployees.length} employees`
-        });
-
-    } catch (error) {
-        console.error('Error fetching employees:', error);
-        
-        // Return demo data if database fails (for development/testing)
-        const demoEmployees = [
-            {
-                id: 'emp1',
-                userId: 1,
-                firstName: 'John',
-                lastName: 'Doe',
-                fullName: 'John Doe',
-                email: 'john.doe@company.com',
-                jobId: 1,
-                jobTitle: 'Software Engineer',
-                departmentId: 1,
-                department: 'IT'
-            },
-            {
-                id: 'emp2',
-                userId: 2,
-                firstName: 'Jane',
-                lastName: 'Smith',
-                fullName: 'Jane Smith',
-                email: 'jane.smith@company.com',
-                jobId: 2,
-                jobTitle: 'Operations Manager',
-                departmentId: 2,
-                department: 'Operations'
-            },
-            {
-                id: 'emp3',
-                userId: 3,
-                firstName: 'Mike',
-                lastName: 'Johnson',
-                fullName: 'Mike Johnson',
-                email: 'mike.johnson@company.com',
-                jobId: 3,
-                jobTitle: 'Data Analyst',
-                departmentId: 3,
-                department: 'Analytics'
-            },
-            {
-                id: 'emp4',
-                userId: 4,
-                firstName: 'Sarah',
-                lastName: 'Wilson',
-                fullName: 'Sarah Wilson',
-                email: 'sarah.wilson@company.com',
-                jobId: 4,
-                jobTitle: 'HR Specialist',
-                departmentId: 4,
-                department: 'Human Resources'
-            },
-            {
-                id: 'emp5',
-                userId: 5,
-                firstName: 'David',
-                lastName: 'Brown',
-                fullName: 'David Brown',
-                email: 'david.brown@company.com',
-                jobId: 5,
-                jobTitle: 'Marketing Manager',
-                departmentId: 5,
-                department: 'Marketing'
-            }
-        ];
-
-        console.log('Returning demo data due to database error');
-        
-        res.json({
-            success: true,
-            data: demoEmployees,
-            message: 'Using demo data (database connection failed)',
-            isDemoData: true
-        });
-    }
-},
-
-getEmployeeTrainingDashboard: async function (req, res) {
-    try {
-        console.log('Loading Employee Training Dashboard...');
-
-        // Get all employees with their basic info
-        const { data: allEmployees, error: employeesError } = await supabase
-            .from('staffaccounts')
-            .select(`
-                userId,
-                firstName,
-                lastName,
-                jobId,
-                departmentId,
-                jobpositions(jobTitle),
-                departments(deptName),
-                useraccounts(userEmail)
-            `)
-            .order('firstName', { ascending: true });
-
-        if (employeesError) {
-            console.error('Error fetching employees:', employeesError);
-            throw employeesError;
-        }
-
-        console.log(`Found ${allEmployees?.length || 0} employees`);
-
-        // Get all training records for all employees
-        const { data: allTrainingRecords, error: recordsError } = await supabase
-            .from('training_records')
-            .select(`
-                *,
-                trainings!inner(
-                    trainingName,
-                    isRequired,
-                    totalDuration,
-                    isOnlineArrangement
-                )
-            `)
-            .eq('trainings.isRequired', true) // Only required trainings
-            .eq('trainings.isActive', true);
-
-        if (recordsError) {
-            console.error('Error fetching training records:', recordsError);
-            throw recordsError;
-        }
-
-        console.log(`Found ${allTrainingRecords?.length || 0} training records`);
-
-        // Get all activity progress data
-        const trainingRecordIds = allTrainingRecords?.map(record => record.trainingRecordId) || [];
-        let allActivityProgress = [];
-        let allCertificates = [];
-
-        if (trainingRecordIds.length > 0) {
-            const { data: activityData } = await supabase
-                .from('training_records_activities')
-                .select('trainingRecordId, status, activityId')
-                .in('trainingRecordId', trainingRecordIds);
-
-            const { data: certificateData } = await supabase
-                .from('training_records_certificates')
-                .select('trainingRecordId, certificate_url')
-                .in('trainingRecordId', trainingRecordIds);
-
-            allActivityProgress = activityData || [];
-            allCertificates = certificateData || [];
-        }
-
-        // Get activity counts for all trainings
-        const trainingIds = [...new Set(allTrainingRecords?.map(record => record.trainingId) || [])];
-        let trainingActivityCounts = {};
-
-        if (trainingIds.length > 0) {
-            const { data: activityCounts } = await supabase
-                .from('training_activities')
-                .select('trainingId, activityId')
-                .in('trainingId', trainingIds);
-
-            // Create map of training ID to activity count
-            if (activityCounts) {
-                activityCounts.forEach(activity => {
-                    trainingActivityCounts[activity.trainingId] = (trainingActivityCounts[activity.trainingId] || 0) + 1;
-                });
-            }
-        }
-
-        // Process each employee to calculate their training dashboard data
-        const employeeDashboardData = (allEmployees || []).map(employee => {
-            // Get all training records for this employee
-            const employeeTrainings = allTrainingRecords?.filter(record => record.userId === employee.userId) || [];
-
-            // Calculate overall progress for this employee
-            let totalTrainings = employeeTrainings.length;
-            let completedTrainings = 0;
-            let inProgressTrainings = 0;
-            let notStartedTrainings = 0;
-            let overdueTrainings = 0;
-            let totalProgressSum = 0;
-
-            const trainingDetails = employeeTrainings.map(training => {
-                // Calculate progress for this specific training (same logic as before)
-                const recordActivities = allActivityProgress.filter(ap => ap.trainingRecordId === training.trainingRecordId);
-                const completedActivities = recordActivities.filter(ra => ra.status === 'Completed').length;
-                const inProgressActivities = recordActivities.filter(ra => ra.status === 'In Progress').length;
-                const totalActivities = trainingActivityCounts[training.trainingId] || 0;
-
-                // Check for valid certificates
-                const recordCertificates = allCertificates.filter(cert => cert.trainingRecordId === training.trainingRecordId);
-                const hasValidCertificates = recordCertificates.some(cert => 
-                    cert.certificate_url && cert.certificate_url.trim() !== ''
-                );
-
-                // Calculate percentage progress (same logic as employee side)
-                let progressPercentage = 0;
-                if (hasValidCertificates) {
-                    progressPercentage = 100;
-                } else if (totalActivities > 0) {
-                    const partialProgress = (completedActivities * 1.0) + (inProgressActivities * 0.5);
-                    progressPercentage = Math.round((partialProgress / totalActivities) * 100);
-                }
-
-                // Enhanced status determination (same logic as employee side)
-                let displayStatus = 'Not Started';
-                const today = new Date();
-                const endDate = training.setEndDate ? new Date(training.setEndDate) : null;
-
-                // Simplified status logic (removed approval checks)
-                if (hasValidCertificates) {
-                    displayStatus = 'Completed';
-                } else if (endDate && today > endDate && progressPercentage < 100) {
-                    displayStatus = 'Overdue';
-                } else if (inProgressActivities > 0 || completedActivities > 0) {
-                    displayStatus = 'In Progress';
-                } else {
-                    displayStatus = 'Not Started';
-                }
-
-                // Count by status
-                switch (displayStatus) {
-                    case 'Completed':
-                        completedTrainings++;
-                        break;
-                    case 'In Progress':
-                        inProgressTrainings++;
-                        break;
-                    case 'Overdue':
-                        overdueTrainings++;
-                        break;
-                    default:
-                        notStartedTrainings++;
-                        break;
-                }
-
-                totalProgressSum += progressPercentage;
-
-                return {
-                    userId: employee.userId, 
-                    employeeName: `${employee.firstName} ${employee.lastName}`,
-                    jobTitle: employee.jobpositions?.jobTitle || 'Unknown Position',
-                    department: employee.departments?.deptName || 'Unknown Department',
-                    email: employee.useraccounts?.userEmail || 'No email',
-                    trainingRecordId: training.trainingRecordId,
-                    trainingName: training.trainings.trainingName,
-                    isRequired: training.trainings.isRequired,
-                    totalDuration: training.trainings.totalDuration,
-                    isOnlineArrangement: training.trainings.isOnlineArrangement,
-                    status: displayStatus,
-                    progress: progressPercentage,
-                    startDate: training.setStartDate,
-                    endDate: training.setEndDate,
-                    isOverdue: displayStatus === 'Overdue',
-                };
-            });
-
-            // Calculate overall employee stats
-            const overallProgress = totalTrainings > 0 ? Math.round(totalProgressSum / totalTrainings) : 0;
-            
-            // Determine overall employee status
-            let overallStatus = 'On Track';
-            if (overdueTrainings > 0) {
-                overallStatus = 'Behind Schedule';
-            } else if (completedTrainings === totalTrainings && totalTrainings > 0) {
-                overallStatus = 'All Complete';
-            } 
-
-            return {
-                userId: employee.userId,
-                employeeName: `${employee.firstName} ${employee.lastName}`,
-                jobTitle: employee.jobpositions?.jobTitle || 'Unknown Position',
-                department: employee.departments?.deptName || 'Unknown Department',
-                email: employee.useraccounts?.userEmail || 'No email',
-                
-                // Overall stats
-                overallProgress: overallProgress,
-                overallStatus: overallStatus,
-                
-                // Training counts
-                totalTrainings: totalTrainings,
-                completedTrainings: completedTrainings,
-                inProgressTrainings: inProgressTrainings,
-                notStartedTrainings: notStartedTrainings,
-                overdueTrainings: overdueTrainings,
-             
-                // Detailed training info
-                trainings: trainingDetails,
-                
-                // Flags for filtering
-                hasOverdueTrainings: overdueTrainings > 0,
-                hasCompletedAllTrainings: completedTrainings === totalTrainings && totalTrainings > 0,
-            };
-        });
-
-        // Calculate dashboard summary statistics
-        const dashboardStats = {
-            totalEmployees: employeeDashboardData.length,
-            employeesBehindSchedule: employeeDashboardData.filter(emp => emp.overallStatus === 'Behind Schedule').length,
-            employeesOnTrack: employeeDashboardData.filter(emp => emp.overallStatus === 'On Track').length,
-            employeesAllComplete: employeeDashboardData.filter(emp => emp.overallStatus === 'All Complete').length,
-            averageProgress: employeeDashboardData.length > 0 ? 
-                Math.round(employeeDashboardData.reduce((sum, emp) => sum + emp.overallProgress, 0) / employeeDashboardData.length) : 0
-        };
-
-        console.log('Dashboard stats calculated:', dashboardStats);
-
-        res.json({
-            success: true,
-            data: {
-                employees: employeeDashboardData,
-                statistics: dashboardStats
-            },
-            message: `Employee dashboard loaded with ${employeeDashboardData.length} employees`
-        });
-
-    } catch (error) {
-        console.error('Error loading employee training dashboard:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to load employee training dashboard',
-            error: error.message
-        });
-    }
-},
-
-getExistingTrainings: async function (req, res) {
-    try {
-        console.log('Loading existing REQUIRED trainings for reassignment...');
-
-        const { data: trainings, error } = await supabase
-            .from('trainings')
-            .select(`
-                trainingId,
-                trainingName,
-                trainingDesc,
-                isOnlineArrangement,
-                country,
-                address,
-                cost,
-                totalDuration,
-                isRequired
-            `)
-            .eq('isActive', true)
-            .eq('isRequired', true) // Only fetch required trainings
-            .order('trainingName', { ascending: true });
-
-        if (error) {
-            console.error('Error fetching existing trainings:', error);
-            throw error;
-        }
-
-        // Format trainings for dropdown
-        const formattedTrainings = (trainings || []).map(training => ({
-            id: training.trainingId,
-            title: training.trainingName,
-            description: training.trainingDesc,
-            mode: training.isOnlineArrangement ? 'online' : 'onsite',
-            cost: training.cost || 0,
-            duration: training.totalDuration || 0,
-            isRequired: training.isRequired || false,
-            location: training.isOnlineArrangement ? null : {
-                country: training.country,
-                address: training.address
-            }
-        }));
-
-        console.log(`Found ${formattedTrainings.length} existing REQUIRED trainings`);
-
-        res.json({
-            success: true,
-            data: formattedTrainings,
-            message: `Successfully loaded ${formattedTrainings.length} required trainings`
-        });
-
-    } catch (error) {
-        console.error('Error loading existing trainings:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to load existing trainings',
-            error: error.message
-        });
-    }
-},
-
-    // Create training with employee assignments
-    createTraining: async function (req, res) {
-        try {
-            const {
-                trainingName,
-                trainingDesc,
-                isRequired,
-                isOnlineArrangement,
-                cost,
-                totalDuration,
-                activities,
-                certifications,
-                assignedEmployees,
-                country,
-                address,
-                assignmentType, // 'all', 'department', 'jobPosition', 'individual'
-                departmentId,
-                jobId
-            } = req.body;
-
-            console.log('Creating training with data:', req.body);
-
-            // Validation
-            if (!trainingName || !trainingDesc) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Training name and description are required'
-                });
-            }
-
-            if (!assignedEmployees || assignedEmployees.length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'At least one employee must be assigned'
-                });
-            }
-
-            /// Get jobId from the first assigned employee
-            let trainingJobId = jobId; 
-
-            // If no jobId provided, get from first assigned employee
-            if (!trainingJobId && assignedEmployees && assignedEmployees.length > 0) {
-                console.log('No jobId provided, getting from first employee:', assignedEmployees[0].userId);
-                
-                const { data: employeeData, error: employeeError } = await supabase
-                    .from('staffaccounts')
-                    .select('jobId')
-                    .eq('userId', assignedEmployees[0].userId)
-                    .single();
-                
-                if (employeeError) {
-                    console.error('Error getting employee jobId:', employeeError);
-                    trainingJobId = 1; // Fallback to jobId 1
-                } else {
-                    trainingJobId = employeeData?.jobId || 1;
-                }
-                
-                console.log('Using jobId from employee:', trainingJobId);
-            }
-
-            // Create training record with the determined jobId
-            const { data: trainingData, error: trainingError } = await supabase
-                .from('trainings')
-                .insert({
-                    trainingName: trainingName,
-                    trainingDesc: trainingDesc,
-                    isOnlineArrangement: isOnlineArrangement,
-                    country: !isOnlineArrangement ? country : null,
-                    address: !isOnlineArrangement ? address : null,
-                    cost: parseFloat(cost) || 0,
-                    totalDuration: parseFloat(totalDuration) || 0,
-                    isRequired: isRequired || false,
-                    isActive: true,
-                    userId: req.session.user?.userId || 1,
-                    jobId: trainingJobId 
-                })
-                .select()
-                .single();
-
-            if (trainingError) {
-                console.error('Error creating training:', trainingError);
-                throw new Error('Failed to create training');
-            }
-
-            const trainingId = trainingData.trainingId;
-            console.log('Training created with ID:', trainingId);
-
-            // Create training records for assigned employees
-            try {
-                const trainingRecords = assignedEmployees.map(assignment => ({
-                    trainingId: trainingId,
-                    userId: assignment.userId,
-                    setStartDate: assignment.startDate || new Date().toISOString().split('T')[0],
-                    setEndDate: assignment.dueDate || null,
-                    isApproved: true, // Auto-approved since it's assigned by HR
-                    trainingStatus: 'Not Started',
-                    dateRequested: new Date().toISOString().split('T')[0],
-                    decisionDate: new Date().toISOString().split('T')[0],
-                    decisionRemarks: `Training assigned by HR - Assignment Type: ${assignmentType} - Status: Not Started`
-                }));
-
-                const { error: recordsError } = await supabase
-                    .from('training_records')
-                    .insert(trainingRecords);
-
-                if (recordsError) {
-                    console.log('Could not create training records:', recordsError);
-                    // Continue without failing - training is still created
-                } else {
-                    console.log(`Created ${trainingRecords.length} training records`);
-                }
-            } catch (recordsError) {
-                console.log('Training records creation failed:', recordsError);
-            }
-
-            // Insert activities if provided
-            if (activities && activities.length > 0) {
-                try {
-                    const trainingActivities = activities.map(activity => ({
-                        trainingId: trainingId,
-                        activityName: activity.name,
-                        activityType: activity.type,
-                        estActivityDuration: parseFloat(activity.duration),
-                        activityRemarks: activity.remarks || null
-                    }));
-
-                    await supabase.from('training_activities').insert(trainingActivities);
-                    console.log(`Created ${trainingActivities.length} training activities`);
-                } catch (e) {
-                    console.log('Could not insert activities:', e);
-                }
-            }
-
-            // Insert certifications if provided
-            if (certifications && certifications.length > 0) {
-                try {
-                    const trainingCerts = certifications.map(cert => ({
-                        trainingId: trainingId,
-                        trainingCertTitle: cert.title,
-                        trainingCertDesc: cert.description
-                    }));
-
-                    await supabase.from('training_certifications').insert(trainingCerts);
-                    console.log(`Created ${trainingCerts.length} training certifications`);
-                } catch (e) {
-                    console.log('Could not insert certifications:', e);
-                }
-            }
-
-            res.json({
-                success: true,
-                message: `Training "${trainingName}" created successfully and assigned to ${assignedEmployees.length} employee(s)`,
-                data: {
-                    trainingId: trainingId,
-                    trainingName: trainingName,
-                    assignedEmployeesCount: assignedEmployees.length,
-                    isRequired: isRequired,
-                    assignmentType: assignmentType
-                }
-            });
-
-        } catch (error) {
-            console.error('Error creating training:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to create training course',
-                error: error.message
-            });
-        }
-    },
-
-    // Get form data for dropdowns
-    getTrainingFormData: async function (req, res) {
-        try {
-            console.log('Loading training form data...');
-
-            // Fetch job positions
-            const { data: jobPositions } = await supabase
-                .from('jobpositions')
-                .select('*')
-                .order('jobTitle', { ascending: true });
-
-            // Fetch departments
-            const { data: departments } = await supabase
-                .from('departments')
-                .select('*')
-                .order('deptName', { ascending: true });
-
-            // Fetch activity types
-            const { data: activityTypes } = await supabase
-                .from('training_activities_types')
-                .select('*')
-                .order('activityType', { ascending: true });
-
-            const formData = {
-                jobPositions: jobPositions || [],
-                departments: departments || [],
-                activityTypes: (activityTypes || []).map(type => ({
-                    id: type.activityTypeId,
-                    label: type.activityType
-                }))
-            };
-
-            // Add fallback data if tables are empty
-            if (formData.jobPositions.length === 0) {
-                formData.jobPositions = [
-                    { jobId: 1, jobTitle: 'Software Engineer', jobDescrpt: 'Develops software applications' },
-                    { jobId: 2, jobTitle: 'Data Analyst', jobDescrpt: 'Analyzes business data' },
-                    { jobId: 3, jobTitle: 'HR Specialist', jobDescrpt: 'Manages human resources' }
-                ];
-            }
-
-            if (formData.departments.length === 0) {
-                formData.departments = [
-                    { departmentId: 1, deptName: 'IT' },
-                    { departmentId: 2, deptName: 'HR' },
-                    { departmentId: 3, deptName: 'Finance' }
-                ];
-            }
-
-            if (formData.activityTypes.length === 0) {
-                formData.activityTypes = [
-                    { id: 1, label: 'Video Lesson' },
-                    { id: 2, label: 'Reading Material' },
-                    { id: 3, label: 'Practical Exercise' },
-                    { id: 4, label: 'Quiz/Assessment' },
-                    { id: 5, label: 'Workshop' }
-                ];
-            }
-
-            res.json({
-                success: true,
-                data: formData,
-                metadata: {
-                    jobPositionsCount: formData.jobPositions.length,
-                    departmentsCount: formData.departments.length,
-                    activityTypesCount: formData.activityTypes.length
-                }
-            });
-
-        } catch (error) {
-            console.error('Error loading form data:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to load form data',
-                error: error.message
-            });
-        }
-    },
-
-reassignTraining: async function (req, res) {
-    try {
-        const {
-            trainingId,
-            assignedEmployees,
-            assignmentType,
-            departmentId,
-            jobId
-        } = req.body;
-
-        console.log('Re-assigning training:', { trainingId, assignmentType, employeeCount: assignedEmployees?.length });
-
-        // Validation
-        if (!trainingId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Training ID is required'
-            });
-        }
-
-        if (!assignedEmployees || assignedEmployees.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'At least one employee must be assigned'
-            });
-        }
-
-        // Get training details
-        const { data: training, error: trainingError } = await supabase
-            .from('trainings')
-            .select('trainingName, isRequired')
-            .eq('trainingId', trainingId)
-            .single();
-
-        if (trainingError || !training) {
-            return res.status(404).json({
-                success: false,
-                message: 'Training not found'
-            });
-        }
-
-        // Get all training activities for this training
-        const { data: trainingActivities, error: activitiesError } = await supabase
-            .from('training_activities')
-            .select('activityId')
-            .eq('trainingId', trainingId);
-
-        if (activitiesError) {
-            console.error('Error fetching training activities:', activitiesError);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to fetch training activities'
-            });
-        }
-
-        // Get all training certifications for this training
-        const { data: trainingCertifications, error: certificationsError } = await supabase
-            .from('training_certifications')
-            .select('trainingCertId')
-            .eq('trainingId', trainingId);
-
-        if (certificationsError) {
-            console.error('Error fetching training certifications:', certificationsError);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to fetch training certifications'
-            });
-        }
-
-        // Create training records for newly assigned employees
-        const trainingRecords = assignedEmployees.map(assignment => ({
-            trainingId: trainingId,
-            userId: assignment.userId,
-            setStartDate: assignment.startDate || new Date().toISOString().split('T')[0],
-            setEndDate: assignment.dueDate || null,
-            isApproved: true,
-            trainingStatus: 'Not Started',
-            dateRequested: new Date().toISOString().split('T')[0],
-            decisionDate: new Date().toISOString().split('T')[0],
-            decisionRemarks: `Training re-assigned by HR - Assignment Type: ${assignmentType}`
-        }));
-
-        // Insert training records and get the created records with their IDs
-        const { data: createdRecords, error: recordsError } = await supabase
-            .from('training_records')
-            .insert(trainingRecords)
-            .select('trainingRecordId, userId');
-
-        if (recordsError) {
-            console.error('Error creating training records:', recordsError);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to assign training to employees'
-            });
-        }
-
-        let activitiesCreated = 0;
-        let certificatesCreated = 0;
-
-        // Create training_records_activities for each user and each activity
-        if (trainingActivities && trainingActivities.length > 0 && createdRecords && createdRecords.length > 0) {
-            const trainingRecordsActivities = [];
-            
-            createdRecords.forEach(record => {
-                trainingActivities.forEach(activity => {
-                    trainingRecordsActivities.push({
-                        trainingRecordId: record.trainingRecordId,
-                        activityId: activity.activityId,
-                        status: 'Not Started',
-                        created_at: new Date().toISOString()
+            if (userIds.length === 0) {
+                console.log('No pending requests found');
+                if (res) {
+                    return res.json({
+                        success: true,
+                        data: []
                     });
-                });
-            });
-
-            // Insert all training records activities
-            const { error: activitiesRecordsError } = await supabase
-                .from('training_records_activities')
-                .insert(trainingRecordsActivities);
-
-            if (activitiesRecordsError) {
-                console.error('Error creating training records activities:', activitiesRecordsError);
-                console.warn('Training assigned but activity records creation failed');
-            } else {
-                activitiesCreated = trainingRecordsActivities.length;
+                }
+                return [];
             }
-        }
 
-        // Create training_records_certificates for each user and each certification
-        if (trainingCertifications && trainingCertifications.length > 0 && createdRecords && createdRecords.length > 0) {
-            const trainingRecordsCertificates = [];
-            
-            createdRecords.forEach(record => {
-                trainingCertifications.forEach(certification => {
-                    trainingRecordsCertificates.push({
-                        trainingRecordId: record.trainingRecordId,
-                        trainingCertId: certification.trainingCertId,
-                        certificate_url: null, // Will be populated when certificate is earned
-                        created_at: new Date().toISOString()
-                    });
-                });
-            });
-
-            // Insert all training records certificates
-            const { error: certificatesRecordsError } = await supabase
-                .from('training_records_certificates')
-                .insert(trainingRecordsCertificates);
-
-            if (certificatesRecordsError) {
-                console.error('Error creating training records certificates:', certificatesRecordsError);
-                console.warn('Training assigned but certificate records creation failed');
-            } else {
-                certificatesCreated = trainingRecordsCertificates.length;
-            }
-        }
-
-        console.log(`Successfully re-assigned training to ${assignedEmployees.length} employees`);
-        console.log(`Created ${activitiesCreated} activity records`);
-        console.log(`Created ${certificatesCreated} certificate records`);
-
-        res.json({
-            success: true,
-            message: `Training "${training.trainingName}" re-assigned to ${assignedEmployees.length} employee(s)`,
-            data: {
-                trainingId: trainingId,
-                trainingName: training.trainingName,
-                assignedEmployeesCount: assignedEmployees.length,
-                isRequired: training.isRequired,
-                assignmentType: assignmentType,
-                activitiesCreated: activitiesCreated,
-                certificatesCreated: certificatesCreated
-            }
-        });
-
-    } catch (error) {
-        console.error('Error re-assigning training:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to re-assign training',
-            error: error.message
-        });
-    }
-},
-    getEmployeesByFilter: async function (req, res) {
-        try {
-            const { departmentId, jobId, filterType } = req.query;
-            
-            console.log('Getting employees by filter:', { departmentId, jobId, filterType });
-            
-            let query = supabase
+            // Get all staff data for these users in one query
+            const { data: staffData, error: staffError } = await supabase
                 .from('staffaccounts')
                 .select(`
-                    staffId, 
-                    lastName, 
-                    firstName, 
-                    userId,
-                    jobId,
-                    departmentId,
-                    jobpositions(jobTitle),
-                    departments(deptName),
-                    useraccounts(userEmail)
+                    *,
+                    departments!staffaccounts_departmentId_fkey (
+                        departmentId,
+                        deptName
+                    ),
+                    jobpositions!staffaccounts_jobId_fkey (
+                        jobId,
+                        jobTitle
+                    )
                 `)
-                .order('firstName', { ascending: true });
+                .in('userId', userIds);
 
-            // Apply filters based on filterType
-            if (filterType === 'department' && departmentId) {
-                query = query.eq('departmentId', departmentId);
-            } else if (filterType === 'jobPosition' && jobId) {
-                query = query.eq('jobId', jobId);
-            }
+            if (staffError) throw staffError;
 
-            const { data: employees, error } = await query;
+            // Create a lookup map
+            const staffLookup = {};
+            (staffData || []).forEach(staff => {
+                staffLookup[staff.userId] = staff;
+            });
 
-            if (error) {
-                console.error('Error fetching employees:', error);
-                throw error;
-            }
+            // Format the requests
+            const formattedRequests = await Promise.all((requests || []).map(async request => {
+                const staff = staffLookup[request.userId];
+                
+                if (!staff) {
+                    console.error(`No staff data found for userId: ${request.userId}`);
+                    return null;
+                }
 
-            // Format the employees data
-            const formattedEmployees = (employees || []).map(emp => ({
-                id: emp.staffId,
-                userId: emp.userId,
-                firstName: emp.firstName || 'Unknown',
-                lastName: emp.lastName || 'User',
-                fullName: `${emp.firstName || 'Unknown'} ${emp.lastName || 'User'}`,
-                email: emp.useraccounts?.userEmail || 'no-email@company.com',
-                jobId: emp.jobId,
-                jobTitle: emp.jobpositions?.jobTitle || 'Unknown Position',
-                departmentId: emp.departmentId,
-                department: emp.departments?.deptName || 'Unknown Department'
+                const budgetCheck = await hrController.checkDepartmentBudget(
+                    staff.departmentId || 0,
+                    request.cost || 0
+                );
+
+                return {
+                    requestId: request.trainingRecordId,
+                    employeeName: `${staff.firstName || 'Unknown'} ${staff.lastName || 'User'}`,
+                    department: staff.departments?.deptName || 'Unknown Department',
+                    departmentId: staff.departmentId || 0,
+                    jobTitle: staff.jobpositions?.jobTitle || 'Unknown Position',
+                    trainingName: request.trainingName,
+                    trainingDesc: request.trainingDesc,
+                    cost: request.cost || 0,
+                    requestDate: request.dateRequested,
+                    lineManagerRemarks: request.lmDecisionRemarks,
+                    isOnlineArrangement: request.isOnlineArrangement,
+                    duration: request.totalDuration || 0,
+                    country: request.country,
+                    address: request.address,
+                    budgetSufficient: budgetCheck.sufficient,
+                    availableBudget: budgetCheck.available
+                };
             }));
 
-            console.log(`Found ${formattedEmployees.length} employees with filter`);
+            // Filter out null results (where staff data wasn't found)
+            const validRequests = formattedRequests.filter(request => request !== null);
+
+            console.log(`Found ${validRequests.length} pending requests`);
+
+            if (res) {
+                return res.json({
+                    success: true,
+                    data: validRequests
+                });
+            }
+            
+            return validRequests;
+
+        } catch (error) {
+            console.error('Error fetching pending requests:', error);
+            if (res) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to fetch pending requests'
+                });
+            }
+            return [];
+        }
+    },
+
+
+    // ============================================================================
+    // APPROVE/REJECT TRAINING REQUEST - Based on budget
+    // ============================================================================
+    approveTrainingRequest: async function (req, res) {
+        try {
+            const { requestId, decision, remarks } = req.body;
+            
+            console.log(`Processing approval for request ${requestId}: ${decision}`);
+
+            if (!requestId || !decision || !['approved', 'rejected'].includes(decision)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid request data'
+                });
+            }
+
+            // Get the training request details
+            const { data: request, error: requestError } = await supabase
+                .from('training_records')
+                .select(`
+                    *,
+                    useraccounts!training_records_userId_fkey (
+                        userId
+                    )
+                `)
+                .eq('trainingRecordId', requestId)
+                .single();
+
+            if (requestError || !request) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Training request not found'
+                });
+            }
+
+            // Get staff data to find department
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('departmentId')
+                .eq('userId', request.userId)
+                .single();
+
+            if (staffError || !staffData) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Staff data not found'
+                });
+            }
+
+            // If approving, check budget
+            if (decision === 'approved') {
+                const budgetCheck = await hrController.checkDepartmentBudget(
+                    staffData.departmentId,
+                    request.cost || 0
+                );
+
+                if (!budgetCheck.sufficient) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Insufficient budget. Available: ₱${budgetCheck.available}, Required: ₱${request.cost}`
+                    });
+                }
+            }
+
+            // Update the training request
+            const newStatus = decision === 'approved' ? 'In Progress' : 'Cancelled';
+            
+            const { error: updateError } = await supabase
+                .from('training_records')
+                .update({
+                    status: newStatus,
+                    isApproved: decision === 'approved',
+                    hrDecisionDate: new Date().toISOString(),
+                    hrDecisionRemarks: remarks || `Training ${decision} by HR`
+                })
+                .eq('trainingRecordId', requestId);
+
+            if (updateError) throw updateError;
+
+            console.log(`Training request ${requestId} ${decision} successfully`);
 
             res.json({
                 success: true,
-                data: formattedEmployees,
-                filterApplied: { departmentId, jobId, filterType }
+                message: `Training request ${decision} successfully`,
+                data: {
+                    requestId: requestId,
+                    decision: decision,
+                    newStatus: newStatus
+                }
             });
 
         } catch (error) {
-            console.error('Error fetching employees by filter:', error);
+            console.error('Error processing approval:', error);
             res.status(500).json({
                 success: false,
-                message: 'Failed to fetch employees',
-                error: error.message
+                message: 'Failed to process approval'
             });
         }
     },
 
-    getBudgetOverview: async function (req, res) {
+
+
+    // ============================================================================
+    // CHECK DEPARTMENT BUDGET - Verify if department has sufficient funds
+    // ============================================================================
+   checkDepartmentBudget: async function (departmentId, requestedAmount) {
         try {
-            console.log('🏢 Loading HR budget overview...');
+            console.log(`Checking budget for department ${departmentId}, amount: ₱${requestedAmount}`);
 
-            // Fetch all training budgets
-            const { data: trainingBudgets, error: budgetsError } = await supabase
+            // Get department budget
+            const { data: budget, error: budgetError } = await supabase
                 .from('training_budgets')
-                .select('*')
-                .order('departmentId', { ascending: true });
+                .select('amount')
+                .eq('departmentId', departmentId)
+                .single();
 
-            if (budgetsError) {
-                console.error('Error fetching training budgets:', budgetsError);
-                throw budgetsError;
+            if (budgetError) {
+                console.log('No budget found for department, defaulting to ₱100,000');
+                return {
+                    sufficient: requestedAmount <= 100000,
+                    available: 100000,
+                    allocated: 100000,
+                    spent: 0
+                };
             }
 
-            // Fetch all departments
+            // Get spent amount - Fixed relationship
+            const { data: approvedTrainings, error: spendingError } = await supabase
+                .from('training_records')
+                .select('userId, cost')
+                .eq('isApproved', true);
+
+            if (spendingError) throw spendingError;
+
+            // Get user IDs from approved trainings
+            const userIds = (approvedTrainings || []).map(training => training.userId);
+            let totalSpent = 0;
+
+            if (userIds.length > 0) {
+                // Get staff data for these users in this department
+                const { data: staffData, error: staffError } = await supabase
+                    .from('staffaccounts')
+                    .select('userId')
+                    .eq('departmentId', departmentId)
+                    .in('userId', userIds);
+
+                if (staffError) throw staffError;
+
+                // Get user IDs for this department
+                const deptUserIds = (staffData || []).map(staff => staff.userId);
+                
+                // Calculate total spent for this department
+                totalSpent = (approvedTrainings || [])
+                    .filter(training => deptUserIds.includes(training.userId))
+                    .reduce((sum, training) => sum + (training.cost || 0), 0);
+            }
+
+            const available = (budget.amount || 0) - totalSpent;
+
+            return {
+                sufficient: available >= requestedAmount,
+                available: available,
+                allocated: budget.amount || 0,
+                spent: totalSpent
+            };
+
+        } catch (error) {
+            console.error('Error checking budget:', error);
+            return {
+                sufficient: false,
+                available: 0,
+                allocated: 0,
+                spent: 0
+            };
+        }
+    },
+
+    // ============================================================================
+    // BUDGET OVERVIEW - Show all department budgets and spending
+    // ============================================================================
+    getBudgetOverview: async function (req, res) {
+        try {
+            console.log('Loading budget overview...');
+            
+            const budgetData = await hrController.getBudgetOverviewData();
+            
+            res.json({
+                success: true,
+                data: budgetData
+            });
+
+        } catch (error) {
+            console.error('Error loading budget overview:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to load budget overview'
+            });
+        }
+    },
+
+    getBudgetOverviewData: async function () {
+        try {
+            // Get all departments
             const { data: departments, error: deptError } = await supabase
                 .from('departments')
                 .select('*');
 
-            if (deptError) {
-                console.error('Error fetching departments:', deptError);
-                throw deptError;
-            }
+            if (deptError) throw deptError;
 
-            console.log(`Found ${trainingBudgets?.length || 0} budget entries`);
-            console.log(`Found ${departments?.length || 0} departments`);
+            // Get all budgets
+            const { data: budgets, error: budgetError } = await supabase
+                .from('training_budgets')
+                .select('*');
 
-            // Fetch approved training records with costs and department info
-            const { data: trainingRecords, error: recordsError } = await supabase
+            if (budgetError) throw budgetError;
+
+            // Get approved training spending - Fixed relationship
+            const { data: approvedTrainings, error: spendingError } = await supabase
                 .from('training_records')
-                .select(`
-                    trainingRecordId,
-                    userId,
-                    trainingId,
-                    isApproved,
-                    dateRequested,
-                    trainings!inner(cost, trainingName),
-                    staffaccounts!inner(departmentId, firstName, lastName)
-                `)
-                .eq('isApproved', true); // Only count approved trainings
+                .select('userId, cost')
+                .eq('isApproved', true);
 
-            if (recordsError) {
-                console.error('Error fetching training records:', recordsError);
-                // Continue without spending data rather than failing
+            if (spendingError) throw spendingError;
+
+            // Get all user IDs from approved trainings
+            const userIds = (approvedTrainings || []).map(training => training.userId);
+            
+            let spendingByDept = {};
+            
+            if (userIds.length > 0) {
+                // Get staff data for these users to determine departments
+                const { data: staffData, error: staffError } = await supabase
+                    .from('staffaccounts')
+                    .select('userId, departmentId')
+                    .in('userId', userIds);
+
+                if (staffError) throw staffError;
+
+                // Create user to department mapping
+                const userToDept = {};
+                (staffData || []).forEach(staff => {
+                    userToDept[staff.userId] = staff.departmentId;
+                });
+
+                // Calculate spending per department
+                (approvedTrainings || []).forEach(training => {
+                    const deptId = userToDept[training.userId];
+                    if (deptId) {
+                        if (!spendingByDept[deptId]) spendingByDept[deptId] = 0;
+                        spendingByDept[deptId] += training.cost || 0;
+                    }
+                });
             }
 
-            console.log(`Found ${trainingRecords?.length || 0} approved training records`);
-
-            // Calculate spending per department
-            const departmentSpending = {};
-            (trainingRecords || []).forEach(record => {
-                const departmentId = record.staffaccounts?.departmentId;
-                const cost = record.trainings?.cost || 0;
-                
-                if (departmentId) {
-                    if (!departmentSpending[departmentId]) {
-                        departmentSpending[departmentId] = {
-                            totalSpent: 0,
-                            trainingCount: 0,
-                            recentTrainings: []
-                        };
-                    }
-                    
-                    departmentSpending[departmentId].totalSpent += cost;
-                    departmentSpending[departmentId].trainingCount++;
-                    
-                    // Keep track of recent trainings for details
-                    departmentSpending[departmentId].recentTrainings.push({
-                        trainingName: record.trainings.trainingName,
-                        cost: cost,
-                        employeeName: `${record.staffaccounts.firstName} ${record.staffaccounts.lastName}`,
-                        dateAssigned: record.dateRequested
-                    });
-                }
-            });
-
-            console.log('Department spending calculated:', Object.keys(departmentSpending).length, 'departments with spending');
-
-            // Create enhanced budget overview with spending data
+            // Combine data
             const budgetOverview = (departments || []).map(dept => {
-                const budget = trainingBudgets?.find(b => b.departmentId === dept.departmentId);
-                const spending = departmentSpending[dept.departmentId] || { totalSpent: 0, trainingCount: 0, recentTrainings: [] };
-                
-                const budgetAmount = budget?.amount || 0;
-                const spentAmount = spending.totalSpent;
-                const remainingAmount = budgetAmount - spentAmount;
-                const utilizationPercentage = budgetAmount > 0 ? Math.round((spentAmount / budgetAmount) * 100) : 0;
-                
+                const budget = (budgets || []).find(b => b.departmentId === dept.departmentId);
+                const spent = spendingByDept[dept.departmentId] || 0;
+                const allocated = budget?.amount || 100000; // Default ₱100k
+                const remaining = allocated - spent;
+                const utilization = allocated > 0 ? Math.round((spent / allocated) * 100) : 0;
+
                 return {
                     departmentId: dept.departmentId,
                     departmentName: dept.deptName,
-                    budgetAmount: budgetAmount,
-                    spentAmount: spentAmount,
-                    remainingAmount: remainingAmount,
-                    utilizationPercentage: utilizationPercentage,
-                    trainingCount: spending.trainingCount,
-                    fiscalYear: budget?.fiscalYear || new Date().getFullYear(),
-                    status: utilizationPercentage >= 90 ? 'critical' : 
-                            utilizationPercentage >= 75 ? 'warning' : 'good',
-                    recentTrainings: spending.recentTrainings.slice(-5) // Last 5 trainings
+                    allocated: allocated,
+                    spent: spent,
+                    remaining: remaining,
+                    utilization: utilization,
+                    status: utilization >= 90 ? 'critical' : utilization >= 75 ? 'warning' : 'good'
                 };
             });
 
-            console.log('Budget overview created:', budgetOverview);
-
-            res.json({
-                success: true,
-                data: {
-                    departments: budgetOverview,
-                    totalBudget: budgetOverview.reduce((sum, dept) => sum + dept.budgetAmount, 0),
-                    totalSpent: budgetOverview.reduce((sum, dept) => sum + dept.spentAmount, 0),
-                    totalRemaining: budgetOverview.reduce((sum, dept) => sum + dept.remainingAmount, 0),
-                    summary: {
-                        departmentCount: budgetOverview.length,
-                        budgetedDepartments: budgetOverview.filter(d => d.budgetAmount > 0).length,
-                        departmentsWithSpending: budgetOverview.filter(d => d.spentAmount > 0).length,
-                        departmentsOverBudget: budgetOverview.filter(d => d.remainingAmount < 0).length,
-                        departmentsCritical: budgetOverview.filter(d => d.status === 'critical').length,
-                        departmentsWarning: budgetOverview.filter(d => d.status === 'warning').length,
-                        avgBudgetPerDepartment: budgetOverview.length > 0 ? 
-                            Math.round(budgetOverview.reduce((sum, dept) => sum + dept.budgetAmount, 0) / budgetOverview.length) : 0,
-                        avgSpendingPerDepartment: budgetOverview.length > 0 ? 
-                            Math.round(budgetOverview.reduce((sum, dept) => sum + dept.spentAmount, 0) / budgetOverview.length) : 0,
-                        overallUtilization: budgetOverview.reduce((sum, dept) => sum + dept.budgetAmount, 0) > 0 ?
-                            Math.round((budgetOverview.reduce((sum, dept) => sum + dept.spentAmount, 0) / 
-                                    budgetOverview.reduce((sum, dept) => sum + dept.budgetAmount, 0)) * 100) : 0
-                    }
-                },
-                message: `Budget overview loaded: ${budgetOverview.length} departments analyzed`
-            });
+            return {
+                departments: budgetOverview,
+                totalAllocated: budgetOverview.reduce((sum, dept) => sum + dept.allocated, 0),
+                totalSpent: budgetOverview.reduce((sum, dept) => sum + dept.spent, 0),
+                totalRemaining: budgetOverview.reduce((sum, dept) => sum + dept.remaining, 0)
+            };
 
         } catch (error) {
-            console.error('Error in getBudgetOverview:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to load budget overview',
-                error: error.message
-            });
+            console.error('Error getting budget overview data:', error);
+            return {
+                departments: [],
+                totalAllocated: 0,
+                totalSpent: 0,
+                totalRemaining: 0
+            };
         }
     },
 
+    // ============================================================================
+    // UPDATE DEPARTMENT BUDGET - HR can set/update budgets
+    // ============================================================================
     updateBudget: async function (req, res) {
         try {
-            console.log('🔄 Updating department budget...');
-            
-            const { departmentId, amount, fiscalYear, notes } = req.body;
-            
-            // Validation
-            if (!departmentId || amount === undefined || !fiscalYear) {
+            const { departmentId, amount, fiscalYear = 2025 } = req.body;
+
+            console.log(`Updating budget for department ${departmentId}: ₱${amount}`);
+
+            if (!departmentId || amount === undefined) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Department ID, amount, and fiscal year are required'
+                    message: 'Department ID and amount are required'
                 });
             }
 
-            if (amount < 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Budget amount cannot be negative'
-                });
-            }
-
-            console.log(`Updating budget for department ${departmentId}: ₱${amount} for FY ${fiscalYear}`);
-
-            // Check if budget record exists
-            const { data: existingBudget, error: checkError } = await supabase
+            // Check if budget exists
+            const { data: existing, error: checkError } = await supabase
                 .from('training_budgets')
                 .select('*')
                 .eq('departmentId', departmentId)
                 .eq('fiscalYear', fiscalYear)
                 .single();
 
-            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
-                console.error('Error checking existing budget:', checkError);
-                throw checkError;
-            }
-
             let result;
-            
-            if (existingBudget) {
-                // Update existing budget
-                console.log('Updating existing budget record');
+            if (existing) {
+                // Update existing
                 const { data, error } = await supabase
                     .from('training_budgets')
-                    .update({
-                        amount: parseFloat(amount),
-                        fiscalYear: fiscalYear,
-                        notes: notes || null,
-                        updated_at: new Date().toISOString()
-                    })
+                    .update({ amount: parseFloat(amount) })
                     .eq('departmentId', departmentId)
                     .eq('fiscalYear', fiscalYear)
                     .select()
                     .single();
 
-                if (error) {
-                    console.error('Error updating budget:', error);
-                    throw error;
-                }
-
+                if (error) throw error;
                 result = data;
-                console.log('Budget updated successfully');
-
             } else {
-                // Create new budget record
-                console.log('Creating new budget record');
+                // Create new
                 const { data, error } = await supabase
                     .from('training_budgets')
                     .insert({
                         departmentId: parseInt(departmentId),
                         amount: parseFloat(amount),
-                        fiscalYear: fiscalYear,
-                        notes: notes || null,
-                        created_at: new Date().toISOString()
+                        fiscalYear: fiscalYear
                     })
                     .select()
                     .single();
 
-                if (error) {
-                    console.error('Error creating budget:', error);
-                    throw error;
-                }
-
+                if (error) throw error;
                 result = data;
-                console.log('Budget created successfully');
             }
-
-            // Get department name for response
-            const { data: department } = await supabase
-                .from('departments')
-                .select('deptName')
-                .eq('departmentId', departmentId)
-                .single();
 
             res.json({
                 success: true,
-                data: {
-                    budgetId: result.trainingBugetId || result.id,
-                    departmentId: departmentId,
-                    departmentName: department?.deptName || 'Unknown Department',
-                    amount: result.amount,
-                    fiscalYear: result.fiscalYear,
-                    notes: result.notes,
-                    isNewRecord: !existingBudget
-                },
-                message: `Budget ${existingBudget ? 'updated' : 'created'} successfully for ${department?.deptName || 'department'}`
+                message: 'Budget updated successfully',
+                data: result
             });
 
         } catch (error) {
-            console.error('Error in updateBudget:', error);
+            console.error('Error updating budget:', error);
             res.status(500).json({
                 success: false,
-                message: 'Failed to update budget',
-                error: error.message
+                message: 'Failed to update budget'
             });
         }
     },
 
     // ============================================================================
-    // TRAINING REPORTS CONTROLLER FUNCTIONS
+    // GET TRAINING REQUEST DETAILS - For HR review
     // ============================================================================
-
-    // Training Courses Report
-    getTrainingCoursesReport: async function (req, res) {
+    getTrainingRequestDetails: async function (req, res) {
         try {
-            console.log('🔄 Generating training courses report...');
-            
-            const { search } = req.query;
-            
-            // Fetch all required trainings
-            let query = supabase
-                .from('trainings')
-                .select('*')
-                .eq('isActive', true)
-                .eq('isRequired', true);
-            
-            // Apply search filter if provided
-            if (search) {
-                query = query.ilike('trainingName', `%${search}%`);
-            }
-            
-            const { data: trainings, error: trainingsError } = await query.order('trainingName', { ascending: true });
-            
-            if (trainingsError) {
-                console.error('Error fetching trainings:', trainingsError);
-                throw trainingsError;
-            }
-            
-            console.log(`Found ${trainings?.length || 0} training courses`);
-            
-            // Get training statistics for each course
-            const coursesWithStats = await Promise.all(
-                (trainings || []).map(async (training) => {
-                    try {
-                        // Get assignment count and completion stats
-                        const { data: assignments, error: assignmentsError } = await supabase
-                            .from('training_records')
-                            .select(`
-                                trainingRecordId,
-                                userId,
-                                trainingStatus,
-                                progressPercentage,
-                                isApproved,
-                                dateRequested,
-                                setEndDate,
-                                completionDate
-                            `)
-                            .eq('trainingId', training.trainingId)
-                            .eq('isApproved', true);
-                        
-                        if (assignmentsError) {
-                            console.error(`Error fetching assignments for training ${training.trainingId}:`, assignmentsError);
-                        }
-                        
-                        const assignmentCount = assignments?.length || 0;
-                        const completedCount = assignments?.filter(a => 
-                            a.trainingStatus === 'Completed' || a.progressPercentage >= 100
-                        ).length || 0;
-                        
-                        const completionRate = assignmentCount > 0 ? 
-                            Math.round((completedCount / assignmentCount) * 100) : 0;
-                        
-                        return {
-                            id: training.trainingId,
-                            title: training.trainingName,
-                            description: training.trainingDesc,
-                            mode: training.isOnlineArrangement ? 'online' : 'onsite',
-                            duration: training.totalDuration || 0,
-                            cost: training.cost || 0,
-                            isRequired: training.isRequired,
-                            assignedEmployees: assignmentCount,
-                            completedEmployees: completedCount,
-                            completionRate: `${completionRate}%`,
-                            createdDate: training.dateCreated
-                        };
-                    } catch (error) {
-                        console.error(`Error processing training ${training.trainingId}:`, error);
-                        return {
-                            id: training.trainingId,
-                            title: training.trainingName,
-                            description: training.trainingDesc,
-                            mode: training.isOnlineArrangement ? 'online' : 'onsite',
-                            duration: training.totalDuration || 0,
-                            cost: training.cost || 0,
-                            isRequired: training.isRequired,
-                            assignedEmployees: 0,
-                            completedEmployees: 0,
-                            completionRate: '0%'
-                        };
-                    }
-                })
-            );
-            
-            // Calculate summary statistics
-            const summary = {
-                totalCourses: coursesWithStats.length,
-                totalAssignments: coursesWithStats.reduce((sum, course) => sum + course.assignedEmployees, 0),
-                totalCompleted: coursesWithStats.reduce((sum, course) => sum + course.completedEmployees, 0),
-                averageCompletionRate: coursesWithStats.length > 0 ? 
-                    Math.round(coursesWithStats.reduce((sum, course) => 
-                        sum + parseInt(course.completionRate), 0) / coursesWithStats.length) : 0,
-                totalCost: coursesWithStats.reduce((sum, course) => sum + (course.cost * course.assignedEmployees), 0),
-                onlineCourses: coursesWithStats.filter(course => course.mode === 'online').length,
-                onsiteCourses: coursesWithStats.filter(course => course.mode === 'onsite').length
-            };
-            
-            console.log('Training courses report generated successfully');
-            
-            res.json({
-                success: true,
-                data: coursesWithStats,
-                summary: summary,
-                filters: { search },
-                generatedAt: new Date().toISOString()
-            });
-            
-        } catch (error) {
-            console.error('Error generating training courses report:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to generate training courses report',
-                error: error.message
-            });
-        }
-    },
+            const { requestId } = req.params;
 
-    // Training Assignments Report
-    getTrainingAssignmentsReport: async function (req, res) {
-        try {
-            console.log('🔄 Generating training assignments report...');
-            
-            const { startDate, endDate, status, department } = req.query;
-            
-            // FIXED: Corrected table relationships
-            let query = supabase
+            console.log('Getting training request details:', requestId);
+
+            const { data: request, error } = await supabase
                 .from('training_records')
                 .select(`
                     *,
-                    trainings!inner(trainingName, isRequired, totalDuration, cost),
-                    staffaccounts!inner(firstName, lastName, departmentId, jobId),
-                    departments!inner(deptName),
-                    jobpositions!inner(jobTitle)
+                    useraccounts!training_records_userId_fkey (
+                        userId,
+                        userEmail
+                    )
                 `)
-                .eq('trainings.isRequired', true)
-                .eq('trainings.isActive', true)
-                .eq('isApproved', true);
-            
-            // Apply filters safely
-            if (startDate) {
-                query = query.gte('dateRequested', startDate);
-            }
-            if (endDate) {
-                query = query.lte('dateRequested', endDate);
-            }
-            
-            const { data: assignments, error: assignmentsError } = await query
-                .order('dateRequested', { ascending: false });
-            
-            if (assignmentsError) {
-                console.error('Error fetching assignments:', assignmentsError);
-                // Return empty data instead of throwing error
-                return res.json({
-                    success: true,
-                    data: [],
-                    summary: {
-                        totalAssigned: 0,
-                        completed: 0,
-                        inProgress: 0,
-                        notStarted: 0,
-                        overdue: 0,
-                        averageCompletion: 0
-                    },
-                    filters: { startDate, endDate, status, department },
-                    generatedAt: new Date().toISOString()
+                .eq('trainingRecordId', requestId)
+                .single();
+
+            if (error || !request) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Training request not found'
                 });
             }
-            
-            // Process assignments safely
-            const processedAssignments = (assignments || []).map(assignment => {
-                try {
-                    // Simplified processing to avoid nested async calls that cause timeouts
-                    const progressPercentage = assignment.progressPercentage || 0;
-                    
-                    let displayStatus = 'Not Started';
-                    const today = new Date();
-                    const endDate = assignment.setEndDate ? new Date(assignment.setEndDate) : null;
-                    
-                    if (progressPercentage >= 100) {
-                        displayStatus = 'Completed';
-                    } else if (endDate && today > endDate) {
-                        displayStatus = 'Overdue';
-                    } else if (progressPercentage > 0) {
-                        displayStatus = 'In Progress';
-                    }
-                    
-                    return {
-                        assignmentId: assignment.trainingRecordId,
-                        employeeName: `${assignment.staffaccounts?.firstName || ''} ${assignment.staffaccounts?.lastName || ''}`,
-                        employeeEmail: assignment.staffaccounts?.userEmail || 'N/A',
-                        department: assignment.departments?.deptName || 'N/A',
-                        jobTitle: assignment.jobpositions?.jobTitle || 'N/A',
-                        trainingTitle: assignment.trainings?.trainingName || 'N/A',
-                        trainingDuration: assignment.trainings?.totalDuration || 0,
-                        trainingCost: assignment.trainings?.cost || 0,
-                        status: displayStatus,
-                        progress: progressPercentage,
-                        assignedDate: assignment.dateRequested,
-                        startDate: assignment.setStartDate,
-                        dueDate: assignment.setEndDate,
-                        isRequired: assignment.trainings?.isRequired || false,
-                        isOverdue: displayStatus === 'Overdue'
-                    };
-                } catch (error) {
-                    console.error(`Error processing assignment:`, error);
-                    return null;
-                }
-            }).filter(assignment => assignment !== null);
-            
-            // Apply status filter if provided
-            let filteredAssignments = processedAssignments;
-            if (status) {
-                filteredAssignments = processedAssignments.filter(assignment => 
-                    assignment.status.toLowerCase().replace(' ', '-') === status.toLowerCase().replace(' ', '-')
-                );
+
+            // Get staff data
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select(`
+                    *,
+                    departments!staffaccounts_departmentId_fkey (
+                        departmentId,
+                        deptName
+                    ),
+                    jobpositions!staffaccounts_jobId_fkey (
+                        jobId,
+                        jobTitle
+                    )
+                `)
+                .eq('userId', request.userId)
+                .single();
+
+            if (staffError || !staffData) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Staff data not found'
+                });
             }
-            
-            // Apply department filter if provided
-            if (department) {
-                filteredAssignments = filteredAssignments.filter(assignment => 
-                    assignment.department.toLowerCase().includes(department.toLowerCase())
-                );
-            }
-            
-            // Calculate summary
-            const summary = {
-                totalAssigned: filteredAssignments.length,
-                completed: filteredAssignments.filter(a => a.status === 'Completed').length,
-                inProgress: filteredAssignments.filter(a => a.status === 'In Progress').length,
-                notStarted: filteredAssignments.filter(a => a.status === 'Not Started').length,
-                overdue: filteredAssignments.filter(a => a.isOverdue).length,
-                averageCompletion: filteredAssignments.length > 0 ? 
-                    Math.round(filteredAssignments.reduce((sum, a) => sum + a.progress, 0) / filteredAssignments.length) : 0
+
+            const formattedRequest = {
+                requestId: request.trainingRecordId,
+                employeeName: `${staffData.firstName || 'Unknown'} ${staffData.lastName || 'User'}`,
+                department: staffData.departments?.deptName || 'Unknown Department',
+                departmentId: staffData.departmentId || 0,
+                jobTitle: staffData.jobpositions?.jobTitle || 'Unknown Position',
+                trainingName: request.trainingName,
+                trainingDesc: request.trainingDesc,
+                cost: request.cost || 0,
+                duration: request.totalDuration || 0,
+                requestDate: request.dateRequested,
+                lineManagerRemarks: request.lmDecisionRemarks,
+                isOnlineArrangement: request.isOnlineArrangement,
+                country: request.country,
+                address: request.address,
+                status: request.status
             };
-            
+
             res.json({
                 success: true,
-                data: filteredAssignments,
-                summary: summary,
-                filters: { startDate, endDate, status, department },
-                generatedAt: new Date().toISOString()
+                data: formattedRequest
             });
-            
+
         } catch (error) {
-            console.error('Error generating training assignments report:', error);
+            console.error('Error getting request details:', error);
             res.status(500).json({
                 success: false,
-                message: 'Failed to generate training assignments report',
-                error: error.message
+                message: 'Failed to get request details'
             });
         }
     },
 
 
-    // Filtered Training Assignments (for enhanced filters)
-    getFilteredTrainingAssignments: async function (req, res) {
+    // ============================================================================
+    // GET TRAINING APPROVAL HISTORY - All HR decisions made
+    // ============================================================================
+    getTrainingApprovalHistory: async function (req, res) {
         try {
-            console.log('🔍 Getting filtered training assignments...');
-            
-            const { startDate, endDate, status, department } = req.query;
-            
-            // Reuse the assignments report logic but return employee dashboard format
-            const assignmentsResponse = await module.exports.getTrainingAssignmentsReport(req, { 
-                json: (data) => data 
-            });
-            
-            if (!assignmentsResponse.success) {
-                throw new Error(assignmentsResponse.message);
-            }
-            
-            // Transform assignments data to employee dashboard format for consistency
-            const employeeDashboardFormat = {};
-            
-            assignmentsResponse.data.forEach(assignment => {
-                const employeeKey = assignment.employeeName;
-                
-                if (!employeeDashboardFormat[employeeKey]) {
-                    employeeDashboardFormat[employeeKey] = {
-                        userId: assignment.assignmentId, // Use assignment ID as placeholder
-                        employeeName: assignment.employeeName,
-                        email: assignment.employeeEmail,
-                        department: assignment.department,
-                        jobTitle: assignment.jobTitle,
-                        trainings: [],
-                        totalTrainings: 0,
-                        completedTrainings: 0,
-                        inProgressTrainings: 0,
-                        notStartedTrainings: 0,
-                        overdueTrainings: 0,
-                        overallProgress: 0
-                    };
-                }
-                
-                const employee = employeeDashboardFormat[employeeKey];
-                employee.trainings.push({
-                    trainingName: assignment.trainingTitle,
-                    status: assignment.status,
-                    progress: assignment.progress,
-                    dueDate: assignment.dueDate,
-                    isOverdue: assignment.isOverdue
-                });
-                
-                employee.totalTrainings++;
-                
-                // Count by status
-                switch (assignment.status) {
-                    case 'Completed':
-                        employee.completedTrainings++;
-                        break;
-                    case 'In Progress':
-                        employee.inProgressTrainings++;
-                        break;
-                    case 'Overdue':
-                        employee.overdueTrainings++;
-                        break;
-                    default:
-                        employee.notStartedTrainings++;
-                }
-            });
-            
-            // Calculate overall progress for each employee
-            const employeeArray = Object.values(employeeDashboardFormat).map(employee => {
-                employee.overallProgress = employee.totalTrainings > 0 ? 
-                    Math.round(employee.trainings.reduce((sum, t) => sum + t.progress, 0) / employee.totalTrainings) : 0;
-                
-                // Determine overall status
-                let overallStatus = 'On Track';
-                if (employee.overdueTrainings > 0) {
-                    overallStatus = 'Behind Schedule';
-                } else if (employee.completedTrainings === employee.totalTrainings && employee.totalTrainings > 0) {
-                    overallStatus = 'All Complete';
-                }
-                employee.overallStatus = overallStatus;
-                
-                return employee;
-            });
-            
-            console.log(`Filtered assignments processed for ${employeeArray.length} employees`);
-            
-            res.json({
-                success: true,
-                data: employeeArray,
-                summary: assignmentsResponse.summary,
-                filters: { startDate, endDate, status, department },
-                generatedAt: new Date().toISOString()
-            });
-            
-        } catch (error) {
-            console.error('Error getting filtered training assignments:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to get filtered training assignments',
-                error: error.message
-            });
-        }
-    },
+            console.log('Fetching training approval history...');
 
-    getBudgetReport: async function (req, res) {
-        try {
-            console.log('🔄 Generating budget report...');
-            
-            // Get departments first
-            const { data: departments, error: deptError } = await supabase
-                .from('departments')
-                .select('*')
-                .order('deptName', { ascending: true });
-            
-            if (deptError) {
-                console.error('Error fetching departments:', deptError);
-                throw deptError;
-            }
-            
-            // Simplified approach - just get basic training cost data
-            const { data: trainingCosts, error: costsError } = await supabase
+            const { data: history, error } = await supabase
                 .from('training_records')
                 .select(`
-                    trainingId,
-                    userId,
-                    trainings(cost, trainingName)
+                    *,
+                    useraccounts!training_records_userId_fkey (
+                        userId,
+                        userEmail
+                    )
                 `)
-                .eq('isApproved', true);
+                .in('status', ['In Progress', 'Cancelled', 'Completed'])
+                .not('hrDecisionDate', 'is', null)
+                .order('hrDecisionDate', { ascending: false });
+
+            if (error) throw error;
+
+            // Get all user IDs from the history
+            const userIds = (history || []).map(record => record.userId);
             
-            if (costsError) {
-                console.error('Error fetching training costs:', costsError);
-                // Continue with empty data instead of failing
+            if (userIds.length === 0) {
+                return res.json({
+                    success: true,
+                    data: []
+                });
             }
-            
-            // Get staff department info separately to avoid complex joins
-            const { data: staffInfo, error: staffError } = await supabase
+
+            // Get all staff data for these users
+            const { data: staffData, error: staffError } = await supabase
                 .from('staffaccounts')
-                .select('userId, departmentId, departments(deptName)');
-            
-            if (staffError) {
-                console.error('Error fetching staff info:', staffError);
-            }
-            
-            // Process department budget analysis with fallback values
-            const departmentAnalysis = (departments || []).map(dept => {
-                // Find staff in this department
-                const deptStaff = (staffInfo || []).filter(staff => 
-                    staff.departmentId === dept.departmentId
-                );
+                .select(`
+                    *,
+                    departments!staffaccounts_departmentId_fkey (
+                        departmentId,
+                        deptName
+                    ),
+                    jobpositions!staffaccounts_jobId_fkey (
+                        jobId,
+                        jobTitle
+                    )
+                `)
+                .in('userId', userIds);
+
+            if (staffError) throw staffError;
+
+            // Create a lookup map
+            const staffLookup = {};
+            (staffData || []).forEach(staff => {
+                staffLookup[staff.userId] = staff;
+            });
+
+            const formattedHistory = (history || []).map(record => {
+                const staff = staffLookup[record.userId];
                 
-                // Find training costs for staff in this department
-                const deptTrainingCosts = (trainingCosts || []).filter(tc => 
-                    deptStaff.some(staff => staff.userId === tc.userId)
-                );
-                
-                const totalSpent = deptTrainingCosts.reduce((sum, tc) => 
-                    sum + ((tc.trainings?.cost || 0)), 0
-                );
-                
-                const trainingCount = deptTrainingCosts.length;
-                const budgetAllocated = 100000; // Default budget
-                const remainingBudget = budgetAllocated - totalSpent;
-                const utilizationPercentage = budgetAllocated > 0 ? 
-                    Math.round((totalSpent / budgetAllocated) * 100) : 0;
-                
-                let status = 'good';
-                if (utilizationPercentage >= 90) {
-                    status = 'critical';
-                } else if (utilizationPercentage >= 75) {
-                    status = 'warning';
+                if (!staff) {
+                    console.warn(`No staff data found for userId: ${record.userId}`);
+                    return {
+                        requestId: record.trainingRecordId,
+                        employeeName: 'Unknown User',
+                        department: 'Unknown Department',
+                        departmentId: 0,
+                        jobTitle: 'Unknown Position',
+                        trainingName: record.trainingName,
+                        cost: record.cost || 0,
+                        duration: record.totalDuration || 0,
+                        status: record.status,
+                        isApproved: record.isApproved,
+                        hrDecisionDate: record.hrDecisionDate,
+                        hrDecisionRemarks: record.hrDecisionRemarks,
+                        isOnlineArrangement: record.isOnlineArrangement
+                    };
                 }
-                
+
                 return {
-                    departmentId: dept.departmentId,
-                    departmentName: dept.deptName,
-                    budgetAllocated,
-                    totalSpent,
-                    remainingBudget,
-                    utilizationPercentage,
-                    status,
-                    trainingCount,
-                    employeeCount: deptStaff.length
+                    requestId: record.trainingRecordId,
+                    employeeName: `${staff.firstName || 'Unknown'} ${staff.lastName || 'User'}`,
+                    department: staff.departments?.deptName || 'Unknown Department',
+                    departmentId: staff.departmentId || 0,
+                    jobTitle: staff.jobpositions?.jobTitle || 'Unknown Position',
+                    trainingName: record.trainingName,
+                    cost: record.cost || 0,
+                    duration: record.totalDuration || 0,
+                    status: record.status,
+                    isApproved: record.isApproved,
+                    hrDecisionDate: record.hrDecisionDate,
+                    hrDecisionRemarks: record.hrDecisionRemarks,
+                    isOnlineArrangement: record.isOnlineArrangement
                 };
             });
-            
-            // Calculate totals
-            const totalBudgetAllocated = departmentAnalysis.reduce((sum, dept) => sum + dept.budgetAllocated, 0);
-            const totalSpent = departmentAnalysis.reduce((sum, dept) => sum + dept.totalSpent, 0);
-            const totalTrainings = departmentAnalysis.reduce((sum, dept) => sum + dept.trainingCount, 0);
-            
-            // FIXED: Add the missing topSpendingDepartments calculation
-            const topSpendingDepartments = departmentAnalysis
-                .filter(dept => dept.totalSpent > 0) // Only departments with spending
-                .sort((a, b) => b.totalSpent - a.totalSpent) // Sort by spending descending
-                .slice(0, 5) // Take top 5
-                .map(dept => ({
-                    departmentName: dept.departmentName,
-                    totalSpent: dept.totalSpent,
-                    utilizationPercentage: dept.utilizationPercentage,
-                    trainingCount: dept.trainingCount
-                }));
-            
-            const insights = {
-                totalBudgetAllocated,
-                totalSpent,
-                totalRemaining: totalBudgetAllocated - totalSpent,
-                overallUtilization: totalBudgetAllocated > 0 ? 
-                    Math.round((totalSpent / totalBudgetAllocated) * 100) : 0,
-                totalTrainings,
-                departmentCount: departmentAnalysis.length,
-                departmentsOverBudget: departmentAnalysis.filter(d => d.remainingBudget < 0).length,
-                departmentsCritical: departmentAnalysis.filter(d => d.status === 'critical').length,
-                departmentsWarning: departmentAnalysis.filter(d => d.status === 'warning').length,
-                // FIXED: Include the topSpendingDepartments in insights
-                topSpendingDepartments: topSpendingDepartments
-            };
-            
+
+            console.log(`Found ${formattedHistory.length} approval history records`);
+
             res.json({
                 success: true,
-                data: {
-                    departments: departmentAnalysis,
-                    insights,
-                    summary: insights
-                },
-                generatedAt: new Date().toISOString()
+                data: formattedHistory
             });
-            
-        } catch (error) {
-            console.error('Error generating budget report:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to generate budget report',
-                error: error.message
-            });
-        }
-    },
 
-    // Export Budget Report as PDF/Excel
-    exportBudgetReport: async function (req, res) {
-        try {
-            console.log('🔄 Exporting budget report...');
-            
-            const { format } = req.params; // 'pdf' or 'excel'
-            
-            // Get budget report data
-            const budgetData = await module.exports.getBudgetReport({ query: {} }, { 
-                json: (data) => data 
-            });
-            
-            if (!budgetData.success) {
-                throw new Error(budgetData.message);
-            }
-            
-            if (format === 'pdf') {
-                // For now, return the data for frontend PDF generation
-                res.json({
-                    success: true,
-                    data: budgetData.data,
-                    format: 'pdf',
-                    message: 'Budget report data ready for PDF generation'
-                });
-            } else if (format === 'excel') {
-                // For now, return the data for frontend Excel generation
-                res.json({
-                    success: true,
-                    data: budgetData.data,
-                    format: 'excel',
-                    message: 'Budget report data ready for Excel generation'
-                });
-            } else {
-                throw new Error('Invalid export format. Use pdf or excel.');
-            }
-            
         } catch (error) {
-            console.error('Error exporting budget report:', error);
+            console.error('Error fetching approval history:', error);
             res.status(500).json({
                 success: false,
-                message: 'Failed to export budget report',
-                error: error.message
+                message: 'Failed to fetch approval history'
             });
         }
     },
