@@ -497,7 +497,11 @@ getTrainingDevelopmentTracker: async function (req, res) {
                     userEmail
                 ),
                 jobpositions!jobId (
-                    jobTitle
+                    jobTitle,
+                    departmentId,
+                    departments!departmentId (
+                        deptName
+                    )
                 )
             `)
             .eq('status', 'For Line Manager Endorsement')
@@ -598,7 +602,214 @@ getTrainingDevelopmentTracker: async function (req, res) {
             console.log(`   - Has applicant data: ${!!record.applicantaccounts}`);
         });
 
-        // Calculate statistics
+        // ========================================
+        // FETCH EMPLOYEES FROM SAME DEPARTMENT AS CURRENT LINE MANAGER
+        // ========================================
+        console.log('👥 Fetching employees from same department as line manager...');
+        
+        const currentUserId = req.session?.user?.userId;
+        console.log('🔍 Current Line Manager ID from session:', currentUserId);
+        console.log('🔍 Full session user data:', JSON.stringify(req.session?.user, null, 2));
+        
+        // First, get the current line manager's department
+        const { data: currentManagerInfo, error: currentManagerError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                userId,
+                firstName,
+                lastName,
+                jobId,
+                jobpositions!jobId (
+                    jobTitle,
+                    departmentId,
+                    departments!departmentId (
+                        deptName
+                    )
+                )
+            `)
+            .eq('userId', currentUserId)
+            .single();
+
+        if (currentManagerError) {
+            console.error('❌ Error fetching current line manager info:', currentManagerError);
+        } else {
+            console.log('👤 Current line manager info:', JSON.stringify(currentManagerInfo, null, 2));
+        }
+
+        // Get the line manager's department ID
+        const managerDepartmentId = currentManagerInfo?.jobpositions?.departmentId;
+        const managerDepartmentName = currentManagerInfo?.jobpositions?.departments?.deptName;
+        
+        console.log('🏢 Line manager department ID:', managerDepartmentId);
+        console.log('🏢 Line manager department name:', managerDepartmentName);
+
+        let employees = [];
+        let employeesError = null;
+
+        if (managerDepartmentId) {
+            console.log(`📋 Fetching employees from department: ${managerDepartmentName} (ID: ${managerDepartmentId})`);
+            
+            // Fetch all employees from the SAME DEPARTMENT as the line manager
+            // ONLY show employees who have a position AND department assigned
+            const result = await supabase
+                .from('staffaccounts')
+                .select(`
+                    userId,
+                    firstName,
+                    lastName,
+                    hireDate,
+                    jobId,
+                    useraccounts!userId (
+                        userEmail
+                    ),
+                    jobpositions!jobId (
+                        jobTitle,
+                        departmentId,
+                        departments!departmentId (
+                            deptName
+                        )
+                    )
+                `)
+                .not('jobId', 'is', null) // Employee must have a job/position assigned
+                .eq('jobpositions.departmentId', managerDepartmentId) // Same department as line manager
+                .not('jobpositions.departmentId', 'is', null) // Position must have a department
+                .neq('userId', currentUserId) // Exclude the line manager from the employee list
+                .order('firstName', { ascending: true });
+            
+            employees = result.data;
+            employeesError = result.error;
+            
+            console.log(`👥 Found ${employees?.length || 0} employees in department ${managerDepartmentName}`);
+        } else {
+            console.log('⚠️ Could not determine line manager\'s department');
+            employees = [];
+            employeesError = { message: 'Could not determine line manager department' };
+        }
+
+        // Alternative query if you don't have lineManagerId field (also removed isActive):
+        // 
+        // OPTION 2: If you have a specific way to determine line manager relationships
+        // You might need to use a junction table or different logic here
+        // 
+        // OPTION 3: If line managers are determined by job roles/titles
+        // const { data: employees, error: employeesError } = await supabase
+        //     .from('staffaccounts')
+        //     .select(`
+        //         userId,
+        //         firstName,
+        //         lastName,
+        //         hireDate,
+        //         jobId,
+        //         useraccounts!userId (
+        //             userEmail
+        //         ),
+        //         jobpositions!jobId (
+        //             jobTitle,
+        //             departmentId,
+        //             departments!departmentId (
+        //                 deptName
+        //             )
+        //         )
+        //     `)
+        //     .eq('jobpositions.jobTitle', 'Employee') // Example: if you want to show only employees, not managers
+        //     .order('firstName', { ascending: true });
+
+        if (employeesError) {
+            console.error('❌ Error fetching employees:', employeesError);
+            // Don't throw error here, just log it and continue with empty employees array
+        }
+
+        // Process employees data - only include those with complete position/department info
+        // AND fetch their latest training status
+        const processedEmployees = employees ? await Promise.all(
+            employees.filter(employee => {
+                // Filter out employees without proper job/department data
+                const hasJobTitle = employee.jobpositions?.jobTitle;
+                const hasDepartment = employee.jobpositions?.departments?.deptName;
+                const hasJobId = employee.jobId;
+                
+                if (!hasJobTitle || !hasDepartment || !hasJobId) {
+                    console.log(`⚠️ Excluding employee ${employee.firstName} ${employee.lastName} - missing position/department data`);
+                    return false;
+                }
+                
+                return true;
+            }).map(async (employee) => {
+                // Fetch the latest training record for this employee
+                const { data: latestTraining, error: trainingError } = await supabase
+                    .from('training_records')
+                    .select('status, dateRequested, trainingName')
+                    .eq('userId', employee.userId)
+                    .order('dateRequested', { ascending: false })
+                    .limit(1);
+
+                if (trainingError) {
+                    console.error(`❌ Error fetching training for user ${employee.userId}:`, trainingError);
+                }
+
+                // Determine employee status based on latest training record
+                let employeeStatus = 'No Training';
+                let statusClass = 'status-no-training';
+                let latestTrainingInfo = null;
+
+                if (latestTraining && latestTraining.length > 0) {
+                    const training = latestTraining[0];
+                    employeeStatus = training.status;
+                    latestTrainingInfo = {
+                        trainingName: training.trainingName,
+                        dateRequested: training.dateRequested
+                    };
+
+                    // Set CSS class based on status
+                    switch (training.status) {
+                        case 'For Line Manager Endorsement':
+                            statusClass = 'status-pending-lm';
+                            break;
+                        case 'For HR Approval':
+                            statusClass = 'status-pending-hr';
+                            break;
+                        case 'Cancelled':
+                            statusClass = 'status-cancelled';
+                            break;
+                        case 'Not Started':
+                            statusClass = 'status-not-started';
+                            break;
+                        case 'In Progress':
+                            statusClass = 'status-in-progress';
+                            break;
+                        case 'Completed':
+                            statusClass = 'status-completed';
+                            break;
+                        default:
+                            statusClass = 'status-unknown';
+                    }
+                }
+
+                console.log(`👤 Employee ${employee.firstName} ${employee.lastName} - Training Status: ${employeeStatus}`);
+
+                return {
+                    userId: employee.userId,
+                    firstName: employee.firstName,
+                    lastName: employee.lastName,
+                    userEmail: employee.useraccounts?.userEmail,
+                    jobTitle: employee.jobpositions?.jobTitle,
+                    departmentId: employee.jobpositions?.departmentId,
+                    department: employee.jobpositions?.departments?.deptName,
+                    hireDate: employee.hireDate,
+                    trainingStatus: employeeStatus,
+                    statusClass: statusClass,
+                    latestTraining: latestTrainingInfo,
+                    isActive: true // Keep this for UI compatibility
+                };
+            })
+        ) : [];
+
+        console.log('👥 Employees fetched:', processedEmployees?.length || 0);
+        console.log('👥 Sample employee:', JSON.stringify(processedEmployees?.[0], null, 2));
+
+        // ========================================
+        // CALCULATE STATISTICS (Including Training Status Stats)
+        // ========================================
         const totalPendingEndorsements = trainingRecordsWithNames?.length || 0;
         
         const trainingByType = {};
@@ -607,6 +818,17 @@ getTrainingDevelopmentTracker: async function (req, res) {
             averageCost: 0,
             onlineTrainings: 0,
             onsiteTrainings: 0
+        };
+
+        // NEW: Training Status Statistics
+        const statusStats = {
+            forLineManagerEndorsement: 0,
+            forHRApproval: 0,
+            cancelled: 0,
+            notStarted: 0,
+            inProgress: 0,
+            completed: 0,
+            noTraining: 0
         };
 
         if (trainingRecordsWithNames) {
@@ -623,6 +845,35 @@ getTrainingDevelopmentTracker: async function (req, res) {
                     costSummary.onlineTrainings++;
                 } else {
                     costSummary.onsiteTrainings++;
+                }
+            });
+        }
+
+        // Count status from processed employees (this includes all statuses)
+        if (processedEmployees) {
+            processedEmployees.forEach(employee => {
+                switch (employee.trainingStatus) {
+                    case 'For Line Manager Endorsement':
+                        statusStats.forLineManagerEndorsement++;
+                        break;
+                    case 'For HR Approval':
+                        statusStats.forHRApproval++;
+                        break;
+                    case 'Cancelled':
+                        statusStats.cancelled++;
+                        break;
+                    case 'Not Started':
+                        statusStats.notStarted++;
+                        break;
+                    case 'In Progress':
+                        statusStats.inProgress++;
+                        break;
+                    case 'Completed':
+                        statusStats.completed++;
+                        break;
+                    case 'No Training':
+                        statusStats.noTraining++;
+                        break;
                 }
             });
         }
@@ -656,19 +907,29 @@ getTrainingDevelopmentTracker: async function (req, res) {
             totalPendingEndorsements,
             trainingByType,
             costSummary,
-            monthlyTrends: monthlyTrendsArray
+            statusStats, // NEW: Add status statistics
+            monthlyTrends: monthlyTrendsArray,
+            totalEmployees: processedEmployees?.length || 0 // NEW: Total employees count
         };
 
         console.log('📊 Statistics calculated:', statistics);
 
+        // ========================================
+        // RENDER PAGE WITH ALL DATA
+        // ========================================
         res.render('staffpages/linemanager_pages/trainingdevelopmenttracker', {
             title: 'Employee Training & Development Tracker',
             user: req.session?.user || null,
             trainingRecords: trainingRecordsWithNames || [],
+            employees: processedEmployees || [], // Add employees data
             statistics: statistics
         });
         
         console.log('✅ Page rendered successfully');
+        console.log(`📋 Final data summary:`);
+        console.log(`   - Training Records: ${trainingRecordsWithNames?.length || 0}`);
+        console.log(`   - Employees: ${processedEmployees?.length || 0}`);
+        console.log(`   - Pending Endorsements: ${totalPendingEndorsements}`);
         
     } catch (error) {
         console.error('💥 ERROR in getTrainingDevelopmentTracker:', error);
@@ -683,6 +944,287 @@ getTrainingDevelopmentTracker: async function (req, res) {
                 </a>
             </div>
         `);
+    }
+},
+
+// 7. Here's your improved getEmployeeTrainingHistory function with better error handling:
+
+getEmployeeTrainingHistory: async function (req, res) {
+    try {
+        const userId = req.params.userId;
+        console.log('🔍 Fetching comprehensive training history for user:', userId);
+
+        // Validate userId
+        if (!userId) {
+            return res.status(400).json({ 
+                error: 'User ID is required',
+                success: false 
+            });
+        }
+
+        // Set proper JSON content type
+        res.setHeader('Content-Type', 'application/json');
+
+        // First, get employee basic info
+        const { data: employee, error: employeeError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                userId,
+                firstName,
+                lastName,
+                useraccounts!userId (
+                    userEmail
+                ),
+                jobpositions!jobId (
+                    jobTitle,
+                    departments!departmentId (
+                        deptName
+                    )
+                )
+            `)
+            .eq('userId', userId)
+            .single();
+
+        if (employeeError) {
+            console.error('❌ Error fetching employee info:', employeeError);
+            return res.status(404).json({ 
+                error: 'Employee not found',
+                details: employeeError.message,
+                success: false 
+            });
+        }
+
+        if (!employee) {
+            return res.status(404).json({ 
+                error: 'Employee not found',
+                success: false 
+            });
+        }
+
+        console.log('👤 Employee found:', employee.firstName, employee.lastName);
+
+        // Fetch all training records for this employee
+        const { data: trainingRecords, error: trainingError } = await supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                trainingName,
+                trainingDesc,
+                cost,
+                totalDuration,
+                isOnlineArrangement,
+                address,
+                country,
+                status,
+                dateRequested,
+                setStartDate,
+                setEndDate,
+                lmDecisionDate,
+                lmDecisionRemarks,
+                hrDecisionDate,
+                hrDecisionRemarks
+            `)
+            .eq('userId', userId)
+            .order('dateRequested', { ascending: false });
+
+        if (trainingError) {
+            console.error('❌ Error fetching training records:', trainingError);
+            return res.status(500).json({ 
+                error: 'Error fetching training records',
+                details: trainingError.message,
+                success: false 
+            });
+        }
+
+        console.log(`📋 Found ${trainingRecords?.length || 0} training records`);
+
+        // For each training record, fetch all related data
+        const comprehensiveTrainings = [];
+        
+        if (trainingRecords && trainingRecords.length > 0) {
+            for (const training of trainingRecords) {
+                try {
+                    const trainingRecordId = training.trainingRecordId;
+                    console.log(`🔍 Fetching details for training: ${training.trainingName} (ID: ${trainingRecordId})`);
+
+                    // Fetch Activities (with error handling)
+                    let activities = [];
+                    try {
+                        const { data: activitiesData, error: activitiesError } = await supabase
+                            .from('training_records_activities')
+                            .select(`
+                                trainingRecordActivityId,
+                                created_at,
+                                timestampzStarted,
+                                timestampzCompleted,
+                                status,
+                                activityName,
+                                activityRemarks,
+                                estActivityDuration,
+                                training_records_activities_types!activityTypeId (
+                                    activityType
+                                )
+                            `)
+                            .eq('trainingRecordId', trainingRecordId);
+
+                        if (!activitiesError) {
+                            activities = activitiesData ? activitiesData.map(activity => ({
+                                ...activity,
+                                activityType: activity.training_records_activities_types?.activityType || 'Unknown'
+                            })) : [];
+                        }
+                    } catch (err) {
+                        console.error('⚠️ Error fetching activities, continuing...', err);
+                    }
+
+                    // Fetch Skills (with error handling)
+                    let skills = [];
+                    try {
+                        const { data: skillsData, error: skillsError } = await supabase
+                            .from('training_records_skills')
+                            .select(`
+                                trainingRecordSkillId,
+                                created_at,
+                                jobreqskills!jobReqSkillId (
+                                    jobReqSkillName,
+                                    jobReqSkillType
+                                )
+                            `)
+                            .eq('trainingRecordId', trainingRecordId);
+
+                        if (!skillsError) {
+                            skills = skillsData ? skillsData.map(skill => ({
+                                ...skill,
+                                jobReqSkillName: skill.jobreqskills?.jobReqSkillName || 'Unknown Skill',
+                                jobReqSkillType: skill.jobreqskills?.jobReqSkillType || 'General'
+                            })) : [];
+                        }
+                    } catch (err) {
+                        console.error('⚠️ Error fetching skills, continuing...', err);
+                    }
+
+                    // Fetch Objectives (with error handling)
+                    let objectives = [];
+                    try {
+                        const { data: objectivesData, error: objectivesError } = await supabase
+                            .from('training_records_objectives')
+                            .select(`
+                                trainingRecordObjectiveId,
+                                created_at,
+                                objectivesettings_objectives!objectiveId (
+                                    objectiveName
+                                )
+                            `)
+                            .eq('trainingRecordId', trainingRecordId);
+
+                        if (!objectivesError) {
+                            objectives = objectivesData ? objectivesData.map(obj => ({
+                                ...obj,
+                                objectiveName: obj.objectivesettings_objectives?.objectiveName || 'Objective'
+                            })) : [];
+                        }
+                    } catch (err) {
+                        console.error('⚠️ Error fetching objectives, continuing...', err);
+                    }
+
+                    // Fetch Categories (with error handling)
+                    let categories = [];
+                    try {
+                        const { data: categoriesData, error: categoriesError } = await supabase
+                            .from('training_records_categories')
+                            .select(`
+                                trainingRecordCategoriesId,
+                                created_at,
+                                training_categories!trainingCategoriesId (
+                                    categoryName
+                                )
+                            `)
+                            .eq('trainingRecordId', trainingRecordId);
+
+                        if (!categoriesError) {
+                            categories = categoriesData ? categoriesData.map(cat => ({
+                                ...cat,
+                                categoryName: cat.training_categories?.categoryName || 'Category'
+                            })) : [];
+                        }
+                    } catch (err) {
+                        console.error('⚠️ Error fetching categories, continuing...', err);
+                    }
+
+                    // Fetch Certificates (with error handling)
+                    let certificates = [];
+                    try {
+                        const { data: certificatesData, error: certificatesError } = await supabase
+                            .from('training_records_certificates')
+                            .select(`
+                                trainingRecordCertificateId,
+                                created_at,
+                                certificate_url,
+                                trainingCertTitle,
+                                trainingCertDesc
+                            `)
+                            .eq('trainingRecordId', trainingRecordId);
+
+                        if (!certificatesError) {
+                            certificates = certificatesData || [];
+                        }
+                    } catch (err) {
+                        console.error('⚠️ Error fetching certificates, continuing...', err);
+                    }
+
+                    console.log(`   📊 Activities: ${activities.length}, Skills: ${skills.length}, Objectives: ${objectives.length}, Categories: ${categories.length}, Certificates: ${certificates.length}`);
+
+                    comprehensiveTrainings.push({
+                        ...training,
+                        activities: activities,
+                        skills: skills,
+                        objectives: objectives,
+                        categories: categories,
+                        certificates: certificates
+                    });
+                    
+                } catch (err) {
+                    console.error(`⚠️ Error processing training ${training.trainingRecordId}, skipping...`, err);
+                    // Add the training without detailed data
+                    comprehensiveTrainings.push({
+                        ...training,
+                        activities: [],
+                        skills: [],
+                        objectives: [],
+                        categories: [],
+                        certificates: []
+                    });
+                }
+            }
+        }
+
+        console.log('✅ Successfully fetched comprehensive training data');
+
+        const response = {
+            success: true,
+            employee: {
+                userId: employee.userId,
+                firstName: employee.firstName,
+                lastName: employee.lastName,
+                email: employee.useraccounts?.userEmail,
+                jobTitle: employee.jobpositions?.jobTitle,
+                department: employee.jobpositions?.departments?.deptName
+            },
+            trainings: comprehensiveTrainings
+        };
+
+        res.json(response);
+
+    } catch (error) {
+        console.error('💥 ERROR in getEmployeeTrainingHistory:', error);
+        
+        // Make sure we always return JSON
+        res.setHeader('Content-Type', 'application/json');
+        res.status(500).json({
+            error: 'Internal server error',
+            message: error.message,
+            success: false
+        });
     }
 },
 

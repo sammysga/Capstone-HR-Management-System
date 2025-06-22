@@ -376,6 +376,17 @@ router.post('/linemanager/training/reject', lineManagerController.rejectTraining
 router.post('/api/training/endorse', lineManagerController.endorseTrainingToHR);
 router.post('/api/training/reject', lineManagerController.cancelTraining);
 router.get('/api/training/details/:id', lineManagerController.getTrainingDetailsAPI);
+// GET /api/employee/trainings/:userId
+router.get('/linemanager/api/employee/trainings/:userId', lineManagerController.getEmployeeTrainingHistory);
+
+// Alternative: If you want to include it in your existing training routes
+// GET /api/training/employee/:userId
+// router.get('/training/employee/:userId', lineManagerController.getEmployeeTrainingHistory);
+
+// Make sure your existing routes are also present:
+// router.post('/training/endorse', TrainingController.endorseTraining);
+// router.post('/training/reject', TrainingController.rejectTraining);
+// router.get('/training/details/:trainingRecordId', lineManagerController.getTrainingDetails);
 
 // NEW: Pending training requests management routes (ADD THESE 4 LINES)
 // router.post('/linemanager/training-request/approve', lineManagerController.approveTrainingRequestByRecord);
