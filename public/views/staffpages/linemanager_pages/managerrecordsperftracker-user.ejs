@@ -2564,181 +2564,78 @@
                 <div class="char-counter"><span id="nextRoleMobilityCount">0</span> characters</div>
             </div>
         </fieldset>
+<!-- Make sure your training categories section looks like this -->
 <fieldset class="suggested-trainings-fieldset">
     <legend><i class="fas fa-briefcase"></i> SUGGESTED POTENTIAL JOB CATEGORIES TO TAKE</legend>
     
     <div class="form-group">
-        <div class="training-selection-container" style="
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: var(--border-radius);
-            padding: 20px;
-            border: 2px solid var(--primary-color);
-            margin-bottom: 15px;
-        ">
+        <div class="training-selection-container">
             <div class="training-header" style="margin-bottom: 15px;">
                 <h4 style="margin: 0 0 8px 0; color: var(--primary-color); font-size: 16px;">
                     <i class="fas fa-search"></i> Select and Add Training Categories
                 </h4>
                 <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.4;">
-                    Choose training categories that align with your career development goals. You can select from existing categories or add new ones.
+                    Choose training categories that align with your career development goals.
                 </p>
             </div>
-
-<!-- Category Selection Dropdown -->
-<div class="category-dropdown-container" style="position: relative; margin-bottom: 20px;">
-    <label for="trainingCategorySelect" style="
-        display: block;
-        font-weight: 600;
-        color: var(--primary-color);
-        margin-bottom: 8px;
-        font-size: 14px;
-    ">
-        <i class="fas fa-list"></i> Search or Add New Category:
-    </label>
-    
-    <div style="display: flex; align-items: flex-start; gap: 10px;">
-        <!-- Enhanced Select Element with Search -->
-        <div style="flex: 1; position: relative;">
-            <select id="trainingCategorySelect" style="
-                width: 100%;
-                padding: 12px 15px;
-                border: 2px solid #ddd;
-                border-radius: var(--border-radius);
-                background-color: white;
-                color: var(--primary-color);
-                font-weight: 500;
-                cursor: pointer;
-                transition: var(--transition);
-                font-size: 13px;
-                line-height: 1.3;
-                height: auto;
-                min-height: 45px;
-            " onchange="handleCategorySelection(this)">
-                <option value="">-- Search or Add New Category --</option>
-                <!-- Categories will be loaded dynamically -->
-            </select>
             
-            <!-- Search Input (initially hidden) -->
-            <input type="text" id="categorySearchInput" placeholder="Search or Add New Category..." style="
-                width: 100%;
-                padding: 12px 15px;
-                border: 2px solid #ddd;
-                border-radius: var(--border-radius);
-                background-color: white;
-                color: var(--primary-color);
-                font-weight: 500;
-                transition: var(--transition);
-                font-size: 13px;
-                line-height: 1.3;
-                height: auto;
-                min-height: 45px;
-                display: none;
-            " onkeyup="filterCategories()" onkeydown="handleCategoryKeydown(event)">
-        </div>
-        
-        <!-- Toggle Search Button -->
-        <button type="button" id="toggleSearchBtn" style="
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-weight: 500;
-            transition: var(--transition);
-            white-space: nowrap;
-            min-height: 45px;
-        " onclick="toggleCategorySearch()">
-            <i class="fas fa-search"></i> Search
-        </button>
-        
-        <!-- Add Category Button -->
-        <button type="button" id="addCategoryBtn" style="
-            background-color: var(--success-color);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-weight: 500;
-            transition: var(--transition);
-            white-space: nowrap;
-            min-height: 45px;
-        " onclick="addSelectedCategory()">
-            <i class="fas fa-plus"></i> Add Category
-        </button>
-    </div>
-    
-    <!-- Search Results Dropdown (for filtered categories) -->
-    <div id="categorySearchResults" style="
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 2px solid var(--secondary-color);
-        border-radius: var(--border-radius);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        z-index: 1000;
-        display: none;
-        max-height: 300px;
-        overflow-y: auto;
-        margin-top: 5px;
-    ">
-        <div id="categorySearchList" style="padding: 10px;">
-            <!-- Filtered results will be populated here -->
-        </div>
-    </div>
-</div>
+            <!-- Category Selection -->
+            <div class="category-dropdown-container" style="position: relative; margin-bottom: 20px;">
+                <label for="categorySearchInput" style="display: block; font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 14px;">
+                    <i class="fas fa-search"></i> Search or Add New Category:
+                </label>
+                
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <!-- Search Input -->
+                    <div style="flex: 1; position: relative;">
+                        <input type="text" 
+                               id="categorySearchInput" 
+                               placeholder="Type to search categories or click to browse all..." 
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: var(--border-radius); background-color: white; color: var(--primary-color); font-weight: 500; transition: var(--transition); font-size: 13px; line-height: 1.3; height: auto; min-height: 45px;" 
+                               onkeyup="filterCategories()" 
+                               onkeydown="handleCategoryKeydown(event)" 
+                               onfocus="showAllCategoriesOnFocus()" 
+                               onclick="showAllCategoriesOnFocus()">
+                    </div>
+                    
+                    <!-- Add Category Button -->
+                    <button type="button" 
+                            id="addCategoryBtn" 
+                            style="background-color: var(--success-color); color: white; border: none; padding: 12px 20px; border-radius: var(--border-radius); cursor: pointer; font-weight: 500; transition: var(--transition); white-space: nowrap; min-height: 45px;" 
+                            onclick="addSelectedCategory()">
+                        <i class="fas fa-plus"></i> Add Category
+                    </button>
+                </div>
+                
+                <!-- Search Results Dropdown -->
+                <div id="categorySearchResults" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid var(--secondary-color); border-radius: var(--border-radius); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); z-index: 1000; display: none; max-height: 300px; overflow-y: auto; margin-top: 5px;">
+                    <div id="categorySearchList" style="padding: 10px;">
+                        <!-- Categories will be populated here -->
+                    </div>
+                </div>
+            </div>
 
             <!-- Selected Categories Display -->
             <div id="selectedCategoriesContainer" style="margin-top: 20px;">
                 <h5 style="margin: 0 0 15px 0; color: var(--primary-color); font-size: 14px;">
                     <i class="fas fa-list-check"></i> Selected Training Categories:
                 </h5>
-                <div id="selectedCategoriesList" style="
-                    min-height: 60px;
-                    padding: 15px;
-                    background-color: rgba(255, 255, 255, 0.8);
-                    border-radius: 8px;
-                    border: 1px dashed #ddd;
-                ">
-                    <div class="no-categories-message" style="
-                        text-align: center;
-                        color: #666;
-                        font-style: italic;
-                        padding: 20px;
-                    ">
-                        <i class="fas fa-info-circle"></i> No training categories selected yet. Use the dropdown above to add categories.
+                <div id="selectedCategoriesList" style="min-height: 60px; padding: 15px; background-color: rgba(255, 255, 255, 0.8); border-radius: 8px; border: 1px dashed #ddd;">
+                    <div class="no-categories-message" style="text-align: center; color: #666; font-style: italic; padding: 20px;">
+                        <i class="fas fa-info-circle"></i> No training categories selected yet. Use the search above to add categories.
                     </div>
                 </div>
             </div>
 
             <!-- Training Remarks Section -->
             <div style="margin-top: 20px;">
-                <label for="trainingRemarks" style="
-                    display: block;
-                    font-weight: 600;
-                    color: var(--primary-color);
-                    margin-bottom: 8px;
-                    font-size: 14px;
-                ">
+                <label for="trainingRemarks" style="display: block; font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 14px;">
                     <i class="fas fa-comment"></i> Training Remarks & Development Goals:
                 </label>
-                <textarea id="trainingRemarks" name="trainingRemarks" style="
-                    width: 100%;
-                    min-height: 100px;
-                    padding: 12px;
-                    border: 2px solid #ddd;
-                    border-radius: var(--border-radius);
-                    background-color: white;
-                    color: var(--primary-color);
-                    font-weight: 400;
-                    transition: var(--transition);
-                    font-size: 13px;
-                    line-height: 1.4;
-                    resize: vertical;
-                " placeholder="Describe your training goals, preferred learning methods, timeline expectations, and how these categories align with your career development plan..."></textarea>
+                <textarea id="trainingRemarks" 
+                          name="trainingRemarks" 
+                          style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #ddd; border-radius: var(--border-radius); background-color: white; color: var(--primary-color); font-weight: 400; transition: var(--transition); font-size: 13px; line-height: 1.4; resize: vertical;" 
+                          placeholder="Describe your training goals, preferred learning methods, timeline expectations, and how these categories align with your career development plan..."></textarea>
                 <div class="char-counter" style="text-align: right; font-size: 12px; color: #666; margin-top: 5px;">
                     <span id="trainingRemarksCount">0</span> characters
                 </div>
@@ -2993,7 +2890,6 @@ async function initializeTrainingCategories() {
         showCategoryError('Failed to initialize training categories');
     }
 }
-
 // Load available training categories for user's department
 async function loadTrainingCategories() {
     try {
@@ -3011,8 +2907,9 @@ async function loadTrainingCategories() {
             
             console.log('Loaded training categories:', availableCategories);
             
-            // Populate the dropdown
-            populateCategoryDropdown();
+            // NEW: Show all categories initially
+            showAllCategoriesInitially();
+            
         } else {
             throw new Error(result.message || 'Failed to load training categories');
         }
@@ -3022,118 +2919,39 @@ async function loadTrainingCategories() {
     }
 }
 
-// Populate the// Populate the category dropdown
-function populateCategoryDropdown() {
-    const categorySelect = document.getElementById('trainingCategorySelect');
-    
-    if (!categorySelect) {
-        console.error('Category select element not found');
-        return;
-    }
-    
-    // Clear existing options except the first one
-    categorySelect.innerHTML = '<option value="">-- Select a Training Category --</option>';
-    
-    // Add available categories
-    availableCategories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category.trainingCategoriesId;
-        option.textContent = category.category;
-        option.setAttribute('data-category-name', category.category);
-        categorySelect.appendChild(option);
-    });
-    
-    console.log(`Populated dropdown with ${availableCategories.length} categories`);
-}
-
-// Handle category selection from dropdown
-function handleCategorySelection(selectElement) {
-    const selectedValue = selectElement.value;
-    const selectedOption = selectElement.options[selectElement.selectedIndex];
-    
-    if (!selectedValue) return;
-    
-    const categoryName = selectedOption.getAttribute('data-category-name') || selectedOption.textContent;
-    
-    // Check if category is already selected
-    if (selectedCategories.find(cat => cat.id === selectedValue)) {
-        showCategoryNotification('Category already selected', 'warning');
-        selectElement.value = '';
-        return;
-    }
-    
-    console.log('Category selected from dropdown:', categoryName);
-}
-
-// Toggle between dropdown and search input
-function toggleCategorySearch() {
-    const categorySelect = document.getElementById('trainingCategorySelect');
-    const searchInput = document.getElementById('categorySearchInput');
-    const toggleBtn = document.getElementById('toggleSearchBtn');
-    const searchResults = document.getElementById('categorySearchResults');
-    
-    if (!isSearchMode) {
-        // Switch to search mode
-        categorySelect.style.display = 'none';
-        searchInput.style.display = 'block';
-        searchInput.focus();
-        toggleBtn.innerHTML = '<i class="fas fa-list"></i> Dropdown';
-        isSearchMode = true;
-        
-        // Populate search input with current selection if any
-        if (categorySelect.value) {
-            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-            searchInput.value = selectedOption.textContent;
-        }
-    } else {
-        // Switch back to dropdown mode
-        searchInput.style.display = 'none';
-        categorySelect.style.display = 'block';
-        searchResults.style.display = 'none';
-        toggleBtn.innerHTML = '<i class="fas fa-search"></i> Search';
-        isSearchMode = false;
-        
-        // Clear search
-        searchInput.value = '';
-    }
-}
-// Enhanced function to filter categories based on search input with word-by-word search
-function filterCategories() {
-    const searchInput = document.getElementById('categorySearchInput');
+// NEW: Function to show all available categories initially
+function showAllCategoriesInitially() {
     const searchResults = document.getElementById('categorySearchResults');
     const searchList = document.getElementById('categorySearchList');
     
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    
-    if (searchTerm.length === 0) {
-        searchResults.style.display = 'none';
+    if (!searchResults || !searchList) {
+        console.error('Search results containers not found');
         return;
     }
     
-    // Split search term into individual words for better matching
-    const searchWords = searchTerm.split(' ').filter(word => word.length > 0);
+    if (availableCategories.length === 0) {
+        searchList.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #666;">
+                <i class="fas fa-info-circle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                <div style="font-weight: 500; margin-bottom: 5px;">No categories available</div>
+                <div style="font-size: 12px;">Start typing to create a new category</div>
+            </div>
+        `;
+        return;
+    }
     
-    // Filter existing categories with word-by-word matching
-    const filteredCategories = availableCategories.filter(category => {
-        const categoryText = category.category.toLowerCase();
-        
-        // Check if ALL search words are found in the category text
-        return searchWords.every(word => categoryText.includes(word));
-    });
-    
-    // Generate search results HTML
     let resultsHTML = '';
     
-    // Add filtered existing categories
-    filteredCategories.forEach(category => {
+    // Show header with total count
+    resultsHTML += `
+        <div style="padding: 8px 12px; background-color: #f8f9fa; border-bottom: 1px solid #e9ecef; font-size: 12px; color: #6c757d; position: sticky; top: 0; z-index: 1;">
+            <i class="fas fa-tags"></i> ${availableCategories.length} available categor${availableCategories.length === 1 ? 'y' : 'ies'} - scroll to browse
+        </div>
+    `;
+    
+    // Add all available categories
+    availableCategories.forEach(category => {
         const isSelected = selectedCategories.find(cat => cat.id === category.trainingCategoriesId.toString());
-        
-        // Highlight matching words in the category name
-        let highlightedName = category.category;
-        searchWords.forEach(word => {
-            const regex = new RegExp(`(${word})`, 'gi');
-            highlightedName = highlightedName.replace(regex, '<mark style="background-color: yellow; padding: 1px 2px;">$1</mark>');
-        });
         
         resultsHTML += `
             <div class="search-result-item ${isSelected ? 'disabled' : ''}" 
@@ -3156,7 +2974,7 @@ function filterCategories() {
                 
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-tag" style="color: var(--primary-color);"></i>
-                    <span style="flex: 1; font-weight: 500;">${highlightedName}</span>
+                    <span style="flex: 1; font-weight: 500;">${category.category}</span>
                     ${isSelected ? '<span style="color: #666; font-size: 12px;"><i class="fas fa-check"></i> Selected</span>' : ''}
                 </div>
                 
@@ -3165,68 +2983,9 @@ function filterCategories() {
         `;
     });
     
-    // Add option to create new category if no exact match and search term is valid
-    const exactMatch = filteredCategories.find(cat => 
-        cat.category.toLowerCase() === searchTerm.toLowerCase()
-    );
+    searchList.innerHTML = resultsHTML;
     
-    if (!exactMatch && searchTerm.length >= 2) {
-        resultsHTML += `
-            <div class="search-result-item new-category" 
-                 data-new-category="${searchTerm}"
-                 onclick="selectNewCategoryFromSearch(this)"
-                 style="
-                     padding: 12px;
-                     cursor: pointer;
-                     border-radius: 6px;
-                     margin-bottom: 8px;
-                     background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
-                     border: 2px solid #4CAF50;
-                     transition: all 0.2s ease;
-                     position: relative;
-                 "
-                 onmouseover="this.style.background='linear-gradient(135deg, #d4edda, #e8f5e8)'; this.style.borderColor='#28a745'"
-                 onmouseout="this.style.background='linear-gradient(135deg, #e8f5e8, #f0f8f0)'; this.style.borderColor='#4CAF50'">
-                
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-plus-circle" style="color: #4CAF50; font-size: 16px;"></i>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 600; color: #2e7d32;">Create new category:</div>
-                        <div style="font-size: 14px; color: #4CAF50; margin-top: 2px;">"<strong>${searchTerm}</strong>"</div>
-                    </div>
-                    <i class="fas fa-arrow-right" style="color: #4CAF50; font-size: 12px;"></i>
-                </div>
-                
-                <div style="font-size: 10px; color: #666; margin-top: 6px; padding-left: 26px;">
-                    <i class="fas fa-info-circle"></i> This will be added to your department's training categories
-                </div>
-            </div>
-        `;
-    }
-    
-    // Show results count
-    let countMessage = '';
-    if (filteredCategories.length > 0) {
-        countMessage = `
-            <div style="padding: 8px 12px; background-color: #f8f9fa; border-bottom: 1px solid #e9ecef; font-size: 12px; color: #6c757d;">
-                <i class="fas fa-search"></i> Found ${filteredCategories.length} matching categor${filteredCategories.length === 1 ? 'y' : 'ies'}
-            </div>
-        `;
-    }
-    
-    if (resultsHTML) {
-        searchList.innerHTML = countMessage + resultsHTML;
-        searchResults.style.display = 'block';
-    } else {
-        searchList.innerHTML = `
-            <div style="padding: 20px; text-align: center; color: #666;">
-                <i class="fas fa-search" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
-                <div style="font-weight: 500; margin-bottom: 5px;">No categories found</div>
-                <div style="font-size: 12px;">Try different keywords or create a new category</div>
-            </div>
-        `;
-        searchResults.style.display = 'block';
-    }
+    console.log(`Initially showing all ${availableCategories.length} categories`);
 }
 
 function handleCategoryKeydown(event) {
@@ -3321,17 +3080,8 @@ function selectCategoryFromSearch(element) {
     const categoryId = element.getAttribute('data-category-id');
     const categoryName = element.getAttribute('data-category-name');
     
-    selectExistingCategory(categoryId, categoryName);
-}
-
-// Select new category from search results
-function selectNewCategoryFromSearch(element) {
-    const categoryName = element.getAttribute('data-new-category');
-    createAndSelectNewCategory(categoryName);
-}
-
-// Select an existing category
-function selectExistingCategory(categoryId, categoryName) {
+    console.log('Selecting category from search:', categoryId, categoryName);
+    
     // Check if already selected
     if (selectedCategories.find(cat => cat.id === categoryId)) {
         showCategoryNotification('Category already selected', 'warning');
@@ -3345,6 +3095,104 @@ function selectExistingCategory(categoryId, categoryName) {
         isNew: false
     });
     
+    console.log('Updated selectedCategories:', selectedCategories);
+    
+    // Update display
+    updateSelectedCategoriesDisplay();
+    
+    // Clear search
+    clearCategorySelection();
+    
+    // Show success message
+    showCategoryNotification(`Added category: ${categoryName}`, 'success');
+}
+
+
+// FIXED: Function to select new category from search results
+function selectNewCategoryFromSearch(element) {
+    const categoryName = element.getAttribute('data-new-category');
+    createAndSelectNewCategory(categoryName);
+}
+
+// FIXED: Enhanced function to create and select a new category
+async function createAndSelectNewCategory(categoryName) {
+    if (!categoryName || !userDepartmentId) {
+        showCategoryNotification('Invalid category name or department', 'error');
+        return;
+    }
+    
+    const cleanedCategoryName = categoryName.trim().replace(/\s+/g, ' ');
+    
+    try {
+        console.log('Creating new category:', cleanedCategoryName);
+        
+        const response = await fetch('/linemanager/training-categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                category: cleanedCategoryName,
+                departmentId: userDepartmentId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('Successfully created category:', result.category);
+            
+            // Add to available categories
+            availableCategories.push(result.category);
+            
+            // Add to selected categories
+            selectedCategories.push({
+                id: result.category.trainingCategoriesId.toString(),
+                name: result.category.category,
+                isNew: true
+            });
+            
+            console.log('Updated selectedCategories after creation:', selectedCategories);
+            
+            // Update display
+            updateSelectedCategoriesDisplay();
+            
+            // Clear selection
+            clearCategorySelection();
+            
+            showCategoryNotification(`Successfully created and added: "${cleanedCategoryName}"`, 'success');
+        } else {
+            throw new Error(result.message || 'Failed to create category');
+        }
+    } catch (error) {
+        console.error('Error creating new category:', error);
+        showCategoryNotification('Failed to create new category: ' + error.message, 'error');
+    }
+}
+
+
+// Select an existing category
+function selectExistingCategory(categoryId, categoryName) {
+    console.log("Selecting existing category:", categoryId, categoryName);
+    
+    // Check if already selected
+    if (selectedCategories.find(cat => cat.id === categoryId.toString())) {
+        showCategoryNotification('Category already selected', 'warning');
+        return;
+    }
+    
+    // Add to selected categories with proper structure
+    const newCategory = {
+        id: categoryId.toString(),
+        name: categoryName,
+        category: categoryName, // Add category field for DB matching
+        isNew: false
+    };
+    
+    selectedCategories.push(newCategory);
+    
+    console.log("Updated selectedCategories:", selectedCategories);
+    
     // Update display
     updateSelectedCategoriesDisplay();
     
@@ -3353,10 +3201,8 @@ function selectExistingCategory(categoryId, categoryName) {
     
     // Show success message
     showCategoryNotification(`Added category: ${categoryName}`, 'success');
-    
-    console.log('Selected existing category:', categoryName);
 }
-// Enhanced function to create and select a new category with improved UX
+
 async function createAndSelectNewCategory(categoryName) {
     if (!categoryName || !userDepartmentId) {
         showCategoryNotification('Invalid category name or department', 'error');
@@ -3369,16 +3215,13 @@ async function createAndSelectNewCategory(categoryName) {
         return;
     }
     
-    if (categoryName.length > 100) {
-        showCategoryNotification('Category name must be less than 100 characters', 'warning');
-        return;
-    }
-    
     // Clean up the category name
     const cleanedCategoryName = categoryName.trim().replace(/\s+/g, ' ');
     
     try {
-        // Show enhanced loading state
+        console.log("Creating new category:", cleanedCategoryName, "for department:", userDepartmentId);
+        
+        // Show loading state
         const addBtn = document.getElementById('addCategoryBtn');
         const searchInput = document.getElementById('categorySearchInput');
         
@@ -3386,14 +3229,6 @@ async function createAndSelectNewCategory(categoryName) {
             addBtn.disabled = true;
             addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
         }
-        
-        if (searchInput) {
-            searchInput.disabled = true;
-            searchInput.style.backgroundColor = '#f8f9fa';
-        }
-        
-        // Show loading notification
-        showCategoryNotification(`Creating category: "${cleanedCategoryName}"...`, 'info');
         
         // Create new category on server
         const response = await fetch('/linemanager/training-categories', {
@@ -3410,108 +3245,89 @@ async function createAndSelectNewCategory(categoryName) {
         const result = await response.json();
         
         if (result.success) {
+            console.log("Successfully created category:", result.category);
+            
             // Add to available categories
             availableCategories.push(result.category);
             
-            // Add to selected categories
-            selectedCategories.push({
+            // Add to selected categories with proper structure
+            const newCategory = {
                 id: result.category.trainingCategoriesId.toString(),
                 name: result.category.category,
+                category: result.category.category, // Add category field for DB matching
                 isNew: true
-            });
+            };
+            
+            selectedCategories.push(newCategory);
+            
+            console.log("Updated selectedCategories after creation:", selectedCategories);
             
             // Update displays
-            populateCategoryDropdown();
             updateSelectedCategoriesDisplay();
             
             // Clear selection
             clearCategorySelection();
             
-            // Show enhanced success message
+            // Show success message
             showCategoryNotification(
                 `✨ Successfully created and added: "${cleanedCategoryName}"`, 
                 'success'
             );
-            
-            console.log('Created new category:', result.category);
         } else {
             throw new Error(result.message || 'Failed to create category');
         }
     } catch (error) {
         console.error('Error creating new category:', error);
-        
-        let errorMessage = 'Failed to create new category';
-        if (error.message.includes('already exists')) {
-            errorMessage = 'A category with this name already exists';
-        } else if (error.message.includes('network')) {
-            errorMessage = 'Network error. Please check your connection and try again';
-        } else {
-            errorMessage += ': ' + error.message;
-        }
-        
-        showCategoryNotification(errorMessage, 'error');
+        showCategoryNotification('Failed to create new category: ' + error.message, 'error');
     } finally {
         // Reset UI state
         const addBtn = document.getElementById('addCategoryBtn');
-        const searchInput = document.getElementById('categorySearchInput');
         
         if (addBtn) {
             addBtn.disabled = false;
             addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Category';
         }
-        
-        if (searchInput) {
-            searchInput.disabled = false;
-            searchInput.style.backgroundColor = 'white';
-        }
-    }
-}
-// Add selected category (from dropdown or search)
-function addSelectedCategory() {
-    if (isSearchMode) {
-        const searchInput = document.getElementById('categorySearchInput');
-        const searchTerm = searchInput.value.trim();
-        
-        if (!searchTerm) {
-            showCategoryNotification('Please enter a category name', 'warning');
-            return;
-        }
-        
-        // Try to find exact match first
-        const exactMatch = availableCategories.find(cat => 
-            cat.category.toLowerCase() === searchTerm.toLowerCase()
-        );
-        
-        if (exactMatch) {
-            selectExistingCategory(exactMatch.trainingCategoriesId, exactMatch.category);
-        } else {
-            createAndSelectNewCategory(searchTerm);
-        }
-    } else {
-        const categorySelect = document.getElementById('trainingCategorySelect');
-        const selectedValue = categorySelect.value;
-        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-        
-        if (!selectedValue) {
-            showCategoryNotification('Please select a category first', 'warning');
-            return;
-        }
-        
-        const categoryName = selectedOption.getAttribute('data-category-name') || selectedOption.textContent;
-        selectExistingCategory(selectedValue, categoryName);
     }
 }
 
+
+function addSelectedCategory() {
+    const searchInput = document.getElementById('categorySearchInput');
+    const searchTerm = searchInput.value.trim();
+    
+    if (!searchTerm) {
+        showCategoryNotification('Please enter a category name', 'warning');
+        return;
+    }
+    
+    console.log("Adding category:", searchTerm);
+    
+    // Try to find exact match first
+    const exactMatch = availableCategories.find(cat => 
+        cat.category.toLowerCase() === searchTerm.toLowerCase()
+    );
+    
+    if (exactMatch) {
+        console.log("Found existing category:", exactMatch);
+        selectExistingCategory(exactMatch.trainingCategoriesId.toString(), exactMatch.category);
+    } else {
+        console.log("Creating new category:", searchTerm);
+        createAndSelectNewCategory(searchTerm);
+    }
+}
+
+
 // Clear category selection
 function clearCategorySelection() {
-    const categorySelect = document.getElementById('trainingCategorySelect');
+    // REMOVED: categorySelect dropdown clearing - no longer needed
     const searchInput = document.getElementById('categorySearchInput');
     const searchResults = document.getElementById('categorySearchResults');
     
-    if (categorySelect) categorySelect.value = '';
     if (searchInput) searchInput.value = '';
     if (searchResults) searchResults.style.display = 'none';
 }
+
+
 // Update selected categories display
 function updateSelectedCategoriesDisplay() {
     const container = document.getElementById('selectedCategoriesList');
@@ -3591,15 +3407,18 @@ function updateSelectedCategoriesDisplay() {
 
 // Remove selected category
 function removeSelectedCategory(categoryId) {
+    console.log("Removing category with ID:", categoryId);
+    
+    const beforeCount = selectedCategories.length;
     selectedCategories = selectedCategories.filter(cat => cat.id !== categoryId);
+    const afterCount = selectedCategories.length;
+    
+    console.log(`Removed category. Before: ${beforeCount}, After: ${afterCount}`);
+    console.log("Updated selectedCategories:", selectedCategories);
+    
     updateSelectedCategoriesDisplay();
     
-    const removedCategory = selectedCategories.find(cat => cat.id === categoryId);
-    if (removedCategory) {
-        showCategoryNotification(`Removed category: ${removedCategory.name}`, 'info');
-    }
-    
-    console.log('Removed category with ID:', categoryId);
+    showCategoryNotification('Category removed', 'info');
 }
 
 // Load existing selected categories (for edit/view mode)
@@ -3632,6 +3451,21 @@ async function loadExistingSelectedCategories() {
     }
 }
 
+// NEW: Function to show all categories when input is focused/clicked
+function showAllCategoriesOnFocus() {
+    const searchInput = document.getElementById('categorySearchInput');
+    const searchResults = document.getElementById('categorySearchResults');
+    
+    // If input is empty, show all categories
+    if (!searchInput.value.trim()) {
+        showAllCategoriesInitially();
+        searchResults.style.display = 'block';
+    } else {
+        // If there's text, filter normally
+        filterCategories();
+    }
+}
+
 // Setup event listeners for training categories
 function setupCategoryEventListeners() {
     // Training remarks character counter
@@ -3642,7 +3476,7 @@ function setupCategoryEventListeners() {
         });
     }
     
-    // Click outside to close search results
+    // Enhanced click outside to close search results
     document.addEventListener('click', function(event) {
         const searchResults = document.getElementById('categorySearchResults');
         const searchContainer = document.querySelector('.category-dropdown-container');
@@ -3774,40 +3608,32 @@ function showCategoryError(message) {
 
 // Get selected categories for form submission
 function getSelectedCategoriesForSubmission() {
-    return selectedCategories.map(category => ({
-        id: category.id,
-        name: category.name,
-        isNew: category.isNew
-    }));
+    console.log('Getting selected categories for submission. Current selectedCategories:', selectedCategories);
+    
+    if (!selectedCategories || selectedCategories.length === 0) {
+        console.log('No categories selected');
+        return [];
+    }
+    
+    // Return array of category names
+    const categoryNames = selectedCategories.map(category => category.name).filter(name => name && name.trim() !== '');
+    
+    console.log('Returning category names:', categoryNames);
+    return categoryNames;
 }
 
 // Set training categories to view-only mode
 function setTrainingCategoriesViewOnly(isViewOnly) {
-    const categorySelect = document.getElementById('trainingCategorySelect');
     const searchInput = document.getElementById('categorySearchInput');
-    const toggleBtn = document.getElementById('toggleSearchBtn');
     const addBtn = document.getElementById('addCategoryBtn');
-    const remarksField = document.getElementById('trainingRemarks');
     const container = document.querySelector('.training-selection-container');
     
     if (isViewOnly) {
         // Disable all interactive elements
-        if (categorySelect) {
-            categorySelect.disabled = true;
-            categorySelect.style.backgroundColor = '#f5f5f5';
-            categorySelect.style.cursor = 'not-allowed';
-        }
-        
         if (searchInput) {
             searchInput.disabled = true;
             searchInput.style.backgroundColor = '#f5f5f5';
             searchInput.style.cursor = 'not-allowed';
-        }
-        
-        if (toggleBtn) {
-            toggleBtn.disabled = true;
-            toggleBtn.style.backgroundColor = '#ccc';
-            toggleBtn.style.cursor = 'not-allowed';
         }
         
         if (addBtn) {
@@ -3817,37 +3643,19 @@ function setTrainingCategoriesViewOnly(isViewOnly) {
             addBtn.innerHTML = '<i class="fas fa-lock"></i> View Only';
         }
         
-        if (remarksField) {
-            remarksField.disabled = true;
-            remarksField.style.backgroundColor = '#f5f5f5';
-            remarksField.style.cursor = 'not-allowed';
-        }
-        
         // Update header
         const header = container?.querySelector('h4');
         if (header) {
-            header.innerHTML = '<i class="fas fa-briefcase"></i> Selected Training Categories (View Only)';
+            header.innerHTML = '<i class="fas fa-tag"></i> Selected Training Categories (View Only)';
         }
         
         console.log('Training categories set to view-only mode');
     } else {
         // Enable all interactive elements
-        if (categorySelect) {
-            categorySelect.disabled = false;
-            categorySelect.style.backgroundColor = 'white';
-            categorySelect.style.cursor = 'pointer';
-        }
-        
         if (searchInput) {
             searchInput.disabled = false;
             searchInput.style.backgroundColor = 'white';
             searchInput.style.cursor = 'text';
-        }
-        
-        if (toggleBtn) {
-            toggleBtn.disabled = false;
-            toggleBtn.style.backgroundColor = 'var(--secondary-color)';
-            toggleBtn.style.cursor = 'pointer';
         }
         
         if (addBtn) {
@@ -3857,26 +3665,139 @@ function setTrainingCategoriesViewOnly(isViewOnly) {
             addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Category';
         }
         
-        if (remarksField) {
-            remarksField.disabled = false;
-            remarksField.style.backgroundColor = 'white';
-            remarksField.style.cursor = 'text';
-        }
-        
         // Reset header
         const header = container?.querySelector('h4');
         if (header) {
-            header.innerHTML = '<i class="fas fa-search"></i> Select and Add Training Categories';
+            header.innerHTML = '<i class="fas fa-search"></i> Search or Add New Category';
         }
         
         console.log('Training categories set to edit mode');
     }
 }
 
+
+// FIXED: Enhanced function to filter categories based on search input
+function filterCategories() {
+    const searchInput = document.getElementById('categorySearchInput');
+    const searchResults = document.getElementById('categorySearchResults');
+    const searchList = document.getElementById('categorySearchList');
+    
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    
+    // If search is empty, show all categories
+    if (searchTerm.length === 0) {
+        showAllCategoriesInitially();
+        searchResults.style.display = 'block';
+        return;
+    }
+    
+    // Split search term into individual words for better matching
+    const searchWords = searchTerm.split(' ').filter(word => word.length > 0);
+    
+    // Filter existing categories with word-by-word matching
+    const filteredCategories = availableCategories.filter(category => {
+        const categoryText = category.category.toLowerCase();
+        
+        // Check if ALL search words are found in the category text
+        return searchWords.every(word => categoryText.includes(word));
+    });
+    
+    // Generate search results HTML
+    let resultsHTML = '';
+    
+    // Add filtered existing categories
+    filteredCategories.forEach(category => {
+        const isSelected = selectedCategories.find(cat => cat.id === category.trainingCategoriesId.toString());
+        
+        // Highlight matching words in the category name
+        let highlightedName = category.category;
+        searchWords.forEach(word => {
+            const regex = new RegExp(`(${word})`, 'gi');
+            highlightedName = highlightedName.replace(regex, '<mark style="background-color: yellow; padding: 1px 2px;">$1</mark>');
+        });
+        
+        resultsHTML += `
+            <div class="search-result-item ${isSelected ? 'disabled' : ''}" 
+                 data-category-id="${category.trainingCategoriesId}"
+                 data-category-name="${category.category}"
+                 onclick="selectCategoryFromSearch(this)"
+                 style="
+                     padding: 12px;
+                     cursor: ${isSelected ? 'not-allowed' : 'pointer'};
+                     border-radius: 6px;
+                     margin-bottom: 8px;
+                     background-color: ${isSelected ? '#f5f5f5' : 'white'};
+                     border: 1px solid ${isSelected ? '#ddd' : '#e1e5eb'};
+                     opacity: ${isSelected ? '0.6' : '1'};
+                     transition: all 0.2s ease;
+                     position: relative;
+                 "
+                 onmouseover="if(!this.classList.contains('disabled')) this.style.backgroundColor='#f0f8ff'; this.style.borderColor='var(--secondary-color)'"
+                 onmouseout="if(!this.classList.contains('disabled')) this.style.backgroundColor='white'; this.style.borderColor='#e1e5eb'">
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-tag" style="color: var(--primary-color);"></i>
+                    <span style="flex: 1; font-weight: 500;">${highlightedName}</span>
+                    ${isSelected ? '<span style="color: #666; font-size: 12px;"><i class="fas fa-check"></i> Selected</span>' : ''}
+                </div>
+                
+                ${!isSelected ? '<div style="font-size: 11px; color: #666; margin-top: 4px;"><i class="fas fa-mouse-pointer"></i> Click to select</div>' : ''}
+            </div>
+        `;
+    });
+    
+    // Add option to create new category if no exact match and search term is valid
+    const exactMatch = filteredCategories.find(cat => 
+        cat.category.toLowerCase() === searchTerm.toLowerCase()
+    );
+    
+    if (!exactMatch && searchTerm.length >= 2) {
+        resultsHTML += `
+            <div class="search-result-item new-category" 
+                 data-new-category="${searchTerm}"
+                 onclick="selectNewCategoryFromSearch(this)"
+                 style="
+                     padding: 12px;
+                     cursor: pointer;
+                     border-radius: 6px;
+                     margin-bottom: 8px;
+                     background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+                     border: 2px solid #4CAF50;
+                     transition: all 0.2s ease;
+                     position: relative;
+                 "
+                 onmouseover="this.style.background='linear-gradient(135deg, #d4edda, #e8f5e8)'; this.style.borderColor='#28a745'"
+                 onmouseout="this.style.background='linear-gradient(135deg, #e8f5e8, #f0f8f0)'; this.style.borderColor='#4CAF50'">
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-plus-circle" style="color: #4CAF50; font-size: 16px;"></i>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #2e7d32;">Create new category:</div>
+                        <div style="font-size: 14px; color: #4CAF50; margin-top: 2px;">"<strong>${searchTerm}</strong>"</div>
+                    </div>
+                    <i class="fas fa-arrow-right" style="color: #4CAF50; font-size: 12px;"></i>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (resultsHTML) {
+        searchList.innerHTML = resultsHTML;
+        searchResults.style.display = 'block';
+    } else {
+        searchList.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #666;">
+                <i class="fas fa-search" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                <div style="font-weight: 500; margin-bottom: 5px;">No categories found</div>
+                <div style="font-size: 12px;">Try different keywords or create a new category</div>
+            </div>
+        `;
+        searchResults.style.display = 'block';
+    }
+}
+
 // Export functions for global access
 window.initializeTrainingCategories = initializeTrainingCategories;
-window.handleCategorySelection = handleCategorySelection;
-window.toggleCategorySearch = toggleCategorySearch;
 window.filterCategories = filterCategories;
 window.handleCategoryKeydown = handleCategoryKeydown;
 window.addSelectedCategory = addSelectedCategory;
@@ -5026,35 +4947,102 @@ function getSelectedTrainingName() {
     return '';
 }
 
+function validateIDPForm(formType) {
+    const prefix = formType === 'final' ? 'final' : '';
+    
+    const requiredFields = [
+        `${prefix}ProfStrengths`, 
+        `${prefix}ProfAreasForDevelopment`, 
+        `${prefix}ProfActionsToTake`, 
+        `${prefix}LeaderStrengths`, 
+        `${prefix}LeaderAreasForDevelopment`, 
+        `${prefix}LeaderActionsToTake`, 
+        `${prefix}NextRoleShortTerm`, 
+        `${prefix}NextRoleLongTerm`, 
+        `${prefix}NextRoleMobility`
+    ];
+    
+    let isValid = true;
+    let firstInvalidField = null;
+    
+    requiredFields.forEach(fieldId => {
+        // Handle both naming conventions (with and without prefix)
+        let field = document.getElementById(fieldId);
+        
+        // If not found with prefix, try without prefix (using standard field names)
+        if (!field && prefix) {
+            const standardFieldId = fieldId.replace(prefix, '');
+            field = document.getElementById(standardFieldId.charAt(0).toLowerCase() + standardFieldId.slice(1));
+        }
+        
+        if (field) {
+            // FIXED: Ensure we're checking the actual string value, not an array
+            const fieldValue = Array.isArray(field.value) ? 
+                (field.value.find(val => val && val.trim() !== '') || '') : 
+                field.value;
+                
+            if (!fieldValue.trim()) {
+                field.classList.add("error");
+                isValid = false;
+                if (!firstInvalidField) {
+                    firstInvalidField = field;
+                }
+            } else {
+                field.classList.remove("error");
+            }
+        } else {
+            console.warn(`Field with ID ${fieldId} not found.`);
+        }
+    });
+    
+    if (!isValid) {
+        alert("Please fill all required fields.");
+        
+        // Scroll to the first invalid field
+        if (firstInvalidField) {
+            firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalidField.focus();
+        }
+    }
+    
+    return isValid;
+}
+
+
 // Fixed function to submit Mid-Year IDP form with training categories
+
 async function submitMidYearIDPFormWithTrainingCategories(event) {
     event.preventDefault();
     
     console.log("Submitting Mid-Year IDP form with training categories...");
+    console.log("Current selectedCategories:", selectedCategories);
     
     // Validate the form
     if (!validateIDPForm('mid')) {
         return;
     }
     
-    // Get form data including selected training categories
+    // Get selected training categories
+    const trainingCategories = getSelectedCategoriesForSubmission();
+    console.log("Training categories for submission:", trainingCategories);
+    
+    // Get form data
     const formData = {
-        profStrengths: document.getElementById("profStrengths").value,
-        profAreasForDevelopment: document.getElementById("profAreasForDevelopment").value,
-        profActionsToTake: document.getElementById("profActionsToTake").value,
-        leaderStrengths: document.getElementById("leaderStrengths").value,
-        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment").value,
-        leaderActionsToTake: document.getElementById("leaderActionsToTake").value,
-        nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value,
-        nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value,
-        nextRoleMobility: document.getElementById("nextRoleMobility").value,
-        trainingCategories: getSelectedCategoriesForSubmission(), // Training categories instead of trainings
-        trainingRemarks: document.getElementById("trainingRemarks")?.value || "", // Training remarks
-        year: new Date().getFullYear() // Current year
+        profStrengths: document.getElementById("profStrengths").value.trim(),
+        profAreasForDevelopment: document.getElementById("profAreasForDevelopment").value.trim(),
+        profActionsToTake: document.getElementById("profActionsToTake").value.trim(),
+        leaderStrengths: document.getElementById("leaderStrengths").value.trim(),
+        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment").value.trim(),
+        leaderActionsToTake: document.getElementById("leaderActionsToTake").value.trim(),
+        nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value.trim(),
+        nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value.trim(),
+        nextRoleMobility: document.getElementById("nextRoleMobility").value.trim(),
+        trainingCategories: trainingCategories,
+        trainingRemarks: document.getElementById("trainingRemarks")?.value.trim() || "",
+        year: new Date().getFullYear()
     };
     
-    console.log("Form data with training categories:", formData);
-    console.log("Selected categories count:", selectedCategories?.length || 0);
+    console.log("Final form data:", formData);
     
     // Disable the submit button and show loading state
     const submitButton = document.getElementById("submitMidYearIDP");
@@ -5064,7 +5052,6 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
     }
     
     try {
-        // Submit the form using AJAX
         const response = await fetch(`/linemanager/midyear-idp/${userId}`, {
             method: "POST",
             headers: {
@@ -5082,24 +5069,11 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         
         if (result.success) {
             let successMessage = "Mid-Year IDP saved successfully!";
-            
-            // Show selected categories in success message
-            if (selectedCategories && selectedCategories.length > 0) {
-                successMessage += `\n\nSelected ${selectedCategories.length} training categor${selectedCategories.length === 1 ? 'y' : 'ies'}:`;
-                selectedCategories.forEach(category => {
-                    successMessage += `\n• ${category.name}`;
-                    if (category.isNew) {
-                        successMessage += ` (newly created)`;
-                    }
+            if (trainingCategories.length > 0) {
+                successMessage += `\n\nSelected ${trainingCategories.length} training categor${trainingCategories.length === 1 ? 'y' : 'ies'}:`;
+                trainingCategories.forEach(category => {
+                    successMessage += `\n• ${category}`;
                 });
-            }
-            
-            // Show training remarks if provided
-            if (formData.trainingRemarks) {
-                const remarksPreview = formData.trainingRemarks.length > 100 
-                    ? formData.trainingRemarks.substring(0, 100) + '...' 
-                    : formData.trainingRemarks;
-                successMessage += `\n\nTraining remarks: ${remarksPreview}`;
             }
             
             alert(successMessage);
@@ -5107,8 +5081,6 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
             // Update viewState to reflect the new status
             if (typeof viewState !== 'undefined') {
                 viewState.viewOnlyStatus.midyearidp = true;
-                
-                // Update the UI based on the new state
                 if (typeof updateStepperAccessibility === 'function') {
                     updateStepperAccessibility();
                 }
@@ -5136,7 +5108,6 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         }
     }
 }
-
 
 // Function to reset training selection
 function resetTrainingSelection() {
@@ -8693,6 +8664,49 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
     }
 }
 
+
+// FIXED: Debug function to check category selection
+function debugCategorySelection() {
+    console.log("=== CATEGORY DEBUG ===");
+    console.log("selectedCategories:", selectedCategories);
+    console.log("availableCategories:", availableCategories);
+    console.log("userDepartmentId:", userDepartmentId);
+    
+    const searchInput = document.getElementById('categorySearchInput');
+    if (searchInput) {
+        console.log("Search input value:", searchInput.value);
+    }
+    
+    const categoriesContainer = document.getElementById('selectedCategoriesList');
+    if (categoriesContainer) {
+        console.log("Categories container HTML:", categoriesContainer.innerHTML);
+    }
+    
+    console.log("Categories for submission:", getSelectedCategoriesForSubmission());
+    console.log("=== END CATEGORY DEBUG ===");
+}
+
+// Add event listener to manually test category addition
+function testCategoryAddition() {
+    console.log("Testing category addition...");
+    
+    // Simulate adding a category
+    const testCategory = {
+        id: "999",
+        name: "Test Category",
+        category: "Test Category",
+        isNew: true
+    };
+    
+    selectedCategories.push(testCategory);
+    console.log("Added test category:", selectedCategories);
+    updateSelectedCategoriesDisplay();
+    
+    // Test submission format
+    const submissionData = getSelectedCategoriesForSubmission();
+    console.log("Test submission data:", submissionData);
+}
+
 // Function to submit Final-Year IDP form
 async function submitFinalYearIDPForm(event) {
     event.preventDefault();
@@ -8772,62 +8786,52 @@ async function submitFinalYearIDPForm(event) {
         }
     }
 }
-
-// Function to validate IDP form
-function validateIDPForm(formType) {
-    const prefix = formType === 'final' ? 'final' : '';
+// Add this debug function to help identify form issues
+function debugFormData() {
+    console.log("=== FORM DEBUG ===");
     
-    const requiredFields = [
-        `${prefix}ProfStrengths`, 
-        `${prefix}ProfAreasForDevelopment`, 
-        `${prefix}ProfActionsToTake`, 
-        `${prefix}LeaderStrengths`, 
-        `${prefix}LeaderAreasForDevelopment`, 
-        `${prefix}LeaderActionsToTake`, 
-        `${prefix}NextRoleShortTerm`, 
-        `${prefix}NextRoleLongTerm`, 
-        `${prefix}NextRoleMobility`
+    // Check all form fields
+    const fields = [
+        'profStrengths',
+        'profAreasForDevelopment', 
+        'profActionsToTake',
+        'leaderStrengths',
+        'leaderAreasForDevelopment',
+        'leaderActionsToTake',
+        'nextRoleShortTerm',
+        'nextRoleLongTerm',
+        'nextRoleMobility',
+        'trainingRemarks'
     ];
     
-    let isValid = true;
-    let firstInvalidField = null;
-    
-    requiredFields.forEach(fieldId => {
-        // Handle both naming conventions (with and without prefix)
-        let field = document.getElementById(fieldId);
-        
-        // If not found with prefix, try without prefix (using standard field names)
-        if (!field && prefix) {
-            const standardFieldId = fieldId.replace(prefix, '');
-            field = document.getElementById(standardFieldId.charAt(0).toLowerCase() + standardFieldId.slice(1));
-        }
-        
-        if (field) {
-            if (!field.value.trim()) {
-                field.classList.add("error");
-                isValid = false;
-                if (!firstInvalidField) {
-                    firstInvalidField = field;
-                }
-            } else {
-                field.classList.remove("error");
-            }
+    fields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+            console.log(`${fieldId}:`, {
+                value: element.value,
+                type: typeof element.value,
+                length: element.value.length,
+                element: element
+            });
         } else {
-            console.warn(`Field with ID ${fieldId} not found.`);
+            console.error(`Field ${fieldId} not found!`);
         }
     });
     
-    if (!isValid) {
-        alert("Please fill all required fields.");
-        
-        // Scroll to the first invalid field
-        if (firstInvalidField) {
-            firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            firstInvalidField.focus();
-        }
+    // Check selected categories
+    console.log("Selected Categories:", selectedCategories);
+    console.log("Categories for submission:", getSelectedCategoriesForSubmission());
+    
+    // Check training remarks
+    const remarksField = document.getElementById('trainingRemarks');
+    if (remarksField) {
+        console.log("Training Remarks:", {
+            value: remarksField.value,
+            type: typeof remarksField.value
+        });
     }
     
-    return isValid;
+    console.log("=== END FORM DEBUG ===");
 }
 
 // Function to load Mid-Year IDP data

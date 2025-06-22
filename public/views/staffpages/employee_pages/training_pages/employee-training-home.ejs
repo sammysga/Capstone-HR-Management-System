@@ -7,9 +7,16 @@
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
         /* Import Inter font */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+          /* Import Inter font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        /* Apply Inter font globally */
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
 
          /* Main content styling */
         .main-content {
@@ -19,6 +26,7 @@
         }
 
         /* Dashboard header */
+
         .dashboard-header {
             margin-bottom: 25px;
         }
@@ -27,16 +35,18 @@
             margin-bottom: 10px;
             color: #333;
             font-size: 24px;
+            font-weight: 700;
         }
 
         .dashboard-header p {
             color: #666;
             font-size: 0.95rem;
             max-width: 800px;
+            font-weight: 400;
         }
 
         /* Action Required Alert */
-        .action-required {
+.action-required {
             background-color: #fef3c7;
             border-left: 4px solid #f59e0b;
             padding: 15px 20px;
@@ -56,8 +66,8 @@
             font-weight: 600;
         }
 
-      * Tabs styling */
-        .tabs-container {
+      /* Tabs styling */
+       .tabs-container {
             width: 100%;
             margin-bottom: 30px;
         }
@@ -83,6 +93,7 @@
             margin-right: 10px;
             display: flex;
             align-items: center;
+            font-family: 'Inter', sans-serif;
         }
 
         .tab-button i {
@@ -116,162 +127,66 @@
             to { opacity: 1; }
         }
 
+
     /* Card styling */
-        .card {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            padding: 20px;
-            margin-bottom: 25px;
-        }
-
-        .card-header {
-            margin-bottom: 15px;
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-header h3 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: #333;
-        }
-
-          /* Updated Progress categories grid - Fixed layout with side-by-side approval cards */
-        .progress-categories {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto auto;
-            gap: 20px;
+        .tabs-container {
+            width: 100%;
             margin-bottom: 30px;
         }
 
-        /* Row 1 - Approval Status Cards (Side by side, each takes half width) */
-        .progress-category.row-1 {
-            background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
-            border: 3px solid;
-            border-radius: 16px;
-            padding: 20px 30px;
-            text-align: center;
-            min-height: 100px;
-            max-height: 120px;
+        .tabs-nav {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 30px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            grid-column: span 1; /* Each takes half width */
-            cursor: pointer;
-        }
-
-        .progress-category.row-1::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: var(--accent-color);
-        }
-
-        .progress-category.row-1:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Row 1 Content Layout (Horizontal) */
-        .progress-category.row-1 .request-stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: white;
-            background: linear-gradient(135deg, var(--accent-color), var(--accent-color-dark));
-            flex-shrink: 0;
-        }
-        
-        .progress-category.row-1 .count {
-            font-size: 3rem;
-            font-weight: 700;
-            margin: 0 10px 0 0;
-            color: var(--accent-color);
-            line-height: 1;
-        }
-
-        .progress-category.row-1 .text-content {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            text-align: left;
-        }
-
-        .progress-category.row-1 h3 {
-            margin: 0 0 5px 0;
-            font-size: 1.3rem;
-            color: #334155;
-            font-weight: 700;
-        }
-
-        .progress-category.row-1 p {
+            border-bottom: 2px solid #eee;
+            list-style: none;
+            padding: 0;
             margin: 0;
-            font-size: 0.9rem;
-            color: #64748b;
-            line-height: 1.3;
         }
 
-        /* Row 2 - Training Status Cards (2x2 grid, bigger height) */
-        .progress-category.row-2 {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 25px;
-            text-align: center;
-            min-height: 160px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            transition: all 0.3s ease;
+        .tab-button {
+            padding: 12px 20px;
+            background-color: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
             cursor: pointer;
-            position: relative;
-            grid-column: span 1; /* Takes half width */
-        }
-
-        .progress-category.row-2:hover {
-            border-color: var(--accent-color);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-        }
-
-        /* Common styles for row 2 progress categories */
-        .progress-category.row-2 h3 {
-            margin: 0 0 12px 0;
-            font-size: 1.2rem;
-            color: #334155;
             font-weight: 600;
-        }
-        
-        .progress-category.row-2 .count {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--accent-color);
-            line-height: 1;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
         }
 
-        .progress-category.row-2 p {
-            margin: 0;
-            font-size: 0.9rem;
-            color: #64748b;
-            line-height: 1.4;
+        .tab-button i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .tab-button.active {
+            color: #07ACB9;
+            border-bottom: 3px solid #07ACB9;
+            background-color: #f8fdfd;
+        }
+
+        .tab-button:hover:not(.active) {
+            color: #124A5C;
+            border-bottom: 3px solid #ddd;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 25px 0;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         /* Row 1 Approval Status Colors and Icons */
@@ -306,6 +221,7 @@
 
      
         /* Courses header actions */
+        /* Courses header actions */
         .courses-header-actions {
             display: flex;
             align-items: center;
@@ -327,6 +243,7 @@
             align-items: center;
             gap: 8px;
             white-space: nowrap;
+            font-family: 'Inter', sans-serif;
         }
 
         .add-request-btn:hover {
@@ -334,470 +251,126 @@
             transform: translateY(-2px);
         }
 
+        :root {
+            --primary-color: #124A5C;
+            --secondary-color: #059ca4;
+            --success-color: #4CAF50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
 
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    padding: 20px;
-}
+        /* Modal styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
 
-.modal-overlay.show {
-    display: flex !important;
-    animation: modalFadeIn 0.3s ease-out;
-}
+        .modal-overlay.show {
+            display: flex !important;
+            opacity: 1;
+        }
 
-.modal-content {
-    background: white;
-    border-radius: 20px;
-    width: 100%;
-    max-width: 800px;
-    max-height: 95vh;
-    overflow-y: auto;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-    position: relative;
-    animation: modalSlideIn 0.3s ease-out;
-}
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 0;
+            max-width: 1200px;
+            width: 95%;
+            max-height: 95vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
 
-@keyframes modalSlideIn {
-    from { 
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
 
-.modal-header {
-    padding: 30px 30px 20px 30px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background:  #07ACB9 100%;
-    color: white;
-    border-radius: 20px 20px 0 0;
-}
+        .modal-header {
+            background: linear-gradient(135deg, #124A5C, #07ACB9);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.modal-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-}
+        .modal-header h2 {
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+        }
 
-.modal-close {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
+        .modal-body {
+            padding: 30px;
+        }
 
-.modal-close:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
-}
 
-     
-/* Form Sections */
-/* Additional styles for the new modal */
+/* Form Section Improvements */
 .form-section {
-    padding: 25px 30px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.form-section:last-child {
-    border-bottom: none;
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.section-header h3, .section-header h4 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.section-header h3 i, .section-header h4 i {
-    color: #07ACB9;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.form-label i {
-    color: #07ACB9;
-}
-
-.form-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: #07ACB9;
-    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
-}
-
-textarea.form-input {
-    resize: vertical;
-    min-height: 80px;
-}
-
-.dropdown-container {
-    position: relative;
-}
-
-.dropdown-input {
-    width: 100%;
-    padding: 12px 40px 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    background: white;
-}
-
-.dropdown-input:focus {
-    outline: none;
-    border-color: #07ACB9;
-    box-shadow: 0 0 0 3px rgba(7, 172, 185, 0.1);
-}
-
-.dropdown-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #64748b;
-    pointer-events: none;
-    transition: transform 0.2s ease;
-}
-
-.dropdown-container.open .dropdown-icon {
-    transform: translateY(-50%) rotate(180deg);
-}
-
-.dropdown-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    display: none;
-    max-height: 250px;
-    overflow-y: auto;
-}
-
-.dropdown-container.open .dropdown-list {
-    display: block;
-}
-
-.dropdown-item {
-    padding: 15px 20px;
-    cursor: pointer;
-    border-bottom: 1px solid #f1f5f9;
-    transition: all 0.2s ease;
-}
-
-.dropdown-item:last-child {
-    border-bottom: none;
-}
-
-.dropdown-item:hover {
-    background: #f8fafc;
-}
-
-.dropdown-item-title {
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.dropdown-item-meta {
-    font-size: 12px;
-    color: #64748b;
-}
-
-.loading, .no-results {
+    margin-bottom: 25px;
     padding: 20px;
-    text-align: center;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    border: 1px solid #e1e5eb;
+    border-radius: 12px;
+    background-color: #f9f9f9;
 }
 
-.training-categories-section {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #f1f5f9;
-}
-
-.categories-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    min-height: 50px;
-    border: 2px dashed #e2e8f0;
-    border-radius: 8px;
-    padding: 15px;
-    background: #f8fafc;
-}
-
-.category-tag {
-    background: linear-gradient(135deg, #07ACB9 0%, #059ca4 100%);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: 0 2px 4px rgba(7, 172, 185, 0.2);
-}
-
-.focus-areas-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 25px;
-}
-
-.focus-area-column {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 20px;
-}
-
-.focus-area-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 15px;
+.form-section h3 {
+    margin: 0 0 15px 0;
+    color: #124A5C;
+    border-bottom: 2px solid #07ACB9;
+    padding-bottom: 8px;
     font-weight: 600;
-    color: #374151;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.focus-area-header i {
+.form-section h3 i {
     color: #07ACB9;
 }
 
-.onsite-fields {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #f1f5f9;
+
+#fullIdpModal .modal-content {
+    max-width: 900px !important;
+    max-height: 90vh !important;
 }
 
-.activities-container {
-    min-height: 100px;
-    margin-bottom: 20px;
-}
-
-.activity-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    transition: all 0.2s ease;
-}
-
-.activity-item:hover {
-    border-color: #07ACB9;
-    background: #f0fdff;
-}
-
-.activity-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.activity-number {
-    background: linear-gradient(135deg, #07ACB9 0%, #059ca4 100%);
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    flex-shrink: 0;
-}
-
-.activity-fields {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 10px;
-}
-
-.activity-remarks {
-    width: 100%;
-}
-
-.remove-activity {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.remove-activity:hover {
-    background: #dc2626;
-}
-
-.total-duration-display {
-    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-    border: 2px solid #10b981;
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-    color: #065f46;
-    font-size: 16px;
-}
-
-.empty-state {
-    color: #94a3b8;
-    font-style: italic;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 50px;
-    border: 2px dashed #cbd5e1;
-    border-radius: 8px;
-    background: white;
-}
-
-.btn-secondary, .btn-primary {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: none;
-}
-
-.btn-secondary {
-    background: white;
-    color: #64748b;
-    border: 2px solid #e2e8f0;
-}
-
-.btn-secondary:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #124A5C 0%, #07ACB9 100%);
-    color: white;
-    border: none;
-    box-shadow: 0 4px 12px rgba(18, 74, 92, 0.3);
-}
-
-.btn-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(18, 74, 92, 0.4);
-}
-
-.btn-primary:disabled {
-    background: #94a3b8;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.modal-actions {
-    padding: 25px 30px;
-    background: #f8fafc;
-    border-radius: 0 0 20px 20px;
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-}
-
-.idp-data-content {
-    padding: 30px;
+#fullIdpModal .modal-body {
     max-height: 70vh;
     overflow-y: auto;
+    padding: 25px 30px;
 }
 
+/* IDP Section Styles */
 .idp-section {
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     padding: 20px;
     background: #f8fafc;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border-left: 4px solid #07ACB9;
 }
 
 .idp-section h4 {
+    margin: 0 0 15px 0;
     color: #1e293b;
-    margin-bottom: 15px;
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -808,30 +381,431 @@ textarea.form-input {
 }
 
 .idp-text {
-    color: #64748b;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    color: #374151;
     line-height: 1.6;
-    margin-bottom: 10px;
+    margin: 10px 0;
 }
 
-/* Responsive Design */
+
+/* Training Categories Display */
+.categories-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.category-tag {
+    background-color: rgba(7, 172, 185, 0.1);
+    color: #124A5C;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid rgba(7, 172, 185, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.category-tag i {
+    font-size: 10px;
+}
+
+/* Suggested Trainings Styles */
+.suggested-training-item {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #07ACB9;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.suggested-training-item:hover {
+    background: #f0fdff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(7, 172, 185, 0.1);
+}
+
+.suggested-training-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 6px;
+    font-size: 15px;
+}
+
+.suggested-training-desc {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.suggested-training-remarks {
+    color: #475569;
+    font-size: 13px;
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+
+/* Responsive Design for Modal */
 @media (max-width: 768px) {
-    .focus-areas-grid {
-        grid-template-columns: 1fr;
+    #fullIdpModal .modal-content {
+        max-width: 95%;
+        max-height: 95vh;
+        margin: 10px;
     }
     
-    .activity-fields {
-        grid-template-columns: 1fr;
+    #fullIdpModal .modal-body {
+        max-height: 80vh;
+        padding: 15px 20px;
     }
     
-    .modal-actions {
-        flex-direction: column;
+    .idp-section {
+        padding: 15px;
     }
     
-    .btn-secondary, .btn-primary {
-        width: 100%;
+    .categories-display {
         justify-content: center;
     }
 }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+
+        .form-group {
+            flex: 1;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #124A5C;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+       .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #07ACB9;
+            box-shadow: 0 0 0 2px rgba(7, 172, 185, 0.2);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background-color: #124A5C;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-success {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+       /* PHP Peso Symbol Styling */
+        .peso-symbol {
+            font-weight: 600;
+            margin-right: 2px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .course-cost .peso-symbol,
+        .training-cost .peso-symbol,
+        .cost-display .peso-symbol {
+            color: #059ca4;
+            font-weight: 700;
+        }
+
+        /* Multi-select styles */
+        .multi-select-container {
+            position: relative;
+        }
+
+        .multi-select-input {
+            min-height: 40px;
+            padding: 8px 40px 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .multi-select-input:focus {
+            border-color: #07ACB9;
+            box-shadow: 0 0 0 2px rgba(7, 172, 185, 0.2);
+        }
+
+        .selected-tag {
+            background: #07ACB9;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .multi-select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .multi-select-dropdown.open {
+            display: block;
+        }
+
+        .multi-select-option {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        .multi-select-option:hover {
+            background: #f8fafc;
+        }
+
+        .multi-select-option.selected {
+            background: #e6fffa;
+            color: #0d9488;
+        }
+/* Activity type input/select combo */
+        .activity-type-container {
+            position: relative;
+        }
+
+        .activity-type-input {
+            width: 100%;
+            padding: 10px 40px 10px 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .activity-type-dropdown-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .activity-type-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .activity-type-suggestions.open {
+            display: block;
+        }
+
+        .activity-type-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .activity-type-option:hover {
+            background: #f8fafc;
+        }
+
+       /* Total duration display */
+        .total-duration-display {
+            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+            border: 2px solid #16a34a;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .duration-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #16a34a;
+            font-family: 'Inter', sans-serif;
+        }
+
+
+
+        .certificates-container {
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+        }
+
+        .certificate-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+        }
+
+        .certificate-item:last-child {
+            border-bottom: none;
+        }
+
+        .modal-actions {
+            padding: 25px 30px;
+            background: #f8fafc;
+            border-radius: 0 0 20px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .conditional-field {
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .conditional-field.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+     /* Loading states */
+        .loading-state {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+        }
+
+        .loading-state i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            opacity: 0.6;
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+       /* Placeholder text styling */
+        .placeholder {
+            color: #9ca3af;
+            font-style: italic;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+        }
+
+        /* Error states */
+        .error-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--danger-color);
+            background-color: #ffebee;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--danger-color);
+            font-family: 'Inter', sans-serif;
+        }
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
@@ -881,13 +855,6 @@ textarea.form-input {
             font-size: 14px;
             color: #64748b;
             text-align: center;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 25px;
         }
 
         .btn-secondary {
@@ -1483,7 +1450,7 @@ textarea.form-input {
             color: #07ACB9;
         }
 
-        /* Responsive Design */
+       /* Responsive Design */
         @media (max-width: 768px) {
             .progress-categories {
                 grid-template-columns: 1fr;
@@ -1519,12 +1486,24 @@ textarea.form-input {
             margin-top: 20px;
         }
 
-        .certificate-item {
-            background-color: #f8fafc;
-            border: 2px solid #e2e8f0;
+      /* Activity and Certificate management */
+        .activities-container,
+        .certificates-container {
+            border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 20px;
-            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .activity-item,
+        .certificate-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+        }
+
+        .activity-item:last-child,
+        .certificate-item:last-child {
+            border-bottom: none;
         }
 
         .certificate-item:hover {
@@ -1606,10 +1585,30 @@ textarea.form-input {
     align-items: center;
 }
 
-/* Add spacing after the description paragraph */
-.card p {
-    margin-bottom: 30px;
-}
+/* Card styling */
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .card-header {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #333;
+            font-weight: 600;
+        }s
 
         /* List view styling for progress sections */
         .courses-list {
@@ -1618,6 +1617,7 @@ textarea.form-input {
             gap: 12px;
         }
 
+        /* Course list item styling with peso */
         .course-list-item {
             background-color: #fff;
             border: 1px solid #e2e8f0;
@@ -1627,11 +1627,35 @@ textarea.form-input {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 12px;
         }
 
         .course-list-item:hover {
             border-color: #07ACB9;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .course-list-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .course-list-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .course-list-details {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.4;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
         }
 
         .course-list-item.enrolled {
@@ -1874,140 +1898,139 @@ textarea.form-input {
         }
 
 
-        /* Updated Progress categories grid with custom layout */
-.progress-categories {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto;
-    gap: 20px;
-    margin-bottom: 30px;
-}
+/* Progress categories grid - Fixed layout with side-by-side approval cards */
+        .progress-categories {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
 
-/* Row 1 - Approval Status Cards (Side by side, smaller height) */
-.progress-category.row-1 {
-    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
-    border: 3px solid;
-    border-radius: 16px;
-    padding: 20px 30px;
-    text-align: center;
-    min-height: 100px;
-    max-height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 30px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    grid-column: span 1; /* Each takes half width - CHANGED FROM span 2 */
-    /* Remove click functionality */
-    cursor: default;
-}
+        /* Row 1 - Approval Status Cards (Side by side, each takes half width) */
+        .progress-category.row-1 {
+            background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+            border: 3px solid;
+            border-radius: 16px;
+            padding: 20px 30px;
+            text-align: center;
+            min-height: 100px;
+            max-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            grid-column: span 1;
+            cursor: pointer;
+        }
 
-.progress-category.row-1::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: var(--accent-color);
-}
+        .progress-category.row-1::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--accent-color);
+        }
 
-.progress-category.row-1:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-}
+        .progress-category.row-1:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
 
-/* Row 1 Content Layout (Horizontal) */
-.progress-category.row-1 .request-stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    color: white;
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-dark));
-    flex-shrink: 0;
-}
-
+        /* Row 1 Content Layout (Horizontal) */
+        .progress-category.row-1 .request-stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-color-dark));
+            flex-shrink: 0;
+        }
 .progress-category.row-1 .count {
-    font-size: 3rem;
-    font-weight: 700;
-    margin: 0 10px 0 0;
-    color: var(--accent-color);
-    line-height: 1;
-}
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 0 10px 0 0;
+            color: var(--accent-color);
+            line-height: 1;
+        }
 
-.progress-category.row-1 .text-content {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-}
+        .progress-category.row-1 .text-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+        }
 
-.progress-category.row-1 h3 {
-    margin: 0 0 5px 0;
-    font-size: 1.3rem;
-    color: #334155;
-    font-weight: 700;
-}
+        .progress-category.row-1 h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.3rem;
+            color: #334155;
+            font-weight: 700;
+        }
 
-.progress-category.row-1 p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #64748b;
-    line-height: 1.3;
-}
+        .progress-category.row-1 p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.3;
+            font-weight: 400;
+        }
 
-/* Row 2 - Training Status Cards (2x2 grid, bigger height) */
-.progress-category.row-2 {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 25px;
-    text-align: center;
-    min-height: 160px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    grid-column: span 1; /* Takes half width */
-}
 
-.progress-category.row-2:hover {
-    border-color: var(--accent-color);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-}
+        .progress-category.row-2 {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            grid-column: span 1;
+        }
 
-/* Common styles for row 2 progress categories */
-.progress-category.row-2 h3 {
-    margin: 0 0 12px 0;
-    font-size: 1.2rem;
-    color: #334155;
-    font-weight: 600;
-}
+        .progress-category.row-2:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
 
-.progress-category.row-2 .count {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: var(--accent-color);
-    line-height: 1;
-}
+        .progress-category.row-2 h3 {
+            margin: 0 0 12px 0;
+            font-size: 1.2rem;
+            color: #334155;
+            font-weight: 600;
+        }
+        
+        .progress-category.row-2 .count {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            line-height: 1;
+        }
 
-.progress-category.row-2 p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #64748b;
-    line-height: 1.4;
-}
+        .progress-category.row-2 p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.4;
+            font-weight: 400;
+        }
 
 /* Row 1 Approval Status Colors and Icons */
 .progress-category.awaiting-approval {
@@ -2662,17 +2685,15 @@ textarea.form-input {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-
-/* Action Buttons */
-.modal-actions {
-    padding: 25px 30px;
-    background: #f8fafc;
-    border-radius: 0 0 20px 20px;
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-}
-
+/* Modal actions */
+        .modal-actions {
+            padding: 25px 30px;
+            background: #f8fafc;
+            border-radius: 0 0 20px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
 .btn-secondary, .btn-primary {
     padding: 12px 24px;
     border-radius: 8px;
@@ -3454,261 +3475,271 @@ textarea.form-input {
             </div>
         </div>
     </div>
-
-<!-- Training Request Modal -->
-<div class="modal-overlay" id="trainingRequestModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 class="modal-title">Request New Training</h2>
-            <button class="modal-close" onclick="closeTrainingRequestModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <form id="trainingRequestForm">
-            <!-- Basic Training Information -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-graduation-cap"></i> Training Information</h3>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-book"></i>
-                        Training Name
-                    </label>
-                    <input type="text" class="form-input" id="trainingName" name="trainingName" placeholder="Enter training name" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-align-left"></i>
-                        Training Description
-                    </label>
-                    <textarea class="form-input" id="trainingDesc" name="trainingDesc" rows="3" placeholder="Describe the training objectives and content" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-peso-sign"></i>
-                        Cost (PHP)
-                    </label>
-                    <input type="number" class="form-input" id="cost" name="cost" step="0.01" min="0" placeholder="0.00" required>
-                </div>
-            </div>
-
-            <!-- IDP Selection -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-calendar-alt"></i> Individual Development Plan (IDP)</h3>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-calendar"></i>
-                        IDP Period
-                    </label>
-                    <div class="dropdown-container" id="idpDropdown">
-                        <input 
-                            type="text" 
-                            class="dropdown-input" 
-                            id="idpPeriodInput" 
-                            placeholder="Select IDP period..."
-                            readonly
-                            required
-                        >
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                        <div class="dropdown-list" id="idpDropdownList">
-                            <div class="loading">Loading IDP periods...</div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="selectedIdpId" name="selectedIdpId">
-                    <input type="hidden" id="selectedIdpType" name="selectedIdpType">
-                </div>
-
-                <!-- Training Categories -->
-                <div class="training-categories-section" id="trainingCategoriesSection" style="display: none;">
-                    <div class="section-header">
-                        <h4><i class="fas fa-tags"></i> Training Categories</h4>
-                        <button type="button" class="btn-secondary" id="viewIdpDataBtn" style="display: none;">
-                            <i class="fas fa-eye"></i> View IDP Data
-                        </button>
-                    </div>
-                    <div class="categories-container" id="categoriesContainer">
-                        <div class="empty-state">Select an IDP period to view training categories</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Training Arrangement -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-laptop"></i> Training Arrangement</h3>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-globe"></i>
-                        Training Mode
-                    </label>
-                    <div class="dropdown-container" id="arrangementDropdown">
-                        <input 
-                            type="text" 
-                            class="dropdown-input" 
-                            id="arrangementInput" 
-                            placeholder="Select training mode..."
-                            readonly
-                            required
-                        >
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                        <div class="dropdown-list" id="arrangementDropdownList">
-                            <div class="dropdown-item" onclick="selectArrangement(true, 'Online')">
-                                <div class="dropdown-item-title">
-                                    <i class="fas fa-laptop"></i> Online Training
-                                </div>
-                                <div class="dropdown-item-meta">Conducted remotely via digital platforms</div>
-                            </div>
-                            <div class="dropdown-item" onclick="selectArrangement(false, 'Onsite')">
-                                <div class="dropdown-item-title">
-                                    <i class="fas fa-map-marker-alt"></i> Onsite Training
-                                </div>
-                                <div class="dropdown-item-meta">Conducted at physical location</div>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="isOnlineArrangement" name="isOnlineArrangement">
-                </div>
-
-                <!-- Onsite Location Fields -->
-                <div class="onsite-fields" id="onsiteFields" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Address
-                        </label>
-                        <input type="text" class="form-input" id="address" name="address" placeholder="Enter training venue address">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-globe-asia"></i>
-                            Country
-                        </label>
-                        <input type="text" class="form-input" id="country" name="country" placeholder="Enter country" value="Philippines">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Learning Objectives & Skills -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-target"></i> Learning Focus</h3>
-                </div>
-                
-                <div class="focus-areas-grid">
-                    <div class="focus-area-column">
-                        <div class="focus-area-header">
-                            <i class="fas fa-bullseye"></i>
-                            <span>Objective</span>
-                        </div>
-                        <div class="form-group">
-                            <div class="dropdown-container" id="objectiveDropdown">
-                                <input 
-                                    type="text" 
-                                    class="dropdown-input" 
-                                    id="objectiveInput" 
-                                    placeholder="Select learning objective..."
-                                    readonly
-                                >
-                                <i class="fas fa-chevron-down dropdown-icon"></i>
-                                <div class="dropdown-list" id="objectiveDropdownList">
-                                    <div class="loading">Loading objectives...</div>
-                                </div>
-                            </div>
-                            <input type="hidden" id="selectedObjectiveId" name="objectiveId">
-                        </div>
-                    </div>
-                    
-                    <div class="focus-area-column">
-                        <div class="focus-area-header">
-                            <i class="fas fa-cogs"></i>
-                            <span>Required Skill</span>
-                        </div>
-                        <div class="form-group">
-                            <div class="dropdown-container" id="skillDropdown">
-                                <input 
-                                    type="text" 
-                                    class="dropdown-input" 
-                                    id="skillInput" 
-                                    placeholder="Select required skill..."
-                                    readonly
-                                >
-                                <i class="fas fa-chevron-down dropdown-icon"></i>
-                                <div class="dropdown-list" id="skillDropdownList">
-                                    <div class="loading">Loading skills...</div>
-                                </div>
-                            </div>
-                            <input type="hidden" id="selectedSkillId" name="jobReqSkillId">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Training Activities -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-tasks"></i> Training Activities</h3>
-                    <button type="button" class="btn-secondary" id="addActivityBtn">
-                        <i class="fas fa-plus"></i> Add Activity
-                    </button>
-                </div>
-                
-                <div class="activities-container" id="activitiesContainer">
-                    <!-- Activities will be added here -->
-                </div>
-                
-                <div class="total-duration-display" id="totalDurationDisplay">
-                    <strong>Total Training Duration: <span id="totalDurationValue">0</span> hours</strong>
-                </div>
-            </div>
-
-            <!-- Certification -->
-            <div class="form-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-certificate"></i> Training Certificate</h3>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-award"></i>
-                        Certificate Title
-                    </label>
-                    <input type="text" class="form-input" id="trainingCertTitle" name="trainingCertTitle" placeholder="Enter certificate title" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-file-alt"></i>
-                        Certificate Description
-                    </label>
-                    <textarea class="form-input" id="trainingCertDesc" name="trainingCertDesc" rows="2" placeholder="Describe the certificate requirements and criteria" required></textarea>
-                </div>
-            </div>
-
-            <!-- Form Actions -->
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" onclick="closeTrainingRequestModal()">
+ <!-- Modal Overlay -->
+    <div class="modal-overlay" id="trainingRequestModal">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h2><i class="fas fa-graduation-cap"></i> Request New Training</h2>
+                <button type="button" class="btn btn-danger" onclick="closeTrainingModal()">
                     <i class="fas fa-times"></i>
-                    Cancel
-                </button>
-                <button type="submit" class="btn-primary" id="submitTrainingRequest">
-                    <i class="fas fa-paper-plane"></i>
-                    Submit Request
                 </button>
             </div>
-        </form>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <form id="newTrainingRequestForm">
+                    <!-- IDP Selection Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-clipboard-list"></i> Individual Development Plan (IDP) Selection</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="idpType">
+                                    <i class="fas fa-calendar-alt"></i> IDP Type *
+                                </label>
+                                <select id="idpType" name="idpType" required onchange="loadIdpPeriods()">
+                                    <option value="">Select IDP Type</option>
+                                    <option value="midyear">Mid-Year IDP</option>
+                                    <option value="finalyear">Final-Year IDP</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="idpPeriod">
+                                    <i class="fas fa-calendar"></i> IDP Period *
+                                </label>
+                                <select id="idpPeriod" name="idpPeriod" required onchange="loadIdpDetails()" disabled>
+                                    <option value="">Select IDP Period</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- IDP Overview Card -->
+                        <div id="idpOverviewCard" class="form-section" style="display: none; background: #f0f9ff; border-color: #0ea5e9;">
+                            <h4><i class="fas fa-eye"></i> IDP Overview</h4>
+                            <div id="idpDetails">
+                                <!-- IDP details will be loaded here -->
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="viewFullIdp()" style="margin-top: 10px;">
+                                <i class="fas fa-external-link-alt"></i> View Full IDP
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Training Details Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-book"></i> Training Details</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trainingName">
+                                    <i class="fas fa-graduation-cap"></i> Training Name *
+                                </label>
+                                <input type="text" id="trainingName" name="trainingName" required 
+                                       placeholder="Enter training course name">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="trainingDesc">
+                                <i class="fas fa-align-left"></i> Training Description *
+                            </label>
+                            <textarea id="trainingDesc" name="trainingDesc" rows="4" required 
+                                      placeholder="Describe the training content, objectives, and expected outcomes"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cost">
+                                    <i class="fas fa-peso-sign"></i> Estimated Cost (PHP)
+                                </label>
+                                <div style="position: relative;">
+                                    <span class="peso-symbol" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #059ca4; font-weight: 600;">₱</span>
+                                    <input type="number" id="cost" name="cost" min="0" step="0.01" 
+                                           style="padding-left: 25px;" placeholder="0.00">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="isOnlineArrangement">
+                                    <i class="fas fa-laptop"></i> Training Format *
+                                </label>
+                                <select id="isOnlineArrangement" name="isOnlineArrangement" required onchange="toggleLocationFields()">
+                                    <option value="">Select Format</option>
+                                    <option value="true">Online</option>
+                                    <option value="false">Onsite</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Location Fields (shown only for onsite) -->
+                        <div id="locationFields" class="conditional-field">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="address">
+                                        <i class="fas fa-map-marker-alt"></i> Training Address *
+                                    </label>
+                                    <input type="text" id="address" name="address" 
+                                           placeholder="Enter complete training venue address">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="country">
+                                        <i class="fas fa-globe"></i> Country *
+                                    </label>
+                                    <input type="text" id="country" name="country" 
+                                           placeholder="Enter country">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto-calculated Total Duration Display -->
+                        <div class="total-duration-display">
+                            <div class="duration-value" id="totalDurationValue">0</div>
+                            <div>Total Hours (Auto-calculated from activities)</div>
+                        </div>
+                    </div>
+
+                    <!-- Training Alignment Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-bullseye"></i> Training Alignment</h3>
+                        
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-target"></i> Related Objectives
+                            </label>
+                            <div class="multi-select-container">
+                                <div class="multi-select-input" id="objectivesMultiSelect" onclick="toggleMultiSelect('objectives')">
+                                    <span class="placeholder">Select related objectives (optional)</span>
+                                </div>
+                                <div class="multi-select-dropdown" id="objectivesDropdown">
+                                    <!-- Options will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-cogs"></i> Related Skills
+                            </label>
+                            <div class="multi-select-container">
+                                <div class="multi-select-input" id="skillsMultiSelect" onclick="toggleMultiSelect('skills')">
+                                    <span class="placeholder">Select related skills (optional)</span>
+                                </div>
+                                <div class="multi-select-dropdown" id="skillsDropdown">
+                                    <!-- Options will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Training Activities Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-tasks"></i> Training Activities</h3>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <p style="margin: 0; color: #666; font-size: 14px;">
+                                Define the activities that will be part of this training program.
+                            </p>
+                            <button type="button" class="btn btn-success" onclick="addActivity()">
+                                <i class="fas fa-plus"></i> Add Activity
+                            </button>
+                        </div>
+
+                        <div id="activitiesContainer" class="activities-container">
+                            <div class="activity-item">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>
+                                            <i class="fas fa-play"></i> Activity Name *
+                                        </label>
+                                        <input type="text" name="activityName[]" required 
+                                               placeholder="e.g., Introduction to Python">
+                                    </div>
+                                    
+                                    <div class="form-group" style="flex: 0.6;">
+                                        <label>
+                                            <i class="fas fa-tag"></i> Activity Type *
+                                        </label>
+                                        <input type="text" name="activityType[]" required 
+                                               placeholder="e.g., Lecture, Workshop, Practical" onchange="updateTotalDuration()">
+                                    </div>
+                                    
+                                    <div class="form-group" style="flex: 0.4;">
+                                        <label>
+                                            <i class="fas fa-clock"></i> Duration (hrs) *
+                                        </label>
+                                        <input type="number" name="estActivityDuration[]" required 
+                                               min="0.5" step="0.5" placeholder="2.5" onchange="updateTotalDuration()">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <i class="fas fa-comment"></i> Activity Remarks
+                                    </label>
+                                    <textarea name="activityRemarks[]" rows="2" 
+                                              placeholder="Additional notes about this activity"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Training Certificates Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-certificate"></i> Training Certificates</h3>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <p style="margin: 0; color: #666; font-size: 14px;">
+                                Define the certificates that will be awarded upon completion.
+                            </p>
+                            <button type="button" class="btn btn-success" onclick="addCertificate()">
+                                <i class="fas fa-plus"></i> Add Certificate
+                            </button>
+                        </div>
+
+                        <div id="certificatesContainer" class="certificates-container">
+                            <div class="certificate-item">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>
+                                            <i class="fas fa-award"></i> Certificate Title *
+                                        </label>
+                                        <input type="text" name="trainingCertTitle[]" required 
+                                               placeholder="e.g., Python Programming Certificate">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>
+                                        <i class="fas fa-file-alt"></i> Certificate Description *
+                                    </label>
+                                    <textarea name="trainingCertDesc[]" rows="3" required 
+                                              placeholder="Describe what this certificate validates and its significance"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden inputs for selected data -->
+                    <input type="hidden" id="selectedObjectives" name="selectedObjectives" value="">
+                    <input type="hidden" id="selectedSkills" name="selectedSkills" value="">
+                    <input type="hidden" id="totalDuration" name="totalDuration" value="0">
+                </form>
+            </div>
+
+            <!-- Modal Actions -->
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeTrainingModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="submitTrainingRequest()" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i> Submit Training Request
+                </button>
+            </div>
+        </div>
     </div>
-</div>
 
 <!-- IDP Data View Modal -->
 <div class="modal-overlay" id="idpDataModal">
@@ -3762,10 +3793,16 @@ textarea.form-input {
         let selectedIdpData = null;
 
 
-        let selectedObjective = null;
-        let selectedSkill = null;
+        let selectedObjectives = [];
+        let selectedSkills = [];
+        let activityTypes = [];
         let activityCount = 0;
         let totalDuration = 0;
+
+        let currentUser = null;
+        let idpPeriods = [];
+        let userObjectives = [];
+        let userSkills = [];
 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -3827,9 +3864,96 @@ textarea.form-input {
                     document.body.removeChild(fileInput);
                 });
             }
+
+            // Setup form submission
+            document.getElementById('newTrainingRequestForm').addEventListener('submit', handleFormSubmit);
+            
+            // Load user data
+            loadActivityTypes();
+            loadUserObjectives();
+            loadUserSkills();s
+
         });
 
-        
+        // Modal functions
+        function openTrainingModal() {
+            document.getElementById('trainingRequestModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTrainingModal() {
+            document.getElementById('trainingRequestModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+            resetForm();
+        }
+
+        function resetForm() {
+            document.getElementById('newTrainingRequestForm').reset();
+            document.getElementById('idpOverviewCard').style.display = 'none';
+            document.getElementById('locationFields').style.display = 'none';
+            document.getElementById('idpPeriod').disabled = true;
+            
+            selectedObjectives = [];
+            selectedSkills = [];
+            selectedIdpData = null;
+            
+            resetActivitiesContainer();
+            resetCertificatesContainer();
+            resetMultiSelects();
+            updateTotalDuration();
+        }
+
+
+async function loadIdpPeriods() {
+            const idpType = document.getElementById('idpType').value;
+            const idpPeriodSelect = document.getElementById('idpPeriod');
+            
+            if (!idpType) {
+                idpPeriodSelect.disabled = true;
+                idpPeriodSelect.innerHTML = '<option value="">Select IDP Period</option>';
+                return;
+            }
+
+            try {
+                idpPeriodSelect.innerHTML = '<option value="">Loading...</option>';
+                idpPeriodSelect.disabled = true;
+
+                const response = await fetch('/employee/idp-periods');
+                const result = await response.json();
+
+                if (result.success) {
+                    idpPeriods = result.data;
+                    
+                    const filteredPeriods = idpPeriods.filter(period => {
+                        if (idpType === 'midyear') return period.type === 'Midyear';
+                        if (idpType === 'finalyear') return period.type === 'Final';
+                        return false;
+                    });
+
+                    idpPeriodSelect.innerHTML = '<option value="">Select IDP Period</option>';
+                    
+                    if (filteredPeriods.length > 0) {
+                        filteredPeriods.forEach(period => {
+                            const option = document.createElement('option');
+                            option.value = period.id;
+                            option.textContent = `${period.type} ${period.year}`;
+                            option.setAttribute('data-type', period.type);
+                            option.setAttribute('data-year', period.year);
+                            idpPeriodSelect.appendChild(option);
+                        });
+                        idpPeriodSelect.disabled = false;
+                    } else {
+                        idpPeriodSelect.innerHTML = '<option value="">No IDP periods available</option>';
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to load IDP periods');
+                }
+            } catch (error) {
+                console.error('Error loading IDP periods:', error);
+                idpPeriodSelect.innerHTML = '<option value="">Error loading periods</option>';
+                alert('Failed to load IDP periods: ' + error.message);
+            }
+        }
 
         // Filter dropdown functionality
         function toggleFilterDropdown() {
@@ -3843,6 +3967,569 @@ textarea.form-input {
         dropdown.classList.remove('open');
     }
 });
+
+async function loadIdpDetails() {
+    const idpPeriodSelect = document.getElementById('idpPeriod');
+    const selectedOption = idpPeriodSelect.options[idpPeriodSelect.selectedIndex];
+    const idpOverviewCard = document.getElementById('idpOverviewCard');
+    const idpDetails = document.getElementById('idpDetails');
+    
+    if (!idpPeriodSelect.value) {
+        idpOverviewCard.style.display = 'none';
+        return;
+    }
+
+    const idpId = idpPeriodSelect.value;
+    const idpType = selectedOption.getAttribute('data-type');
+
+    try {
+        idpDetails.innerHTML = '<div style="text-align: center; color: #666;"><i class="fas fa-spinner fa-spin"></i> Loading IDP details...</div>';
+        idpOverviewCard.style.display = 'block';
+
+        // Use the correct endpoint based on IDP type
+        let endpoint;
+        if (idpType === 'Midyear') {
+            endpoint = `/employee/idp/midyear/${idpId}`;
+        } else if (idpType === 'Final') {
+            endpoint = `/employee/idp/final/${idpId}`;
+        } else {
+            throw new Error('Invalid IDP type');
+        }
+
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+            selectedIdpData = result.data;
+            displayIdpOverview(result.data, idpType);
+        } else {
+            throw new Error(result.message || 'Failed to load IDP details');
+        }
+    } catch (error) {
+        console.error('Error loading IDP details:', error);
+        idpDetails.innerHTML = `<div style="color: #dc2626; text-align: center;">Error loading IDP details: ${error.message}</div>`;
+    }
+}
+        function displayIdpOverview(idp, idpType) {
+    const idpDetails = document.getElementById('idpDetails');
+    
+    // Handle both midyear and final year IDP data structures
+    const idpData = idp.midYearData || idp.finalYearData || idp;
+    
+    let categoriesHtml = '';
+    if (idpData.trainingCategories && idpData.trainingCategories.length > 0) {
+        categoriesHtml = `
+            <div style="margin-bottom: 15px;">
+                <strong><i class="fas fa-tags"></i> Training Categories:</strong>
+                <div class="categories-display" style="display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0;">
+                    ${idpData.trainingCategories.map(cat => `
+                        <span style="background-color: rgba(7, 172, 185, 0.1); color: #124A5C; padding: 4px 10px; border-radius: 15px; font-size: 12px; border: 1px solid rgba(7, 172, 185, 0.2);">${cat}</span>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    let remarksHtml = '';
+    if (idpData.trainingRemarks) {
+        remarksHtml = `
+            <div style="margin-bottom: 15px;">
+                <strong><i class="fas fa-comment"></i> Training Remarks:</strong>
+                <div style="background-color: white; padding: 10px; border-radius: 4px; margin-top: 5px; font-style: italic;">
+                    ${idpData.trainingRemarks}
+                </div>
+            </div>
+        `;
+    }
+
+    idpDetails.innerHTML = `
+        <div style="margin-bottom: 15px;">
+            <strong><i class="fas fa-calendar-alt"></i> IDP Type:</strong> ${idpType} IDP
+        </div>
+        <div style="margin-bottom: 15px;">
+            <strong><i class="fas fa-calendar"></i> Year:</strong> ${idpData.year || new Date().getFullYear()}
+        </div>
+        ${categoriesHtml}
+        ${remarksHtml}
+        ${!categoriesHtml && !remarksHtml ? '<p style="color: #666; font-style: italic;">No training categories or remarks found for this IDP.</p>' : ''}
+    `;
+}
+
+       function viewFullIdp() {
+    if (!selectedIdpData) {
+        alert('No IDP data available');
+        return;
+    }
+
+    const idpType = document.getElementById('idpType').value;
+    const idpData = selectedIdpData.midYearData || selectedIdpData.finalYearData || selectedIdpData;
+    const year = idpData.year || new Date().getFullYear();
+    
+    // Create modal for full IDP view
+    const modalHtml = `
+        <div class="modal-overlay" id="fullIdpModal" style="display: flex;">
+            <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2><i class="fas fa-clipboard-list"></i> ${idpType} IDP - Year ${year}</h2>
+                    <button type="button" class="btn btn-danger" onclick="closeFullIdpModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    ${generateFullIdpContent(selectedIdpData)}
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeFullIdpModal()">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Prevent body scrolling
+    document.body.style.overflow = 'hidden';
+}
+
+
+
+
+        function generateFullIdpContent(idp) {
+    let content = '';
+    
+    // Handle both data structures
+    const idpData = idp.midYearData || idp.finalYearData || idp;
+    
+    // Professional Development Section
+    if (idpData.profStrengths || idpData.profAreasForDevelopment || idpData.profActionsToTake) {
+        content += `
+            <div class="form-section">
+                <h3><i class="fas fa-user-tie"></i> Professional Development</h3>
+                ${idpData.profStrengths ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Strengths:</strong>
+                        <p style="background: #f0fdf4; padding: 10px; border-radius: 4px; margin: 5px 0;">${idpData.profStrengths}</p>
+                    </div>
+                ` : ''}
+                ${idpData.profAreasForDevelopment ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Areas for Development:</strong>
+                        <p style="background: #fef3c7; padding: 10px; border-radius: 4px; margin: 5px 0;">${idpData.profAreasForDevelopment}</p>
+                    </div>
+                ` : ''}
+                ${idpData.profActionsToTake ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Actions to Take:</strong>
+                        <p style="background: #f0f9ff; padding: 10px; border-radius: 4px; margin: 5px 0;">${idpData.profActionsToTake}</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Leadership Development Section
+    if (idpData.leaderStrengths || idpData.leaderAreasForDevelopment || idpData.leaderActionsToTake) {
+        content += `
+            <div class="form-section">
+                <h3><i class="fas fa-users"></i> Leadership Development</h3>
+                ${idpData.leaderStrengths ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Leadership Strengths:</strong>
+                        <p style="background: #f0fdf4; padding: 10px; border-radius: 4px; margin: 5px 0;">${idpData.leaderStrengths}</p>
+                    </div>
+                ` : ''}
+                ${idpData.leaderAreasForDevelopment ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Leadership Areas for Development:</strong>
+                        <p style="background: #fef3c7; padding: 10px; border-radius: 4px; margin: 5px 0;">${idpData.leaderAreasForDevelopment}</p>
+                    </div>
+                ` : ''}
+                ${idpData.leaderActionsToTake ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Leadership Actions to Take:</strong>
+                        <p style="background: #f0f9ff; padding: 10px; border-radius: 4px; margin: 5px 0;">${idpData.leaderActionsToTake}</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Career Goals Section
+    if (idpData.nextRoleShortTerm || idpData.nextRoleLongTerm || idpData.nextRoleMobility) {
+        content += `
+            <div class="form-section">
+                <h3><i class="fas fa-road"></i> Career Goals</h3>
+                ${idpData.nextRoleShortTerm ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Short-term Role Goals:</strong>
+                        <p style="background: #f0f9ff; padding: 10px; border-radius: 4px; margin: 5px 0;">${idpData.nextRoleShortTerm}</p>
+                    </div>
+                ` : ''}
+                ${idpData.nextRoleLongTerm ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Long-term Role Goals:</strong>
+                        <p style="background: #f0f9ff; padding: 10px; border-radius: 4px; margin: 5px 0;">${idpData.nextRoleLongTerm}</p>
+                    </div>
+                ` : ''}
+                ${idpData.nextRoleMobility ? `
+                    <div style="margin-bottom: 15px;">
+                        <strong>Role Mobility Preferences:</strong>
+                        <p style="background: #f0f9ff; padding: 10px; border-radius: 4px; margin: 5px 0;">${idpData.nextRoleMobility}</p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Training Information Section
+    content += `
+        <div class="form-section">
+            <h3><i class="fas fa-graduation-cap"></i> Training Information</h3>
+            ${idpData.trainingCategories && idpData.trainingCategories.length > 0 ? `
+                <div style="margin-bottom: 15px;">
+                    <strong>Training Categories:</strong>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0;">
+                        ${idpData.trainingCategories.map(cat => `
+                            <span style="background-color: rgba(7, 172, 185, 0.1); color: #124A5C; padding: 4px 10px; border-radius: 15px; font-size: 12px; border: 1px solid rgba(7, 172, 185, 0.2);">${cat}</span>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            ${idpData.trainingRemarks ? `
+                <div style="margin-bottom: 15px;">
+                    <strong>Training Remarks:</strong>
+                    <p style="background: #f8fafc; padding: 10px; border-radius: 4px; margin: 5px 0; font-style: italic;">${idpData.trainingRemarks}</p>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    // Suggested Trainings Section (if available)
+    if (idp.suggestedTrainings && idp.suggestedTrainings.length > 0) {
+        content += `
+            <div class="form-section">
+                <h3><i class="fas fa-lightbulb"></i> Suggested Trainings</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    ${idp.suggestedTrainings.map(training => `
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border-left: 4px solid #07ACB9;">
+                            <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">
+                                ${training.trainings?.trainingName || training.trainingName || 'Training'}
+                            </div>
+                            ${training.trainings?.trainingDesc ? `
+                                <div style="color: #64748b; font-size: 14px; margin-bottom: 8px;">
+                                    ${training.trainings.trainingDesc}
+                                </div>
+                            ` : ''}
+                            ${training.remarks ? `
+                                <div style="color: #475569; font-size: 13px; font-style: italic;">
+                                    <strong>Remarks:</strong> ${training.remarks}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    return content || '<p style="text-align: center; color: #666;">No detailed IDP information available.</p>';
+}
+
+        function closeFullIdpModal() {
+    const modal = document.getElementById('fullIdpModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function toggleLocationFields() {
+            const isOnline = document.getElementById('isOnlineArrangement').value === 'true';
+            const locationFields = document.getElementById('locationFields');
+            const addressField = document.getElementById('address');
+            const countryField = document.getElementById('country');
+            
+            if (isOnline) {
+                locationFields.style.display = 'none';
+                addressField.removeAttribute('required');
+                countryField.removeAttribute('required');
+            } else {
+                locationFields.style.display = 'block';
+                addressField.setAttribute('required', 'required');
+                countryField.setAttribute('required', 'required');
+            }
+        }
+
+        // Load activity types
+        async function loadActivityTypes() {
+            try {
+                const response = await fetch('/employee/activity-types');
+                const result = await response.json();
+
+                if (result.success) {
+                    activityTypes = result.data || [];
+                } else {
+                    console.warn('Failed to load activity types:', result.message);
+                    activityTypes = [
+                        { activityType: 'Lecture' },
+                        { activityType: 'Workshop' },
+                        { activityType: 'Practical' },
+                        { activityType: 'Assessment' },
+                        { activityType: 'Project' }
+                    ];
+                }
+            } catch (error) {
+                console.error('Error loading activity types:', error);
+                // Use default types if loading fails
+                activityTypes = [
+                    { activityType: 'Lecture' },
+                    { activityType: 'Workshop' },
+                    { activityType: 'Practical' },
+                    { activityType: 'Assessment' },
+                    { activityType: 'Project' }
+                ];
+            }
+        }
+
+
+        // Activity type suggestions
+        function showActivityTypeSuggestions(input) {
+            const container = input.closest('.activity-type-container');
+            const suggestions = container.querySelector('.activity-type-suggestions');
+            
+            renderActivityTypeSuggestions(suggestions, '');
+            suggestions.classList.add('open');
+        }
+
+        function filterActivityTypes(input) {
+            const container = input.closest('.activity-type-container');
+            const suggestions = container.querySelector('.activity-type-suggestions');
+            const query = input.value.toLowerCase();
+            
+            renderActivityTypeSuggestions(suggestions, query);
+            suggestions.classList.add('open');
+        }
+
+        function renderActivityTypeSuggestions(container, query) {
+            const filtered = activityTypes.filter(type => 
+                type.activityType.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            let html = '';
+            
+            // Add option to create new type if query doesn't match exactly
+            if (query && !activityTypes.some(type => type.activityType.toLowerCase() === query.toLowerCase())) {
+                html += `
+                    <div class="activity-type-option" onclick="selectActivityType(this, '${query}', true)">
+                        <i class="fas fa-plus"></i> Create "${query}"
+                    </div>
+                `;
+            }
+            
+            // Add existing types
+            filtered.forEach(type => {
+                html += `
+                    <div class="activity-type-option" onclick="selectActivityType(this, '${type.activityType}', false)">
+                        ${type.activityType}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<div style="padding: 10px; color: #666;">No matching types</div>';
+        }
+
+        function selectActivityType(element, typeName, isNew) {
+            const container = element.closest('.activity-type-container');
+            const input = container.querySelector('.activity-type-input');
+            const suggestions = container.querySelector('.activity-type-suggestions');
+            
+            input.value = typeName;
+            suggestions.classList.remove('open');
+            
+            // If it's a new type, add it to our local array
+            if (isNew && !activityTypes.some(type => type.activityType === typeName)) {
+                activityTypes.push({ activityType: typeName });
+            }
+            
+            updateTotalDuration();
+        }
+
+        function toggleActivityTypeDropdown(button) {
+            const container = button.closest('.activity-type-container');
+            const suggestions = container.querySelector('.activity-type-suggestions');
+            const input = container.querySelector('.activity-type-input');
+            
+            if (suggestions.classList.contains('open')) {
+                suggestions.classList.remove('open');
+            } else {
+                renderActivityTypeSuggestions(suggestions, '');
+                suggestions.classList.add('open');
+                input.focus();
+            }
+        }
+
+        function closeAllActivityTypeSuggestions() {
+            document.querySelectorAll('.activity-type-suggestions').forEach(el => {
+                el.classList.remove('open');
+            });
+        }
+
+        // Load user objectives
+        async function loadUserObjectives() {
+            try {
+                const response = await fetch('/employee/user-objectives');
+                const result = await response.json();
+
+                if (result.success) {
+                    userObjectives = result.data || [];
+                    renderMultiSelectOptions('objectives', userObjectives.map(obj => ({
+                        id: obj.objectiveId,
+                        name: obj.objectiveDescrpt,
+                        meta: obj.objectiveKPI ? `KPI: ${obj.objectiveKPI}` : ''
+                    })));
+                    console.log('Loaded objectives:', userObjectives.length);
+                } else {
+                    console.warn('Failed to load objectives:', result.message);
+                }
+            } catch (error) {
+                console.error('Error loading user objectives:', error);
+            }
+        }
+        async function loadUserSkills() {
+            try {
+                const response = await fetch('/employee/user-skills');
+                const result = await response.json();
+
+                if (result.success) {
+                    userSkills = result.data || [];
+                    renderMultiSelectOptions('skills', userSkills.map(skill => ({
+                        id: skill.jobReqSkillId,
+                        name: skill.jobReqSkillName,
+                        meta: `Type: ${skill.jobReqSkillType}`
+                    })));
+                    console.log('Loaded skills:', userSkills.length);
+                } else {
+                    console.warn('Failed to load skills:', result.message);
+                }
+            } catch (error) {
+                console.error('Error loading user skills:', error);
+            }
+        }
+         function toggleMultiSelect(type) {
+            const dropdown = document.getElementById(`${type}Dropdown`);
+            const isOpen = dropdown.classList.contains('open');
+            
+            // Close all other dropdowns
+            closeAllMultiSelects();
+            
+            // Toggle current dropdown
+            if (!isOpen) {
+                dropdown.classList.add('open');
+            }
+        }
+        function closeAllMultiSelects() {
+            document.querySelectorAll('.multi-select-dropdown').forEach(dropdown => {
+                dropdown.classList.remove('open');
+            });
+        }
+
+        function renderMultiSelectOptions(type, options) {
+            const dropdown = document.getElementById(`${type}Dropdown`);
+            const selectedItems = type === 'objectives' ? selectedObjectives : selectedSkills;
+            
+            const html = options.map(option => {
+                const isSelected = selectedItems.some(item => item.id === option.id);
+                return `
+                    <div class="multi-select-option ${isSelected ? 'selected' : ''}" 
+                         onclick="toggleSelectOption('${type}', ${option.id}, '${option.name.replace(/'/g, "\\'")}', '${option.meta.replace(/'/g, "\\'")}')">
+                        <div style="font-weight: 500;">${option.name}</div>
+                        ${option.meta ? `<div style="font-size: 12px; color: #666;">${option.meta}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            dropdown.innerHTML = html;
+        }
+        function toggleSelectOption(type, id, name, meta) {
+            const selectedItems = type === 'objectives' ? selectedObjectives : selectedSkills;
+            const existingIndex = selectedItems.findIndex(item => item.id === id);
+            
+            if (existingIndex > -1) {
+                selectedItems.splice(existingIndex, 1);
+            } else {
+                selectedItems.push({ id, name, meta });
+            }
+            
+            updateMultiSelectDisplay(type);
+            
+            // Re-render options to update selected state
+            const options = type === 'objectives' ? 
+                userObjectives.map(obj => ({ id: obj.objectiveId, name: obj.objectiveDescrpt, meta: obj.objectiveKPI ? `KPI: ${obj.objectiveKPI}` : '' })) :
+                userSkills.map(skill => ({ id: skill.jobReqSkillId, name: skill.jobReqSkillName, meta: `Type: ${skill.jobReqSkillType}` }));
+            
+            renderMultiSelectOptions(type, options);
+            
+            // Update hidden input
+            document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`).value = 
+                JSON.stringify(selectedItems.map(item => item.id));
+        }
+
+        function updateMultiSelectDisplay(type) {
+            const container = document.getElementById(`${type}MultiSelect`);
+            const selectedItems = type === 'objectives' ? selectedObjectives : selectedSkills;
+            
+            if (selectedItems.length === 0) {
+                container.innerHTML = `<span class="placeholder">Select related ${type} (optional)</span>`;
+            } else {
+                container.innerHTML = selectedItems.map(item => `
+                    <span class="selected-tag">
+                        ${item.name}
+                        <span class="tag-remove" onclick="removeSelectedItem('${type}', ${item.id})">&times;</span>
+                    </span>
+                `).join('');
+            }
+        }
+
+        function removeSelectedItem(type, id) {
+            const selectedItems = type === 'objectives' ? selectedObjectives : selectedSkills;
+            const index = selectedItems.findIndex(item => item.id === id);
+            
+            if (index > -1) {
+                selectedItems.splice(index, 1);
+                updateMultiSelectDisplay(type);
+                
+                // Update hidden input
+                document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`).value = 
+                    JSON.stringify(selectedItems.map(item => item.id));
+                
+                // Re-render options to update selected state
+                const options = type === 'objectives' ? 
+                    userObjectives.map(obj => ({ id: obj.objectiveId, name: obj.objectiveDescrpt, meta: obj.objectiveKPI ? `KPI: ${obj.objectiveKPI}` : '' })) :
+                    userSkills.map(skill => ({ id: skill.jobReqSkillId, name: skill.jobReqSkillName, meta: `Type: ${skill.jobReqSkillType}` }));
+                
+                renderMultiSelectOptions(type, options);
+            }
+        }
+        
+        function resetMultiSelects() {
+            selectedObjectives = [];
+            selectedSkills = [];
+            updateMultiSelectDisplay('objectives');
+            updateMultiSelectDisplay('skills');
+            document.getElementById('selectedObjectives').value = '';
+            document.getElementById('selectedSkills').value = '';
+        }
 
         // Update filters based on checkboxes
         function updateFilters() {
@@ -4295,51 +4982,172 @@ function selectSkill(skillId, skillName, skillType) {
     document.getElementById('skillDropdown').classList.remove('open');
 }
 
-// Activity management
 function addActivity() {
-    activityCount++;
-    const activityHTML = `
-        <div class="activity-item" id="activity-${activityCount}">
-            <div class="activity-header">
-                <div class="activity-number">${activityCount}</div>
-                <button type="button" class="remove-activity" onclick="removeActivity(${activityCount})">
-                    <i class="fas fa-trash"></i> Remove
-                </button>
-            </div>
-            <div class="activity-fields">
-                <div>
-                    <label class="form-label">Activity Name</label>
-                    <input type="text" class="form-input" name="activityName[]" placeholder="Enter activity name" required>
+            const container = document.getElementById('activitiesContainer');
+            const activityHtml = `
+                <div class="activity-item">
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                        <button type="button" class="btn btn-danger" onclick="removeActivity(this)" style="padding: 5px 10px; font-size: 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-play"></i> Activity Name *
+                            </label>
+                            <input type="text" name="activityName[]" required 
+                                   placeholder="e.g., Introduction to Python">
+                        </div>
+                        
+                        <div class="form-group" style="flex: 0.6;">
+                            <label>
+                                <i class="fas fa-tag"></i> Activity Type *
+                            </label>
+                            <input type="text" name="activityType[]" required 
+                                   placeholder="e.g., Lecture, Workshop, Practical" onchange="updateTotalDuration()">
+                        </div>
+                        
+                        <div class="form-group" style="flex: 0.4;">
+                            <label>
+                                <i class="fas fa-clock"></i> Duration (hrs) *
+                            </label>
+                            <input type="number" name="estActivityDuration[]" required 
+                                   min="0.5" step="0.5" placeholder="2.5" onchange="updateTotalDuration()">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-comment"></i> Activity Remarks
+                        </label>
+                        <textarea name="activityRemarks[]" rows="2" 
+                                  placeholder="Additional notes about this activity"></textarea>
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label">Activity Type</label>
-                    <input type="text" class="form-input" name="activityType[]" placeholder="e.g., Lecture, Workshop" required>
-                </div>
-                <div>
-                    <label class="form-label">Duration (hours)</label>
-                    <input type="number" class="form-input duration-input" name="estActivityDuration[]" 
-                           step="0.5" min="0.5" placeholder="0.5" required onchange="updateTotalDuration()">
-                </div>
-            </div>
-            <div class="activity-remarks">
-                <label class="form-label">Remarks (optional)</label>
-                <textarea class="form-input" name="activityRemarks[]" rows="2" placeholder="Additional notes about this activity"></textarea>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('activitiesContainer').insertAdjacentHTML('beforeend', activityHTML);
-    updateTotalDuration();
-}
+            `;
+            container.insertAdjacentHTML('beforeend', activityHtml);
+        }
 
-function removeActivity(activityNumber) {
-    const activityElement = document.getElementById(`activity-${activityNumber}`);
-    if (activityElement) {
-        activityElement.remove();
-        updateTotalDuration();
-        renumberActivities();
-    }
-}
+         function removeActivity(button) {
+            const activityItem = button.closest('.activity-item');
+            const container = document.getElementById('activitiesContainer');
+            
+            if (container.children.length > 1) {
+                activityItem.remove();
+                updateTotalDuration();
+            } else {
+                alert('At least one activity is required.');
+            }
+        }
+
+        // Certificate management
+        function addCertificate() {
+            const container = document.getElementById('certificatesContainer');
+            const certificateHtml = `
+                <div class="certificate-item">
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                        <button type="button" class="btn btn-danger" onclick="removeCertificate(this)" style="padding: 5px 10px; font-size: 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-award"></i> Certificate Title *
+                            </label>
+                            <input type="text" name="trainingCertTitle[]" required 
+                                   placeholder="e.g., Python Programming Certificate">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-file-alt"></i> Certificate Description *
+                        </label>
+                        <textarea name="trainingCertDesc[]" rows="3" required 
+                                  placeholder="Describe what this certificate validates and its significance"></textarea>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', certificateHtml);
+        }
+
+function removeCertificate(button) {
+            const certificateItem = button.closest('.certificate-item');
+            const container = document.getElementById('certificatesContainer');
+            
+            if (container.children.length > 1) {
+                certificateItem.remove();
+            } else {
+                alert('At least one certificate is required.');
+            }
+        }
+        function resetActivitiesContainer() {
+            const container = document.getElementById('activitiesContainer');
+            container.innerHTML = `
+                <div class="activity-item">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-play"></i> Activity Name *
+                            </label>
+                            <input type="text" name="activityName[]" required 
+                                   placeholder="e.g., Introduction to Python">
+                        </div>
+                        
+                        <div class="form-group" style="flex: 0.6;">
+                            <label>
+                                <i class="fas fa-tag"></i> Activity Type *
+                            </label>
+                            <input type="text" name="activityType[]" required 
+                                   placeholder="e.g., Lecture, Workshop, Practical" onchange="updateTotalDuration()">
+                        </div>
+                        
+                        <div class="form-group" style="flex: 0.4;">
+                            <label>
+                                <i class="fas fa-clock"></i> Duration (hrs) *
+                            </label>
+                            <input type="number" name="estActivityDuration[]" required 
+                                   min="0.5" step="0.5" placeholder="2.5" onchange="updateTotalDuration()">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-comment"></i> Activity Remarks
+                        </label>
+                        <textarea name="activityRemarks[]" rows="2" 
+                                  placeholder="Additional notes about this activity"></textarea>
+                    </div>
+                </div>
+            `;
+        }
+
+        function resetCertificatesContainer() {
+            const container = document.getElementById('certificatesContainer');
+            container.innerHTML = `
+                <div class="certificate-item">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-award"></i> Certificate Title *
+                            </label>
+                            <input type="text" name="trainingCertTitle[]" required 
+                                   placeholder="e.g., Python Programming Certificate">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-file-alt"></i> Certificate Description *
+                        </label>
+                        <textarea name="trainingCertDesc[]" rows="3" required 
+                                  placeholder="Describe what this certificate validates and its significance"></textarea>
+                    </div>
+                </div>
+            `;
+        }
 
 function renumberActivities() {
     const activities = document.querySelectorAll('.activity-item');
@@ -4349,20 +5157,18 @@ function renumberActivities() {
     });
 }
 
-
-
 function updateTotalDuration() {
-    const durationInputs = document.querySelectorAll('.duration-input');
-    totalDuration = 0;
-    
-    durationInputs.forEach(input => {
-        const value = parseFloat(input.value) || 0;
-        totalDuration += value;
-    });
-    
-    document.getElementById('totalDurationValue').textContent = totalDuration.toFixed(1);
-}
-
+            const durationInputs = document.querySelectorAll('input[name="estActivityDuration[]"]');
+            let total = 0;
+            
+            durationInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                total += value;
+            });
+            
+            document.getElementById('totalDurationValue').textContent = total.toFixed(1);
+            document.getElementById('totalDuration').value = total;
+        }
 // Dropdown toggle functions
 function toggleDropdown(dropdownId) {
     const dropdown = document.getElementById(dropdownId);
@@ -4379,81 +5185,209 @@ function toggleDropdown(dropdownId) {
     }
 }
 
-// Form submission handler - REPLACE existing handleFormSubmit with this:
-async function handleNewFormSubmit(e) {
-    e.preventDefault();
-    
-    console.log('Submitting new training request...');
-    
-    // Validate required fields
-    if (!validateNewForm()) {
-        alert('Please fill in all required fields.');
-        return;
-    }
-    
-    // Collect form data
-    const formData = {
-        trainingName: document.getElementById('trainingName').value,
-        trainingDesc: document.getElementById('trainingDesc').value,
-        cost: parseFloat(document.getElementById('cost').value) || 0,
-        midyearidpId: document.getElementById('selectedIdpType').value === 'Midyear' ? 
-                      parseInt(document.getElementById('selectedIdpId').value) : null,
-        finalyearidpId: document.getElementById('selectedIdpType').value === 'Final' ? 
-                        parseInt(document.getElementById('selectedIdpId').value) : null,
-        isOnlineArrangement: document.getElementById('isOnlineArrangement').value === 'true',
-        address: document.getElementById('address').value || null,
-        country: document.getElementById('country').value || null,
-        objectiveId: parseInt(document.getElementById('selectedObjectiveId').value) || null,
-        jobReqSkillId: parseInt(document.getElementById('selectedSkillId').value) || null,
-        totalDuration: totalDuration,
-        trainingCertTitle: document.getElementById('trainingCertTitle').value,
-        trainingCertDesc: document.getElementById('trainingCertDesc').value,
-        activities: collectActivities()
-    };
-    
-    console.log('Form data:', formData);
-    
-    const submitButton = document.getElementById('submitTrainingRequest');
-    const originalText = submitButton.innerHTML;
-    
-    // Disable button and show loading
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-    
-    try {
-        const response = await fetch('/employee/training-requests/new', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-            alert(`✅ Training request submitted successfully!\n\nTraining: ${formData.trainingName}\nTotal Duration: ${formData.totalDuration} hours\nActivities: ${formData.activities.length}\n\nYour request has been sent for approval.`);
+async function handleFormSubmit(event) {
+            event.preventDefault();
             
-            closeTrainingRequestModal();
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
             
-            // Refresh the data
-            setTimeout(() => {
-                if (typeof loadTrainingProgress === 'function') loadTrainingProgress();
-                if (typeof loadAllCourses === 'function') loadAllCourses();
-            }, 1000);
-            
-        } else {
-            throw new Error(result.message || 'Failed to submit training request');
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                
+                const formData = collectFormData();
+                
+                if (!validateFormData(formData)) {
+                    return;
+                }
+                
+                const response = await fetch('/employee/create-new-training-request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Training request submitted successfully!\n\nTraining: ${result.data.trainingName}\nStatus: ${result.data.status || 'Pending Approval'}\nTraining Record ID: ${result.data.trainingRecordId}`);
+                    closeTrainingModal();
+                    location.reload();
+                } else {
+                    throw new Error(result.message || 'Failed to submit training request');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting training request:', error);
+                alert('Error submitting training request: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-        
-    } catch (error) {
-        console.error('Error submitting training request:', error);
-        alert('❌ Failed to submit training request: ' + (error.message || 'Please try again later.'));
-        
-        // Re-enable button
-        submitButton.disabled = false;
-        submitButton.innerHTML = originalText;
-    }
-}
+function collectFormData() {
+            const form = document.getElementById('newTrainingRequestForm');
+            const formData = new FormData(form);
+            
+            const data = {};
+            
+            // Single value fields
+            for (const [key, value] of formData.entries()) {
+                if (!key.endsWith('[]')) {
+                    data[key] = value;
+                }
+            }
+            
+            // Handle array fields
+            data.activities = [];
+            const activityNames = formData.getAll('activityName[]');
+            const activityTypes = formData.getAll('activityType[]');
+            const activityDurations = formData.getAll('estActivityDuration[]');
+            const activityRemarks = formData.getAll('activityRemarks[]');
+            
+            for (let i = 0; i < activityNames.length; i++) {
+                data.activities.push({
+                    activityName: activityNames[i],
+                    activityType: activityTypes[i],
+                    estActivityDuration: parseFloat(activityDurations[i]) || 0,
+                    activityRemarks: activityRemarks[i] || null
+                });
+            }
+            
+            // Handle certificate arrays
+            data.certificates = [];
+            const certTitles = formData.getAll('trainingCertTitle[]');
+            const certDescs = formData.getAll('trainingCertDesc[]');
+            
+            for (let i = 0; i < certTitles.length; i++) {
+                data.certificates.push({
+                    trainingCertTitle: certTitles[i],
+                    trainingCertDesc: certDescs[i]
+                });
+            }
+            
+            // Handle selected objectives and skills
+            data.objectives = selectedObjectives.map(obj => ({ objectiveId: obj.id }));
+            data.skills = selectedSkills.map(skill => ({ skillId: skill.id }));
+            
+            // Convert boolean fields
+            data.isOnlineArrangement = data.isOnlineArrangement === 'true';
+            
+            // Convert numeric fields
+            if (data.cost) data.cost = parseFloat(data.cost);
+            data.totalDuration = parseFloat(data.totalDuration);
+            
+            // Determine which IDP ID to use
+            const idpType = data.idpType;
+            if (idpType === 'midyear') {
+                data.midyearidpId = parseInt(data.idpPeriod);
+                data.finalyearidpId = null;
+            } else if (idpType === 'finalyear') {
+                data.finalyearidpId = parseInt(data.idpPeriod);
+                data.midyearidpId = null;
+            }
+            
+            // Clean up temporary fields
+            delete data.idpType;
+            delete data.idpPeriod;
+            delete data.selectedObjectives;
+            delete data.selectedSkills;
+            
+            return data;
+        }
+
+    function validateFormData(data) {
+            if (!data.trainingName) {
+                alert('Training name is required.');
+                return false;
+            }
+            
+            if (!data.trainingDesc) {
+                alert('Training description is required.');
+                return false;
+            }
+            
+            if (!data.totalDuration || data.totalDuration <= 0) {
+                alert('Valid total duration is required. Please add activities with durations.');
+                return false;
+            }
+            
+            if (data.isOnlineArrangement === null || data.isOnlineArrangement === undefined) {
+                alert('Please select training format (Online/Onsite).');
+                return false;
+            }
+            
+            if (!data.isOnlineArrangement) {
+                if (!data.address) {
+                    alert('Address is required for onsite training.');
+                    return false;
+                }
+                if (!data.country) {
+                    alert('Country is required for onsite training.');
+                    return false;
+                }
+            }
+            
+            if (!data.midyearidpId && !data.finalyearidpId) {
+                alert('Please select an IDP period.');
+                return false;
+            }
+            
+            if (!data.activities || data.activities.length === 0) {
+                alert('At least one training activity is required.');
+                return false;
+            }
+            
+            if (!data.certificates || data.certificates.length === 0) {
+                alert('At least one training certificate is required.');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Make functions globally available
+        window.openTrainingModal = openTrainingModal;
+        window.closeTrainingModal = closeTrainingModal;
+        window.loadIdpPeriods = loadIdpPeriods;
+        window.loadIdpDetails = loadIdpDetails;
+        window.viewFullIdp = viewFullIdp;
+        window.closeFullIdpModal = closeFullIdpModal;
+        window.toggleLocationFields = toggleLocationFields;
+        window.addActivity = addActivity;
+        window.removeActivity = removeActivity;
+        window.addCertificate = addCertificate;
+        window.removeCertificate = removeCertificate;
+        window.updateTotalDuration = updateTotalDuration;
+        window.submitTrainingRequest = submitTrainingRequest;
+        window.showActivityTypeSuggestions = showActivityTypeSuggestions;
+        window.filterActivityTypes = filterActivityTypes;
+        window.selectActivityType = selectActivityType;
+        window.toggleActivityTypeDropdown = toggleActivityTypeDropdown;
+        window.toggleMultiSelect = toggleMultiSelect;
+        window.toggleSelectOption = toggleSelectOption;
+        window.removeSelectedItem = removeSelectedItem;
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('trainingRequestModal');
+            if (event.target === modal) {
+                closeTrainingModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('trainingRequestModal');
+                if (modal.style.display === 'block') {
+                    closeTrainingModal();
+                }
+            }
+        });
+
 
 // ADD these event listeners to your existing DOMContentLoaded section:
 document.addEventListener('DOMContentLoaded', function() {
@@ -4828,6 +5762,8 @@ document.addEventListener('click', function(e) {
 // Initialize the application
         document.addEventListener('DOMContentLoaded', async () => {
             initializeTabs();
+            setupEventListeners();
+            loadInitialData();
             initializeViewToggle();
             initializeCalendarNavigation();
             
@@ -4838,6 +5774,46 @@ document.addEventListener('click', function(e) {
                 loadCertificates()
             ]);
         });
+
+
+         function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+
+                    button.classList.add('active');
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        function setupEventListeners() {
+            // Request New Training button
+            document.querySelectorAll('.btn.btn-primary').forEach(btn => {
+                if (btn.textContent.includes('Request New Training')) {
+                    btn.addEventListener('click', openTrainingModal);
+                }
+            });
+
+            // Form submission
+            document.getElementById('newTrainingRequestForm').addEventListener('submit', handleFormSubmit);
+        }
+
+
+        async function loadInitialData() {
+            await Promise.all([
+                loadTrainingProgress(),
+                loadAllCourses(),
+                loadCertificates(),
+                loadUserObjectives(),
+                loadUserSkills()
+            ]);
+        }
 
         function initializeViewToggle() {
             const listViewBtn = document.getElementById('listViewBtn');
@@ -5832,70 +6808,61 @@ function getHoursPerDay() {
         default: return 4;
     }
 }
-async function submitTrainingRequest(formData) {
-    const submitButton = document.getElementById('submitButton');
-    const originalText = submitButton.innerHTML;
-    
-    // Disable button and show loading state
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
-    try {
-        const response = await fetch('/employee/training-requests', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-                trainingId: formData.trainingId,
-                startDate: formData.startDate,
-                endDate: formData.endDate,
-                scheduleType: formData.scheduleType
-            })
-        });
-
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-            // Success message
-            alert(`✅ Training request submitted successfully!\n\nTraining: ${formData.trainingName}\nSchedule: ${formData.scheduleType}\nPeriod: ${formatDate(formData.startDate)} - ${formatDate(formData.endDate)}\nTotal Duration: ${formData.totalDuration} hours\n\nYour line manager will be notified for approval.`);
+ // Submit training request
+        async function submitTrainingRequest() {
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
             
-            // Close modal AFTER showing success message
-            closeTrainingRequestModal();
-            
-            // Refresh the data
-            setTimeout(() => {
-                if (typeof loadTrainingProgress === 'function') loadTrainingProgress();
-                if (typeof loadAllCourses === 'function') loadAllCourses();
-            }, 1000);
-            
-        } else {
-            throw new Error(result.message || 'Failed to submit training request');
+            try {
+                // Disable submit button and show loading
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                
+                // Collect form data
+                const formData = collectFormData();
+                
+                // Validate form data
+                if (!validateFormData(formData)) {
+                    return;
+                }
+                
+                // Submit to server
+                const response = await fetch('/employee/create-new-training-request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Training request submitted successfully!\n\nTraining: ${result.data.trainingName}\nStatus: ${result.data.status || 'Pending Approval'}\nTraining Record ID: ${result.data.trainingRecordId}`);
+                    closeTrainingModal();
+                    
+                    // Refresh the page or update the training list
+                    if (typeof refreshTrainingList === 'function') {
+                        refreshTrainingList();
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to submit training request');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting training request:', error);
+                alert('Error submitting training request: ' + error.message);
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         }
-        
-    } catch (error) {
-        console.error('Error submitting training request:', error);
 
-        let errorMessage = 'Failed to submit training request. ';
-        if (error.message.includes('already have an active')) {
-            errorMessage = '⚠️ You already have an active training request for this course.';
-        } else if (error.message.includes('not authenticated')) {
-            errorMessage += 'Please log in again and try again.';
-        } else if (error.message.includes('not found')) {
-            errorMessage += 'The selected training is no longer available.';
-        } else {
-            errorMessage += error.message || 'Please try again later.';
-        }
-        
-        alert('❌ ' + errorMessage);
-        
-        // Re-enable button on error - DON'T reset modal
-        submitButton.disabled = false;
-        submitButton.innerHTML = originalText;
-        
-        // Re-validate form to restore proper button state
-        validateForm();
-    }
-}
+
 function openTrainingRequestModal() {
     console.log('Opening training request modal...');
     
@@ -5991,66 +6958,17 @@ function resetModal() {
 
 
 
- function initializeTabs() {
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
 
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-
-                    button.classList.add('active');
-                    const tabId = button.getAttribute('data-tab');
-                    document.getElementById(tabId).classList.add('active');
-                });
-            });
-        }
-
-// Improved error handling for loadTrainingProgress
 async function loadTrainingProgress() {
             try {
-                const response = await fetch('/employee/training-progress', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
+                const response = await fetch('/employee/training-progress');
                 const result = await response.json();
-                
-                if (result.success && result.data) {
-                    const processedData = {
-                        trainings: result.data.map(training => {
-                            const status = training.status || determineTrainingStatus(training);
-                            return { ...training, status };
-                        })
-                    };
-                    
-                    trainingProgressData = processedData;
+                if (result.success) {
+                    trainingProgressData = { trainings: result.data || [] };
                     renderProgressCategories();
-                    renderTrainingSections();
-                } else {
-                    throw new Error(result.message || 'No training data available');
                 }
             } catch (error) {
                 console.error('Error loading training progress:', error);
-                document.getElementById('progressCategories').innerHTML = 
-                    `<div class="loading-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: #64748b;">Failed to load training progress</p>
-                        <button onclick="loadTrainingProgress()" style="margin-top: 10px; padding: 8px 16px; background: #07ACB9; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                            <i class="fas fa-retry"></i> Retry
-                        </button>
-                    </div>`;
-                
-                document.getElementById('trainingSections').innerHTML = 
-                    `<div style="text-align: center; color: #64748b; padding: 40px;">
-                        <p>Unable to load training courses. Please try refreshing the page.</p>
-                    </div>`;
             }
         }
 
@@ -6940,6 +7858,24 @@ function renderCertificates(certificates) {
                 console.log('Training Request Submitted:', formData);
                 alert('Training request submitted successfully! Your line manager will be notified for approval.');
                 closeTrainingRequestModal();
+            });
+
+
+            // Close modal when clicking outside
+            document.addEventListener('click', function(event) {
+                if (event.target.classList.contains('modal-overlay')) {
+                    closeTrainingModal();
+                }
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.multi-select-container')) {
+                    closeAllMultiSelects();
+                }
+                if (!event.target.closest('.activity-type-container')) {
+                    closeAllActivityTypeSuggestions();
+                }
             });
         });
 
