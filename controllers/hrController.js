@@ -5920,49 +5920,23 @@ finalizeP2Review: async function(req, res) {
                     .single();
                 
                 if (!fetchError && applicantData && applicantData.userId) {
-                    // Add congratulations message (first message)
-                    const congratsMessage = "Congratulations! We are pleased to inform you that you have successfully passed the initial interview. We would like to invite you for a final interview with our senior management team.";
-                    
-                    const { data: chatData1, error: chatError1 } = await supabase
+                    // Add chatbot message
+                    const { data: chatData, error: chatError } = await supabase
                         .from('chatbot_history')
                         .insert([{
                             userId: applicantData.userId,
-                            message: JSON.stringify({ text: congratsMessage }),
+                            message: JSON.stringify({ 
+                                text: "Congratulations! You have successfully passed the HR evaluation process. We will contact you soon to schedule the next interview stage with the Line Manager." 
+                            }),
                             sender: 'bot',
                             timestamp: new Date().toISOString(),
                             applicantStage: 'P2 - PASSED'
                         }]);
                         
-                    if (chatError1) {
-                        console.error(`❌ [HR] Error adding congratulations message for ${applicantId}:`, chatError1);
-                    }
-                    
-                    // Add Calendly link message (second message with slight delay)
-                    const calendlyMessage = "Please click the button below to schedule your final interview at your convenience:";
-                    
-                    const { data: chatData2, error: chatError2 } = await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId: applicantData.userId,
-                            message: JSON.stringify({ 
-                                text: calendlyMessage,
-                                buttons: [
-                                    { 
-                                        text: "Schedule Final Interview", 
-                                        value: "schedule_final_interview",
-                                        url: "/applicant/schedule-interview?stage=P2"
-                                    }
-                                ]
-                            }),
-                            sender: 'bot',
-                            timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
-                            applicantStage: 'P2 - PASSED'
-                        }]);
-                        
-                    if (chatError2) {
-                        console.error(`❌ [HR] Error adding Calendly message for ${applicantId}:`, chatError2);
+                    if (chatError) {
+                        console.error(`❌ [HR] Error adding chat message for ${applicantId}:`, chatError);
                     } else {
-                        console.log(`💬 [HR] Added both chatbot messages for passed applicant ${applicantId}`);
+                        console.log(`💬 [HR] Added chatbot message for passed applicant ${applicantId}`);
                     }
                 }
                 
