@@ -373,17 +373,20 @@ router.get('/linemanager/training-request/:userId', lineManagerController.getTra
 router.get('/linemanager/api/training-request/:userId/details', lineManagerController.getTrainingRequestDetails); // Fixed path
 router.post('/linemanager/training/approve', lineManagerController.approveTrainingRequest); // Fixed path
 router.post('/linemanager/training/reject', lineManagerController.rejectTrainingRequest); // Fixed path
+router.post('/api/training/endorse', lineManagerController.endorseTrainingToHR);
+router.post('/api/training/reject', lineManagerController.cancelTraining);
+router.get('/api/training/details/:id', lineManagerController.getTrainingDetailsAPI);
 
 // NEW: Pending training requests management routes (ADD THESE 4 LINES)
-router.post('/linemanager/training-request/approve', lineManagerController.approveTrainingRequestByRecord);
-router.post('/linemanager/training-request/reject', lineManagerController.rejectTrainingRequestByRecord);
-router.post('/linemanager/training-request/approve-bulk', lineManagerController.approveTrainingRequestsBulk);
-router.post('/linemanager/training-request/reject-bulk', lineManagerController.rejectTrainingRequestsBulk);
+// router.post('/linemanager/training-request/approve', lineManagerController.approveTrainingRequestByRecord);
+// router.post('/linemanager/training-request/reject', lineManagerController.rejectTrainingRequestByRecord);
+// router.post('/linemanager/training-request/approve-bulk', lineManagerController.approveTrainingRequestsBulk);
+// router.post('/linemanager/training-request/reject-bulk', lineManagerController.rejectTrainingRequestsBulk);
 
-// Add this line with your other training routes
-router.get('/linemanager/training/:trainingId/objectives', lineManagerController.getTrainingObjectives);
-// Add this line with your other training routes
-router.get('/linemanager/training/:trainingId/skills', lineManagerController.getTrainingSkills);
+// // Add this line with your other training routes
+// router.get('/linemanager/training/:trainingId/objectives', lineManagerController.getTrainingObjectives);
+// // Add this line with your other training routes
+// router.get('/linemanager/training/:trainingId/skills', lineManagerController.getTrainingSkills);
 
 // ============================
 // Employee - TRAINING MODULE CONTROLLER FUNCTIONS
@@ -431,22 +434,27 @@ router.get('/employee/certificates', employeeController.getCertificates);
 // ============================
 // HR - TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================
-router.get('/hr/employees', hrController.getEmployees);
 router.get('/hr/training-development-tracker', hrController.getHrTrainingDevelopmentTracker);
-router.get('/hr/training-form-data', hrController.getTrainingFormData); 
-router.post('/hr/training', hrController.createTraining); 
-router.get('/hr/employees/filter', hrController.getEmployeesByFilter); 
-router.get('/hr/existing-trainings', hrController.getExistingTrainings); 
-router.post('/hr/training/reassign', hrController.reassignTraining); 
-router.get('/hr/training/:trainingId/details', hrController.getTrainingDetails);
-router.get('/hr/employee-dashboard', hrController.getEmployeeTrainingDashboard);
+router.get('/hr/pending-training-requests', hrController.getPendingTrainingRequests);
+router.post('/hr/approve-training-request', hrController.approveTrainingRequest);
 router.get('/hr/budget-overview', hrController.getBudgetOverview);
 router.post('/hr/update-budget', hrController.updateBudget);
-router.get('/hr/training-reports/courses', hrController.getTrainingCoursesReport);
-router.get('/hr/training-reports/assignments', hrController.getTrainingAssignmentsReport);
-router.get('/hr/training-reports/assignments/filtered', hrController.getFilteredTrainingAssignments);
-router.get('/hr/budget-report', hrController.getBudgetReport);
-router.get('/hr/budget-export/:format', hrController.exportBudgetReport);
+router.get('/hr/training-approval-history', hrController.getTrainingApprovalHistory);
+
+// commenting this out for now
+// router.get('/hr/employees', hrController.getEmployees);
+// router.get('/hr/training-form-data', hrController.getTrainingFormData); 
+// router.post('/hr/training', hrController.createTraining); 
+// router.get('/hr/employees/filter', hrController.getEmployeesByFilter); 
+// router.get('/hr/existing-trainings', hrController.getExistingTrainings); 
+// router.post('/hr/training/reassign', hrController.reassignTraining); 
+// router.get('/hr/training/:trainingId/details', hrController.getTrainingDetails);
+// router.get('/hr/employee-dashboard', hrController.getEmployeeTrainingDashboard);
+// router.get('/hr/training-reports/courses', hrController.getTrainingCoursesReport);
+// router.get('/hr/training-reports/assignments', hrController.getTrainingAssignmentsReport);
+// router.get('/hr/training-reports/assignments/filtered', hrController.getFilteredTrainingAssignments);
+// router.get('/hr/budget-report', hrController.getBudgetReport);
+// router.get('/hr/budget-export/:format', hrController.exportBudgetReport);
 
 
 router.get('/hr/offboarding-dashboard-stats', hrController.getOffboardingDashboardStats);
