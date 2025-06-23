@@ -7062,6 +7062,7 @@ addTrainingCategory: async function(req, res) {
         });
     }
 },
+
 // FIXED: saveMidYearIDP function to properly handle training categories
 saveMidYearIDP: async function(req, res) {
     try {
@@ -7090,32 +7091,41 @@ saveMidYearIDP: async function(req, res) {
             year
         } = req.body;
 
-        // FIXED: Handle training categories - ensure it's an array of strings
+        // FIXED: Handle training categories - ensure it's properly formatted as an array of strings
         let processedTrainingCategories = [];
         
         console.log("Raw trainingCategories received:", trainingCategories, typeof trainingCategories);
         
         if (trainingCategories) {
             if (Array.isArray(trainingCategories)) {
-                // If it's already an array, filter out empty values
-                processedTrainingCategories = trainingCategories.filter(cat => {
-                    if (typeof cat === 'string') {
-                        return cat.trim() !== '';
-                    } else if (typeof cat === 'object' && cat !== null) {
-                        return (cat.name || cat.category || '').trim() !== '';
-                    }
-                    return false;
-                }).map(cat => {
-                    if (typeof cat === 'string') {
-                        return cat.trim();
-                    } else {
-                        return (cat.name || cat.category || '').trim();
-                    }
-                });
+                // If it's already an array, process each item
+                processedTrainingCategories = trainingCategories
+                    .map(cat => {
+                        if (typeof cat === 'string') {
+                            return cat.trim();
+                        } else if (typeof cat === 'object' && cat !== null) {
+                            // Handle objects with name/category properties
+                            return (cat.name || cat.category || '').trim();
+                        }
+                        return '';
+                    })
+                    .filter(cat => cat.length > 0); // Remove empty strings
             } else if (typeof trainingCategories === 'string') {
-                // If it's a string, make it an array
-                if (trainingCategories.trim() !== '') {
-                    processedTrainingCategories = [trainingCategories.trim()];
+                // If it's a string, try to parse as JSON or treat as single item
+                try {
+                    const parsed = JSON.parse(trainingCategories);
+                    if (Array.isArray(parsed)) {
+                        processedTrainingCategories = parsed
+                            .map(cat => typeof cat === 'string' ? cat.trim() : '')
+                            .filter(cat => cat.length > 0);
+                    } else {
+                        processedTrainingCategories = [trainingCategories.trim()];
+                    }
+                } catch (e) {
+                    // Not JSON, treat as single category
+                    if (trainingCategories.trim() !== '') {
+                        processedTrainingCategories = [trainingCategories.trim()];
+                    }
                 }
             }
         }
@@ -7174,10 +7184,12 @@ saveMidYearIDP: async function(req, res) {
             nextRoleShortTerm,
             nextRoleLongTerm,
             nextRoleMobility,
-            trainingCategories: processedTrainingCategories,
+            trainingCategories: JSON.stringify(processedTrainingCategories), // FIXED: Ensure JSONB format
             trainingRemarks: trainingRemarks || null,
             year: currentYear
         };
+
+        console.log("Data to save to database:", dataToSave);
 
         let result;
 
@@ -7253,40 +7265,92 @@ saveMidYearIDP: async function(req, res) {
 getMidYearIDPWithTrainings: async function(req, res) {
     try {
         const userId = req.params.userId;
-        const year = req.query.year || new Date().getFullYear();
         
         if (!userId) {
             return res.status(400).json({ success: false, message: "User ID is required" });
         }
 
-        // Get Mid-Year IDP data with training categories
-        const { data: midyearData, error: midyearError } = await supabase
+        console.log("Getting Mid-Year IDP with trainings for userId:", userId);
+
+        // Get the Mid-Year IDP data
+        const { data: midYearData, error: midYearError } = await supabase
             .from("midyearidps")
             .select("*")
             .eq("userId", userId)
-            .eq("year", year)
             .single();
 
-        if (midyearError && midyearError.code !== 'PGRST116') {
-            console.error("Error fetching Mid-Year IDP:", midyearError);
-            return res.status(500).json({ success: false, message: "Error fetching Mid-Year IDP data" });
+        if (midYearError) {
+            console.error("Error fetching Mid-Year IDP:", midYearError);
+            return res.status(500).json({ 
+                success: false, 
+                message: "Error fetching Mid-Year IDP data" 
+            });
         }
+
+        if (!midYearData) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Mid-Year IDP not found" 
+            });
+        }
+
+        console.log("Raw Mid-Year IDP data:", midYearData);
+
+        // FIXED: Process training categories from JSONB
+        let processedTrainingCategories = [];
+        
+        if (midYearData.trainingCategories) {
+            try {
+                // Parse the JSONB data
+                let categories;
+                if (typeof midYearData.trainingCategories === 'string') {
+                    categories = JSON.parse(midYearData.trainingCategories);
+                } else {
+                    categories = midYearData.trainingCategories;
+                }
+
+                console.log("Parsed training categories:", categories);
+
+                if (Array.isArray(categories)) {
+                    processedTrainingCategories = categories
+                        .filter(cat => cat && typeof cat === 'string' && cat.trim() !== '')
+                        .map(cat => cat.trim());
+                } else if (typeof categories === 'string' && categories.trim() !== '') {
+                    processedTrainingCategories = [categories.trim()];
+                }
+
+                console.log("Processed training categories:", processedTrainingCategories);
+            } catch (parseError) {
+                console.error("Error parsing training categories:", parseError);
+                console.log("Raw trainingCategories value:", midYearData.trainingCategories);
+                // If parsing fails, treat as empty array
+                processedTrainingCategories = [];
+            }
+        }
+
+        // Prepare the response data
+        const responseData = {
+            midYearData: {
+                ...midYearData,
+                trainingCategories: processedTrainingCategories
+            },
+            trainingCategories: processedTrainingCategories,
+            trainingRemarks: midYearData.trainingRemarks || ""
+        };
+
+        console.log("Returning Mid-Year IDP data with training categories:", responseData);
 
         return res.status(200).json({
             success: true,
-            data: {
-                midyearIDP: midyearData,
-                trainingCategories: midyearData?.trainingCategories || [],
-                trainingRemarks: midyearData?.trainingRemarks || ""
-            }
+            data: responseData
         });
 
     } catch (error) {
         console.error("Error in getMidYearIDPWithTrainings:", error);
-        return res.status(500).json({ 
-            success: false, 
+        return res.status(500).json({
+            success: false,
             message: "An error occurred while fetching Mid-Year IDP data",
-            error: error.message 
+            error: error.message
         });
     }
 },
@@ -9457,181 +9521,364 @@ determineResponderType: function(reviewerUserId, targetUserId, departmentStaff) 
     // For now, we'll return 'Peer' as default
     return 'Peer';
 },
+save360Questionnaire: async function(req, res) {
+    try {
+        console.log("=== ENTERING save360Questionnaire ===");
+        console.log("Request body:", JSON.stringify(req.body, null, 2));
+        console.log("Request params:", req.params);
+        
+        // FIXED: Get userId from params (URL) first, then from body as fallback
+        let userId = req.params.userId || req.body.userId;
+        
+        // Extract other fields from request body
+        let { startDate, endDate, jobId, feedbackData, quarter, activeQuarter } = req.body;
+        
+        // FIXED: Handle quarter field - use activeQuarter if quarter is not provided
+        if (!quarter && activeQuarter) {
+            quarter = activeQuarter;
+        }
+        
+        console.log("Extracted values:", {
+            userId: userId,
+            startDate: startDate,
+            endDate: endDate,
+            jobId: jobId,
+            quarter: quarter,
+            feedbackDataExists: !!feedbackData
+        });
 
-    save360Questionnaire: async function(req, res) {
-        const { userId, startDate, endDate, jobId, feedbackData, quarter } = req.body;
-    
-        try {
-            console.log("Entering save360DegreeFeedback function");
-            console.log("User ID:", userId, "Request body:", req.body);
-    
-            // Step 1: Fetch the jobId if not provided
-            let completeJobId = jobId;
-            if (!completeJobId) {
-                console.log("jobId is missing, fetching from staffaccounts...");
-                const { data: staffAccountData, error } = await supabase
-                    .from("staffaccounts")
-                    .select("jobId")
-                    .eq("userId", userId)
-                    .single();
-    
-                if (error) {
-                    console.error("Error fetching jobId:", error.message);
-                    return res.status(500).json({ success: false, message: error.message });
-                }
-    
-                if (!staffAccountData || !staffAccountData.jobId) {
-                    console.error("No jobId found for the user.");
-                    return res.status(400).json({ success: false, message: "Job ID not found for the user." });
-                }
-    
-                completeJobId = staffAccountData.jobId;
-                console.log("Fetched jobId:", completeJobId);
+        // FIXED: Validate userId first
+        if (!userId) {
+            console.error("❌ User ID is missing from both params and body");
+            return res.status(400).json({ 
+                success: false, 
+                message: "User ID is required. Please check the request URL or body." 
+            });
+        }
+
+        // Convert userId to integer if it's a string
+        userId = parseInt(userId);
+        if (isNaN(userId)) {
+            console.error("❌ Invalid userId format:", req.params.userId || req.body.userId);
+            return res.status(400).json({ 
+                success: false, 
+                message: "Invalid User ID format." 
+            });
+        }
+
+        console.log("✅ Valid userId:", userId);
+
+        // Step 1: Fetch the jobId if not provided
+        let completeJobId = jobId;
+        if (!completeJobId) {
+            console.log("📋 jobId is missing, fetching from staffaccounts...");
+            const { data: staffAccountData, error } = await supabase
+                .from("staffaccounts")
+                .select("jobId")
+                .eq("userId", userId)
+                .single();
+
+            if (error) {
+                console.error("❌ Error fetching jobId:", error);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: `Error fetching job information: ${error.message}` 
+                });
             }
-    
-            // Step 2: Validate required fields
-            if (!completeJobId || !startDate || !endDate || !feedbackData || !feedbackData.questions.length || !quarter) {
-                console.error('Validation error: Missing fields', { completeJobId, startDate, endDate, feedbackData, quarter });
-                return res.status(400).json({ success: false, message: 'All fields are required.' });
+
+            if (!staffAccountData || !staffAccountData.jobId) {
+                console.error("❌ No jobId found for the user.");
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "Job ID not found for the user. Please ensure the user has a valid job assignment." 
+                });
             }
-    
-            // Determine the feedback table based on the quarter
-            const feedbackTable = `feedbacks_${quarter}`;
-            const feedbackKey = `feedback${quarter.toLowerCase()}_Id`;
-    
-            // Step 3: Check if feedback already exists
-            const existingFeedback = await supabase
+
+            completeJobId = staffAccountData.jobId;
+            console.log("✅ Fetched jobId:", completeJobId);
+        }
+
+        // Step 2: Validate required fields
+        if (!completeJobId || !startDate || !endDate || !quarter) {
+            console.error('❌ Validation error: Missing required fields', { 
+                completeJobId, 
+                startDate, 
+                endDate, 
+                quarter,
+                hasFeedbackData: !!feedbackData
+            });
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Missing required fields: userId, jobId, startDate, endDate, and quarter are required.' 
+            });
+        }
+
+        // FIXED: Handle feedbackData - create empty structure if not provided
+        if (!feedbackData) {
+            console.log("⚠️ No feedbackData provided, creating empty structure");
+            feedbackData = { questions: [] };
+        }
+
+        if (!feedbackData.questions) {
+            feedbackData.questions = [];
+        }
+
+        console.log("📝 FeedbackData questions count:", feedbackData.questions.length);
+
+        // FIXED: Ensure quarter format is correct (Q1, Q2, Q3, Q4)
+        let formattedQuarter = quarter;
+        if (!quarter.startsWith('Q')) {
+            formattedQuarter = `Q${quarter}`;
+        }
+
+        // Determine the feedback table based on the quarter
+        const feedbackTable = `feedbacks_${formattedQuarter}`;
+        const feedbackKey = `feedback${formattedQuarter.toLowerCase()}_Id`;
+        
+        console.log("🗂️ Using table:", feedbackTable, "with key:", feedbackKey);
+
+        // Step 3: Check if feedback already exists
+        console.log("🔍 Checking for existing feedback...");
+        const { data: existingFeedback, error: existingError } = await supabase
+            .from(feedbackTable)
+            .select('*')
+            .eq('userId', userId)
+            .eq('jobId', completeJobId)
+            .eq('quarter', formattedQuarter)
+            .eq('year', new Date().getFullYear())
+            .maybeSingle(); // FIXED: Use maybeSingle instead of single to avoid errors when no data
+
+        if (existingError) {
+            console.error("❌ Error checking existing feedback:", existingError);
+            return res.status(500).json({ 
+                success: false, 
+                message: `Error checking existing feedback: ${existingError.message}` 
+            });
+        }
+
+        let feedbackId;
+        const dateCreated = new Date();
+
+        if (existingFeedback) {
+            console.log(`📝 Updating existing feedback in ${feedbackTable}...`);
+            const { data: updateData, error: updateError } = await supabase
                 .from(feedbackTable)
-                .select('*')
+                .update({
+                    setStartDate: new Date(startDate),
+                    setEndDate: new Date(endDate),
+                    dateCreated: dateCreated,
+                })
                 .eq('userId', userId)
                 .eq('jobId', completeJobId)
-                .eq('quarter', quarter)
+                .eq('quarter', formattedQuarter)
                 .eq('year', new Date().getFullYear())
-                .single();
-    
-            let feedbackId;
-            const dateCreated = new Date();
-    
-            if (existingFeedback.data) {
-                console.log(`Updating existing feedback in ${feedbackTable}...`);
-                const { error: updateError } = await supabase
-                    .from(feedbackTable)
-                    .update({
-                        setStartDate: new Date(startDate),
-                        setEndDate: new Date(endDate),
-                        dateCreated: dateCreated,
-                    })
-                    .eq('userId', userId)
-                    .eq('jobId', completeJobId)
-                    .eq('quarter', quarter)
-                    .eq('year', new Date().getFullYear());
-    
-                if (updateError) {
-                    console.error(`Error updating feedback in ${feedbackTable}:`, updateError);
-                    return res.status(500).json({ success: false, message: 'Error updating feedback. Please try again.', error: updateError });
-                }
-    
-                feedbackId = existingFeedback.data[feedbackKey];
-            } else {
-                console.log(`Inserting new feedback into ${feedbackTable}...`);
-                const { data: feedbackInsertData, error: feedbackInsertError } = await supabase
-                    .from(feedbackTable)
-                    .insert({
-                        userId,
-                        jobId: completeJobId,
-                        setStartDate: new Date(startDate),
-                        setEndDate: new Date(endDate),
-                        dateCreated: dateCreated,
-                        year: new Date().getFullYear(),
-                        quarter: quarter
-                    })
-                    .select(feedbackKey);
-    
-                if (feedbackInsertError) {
-                    console.error(`Error inserting into ${feedbackTable}:`, feedbackInsertError);
-                    return res.status(500).json({ success: false, message: 'Error saving feedback. Please try again.', error: feedbackInsertError });
-                }
-    
-                feedbackId = feedbackInsertData[0][feedbackKey];
+                .select(feedbackKey);
+
+            if (updateError) {
+                console.error(`❌ Error updating feedback in ${feedbackTable}:`, updateError);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error updating feedback. Please try again.',
+                    error: updateError.message 
+                });
             }
-    
-            // Step 4: Insert feedback mappings for questions
+
+            feedbackId = existingFeedback[feedbackKey];
+            console.log("✅ Updated existing feedback with ID:", feedbackId);
+        } else {
+            console.log(`➕ Inserting new feedback into ${feedbackTable}...`);
+            const { data: feedbackInsertData, error: feedbackInsertError } = await supabase
+                .from(feedbackTable)
+                .insert({
+                    userId: userId,
+                    jobId: completeJobId,
+                    setStartDate: new Date(startDate),
+                    setEndDate: new Date(endDate),
+                    dateCreated: dateCreated,
+                    year: new Date().getFullYear(),
+                    quarter: formattedQuarter
+                })
+                .select(feedbackKey);
+
+            if (feedbackInsertError) {
+                console.error(`❌ Error inserting into ${feedbackTable}:`, feedbackInsertError);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error saving feedback. Please try again.',
+                    error: feedbackInsertError.message 
+                });
+            }
+
+            if (!feedbackInsertData || feedbackInsertData.length === 0) {
+                console.error("❌ No data returned from feedback insert");
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error saving feedback - no data returned.' 
+                });
+            }
+
+            feedbackId = feedbackInsertData[0][feedbackKey];
+            console.log("✅ Inserted new feedback with ID:", feedbackId);
+        }
+
+        // Step 4: Insert feedback mappings for questions
+        if (feedbackData.questions && feedbackData.questions.length > 0) {
+            console.log(`📋 Processing ${feedbackData.questions.length} questions...`);
+            
             for (const question of feedbackData.questions) {
                 const { objectiveId, questionText } = question;
-    
-                const existingMapping = await supabase
+
+                if (!objectiveId || !questionText) {
+                    console.warn("⚠️ Skipping invalid question:", question);
+                    continue;
+                }
+
+                console.log(`🔍 Checking existing mapping for objectiveId=${objectiveId}`);
+                const { data: existingMapping, error: mappingCheckError } = await supabase
                     .from('feedbacks_questions-objectives')
                     .select('*')
                     .eq(feedbackKey, feedbackId)
                     .eq('objectiveId', objectiveId)
-                    .single();
-    
-                if (!existingMapping.data) {
-                    console.log(`Inserting mapping for objectiveId=${objectiveId}`);
+                    .maybeSingle();
+
+                if (mappingCheckError) {
+                    console.error(`❌ Error checking mapping for objectiveId=${objectiveId}:`, mappingCheckError);
+                    continue;
+                }
+
+                if (!existingMapping) {
+                    console.log(`➕ Inserting mapping for objectiveId=${objectiveId}`);
                     const { error: mappingInsertError } = await supabase
                         .from('feedbacks_questions-objectives')
                         .insert({
                             [feedbackKey]: feedbackId,
-                            objectiveId,
+                            objectiveId: objectiveId,
                             objectiveQualiQuestion: questionText
                         });
-    
-                    if (mappingInsertError) {
-                        console.error(`Error inserting feedback mapping:`, mappingInsertError);
-                        return res.status(500).json({ success: false, message: 'Error inserting feedback mapping.', error: mappingInsertError });
-                    }
-                }
-            }
-    
-            // Step 5: Fetch and map jobReqSkills
-            const { data: jobReqSkills, error: skillFetchError } = await supabase
-                .from('jobreqskills')
-                .select('jobReqSkillId')
-                .eq('jobId', completeJobId);
-    
-            if (skillFetchError) {
-                console.error("Error fetching jobReqSkills:", skillFetchError.message);
-                return res.status(500).json({ success: false, message: "Error fetching job skills." });
-            }
-    
-            if (jobReqSkills && jobReqSkills.length > 0) {
-                console.log("Mapping skills to feedback...");
-                for (const jobReqSkill of jobReqSkills) {
-                    const { jobReqSkillId } = jobReqSkill;
-    
-                    const existingSkillMapping = await supabase
-                        .from('feedbacks_questions-skills')
-                        .select('*')
-                        .eq(feedbackKey, feedbackId)
-                        .eq('jobReqSkillId', jobReqSkillId)
-                        .single();
-    
-                    if (!existingSkillMapping.data) {
-                        console.log(`Inserting skill mapping for jobReqSkillId=${jobReqSkillId}`);
-                        const { error: skillMappingInsertError } = await supabase
-                            .from('feedbacks_questions-skills')
-                            .insert({
-                                [feedbackKey]: feedbackId,
-                                jobReqSkillId
-                            });
-    
-                        if (skillMappingInsertError) {
-                            console.error("Error inserting skill mapping:", skillMappingInsertError);
-                            return res.status(500).json({ success: false, message: "Error inserting skill mapping." });
-                        }
-                    }
-                }
-            } else {
-                console.error('No jobReqSkills found for the job.');
-            }
-    
-            return res.status(200).json({ success: true, message: 'Feedback saved successfully.' });
-        } catch (error) {
-            console.error('Error in save360DegreeFeedback:', error);
-            return res.status(500).json({ success: false, message: 'An error occurred.', error: error.message });
-        }
-    },
 
+                    if (mappingInsertError) {
+                        console.error(`❌ Error inserting feedback mapping:`, mappingInsertError);
+                        return res.status(500).json({ 
+                            success: false, 
+                            message: 'Error inserting feedback mapping.',
+                            error: mappingInsertError.message 
+                        });
+                    }
+                    console.log(`✅ Inserted mapping for objectiveId=${objectiveId}`);
+                } else {
+                    console.log(`ℹ️ Mapping already exists for objectiveId=${objectiveId}`);
+                }
+            }
+        } else {
+            console.log("ℹ️ No questions to process");
+        }
+
+        // Step 5: Fetch and map jobReqSkills
+        console.log("🔧 Fetching job skills...");
+        const { data: jobReqSkills, error: skillFetchError } = await supabase
+            .from('jobreqskills')
+            .select('jobReqSkillId')
+            .eq('jobId', completeJobId);
+
+        if (skillFetchError) {
+            console.error("❌ Error fetching jobReqSkills:", skillFetchError);
+            return res.status(500).json({ 
+                success: false, 
+                message: "Error fetching job skills.",
+                error: skillFetchError.message 
+            });
+        }
+
+        if (jobReqSkills && jobReqSkills.length > 0) {
+            console.log(`🔧 Mapping ${jobReqSkills.length} skills to feedback...`);
+            
+            for (const jobReqSkill of jobReqSkills) {
+                const { jobReqSkillId } = jobReqSkill;
+
+                console.log(`🔍 Checking existing skill mapping for jobReqSkillId=${jobReqSkillId}`);
+                const { data: existingSkillMapping, error: skillMappingCheckError } = await supabase
+                    .from('feedbacks_questions-skills')
+                    .select('*')
+                    .eq(feedbackKey, feedbackId)
+                    .eq('jobReqSkillId', jobReqSkillId)
+                    .maybeSingle();
+
+                if (skillMappingCheckError) {
+                    console.error(`❌ Error checking skill mapping for jobReqSkillId=${jobReqSkillId}:`, skillMappingCheckError);
+                    continue;
+                }
+
+                if (!existingSkillMapping) {
+                    console.log(`➕ Inserting skill mapping for jobReqSkillId=${jobReqSkillId}`);
+                    const { error: skillMappingInsertError } = await supabase
+                        .from('feedbacks_questions-skills')
+                        .insert({
+                            [feedbackKey]: feedbackId,
+                            jobReqSkillId: jobReqSkillId
+                        });
+
+                    if (skillMappingInsertError) {
+                        console.error("❌ Error inserting skill mapping:", skillMappingInsertError);
+                        return res.status(500).json({ 
+                            success: false, 
+                            message: "Error inserting skill mapping.",
+                            error: skillMappingInsertError.message 
+                        });
+                    }
+                    console.log(`✅ Inserted skill mapping for jobReqSkillId=${jobReqSkillId}`);
+                } else {
+                    console.log(`ℹ️ Skill mapping already exists for jobReqSkillId=${jobReqSkillId}`);
+                }
+            }
+        } else {
+            console.log('⚠️ No jobReqSkills found for the job.');
+        }
+
+        console.log("=== save360Questionnaire COMPLETED SUCCESSFULLY ===");
+        
+        // FIXED: Check if this is an AJAX request or form submission
+        const isAjaxRequest = req.xhr || 
+                             req.headers.accept?.includes('application/json') || 
+                             req.headers['content-type']?.includes('application/json');
+        
+        if (isAjaxRequest) {
+            // Return JSON for AJAX requests
+            return res.status(200).json({ 
+                success: true, 
+                message: 'Feedback questionnaire saved successfully.',
+                data: {
+                    feedbackId: feedbackId,
+                    quarter: formattedQuarter,
+                    questionsProcessed: feedbackData.questions.length,
+                    skillsProcessed: jobReqSkills ? jobReqSkills.length : 0
+                }
+            });
+        } else {
+            // Redirect for form submissions
+            req.flash('success', 'Feedback questionnaire saved successfully!');
+            return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
+        }
+
+    } catch (error) {
+        console.error('❌ CRITICAL ERROR in save360Questionnaire:', error);
+        
+        // FIXED: Handle errors differently for AJAX vs form submissions
+        const isAjaxRequest = req.xhr || 
+                             req.headers.accept?.includes('application/json') || 
+                             req.headers['content-type']?.includes('application/json');
+        
+        if (isAjaxRequest) {
+            return res.status(500).json({ 
+                success: false, 
+                message: 'An unexpected error occurred while saving the questionnaire.',
+                error: error.message 
+            });
+        } else {
+            req.flash('errors', { dbError: 'An error occurred while saving the questionnaire.' });
+            return res.redirect(`/linemanager/records-performance-tracker/${userId || req.params.userId}`);
+        }
+    }
+},
     getOffboardingRequestsDash: async function (req, res) {
         try {
             const userId = req.session.user ? req.session.user.userId : null;

@@ -3615,10 +3615,20 @@ function getSelectedCategoriesForSubmission() {
         return [];
     }
     
-    // Return array of category names
-    const categoryNames = selectedCategories.map(category => category.name).filter(name => name && name.trim() !== '');
+    // FIXED: Return array of category names (strings only)
+    const categoryNames = selectedCategories
+        .map(category => {
+            // Handle different possible structures
+            if (typeof category === 'string') {
+                return category.trim();
+            } else if (typeof category === 'object' && category !== null) {
+                return (category.name || category.category || '').trim();
+            }
+            return '';
+        })
+        .filter(name => name && name.length > 0); // Remove empty/null values
     
-    console.log('Returning category names:', categoryNames);
+    console.log('Returning category names for submission:', categoryNames);
     return categoryNames;
 }
 
@@ -3806,6 +3816,9 @@ window.getSelectedCategoriesForSubmission = getSelectedCategoriesForSubmission;
 window.setTrainingCategoriesViewOnly = setTrainingCategoriesViewOnly;
 window.selectCategoryFromSearch = selectCategoryFromSearch;
 window.selectNewCategoryFromSearch = selectNewCategoryFromSearch;
+window.submitMidYearIDPFormWithTrainingCategories = submitMidYearIDPFormWithTrainingCategories;
+window.debugCategorySubmission = debugCategorySubmission;
+window.validateCategoryData = validateCategoryData;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Setting up enhanced feedback tabs...');
@@ -5010,7 +5023,6 @@ function validateIDPForm(formType) {
 
 
 // Fixed function to submit Mid-Year IDP form with training categories
-
 async function submitMidYearIDPFormWithTrainingCategories(event) {
     event.preventDefault();
     
@@ -5022,9 +5034,16 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         return;
     }
     
-    // Get selected training categories
+    // Get selected training categories - FIXED
     const trainingCategories = getSelectedCategoriesForSubmission();
     console.log("Training categories for submission:", trainingCategories);
+    
+    // Validate that we have proper array of strings
+    if (!Array.isArray(trainingCategories)) {
+        console.error("trainingCategories is not an array:", trainingCategories);
+        alert("Error: Training categories data is invalid. Please try again.");
+        return;
+    }
     
     // Get form data
     const formData = {
@@ -5037,12 +5056,14 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value.trim(),
         nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value.trim(),
         nextRoleMobility: document.getElementById("nextRoleMobility").value.trim(),
-        trainingCategories: trainingCategories,
+        trainingCategories: trainingCategories, // FIXED: Send as proper array
         trainingRemarks: document.getElementById("trainingRemarks")?.value.trim() || "",
         year: new Date().getFullYear()
     };
     
-    console.log("Final form data:", formData);
+    console.log("Final form data being sent:", formData);
+    console.log("trainingCategories type:", typeof formData.trainingCategories);
+    console.log("trainingCategories isArray:", Array.isArray(formData.trainingCategories));
     
     // Disable the submit button and show loading state
     const submitButton = document.getElementById("submitMidYearIDP");
@@ -5062,10 +5083,13 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         });
         
         if (!response.ok) {
-            throw new Error(`Server responded with status ${response.status}`);
+            const errorText = await response.text();
+            console.error("Server error response:", errorText);
+            throw new Error(`Server responded with status ${response.status}: ${errorText}`);
         }
         
         const result = await response.json();
+        console.log("Server response:", result);
         
         if (result.success) {
             let successMessage = "Mid-Year IDP saved successfully!";
@@ -5089,6 +5113,7 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
             // Redirect to refresh the page and show view-only mode
             window.location.href = `/linemanager/records-performance-tracker/${userId}`;
         } else {
+            console.error("Server returned error:", result);
             alert("Error saving Mid-Year IDP: " + (result.message || "Unknown error"));
             
             // Re-enable the submit button
@@ -5099,7 +5124,7 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         }
     } catch (error) {
         console.error("Error submitting Mid-Year IDP:", error);
-        alert("An error occurred while submitting the Mid-Year IDP. Please try again.");
+        alert("An error occurred while submitting the Mid-Year IDP. Please try again.\n\nError: " + error.message);
         
         // Re-enable the submit button
         if (submitButton) {
@@ -5107,6 +5132,49 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
             submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
         }
     }
+}
+
+// FIXED: Debug function to check the submission data
+function debugCategorySubmission() {
+    console.log("=== CATEGORY SUBMISSION DEBUG ===");
+    console.log("selectedCategories:", selectedCategories);
+    console.log("selectedCategories type:", typeof selectedCategories);
+    console.log("selectedCategories isArray:", Array.isArray(selectedCategories));
+    
+    const categoriesForSubmission = getSelectedCategoriesForSubmission();
+    console.log("categoriesForSubmission:", categoriesForSubmission);
+    console.log("categoriesForSubmission type:", typeof categoriesForSubmission);
+    console.log("categoriesForSubmission isArray:", Array.isArray(categoriesForSubmission));
+    
+    // Test the actual submission data structure
+    const testFormData = {
+        trainingCategories: categoriesForSubmission,
+        trainingRemarks: document.getElementById("trainingRemarks")?.value || ""
+    };
+    
+    console.log("Test form data:", testFormData);
+    console.log("JSON.stringify of trainingCategories:", JSON.stringify(testFormData.trainingCategories));
+    console.log("=== END CATEGORY SUBMISSION DEBUG ===");
+}
+
+// FIXED: Validation function to ensure proper category data
+function validateCategoryData() {
+    const categories = getSelectedCategoriesForSubmission();
+    
+    if (!Array.isArray(categories)) {
+        console.error("Categories is not an array:", categories);
+        return false;
+    }
+    
+    // Check if all categories are strings
+    const invalidCategories = categories.filter(cat => typeof cat !== 'string' || cat.trim() === '');
+    if (invalidCategories.length > 0) {
+        console.error("Invalid categories found:", invalidCategories);
+        return false;
+    }
+    
+    console.log("Category data validation passed:", categories);
+    return true;
 }
 
 // Function to reset training selection
@@ -5836,6 +5904,13 @@ function addQuestionnaireObjectiveRow(objective, quarter) {
     const quarterKey = quarter.replace('Q', '');
     const isViewOnly = viewState.viewOnlyStatus[`feedbacks_Q${quarterKey}`];
 
+    console.log("Adding objective row:", {
+        objectiveId: objective.objectiveId,
+        description: objective.objectiveDescrpt,
+        guideQuestion: objective.guideQuestion || objective.objectiveQualiQuestion,
+        isViewOnly: isViewOnly
+    });
+
     // Create and append the objective row
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -5846,6 +5921,22 @@ function addQuestionnaireObjectiveRow(objective, quarter) {
         <td><strong>${objective.objectiveAssignedWeight ? (objective.objectiveAssignedWeight * 100).toFixed(2) + '%' : 'N/A'}</strong></td>
     `;
     tbody.appendChild(row);
+
+    // FIXED: Get the guide question from multiple possible sources
+    let guideQuestion = '';
+    
+    // Try different property names for guide question
+    if (objective.guideQuestion && objective.guideQuestion !== 'No guide question available') {
+        guideQuestion = objective.guideQuestion;
+    } else if (objective.objectiveQualiQuestion && objective.objectiveQualiQuestion !== 'No guide question available') {
+        guideQuestion = objective.objectiveQualiQuestion;
+    } else if (objective.questionText) {
+        guideQuestion = objective.questionText;
+    } else {
+        guideQuestion = 'No guide question submitted';
+    }
+
+    console.log(`Guide question for objective ${objective.objectiveId}:`, guideQuestion);
 
     // Create and append the guide question row
     const inputRow = document.createElement('tr');
@@ -5858,12 +5949,12 @@ function addQuestionnaireObjectiveRow(objective, quarter) {
                     <i class="fas fa-question-circle"></i> <strong>Guide Question for Feedback:</strong>
                 </label>
                 ${isViewOnly ? 
-                    `<div style="padding: 8px; background-color: #f5f5f5; border-radius: 4px; border: 1px solid #e1e5eb;">
-                        ${objective.guideQuestion || objective.objectiveQualiQuestion || 'No guide question available'}
+                    `<div style="padding: 8px; background-color: #f5f5f5; border-radius: 4px; border: 1px solid #e1e5eb; min-height: 40px;">
+                        ${guideQuestion}
                     </div>` : 
                     `<input id="${inputId}" type="text" 
                         style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
-                        value="${objective.guideQuestion || objective.objectiveQualiQuestion || ''}"  
+                        value="${guideQuestion}"  
                         placeholder="Enter guide question for feedback" 
                         data-objective-id="${objective.objectiveId}" 
                         class="guide-question-input"
@@ -5934,7 +6025,6 @@ function addQuestionnaireObjectiveRow(objective, quarter) {
         }, 100);
     }
 }
-
 
 // Function to add questionnaire skill row
 function addQuestionnaireSkillRow(skill, skillType) {
@@ -7058,6 +7148,8 @@ function toggleFeedbackView(view) {
     }
 }
 
+
+// FIXED: Frontend function to save 360 questionnaire
 async function save360Questionnaire() {
     console.log("Saving 360 degree feedback...");
     
@@ -7085,10 +7177,21 @@ async function save360Questionnaire() {
     // Get the quarter from the active field
     const quarter = activeQuarterField.value || 'Q1';
     
+    // FIXED: Ensure userId is available
+    if (!userId) {
+        console.error("UserId is not available");
+        alert("Error: User ID is not available. Please refresh the page and try again.");
+        
+        if (saveFeedbackButton) {
+            saveFeedbackButton.disabled = false;
+            saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
+        }
+        return;
+    }
+    
     // Validate dates
     if (!startDate || !endDate) {
         alert("Please enter both start and end dates.");
-        // Reset button state
         if (saveFeedbackButton) {
             saveFeedbackButton.disabled = false;
             saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
@@ -7098,7 +7201,6 @@ async function save360Questionnaire() {
     
     if (new Date(startDate) > new Date(endDate)) {
         alert("End date must be after start date.");
-        // Reset button state
         if (saveFeedbackButton) {
             saveFeedbackButton.disabled = false;
             saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
@@ -7125,82 +7227,86 @@ async function save360Questionnaire() {
         const objectiveId = input.getAttribute('data-objective-id');
         if (objectiveId && input.value.trim()) {
             feedbackData.questions.push({
-                objectiveId: objectiveId,
+                objectiveId: parseInt(objectiveId), // Ensure it's an integer
                 questionText: input.value.trim()
             });
         }
     });
 
-    // Check if any questions were added
-    if (feedbackData.questions.length === 0) {
-        alert("Please provide at least one qualitative question.");
-        
-        // Reset button state
-        if (saveFeedbackButton) {
-            saveFeedbackButton.disabled = false;
-            saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
-        }
-        return;
-    }
-
     console.log("Feedback data to save:", feedbackData);
 
-    // Send data to server using the correct endpoint for saving questionnaire
+    // FIXED: Send data to server using the correct endpoint with userId in URL
     try {
+        const requestData = {
+            startDate,
+            endDate,
+            feedbackData,
+            quarter,
+            activeQuarter: quarter, // Include as backup
+            jobId // Include jobId if available
+        };
+
+        console.log("Sending request data:", requestData);
+
+        // FIXED: Include userId in the URL path
         const response = await fetch(`/linemanager/save-feedback-questionnaire/${userId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId,
-                jobId,
-                startDate,
-                endDate,
-                feedbackData,
-                quarter
-            })
+            body: JSON.stringify(requestData)
         });
 
         console.log("Response from server:", response.status);
 
-        // Check if the response was successful
         if (!response.ok) {
-            throw new Error(`Server responded with status ${response.status}`);
+            const errorText = await response.text();
+            console.error("Server error response:", errorText);
+            throw new Error(`Server responded with status ${response.status}: ${errorText}`);
         }
 
-        const result = await response.json();
-        console.log("Result from server:", result);
+        // FIXED: Handle both JSON responses and redirects
+        let result;
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+            // JSON response
+            result = await response.json();
+            console.log("Result from server:", result);
 
-        if (result.success) {
-            // Show success message
-            alert("Feedback questionnaire saved successfully!");
-            
-            // Update viewState to reflect the new status
-            const quarterKey = `feedbacks_${quarter}`;
-            viewState.viewOnlyStatus[quarterKey] = true;
-            
-            // Update the UI based on the new state
-            updateStepperAccessibility();
-            
-            // Switch to view-only mode
-            switchToViewOnlyMode();
-            
-            // Switch to the "View Feedback" tab
-            const viewFeedbackBtn = document.getElementById('viewFeedbackBtn');
-            if (viewFeedbackBtn) {
-                viewFeedbackBtn.click();
+            if (result.success) {
+                // Show success message and redirect
+                alert("Feedback questionnaire saved successfully!");
+                
+                // Update viewState to reflect the new status
+                const quarterKey = `feedbacks_${quarter}`;
+                if (typeof viewState !== 'undefined') {
+                    viewState.viewOnlyStatus[quarterKey] = true;
+                }
+                
+                // Update the UI based on the new state
+                if (typeof updateStepperAccessibility === 'function') {
+                    updateStepperAccessibility();
+                }
+                
+                // FIXED: Redirect to refresh the page
+                window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+            } else {
+                console.error("Server returned error:", result);
+                alert("Failed to save feedback: " + (result.message || "Unknown error"));
+                
+                // Reset button state
+                if (saveFeedbackButton) {
+                    saveFeedbackButton.disabled = false;
+                    saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
+                }
             }
         } else {
-            alert("Failed to save feedback: " + (result.message || "Unknown error"));
-            
-            // Reset button state
-            if (saveFeedbackButton) {
-                saveFeedbackButton.disabled = false;
-                saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
-            }
+            // HTML response (redirect) - follow the redirect
+            console.log("Server redirected, following redirect...");
+            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
         }
     } catch (error) {
         console.error("Error saving feedback:", error);
-        alert("An error occurred while saving feedback. Please try again later.");
+        alert("An error occurred while saving feedback. Please try again later.\n\nError: " + error.message);
         
         // Reset button state
         if (saveFeedbackButton) {
@@ -7209,6 +7315,7 @@ async function save360Questionnaire() {
         }
     }
 }
+
 // Function to fetch year data
 function fetchYearData() {
     const yearSelect = document.getElementById('yearSelect');

@@ -4730,27 +4730,32 @@ createActivityType: async function(req, res) {
 },
 // Add new activity type (new method)
 addActivityType: async function(req, res) {
+    console.log('Creating new activity type:', req.body);
+    
     try {
         const { activityType } = req.body;
         
-        if (!activityType) {
+        if (!activityType || !activityType.trim()) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Activity type is required" 
+                message: "Activity type name is required" 
             });
         }
 
-        // Check if activity type already exists
+        const activityTypeName = activityType.trim();
+
+        // Check if activity type already exists (case-insensitive)
         const { data: existing, error: checkError } = await supabase
             .from("training_records_activities_types")
-            .select("activityTypeId")
-            .eq("activityType", activityType.trim())
+            .select("activityTypeId, activityType")
+            .ilike("activityType", activityTypeName)
             .single();
 
-        if (existing) {
+        if (existing && !checkError) {
             return res.status(409).json({ 
                 success: false, 
-                message: "Activity type already exists" 
+                message: "Activity type already exists",
+                data: existing
             });
         }
 
@@ -4758,18 +4763,22 @@ addActivityType: async function(req, res) {
         const { data: newType, error: insertError } = await supabase
             .from("training_records_activities_types")
             .insert({
-                activityType: activityType.trim()
+                activityType: activityTypeName,
+                created_at: new Date().toISOString()
             })
-            .select()
+            .select("activityTypeId, activityType")
             .single();
 
         if (insertError) {
             console.error("Error inserting activity type:", insertError);
             return res.status(500).json({ 
                 success: false, 
-                message: "Error adding activity type" 
+                message: "Error adding activity type",
+                error: insertError.message
             });
         }
+
+        console.log('✅ Successfully created activity type:', newType);
 
         return res.status(201).json({ 
             success: true, 
@@ -4787,7 +4796,6 @@ addActivityType: async function(req, res) {
     }
 },
 
-// UPDATED: Enhanced createNewTrainingRequest with auto-duration calculation
 createNewTrainingRequest: async function(req, res) {
     console.log(`[${new Date().toISOString()}] Creating new training request for user ${req.session?.user?.userId}`);
     console.log('Request body:', req.body);
@@ -4805,6 +4813,8 @@ createNewTrainingRequest: async function(req, res) {
             trainingName,
             trainingDesc,
             cost,
+            setStartDate,
+            setEndDate,
             midyearidpId,
             finalyearidpId,
             isOnlineArrangement,
@@ -4812,8 +4822,9 @@ createNewTrainingRequest: async function(req, res) {
             country,
             activities,
             certificates,
-            objectives = [], // Default to empty array
-            skills = [] // Default to empty array
+            objectives = [], 
+            skills = [],
+            trainingCategories = [] // Training categories from IDP
         } = req.body;
 
         // Validate required fields
@@ -4845,6 +4856,14 @@ createNewTrainingRequest: async function(req, res) {
             });
         }
 
+        // Validate date fields
+        if (!setStartDate || !setEndDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'Start date and end date are required'
+            });
+        }
+
         // Validate onsite training requirements
         if (!isOnlineArrangement && (!address || !country)) {
             return res.status(400).json({
@@ -4853,7 +4872,7 @@ createNewTrainingRequest: async function(req, res) {
             });
         }
 
-        // UPDATED: Calculate total duration from activities
+        // Calculate total duration from activities
         const totalDuration = activities.reduce((sum, activity) => {
             return sum + (parseFloat(activity.estActivityDuration) || 0);
         }, 0);
@@ -4880,23 +4899,60 @@ createNewTrainingRequest: async function(req, res) {
             });
         }
 
-        // Create the training record
+        // Get training categories from the selected IDP
+        let idpTrainingCategories = [];
+        try {
+            if (midyearidpId) {
+                const { data: midyearIDP, error: midyearError } = await supabase
+                    .from('midyearidps')
+                    .select('trainingCategories')
+                    .eq('midyearidpId', midyearidpId)
+                    .single();
+
+                if (!midyearError && midyearIDP && midyearIDP.trainingCategories) {
+                    idpTrainingCategories = Array.isArray(midyearIDP.trainingCategories) 
+                        ? midyearIDP.trainingCategories 
+                        : [];
+                }
+            } else if (finalyearidpId) {
+                const { data: finalyearIDP, error: finalyearError } = await supabase
+                    .from('finalyearidps')
+                    .select('trainingCategories')
+                    .eq('finalyearidpId', finalyearidpId)
+                    .single();
+
+                if (!finalyearError && finalyearIDP && finalyearIDP.trainingCategories) {
+                    idpTrainingCategories = Array.isArray(finalyearIDP.trainingCategories) 
+                        ? finalyearIDP.trainingCategories 
+                        : [];
+                }
+            }
+        } catch (idpError) {
+            console.error('Error fetching IDP training categories:', idpError);
+            // Continue without categories if there's an error
+        }
+
+        console.log('Training categories from IDP:', idpTrainingCategories);
+
+        // FIXED: Create the training record with correct status and dateRequested
         const trainingRecordData = {
             userId: userId,
             trainingName: trainingName,
             trainingDesc: trainingDesc,
             cost: parseFloat(cost) || 0,
+            setStartDate: setStartDate,
+            setEndDate: setEndDate,
             midyearidpId: midyearidpId ? parseInt(midyearidpId) : null,
             finalyearidpId: finalyearidpId ? parseInt(finalyearidpId) : null,
             isOnlineArrangement: isOnlineArrangement,
             address: isOnlineArrangement ? null : address,
             country: isOnlineArrangement ? null : country,
-            totalDuration: totalDuration, // Use calculated duration
+            totalDuration: totalDuration,
             jobId: staff.jobId,
-            dateRequested: new Date().toISOString().split('T')[0],
-            isApproved: null, // Pending approval
-            created_at: new Date().toISOString(),
-            status: 'Pending Approval'
+            dateRequested: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+            isApproved: null, // Explicitly set to null for pending approval
+            status: 'For Line Manager Endorsement', // FIXED: Use correct enum value
+            created_at: new Date().toISOString()
         };
 
         console.log('Creating training record with data:', trainingRecordData);
@@ -4915,7 +4971,59 @@ createNewTrainingRequest: async function(req, res) {
         const trainingRecordId = trainingRecord.trainingRecordId;
         console.log(`Training record created with ID: ${trainingRecordId}`);
 
-        // UPDATED: Create activity records with proper type handling
+        // Create training category records based on IDP categories and training_categories table
+        let categoriesCreated = 0;
+        let categoriesFailed = 0;
+
+        if (idpTrainingCategories && idpTrainingCategories.length > 0) {
+            // Get all training categories from the training_categories table
+            const { data: allTrainingCategories, error: categoriesError } = await supabase
+                .from('training_categories')
+                .select('trainingCategoriesId, trainingCategoriesName');
+
+            if (!categoriesError && allTrainingCategories) {
+                // Match IDP categories with training_categories table
+                for (const idpCategory of idpTrainingCategories) {
+                    const matchingCategory = allTrainingCategories.find(
+                        cat => cat.trainingCategoriesName.toLowerCase().trim() === idpCategory.toLowerCase().trim()
+                    );
+
+                    if (matchingCategory) {
+                        try {
+                            const categoryRecordData = {
+                                trainingRecordId: trainingRecordId,
+                                trainingCategoriesId: matchingCategory.trainingCategoriesId,
+                                created_at: new Date().toISOString()
+                            };
+
+                            const { data: categoryRecord, error: categoryError } = await supabase
+                                .from('training_records_categories')
+                                .insert([categoryRecordData])
+                                .select()
+                                .single();
+
+                            if (categoryError) {
+                                console.error(`Error creating category record for ${idpCategory}:`, categoryError);
+                                categoriesFailed++;
+                            } else {
+                                categoriesCreated++;
+                                console.log(`Successfully created category record: ${categoryRecord.trainingRecordCategoriesId}`);
+                            }
+                        } catch (categoryError) {
+                            console.error(`Exception creating category record for ${idpCategory}:`, categoryError);
+                            categoriesFailed++;
+                        }
+                    } else {
+                        console.warn(`No matching training category found for IDP category: ${idpCategory}`);
+                        categoriesFailed++;
+                    }
+                }
+            } else {
+                console.error('Error fetching training categories:', categoriesError);
+            }
+        }
+
+        // Create activity records with proper activity type handling
         let activitiesCreated = 0;
         let activitiesFailed = 0;
 
@@ -4934,6 +5042,7 @@ createNewTrainingRequest: async function(req, res) {
 
                     if (existingType) {
                         activityTypeId = existingType.activityTypeId;
+                        console.log(`Found existing activity type: ${activity.activityType} (ID: ${activityTypeId})`);
                     } else {
                         // Create new activity type if it doesn't exist
                         const { data: newType, error: newTypeError } = await supabase
@@ -4944,6 +5053,9 @@ createNewTrainingRequest: async function(req, res) {
 
                         if (!newTypeError && newType) {
                             activityTypeId = newType.activityTypeId;
+                            console.log(`Created new activity type: ${activity.activityType} (ID: ${activityTypeId})`);
+                        } else {
+                            console.error(`Failed to create activity type ${activity.activityType}:`, newTypeError);
                         }
                     }
                 }
@@ -4954,7 +5066,7 @@ createNewTrainingRequest: async function(req, res) {
                     activityTypeId: activityTypeId,
                     estActivityDuration: activity.estActivityDuration.toString(),
                     activityRemarks: activity.activityRemarks || null,
-                    status: 'Not Started',
+                    status: 'Not Started', // Activities start as "Not Started"
                     created_at: new Date().toISOString()
                 };
 
@@ -4979,14 +5091,14 @@ createNewTrainingRequest: async function(req, res) {
             }
         }
 
-        // UPDATED: Create objective relationships (multiple)
+        // Create objective relationships
         let objectivesCreated = 0;
         if (objectives && objectives.length > 0) {
             for (const objective of objectives) {
                 try {
                     const objectiveRecordData = {
                         trainingRecordId: trainingRecordId,
-                        objectiveId: parseInt(objective.objectiveId),
+                        objectiveId: parseInt(objective.objectiveId || objective.id),
                         created_at: new Date().toISOString()
                     };
 
@@ -5008,14 +5120,14 @@ createNewTrainingRequest: async function(req, res) {
             }
         }
 
-        // UPDATED: Create skill relationships (multiple)
+        // Create skill relationships
         let skillsCreated = 0;
         if (skills && skills.length > 0) {
             for (const skill of skills) {
                 try {
                     const skillRecordData = {
                         trainingRecordId: trainingRecordId,
-                        jobReqSkillId: parseInt(skill.skillId),
+                        jobReqSkillId: parseInt(skill.skillId || skill.id),
                         created_at: new Date().toISOString()
                     };
 
@@ -5073,18 +5185,22 @@ createNewTrainingRequest: async function(req, res) {
         }
 
         console.log(`Training request created successfully: ${trainingRecordId}`);
-        console.log(`- Activities: ${activitiesCreated}/${activities.length} created`);
-        console.log(`- Certificates: ${certificatesCreated}/${certificates.length} created`);
+        console.log(`- Activities: ${activitiesCreated}/${activities.length} created (${activitiesFailed} failed)`);
+        console.log(`- Certificates: ${certificatesCreated}/${certificates.length} created (${certificatesFailed} failed)`);
+        console.log(`- Categories: ${categoriesCreated}/${idpTrainingCategories.length} created (${categoriesFailed} failed)`);
         console.log(`- Objectives linked: ${objectivesCreated}/${objectives.length}`);
         console.log(`- Skills linked: ${skillsCreated}/${skills.length}`);
 
+        // FIXED: Return response with correct status
         res.status(201).json({
             success: true,
-            message: 'Training request submitted successfully and is pending approval',
+            message: 'Training request submitted successfully and is pending line manager endorsement',
             data: {
                 trainingRecordId: trainingRecordId,
                 trainingName: trainingName,
                 totalDuration: totalDuration,
+                startDate: setStartDate,
+                endDate: setEndDate,
                 activitiesCreated: activitiesCreated,
                 totalActivities: activities.length,
                 activitiesFailed: activitiesFailed,
@@ -5093,10 +5209,15 @@ createNewTrainingRequest: async function(req, res) {
                 totalCertificates: certificates.length,
                 certificatesFailed: certificatesFailed,
                 allCertificatesCreated: certificatesCreated === certificates.length,
+                categoriesCreated: categoriesCreated,
+                totalCategories: idpTrainingCategories.length,
+                categoriesFailed: categoriesFailed,
                 objectivesLinked: objectivesCreated,
                 skillsLinked: skillsCreated,
                 isOnline: isOnlineArrangement,
-                status: 'Pending Approval'
+                status: 'For Line Manager Endorsement', // FIXED: Use correct enum value
+                dateRequested: new Date().toISOString().split('T')[0],
+                isApproved: null
             }
         });
 
@@ -5110,7 +5231,6 @@ createNewTrainingRequest: async function(req, res) {
         });
     }
 },
-// Fixed IDP functions with consistent authentication pattern
 
 // Get IDP periods for the current user (your working version)
 getIdpPeriods: async function(req, res) {
