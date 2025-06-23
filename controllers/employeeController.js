@@ -40,7 +40,6 @@ function checkActivitiesCompletion(activities) {
         }))
     };
 }
-
 function checkActivitiesCompletion(activities) {
     console.log('📊 [Activity Check] Starting completion check...');
     console.log('📊 [Activity Check] Raw activities:', activities);
@@ -78,7 +77,6 @@ function checkActivitiesCompletion(activities) {
         
         if (status !== 'Completed') {
             incompleteActivities.push({
-                activityId: activity.activityId,
                 activityName: activityName,
                 currentStatus: status || 'Unknown'
             });
@@ -101,7 +99,6 @@ function checkActivitiesCompletion(activities) {
     console.log('📊 [Activity Check] Final result:', result);
     return result;
 }
-
 
 const employeeController = {
     getEmployeeDashboard: function(req, res) {
@@ -6557,7 +6554,6 @@ uploadTrainingCertificate: async function(req, res) {
     console.log('📂 [Certificate Upload] Request files:', req.files ? Object.keys(req.files) : 'No files');
 
     try {
-        // Use the same session pattern as handleFileUpload
         const userId = req.session?.user?.userId || req.session?.userID;
         console.log('📂 [Certificate Upload] User ID from session:', userId);
         
@@ -6597,12 +6593,12 @@ uploadTrainingCertificate: async function(req, res) {
             });
         }
 
-        // File validation - same as handleFileUpload but with higher limit for certificates
+        // File validation
         const allowedTypes = [
             'application/pdf', 'image/jpeg', 'image/png', 'image/jpg',
             'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ];
-        const maxSize = 10 * 1024 * 1024; // 10 MB for certificates (vs 5MB in handleFileUpload)
+        const maxSize = 10 * 1024 * 1024; // 10 MB
 
         if (!allowedTypes.includes(file.mimetype)) {
             console.log('❌ [Certificate Upload] Invalid file type:', file.mimetype);
@@ -6620,11 +6616,11 @@ uploadTrainingCertificate: async function(req, res) {
             });
         }
 
-        // Verify training record belongs to user
+        // FIXED: Verify training record belongs to user (removed trainingId reference)
         console.log('🔍 [Certificate Upload] Verifying training record...');
         const { data: trainingRecord, error: recordError } = await supabase
             .from('training_records')
-            .select('trainingRecordId, trainingId')
+            .select('trainingRecordId, trainingName, isApproved') // Removed trainingId
             .eq('trainingRecordId', trainingRecordId)
             .eq('userId', userId)
             .single();
@@ -6637,35 +6633,29 @@ uploadTrainingCertificate: async function(req, res) {
             });
         }
 
-        // Verify certificate exists for this training
-        console.log('🔍 [Certificate Upload] Verifying certificate configuration...');
-        const { data: certificationExists, error: certError } = await supabase
-            .from('training_certifications')
-            .select('trainingCertId, trainingCertTitle, trainingCertDesc')
-            .eq('trainingCertId', trainingCertId)
-            .eq('trainingId', trainingRecord.trainingId)
-            .single();
+        console.log('✅ [Certificate Upload] Training record verified:', {
+            trainingRecordId: trainingRecord.trainingRecordId,
+            trainingName: trainingRecord.trainingName,
+            isApproved: trainingRecord.isApproved
+        });
 
-        if (certError || !certificationExists) {
-            console.error('❌ [Certificate Upload] Certificate not found for this training:', certError);
-            return res.status(404).json({ 
+        // Check if training is approved
+        if (trainingRecord.isApproved !== true) {
+            console.log('❌ [Certificate Upload] Training not approved');
+            return res.status(403).json({ 
                 success: false, 
-                message: 'Certificate not found for this training.' 
+                message: 'Cannot upload certificates for unapproved training.' 
             });
         }
+
+        // REMOVED: Certificate verification against training_certifications table
+        // Since you're using training_records_certificates directly, we skip this check
 
         // Check if all activities are completed
         console.log('🔍 [Certificate Upload] Checking activity completion...');
         const { data: activities, error: activitiesError } = await supabase
             .from('training_records_activities')
-            .select(`
-                activityId, 
-                status,
-                training_activities!inner(
-                    activityName,
-                    estActivityDuration
-                )
-            `)
+            .select('status, activityName') // Simplified selection
             .eq('trainingRecordId', trainingRecordId);
 
         if (activitiesError) {
@@ -6678,7 +6668,9 @@ uploadTrainingCertificate: async function(req, res) {
             });
         }
 
-        // Use robust completion check (assuming you have this function)
+        console.log('📊 [Certificate Upload] Activities found:', activities?.length || 0);
+
+        // Check completion - simplified version
         const completionResult = checkActivitiesCompletion(activities);
         console.log('📊 [Certificate Upload] Completion analysis:', completionResult);
 
@@ -6696,7 +6688,7 @@ uploadTrainingCertificate: async function(req, res) {
             });
         }
 
-        // Sanitize filename - same as your pattern but more robust
+        // Sanitize filename
         function sanitizeFilename(filename) {
             let sanitized = filename
                 .replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
@@ -6713,23 +6705,23 @@ uploadTrainingCertificate: async function(req, res) {
             return sanitized;
         }
 
-        // Generate unique file name - same pattern as handleFileUpload
+        // Generate unique file name
         const sanitizedFileName = sanitizeFilename(file.name);
         const uniqueName = `${Date.now()}-${sanitizedFileName}`;
         const filePath = path.join(__dirname, '../uploads', uniqueName);
 
         console.log(`📎 [Certificate Upload] File processed: ${uniqueName} (Type: ${file.mimetype}, Size: ${file.size} bytes)`);
 
-        // Create uploads directory if it doesn't exist - same as handleFileUpload
+        // Create uploads directory if it doesn't exist
         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
             fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
         }
 
-        // Save file locally first - same as handleFileUpload
+        // Save file locally first
         await file.mv(filePath);
         console.log('📂 [Certificate Upload] File successfully saved locally. Uploading to Supabase...');
 
-        // Upload to Supabase using the same pattern - SAME uploads bucket as handleFileUpload
+        // Upload to Supabase
         const { error: uploadError } = await supabase.storage
             .from('uploads')
             .upload(uniqueName, fs.readFileSync(filePath), {
@@ -6738,7 +6730,7 @@ uploadTrainingCertificate: async function(req, res) {
                 upsert: false,
             });
 
-        // Remove local file after upload - same as handleFileUpload
+        // Remove local file after upload
         fs.unlinkSync(filePath);
         console.log('📂 [Certificate Upload] Local file deleted after upload to Supabase.');
 
@@ -6752,11 +6744,11 @@ uploadTrainingCertificate: async function(req, res) {
             });
         }
 
-        // Generate file URL - SAME uploads bucket as handleFileUpload
+        // Generate file URL
         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
         console.log(`✅ [Certificate Upload] File uploaded successfully: ${fileUrl}`);
 
-        // Insert file metadata into user_files - SAME AS handleFileUpload
+        // Insert file metadata into user_files
         console.log('📂 [Certificate Upload] Inserting file metadata into user_files...');
         const { error: insertError } = await supabase
             .from('user_files')
@@ -6780,24 +6772,46 @@ uploadTrainingCertificate: async function(req, res) {
 
         console.log('✅ [Certificate Upload] File metadata successfully inserted into user_files database.');
 
-        // NOW save the certificate record - this is the additional step for certificates
+        // FIXED: Save certificate record to training_records_certificates
         console.log('💾 [Certificate Upload] Saving certificate record to training_records_certificates...');
+        
+        // Get default certificate title and description based on trainingCertId or use generic ones
+        let certificateTitle = 'Training Certificate';
+        let certificateDesc = 'Certificate of completion for this training';
+        
+        // Try to get existing certificate info or use defaults
+        const { data: existingCertInfo } = await supabase
+            .from('training_records_certificates')
+            .select('trainingCertTitle, trainingCertDesc')
+            .eq('trainingRecordId', trainingRecordId)
+            .limit(1)
+            .single();
+            
+        if (existingCertInfo) {
+            certificateTitle = existingCertInfo.trainingCertTitle || certificateTitle;
+            certificateDesc = existingCertInfo.trainingCertDesc || certificateDesc;
+        } else {
+            // Use training name for certificate title
+            certificateTitle = `${trainingRecord.trainingName} - Certificate of Completion`;
+            certificateDesc = `Certificate of completion for ${trainingRecord.trainingName}`;
+        }
+
         const certificateData = {
             trainingRecordId: parseInt(trainingRecordId),
-            trainingCertId: parseInt(trainingCertId),
             certificate_url: fileUrl,
+            trainingCertTitle: certificateTitle,
+            trainingCertDesc: certificateDesc,
             created_at: new Date().toISOString()
         };
 
         console.log('💾 [Certificate Upload] Certificate data to save:', certificateData);
 
-        // Check if certificate record already exists
+        // Check if certificate record already exists for this training record
         console.log('🔍 [Certificate Upload] Checking for existing certificate record...');
         const { data: existingCert, error: existingError } = await supabase
             .from('training_records_certificates')
             .select('trainingRecordCertificateId, certificate_url')
             .eq('trainingRecordId', trainingRecordId)
-            .eq('trainingCertId', trainingCertId)
             .maybeSingle();
 
         console.log('🔍 [Certificate Upload] Existing certificate check:', { data: existingCert, error: existingError });
@@ -6820,6 +6834,8 @@ uploadTrainingCertificate: async function(req, res) {
                 .from('training_records_certificates')
                 .update({
                     certificate_url: fileUrl,
+                    trainingCertTitle: certificateTitle,
+                    trainingCertDesc: certificateDesc,
                     created_at: certificateData.created_at
                 })
                 .eq('trainingRecordCertificateId', existingCert.trainingRecordCertificateId)
@@ -6830,7 +6846,7 @@ uploadTrainingCertificate: async function(req, res) {
                 console.error('❌ [Certificate Upload] Error updating certificate record:', updateError);
                 return res.status(500).json({ 
                     success: false, 
-                    message: 'File uploaded to user_files but failed to update certificate record.',
+                    message: 'File uploaded but failed to update certificate record.',
                     error: updateError.message,
                     timestamp: new Date().toISOString()
                 });
@@ -6850,7 +6866,7 @@ uploadTrainingCertificate: async function(req, res) {
                 console.error('❌ [Certificate Upload] Error inserting certificate record:', insertError);
                 return res.status(500).json({ 
                     success: false, 
-                    message: 'File uploaded to user_files but failed to save certificate record.',
+                    message: 'File uploaded but failed to save certificate record.',
                     error: insertError.message,
                     timestamp: new Date().toISOString()
                 });
@@ -6874,9 +6890,8 @@ uploadTrainingCertificate: async function(req, res) {
         console.log('🔍 [Certificate Upload] Final verification...');
         const { data: verificationData, error: verificationError } = await supabase
             .from('training_records_certificates')
-            .select('trainingRecordCertificateId, certificate_url, created_at')
+            .select('trainingRecordCertificateId, certificate_url, created_at, trainingCertTitle, trainingCertDesc')
             .eq('trainingRecordId', trainingRecordId)
-            .eq('trainingCertId', trainingCertId)
             .single();
 
         console.log('🔍 [Certificate Upload] Final verification result:', { 
@@ -6893,16 +6908,16 @@ uploadTrainingCertificate: async function(req, res) {
             });
         }
 
-        // SUCCESS: Return the same response pattern as your other functions
+        // SUCCESS: Return response
         console.log('✅ [Certificate Upload] Upload process completed and verified successfully');
         res.json({
             success: true,
-            message: `Certificate "${certificationExists.trainingCertTitle}" uploaded and verified successfully`,
+            message: `Certificate "${verificationData.trainingCertTitle}" uploaded and verified successfully`,
             data: {
                 certificateUrl: verificationData.certificate_url,
                 certificateId: verificationData.trainingRecordCertificateId,
-                trainingCertTitle: certificationExists.trainingCertTitle,
-                trainingCertDesc: certificationExists.trainingCertDesc,
+                trainingCertTitle: verificationData.trainingCertTitle,
+                trainingCertDesc: verificationData.trainingCertDesc,
                 uploadedAt: verificationData.created_at,
                 fileName: uniqueName
             }
@@ -6929,20 +6944,12 @@ getCertificatesForTraining: async function(req, res) {
     }
 
     const trainingRecordId = req.params.trainingRecordId;
-    console.log(`[${new Date().toISOString()}] Fetching certificates for training record ${trainingRecordId} for user ${userId}`);
-
+    
     try {
-        if (!trainingRecordId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Training record ID is required.' 
-            });
-        }
-
-        // Verify training record belongs to user
+        // Verify training record belongs to user (REMOVED trainingId reference)
         const { data: trainingRecord, error: recordError } = await supabase
             .from('training_records')
-            .select('trainingRecordId, userId')
+            .select('trainingRecordId, userId, trainingName') // Removed trainingId
             .eq('trainingRecordId', trainingRecordId)
             .eq('userId', userId)
             .single();
@@ -6957,21 +6964,16 @@ getCertificatesForTraining: async function(req, res) {
         // Check if all activities are completed
         const { data: activities, error: activitiesError } = await supabase
             .from('training_records_activities')
-            .select('activityId, status, activityName')
+            .select('status, activityName')
             .eq('trainingRecordId', trainingRecordId);
 
         let allCompleted = false;
         if (!activitiesError && activities) {
-            console.log('📊 [Get Certificates] Raw activities:', activities);
-            
-            // Use the existing checkActivitiesCompletion function
             const completionResult = checkActivitiesCompletion(activities);
             allCompleted = completionResult.completed;
-            
-            console.log('📊 [Get Certificates] Completion analysis:', completionResult);
         }
 
-        // Get certificates from training_records_certificates table
+        // Get existing certificates for this training record
         const { data: certificateRecords, error: certificatesError } = await supabase
             .from('training_records_certificates')
             .select('*')
@@ -6981,8 +6983,7 @@ getCertificatesForTraining: async function(req, res) {
             throw new Error(`Failed to fetch certificates: ${certificatesError.message}`);
         }
 
-        // Process certificates - create entries for each certificate type
-        // Since we're working with training_records_certificates table directly
+        // Process certificates
         const certificatesWithStatus = (certificateRecords || []).map(cert => {
             const hasValidUrl = cert.certificate_url && 
                                cert.certificate_url !== null && 
@@ -6990,8 +6991,8 @@ getCertificatesForTraining: async function(req, res) {
                                cert.certificate_url !== 'null';
             
             return {
-                trainingCertId: cert.trainingRecordCertificateId, // Using the primary key
-                trainingCertTitle: cert.trainingCertTitle || 'Training Certificate',
+                trainingCertId: cert.trainingRecordCertificateId,
+                trainingCertTitle: cert.trainingCertTitle || `${trainingRecord.trainingName} Certificate`,
                 trainingCertDesc: cert.trainingCertDesc || 'Certificate of completion',
                 isUploaded: hasValidUrl,
                 certificate_url: hasValidUrl ? cert.certificate_url : null,
@@ -7004,9 +7005,9 @@ getCertificatesForTraining: async function(req, res) {
         // If no certificate records exist, create a default one
         if (certificatesWithStatus.length === 0) {
             certificatesWithStatus.push({
-                trainingCertId: 1, // Default certificate ID
-                trainingCertTitle: 'Training Completion Certificate',
-                trainingCertDesc: 'Certificate showing successful completion of this training program',
+                trainingCertId: 1,
+                trainingCertTitle: `${trainingRecord.trainingName} - Certificate of Completion`,
+                trainingCertDesc: `Certificate showing successful completion of ${trainingRecord.trainingName}`,
                 isUploaded: false,
                 certificate_url: null,
                 uploadedAt: null,
@@ -7014,8 +7015,6 @@ getCertificatesForTraining: async function(req, res) {
                 canUpload: allCompleted
             });
         }
-
-        console.log('📊 [Get Certificates] Final certificates with status:', certificatesWithStatus);
 
         res.json({
             success: true,
@@ -7028,13 +7027,10 @@ getCertificatesForTraining: async function(req, res) {
         res.status(500).json({
             success: false,
             message: 'Failed to fetch certificates for training',
-            error: error.message,
-            timestamp: new Date().toISOString()
+            error: error.message
         });
     }
 },
-
-
 
 // UPDATED: Get training certificates function with consistent session handling
 getTrainingCertificates: async function(req, res) {
