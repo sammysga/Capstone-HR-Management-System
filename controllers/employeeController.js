@@ -41,6 +41,67 @@ function checkActivitiesCompletion(activities) {
     };
 }
 
+function checkActivitiesCompletion(activities) {
+    console.log('📊 [Activity Check] Starting completion check...');
+    console.log('📊 [Activity Check] Raw activities:', activities);
+    
+    if (!activities || !Array.isArray(activities)) {
+        console.log('📊 [Activity Check] No activities or invalid format');
+        return {
+            completed: false,
+            total: 0,
+            incomplete: 0,
+            reason: 'No activities found or invalid format',
+            incompleteList: []
+        };
+    }
+
+    if (activities.length === 0) {
+        console.log('📊 [Activity Check] No activities to check');
+        return {
+            completed: true,
+            total: 0,
+            incomplete: 0,
+            reason: 'No activities to complete',
+            incompleteList: []
+        };
+    }
+
+    const incompleteActivities = [];
+    let completedCount = 0;
+
+    activities.forEach((activity, index) => {
+        const status = activity.status ? activity.status.trim() : '';
+        const activityName = activity.activityName || `Activity ${index + 1}`;
+        
+        console.log(`📊 [Activity Check] Activity "${activityName}": status = "${status}" (type: ${typeof status})`);
+        
+        if (status !== 'Completed') {
+            incompleteActivities.push({
+                activityId: activity.activityId,
+                activityName: activityName,
+                currentStatus: status || 'Unknown'
+            });
+        } else {
+            completedCount++;
+        }
+    });
+
+    const allCompleted = incompleteActivities.length === 0;
+    
+    const result = {
+        completed: allCompleted,
+        total: activities.length,
+        incomplete: incompleteActivities.length,
+        completedCount: completedCount,
+        reason: allCompleted ? 'All activities completed' : `${incompleteActivities.length} activities not completed`,
+        incompleteList: incompleteActivities
+    };
+
+    console.log('📊 [Activity Check] Final result:', result);
+    return result;
+}
+
 
 const employeeController = {
     getEmployeeDashboard: function(req, res) {
@@ -3778,95 +3839,6 @@ getEmployeeTrainingHome: function(req, res) {
         }
     },
     
-    getEmployeeTrainingSpecific: async function(req, res) {
-    if (!req.session.user || req.session.user.userRole !== 'Employee') {
-        req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
-        return res.redirect('/staff/login');
-    }
-
-    try {
-        const trainingRecordId = req.params.trainingRecordId;
-        const userId = req.session.user.userId;
-        
-        console.log('Fetching training details for record:', trainingRecordId);
-        
-        // UPDATED: Fetch training record directly (no joins needed)
-        const { data: trainingRecord, error: trainingError } = await supabase
-            .from('training_records')
-            .select('*')
-            .eq('trainingRecordId', trainingRecordId)
-            .eq('userId', userId)
-            .single();
-
-        if (trainingError || !trainingRecord) {
-            console.error('Training record error:', trainingError);
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Training record not found' 
-            });
-        }
-
-        // Fetch all training activities for this record
-        const { data: activitiesData, error: activitiesError } = await supabase
-            .from('training_records_activities')
-            .select('*')
-            .eq('trainingRecordId', trainingRecordId);
-
-        if (activitiesError) {
-            console.error('Error fetching activities:', activitiesError);
-        }
-
-        // Fetch certificates for this training record
-        const { data: certificateRecords, error: certificatesError } = await supabase
-            .from('training_records_certificates')
-            .select('*')
-            .eq('trainingRecordId', trainingRecordId);
-
-        if (certificatesError) {
-            console.error('Error fetching certificates:', certificatesError);
-        }
-
-        // Process certificates data
-        const certificates = (certificateRecords || []).map(cert => ({
-            trainingRecordCertificateId: cert.trainingRecordCertificateId,
-            certificate_url: cert.certificate_url,
-            created_at: cert.created_at,
-            trainingCertTitle: cert.trainingCertTitle || 'Training Certificate',
-            trainingCertDesc: cert.trainingCertDesc || 'No description available'
-        }));
-
-        const data = {
-            trainingRecord: {
-                ...trainingRecord,
-                // UPDATED: All data is directly on the record now
-                trainingName: trainingRecord.trainingName,
-                trainingDesc: trainingRecord.trainingDesc,
-                isOnlineArrangement: trainingRecord.isOnlineArrangement,
-                totalDuration: trainingRecord.totalDuration,
-                address: trainingRecord.address,
-                cost: trainingRecord.cost,
-                country: trainingRecord.country
-            },
-            activities: activitiesData || [],
-            certificates: certificates || []
-        };
-
-        console.log('Training data prepared:', {
-            trainingName: data.trainingRecord.trainingName,
-            activitiesCount: data.activities.length,
-            certificatesCount: data.certificates.length
-        });
-
-        res.render('staffpages/employee_pages/training_pages/employee-specific-training', { data });
-    } catch (error) {
-        console.error('Error fetching training details:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch training details',
-            error: error.message 
-        });
-    }
-},
    getEmployeeTrainingRecords: async function(req, res) {
     if (!req.session.user || req.session.user.userRole !== 'Employee') {
         return res.status(401).json({ 
@@ -3968,124 +3940,173 @@ getEmployeeTrainingHome: function(req, res) {
     }
 },
 
+getTrainingRecordDetails: async function(req, res) {
+    console.log('🔍 [API] getTrainingRecordDetails called');
+    
+    if (!req.session.user || req.session.user.userRole !== 'Employee') {
+        console.log('❌ [API] Unauthorized access attempt');
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized. Employee access only.' 
+        });
+    }
 
-    getTrainingRecordDetails: async function(req, res) {
-        if (!req.session.user || req.session.user.userRole !== 'Employee') {
-            return res.status(401).json({ 
+    try {
+        const trainingRecordId = req.params.trainingRecordId;
+        const userId = req.session.user.userId;
+        
+        console.log(`🔍 [API] Fetching training details for record: ${trainingRecordId}, user: ${userId}`);
+        
+        if (!trainingRecordId) {
+            console.log('❌ [API] Missing trainingRecordId parameter');
+            return res.status(400).json({ 
                 success: false, 
-                message: 'Unauthorized. Employee access only.' 
+                message: 'Training record ID is required' 
             });
         }
 
-        try {
-            const trainingRecordId = req.params.trainingRecordId;
-            const userId = req.session.user.userId;
-            
-            // Fetch training record with training details
-            const { data: trainingRecord, error: recordError } = await supabase
-                .from('training_records')
-                .select(`
-                    *,
-                    trainings!inner (
-                        trainingId,
-                        trainingName,
-                        trainingDesc,
-                        isOnlineArrangement,
-                        totalDuration,
-                        cost,
-                        address,
-                        country
-                    )
-                `)
-                .eq('trainingRecordId', trainingRecordId)
-                .eq('userId', userId)
-                .single();
+        // Step 1: Fetch training record from training_records table
+        console.log('📋 [API] Step 1: Fetching training record...');
+        const { data: trainingRecord, error: recordError } = await supabase
+            .from('training_records')
+            .select('*')
+            .eq('trainingRecordId', trainingRecordId)
+            .eq('userId', userId)
+            .single();
 
-            if (recordError || !trainingRecord) {
-                return res.status(404).json({ 
-                    success: false, 
-                    message: 'Training record not found' 
-                });
-            }
-
-            // Fetch activities with completion status
-            const { data: activitiesData, error: activitiesError } = await supabase
-                .from('training_activities')
-                .select(`
-                    activityId,
-                    activityName,
-                    activityType,
-                    activityRemarks,
-                    estActivityDuration,
-                    trainingId
-                `)
-                .eq('trainingId', trainingRecord.trainings.trainingId)
-                .order('activityId');
-
-            if (activitiesError) {
-                console.error('Error fetching activities:', activitiesError);
-            }
-
-            // Fetch activity completion status
-            const { data: activityStatus, error: statusError } = await supabase
-                .from('training_records_activities')
-                .select('*')
-                .eq('trainingRecordId', trainingRecordId);
-
-            if (statusError) {
-                console.error('Error fetching activity status:', statusError);
-            }
-
-            // Merge activities with their status
-            const activities = (activitiesData || []).map(activity => {
-                const status = (activityStatus || []).find(s => s.activityId === activity.activityId);
-                return {
-                    ...activity,
-                    status: status?.status || 'Not Started',
-                    dateStarted: status?.dateStarted || null,
-                    dateCompleted: status?.dateCompleted || null,
-                    trainingRecordActivityId: status?.trainingRecordActivityId || null
-                };
-            });
-
-            // Get activity counts
-            const totalActivities = activities?.length || 0;
-            const completedActivities = activities?.filter(
-                activity => activity.status === 'Completed'
-            ).length || 0;
-
-            // Calculate percentage
-            const percentage = totalActivities > 0 ? 
-                Math.round((completedActivities / totalActivities) * 100) : 0;
-
-            const enrichedRecord = {
-                ...trainingRecord,
-                trainingName: trainingRecord.trainings.trainingName,
-                trainingDesc: trainingRecord.trainings.trainingDesc,
-                isOnlineArrangement: trainingRecord.trainings.isOnlineArrangement,
-                totalDuration: trainingRecord.trainings.totalDuration,
-                cost: trainingRecord.trainings.cost,
-                address: trainingRecord.trainings.address,
-                country: trainingRecord.trainings.country,
-                totalActivities,
-                completedActivities,
-                trainingPercentage: percentage,
-                activities: activities || []
-            };
-            
-            res.json({
-                success: true,
-                data: enrichedRecord
-            });
-        } catch (error) {
-            console.error('Error fetching training record details:', error);
-            res.status(500).json({ 
+        if (recordError) {
+            console.error('❌ [API] Error fetching training record:', recordError);
+            return res.status(500).json({ 
                 success: false, 
-                message: 'Failed to fetch training record details',
-                error: error.message 
+                message: 'Database error fetching training record',
+                error: recordError.message
             });
         }
-    },
+
+        if (!trainingRecord) {
+            console.log('❌ [API] Training record not found');
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Training record not found or access denied' 
+            });
+        }
+
+        console.log('✅ [API] Training record found:', {
+            trainingRecordId: trainingRecord.trainingRecordId,
+            trainingName: trainingRecord.trainingName,
+            isApproved: trainingRecord.isApproved
+        });
+
+        // Step 2: Fetch activities for this training record
+        console.log('📋 [API] Step 2: Fetching activities...');
+        const { data: activitiesData, error: activitiesError } = await supabase
+            .from('training_records_activities')
+            .select(`
+                trainingRecordActivityId,
+                activityId,
+                activityName,
+                estActivityDuration,
+                status,
+                timestampzStarted,
+                timestampzCompleted,
+                activityRemarks,
+                activityTypeId
+            `)
+            .eq('trainingRecordId', trainingRecordId)
+            .order('trainingRecordActivityId', { ascending: true });
+
+        if (activitiesError) {
+            console.error('❌ [API] Error fetching activities:', activitiesError);
+            // Don't fail the whole request for activities error
+        }
+
+        console.log(`📋 [API] Found ${activitiesData?.length || 0} activities`);
+
+        // Step 3: Get activity types for the activities
+        let activityTypes = {};
+        if (activitiesData && activitiesData.length > 0) {
+            const activityTypeIds = [...new Set(activitiesData.map(a => a.activityTypeId).filter(id => id))];
+            
+            if (activityTypeIds.length > 0) {
+                console.log('📋 [API] Step 3: Fetching activity types...');
+                const { data: typesData, error: typesError } = await supabase
+                    .from('training_records_activities_types')
+                    .select('activityTypeId, activityType')
+                    .in('activityTypeId', activityTypeIds);
+
+                if (!typesError && typesData) {
+                    activityTypes = typesData.reduce((acc, type) => {
+                        acc[type.activityTypeId] = type.activityType;
+                        return acc;
+                    }, {});
+                }
+            }
+        }
+
+        // Step 4: Process activities data to match frontend expectations
+        const activities = (activitiesData || []).map(activity => ({
+            activityId: activity.activityId,
+            trainingRecordActivityId: activity.trainingRecordActivityId,
+            activityName: activity.activityName || 'Unknown Activity',
+            estActivityDuration: activity.estActivityDuration || '0',
+            status: activity.status || 'Not Started',
+            timestampzStarted: activity.timestampzStarted,
+            timestampzCompleted: activity.timestampzCompleted,
+            activityRemarks: activity.activityRemarks || 'No remarks',
+            activityType: activityTypes[activity.activityTypeId] || 'N/A'
+        }));
+
+        // Step 5: Calculate progress
+        const totalActivities = activities.length;
+        const completedActivities = activities.filter(a => a.status === 'Completed').length;
+        const trainingPercentage = totalActivities > 0 ? 
+            Math.round((completedActivities / totalActivities) * 100) : 0;
+
+        // Step 6: Prepare response data
+        const responseData = {
+            // All training fields from training_records table
+            trainingRecordId: trainingRecord.trainingRecordId,
+            trainingName: trainingRecord.trainingName,
+            trainingDesc: trainingRecord.trainingDesc,
+            setStartDate: trainingRecord.setStartDate,
+            setEndDate: trainingRecord.setEndDate,
+            totalDuration: trainingRecord.totalDuration,
+            isOnlineArrangement: trainingRecord.isOnlineArrangement,
+            address: trainingRecord.address,
+            cost: trainingRecord.cost,
+            country: trainingRecord.country,
+            isApproved: trainingRecord.isApproved,
+            status: trainingRecord.status,
+            
+            // Processed activities
+            activities: activities,
+            totalActivities,
+            completedActivities,
+            trainingPercentage
+        };
+
+        console.log('✅ [API] Successfully prepared response data:', {
+            trainingName: responseData.trainingName,
+            activitiesCount: responseData.activities.length,
+            completedActivities: responseData.completedActivities,
+            trainingPercentage: responseData.trainingPercentage
+        });
+        
+        res.json({
+            success: true,
+            data: responseData
+        });
+
+    } catch (error) {
+        console.error('❌ [API] Unexpected error in getTrainingRecordDetails:', error);
+        console.error('❌ [API] Error stack:', error.stack);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch training record details',
+            error: error.message 
+        });
+    }
+},
 
     // Additional helper method for training dropdown in modal
     getTrainingDropdown: async function(req, res) {
@@ -4575,8 +4596,6 @@ getEmployeeAllCourses: async function(req, res) {
     }
 },
 
-
-// Get IDP periods for the current user
 getEmployeeTrainingSpecific: async function(req, res) {
     if (!req.session.user || req.session.user.userRole !== 'Employee') {
         req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
@@ -4587,9 +4606,9 @@ getEmployeeTrainingSpecific: async function(req, res) {
         const trainingRecordId = req.params.trainingRecordId;
         const userId = req.session.user.userId;
         
-        console.log('Fetching training details for record:', trainingRecordId);
+        console.log(`[${new Date().toISOString()}] 🔍 Fetching training details for record: ${trainingRecordId}, user: ${userId}`);
         
-        // FIXED: Fetch training record directly from training_records
+        // Step 1: Fetch training record from training_records table
         const { data: trainingRecord, error: trainingError } = await supabase
             .from('training_records')
             .select('*')
@@ -4598,71 +4617,155 @@ getEmployeeTrainingSpecific: async function(req, res) {
             .single();
 
         if (trainingError || !trainingRecord) {
-            console.error('Training record error:', trainingError);
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Training record not found' 
+            console.error('❌ Training record error:', trainingError);
+            return res.status(404).render('staffpages/error', { 
+                error: 'Training record not found',
+                message: 'The requested training record could not be found or you do not have access to it.'
             });
         }
 
-        // Fetch all training activities for this record
-        const { data: activitiesData, error: activitiesError } = await supabase
-            .from('training_records_activities')
-            .select('*')
-            .eq('trainingRecordId', trainingRecordId);
-
-        if (activitiesError) {
-            console.error('Error fetching activities:', activitiesError);
-        }
-
-        // Fetch certificates for this training record
-        const { data: certificateRecords, error: certificatesError } = await supabase
-            .from('training_records_certificates')
-            .select('*')
-            .eq('trainingRecordId', trainingRecordId);
-
-        if (certificatesError) {
-            console.error('Error fetching certificates:', certificatesError);
-        }
-
-        // Process certificates data
-        const certificates = (certificateRecords || []).map(cert => ({
-            trainingRecordCertificateId: cert.trainingRecordCertificateId,
-            certificate_url: cert.certificate_url,
-            created_at: cert.created_at,
-            trainingCertTitle: cert.trainingCertTitle || 'Training Certificate',
-            trainingCertDesc: cert.trainingCertDesc || 'No description available'
-        }));
-
-        const data = {
-            trainingRecord: {
-                ...trainingRecord,
-                // All data is directly on the record now
-                trainingName: trainingRecord.trainingName,
-                trainingDesc: trainingRecord.trainingDesc,
-                isOnlineArrangement: trainingRecord.isOnlineArrangement,
-                totalDuration: trainingRecord.totalDuration,
-                address: trainingRecord.address,
-                cost: trainingRecord.cost,
-                country: trainingRecord.country
-            },
-            activities: activitiesData || [],
-            certificates: certificates || []
-        };
-
-        console.log('Training data prepared:', {
-            trainingName: data.trainingRecord.trainingName,
-            activitiesCount: data.activities.length,
-            certificatesCount: data.certificates.length
+        console.log('✅ Training record found:', {
+            trainingRecordId: trainingRecord.trainingRecordId,
+            trainingName: trainingRecord.trainingName,
+            isApproved: trainingRecord.isApproved
         });
 
-        res.render('staffpages/employee_pages/training_pages/employee-specific-training', { data });
+        // Step 2: Fetch activities from training_records_activities table
+        console.log(`🔍 Step 2: Fetching activities for trainingRecordId: ${trainingRecordId}`);
+        
+        const { data: activitiesData, error: activitiesError } = await supabase
+            .from('training_records_activities')
+            .select('*') // Select all columns to see what's available
+            .eq('trainingRecordId', trainingRecordId)
+            .order('trainingRecordActivityId', { ascending: true });
+
+        console.log('📋 Activities query result:', {
+            error: activitiesError,
+            dataCount: activitiesData?.length || 0,
+            sampleData: activitiesData?.[0] || null
+        });
+
+        if (activitiesError) {
+            console.error('❌ Error fetching activities:', activitiesError);
+            // Continue without activities - don't fail the whole request
+        }
+
+        // Step 3: Get activity types if activities exist and have activityTypeId
+        let activityTypes = {};
+        if (activitiesData && activitiesData.length > 0) {
+            console.log('🔍 Step 3: Processing activity types...');
+            
+            // Check if activityTypeId exists in the data
+            const hasActivityTypeIds = activitiesData.some(a => a.activityTypeId);
+            console.log('📋 Activities have activityTypeId:', hasActivityTypeIds);
+            
+            if (hasActivityTypeIds) {
+                const activityTypeIds = [...new Set(activitiesData.map(a => a.activityTypeId).filter(id => id))];
+                console.log('📋 Unique activityTypeIds:', activityTypeIds);
+                
+                if (activityTypeIds.length > 0) {
+                    const { data: typesData, error: typesError } = await supabase
+                        .from('training_records_activities_types')
+                        .select('activityTypeId, activityType')
+                        .in('activityTypeId', activityTypeIds);
+
+                    console.log('📋 Activity types query result:', {
+                        error: typesError,
+                        dataCount: typesData?.length || 0,
+                        data: typesData
+                    });
+
+                    if (!typesError && typesData) {
+                        activityTypes = typesData.reduce((acc, type) => {
+                            acc[type.activityTypeId] = type.activityType;
+                            return acc;
+                        }, {});
+                    }
+                }
+            }
+        }
+
+        // Step 4: Process activities data (handle missing activityId)
+        const activities = (activitiesData || []).map((activity, index) => {
+            console.log(`📋 Processing activity ${index + 1}:`, {
+                trainingRecordActivityId: activity.trainingRecordActivityId,
+                activityName: activity.activityName,
+                status: activity.status,
+                activityTypeId: activity.activityTypeId
+            });
+            
+            return {
+                // Use trainingRecordActivityId as activityId if activityId doesn't exist
+                activityId: activity.activityId || activity.trainingRecordActivityId,
+                trainingRecordActivityId: activity.trainingRecordActivityId,
+                activityName: activity.activityName || 'Unknown Activity',
+                estActivityDuration: activity.estActivityDuration || '0',
+                status: activity.status || 'Not Started',
+                timestampzStarted: activity.timestampzStarted,
+                timestampzCompleted: activity.timestampzCompleted,
+                activityRemarks: activity.activityRemarks || 'No remarks',
+                activityType: activityTypes[activity.activityTypeId] || 'General Activity'
+            };
+        });
+
+        console.log(`📋 Processed ${activities.length} activities`);
+
+        // Step 5: Calculate progress
+        const totalActivities = activities.length;
+        const completedActivities = activities.filter(a => a.status === 'Completed').length;
+        const trainingPercentage = totalActivities > 0 ? 
+            Math.round((completedActivities / totalActivities) * 100) : 0;
+
+        console.log('📊 Progress calculated:', {
+            totalActivities,
+            completedActivities,
+            trainingPercentage
+        });
+
+        // Step 6: Prepare data for the EJS template
+        const data = {
+            // Training record data
+            trainingRecordId: trainingRecord.trainingRecordId,
+            trainingName: trainingRecord.trainingName,
+            trainingDesc: trainingRecord.trainingDesc,
+            setStartDate: trainingRecord.setStartDate,
+            setEndDate: trainingRecord.setEndDate,
+            totalDuration: trainingRecord.totalDuration,
+            isOnlineArrangement: trainingRecord.isOnlineArrangement,
+            address: trainingRecord.address,
+            cost: trainingRecord.cost,
+            country: trainingRecord.country,
+            isApproved: trainingRecord.isApproved,
+            status: trainingRecord.status,
+            
+            // Activities data
+            activities: activities,
+            totalActivities,
+            completedActivities,
+            trainingPercentage
+        };
+
+        console.log('✅ Final data prepared for EJS template:', {
+            trainingName: data.trainingName,
+            activitiesCount: data.activities.length,
+            completedActivities: data.completedActivities,
+            trainingPercentage: data.trainingPercentage,
+            sampleActivity: data.activities[0] || null
+        });
+
+        // Render the EJS template with the data
+        res.render('staffpages/employee_pages/training_pages/employee-specific-training', { 
+            data: data,
+            user: req.session.user
+        });
+
     } catch (error) {
-        console.error('Error fetching training details:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch training details',
-            error: error.message 
+        console.error('❌ Error fetching training details:', error);
+        console.error('❌ Error stack:', error.stack);
+        res.status(500).render('staffpages/error', { 
+            error: 'Server Error',
+            message: 'Failed to fetch training details. Please try again later.',
+            details: error.message
         });
     }
 },
@@ -6154,97 +6257,6 @@ getFinalYearIDPForEmployee: async function(req, res) {
 //     }
 // },
 
-// Helper function to get detailed training record with all related data
-getTrainingRecordDetails: async function(req, res) {
-    if (!req.session.user || req.session.user.userRole !== 'Employee') {
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Unauthorized. Employee access only.' 
-        });
-    }
-
-    try {
-        const trainingRecordId = req.params.trainingRecordId;
-        const userId = req.session.user.userId;
-        
-        // FIXED: Fetch training record directly from training_records
-        const { data: trainingRecord, error: recordError } = await supabase
-            .from('training_records')
-            .select('*')
-            .eq('trainingRecordId', trainingRecordId)
-            .eq('userId', userId)
-            .single();
-
-        if (recordError || !trainingRecord) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Training record not found' 
-            });
-        }
-
-        // Fetch activities with completion status (updated field names)
-        const { data: activitiesData, error: activitiesError } = await supabase
-            .from('training_records_activities')
-            .select('*')
-            .eq('trainingRecordId', trainingRecordId)
-            .order('trainingRecordActivityId');
-
-        if (activitiesError) {
-            console.error('Error fetching activities:', activitiesError);
-        }
-
-        // Format activities with status information
-        const activities = (activitiesData || []).map(activity => ({
-            activityId: activity.trainingRecordActivityId, // Use the record activity ID
-            activityName: activity.activityName,
-            activityType: activity.activityTypeId, // You might want to join with activity types table
-            activityRemarks: activity.activityRemarks,
-            estActivityDuration: activity.estActivityDuration,
-            status: activity.status || 'Not Started',
-            timestampzStarted: activity.timestampzStarted || null,
-            timestampzCompleted: activity.timestampzCompleted || null,
-            trainingRecordActivityId: activity.trainingRecordActivityId
-        }));
-
-        // Get activity counts
-        const totalActivities = activities?.length || 0;
-        const completedActivities = activities?.filter(
-            activity => activity.status === 'Completed'
-        ).length || 0;
-
-        // Calculate percentage
-        const percentage = totalActivities > 0 ? 
-            Math.round((completedActivities / totalActivities) * 100) : 0;
-
-        const enrichedRecord = {
-            ...trainingRecord,
-            // All training data is now directly on the record
-            trainingName: trainingRecord.trainingName,
-            trainingDesc: trainingRecord.trainingDesc,
-            isOnlineArrangement: trainingRecord.isOnlineArrangement,
-            totalDuration: trainingRecord.totalDuration,
-            cost: trainingRecord.cost,
-            address: trainingRecord.address,
-            country: trainingRecord.country,
-            totalActivities,
-            completedActivities,
-            trainingPercentage: percentage,
-            activities: activities || []
-        };
-        
-        res.json({
-            success: true,
-            data: enrichedRecord
-        });
-    } catch (error) {
-        console.error('Error fetching training record details:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch training record details',
-            error: error.message 
-        });
-    }
-},
 
 
 // // Enhanced getAllCourses with approval status indicators
@@ -6845,7 +6857,6 @@ uploadTrainingCertificate: async function(req, res) {
         });
     }
 },
-// ENHANCED: Get certificates with better null checking
 getCertificatesForTraining: async function(req, res) {
     const userId = req.session?.user?.userId;
     if (!userId) {
@@ -6869,7 +6880,7 @@ getCertificatesForTraining: async function(req, res) {
         // Verify training record belongs to user
         const { data: trainingRecord, error: recordError } = await supabase
             .from('training_records')
-            .select('trainingRecordId, trainingId')
+            .select('trainingRecordId, userId')
             .eq('trainingRecordId', trainingRecordId)
             .eq('userId', userId)
             .single();
@@ -6891,52 +6902,56 @@ getCertificatesForTraining: async function(req, res) {
         if (!activitiesError && activities) {
             console.log('📊 [Get Certificates] Raw activities:', activities);
             
+            // Use the existing checkActivitiesCompletion function
             const completionResult = checkActivitiesCompletion(activities);
             allCompleted = completionResult.completed;
             
             console.log('📊 [Get Certificates] Completion analysis:', completionResult);
         }
 
-        // Get all certificates assigned to this training
-        const { data: trainingCertifications, error: certificationsError } = await supabase
-            .from('training_certifications')
-            .select('trainingCertId, trainingCertTitle, trainingCertDesc')
-            .eq('trainingId', trainingRecord.trainingId)
-            .order('trainingCertId', { ascending: true });
-
-        if (certificationsError) {
-            throw new Error(`Failed to fetch training certifications: ${certificationsError.message}`);
-        }
-
-        // Get uploaded certificates for this training record
-        const { data: uploadedCertificates, error: uploadedError } = await supabase
+        // Get certificates from training_records_certificates table
+        const { data: certificateRecords, error: certificatesError } = await supabase
             .from('training_records_certificates')
-            .select('trainingCertId, certificate_url, created_at, trainingRecordCertificateId')
+            .select('*')
             .eq('trainingRecordId', trainingRecordId);
 
-        if (uploadedError) {
-            throw new Error(`Failed to fetch uploaded certificates: ${uploadedError.message}`);
+        if (certificatesError) {
+            throw new Error(`Failed to fetch certificates: ${certificatesError.message}`);
         }
 
-        // Combine certification requirements with upload status
-        const certificatesWithStatus = (trainingCertifications || []).map(cert => {
-            const uploaded = (uploadedCertificates || []).find(upload => 
-                upload.trainingCertId === cert.trainingCertId && 
-                upload.certificate_url !== null && 
-                upload.certificate_url !== ''
-            );
+        // Process certificates - create entries for each certificate type
+        // Since we're working with training_records_certificates table directly
+        const certificatesWithStatus = (certificateRecords || []).map(cert => {
+            const hasValidUrl = cert.certificate_url && 
+                               cert.certificate_url !== null && 
+                               cert.certificate_url !== '' &&
+                               cert.certificate_url !== 'null';
             
             return {
-                trainingCertId: cert.trainingCertId,
-                trainingCertTitle: cert.trainingCertTitle,
-                trainingCertDesc: cert.trainingCertDesc,
-                isUploaded: !!uploaded,
-                certificate_url: uploaded?.certificate_url || null,
-                uploadedAt: uploaded?.created_at || null,
-                trainingRecordCertificateId: uploaded?.trainingRecordCertificateId || null,
+                trainingCertId: cert.trainingRecordCertificateId, // Using the primary key
+                trainingCertTitle: cert.trainingCertTitle || 'Training Certificate',
+                trainingCertDesc: cert.trainingCertDesc || 'Certificate of completion',
+                isUploaded: hasValidUrl,
+                certificate_url: hasValidUrl ? cert.certificate_url : null,
+                uploadedAt: cert.created_at || null,
+                trainingRecordCertificateId: cert.trainingRecordCertificateId,
                 canUpload: allCompleted
             };
         });
+
+        // If no certificate records exist, create a default one
+        if (certificatesWithStatus.length === 0) {
+            certificatesWithStatus.push({
+                trainingCertId: 1, // Default certificate ID
+                trainingCertTitle: 'Training Completion Certificate',
+                trainingCertDesc: 'Certificate showing successful completion of this training program',
+                isUploaded: false,
+                certificate_url: null,
+                uploadedAt: null,
+                trainingRecordCertificateId: null,
+                canUpload: allCompleted
+            });
+        }
 
         console.log('📊 [Get Certificates] Final certificates with status:', certificatesWithStatus);
 
@@ -6956,6 +6971,8 @@ getCertificatesForTraining: async function(req, res) {
         });
     }
 },
+
+
 
 // UPDATED: Get training certificates function with consistent session handling
 getTrainingCertificates: async function(req, res) {
@@ -7663,124 +7680,6 @@ getTrainingProgressSummary: async function(trainingRecordId) {
     } catch (error) {
         console.error('Error getting training progress summary:', error);
         throw error;
-    }
-},
-
-// UPDATED: Get training record details with timestamp fields
-getTrainingRecordDetails: async function(req, res) {
-    if (!req.session.user || req.session.user.userRole !== 'Employee') {
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Unauthorized. Employee access only.' 
-        });
-    }
-
-    try {
-        const trainingRecordId = req.params.trainingRecordId;
-        const userId = req.session.user.userId;
-        
-        // Fetch training record with training details
-        const { data: trainingRecord, error: recordError } = await supabase
-            .from('training_records')
-            .select(`
-                *,
-                trainings!inner (
-                    trainingId,
-                    trainingName,
-                    trainingDesc,
-                    isOnlineArrangement,
-                    totalDuration,
-                    cost,
-                    address,
-                    country
-                )
-            `)
-            .eq('trainingRecordId', trainingRecordId)
-            .eq('userId', userId)
-            .single();
-
-        if (recordError || !trainingRecord) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Training record not found' 
-            });
-        }
-
-        // Fetch activities with completion status (updated field names)
-        const { data: activitiesData, error: activitiesError } = await supabase
-            .from('training_activities')
-            .select(`
-                activityId,
-                activityName,
-                activityType,
-                activityRemarks,
-                estActivityDuration,
-                trainingId
-            `)
-            .eq('trainingId', trainingRecord.trainings.trainingId);
-
-        if (activitiesError) {
-            console.error('Error fetching activities:', activitiesError);
-        }
-
-        // Fetch activity completion status with timestamp fields
-        const { data: activityStatus, error: statusError } = await supabase
-            .from('training_records_activities')
-            .select('*')
-            .eq('trainingRecordId', trainingRecordId);
-
-        if (statusError) {
-            console.error('Error fetching activity status:', statusError);
-        }
-
-        // Merge activities with their status
-        const activities = (activitiesData || []).map(activity => {
-            const status = (activityStatus || []).find(s => s.activityId === activity.activityId);
-            return {
-                ...activity,
-                status: status?.status || 'Not Started',
-                timestampzStarted: status?.timestampzStarted || null,
-                timestampzCompleted: status?.timestampzCompleted || null,
-                trainingRecordActivityId: status?.trainingRecordActivityId || null
-            };
-        });
-
-        // Get activity counts
-        const totalActivities = activities?.length || 0;
-        const completedActivities = activities?.filter(
-            activity => activity.status === 'Completed'
-        ).length || 0;
-
-        // Calculate percentage
-        const percentage = totalActivities > 0 ? 
-            Math.round((completedActivities / totalActivities) * 100) : 0;
-
-        const enrichedRecord = {
-            ...trainingRecord,
-            trainingName: trainingRecord.trainings.trainingName,
-            trainingDesc: trainingRecord.trainings.trainingDesc,
-            isOnlineArrangement: trainingRecord.trainings.isOnlineArrangement,
-            totalDuration: trainingRecord.trainings.totalDuration,
-            cost: trainingRecord.trainings.cost,
-            address: trainingRecord.trainings.address,
-            country: trainingRecord.trainings.country,
-            totalActivities,
-            completedActivities,
-            trainingPercentage: percentage,
-            activities: activities || []
-        };
-        
-        res.json({
-            success: true,
-            data: enrichedRecord
-        });
-    } catch (error) {
-        console.error('Error fetching training record details:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch training record details',
-            error: error.message 
-        });
     }
 },
 

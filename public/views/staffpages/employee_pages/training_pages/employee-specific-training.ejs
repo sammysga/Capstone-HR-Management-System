@@ -668,7 +668,7 @@
 <body>
     <%- include('../../../partials/employee_partials') %>
     
-    <!-- Main content area -->
+       <!-- Main content area -->
     <div class="main-content">
         <!-- Course Header -->
         <div class="course-header">
@@ -799,45 +799,82 @@
         </div>
     </div>
 
+    <script>
+    // Embed the training data from the server into the page
+    window.trainingData = <%- JSON.stringify(data) %>;
+    console.log('🎯 Training data embedded from server:', window.trainingData);
+</script>
+
     <!-- JavaScript for interactions -->
     <script>
         let trainingData = null;
         let hasUnsavedChanges = false;
         let allActivitiesCompleted = false;
-        const trainingRecordId = window.location.pathname.split('/').pop();
+       const trainingRecordId = window.location.pathname.split('/').pop();
 
-        document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', async () => {
+        // Use the embedded data instead of making an AJAX call
+        if (window.trainingData) {
+            console.log('✅ Using embedded training data');
+            trainingData = window.trainingData;
+            displayTrainingData();
+        } else {
+            console.log('⚠️ No embedded data found, falling back to AJAX');
             await loadTrainingData();
-            await loadCertificates();
-            setupEventListeners();
-        });
+        }
+        
+        await loadCertificates();
+        setupEventListeners();
+    });
 
-        async function loadTrainingData() {
-            try {
-                const response = await fetch(`/employee/training/${trainingRecordId}/details`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                });
+       async function loadTrainingData() {
+        try {
+            console.log('🔄 Loading training data via AJAX for trainingRecordId:', trainingRecordId);
+            
+            const response = await fetch(`/employee/training/${trainingRecordId}/details`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+            console.log('📡 Response status:', response.status, response.statusText);
 
-                const result = await response.json();
-                
-                if (result.success) {
-                    trainingData = result.data;
-                    await loadSkillsAndObjectives(); // Load skills and objectives from job
-                    displayTrainingData();
-                } else {
-                    throw new Error(result.message || 'Failed to fetch training data');
-                }
-            } catch (error) {
-                console.error('Error loading training data:', error);
-                showError('Failed to load training data. Please refresh the page.');
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Response error text:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log('📡 Response data:', result);
+            
+            if (result.success) {
+                trainingData = result.data;
+                console.log('✅ Training data loaded via AJAX:', trainingData);
+                displayTrainingData();
+            } else {
+                throw new Error(result.message || 'Failed to fetch training data');
+            }
+        } catch (error) {
+            console.error('❌ Error loading training data:', error);
+            showError('Failed to load training data: ' + error.message);
+            
+            // Show the error in the UI
+            const tableBody = document.querySelector('#activitiesTable tbody');
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #dc2626;">
+                            <i class="fas fa-exclamation-triangle"></i><br>
+                            Failed to load training data<br>
+                            <small>${error.message}</small>
+                        </td>
+                    </tr>
+                `;
             }
         }
+    }
+
 
         async function loadSkillsAndObjectives() {
             try {
@@ -886,7 +923,6 @@
         console.log('📂 [Frontend] Certificates API response:', result);
         
         if (result.success) {
-            // Validate that we actually have data
             if (result.data && Array.isArray(result.data)) {
                 displayCertificates(result.data);
             } else {
@@ -902,6 +938,7 @@
         showError('Error loading certificates. Please refresh the page.');
     }
 }
+
 
 function displayCertificates(certificates) {
     const container = document.getElementById('certificatesGrid');
@@ -937,7 +974,7 @@ function createCertificateElement(cert) {
     const div = document.createElement('div');
     const isDisabled = !allActivitiesCompleted && !cert.isUploaded;
     
-    // ENHANCED: More thorough validation of upload status
+    // Enhanced validation of upload status
     const isActuallyUploaded = cert.isUploaded && 
                               cert.certificate_url && 
                               cert.certificate_url !== null && 
@@ -995,7 +1032,6 @@ function createUploadedView(cert) {
         </div>
     `;
 }
-
 function createUploadView(cert, isDisabled) {
     return `
         <div class="certificate-header">
@@ -1095,27 +1131,36 @@ async function handleFileSelect(trainingCertId, file) {
     }
 }
 
-        function displayTrainingData() {
-            if (!trainingData) return;
-
-            // Update header information
-            document.getElementById('trainingName').textContent = trainingData.trainingName || 'Unknown Training';
-            document.getElementById('trainingMode').textContent = trainingData.isOnlineArrangement ? 'Online' : 'Onsite';
-            
-            // Update dates
-            document.getElementById('startDate').textContent = formatDate(trainingData.setStartDate) || 'Not set';
-            document.getElementById('endDate').textContent = formatDate(trainingData.setEndDate) || 'Not set';
-            
-            // Update total duration
-            document.getElementById('totalDuration').textContent = `${trainingData.totalDuration || 0} hours`;
-
-            // Display objectives and skills from job data
-            displayObjectives();
-            displaySkills();
-            
-            // Display activities
-            displayActivities();
+       function displayTrainingData() {
+        if (!trainingData) {
+            console.error('❌ No training data available to display');
+            return;
         }
+
+        console.log('🎨 Displaying training data:', trainingData);
+
+        // Update header information
+        const trainingNameEl = document.getElementById('trainingName');
+        const trainingModeEl = document.getElementById('trainingMode');
+        const startDateEl = document.getElementById('startDate');
+        const endDateEl = document.getElementById('endDate');
+        const totalDurationEl = document.getElementById('totalDuration');
+
+        if (trainingNameEl) trainingNameEl.textContent = trainingData.trainingName || 'Unknown Training';
+        if (trainingModeEl) trainingModeEl.textContent = trainingData.isOnlineArrangement ? 'Online' : 'Onsite';
+        if (startDateEl) startDateEl.textContent = formatDate(trainingData.setStartDate) || 'Not set';
+        if (endDateEl) endDateEl.textContent = formatDate(trainingData.setEndDate) || 'Not set';
+        if (totalDurationEl) totalDurationEl.textContent = `${trainingData.totalDuration || 0} hours`;
+
+        // Hide objectives and skills sections since they're not directly related to training record
+        const objectivesSection = document.getElementById('objectivesSection');
+        const skillsSection = document.getElementById('skillsSection');
+        if (objectivesSection) objectivesSection.style.display = 'none';
+        if (skillsSection) skillsSection.style.display = 'none';
+        
+        // Display activities
+        displayActivities();
+    }
 
         function displayObjectives() {
             const container = document.getElementById('objectivesTags');
@@ -1142,63 +1187,74 @@ async function handleFileSelect(trainingCertId, file) {
         }
 
         function displayActivities() {
-            const tableBody = document.querySelector('#activitiesTable tbody');
-            
-            if (!trainingData.activities || trainingData.activities.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
-                            No activities found for this training.
-                        </td>
-                    </tr>
-                `;
-                allActivitiesCompleted = false;
-                return;
-            }
-
-            // Check if all activities are completed
-            allActivitiesCompleted = trainingData.activities.every(activity => activity.status === 'Completed');
-            updateCompletionRequirement();
-
-            tableBody.innerHTML = trainingData.activities.map(activity => `
-                <tr data-activity-id="${activity.activityId}">
-                    <td>${activity.activityName || 'Unknown Activity'}</td>
-                    <td>${activity.estActivityDuration || 0} minutes</td>
-                    <td class="editable-field">
-                        <select class="status-select ${getStatusClass(activity.status)}" 
-                                onchange="updateActivityStatus(${activity.activityId}, this.value)"
-                                data-activity-id="${activity.activityId}" 
-                                data-field="status">
-                            <option value="Not Started" ${activity.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
-                            <option value="In Progress" ${activity.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                            <option value="Completed" ${activity.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                        </select>
+        const tableBody = document.querySelector('#activitiesTable tbody');
+        
+        if (!tableBody) {
+            console.error('❌ Activities table body not found');
+            return;
+        }
+        
+        if (!trainingData.activities || trainingData.activities.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
+                        No activities found for this training.
                     </td>
-                    <td>
-                        <div class="timestamp-display ${activity.timestampzStarted ? 'has-value' : ''}">
-                            ${activity.timestampzStarted ? formatTimestamp(activity.timestampzStarted) : 'Not started'}
-                        </div>
-                    </td>
-                    <td>
-                        <div class="timestamp-display ${activity.timestampzCompleted ? 'has-value' : ''}">
-                            ${activity.timestampzCompleted ? formatTimestamp(activity.timestampzCompleted) : 'Not completed'}
-                        </div>
-                    </td>
-                    <td>${activity.activityType || 'N/A'}</td>
-                    <td>${activity.activityRemarks || 'No remarks'}</td>
                 </tr>
-            `).join('');
+            `;
+            allActivitiesCompleted = false;
+            updateCompletionRequirement();
+            return;
         }
 
-        function updateCompletionRequirement() {
-            const completionReq = document.getElementById('completionRequirement');
-            if (allActivitiesCompleted) {
-                completionReq.style.display = 'none';
-            } else {
-                completionReq.style.display = 'flex';
-            }
-        }
+        console.log('🎨 Displaying activities:', trainingData.activities);
 
+        // Check if all activities are completed
+        allActivitiesCompleted = trainingData.activities.every(activity => activity.status === 'Completed');
+        updateCompletionRequirement();
+
+        tableBody.innerHTML = trainingData.activities.map(activity => `
+            <tr data-activity-id="${activity.activityId}">
+                <td>${activity.activityName || 'Unknown Activity'}</td>
+                <td>${activity.estActivityDuration || 0} minutes</td>
+                <td class="editable-field">
+                    <select class="status-select ${getStatusClass(activity.status)}" 
+                            onchange="updateActivityStatus(${activity.activityId}, this.value)"
+                            data-activity-id="${activity.activityId}" 
+                            data-field="status">
+                        <option value="Not Started" ${activity.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                        <option value="In Progress" ${activity.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="Completed" ${activity.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                    </select>
+                </td>
+                <td>
+                    <div class="timestamp-display ${activity.timestampzStarted ? 'has-value' : ''}">
+                        ${activity.timestampzStarted ? formatTimestamp(activity.timestampzStarted) : 'Not started'}
+                    </div>
+                </td>
+                <td>
+                    <div class="timestamp-display ${activity.timestampzCompleted ? 'has-value' : ''}">
+                        ${activity.timestampzCompleted ? formatTimestamp(activity.timestampzCompleted) : 'Not completed'}
+                    </div>
+                </td>
+                <td>${activity.activityType || 'N/A'}</td>
+                <td>${activity.activityRemarks || 'No remarks'}</td>
+            </tr>
+        `).join('');
+
+        console.log('✅ Activities displayed successfully');
+    }
+
+function updateCompletionRequirement() {
+        const completionReq = document.getElementById('completionRequirement');
+        if (!completionReq) return;
+        
+        if (allActivitiesCompleted) {
+            completionReq.style.display = 'none';
+        } else {
+            completionReq.style.display = 'flex';
+        }
+    }
         function displayCertificates(certificates) {
             const container = document.getElementById('certificatesGrid');
             container.innerHTML = '';
@@ -1299,163 +1355,164 @@ async function handleFileSelect(trainingCertId, file) {
             `;
         }
 
-        function getStatusClass(status) {
-            if (!status) return 'not-started';
-            return status.toLowerCase().replace(' ', '-');
-        }
+       function getStatusClass(status) {
+        if (!status) return 'not-started';
+        return status.toLowerCase().replace(' ', '-');
+    }
+
 
         // Updated activity status change with timestamp handling
-        async function updateActivityStatus(activityId, newStatus) {
-            console.log('Updating activity status:', { activityId, newStatus });
-            
-            // Find the activity in our data
-            const activity = trainingData.activities.find(a => a.activityId === activityId);
-            if (!activity) {
-                console.error('Activity not found:', activityId);
-                return;
-            }
+       async function updateActivityStatus(activityId, newStatus) {
+    console.log('Updating activity status:', { activityId, newStatus });
+    
+    // Find the activity in our data
+    const activity = trainingData.activities.find(a => a.activityId === activityId);
+    if (!activity) {
+        console.error('Activity not found:', activityId);
+        return;
+    }
 
-            const oldStatus = activity.status;
-            
-            // Show loading state
-            const fieldElement = document.querySelector(`[data-activity-id="${activityId}"][data-field="status"]`);
-            if (fieldElement) {
-                fieldElement.classList.add('updating');
-                fieldElement.disabled = true;
-            }
+    const oldStatus = activity.status;
+    
+    // Show loading state
+    const fieldElement = document.querySelector(`[data-activity-id="${activityId}"][data-field="status"]`);
+    if (fieldElement) {
+        fieldElement.classList.add('updating');
+        fieldElement.disabled = true;
+    }
 
-            try {
-                // Prepare request data
-                const requestData = { status: newStatus };
-                
-                // Determine which timestamp to update based on status change
-                const now = new Date().toISOString();
-                if (oldStatus === 'Not Started' && newStatus === 'In Progress') {
-                    requestData.timestampzStarted = now;
-                } else if (newStatus === 'Completed') {
-                    requestData.timestampzCompleted = now;
-                    if (!activity.timestampzStarted) {
-                        requestData.timestampzStarted = now; // Also set start time if not set
-                    }
-                }
-
-                // Update local data
-                activity.status = newStatus;
-                if (requestData.timestampzStarted) activity.timestampzStarted = requestData.timestampzStarted;
-                if (requestData.timestampzCompleted) activity.timestampzCompleted = requestData.timestampzCompleted;
-
-                // Update visual state
-                const selectElement = document.querySelector(`tr[data-activity-id="${activityId}"] .status-select`);
-                if (selectElement) {
-                    selectElement.className = `status-select ${getStatusClass(newStatus)}`;
-                }
-
-                // Save to database
-                await saveActivityChange(activityId, requestData);
-                
-                // Update timestamps in UI
-                updateTimestampDisplays(activityId, activity);
-                
-                // Check if all activities are completed
-                allActivitiesCompleted = trainingData.activities.every(act => act.status === 'Completed');
-                updateCompletionRequirement();
-                
-                // Reload certificates to update enabled/disabled state
-                if (allActivitiesCompleted) {
-                    await loadCertificates();
-                }
-
-                // Show success state
-                if (fieldElement) {
-                    fieldElement.classList.remove('updating');
-                    fieldElement.classList.add('success');
-                    fieldElement.disabled = false;
-                    
-                    setTimeout(() => {
-                        fieldElement.classList.remove('success');
-                    }, 2000);
-                }
-
-                const statusText = newStatus === 'In Progress' ? 'started' : newStatus.toLowerCase();
-                showSuccess(`Activity ${statusText} successfully! ${requestData.timestampzStarted ? 'Start time recorded.' : ''} ${requestData.timestampzCompleted ? 'Completion time recorded.' : ''}`);
-                
-            } catch (error) {
-                console.error('Error saving activity change:', error);
-                
-                // Revert the change if save failed
-                activity.status = oldStatus;
-                const selectElement = document.querySelector(`tr[data-activity-id="${activityId}"] .status-select`);
-                if (selectElement) {
-                    selectElement.value = oldStatus;
-                    selectElement.className = `status-select ${getStatusClass(oldStatus)}`;
-                }
-
-                // Show error state
-                if (fieldElement) {
-                    fieldElement.classList.remove('updating');
-                    fieldElement.classList.add('error');
-                    fieldElement.disabled = false;
-                    
-                    setTimeout(() => {
-                        fieldElement.classList.remove('error');
-                    }, 3000);
-                }
-
-                showError('Failed to save status change. Please try again.');
+    try {
+        // Prepare request data
+        const requestData = { status: newStatus };
+        
+        // Determine which timestamp to update based on status change
+        const now = new Date().toISOString();
+        if (oldStatus === 'Not Started' && newStatus === 'In Progress') {
+            requestData.timestampzStarted = now;
+        } else if (newStatus === 'Completed') {
+            requestData.timestampzCompleted = now;
+            if (!activity.timestampzStarted) {
+                requestData.timestampzStarted = now; // Also set start time if not set
             }
         }
+
+        // Update local data
+        activity.status = newStatus;
+        if (requestData.timestampzStarted) activity.timestampzStarted = requestData.timestampzStarted;
+        if (requestData.timestampzCompleted) activity.timestampzCompleted = requestData.timestampzCompleted;
+
+        // Update visual state
+        const selectElement = document.querySelector(`tr[data-activity-id="${activityId}"] .status-select`);
+        if (selectElement) {
+            selectElement.className = `status-select ${getStatusClass(newStatus)}`;
+        }
+
+        // Save to database
+        await saveActivityChange(activityId, requestData);
+        
+        // Update timestamps in UI
+        updateTimestampDisplays(activityId, activity);
+        
+        // Check if all activities are completed
+        allActivitiesCompleted = trainingData.activities.every(act => act.status === 'Completed');
+        updateCompletionRequirement();
+        
+        // Reload certificates to update enabled/disabled state
+        if (allActivitiesCompleted) {
+            await loadCertificates();
+        }
+
+        // Show success state
+        if (fieldElement) {
+            fieldElement.classList.remove('updating');
+            fieldElement.classList.add('success');
+            fieldElement.disabled = false;
+            
+            setTimeout(() => {
+                fieldElement.classList.remove('success');
+            }, 2000);
+        }
+
+        const statusText = newStatus === 'In Progress' ? 'started' : newStatus.toLowerCase();
+        showSuccess(`Activity ${statusText} successfully! ${requestData.timestampzStarted ? 'Start time recorded.' : ''} ${requestData.timestampzCompleted ? 'Completion time recorded.' : ''}`);
+        
+    } catch (error) {
+        console.error('Error saving activity change:', error);
+        
+        // Revert the change if save failed
+        activity.status = oldStatus;
+        const selectElement = document.querySelector(`tr[data-activity-id="${activityId}"] .status-select`);
+        if (selectElement) {
+            selectElement.value = oldStatus;
+            selectElement.className = `status-select ${getStatusClass(oldStatus)}`;
+        }
+
+        // Show error state
+        if (fieldElement) {
+            fieldElement.classList.remove('updating');
+            fieldElement.classList.add('error');
+            fieldElement.disabled = false;
+            
+            setTimeout(() => {
+                fieldElement.classList.remove('error');
+            }, 3000);
+        }
+
+        showError('Failed to save status change. Please try again.');
+    }
+}
 
         function updateTimestampDisplays(activityId, activity) {
-            const row = document.querySelector(`tr[data-activity-id="${activityId}"]`);
-            if (!row) return;
+    const row = document.querySelector(`tr[data-activity-id="${activityId}"]`);
+    if (!row) return;
 
-            // Update start timestamp
-            const startDisplay = row.children[3].querySelector('.timestamp-display');
-            if (startDisplay) {
-                if (activity.timestampzStarted) {
-                    startDisplay.textContent = formatTimestamp(activity.timestampzStarted);
-                    startDisplay.classList.add('has-value');
-                } else {
-                    startDisplay.textContent = 'Not started';
-                    startDisplay.classList.remove('has-value');
-                }
-            }
-
-            // Update completion timestamp
-            const completionDisplay = row.children[4].querySelector('.timestamp-display');
-            if (completionDisplay) {
-                if (activity.timestampzCompleted) {
-                    completionDisplay.textContent = formatTimestamp(activity.timestampzCompleted);
-                    completionDisplay.classList.add('has-value');
-                } else {
-                    completionDisplay.textContent = 'Not completed';
-                    completionDisplay.classList.remove('has-value');
-                }
-            }
+    // Update start timestamp
+    const startDisplay = row.children[3].querySelector('.timestamp-display');
+    if (startDisplay) {
+        if (activity.timestampzStarted) {
+            startDisplay.textContent = formatTimestamp(activity.timestampzStarted);
+            startDisplay.classList.add('has-value');
+        } else {
+            startDisplay.textContent = 'Not started';
+            startDisplay.classList.remove('has-value');
         }
+    }
+
+    // Update completion timestamp
+    const completionDisplay = row.children[4].querySelector('.timestamp-display');
+    if (completionDisplay) {
+        if (activity.timestampzCompleted) {
+            completionDisplay.textContent = formatTimestamp(activity.timestampzCompleted);
+            completionDisplay.classList.add('has-value');
+        } else {
+            completionDisplay.textContent = 'Not completed';
+            completionDisplay.classList.remove('has-value');
+        }
+    }
+}
 
         // Save individual activity changes
         async function saveActivityChange(activityId, requestData) {
-            console.log('Saving activity change:', { activityId, requestData });
+    console.log('Saving activity change:', { activityId, requestData });
 
-            const response = await fetch(`/employee/training/${trainingRecordId}/activity/${activityId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(requestData)
-            });
+    const response = await fetch(`/employee/training/${trainingRecordId}/activity/${activityId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestData)
+    });
 
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to save activity change');
-            }
+    const result = await response.json();
+    
+    if (!result.success) {
+        throw new Error(result.message || 'Failed to save activity change');
+    }
 
-            console.log('Activity change saved successfully:', result);
-            return result;
-        }
+    console.log('Activity change saved successfully:', result);
+    return result;
+}
 
         // Batch save function (for bulk operations)
         async function saveAllActivities() {
@@ -1511,56 +1568,72 @@ async function handleFileSelect(trainingCertId, file) {
         }
 
         // Certificate functions
-        function triggerFileInput(trainingCertId) {
-            if (!allActivitiesCompleted) {
-                showError('Please complete all activities before uploading certificates.');
-                return;
-            }
-            document.getElementById(`fileInput_${trainingCertId}`).click();
-        }
+function triggerFileInput(trainingCertId) {
+    if (!allActivitiesCompleted) {
+        showError('Please complete all activities before uploading certificates.');
+        return;
+    }
+    console.log('Triggering file input for certificate:', trainingCertId);
+    document.getElementById(`fileInput_${trainingCertId}`).click();
+}
 
-        function reuploadCertificate(trainingCertId) {
-            if (!allActivitiesCompleted) {
-                showError('Please complete all activities before uploading certificates.');
-                return;
-            }
-            triggerFileInput(trainingCertId);
-        }
+function reuploadCertificate(trainingCertId) {
+    if (!allActivitiesCompleted) {
+        showError('Please complete all activities before uploading certificates.');
+        return;
+    }
+    console.log('Reuploading certificate:', trainingCertId);
+    triggerFileInput(trainingCertId);
+}
+
 
         async function handleFileSelect(trainingCertId, file) {
-            if (!file) return;
-            
-            if (!allActivitiesCompleted) {
-                showError('Please complete all activities before uploading certificates.');
-                return;
-            }
-            
-            // Validate file
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-            
-            if (file.size > maxSize) {
-                showCertError(trainingCertId, 'File size exceeds 10MB limit');
-                return;
-            }
-            
-            if (!allowedTypes.includes(file.type)) {
-                showCertError(trainingCertId, 'Invalid file type. Please upload PDF, image, or Word document.');
-                return;
-            }
-            
-            // Show upload progress
-            showUploadProgress(trainingCertId);
-            
-            try {
-                await uploadCertificate(trainingCertId, file);
-            } catch (error) {
-                showCertError(trainingCertId, error.message);
-                hideUploadProgress(trainingCertId);
-            }
-        }
+    if (!file) {
+        console.log('No file selected');
+        return;
+    }
+    
+    console.log('File selected:', { trainingCertId, fileName: file.name, fileSize: file.size, fileType: file.type });
+    
+    if (!allActivitiesCompleted) {
+        showError('Please complete all activities before uploading certificates.');
+        return;
+    }
+    
+    // Validate file
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = [
+        'application/pdf', 
+        'image/jpeg', 
+        'image/jpg', 
+        'image/png', 
+        'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    if (file.size > maxSize) {
+        showCertError(trainingCertId, 'File size exceeds 10MB limit');
+        return;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+        showCertError(trainingCertId, 'Invalid file type. Please upload PDF, image, or Word document.');
+        return;
+    }
+    
+    // Show upload progress
+    showUploadProgress(trainingCertId);
+    
+    try {
+        await uploadCertificate(trainingCertId, file);
+    } catch (error) {
+        console.error('Upload failed:', error);
+        showCertError(trainingCertId, error.message);
+        hideUploadProgress(trainingCertId);
+    }
+}
 
-       async function uploadCertificate(trainingCertId, file) {
+      async function uploadCertificate(trainingCertId, file) {
     console.log('📂 [Frontend] Starting certificate upload:', { trainingCertId, file: file.name });
     
     const formData = new FormData();
@@ -1596,9 +1669,7 @@ async function handleFileSelect(trainingCertId, file) {
                     const response = JSON.parse(xhr.responseText);
                     console.log('📂 [Frontend] Upload response parsed:', response);
                     
-                    // ENHANCED: Validate response more thoroughly
                     if (response.success) {
-                        // Check if we actually have certificate data
                         if (response.data && response.data.certificateUrl) {
                             console.log('✅ [Frontend] Upload verified successful with URL:', response.data.certificateUrl);
                             showSuccess(`Certificate "${response.data.trainingCertTitle}" uploaded successfully!`);
@@ -1610,12 +1681,10 @@ async function handleFileSelect(trainingCertId, file) {
                             
                             resolve(response);
                         } else {
-                            // Success response but no certificate URL - this is suspicious
                             console.error('❌ [Frontend] Success response but missing certificate URL:', response);
                             reject(new Error('Upload completed but certificate URL is missing. Please try again.'));
                         }
                     } else {
-                        // Server returned success: false
                         console.error('❌ [Frontend] Server returned failure:', response.message);
                         reject(new Error(response.message || 'Upload failed on server'));
                     }
@@ -1625,7 +1694,6 @@ async function handleFileSelect(trainingCertId, file) {
                     reject(new Error('Invalid response from server. Please try again.'));
                 }
             } else {
-                // HTTP error status
                 try {
                     const errorResponse = JSON.parse(xhr.responseText);
                     console.error('❌ [Frontend] HTTP error with parsed response:', errorResponse);
@@ -1657,6 +1725,7 @@ async function handleFileSelect(trainingCertId, file) {
         xhr.send(formData);
     });
 }
+
 
 
 function showUploadProgress(trainingCertId) {
@@ -1724,8 +1793,6 @@ function downloadCertificate(url) {
         showError('Certificate URL not found');
     }
 }
-
-
 // 1. Check database schema for training_records_certificates table
 async function debugDatabaseSchema() {
     try {
@@ -1957,145 +2024,145 @@ async function alternativeUpdateApproach(trainingRecordId, trainingCertId, fileU
 
 
         function setupEventListeners() {
-            // Drag and drop functionality
-            document.addEventListener('dragover', handleDragOver);
-            document.addEventListener('dragleave', handleDragLeave);
-            document.addEventListener('drop', handleDrop);
+    // Drag and drop functionality
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('dragleave', handleDragLeave);
+    document.addEventListener('drop', handleDrop);
 
-            // Warn user about unsaved changes
-            window.addEventListener('beforeunload', (e) => {
-                if (hasUnsavedChanges) {
-                    e.preventDefault();
-                    e.returnValue = '';
-                }
-            });
-        }
-
-        function handleDragOver(e) {
+    // Warn user about unsaved changes
+    window.addEventListener('beforeunload', (e) => {
+        if (hasUnsavedChanges) {
             e.preventDefault();
-            const uploadArea = e.target.closest('.upload-area');
-            if (uploadArea && !uploadArea.classList.contains('disabled')) {
-                uploadArea.classList.add('dragover');
-            }
+            e.returnValue = '';
         }
+    });
+}
 
-        function handleDragLeave(e) {
-            e.preventDefault();
-            const uploadArea = e.target.closest('.upload-area');
-            if (uploadArea) {
-                uploadArea.classList.remove('dragover');
-            }
-        }
+function handleDragOver(e) {
+    e.preventDefault();
+    const uploadArea = e.target.closest('.upload-area');
+    if (uploadArea && !uploadArea.classList.contains('disabled')) {
+        uploadArea.classList.add('dragover');
+    }
+}
 
+function handleDragLeave(e) {
+    e.preventDefault();
+    const uploadArea = e.target.closest('.upload-area');
+    if (uploadArea) {
+        uploadArea.classList.remove('dragover');
+    }
+}
         function handleDrop(e) {
-            e.preventDefault();
-            const uploadArea = e.target.closest('.upload-area');
-            if (uploadArea && !uploadArea.classList.contains('disabled')) {
-                uploadArea.classList.remove('dragover');
-                
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    const fileInput = uploadArea.querySelector('.file-input');
-                    if (fileInput) {
-                        const trainingCertId = fileInput.id.split('_')[1];
-                        handleFileSelect(parseInt(trainingCertId), files[0]);
-                    }
-                }
+    e.preventDefault();
+    const uploadArea = e.target.closest('.upload-area');
+    if (uploadArea && !uploadArea.classList.contains('disabled')) {
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const fileInput = uploadArea.querySelector('.file-input');
+            if (fileInput) {
+                const trainingCertId = fileInput.id.split('_')[1];
+                handleFileSelect(parseInt(trainingCertId), files[0]);
             }
         }
+    }
+}
 
-        function formatDate(dateString) {
-            if (!dateString) return 'Not set';
-            return new Date(dateString).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            });
-        }
+function formatDate(dateString) {
+        if (!dateString) return 'Not set';
+        return new Date(dateString).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
 
-        function formatTimestamp(timestampString) {
-            if (!timestampString) return 'Not set';
-            return new Date(timestampString).toLocaleString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            });
-        }
+    function formatTimestamp(timestampString) {
+        if (!timestampString) return 'Not set';
+        return new Date(timestampString).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+    }
 
-        function showSuccess(message) {
-            createToast('success', message);
-        }
 
-        function showError(message) {
-            createToast('error', message);
-        }
+        
+function showInfo(message) {
+    createToast('info', message);
+}
+function showSuccess(message) {
+        createToast('success', message);
+    }
 
-        function showInfo(message) {
-            createToast('info', message);
-        }
+    function showError(message) {
+        createToast('error', message);
+    }
 
-        function createToast(type, message) {
-            // Remove existing toasts
-            const existingToasts = document.querySelectorAll('.toast');
-            existingToasts.forEach(toast => toast.remove());
+    function createToast(type, message) {
+        // Remove existing toasts
+        const existingToasts = document.querySelectorAll('.toast');
+        existingToasts.forEach(toast => toast.remove());
 
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            
-            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
-            const color = type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#0891b2';
-            
-            toast.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-${icon}" style="color: ${color};"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-                border-left: 4px solid ${color};
-                z-index: 10000;
-                font-size: 14px;
-                max-width: 400px;
-                animation: slideInRight 0.3s ease-out;
-            `;
-            
-            document.body.appendChild(toast);
-            
-            // Auto remove after 4 seconds
-            setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.3s ease-out';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+        const color = type === 'success' ? '#059669' : '#dc2626';
+        
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-${icon}" style="color: ${color};"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid ${color};
+            z-index: 10000;
+            font-size: 14px;
+            max-width: 400px;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
 
-        // Add toast animations to head
-        if (!document.querySelector('#toast-styles')) {
-            const style = document.createElement('style');
-            style.id = 'toast-styles';
-            style.textContent = `
-                @keyframes slideInRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes slideOutRight {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
+    // Add this CSS for animations
+    if (!document.querySelector('#toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
     </script>
 </body>
 </html>
