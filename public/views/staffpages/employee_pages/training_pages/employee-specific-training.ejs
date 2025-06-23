@@ -827,54 +827,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         setupEventListeners();
     });
 
-       async function loadTrainingData() {
-        try {
-            console.log('🔄 Loading training data via AJAX for trainingRecordId:', trainingRecordId);
-            
-            const response = await fetch(`/employee/training/${trainingRecordId}/details`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-            });
+      async function loadTrainingData() {
+    try {
+        console.log('🔄 Loading training data via AJAX for trainingRecordId:', trainingRecordId);
+        
+        const response = await fetch(`/employee/training/${trainingRecordId}/details`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
 
-            console.log('📡 Response status:', response.status, response.statusText);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Response error text:', errorText);
-                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-            }
-
-            const result = await response.json();
-            console.log('📡 Response data:', result);
-            
-            if (result.success) {
-                trainingData = result.data;
-                console.log('✅ Training data loaded via AJAX:', trainingData);
-                displayTrainingData();
-            } else {
-                throw new Error(result.message || 'Failed to fetch training data');
-            }
-        } catch (error) {
-            console.error('❌ Error loading training data:', error);
-            showError('Failed to load training data: ' + error.message);
-            
-            // Show the error in the UI
-            const tableBody = document.querySelector('#activitiesTable tbody');
-            if (tableBody) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: #dc2626;">
-                            <i class="fas fa-exclamation-triangle"></i><br>
-                            Failed to load training data<br>
-                            <small>${error.message}</small>
-                        </td>
-                    </tr>
-                `;
-            }
+        const result = await response.json();
+        
+        if (result.success) {
+            trainingData = result.data;
+            console.log('✅ Training data loaded via AJAX:', trainingData);
+            displayTrainingData();
+        } else {
+            throw new Error(result.message || 'Failed to fetch training data');
+        }
+    } catch (error) {
+        console.error('❌ Error loading training data:', error);
+        showError('Failed to load training data: ' + error.message);
+        
+        // Show the error in the UI
+        const tableBody = document.querySelector('#activitiesTable tbody');
+        if (tableBody) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #dc2626;">
+                        <i class="fas fa-exclamation-triangle"></i><br>
+                        Failed to load training data<br>
+                        <small>${error.message}</small>
+                    </td>
+                </tr>
+            `;
         }
     }
-
+}
 
         async function loadSkillsAndObjectives() {
             try {
@@ -998,7 +993,6 @@ function createCertificateElement(cert) {
     
     return div;
 }
-
 function createUploadedView(cert) {
     return `
         <div class="certificate-header">
@@ -1032,6 +1026,7 @@ function createUploadedView(cert) {
         </div>
     `;
 }
+
 function createUploadView(cert, isDisabled) {
     return `
         <div class="certificate-header">
@@ -1066,6 +1061,7 @@ function createUploadView(cert, isDisabled) {
         </div>
     `;
 }
+
 
 function triggerFileInput(trainingCertId) {
     if (!allActivitiesCompleted) {
@@ -1132,118 +1128,129 @@ async function handleFileSelect(trainingCertId, file) {
 }
 
        function displayTrainingData() {
-        if (!trainingData) {
-            console.error('❌ No training data available to display');
-            return;
-        }
-
-        console.log('🎨 Displaying training data:', trainingData);
-
-        // Update header information
-        const trainingNameEl = document.getElementById('trainingName');
-        const trainingModeEl = document.getElementById('trainingMode');
-        const startDateEl = document.getElementById('startDate');
-        const endDateEl = document.getElementById('endDate');
-        const totalDurationEl = document.getElementById('totalDuration');
-
-        if (trainingNameEl) trainingNameEl.textContent = trainingData.trainingName || 'Unknown Training';
-        if (trainingModeEl) trainingModeEl.textContent = trainingData.isOnlineArrangement ? 'Online' : 'Onsite';
-        if (startDateEl) startDateEl.textContent = formatDate(trainingData.setStartDate) || 'Not set';
-        if (endDateEl) endDateEl.textContent = formatDate(trainingData.setEndDate) || 'Not set';
-        if (totalDurationEl) totalDurationEl.textContent = `${trainingData.totalDuration || 0} hours`;
-
-        // Hide objectives and skills sections since they're not directly related to training record
-        const objectivesSection = document.getElementById('objectivesSection');
-        const skillsSection = document.getElementById('skillsSection');
-        if (objectivesSection) objectivesSection.style.display = 'none';
-        if (skillsSection) skillsSection.style.display = 'none';
-        
-        // Display activities
-        displayActivities();
+    if (!trainingData) {
+        console.error('❌ No training data available to display');
+        return;
     }
 
-        function displayObjectives() {
-            const container = document.getElementById('objectivesTags');
-            
-            if (trainingData.userObjectives && trainingData.userObjectives.length > 0) {
-                container.innerHTML = trainingData.userObjectives.map(obj => 
-                    `<span class="tag">${obj.objectiveDescrpt || obj.description}</span>`
-                ).join('');
-            } else {
-                container.innerHTML = '<span class="tag">No objectives set for your role</span>';
-            }
-        }
+    console.log('🎨 Displaying training data:', trainingData);
 
-        function displaySkills() {
-            const container = document.getElementById('skillsTags');
-            
-            if (trainingData.jobSkills && trainingData.jobSkills.length > 0) {
-                container.innerHTML = trainingData.jobSkills.map(skill => 
-                    `<span class="tag">${skill.jobReqSkillName}</span>`
-                ).join('');
-            } else {
-                container.innerHTML = '<span class="tag">No skills defined for your role</span>';
-            }
-        }
+    // Update header information
+    const trainingNameEl = document.getElementById('trainingName');
+    const trainingModeEl = document.getElementById('trainingMode');
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const totalDurationEl = document.getElementById('totalDuration');
+
+    if (trainingNameEl) trainingNameEl.textContent = trainingData.trainingName || 'Unknown Training';
+    if (trainingModeEl) trainingModeEl.textContent = trainingData.isOnlineArrangement ? 'Online' : 'Onsite';
+    if (startDateEl) startDateEl.textContent = formatDate(trainingData.setStartDate) || 'Not set';
+    if (endDateEl) endDateEl.textContent = formatDate(trainingData.setEndDate) || 'Not set';
+    if (totalDurationEl) totalDurationEl.textContent = `${trainingData.totalDuration || 0} hours`;
+
+    // Display objectives and skills (show sections now)
+    displayObjectives();
+    displaySkills();
+    
+    // Display activities
+    displayActivities();
+}
+        function displayObjectives() {
+    const objectivesSection = document.getElementById('objectivesSection');
+    const container = document.getElementById('objectivesTags');
+    
+    if (!objectivesSection || !container) return;
+    
+    // Show the section
+    objectivesSection.style.display = 'block';
+    
+    if (trainingData.objectives && trainingData.objectives.length > 0) {
+        console.log('🎯 Displaying objectives:', trainingData.objectives);
+        container.innerHTML = trainingData.objectives.map(obj => 
+            `<span class="tag">${obj.objectiveDescrpt || 'Unknown Objective'}</span>`
+        ).join('');
+    } else {
+        container.innerHTML = '<span class="tag">No specific objectives assigned</span>';
+    }
+}
+
+function displaySkills() {
+    const skillsSection = document.getElementById('skillsSection');
+    const container = document.getElementById('skillsTags');
+    
+    if (!skillsSection || !container) return;
+    
+    // Show the section
+    skillsSection.style.display = 'block';
+    
+    if (trainingData.skills && trainingData.skills.length > 0) {
+        console.log('🛠️ Displaying skills:', trainingData.skills);
+        container.innerHTML = trainingData.skills.map(skill => 
+            `<span class="tag">${skill.jobReqSkillName || 'Unknown Skill'} ${skill.jobReqSkillType ? `(${skill.jobReqSkillType})` : ''}</span>`
+        ).join('');
+    } else {
+        container.innerHTML = '<span class="tag">No specific skills assigned</span>';
+    }
+}
 
         function displayActivities() {
-        const tableBody = document.querySelector('#activitiesTable tbody');
-        
-        if (!tableBody) {
-            console.error('❌ Activities table body not found');
-            return;
-        }
-        
-        if (!trainingData.activities || trainingData.activities.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
-                        No activities found for this training.
-                    </td>
-                </tr>
-            `;
-            allActivitiesCompleted = false;
-            updateCompletionRequirement();
-            return;
-        }
-
-        console.log('🎨 Displaying activities:', trainingData.activities);
-
-        // Check if all activities are completed
-        allActivitiesCompleted = trainingData.activities.every(activity => activity.status === 'Completed');
-        updateCompletionRequirement();
-
-        tableBody.innerHTML = trainingData.activities.map(activity => `
-            <tr data-activity-id="${activity.activityId}">
-                <td>${activity.activityName || 'Unknown Activity'}</td>
-                <td>${activity.estActivityDuration || 0} minutes</td>
-                <td class="editable-field">
-                    <select class="status-select ${getStatusClass(activity.status)}" 
-                            onchange="updateActivityStatus(${activity.activityId}, this.value)"
-                            data-activity-id="${activity.activityId}" 
-                            data-field="status">
-                        <option value="Not Started" ${activity.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
-                        <option value="In Progress" ${activity.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                        <option value="Completed" ${activity.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                    </select>
-                </td>
-                <td>
-                    <div class="timestamp-display ${activity.timestampzStarted ? 'has-value' : ''}">
-                        ${activity.timestampzStarted ? formatTimestamp(activity.timestampzStarted) : 'Not started'}
-                    </div>
-                </td>
-                <td>
-                    <div class="timestamp-display ${activity.timestampzCompleted ? 'has-value' : ''}">
-                        ${activity.timestampzCompleted ? formatTimestamp(activity.timestampzCompleted) : 'Not completed'}
-                    </div>
-                </td>
-                <td>${activity.activityType || 'N/A'}</td>
-                <td>${activity.activityRemarks || 'No remarks'}</td>
-            </tr>
-        `).join('');
-
-        console.log('✅ Activities displayed successfully');
+    const tableBody = document.querySelector('#activitiesTable tbody');
+    
+    if (!tableBody) {
+        console.error('❌ Activities table body not found');
+        return;
     }
+    
+    if (!trainingData.activities || trainingData.activities.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
+                    No activities found for this training.
+                </td>
+            </tr>
+        `;
+        allActivitiesCompleted = false;
+        updateCompletionRequirement();
+        return;
+    }
+
+    console.log('🎨 Displaying activities:', trainingData.activities);
+
+    // Check if all activities are completed
+    allActivitiesCompleted = trainingData.activities.every(activity => activity.status === 'Completed');
+    updateCompletionRequirement();
+
+    tableBody.innerHTML = trainingData.activities.map(activity => `
+        <tr data-activity-id="${activity.activityId}">
+            <td>${activity.activityName || 'Unknown Activity'}</td>
+            <td>${activity.estActivityDuration || 0} minutes</td>
+            <td class="editable-field">
+                <select class="status-select ${getStatusClass(activity.status)}" 
+                        onchange="updateActivityStatus(${activity.activityId}, this.value)"
+                        data-activity-id="${activity.activityId}" 
+                        data-field="status">
+                    <option value="Not Started" ${activity.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                    <option value="In Progress" ${activity.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                    <option value="Completed" ${activity.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                </select>
+            </td>
+            <td>
+                <div class="timestamp-display ${activity.timestampzStarted ? 'has-value' : ''}">
+                    ${activity.timestampzStarted ? formatTimestamp(activity.timestampzStarted) : 'Not started'}
+                </div>
+            </td>
+            <td>
+                <div class="timestamp-display ${activity.timestampzCompleted ? 'has-value' : ''}">
+                    ${activity.timestampzCompleted ? formatTimestamp(activity.timestampzCompleted) : 'Not completed'}
+                </div>
+            </td>
+            <td>${activity.activityType || 'N/A'}</td>
+            <td>${activity.activityRemarks || 'No remarks'}</td>
+        </tr>
+    `).join('');
+
+    console.log('✅ Activities displayed successfully');
+}
 
 function updateCompletionRequirement() {
         const completionReq = document.getElementById('completionRequirement');
@@ -1363,12 +1370,13 @@ function updateCompletionRequirement() {
 
         // Updated activity status change with timestamp handling
        async function updateActivityStatus(activityId, newStatus) {
-    console.log('Updating activity status:', { activityId, newStatus });
+    console.log('🔄 Updating activity status:', { activityId, newStatus });
     
     // Find the activity in our data
     const activity = trainingData.activities.find(a => a.activityId === activityId);
     if (!activity) {
-        console.error('Activity not found:', activityId);
+        console.error('❌ Activity not found:', activityId);
+        showError('Activity not found');
         return;
     }
 
@@ -1396,6 +1404,25 @@ function updateCompletionRequirement() {
             }
         }
 
+        console.log('📡 Sending update request:', requestData);
+
+        // Save to database - FIXED: Use correct endpoint
+        const response = await fetch(`/employee/training/${trainingRecordId}/activity/${activityId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(requestData)
+        });
+
+        const result = await response.json();
+        console.log('📡 Update response:', result);
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to save activity change');
+        }
+
         // Update local data
         activity.status = newStatus;
         if (requestData.timestampzStarted) activity.timestampzStarted = requestData.timestampzStarted;
@@ -1406,9 +1433,6 @@ function updateCompletionRequirement() {
         if (selectElement) {
             selectElement.className = `status-select ${getStatusClass(newStatus)}`;
         }
-
-        // Save to database
-        await saveActivityChange(activityId, requestData);
         
         // Update timestamps in UI
         updateTimestampDisplays(activityId, activity);
@@ -1437,10 +1461,9 @@ function updateCompletionRequirement() {
         showSuccess(`Activity ${statusText} successfully! ${requestData.timestampzStarted ? 'Start time recorded.' : ''} ${requestData.timestampzCompleted ? 'Completion time recorded.' : ''}`);
         
     } catch (error) {
-        console.error('Error saving activity change:', error);
+        console.error('❌ Error saving activity change:', error);
         
         // Revert the change if save failed
-        activity.status = oldStatus;
         const selectElement = document.querySelector(`tr[data-activity-id="${activityId}"] .status-select`);
         if (selectElement) {
             selectElement.value = oldStatus;
@@ -1458,11 +1481,10 @@ function updateCompletionRequirement() {
             }, 3000);
         }
 
-        showError('Failed to save status change. Please try again.');
+        showError('Failed to save status change: ' + error.message);
     }
 }
-
-        function updateTimestampDisplays(activityId, activity) {
+       function updateTimestampDisplays(activityId, activity) {
     const row = document.querySelector(`tr[data-activity-id="${activityId}"]`);
     if (!row) return;
 

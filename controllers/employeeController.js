@@ -4595,7 +4595,6 @@ getEmployeeAllCourses: async function(req, res) {
         });
     }
 },
-
 getEmployeeTrainingSpecific: async function(req, res) {
     if (!req.session.user || req.session.user.userRole !== 'Employee') {
         req.flash('errors', { authError: 'Unauthorized. Employee access only.' });
@@ -4635,7 +4634,7 @@ getEmployeeTrainingSpecific: async function(req, res) {
         
         const { data: activitiesData, error: activitiesError } = await supabase
             .from('training_records_activities')
-            .select('*') // Select all columns to see what's available
+            .select('*')
             .eq('trainingRecordId', trainingRecordId)
             .order('trainingRecordActivityId', { ascending: true });
 
@@ -4647,7 +4646,6 @@ getEmployeeTrainingSpecific: async function(req, res) {
 
         if (activitiesError) {
             console.error('❌ Error fetching activities:', activitiesError);
-            // Continue without activities - don't fail the whole request
         }
 
         // Step 3: Get activity types if activities exist and have activityTypeId
@@ -4655,7 +4653,6 @@ getEmployeeTrainingSpecific: async function(req, res) {
         if (activitiesData && activitiesData.length > 0) {
             console.log('🔍 Step 3: Processing activity types...');
             
-            // Check if activityTypeId exists in the data
             const hasActivityTypeIds = activitiesData.some(a => a.activityTypeId);
             console.log('📋 Activities have activityTypeId:', hasActivityTypeIds);
             
@@ -4685,7 +4682,47 @@ getEmployeeTrainingSpecific: async function(req, res) {
             }
         }
 
-        // Step 4: Process activities data (handle missing activityId)
+        // Step 4: Fetch objectives for this training record
+        console.log('🔍 Step 4: Fetching objectives...');
+        const { data: objectivesData, error: objectivesError } = await supabase
+            .from('training_records_objectives')
+            .select(`
+                objectiveId,
+                objectivesettings_objectives!inner(
+                    objectiveDescrpt,
+                    objectiveKPI,
+                    objectiveTarget,
+                    objectiveUOM
+                )
+            `)
+            .eq('trainingRecordId', trainingRecordId);
+
+        console.log('📋 Objectives query result:', {
+            error: objectivesError,
+            dataCount: objectivesData?.length || 0,
+            sampleData: objectivesData?.[0] || null
+        });
+
+        // Step 5: Fetch skills for this training record
+        console.log('🔍 Step 5: Fetching skills...');
+        const { data: skillsData, error: skillsError } = await supabase
+            .from('training_records_skills')
+            .select(`
+                jobReqSkillId,
+                jobreqskills!inner(
+                    jobReqSkillName,
+                    jobReqSkillType
+                )
+            `)
+            .eq('trainingRecordId', trainingRecordId);
+
+        console.log('📋 Skills query result:', {
+            error: skillsError,
+            dataCount: skillsData?.length || 0,
+            sampleData: skillsData?.[0] || null
+        });
+
+        // Step 6: Process activities data
         const activities = (activitiesData || []).map((activity, index) => {
             console.log(`📋 Processing activity ${index + 1}:`, {
                 trainingRecordActivityId: activity.trainingRecordActivityId,
@@ -4695,8 +4732,8 @@ getEmployeeTrainingSpecific: async function(req, res) {
             });
             
             return {
-                // Use trainingRecordActivityId as activityId if activityId doesn't exist
-                activityId: activity.activityId || activity.trainingRecordActivityId,
+                // Use trainingRecordActivityId as the unique identifier since there's no activityId
+                activityId: activity.trainingRecordActivityId,
                 trainingRecordActivityId: activity.trainingRecordActivityId,
                 activityName: activity.activityName || 'Unknown Activity',
                 estActivityDuration: activity.estActivityDuration || '0',
@@ -4708,9 +4745,29 @@ getEmployeeTrainingSpecific: async function(req, res) {
             };
         });
 
-        console.log(`📋 Processed ${activities.length} activities`);
+        // Step 7: Process objectives data
+        const objectives = (objectivesData || []).map(obj => ({
+            objectiveId: obj.objectiveId,
+            objectiveDescrpt: obj.objectivesettings_objectives?.objectiveDescrpt || 'Unknown Objective',
+            objectiveKPI: obj.objectivesettings_objectives?.objectiveKPI || '',
+            objectiveTarget: obj.objectivesettings_objectives?.objectiveTarget || 0,
+            objectiveUOM: obj.objectivesettings_objectives?.objectiveUOM || ''
+        }));
 
-        // Step 5: Calculate progress
+        // Step 8: Process skills data
+        const skills = (skillsData || []).map(skill => ({
+            jobReqSkillId: skill.jobReqSkillId,
+            jobReqSkillName: skill.jobreqskills?.jobReqSkillName || 'Unknown Skill',
+            jobReqSkillType: skill.jobreqskills?.jobReqSkillType || 'General'
+        }));
+
+        console.log(`📋 Processed data counts:`, {
+            activities: activities.length,
+            objectives: objectives.length,
+            skills: skills.length
+        });
+
+        // Step 9: Calculate progress
         const totalActivities = activities.length;
         const completedActivities = activities.filter(a => a.status === 'Completed').length;
         const trainingPercentage = totalActivities > 0 ? 
@@ -4722,7 +4779,7 @@ getEmployeeTrainingSpecific: async function(req, res) {
             trainingPercentage
         });
 
-        // Step 6: Prepare data for the EJS template
+        // Step 10: Prepare data for the EJS template
         const data = {
             // Training record data
             trainingRecordId: trainingRecord.trainingRecordId,
@@ -4742,15 +4799,20 @@ getEmployeeTrainingSpecific: async function(req, res) {
             activities: activities,
             totalActivities,
             completedActivities,
-            trainingPercentage
+            trainingPercentage,
+            
+            // NEW: Objectives and skills data
+            objectives: objectives,
+            skills: skills
         };
 
         console.log('✅ Final data prepared for EJS template:', {
             trainingName: data.trainingName,
             activitiesCount: data.activities.length,
+            objectivesCount: data.objectives.length,
+            skillsCount: data.skills.length,
             completedActivities: data.completedActivities,
-            trainingPercentage: data.trainingPercentage,
-            sampleActivity: data.activities[0] || null
+            trainingPercentage: data.trainingPercentage
         });
 
         // Render the EJS template with the data
@@ -7118,7 +7180,7 @@ updateSingleActivity: async function(req, res) {
 
         console.log('🔄 [Single Activity] Updating activity:', {
             trainingRecordId,
-            activityId,
+            activityId, // This is actually trainingRecordActivityId
             status,
             timestampzStarted,
             timestampzCompleted,
@@ -7137,12 +7199,13 @@ updateSingleActivity: async function(req, res) {
         // Verify training record belongs to user and is approved
         const { data: trainingRecord, error: recordError } = await supabase
             .from('training_records')
-            .select('trainingRecordId, trainingId, isApproved, trainingStatus')
+            .select('trainingRecordId, isApproved, status')
             .eq('trainingRecordId', trainingRecordId)
             .eq('userId', userId)
             .single();
 
         if (recordError || !trainingRecord) {
+            console.error('❌ Training record error:', recordError);
             return res.status(404).json({
                 success: false,
                 message: 'Training record not found'
@@ -7157,12 +7220,12 @@ updateSingleActivity: async function(req, res) {
             });
         }
 
-        // Check if activity record already exists
+        // FIXED: Find activity by trainingRecordActivityId (not activityId)
         const { data: existingActivity, error: checkError } = await supabase
             .from('training_records_activities')
             .select('trainingRecordActivityId, status, timestampzStarted, timestampzCompleted')
             .eq('trainingRecordId', trainingRecordId)
-            .eq('activityId', activityId)
+            .eq('trainingRecordActivityId', activityId) // Use trainingRecordActivityId
             .maybeSingle();
 
         if (checkError && checkError.code !== 'PGRST116') {
@@ -7170,6 +7233,17 @@ updateSingleActivity: async function(req, res) {
             return res.status(500).json({
                 success: false,
                 message: 'Database error while checking activity record'
+            });
+        }
+
+        if (!existingActivity) {
+            console.error('❌ [Single Activity] Activity not found:', {
+                trainingRecordId,
+                activityId
+            });
+            return res.status(404).json({
+                success: false,
+                message: 'Activity not found'
             });
         }
 
@@ -7194,75 +7268,31 @@ updateSingleActivity: async function(req, res) {
         if (timestampzStarted !== undefined) updateData.timestampzStarted = timestampzStarted;
         if (timestampzCompleted !== undefined) updateData.timestampzCompleted = timestampzCompleted;
 
-        let updatedActivity;
+        console.log('🔄 [Single Activity] Updating activity with data:', updateData);
 
-        if (existingActivity) {
-            // Update existing record
-            console.log('🔄 [Single Activity] Updating existing activity record:', existingActivity.trainingRecordActivityId);
-            
-            const { data: updateResult, error: updateError } = await supabase
-                .from('training_records_activities')
-                .update(updateData)
-                .eq('trainingRecordActivityId', existingActivity.trainingRecordActivityId)
-                .select()
-                .single();
+        // Update the activity record
+        const { data: updateResult, error: updateError } = await supabase
+            .from('training_records_activities')
+            .update(updateData)
+            .eq('trainingRecordActivityId', existingActivity.trainingRecordActivityId)
+            .select()
+            .single();
 
-            if (updateError) {
-                console.error('❌ [Single Activity] Error updating existing activity:', updateError);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to update activity: ' + updateError.message
-                });
-            }
-
-            updatedActivity = updateResult;
-        } else {
-            // Insert new record
-            console.log('➕ [Single Activity] Creating new activity record');
-            
-            const insertData = {
-                trainingRecordId: parseInt(trainingRecordId),
-                activityId: parseInt(activityId),
-                ...updateData
-            };
-
-            const { data: insertResult, error: insertError } = await supabase
-                .from('training_records_activities')
-                .insert([insertData])
-                .select()
-                .single();
-
-            if (insertError) {
-                console.error('❌ [Single Activity] Error inserting new activity:', insertError);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Failed to create activity record: ' + insertError.message
-                });
-            }
-
-            updatedActivity = insertResult;
+        if (updateError) {
+            console.error('❌ [Single Activity] Error updating activity:', updateError);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to update activity: ' + updateError.message
+            });
         }
 
-        // CRITICAL: Update training progress status after any activity change
-        console.log('🔄 [Single Activity] Updating training progress after activity change...');
-        let updatedTrainingStatus = trainingRecord.trainingStatus;
-        
-        try {
-            updatedTrainingStatus = await this.updateTrainingProgress(trainingRecordId);
-            console.log(`✅ [Single Activity] Training status updated: ${trainingRecord.trainingStatus} → ${updatedTrainingStatus}`);
-        } catch (progressError) {
-            console.error('❌ [Single Activity] Failed to update training progress:', progressError);
-            // Don't fail the whole request - activity update succeeded
-        }
-
-        console.log('✅ [Single Activity] Activity updated successfully:', updatedActivity);
+        console.log('✅ [Single Activity] Activity updated successfully:', updateResult);
 
         res.json({
             success: true,
             message: 'Activity updated successfully',
             data: {
-                activity: updatedActivity,
-                trainingStatus: updatedTrainingStatus
+                activity: updateResult
             }
         });
 
