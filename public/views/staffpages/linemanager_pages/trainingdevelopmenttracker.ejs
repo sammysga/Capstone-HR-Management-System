@@ -312,13 +312,16 @@
     </div>
 </div>
 
-<!-- Training Details Modal -->
+<!-- Enhanced Training Details Modal -->
 <div id="trainingDetailsModal" class="modal">
   <div class="modal-content">
     <span class="close-modal">&times;</span>
-    <h2>Training Request Details</h2>
+    <h2 style="margin: 0 0 20px 0; padding: 20px 30px; background: #f8f9fa; border-bottom: 1px solid #dee2e6;">Training Request Details</h2>
     <div id="modalContent">
       <!-- Content will be loaded here dynamically -->
+      <div class="loading-spinner">
+        <p>Loading training details...</p>
+      </div>
     </div>
   </div>
 </div>
@@ -746,10 +749,261 @@ function closeEmployeeTrainingModal() {
         }
     });
 
-    function viewTrainingDetails(trainingRecordId) {
-        // Implementation for viewing training details
-        alert('Training details for ID: ' + trainingRecordId + '\n(Feature to be implemented)');
+    // Replace the existing viewTrainingDetails function with this complete implementation
+async function viewTrainingDetails(trainingRecordId) {
+    try {
+        console.log('🔍 Fetching training details for ID:', trainingRecordId);
+        
+        // Show loading state
+        document.getElementById('modalContent').innerHTML = '<div class="loading-spinner"><p>Loading training details...</p></div>';
+        document.getElementById('trainingDetailsModal').style.display = 'block';
+        
+        // Fetch comprehensive training details
+        const response = await fetch(`/linemanager/api/training/details/${trainingRecordId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const textResponse = await response.text();
+            console.error('❌ Expected JSON but got:', textResponse.substring(0, 200));
+            throw new Error('Server returned HTML instead of JSON. Check if the API route is set up correctly.');
+        }
+        
+        const data = await response.json();
+        console.log('📋 Received training details:', data);
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        const training = data.training;
+        
+        // Build comprehensive training details HTML
+        const detailsHTML = `
+            <div class="training-details-container">
+                <!-- Header Section -->
+                <div class="training-details-header">
+                    <div class="training-title-section">
+                        <h2>${training.trainingName}</h2>
+                        <span class="training-status-badge ${getStatusClass(training.status)}">
+                            ${training.status}
+                        </span>
+                    </div>
+                    <div class="training-meta-grid">
+                        <div class="meta-item">
+                            <strong>Duration:</strong> ${training.totalDuration || 0} hours
+                        </div>
+                        <div class="meta-item">
+                            <strong>Cost:</strong> ₱${parseFloat(training.cost || 0).toLocaleString()}
+                        </div>
+                        <div class="meta-item">
+                            <strong>Type:</strong> ${training.isOnlineArrangement ? 'Online' : 'On-site'}
+                        </div>
+                        <div class="meta-item">
+                            <strong>Requested:</strong> ${new Date(training.dateRequested).toLocaleDateString()}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Information -->
+                <div class="details-section">
+                    <h3>Employee Information</h3>
+                    <div class="employee-info-grid">
+                        <div class="info-item">
+                            <strong>Name:</strong> 
+                            ${training.staffaccounts ? 
+                                `${training.staffaccounts.firstName || 'No First Name'} ${training.staffaccounts.lastName || 'No Last Name'}` : 
+                                'Name not found'
+                            }
+                        </div>
+                        <div class="info-item">
+                            <strong>Email:</strong> ${training.useraccounts?.userEmail || 'No Email'}
+                        </div>
+                        <div class="info-item">
+                            <strong>Position:</strong> ${training.jobpositions?.jobTitle || 'No Position'}
+                        </div>
+                        <div class="info-item">
+                            <strong>Department:</strong> ${training.jobpositions?.departments?.deptName || 'No Department'}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training Information -->
+                <div class="details-section">
+                    <h3>Training Details</h3>
+                    <div class="training-info">
+                        <div class="info-row">
+                            <strong>Description:</strong>
+                            <p>${training.trainingDesc || 'No description provided'}</p>
+                        </div>
+                        
+                        ${training.setStartDate && training.setEndDate ? `
+                            <div class="info-row">
+                                <strong>Training Period:</strong>
+                                <p>${new Date(training.setStartDate).toLocaleDateString()} - ${new Date(training.setEndDate).toLocaleDateString()}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${training.address && !training.isOnlineArrangement ? `
+                            <div class="info-row">
+                                <strong>Location:</strong>
+                                <p>📍 ${training.address}, ${training.country || ''}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${training.isOnlineArrangement ? `
+                            <div class="info-row">
+                                <strong>Online Training:</strong>
+                                <p>This training will be conducted online</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Activities Section -->
+                ${training.activities && training.activities.length > 0 ? `
+                <div class="details-section">
+                    <h3>Training Activities (${training.activities.length})</h3>
+                    <div class="activities-list">
+                        ${training.activities.map(activity => `
+                            <div class="activity-item">
+                                <div class="activity-header">
+                                    <span class="activity-name">${activity.activityName || 'Unnamed Activity'}</span>
+                                    <span class="activity-type-badge">${activity.activityType || 'N/A'}</span>
+                                </div>
+                                <div class="activity-details">
+                                    <p><strong>Duration:</strong> ${activity.estActivityDuration || 0} hours</p>
+                                    ${activity.activityDesc ? `<p><strong>Description:</strong> ${activity.activityDesc}</p>` : ''}
+                                    ${activity.activityRemarks ? `<p><strong>Remarks:</strong> ${activity.activityRemarks}</p>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Skills Section -->
+                ${training.skills && training.skills.length > 0 ? `
+                <div class="details-section">
+                    <h3>Skills to be Developed (${training.skills.length})</h3>
+                    <div class="skills-grid">
+                        ${training.skills.map(skill => `
+                            <div class="skill-item">
+                                <span class="skill-badge ${skill.jobReqSkillType ? skill.jobReqSkillType.toLowerCase().replace(/\s+/g, '-') : 'general'}">
+                                    ${skill.jobReqSkillName || 'Unknown Skill'}
+                                </span>
+                                ${skill.jobReqSkillType ? `<small class="skill-type">${skill.jobReqSkillType}</small>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Learning Objectives -->
+                ${training.objectives && training.objectives.length > 0 ? `
+                <div class="details-section">
+                    <h3>Learning Objectives (${training.objectives.length})</h3>
+                    <ul class="objectives-list">
+                        ${training.objectives.map(obj => `<li>${obj.objectiveName || 'Learning objective'}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+
+                <!-- Training Categories -->
+                ${training.categories && training.categories.length > 0 ? `
+                <div class="details-section">
+                    <h3>Training Categories</h3>
+                    <div class="categories-list">
+                        ${training.categories.map(cat => `<span class="category-badge">${cat.categoryName || 'Category'}</span>`).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Decision History -->
+                ${training.lmDecisionRemarks || training.hrDecisionRemarks || training.remarks ? `
+                <div class="details-section">
+                    <h3>Decision History & Remarks</h3>
+                    <div class="decision-history">
+                        ${training.lmDecisionDate ? `
+                            <div class="decision-item">
+                                <strong>Manager Decision Date:</strong> ${new Date(training.lmDecisionDate).toLocaleDateString()}
+                            </div>
+                        ` : ''}
+                        ${training.lmDecisionRemarks ? `
+                            <div class="decision-item">
+                                <strong>Manager Remarks:</strong> ${training.lmDecisionRemarks}
+                            </div>
+                        ` : ''}
+                        ${training.hrDecisionDate ? `
+                            <div class="decision-item">
+                                <strong>HR Decision Date:</strong> ${new Date(training.hrDecisionDate).toLocaleDateString()}
+                            </div>
+                        ` : ''}
+                        ${training.hrDecisionRemarks ? `
+                            <div class="decision-item">
+                                <strong>HR Remarks:</strong> ${training.hrDecisionRemarks}
+                            </div>
+                        ` : ''}
+                        ${training.remarks ? `
+                            <div class="decision-item">
+                                <strong>Additional Remarks:</strong> ${training.remarks}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Action Buttons -->
+                <div class="modal-actions">
+                    <button class="btn btn-approve" onclick="approveTraining('${training.trainingRecordId}')">
+                        Endorse to HR
+                    </button>
+                    <button class="btn btn-reject" onclick="rejectTraining('${training.trainingRecordId}')">
+                        Return for Revision
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeTrainingDetailsModal()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('modalContent').innerHTML = detailsHTML;
+        
+    } catch (error) {
+        console.error('❌ Error loading training details:', error);
+        document.getElementById('modalContent').innerHTML = `
+            <div style="color: red; text-align: center; padding: 40px;">
+                <h3 style="color: #dc3545; margin-bottom: 15px;">⚠️ Error Loading Training Details</h3>
+                <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 20px; margin: 20px 0; color: #721c24;">
+                    <p><strong>Error Details:</strong></p>
+                    <p>${error.message}</p>
+                </div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="closeTrainingDetailsModal()" style="margin-right: 10px;">Close</button>
+                    <button class="btn btn-primary" onclick="viewTrainingDetails('${trainingRecordId}')" style="background: #007bff; color: white;">Try Again</button>
+                </div>
+                <details style="margin-top: 20px; text-align: left;">
+                    <summary style="cursor: pointer; padding: 10px; background: #e9ecef; border-radius: 4px;">Technical Details</summary>
+                    <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; margin-top: 10px; font-family: monospace; font-size: 0.8rem;">
+                        <p><strong>Training Record ID:</strong> ${trainingRecordId}</p>
+                        <p><strong>Error Type:</strong> ${error.name || 'Unknown'}</p>
+                        <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+                        <p><strong>Expected URL:</strong> /linemanager/api/training/details/${trainingRecordId}</p>
+                    </div>
+                </details>
+            </div>
+        `;
     }
+}
+
+// Helper function to close the training details modal
+function closeTrainingDetailsModal() {
+    document.getElementById('trainingDetailsModal').style.display = 'none';
+}
 </script>
 </body>
 </html>

@@ -947,6 +947,208 @@ getTrainingDevelopmentTracker: async function (req, res) {
     }
 },
 
+// Add this method to your line manager controller
+getTrainingDetails: async function (req, res) {
+    try {
+        const { trainingRecordId } = req.params;
+        console.log('🔍 Fetching training details for ID:', trainingRecordId);
+        
+        if (!trainingRecordId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Training Record ID is required'
+            });
+        }
+
+        // Fetch comprehensive training details with all related data
+        const { data: training, error: trainingError } = await supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                userId,
+                trainingName,
+                trainingDesc,
+                cost,
+                totalDuration,
+                isOnlineArrangement,
+                address,
+                country,
+                status,
+                dateRequested,
+                setStartDate,
+                setEndDate,
+                lmDecisionDate,
+                lmDecisionRemarks,
+                hrDecisionDate,
+                hrDecisionRemarks,
+                isApproved,
+                jobId,
+                created_at,
+                useraccounts!userId (
+                    userEmail,
+                    userRole
+                ),
+                jobpositions!jobId (
+                    jobTitle,
+                    departmentId,
+                    departments!departmentId (
+                        deptName
+                    )
+                )
+            `)
+            .eq('trainingRecordId', trainingRecordId)
+            .single();
+
+        if (trainingError) {
+            console.error('❌ Error fetching training record:', trainingError);
+            return res.status(404).json({
+                success: false,
+                error: 'Training record not found'
+            });
+        }
+
+        console.log('📋 Training record found:', training.trainingName);
+
+        // Fetch staff account details separately
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('userId, firstName, lastName')
+            .eq('userId', training.userId)
+            .single();
+
+        if (staffError) {
+            console.error('❌ Error fetching staff account:', staffError);
+        }
+
+        // Add staff account to training object
+        training.staffaccounts = staffAccount || null;
+
+        // Fetch training activities
+        const { data: activities, error: activitiesError } = await supabase
+            .from('training_activities')
+            .select(`
+                activityId,
+                activityName,
+                activityDesc,
+                activityType,
+                estActivityDuration,
+                status,
+                activityRemarks,
+                timestampzStarted,
+                timestampzCompleted
+            `)
+            .eq('trainingRecordId', trainingRecordId)
+            .order('activityId', { ascending: true });
+
+        if (activitiesError) {
+            console.error('❌ Error fetching activities:', activitiesError);
+        }
+
+        training.activities = activities || [];
+        console.log(`📋 Found ${training.activities.length} activities`);
+
+        // Fetch training skills
+        const { data: skills, error: skillsError } = await supabase
+            .from('training_skills')
+            .select(`
+                skillId,
+                jobreqskills!skillId (
+                    jobReqSkillName,
+                    jobReqSkillType
+                )
+            `)
+            .eq('trainingRecordId', trainingRecordId);
+
+        if (skillsError) {
+            console.error('❌ Error fetching skills:', skillsError);
+        }
+
+        // Transform skills data
+        training.skills = skills ? skills.map(skill => ({
+            skillId: skill.skillId,
+            jobReqSkillName: skill.jobreqskills?.jobReqSkillName,
+            jobReqSkillType: skill.jobreqskills?.jobReqSkillType
+        })) : [];
+        console.log(`📋 Found ${training.skills.length} skills`);
+
+        // Fetch learning objectives
+        const { data: objectives, error: objectivesError } = await supabase
+            .from('training_objectives')
+            .select(`
+                objectiveId,
+                objectiveName,
+                objectiveDesc
+            `)
+            .eq('trainingRecordId', trainingRecordId)
+            .order('objectiveId', { ascending: true });
+
+        if (objectivesError) {
+            console.error('❌ Error fetching objectives:', objectivesError);
+        }
+
+        training.objectives = objectives || [];
+        console.log(`📋 Found ${training.objectives.length} objectives`);
+
+        // Fetch training categories
+        const { data: categoryLinks, error: categoriesError } = await supabase
+            .from('training_categories')
+            .select(`
+                categoryId,
+                trainingcategorieslist!categoryId (
+                    categoryName,
+                    categoryDesc
+                )
+            `)
+            .eq('trainingRecordId', trainingRecordId);
+
+        if (categoriesError) {
+            console.error('❌ Error fetching categories:', categoriesError);
+        }
+
+        // Transform categories data
+        training.categories = categoryLinks ? categoryLinks.map(cat => ({
+            categoryId: cat.categoryId,
+            categoryName: cat.trainingcategorieslist?.categoryName,
+            categoryDesc: cat.trainingcategorieslist?.categoryDesc
+        })) : [];
+        console.log(`📋 Found ${training.categories.length} categories`);
+
+        // Fetch certificates (if any)
+        const { data: certificates, error: certificatesError } = await supabase
+            .from('training_certificates')
+            .select(`
+                certId,
+                trainingCertTitle,
+                trainingCertDesc,
+                certificate_url,
+                dateIssued
+            `)
+            .eq('trainingRecordId', trainingRecordId)
+            .order('dateIssued', { ascending: false });
+
+        if (certificatesError) {
+            console.error('❌ Error fetching certificates:', certificatesError);
+        }
+
+        training.certificates = certificates || [];
+        console.log(`📋 Found ${training.certificates.length} certificates`);
+
+        console.log('✅ Training details fetched successfully');
+
+        res.json({
+            success: true,
+            training: training
+        });
+
+    } catch (error) {
+        console.error('💥 ERROR in getTrainingDetails:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error: ' + error.message
+        });
+    }
+},
+
 // 7. Here's your improved getEmployeeTrainingHistory function with better error handling:
 
 getEmployeeTrainingHistory: async function (req, res) {
