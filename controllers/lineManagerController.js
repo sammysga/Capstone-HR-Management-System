@@ -948,6 +948,7 @@ getTrainingDevelopmentTracker: async function (req, res) {
 },
 
 // Add this method to your line manager controller
+// Add this method to your line manager controller
 getTrainingDetails: async function (req, res) {
     try {
         const { trainingRecordId } = req.params;
@@ -1115,7 +1116,7 @@ getTrainingDetails: async function (req, res) {
 
         // Fetch certificates (if any)
         const { data: certificates, error: certificatesError } = await supabase
-            .from('training_certificates')
+            .from('training_records_certificates')
             .select(`
                 certId,
                 trainingCertTitle,
