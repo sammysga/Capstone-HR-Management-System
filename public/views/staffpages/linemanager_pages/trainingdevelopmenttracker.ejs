@@ -202,7 +202,7 @@
         <% } %>
     </div>
 
-    <!-- View Employees Tab Content -->
+    <!-- View Employees Tab Content with Progress Column -->
     <div id="view-employees" class="tab-content">
         <div class="section-header">
             <h2>Team Members</h2>
@@ -218,6 +218,7 @@
                             <th>Position</th>
                             <th>Department</th>
                             <th>Email</th>
+                            <th>Training Progress</th>
                             <th>Status</th>
                             <th>Hire Date</th>
                             <th>Actions</th>
@@ -245,9 +246,37 @@
                                 </td>
                                 <td><%= employee.userEmail || 'No Email' %></td>
                                 <td>
+                                    <div class="progress-container" data-user-id="<%= employee.userId %>">
+                                        <% if (employee.overallProgressPercentage !== undefined) { %>
+                                            <!-- Server-side calculated progress -->
+                                            <div class="progress-info">
+                                                <span class="progress-percentage <%= (employee.overallProgressPercentage || 0) === 100 ? 'completed' : (employee.overallProgressPercentage || 0) > 0 ? 'in-progress' : 'not-started' %>">
+                                                    <%= employee.progressDisplay || 'No Training' %>
+                                                </span>
+                                                <% if (employee.totalTrainings && employee.totalTrainings > 0) { %>
+                                                    <small class="progress-details">
+                                                        <%= employee.completedTrainings || 0 %>/<%= employee.totalTrainings %> completed
+                                                    </small>
+                                                <% } %>
+                                            </div>
+                                            <% if (employee.overallProgressPercentage !== undefined && employee.totalTrainings > 0) { %>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width: <%= employee.overallProgressPercentage %>%"></div>
+                                                </div>
+                                            <% } %>
+                                        <% } else { %>
+                                            <!-- Placeholder for client-side loading -->
+                                            <div class="progress-loading">
+                                                <span class="loading-text">Loading...</span>
+                                                <div class="loading-spinner"></div>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                </td>
+                                <td>
                                     <div class="training-status-info">
-                                        <span class="training-status-badge <%= employee.statusClass %>">
-                                            <%= employee.trainingStatus %>
+                                        <span class="training-status-badge <%= employee.statusClass || (employee.trainingStatus === 'No Training' ? 'status-no-training' : 'status-unknown') %>">
+                                            <%= employee.trainingStatus || 'No Training' %>
                                         </span>
                                         <% if (employee.latestTraining) { %>
                                             <br><small style="color: #6c757d; font-size: 0.75rem;">
@@ -323,6 +352,13 @@
         
         // Add active class to clicked button
         event.target.classList.add('active');
+        
+        // Load progress when showing employees tab (if client-side loading is needed)
+        if (tabId === 'view-employees') {
+            setTimeout(() => {
+                loadEmployeeProgress();
+            }, 100);
+        }
     }
 
     // Toggle active class for sidebar links
@@ -416,7 +452,57 @@
         alert('Employee details for user ID: ' + userId + '\n(Feature to be implemented)');
     }
 
-    // 1. First, let's add better error handling to the frontend JavaScript
+    // JavaScript for client-side progress loading (if server-side data is not available)
+    async function loadEmployeeProgress() {
+        const progressContainers = document.querySelectorAll('.progress-container');
+        
+        for (const container of progressContainers) {
+            const userId = container.getAttribute('data-user-id');
+            if (!userId) continue;
+            
+            // Skip if already loaded (has progress-percentage class)
+            if (container.querySelector('.progress-percentage')) continue;
+            
+            try {
+                const response = await fetch(`/linemanager/api/employee/progress/${userId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const data = result.data;
+                    
+                    container.innerHTML = `
+                        <div class="progress-info">
+                            <span class="progress-percentage ${getProgressClass(data.overallProgressPercentage)}">
+                                ${data.progressDisplay}
+                            </span>
+                            ${data.totalTrainings > 0 ? `
+                                <small class="progress-details">
+                                    ${data.completedTrainings}/${data.totalTrainings} completed
+                                </small>
+                            ` : ''}
+                        </div>
+                        ${data.totalTrainings > 0 ? `
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${data.overallProgressPercentage}%"></div>
+                            </div>
+                        ` : ''}
+                    `;
+                } else {
+                    throw new Error(result.message || 'Failed to load progress');
+                }
+                
+            } catch (error) {
+                console.error(`Error loading progress for user ${userId}:`, error);
+                container.innerHTML = '<span class="progress-error">Error</span>';
+            }
+        }
+    }
+
+    function getProgressClass(percentage) {
+        if (percentage === 100) return 'completed';
+        if (percentage > 0) return 'in-progress';
+        return 'not-started';
+    }
 
 // Complete viewEmployeeTrainings function with all features
 async function viewEmployeeTrainings(userId) {
@@ -645,6 +731,25 @@ function closeEmployeeTrainingModal() {
     setInterval(function() {
         location.reload();
     }, 300000); // 5 minutes
+
+    // Modal functionality
+    document.querySelectorAll('.close-modal').forEach(closeBtn => {
+        closeBtn.addEventListener('click', function() {
+            this.closest('.modal').style.display = 'none';
+        });
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    });
+
+    function viewTrainingDetails(trainingRecordId) {
+        // Implementation for viewing training details
+        alert('Training details for ID: ' + trainingRecordId + '\n(Feature to be implemented)');
+    }
 </script>
 </body>
 </html>

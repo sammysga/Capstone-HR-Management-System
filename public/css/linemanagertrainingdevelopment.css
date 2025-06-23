@@ -320,6 +320,127 @@
     color: #1976d2;
 }
 
+/* Progress Column Styles */
+.progress-container {
+    min-width: 140px;
+    text-align: center;
+}
+
+.progress-info {
+    margin-bottom: 6px;
+}
+
+.progress-percentage {
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 50px;
+}
+
+.progress-percentage.completed {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.progress-percentage.in-progress {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.progress-percentage.not-started {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.progress-details {
+    display: block;
+    color: #6c757d;
+    font-size: 0.75rem;
+    margin-top: 2px;
+    font-weight: normal;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 4px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745 0%, #20c997 50%, #17a2b8 100%);
+    transition: width 0.5s ease;
+    border-radius: 4px;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Loading states */
+.progress-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error state */
+.progress-error {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+/* Hover effects for progress */
+.progress-container:hover .progress-fill {
+    filter: brightness(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.progress-container:hover .progress-percentage {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
 /* Status Breakdown Section */
 .status-breakdown {
     margin-bottom: 30px;
@@ -425,12 +546,24 @@
     background-color: #f8f9fa;
     color: #6c757d;
     border: 1px solid #dee2e6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
 }
 
 .status-unknown {
     background-color: #e2e3e5;
     color: #495057;
     border: 1px solid #ced4da;
+}
+
+.status-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
 }
 
 .training-status-info {
@@ -613,12 +746,6 @@
 
 .close-modal:hover {
     color: black;
-}
-
-.loading-spinner {
-    text-align: center;
-    padding: 40px;
-    color: #6c757d;
 }
 
 /* Training Record Card Styles */
@@ -887,5 +1014,61 @@
     .action-buttons .btn {
         font-size: 0.8rem;
         padding: 6px 12px;
+    }
+
+    /* Mobile Progress Column Responsive */
+    .progress-container {
+        min-width: 100px;
+    }
+    
+    .progress-percentage {
+        font-size: 0.8rem;
+        padding: 2px 4px;
+    }
+    
+    .progress-details {
+        font-size: 0.7rem;
+    }
+    
+    .progress-bar {
+        height: 6px;
+    }
+}
+
+@media (max-width: 1400px) {
+    .employee-table {
+        font-size: 0.9rem;
+    }
+    
+    .progress-container {
+        min-width: 120px;
+    }
+    
+    .progress-percentage {
+        font-size: 0.85rem;
+        padding: 2px 6px;
+    }
+    
+    .progress-details {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .employee-table {
+        font-size: 0.85rem;
+    }
+    
+    .progress-container {
+        min-width: 100px;
+    }
+    
+    .progress-percentage {
+        font-size: 0.8rem;
+        padding: 2px 4px;
+    }
+    
+    .progress-bar {
+        height: 6px;
     }
 }

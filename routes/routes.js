@@ -378,6 +378,8 @@ router.post('/api/training/reject', lineManagerController.cancelTraining);
 router.get('/api/training/details/:id', lineManagerController.getTrainingDetailsAPI);
 // GET /api/employee/trainings/:userId
 router.get('/linemanager/api/employee/trainings/:userId', lineManagerController.getEmployeeTrainingHistory);
+// Add this route to your routes file
+router.get('/linemanager/api/employee/progress/:userId', lineManagerController.getEmployeeProgressForLineManagerRoute);
 
 // Alternative: If you want to include it in your existing training routes
 // GET /api/training/employee/:userId
